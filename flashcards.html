@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5E35B1">
+<meta name="description" content="Free interactive A&P flashcards for SCI 144 — flip cards with spaced-repetition self-grading across all 7 body-system units, plus a daily 20-question challenge.">
+<title>A&amp;P Flashcards &amp; Daily Challenge &middot; Dr. Garg &middot; Herzing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1F2D3D; --muted:#5A6877; --dim:#8A97A5; --line:#E1E6EC;
+    --bg:#F5F7FA; --panel:#fff; --soft:#EEF2F6; --panel2:#F7F9FC;
+    --purple:#5E35B1; --purple-dk:#4A148C; --teal:#00897B; --teal-dk:#00695C;
+    --gold:#E9A400; --green:#2E9E5B; --amber:#E08A00; --red:#D64545; --blue:#0277BD;
+    --radius:14px; --radius-sm:10px;
+    --shadow:0 8px 22px rgba(31,45,61,0.10);
+    --font:'Inter',Arial,Helvetica,sans-serif;
+    --font-disp:'Sora','Inter',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:var(--font); color:var(--ink); background:var(--bg); line-height:1.6; -webkit-text-size-adjust:100%;}
+  .wrap{max-width:1000px; margin:0 auto; padding:0 18px 70px;}
+  a{color:inherit;}
+  button{font-family:var(--font);}
+
+  /* ---- hero ---- */
+  header.hero{background:linear-gradient(135deg,#283593 0%,#5E35B1 48%,#00838F 100%); color:#fff;
+    border-radius:0 0 18px 18px; padding:34px 30px 30px; margin:0 -18px 22px; box-shadow:0 8px 24px rgba(94,53,177,0.28); position:relative; overflow:hidden;}
+  header.hero .blob{position:absolute; border-radius:50%; background:rgba(255,255,255,0.08);}
+  .backlink{display:inline-block; color:#fff; text-decoration:none; font-size:13px; font-weight:600; opacity:.9; margin-bottom:12px;}
+  .backlink:hover{opacity:1; text-decoration:underline;}
+  header.hero h1{font-family:var(--font-disp); margin:0 0 6px; font-size:32px; line-height:1.1; font-weight:800;}
+  header.hero p{margin:0; font-size:15.5px; opacity:.95; max-width:640px;}
+
+  /* ---- mode tabs ---- */
+  .tabs{display:flex; background:var(--soft); border:1px solid var(--line); border-radius:999px; padding:5px; gap:5px; max-width:440px; margin:4px 0 24px;}
+  .tabs button{flex:1; border:none; background:transparent; color:var(--muted); font-weight:700; font-size:14px; padding:11px; border-radius:999px; cursor:pointer; transition:.15s;}
+  .tabs button.on{background:linear-gradient(135deg,var(--purple),#7B1FA2); color:#fff; box-shadow:0 3px 10px rgba(94,53,177,.3);}
+
+  .pane{display:none;} .pane.on{display:block;}
+  .lead{color:var(--muted); font-size:14.5px; margin:0 0 20px;}
+
+  /* ---- deck picker ---- */
+  .decks{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:15px; margin-bottom:10px;}
+  .deck{text-align:left; cursor:pointer; background:var(--panel); border:1px solid var(--line); border-left-width:5px;
+    border-radius:var(--radius); padding:17px; transition:.16s; color:var(--ink); display:flex; flex-direction:column; gap:11px;}
+  .deck:hover{transform:translateY(-3px); box-shadow:var(--shadow);}
+  .d-top{display:flex; align-items:center; gap:11px;}
+  .d-ic{width:44px; height:44px; border-radius:12px; display:grid; place-items:center; font-size:23px; background:var(--soft); flex:0 0 auto;}
+  .deck h3{margin:0; font-family:var(--font-disp); font-size:15.5px; line-height:1.2; font-weight:700;}
+  .d-meta{color:var(--dim); font-size:12.5px; font-weight:500;}
+  .bar{height:8px; border-radius:999px; background:var(--soft); overflow:hidden;}
+  .bar i{display:block; height:100%; width:0; border-radius:999px; background:linear-gradient(90deg,var(--teal),var(--green)); transition:width .5s ease;}
+  .d-prog{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); font-weight:600;}
+
+  /* ---- study area ---- */
+  .study{max-width:660px; margin:0 auto; display:none;}
+  .study.on{display:block;}
+  .studyhead{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
+  .studyhead h2{font-family:var(--font-disp); font-size:19px; margin:0; flex:1; min-width:150px;}
+  .count{color:var(--dim); font-size:13px; font-weight:600;}
+  .btn{display:inline-flex; align-items:center; gap:7px; justify-content:center; text-decoration:none; font-weight:700;
+    border-radius:999px; padding:10px 18px; font-size:14px; cursor:pointer; border:1px solid var(--line); background:var(--panel); color:var(--ink); transition:.14s;}
+  .btn:hover{border-color:var(--purple); color:var(--purple);}
+  .btn.solid{background:linear-gradient(135deg,var(--purple),#7B1FA2); color:#fff; border:none;}
+  .btn.solid:hover{filter:brightness(1.07); color:#fff;}
+  .btn.ghost{background:transparent;}
+
+  .card{perspective:1600px; width:100%; height:330px; margin-bottom:16px; cursor:pointer;}
+  .inner{position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .55s cubic-bezier(.4,.2,.2,1);}
+  .card.flipped .inner{transform:rotateY(180deg);}
+  .face{position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    border:1px solid var(--line); border-radius:var(--radius); padding:30px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; gap:14px; box-shadow:var(--shadow); overflow:auto;}
+  .front{background:linear-gradient(180deg,#fff,#F4F1FB);}
+  .back{background:linear-gradient(180deg,#EAF6F2,#DFF1EA); transform:rotateY(180deg); border-color:#B6E0D2;}
+  .side{position:absolute; top:13px; left:16px; font-size:10.5px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; color:var(--dim);}
+  .back .side{color:var(--teal-dk);}
+  .q{font-family:var(--font-disp); font-size:clamp(17px,3vw,22px); line-height:1.35; font-weight:700;}
+  .a{font-size:clamp(16px,2.7vw,19px); line-height:1.45; font-weight:700; color:var(--ink);}
+  .exp{display:block; margin-top:12px; font-size:14px; font-weight:400; color:var(--teal-dk); line-height:1.5;}
+  .hint{position:absolute; bottom:13px; left:0; right:0; text-align:center; font-size:12px; color:var(--dim);}
+
+  .grade{display:flex; gap:12px; margin-bottom:13px;}
+  .grade .btn{flex:1;}
+  .again{border-color:var(--amber); color:var(--amber);} .again:hover{background:rgba(224,138,0,.09); color:var(--amber);}
+  .got{background:linear-gradient(135deg,var(--green),#38B26A); color:#fff; border:none;} .got:hover{filter:brightness(1.06); color:#fff;}
+
+  .nav{display:flex; gap:10px; align-items:center;}
+  .nav .dots{flex:1; text-align:center; color:var(--dim); font-size:13px; font-weight:600;}
+  .toolbar{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;}
+
+  .done{text-align:center; padding:34px 18px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);}
+  .done .big{font-size:46px; margin-bottom:8px;}
+  .done h3{font-family:var(--font-disp); margin:0 0 6px;}
+
+  /* ---- daily ---- */
+  .daily{max-width:660px; margin:0 auto;}
+  .dcard{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow);}
+  .dhead{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:4px; flex-wrap:wrap;}
+  .dhead .date{color:var(--purple); font-weight:700; font-size:13px; letter-spacing:.3px;}
+  .stats{display:flex; gap:12px; flex-wrap:wrap; margin:16px 0;}
+  .stat{flex:1; min-width:110px; background:var(--panel2); border:1px solid var(--line); border-radius:var(--radius-sm); padding:13px; text-align:center;}
+  .stat b{display:block; font-family:var(--font-disp); font-size:24px; color:var(--purple);}
+  .stat small{color:var(--dim); font-size:11px; letter-spacing:.5px; text-transform:uppercase; font-weight:600;}
+  .prog-row{display:flex; align-items:center; gap:12px; margin:6px 0 18px;}
+  .prog-row .bar{flex:1;} .prog-row span{font-size:12.5px; color:var(--dim); font-weight:600; white-space:nowrap;}
+  .qtext{font-family:var(--font-disp); font-size:clamp(16px,2.7vw,20px); line-height:1.4; margin:0 0 16px; font-weight:700;}
+  .opts{display:flex; flex-direction:column; gap:10px; margin-bottom:14px;}
+  .opt{text-align:left; font-size:15px; color:var(--ink); cursor:pointer; background:var(--panel2); border:1px solid var(--line);
+    border-radius:var(--radius-sm); padding:13px 15px; transition:.14s; display:flex; gap:11px; align-items:flex-start; line-height:1.4;}
+  .opt:hover:not(:disabled){border-color:var(--purple);}
+  .opt .key{font-weight:800; color:var(--dim); flex:0 0 auto;}
+  .opt:disabled{cursor:default;}
+  .opt.correct{border-color:var(--green); background:rgba(46,158,91,.12);} .opt.correct .key{color:var(--green);}
+  .opt.wrong{border-color:var(--red); background:rgba(214,69,69,.10);} .opt.wrong .key{color:var(--red);}
+  .rat{background:rgba(2,119,189,.07); border:1px solid rgba(2,119,189,.22); border-radius:var(--radius-sm);
+    padding:12px 15px; color:var(--muted); font-size:14px; line-height:1.5; margin-bottom:14px; display:none;}
+  .rat.show{display:block;} .rat b{color:var(--ink);}
+  .final{text-align:center; padding:8px 0;}
+  .final .score{font-family:var(--font-disp); font-weight:800; font-size:54px; line-height:1; letter-spacing:-2px;}
+  .final .score small{font-size:22px; color:var(--dim); font-weight:600;}
+
+  footer{text-align:center; color:var(--muted); font-size:13px; margin-top:44px; padding-top:20px; border-top:1px solid var(--line);}
+  @media (max-width:560px){ header.hero h1{font-size:26px;} .card{height:300px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="blob" style="right:-30px; top:-30px; width:200px; height:200px;"></div>
+    <div class="blob" style="right:110px; bottom:-60px; width:140px; height:140px; background:rgba(255,255,255,0.06);"></div>
+    <a class="backlink" href="index.html">&larr; Back to the A&amp;P Learning Hub</a>
+    <h1>&#128218; A&amp;P Flashcards</h1>
+    <p>Flip through every body system, grade yourself, and watch each deck fill up &mdash; then test everything with the Daily Challenge. Your progress saves right here in your browser.</p>
+  </header>
+
+  <div class="tabs">
+    <button id="tabCards" class="on">&#127183; Flashcards</button>
+    <button id="tabDaily">&#127919; Daily Challenge</button>
+  </div>
+
+  <!-- ============ FLASHCARDS PANE ============ -->
+  <section id="paneCards" class="pane on">
+    <p class="lead" id="deckLead">Pick a unit to study. Tap a card to flip it, then rate yourself <strong>Again</strong> or <strong>Got it</strong> &mdash; the bar tracks what you&rsquo;ve mastered.</p>
+
+    <div id="deckList" class="decks"></div>
+
+    <!-- study view -->
+    <div id="study" class="study">
+      <div class="studyhead">
+        <button class="btn ghost" id="backDecks">&larr; All decks</button>
+        <h2 id="deckTitle">Deck</h2>
+        <span class="count" id="deckCount"></span>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="shuffleBtn">&#128256; Shuffle</button>
+        <button class="btn" id="resetBtn">&#8635; Reset progress</button>
+      </div>
+
+      <div id="studyBody">
+        <div class="card" id="fcard">
+          <div class="inner">
+            <div class="face front"><span class="side">Question</span><div class="q" id="qText"></div><div class="hint">Tap to reveal answer</div></div>
+            <div class="face back"><span class="side">Answer</span><div class="a" id="aText"></div><div class="hint">Tap to flip back</div></div>
+          </div>
+        </div>
+        <div class="grade">
+          <button class="btn again" id="againBtn">&#8635; Again</button>
+          <button class="btn got" id="gotBtn">&#10003; Got it</button>
+        </div>
+        <div class="nav">
+          <button class="btn" id="prevBtn">&larr; Prev</button>
+          <span class="dots" id="dots"></span>
+          <button class="btn" id="nextBtn">Next &rarr;</button>
+        </div>
+      </div>
+
+      <div id="deckDone" class="done" style="display:none;">
+        <div class="big">&#127881;</div>
+        <h3 id="doneTitle">Deck complete!</h3>
+        <p class="lead" id="doneMsg" style="margin:0 0 16px;"></p>
+        <button class="btn solid" id="doneAgain">Study this deck again</button>
+        <button class="btn" id="doneBack" style="margin-left:8px;">Back to decks</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DAILY PANE ============ -->
+  <section id="paneDaily" class="pane">
+    <div class="daily">
+      <div class="dcard">
+        <!-- intro -->
+        <div id="daIntro">
+          <div class="dhead">
+            <div style="font-family:var(--font-disp); font-size:19px; font-weight:800;">&#127919; Daily Challenge</div>
+            <div class="date" id="daDate"></div>
+          </div>
+          <p class="lead" style="margin:6px 0 4px;">20 mixed questions drawn from every unit &mdash; the same set for everyone today. Come back tomorrow for a fresh mix and keep your streak alive.</p>
+          <div class="stats">
+            <div class="stat"><b id="daBest">&mdash;</b><small>Best score</small></div>
+            <div class="stat"><b id="daStreak">0</b><small>Day streak</small></div>
+            <div class="stat"><b id="daLast">&mdash;</b><small>Last score</small></div>
+          </div>
+          <button class="btn solid" id="startDaily" style="width:100%; padding:14px;">Start today&rsquo;s challenge &rarr;</button>
+        </div>
+
+        <!-- quiz -->
+        <div id="daQuiz" style="display:none;">
+          <div class="dhead"><div style="font-weight:700;" id="daQNum">Question 1 of 20</div><div class="date">Score: <span id="daRunning">0</span></div></div>
+          <div class="prog-row"><div class="bar"><i id="daBar"></i></div></div>
+          <p class="qtext" id="daQ"></p>
+          <div class="opts" id="daOpts"></div>
+          <div class="rat" id="daRat"></div>
+          <button class="btn solid" id="daNext" style="display:none; width:100%;">Next question &rarr;</button>
+        </div>
+
+        <!-- done -->
+        <div id="daDone" style="display:none;">
+          <div class="final">
+            <div class="score"><span id="daScore">0</span><small>/20</small></div>
+            <div style="font-size:19px; font-family:var(--font-disp); font-weight:800; margin:10px 0 4px;" id="daGradeLbl"></div>
+            <div class="date" style="font-size:15px; margin-bottom:6px;"><span id="daPct">0%</span></div>
+            <p class="lead" id="daNote" style="margin:6px 0 16px;"></p>
+          </div>
+          <div class="stats">
+            <div class="stat"><b id="daBest2">&mdash;</b><small>Best score</small></div>
+            <div class="stat"><b id="daStreak2">0</b><small>Day streak</small></div>
+          </div>
+          <button class="btn solid" id="daReview" style="width:100%; margin-top:4px;">Study the flashcards &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Dr. Garg &middot; Introduction to Anatomy &amp; Physiology &middot; Herzing University<br>
+    <span style="font-size:12px;">Study games &amp; guides for educational use.</span>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- decode a few HTML entities that may appear in card text ---------- */
+  function dec(s){ return String(s).replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' '); }
+
+  /* ======================= DECK DATA (mined from the unit study guides) ======================= */
+  var DECKS = [
+    { id:'u1', icon:'🦠', name:'Unit 1 — Intro & Integumentary', accent:'#00897B', cards:[
+      {q:'What are the 6 characteristics of life?', a:'Organization, metabolism, responsiveness, movement, development, reproduction', exp:'Living things share these six properties; loss of them defines death.'},
+      {q:'What is the relationship between anatomy and physiology?', a:'Anatomy studies structure; physiology studies function; form follows function', exp:'Thin alveoli walls enable gas exchange - structure determines what the organ can do.'},
+      {q:'What is homeostasis, and name variables it controls?', a:'A stable internal environment; controls body temperature, blood pH, glucose, blood pressure', exp:'Disease often equals failed homeostasis; diabetes is glucose-control failure.'},
+      {q:'Distinguish negative and positive feedback loops.', a:'Negative reverses a change (normalizes); positive amplifies a change', exp:'Negative is most common; positive is for completion events like childbirth or clotting.'},
+      {q:'What are the 5 directional term pairs?', a:'Superior/Inferior, Anterior/Posterior, Medial/Lateral, Proximal/Distal, Superficial/Deep', exp:'Always described from anatomical position (standing, palms forward).'},
+      {q:'Name the 3 body planes and what each divides.', a:'Sagittal (left & right), Frontal/Coronal (front & back), Transverse (top & bottom)', exp:'Transverse = CT-scan slices; midsagittal = equal left-right halves.'},
+      {q:'What is the normal blood pH, and define acidosis/alkalosis?', a:'Normal 7.35-7.45; acidosis below 7.35; alkalosis above 7.45', exp:'Lungs and kidneys work together to hold pH in this tight range.'},
+      {q:'What is a buffer, and name the body\'s main blood buffer?', a:'A substance that resists pH change; the bicarbonate buffer system', exp:'Lungs exhale CO2 to lower acidity; kidneys excrete H+ to raise pH.'},
+      {q:'Name the 4 elements that make up ~96% of body mass.', a:'Oxygen, Carbon, Hydrogen, Nitrogen', exp:'These four build all the organic molecules of the body.'},
+      {q:'Compare the 3 types of chemical bonds.', a:'Ionic = electron transfer; Covalent = electron sharing (strongest); Hydrogen = weak attraction', exp:'Hydrogen bonds hold water and the DNA helix together and break easily.'},
+      {q:'What are the 4 organic macromolecules and their building blocks?', a:'Carbs (monosaccharides), Lipids (fatty acids+glycerol), Proteins (amino acids), Nucleic acids (nucleotides)', exp:'Proteins are the most diverse - structure, enzymes, and antibodies.'},
+      {q:'Distinguish dehydration synthesis from hydrolysis.', a:'Dehydration synthesis builds (removes water); hydrolysis breaks down (adds water)', exp:'Hydro means water; hydrolysis splits molecules by adding water (digestion).'},
+      {q:'What is an enzyme, and what causes denaturation?', a:'A protein catalyst that speeds reactions; extreme heat or pH change denatures it', exp:'A denatured enzyme loses its 3D shape and can no longer bind substrate.'},
+      {q:'Describe the fluid mosaic model of the cell membrane.', a:'A phospholipid bilayer with embedded proteins, cholesterol, and carbs', exp:'Fluid = proteins drift; it is selectively permeable, controlling what enters/exits.'},
+      {q:'Compare passive vs active transport with an example of each.', a:'Passive (no ATP): diffusion, osmosis; Active (needs ATP): the Na/K pump', exp:'Active transport moves substances against their gradient and requires energy.'},
+      {q:'What happens to RBCs in isotonic, hypotonic, and hypertonic solutions?', a:'Isotonic = unchanged; hypotonic = swells/bursts; hypertonic = shrinks', exp:'This is why IV fluids must be isotonic - otherwise red cells lyse or crenate.'},
+      {q:'Name the 5 epidermal layers from deep to superficial.', a:'Basale, Spinosum, Granulosum, Lucidum, Corneum', exp:'The lucidum layer is found only in thick skin (palms and soles).'},
+      {q:'What are the 3 skin pigments and their sources?', a:'Melanin (melanocytes, UV protection), Carotene (diet), Hemoglobin (dermal blood)', exp:'Melanin rises with sun exposure; its absence causes albinism.'},
+      {q:'Compare eccrine and apocrine sweat glands.', a:'Eccrine: body-wide, watery, cooling; Apocrine: axilla/groin, thick, activates at puberty', exp:'Apocrine secretions cause body odor when broken down by bacteria.'},
+      {q:'List the functions of the integumentary system.', a:'Protection, thermoregulation, sensation, vitamin D synthesis, excretion, blood reservoir', exp:'Skin makes vitamin D from sunlight and holds about 5% of blood volume.'}
+    ]},
+    { id:'u2', icon:'🦴', name:'Unit 2 — Skeletal & Muscular', accent:'#6D4C41', cards:[
+      {q:'How many bones are in the axial vs appendicular skeleton?', a:'Axial: 80 bones; Appendicular: 126 bones (206 total)', exp:'Axis = center (skull, spine, ribs); appendages = limbs and girdles.'},
+      {q:'What is a foramen, and how does it differ from a fossa?', a:'Foramen = round hole for vessels/nerves; Fossa = shallow depression', exp:'Foramen (hole), fossa (dish), meatus (canal), sinus (cavity).'},
+      {q:'Name the 8 cranial bones.', a:'Parietal (2), Temporal (2), Frontal, Occipital, Sphenoid, Ethmoid', exp:'The sphenoid is the keystone of the cranium, anchoring the others.'},
+      {q:'Which structure holds the pituitary gland, and in which bone?', a:'The sella turcica, in the sphenoid bone', exp:'Sella turcica means Turkish saddle - a saddle-shaped depression.'},
+      {q:'What passes through the cribriform plate, and which bone has it?', a:'The olfactory (smell) nerve; it is in the ethmoid bone', exp:'Head trauma can damage this plate and cause loss of smell (anosmia).'},
+      {q:'Which bone is the keystone of the face, and which skull bone is movable?', a:'The maxilla is the facial keystone; the mandible is the only movable skull bone', exp:'The maxilla and mandible are the largest facial bones.'},
+      {q:'What is unique about the hyoid bone?', a:'It is the only bone that does not form a joint with any other bone', exp:'It is suspended by muscles and ligaments in the neck and anchors the tongue.'},
+      {q:'How many vertebrae are in the cervical, thoracic, and lumbar regions?', a:'Cervical 7, Thoracic 12, Lumbar 5', exp:'Mnemonic: breakfast at 7, lunch at 12, dinner at 5.'},
+      {q:'What are C1 and C2, and what do they do?', a:'C1 = atlas (supports the skull); C2 = axis (has the dens for rotation)', exp:'The atlas holds the head; the axis lets you shake your head no.'},
+      {q:'How many pairs of true ribs are there, and which ribs float?', a:'7 pairs of true ribs; ribs 11 and 12 are floating', exp:'False ribs (8-10) attach indirectly; floating ribs have no sternal attachment.'},
+      {q:'Which forearm bone is on the thumb side, and which on the pinky side?', a:'Radius = thumb side (lateral); Ulna = pinky side (medial)', exp:'Judged in anatomical position with palms facing forward.'},
+      {q:'What is the olecranon process, and which bone has it?', a:'The bony point of the elbow; it is on the ulna', exp:'You feel it as the tip of your elbow when the arm bends.'},
+      {q:'Name the three parts of the hip (coxal) bone.', a:'Ilium (upper/largest), Ischium (lower/strongest), Pubis (anterior)', exp:'The three fuse into one coxal bone: you sit on the ischium.'},
+      {q:'Which leg bone bears weight and has the medial malleolus?', a:'The tibia (shin bone)', exp:'The fibula is thin, non-weight-bearing, and forms the lateral ankle.'},
+      {q:'Which muscle type is voluntary and multinucleated?', a:'Skeletal muscle', exp:'Skeletal is striated and voluntary; cardiac is striated but involuntary; smooth is neither.'},
+      {q:'What are the 4 special properties of muscle tissue?', a:'Excitability, contractility, extensibility, elasticity', exp:'These let muscle sense a stimulus, shorten, stretch, and recoil.'},
+      {q:'What is a sarcomere, and what marks its boundaries?', a:'The smallest contractile unit of muscle; Z discs mark its boundaries', exp:'Sarcomeres line up end-to-end to form a myofibril.'},
+      {q:'During contraction, which band stays the same width?', a:'The A band stays constant; the I band and H zone narrow', exp:'Filaments do not shrink - they slide past each other (sliding filament model).'},
+      {q:'What is acetylcholine (ACh), and where is it released?', a:'The neurotransmitter released at the neuromuscular junction', exp:'ACh binds the sarcolemma and triggers an action potential down the T tubules.'},
+      {q:'What is the final trigger for contraction, and what does it bind?', a:'Calcium (Ca2+) from the sarcoplasmic reticulum; it binds troponin', exp:'Troponin moves tropomyosin, exposing actin so myosin can form cross-bridges.'}
+    ]},
+    { id:'u3', icon:'🧠', name:'Unit 3 — Nervous System', accent:'#5C2D91', cards:[
+      {q:'What are the 3 core functions of the nervous system?', a:'Sensory input, integration, motor output', exp:'Sensory detects, integration interprets, motor responds.'},
+      {q:'Where does integration occur in the nervous system?', a:'In the central nervous system (brain and spinal cord)', exp:'The PNS only carries signals; all decisions are made in the CNS.'},
+      {q:'What is the difference between afferent and efferent fibers?', a:'Afferent = sensory toward the CNS; efferent = motor away from the CNS', exp:'Afferent Arrives; Efferent Exits.'},
+      {q:'Name the CNS and PNS neuroglia.', a:'CNS: astrocytes, microglia, ependymal, oligodendrocytes. PNS: Schwann, satellite', exp:'Glia support and protect neurons; they far outnumber the neurons themselves.'},
+      {q:'Which glial cells make myelin in the CNS and PNS?', a:'CNS: oligodendrocytes; PNS: Schwann cells', exp:'One oligodendrocyte myelinates many axons; each Schwann cell myelinates one segment.'},
+      {q:'Which glial cell is the immune defender of the brain?', a:'Microglia', exp:'They phagocytize microbes and dead neurons.'},
+      {q:'What are the 3 main parts of a neuron?', a:'Cell body (biosynthesis), dendrites (receive), axon (send)', exp:'Dendrites deliver signals in; the axon carries them away.'},
+      {q:'What happens at the axon hillock?', a:'The action potential is generated (initiated)', exp:'This cone-shaped region is the trigger zone of the neuron.'},
+      {q:'What are the jobs of the myelin sheath?', a:'Protects the axon, insulates it, and increases conduction speed', exp:'Myelin speeds transmission roughly 30 times.'},
+      {q:'What is a node of Ranvier?', a:'A gap between myelin segments packed with voltage-gated Na+ channels', exp:'Action potentials regenerate at these nodes during saltatory conduction.'},
+      {q:'Compare white matter and gray matter.', a:'White matter = myelinated axons; gray matter = cell bodies and unmyelinated fibers', exp:'White matter carries signals; gray matter processes them.'},
+      {q:'Name the structural classes of neurons by number of processes.', a:'Unipolar (1), bipolar (2), multipolar (many)', exp:'Multipolar is the most common; unipolar are usually sensory.'},
+      {q:'List the 4 phases of an action potential in order.', a:'Resting, depolarization, repolarization, hyperpolarization', exp:'Na+ rushes in to depolarize; K+ rushes out to repolarize.'},
+      {q:'What are the resting membrane and threshold voltages?', a:'Resting about -70 mV; threshold about -55 mV', exp:'The membrane must depolarize ~15 mV to fire an action potential.'},
+      {q:'State the all-or-none principle.', a:'An action potential fires completely or not at all', exp:'A stronger stimulus fires more APs per second, not a bigger AP.'},
+      {q:'What 2 factors determine conduction speed?', a:'Axon diameter (larger = faster) and myelination (present = faster)', exp:'Big myelinated fibers conduct ~150 m/s; small bare fibers ~1 m/s.'},
+      {q:'What is saltatory conduction?', a:'The action potential jumps node to node along a myelinated axon', exp:'Jumping is far faster than continuous conduction along the whole membrane.'},
+      {q:'What ion triggers neurotransmitter release at the axon terminal?', a:'Calcium (Ca2+)', exp:'Ca2+ influx makes synaptic vesicles fuse and release transmitter.'},
+      {q:'Compare EPSP and IPSP effects.', a:'EPSP depolarizes (promotes firing); IPSP hyperpolarizes (prevents firing)', exp:'Both are graded potentials that must summate to reach threshold.'},
+      {q:'Name the main excitatory and inhibitory CNS neurotransmitters.', a:'Excitatory: glutamate; Inhibitory: GABA', exp:'GABA is the target of benzodiazepines and alcohol.'}
+    ]},
+    { id:'u4', icon:'❤️', name:'Unit 4 — Cardiovascular', accent:'#C62828', cards:[
+      {q:'What are the two main components of blood and their percentages?', a:'Plasma (~55%) and formed elements (~45%); the cell fraction is the hematocrit', exp:'Plasma carries dissolved substances; formed elements are cells and platelets.'},
+      {q:'Name the three plasma proteins in order of abundance.', a:'Albumin (60%), globulins (36%), fibrinogen (4%)', exp:'Albumin holds water in vessels; low albumin causes edema.'},
+      {q:'How many oxygen molecules can one hemoglobin carry, and why?', a:'Four - one per iron atom in each of its four heme groups', exp:'Each heme has one iron, and iron is the O2-binding site.'},
+      {q:'Which organ releases erythropoietin, and what triggers it?', a:'The kidneys, in response to hypoxia (low oxygen)', exp:'This is why kidney disease often causes anemia.'},
+      {q:'What happens to heme when an old RBC is destroyed?', a:'It becomes bilirubin, which the liver secretes in bile', exp:'Excess bilirubin causes jaundice (yellow skin and eyes).'},
+      {q:'List the 5 white blood cells from most to least abundant.', a:'Neutrophils, lymphocytes, monocytes, eosinophils, basophils', exp:'Mnemonic: Never Let Monkeys Eat Bananas.'},
+      {q:'What are the three steps of hemostasis in order?', a:'Vascular spasm, platelet plug, coagulation (fibrin forms)', exp:'It must be fast enough to stop bleeding but local enough to avoid clots everywhere.'},
+      {q:'Name the three heart wall layers from outside in.', a:'Epicardium, myocardium, endocardium', exp:'The myocardium is the thick contractile muscle layer.'},
+      {q:'Why is the left ventricle wall thicker than the right?', a:'It pumps against the whole systemic circulation; the right only pumps to the lungs', exp:'Chronic hypertension thickens the left ventricle (hypertrophy).'},
+      {q:'What do the chordae tendineae do?', a:'Anchor the AV valve flaps so they do not evert during contraction', exp:'They attach only to the AV valves, not the semilunar valves.'},
+      {q:'Trace blood through the four heart valves in order.', a:'Tricuspid, pulmonary semilunar, bicuspid (mitral), aortic semilunar', exp:'LAB RAT: Left = Bicuspid, Right = Tricuspid.'},
+      {q:'Give the cardiac conduction pathway in order.', a:'SA node, AV node, AV bundle (of His), bundle branches, Purkinje fibers', exp:'The SA node fires fastest (~75/min), so it sets the pace.'},
+      {q:'What do the P, QRS, and T waves represent on an ECG?', a:'P = atrial depolarization; QRS = ventricular depolarization; T = ventricular repolarization', exp:'Atrial repolarization hides inside the QRS complex.'},
+      {q:'What is the cardiac output equation?', a:'CO = heart rate x stroke volume (about 5 L/min at rest)', exp:'At rest your whole blood volume cycles through the heart about once a minute.'},
+      {q:'What three factors determine stroke volume?', a:'Preload, contractility, and afterload', exp:'More venous return raises preload and stroke volume (Frank-Starling law).'},
+      {q:'Name the three tunics of a vessel from inside out.', a:'Tunica intima, tunica media, tunica externa', exp:'The media (smooth muscle) controls vessel diameter.'},
+      {q:'Which vessels are the main site of blood-pressure regulation, and why?', a:'Arterioles - small diameter changes cause large resistance changes', exp:'Resistance varies with the fourth power of the radius.'},
+      {q:'What is the blood pressure equation?', a:'BP = cardiac output x peripheral resistance', exp:'The heart sets CO, vessels set resistance, and kidneys set blood volume.'},
+      {q:'Which hormone lowers blood pressure, and which raise it?', a:'ANP lowers BP; ADH, aldosterone, and angiotensin II raise it', exp:'ACE inhibitors block angiotensin II to treat hypertension.'},
+      {q:'Which four structures connect to the right atrium?', a:'Superior vena cava, inferior vena cava, and coronary sinus (not the pulmonary veins)', exp:'The pulmonary veins return to the LEFT atrium.'}
+    ]},
+    { id:'u5', icon:'🫁', name:'Unit 5 — Immunity & Respiratory', accent:'#2E7D32', cards:[
+      {q:'What are the two main functions of the lymphatic system?', a:'Return leaked fluid/proteins to blood, and house immune cells', exp:'Blocked lymph drainage causes swelling (lymphedema).'},
+      {q:'Which duct drains most of the body, and where does it begin?', a:'The thoracic duct; it begins at the cisterna chyli', exp:'It drains everything except the right arm and right head/thorax.'},
+      {q:'Where do B cells and T cells mature?', a:'B cells in bone marrow; T cells in the thymus', exp:'Both start in bone marrow but T cells migrate to the thymus.'},
+      {q:'What are the three lines of defense, innate vs adaptive?', a:'1st (barriers) and 2nd (phagocytes/fever) are innate; 3rd (B/T cells) is adaptive', exp:'Innate is fast and nonspecific; adaptive is slower but has memory.'},
+      {q:'List the four cardinal signs of inflammation.', a:'Redness, heat, swelling, pain', exp:'Vasodilation causes red/heat; leaky capillaries cause swelling/pain.'},
+      {q:'What are the three effects of activated complement?', a:'Inflammation, opsonization, and cell lysis (membrane attack complex)', exp:'Complement bridges innate and adaptive immunity.'},
+      {q:'What three features define adaptive immunity?', a:'Specific, systemic, and memory', exp:'Memory is why vaccines work and reinfection is rare.'},
+      {q:'Differentiate humoral from cellular immunity.', a:'Humoral: B cells and antibodies vs free pathogens; Cellular: T cells attack infected cells', exp:'Humoral guards body fluids; cellular fights viruses and cancer.'},
+      {q:'Name the five antibody classes and a key function.', a:'IgM (first), IgA (secretions), IgD (B-cell receptor), IgG (most abundant, crosses placenta), IgE (allergy)', exp:'Mnemonic MADGE; IgG gives newborns passive immunity.'},
+      {q:'Contrast active vs passive immunity.', a:'Active: you make antibodies (long, has memory); Passive: borrowed antibodies (short, no memory)', exp:'Antivenom is passive; a vaccine produces active immunity.'},
+      {q:'Name the four processes of respiration.', a:'Pulmonary ventilation, external respiration, gas transport, internal respiration', exp:'Only external and internal respiration involve gas crossing membranes.'},
+      {q:'What separates the conducting from the respiratory zone?', a:'Conducting zone moves/cleans air (no exchange); respiratory zone (alveoli) does gas exchange', exp:'The conducting zone is anatomical dead space (~150 mL).'},
+      {q:'Why do aspirated objects lodge in the right lung more often?', a:'The right main bronchus is wider, shorter, and more vertical', exp:'Airway geometry gives objects a straighter path to the right side.'},
+      {q:'Describe the respiratory membrane.', a:'About 0.5 micrometers thick; Type I cells form the wall, Type II secrete surfactant', exp:'It is ultra-thin so gases diffuse quickly; edema thickens it and impairs exchange.'},
+      {q:'Why is intrapleural pressure always negative?', a:'Lung recoil pulls in while the chest wall pulls out, creating negative pressure', exp:'If air enters the pleural space (pneumothorax), the lung collapses.'},
+      {q:'State Boyle\'s Law and how it drives breathing.', a:'Pressure and volume are inversely related; larger thoracic volume drops pressure and air flows in', exp:'Inspiration is active (diaphragm contracts); quiet expiration is passive recoil.'},
+      {q:'How is most CO2 transported in blood?', a:'~70% as bicarbonate, ~20% on hemoglobin, ~10% dissolved', exp:'Bicarbonate formation also buffers blood pH.'},
+      {q:'State the Bohr effect.', a:'Lower pH, higher CO2, and higher temperature make hemoglobin release more O2', exp:'Active, warm, acidic tissues automatically get more oxygen.'},
+      {q:'What are neutrophil steps to reach an infection?', a:'Leukocytosis, margination, diapedesis, chemotaxis', exp:'Each step moves neutrophils from blood to the injured tissue.'},
+      {q:'Which cells secrete surfactant, and why does it matter?', a:'Type II alveolar cells; surfactant lowers surface tension', exp:'Without it, alveoli collapse - the problem in premature-infant respiratory distress.'}
+    ]},
+    { id:'u6', icon:'🧤', name:'Unit 6 — Urinary & Digestive', accent:'#EF6C00', cards:[
+      {q:'What are the 3 main fluid-regulating functions of the kidneys?', a:'Regulate water/solutes, regulate ion balance, and manage long-term acid-base balance', exp:'These keep the extracellular fluid stable for every other system.'},
+      {q:'Trace urine flow from a renal pyramid to the ureter.', a:'Papilla, minor calyx, major calyx, renal pelvis, ureter', exp:'This order shows up on nearly every anatomy exam.'},
+      {q:'Name the two main parts of a nephron.', a:'Renal corpuscle (glomerulus + Bowman capsule) and renal tubule', exp:'The corpuscle filters; the tubule processes the filtrate.'},
+      {q:'What is the normal glomerular filtration rate?', a:'About 120-125 mL/min', exp:'GFR under 60 for 3+ months defines chronic kidney disease.'},
+      {q:'Name the 3 steps of urine formation and their directions.', a:'Filtration (blood to filtrate), reabsorption (filtrate to blood, ~99%), secretion (blood to filtrate)', exp:'Reabsorption and secretion move in opposite directions - a common mix-up.'},
+      {q:'What do the macula densa and granular cells sense?', a:'Macula densa senses filtrate NaCl; granular (JG) cells sense BP and release renin', exp:'The juxtaglomerular apparatus regulates filtration and blood pressure.'},
+      {q:'What does ADH do, and when is it highest?', a:'Increases water reabsorption in collecting ducts; highest during dehydration', exp:'Anti-diuretic means less urine - the body conserving water.'},
+      {q:'What is the medullary osmotic gradient?', a:'~300 mOsm in the cortex up to ~1200 mOsm deep in the medulla', exp:'Built by the countercurrent mechanism; it lets the kidney concentrate urine.'},
+      {q:'What is normal urine made of, and what should not appear?', a:'~95% water, ~5% solutes (mostly urea); glucose, protein, blood, and ketones are abnormal', exp:'Glucose in urine suggests diabetes; protein suggests glomerular damage.'},
+      {q:'Differentiate the internal and external urethral sphincters.', a:'Internal = smooth muscle, involuntary; external = skeletal muscle, voluntary', exp:'Voluntary control of the external sphincter is why toilet training takes maturity.'},
+      {q:'What distinguishes salivary amylase from gastric pepsin?', a:'Amylase begins carbohydrate digestion in the mouth; pepsin begins protein digestion in the stomach', exp:'Carbohydrate digestion starts in the mouth, not the stomach.'},
+      {q:'Which stomach cells make HCl and intrinsic factor?', a:'Parietal cells', exp:'Loss of intrinsic factor blocks B12 absorption and causes pernicious anemia.'},
+      {q:'Why is pepsinogen secreted in an inactive form?', a:'So HCl can activate it to pepsin safely in the lumen, protecting the cells that make it', exp:'The same safety trick applies to pancreatic trypsinogen.'},
+      {q:'Name the small intestine divisions and the main absorption site.', a:'Duodenum, jejunum, ileum; the jejunum is the main absorption site', exp:'The duodenum receives bile and pancreatic juice.'},
+      {q:'What does the liver make, and what does the gallbladder do?', a:'The liver makes bile; the gallbladder stores and concentrates it', exp:'CCK triggers the gallbladder to release bile, which emulsifies fat.'},
+      {q:'Where does digestion of each macronutrient begin?', a:'Carbs in the mouth, proteins in the stomach, fats in the small intestine', exp:'Each nutrient pairs with a location and an enzyme - a testable sequence.'},
+      {q:'How are digested fats absorbed differently from sugars?', a:'Fats enter lacteals (lymph); sugars and amino acids enter blood capillaries', exp:'Fats travel as chylomicrons through the lymphatic system first.'},
+      {q:'What are the main functions of the large intestine?', a:'Absorb water, house bacterial flora (make vitamin K), and store feces', exp:'Little digestion happens here - most absorption already occurred.'},
+      {q:'What initiates and controls the defecation reflex?', a:'Rectal wall stretch initiates it; the voluntary external sphincter controls it', exp:'Holding it lets the reflex subside within seconds.'},
+      {q:'Which nutrient is NOT digested by the human small intestine on its own?', a:'Fiber (cellulose) - no human enzyme breaks it down', exp:'Gut bacteria in the large intestine ferment some of it.'}
+    ]},
+    { id:'u7', icon:'⚧️', name:'Unit 7 — Reproductive', accent:'#AD1457', cards:[
+      {q:'What two things do the gonads produce?', a:'Gametes (sperm or eggs) and sex hormones', exp:'Testes and ovaries share this dual role.'},
+      {q:'Why are the testes held in the scrotum outside the body?', a:'Sperm need about 34 C - core body temperature (37 C) is too warm', exp:'The dartos and cremaster muscles fine-tune scrotal temperature.'},
+      {q:'Which testicular cells produce testosterone?', a:'Interstitial (Leydig) cells, between the seminiferous tubules', exp:'Hormone-making cells sit outside the sperm-making tubules.'},
+      {q:'Where do sperm mature and gain motility?', a:'In the epididymis', exp:'Sperm leave the testis immature and learn to swim in the epididymis.'},
+      {q:'What is the main energy source for sperm in semen?', a:'Fructose from the seminal vesicles', exp:'Without fructose, sperm lack the ATP to reach the egg.'},
+      {q:'How many functional sperm come from one spermatogonium?', a:'Four functional sperm', exp:'Females make only one functional egg from each precursor.'},
+      {q:'What does the acrosome on the sperm head do?', a:'Holds enzymes that let the sperm penetrate the egg', exp:'It acts like a biochemical drill through the egg\'s outer layers.'},
+      {q:'Which autonomic division controls erection?', a:'The parasympathetic division', exp:'Point (Parasympathetic) and Shoot (Sympathetic).'},
+      {q:'How many oocytes does a female have at birth vs puberty?', a:'About 7 million at birth, declining to ~250,000 by puberty', exp:'Females are born with a finite egg supply that only decreases.'},
+      {q:'How does the egg travel from ovary to uterine tube?', a:'Fimbriae sweep it across a small gap using fluid currents', exp:'The gap is why a fertilized egg can implant in the tube (ectopic pregnancy).'},
+      {q:'Name the three uterine layers from outer to inner.', a:'Perimetrium, myometrium (muscle), endometrium (lining)', exp:'The myometrium contracts in labor; the endometrium sheds each cycle.'},
+      {q:'Why is the vagina acidic?', a:'Resident bacteria keep it acidic to suppress pathogens', exp:'Antibiotics kill these bacteria, allowing yeast overgrowth.'},
+      {q:'How many functional eggs come from one primary oocyte?', a:'One ovum (the rest become polar bodies)', exp:'Unequal division hoards cytoplasm to nourish a future embryo.'},
+      {q:'At what stage is the egg when ovulated?', a:'A secondary oocyte paused at metaphase II', exp:'Fertilization completes meiosis II; otherwise the egg dies within 24 hours.'},
+      {q:'What are the two phases of the ovarian cycle?', a:'Follicular (estrogen) and luteal (progesterone), split by ovulation', exp:'FSH drives the follicular phase; an LH surge triggers ovulation.'},
+      {q:'What does the corpus luteum produce?', a:'Progesterone (and some estrogen)', exp:'If no pregnancy occurs it degenerates, hormones fall, and menstruation begins.'},
+      {q:'What defines menopause?', a:'12 consecutive months without menstruation from declining ovarian hormones', exp:'Falling estrogen raises the risk of osteoporosis.'},
+      {q:'Which parent\'s gamete determines the baby\'s sex?', a:'The father\'s sperm (X or Y); the mother always gives an X', exp:'Dad decides: sperm carries either the X or the Y.'},
+      {q:'What does the SRY gene do?', a:'It is the Y-chromosome master switch that starts testes development', exp:'Without SRY, the default female pathway proceeds.'},
+      {q:'When is the embryo sexually indifferent?', a:'Around weeks 5-6, before sex-specific structures form', exp:'Early development is identical before hormones drive differentiation.'}
+    ]}
+  ];
+
+  /* ======================= storage ======================= */
+  var PFX = 'hbq_fc_';
+  var LS = {
+    get:function(k,d){ try{ var v=localStorage.getItem(PFX+k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+    set:function(k,v){ try{ localStorage.setItem(PFX+k, JSON.stringify(v)); }catch(e){} }
+  };
+  function getStatus(id){ return LS.get('st_'+id, {}); }       // {cardIndex: 2(got)|1(again)}
+  function setStatus(id,o){ LS.set('st_'+id,o); }
+  function deckGot(id){ var s=getStatus(id),n=0; for(var k in s){ if(s[k]===2) n++; } return n; }
+
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(s){ var d=document.createElement('div'); d.textContent=dec(s); return d.innerHTML; }
+  function fire(opts){ if(window.confetti){ try{ confetti(opts); }catch(e){} } }
+
+  /* ======================= tabs ======================= */
+  $('tabCards').addEventListener('click', function(){ switchTab('cards'); });
+  $('tabDaily').addEventListener('click', function(){ switchTab('daily'); });
+  function switchTab(t){
+    var c=t==='cards';
+    $('tabCards').classList.toggle('on',c); $('tabDaily').classList.toggle('on',!c);
+    $('paneCards').classList.toggle('on',c); $('paneDaily').classList.toggle('on',!c);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  /* ======================= deck picker ======================= */
+  function renderDecks(){
+    var wrap=$('deckList'); wrap.innerHTML='';
+    DECKS.forEach(function(d){
+      var got=deckGot(d.id), total=d.cards.length, pct=Math.round(got/total*100);
+      var el=document.createElement('button');
+      el.className='deck'; el.style.borderLeftColor=d.accent;
+      el.innerHTML =
+        '<div class="d-top"><div class="d-ic" style="color:'+d.accent+'">'+d.icon+'</div>'+
+        '<div><h3>'+esc(d.name)+'</h3><div class="d-meta">'+total+' cards</div></div></div>'+
+        '<div class="bar"><i style="width:'+pct+'%"></i></div>'+
+        '<div class="d-prog"><span>'+got+' / '+total+' mastered</span><span>'+pct+'%</span></div>';
+      el.addEventListener('click', function(){ openDeck(d); });
+      wrap.appendChild(el);
+    });
+  }
+
+  /* ======================= study runtime ======================= */
+  var curDeck=null, order=[], pos=0;
+  function buildOrder(shuffle){
+    order = DECKS[0] ? curDeck.cards.map(function(_,i){return i;}) : [];
+    if(shuffle){ for(var i=order.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=order[i];order[i]=order[j];order[j]=t; } }
+    pos=0;
+  }
+  function openDeck(d){
+    curDeck=d; buildOrder(false);
+    $('deckList').style.display='none'; $('deckLead').style.display='none';
+    $('study').classList.add('on');
+    $('deckDone').style.display='none'; $('studyBody').style.display='block';
+    $('deckTitle').textContent=dec(d.name);
+    showCard();
+  }
+  function backToDecks(){
+    $('study').classList.remove('on');
+    $('deckList').style.display='grid'; $('deckLead').style.display='block';
+    renderDecks();
+  }
+  function showCard(){
+    var c=curDeck.cards[order[pos]];
+    $('fcard').classList.remove('flipped');
+    $('qText').innerHTML=esc(c.q);
+    $('aText').innerHTML='<div>'+esc(c.a)+'</div><span class="exp">'+esc(c.exp)+'</span>';
+    $('deckCount').textContent=(pos+1)+' / '+order.length;
+    $('dots').textContent='Card '+(pos+1)+' of '+order.length+'  ·  '+deckGot(curDeck.id)+' mastered';
+  }
+  function flip(){ $('fcard').classList.toggle('flipped'); }
+  function advance(){
+    if(pos < order.length-1){ pos++; showCard(); }
+    else { finishDeck(); }
+  }
+  function markGot(){
+    var s=getStatus(curDeck.id); s[order[pos]]=2; setStatus(curDeck.id,s);
+    fire({particleCount:26, spread:55, startVelocity:32, origin:{y:.7}, colors:[curDeck.accent,'#2E9E5B','#E9A400']});
+    advance();
+  }
+  function markAgain(){
+    var s=getStatus(curDeck.id); if(s[order[pos]]!==2) s[order[pos]]=1; setStatus(curDeck.id,s);
+    advance();
+  }
+  function finishDeck(){
+    $('studyBody').style.display='none';
+    var got=deckGot(curDeck.id), total=curDeck.cards.length;
+    $('deckDone').style.display='block';
+    if(got===total){
+      $('doneTitle').textContent='Deck mastered! 🏆';
+      $('doneMsg').textContent='You marked all '+total+' cards as "Got it." Come back tomorrow to keep it fresh.';
+      fire({particleCount:150, spread:80, origin:{y:.6}});
+    } else {
+      $('doneTitle').textContent='Nice work!';
+      $('doneMsg').textContent='You mastered '+got+' of '+total+' cards. Shuffle and run the ones you missed again.';
+    }
+  }
+  function resetDeck(){
+    setStatus(curDeck.id,{}); buildOrder(false);
+    $('deckDone').style.display='none'; $('studyBody').style.display='block';
+    showCard();
+  }
+  $('backDecks').addEventListener('click', backToDecks);
+  $('fcard').addEventListener('click', flip);
+  $('nextBtn').addEventListener('click', advance);
+  $('prevBtn').addEventListener('click', function(){ if(pos>0){ pos--; showCard(); } });
+  $('gotBtn').addEventListener('click', markGot);
+  $('againBtn').addEventListener('click', markAgain);
+  $('shuffleBtn').addEventListener('click', function(){ buildOrder(true); $('deckDone').style.display='none'; $('studyBody').style.display='block'; showCard(); });
+  $('resetBtn').addEventListener('click', resetDeck);
+  $('doneAgain').addEventListener('click', function(){ buildOrder(true); $('deckDone').style.display='none'; $('studyBody').style.display='block'; showCard(); });
+  $('doneBack').addEventListener('click', backToDecks);
+  document.addEventListener('keydown', function(e){
+    if(!$('study').classList.contains('on') || $('studyBody').style.display==='none') return;
+    if(e.code==='Space'){ e.preventDefault(); flip(); }
+    else if(e.key==='ArrowRight'){ advance(); }
+    else if(e.key==='ArrowLeft'){ if(pos>0){pos--;showCard();} }
+    else if(e.key==='1'){ markAgain(); }
+    else if(e.key==='2'){ markGot(); }
+  });
+
+  renderDecks();
+
+  /* ======================= DAILY CHALLENGE ======================= */
+  function mulberry32(seed){ return function(){ seed|=0; seed=(seed+0x6D2B79F5)|0; var t=Math.imul(seed^(seed>>>15),1|seed); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+  function sShuffle(arr,rng){ var a=arr.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(rng()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
+  function todayKey(){ var d=new Date(); var m=String(d.getMonth()+1).padStart(2,'0'); var day=String(d.getDate()).padStart(2,'0'); return ''+d.getFullYear()+m+day; }
+  function prettyDate(){ return new Date().toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'}); }
+
+  // Build a pool of short-answer cards eligible to become MCQs.
+  var POOL=[];
+  DECKS.forEach(function(d){ d.cards.forEach(function(c){ if(dec(c.a).length<=52){ POOL.push({q:c.q,a:c.a,exp:c.exp,deck:d.id}); } }); });
+
+  var ST_KEY='daily';
+  function getState(){ return LS.get(ST_KEY,{best:null,streak:0,lastDay:null,lastScore:null,doneDay:null,doneScore:null}); }
+  function isYesterday(prev,cur){ if(!prev) return false; var p=new Date(+prev.slice(0,4),+prev.slice(4,6)-1,+prev.slice(6,8)); var c=new Date(+cur.slice(0,4),+cur.slice(4,6)-1,+cur.slice(6,8)); return Math.round((c-p)/86400000)===1; }
+  function renderDailyStats(){ var s=getState(); $('daBest').textContent=(s.best==null)?'—':s.best+'/20'; $('daStreak').textContent=s.streak||0; $('daLast').textContent=(s.lastScore==null)?'—':s.lastScore+'/20'; }
+
+  var dailyQs=[];
+  function buildDaily(){
+    var rng=mulberry32(parseInt(todayKey(),10)>>>0);
+    var picked=sShuffle(POOL,rng).slice(0,20);
+    dailyQs=picked.map(function(item){
+      // distractors: prefer same deck, then any; dedupe by answer text
+      var used={}; used[dec(item.a).toLowerCase()]=1;
+      var same=POOL.filter(function(p){ return p.deck===item.deck && !used[dec(p.a).toLowerCase()]; });
+      var other=POOL.filter(function(p){ return p.deck!==item.deck && !used[dec(p.a).toLowerCase()]; });
+      var distract=[];
+      sShuffle(same,rng).forEach(function(p){ var k=dec(p.a).toLowerCase(); if(distract.length<3 && !used[k]){ used[k]=1; distract.push(p.a); } });
+      sShuffle(other,rng).forEach(function(p){ var k=dec(p.a).toLowerCase(); if(distract.length<3 && !used[k]){ used[k]=1; distract.push(p.a); } });
+      var opts=sShuffle([item.a].concat(distract),rng);
+      return {q:item.q, opts:opts, c:opts.indexOf(item.a), tip:item.exp};
+    });
+  }
+  var dqi=0,dscore=0,danswered=false;
+  function startDaily(){ buildDaily(); dqi=0; dscore=0; $('daIntro').style.display='none'; $('daDone').style.display='none'; $('daQuiz').style.display='block'; showDailyQ(); }
+  function showDailyQ(){
+    danswered=false; var item=dailyQs[dqi];
+    $('daQNum').textContent='Question '+(dqi+1)+' of 20';
+    $('daRunning').textContent=dscore;
+    $('daBar').style.width=(dqi/20*100)+'%';
+    $('daQ').innerHTML=esc(item.q);
+    $('daRat').classList.remove('show'); $('daNext').style.display='none';
+    var wrap=$('daOpts'); wrap.innerHTML=''; var keys=['A','B','C','D'];
+    item.opts.forEach(function(opt,i){
+      var b=document.createElement('button'); b.className='opt';
+      b.innerHTML='<span class="key">'+keys[i]+'</span><span>'+esc(opt)+'</span>';
+      b.addEventListener('click', function(){ answerDaily(i,b); });
+      wrap.appendChild(b);
+    });
+  }
+  function answerDaily(choice){
+    if(danswered) return; danswered=true;
+    var item=dailyQs[dqi]; var opts=document.querySelectorAll('#daOpts .opt');
+    opts.forEach(function(b,i){ b.disabled=true; if(i===item.c) b.classList.add('correct'); if(i===choice && choice!==item.c) b.classList.add('wrong'); });
+    if(choice===item.c){ dscore++; }
+    $('daRunning').textContent=dscore;
+    var rat=$('daRat');
+    var head=(choice===item.c)?'<b style="color:var(--green)">Correct.</b> ':'<b style="color:var(--red)">Not quite.</b> ';
+    rat.innerHTML=head+esc(item.tip); rat.classList.add('show');
+    var nb=$('daNext'); nb.textContent=(dqi===19)?'See results ›':'Next question ›'; nb.style.display='block';
+  }
+  $('daNext').addEventListener('click', function(){ if(dqi<19){ dqi++; showDailyQ(); } else { finishDaily(); } });
+  function finishDaily(){
+    $('daQuiz').style.display='none'; $('daDone').style.display='block';
+    var day=todayKey(), s=getState();
+    if(s.doneDay!==day){ if(isYesterday(s.lastDay,day)) s.streak=(s.streak||0)+1; else s.streak=1; s.lastDay=day; }
+    s.lastScore=dscore; s.doneDay=day; s.doneScore=dscore;
+    if(s.best==null||dscore>s.best) s.best=dscore;
+    LS.set(ST_KEY,s);
+    var pct=Math.round(dscore/20*100);
+    $('daScore').textContent=dscore; $('daPct').textContent=pct+'%';
+    $('daBest2').textContent=s.best+'/20'; $('daStreak2').textContent=s.streak;
+    var lbl,col,note;
+    if(pct>=90){ lbl='Exam-ready 🏆'; col='var(--green)'; note='Outstanding - that is a strong, passing performance.'; fire({particleCount:160,spread:85,origin:{y:.6}}); }
+    else if(pct>=75){ lbl='Strong work 💪'; col='var(--teal)'; note='Solid command of the material. Review the misses and you are set.'; fire({particleCount:90,spread:70,origin:{y:.6}}); }
+    else if(pct>=60){ lbl='Getting there 📈'; col='var(--gold)'; note='A decent base - drill the flashcard decks on your weak units.'; }
+    else { lbl='Keep grinding 📚'; col='var(--amber)'; note='Plenty of room to grow. Hit the flashcards and come back tomorrow.'; }
+    var gl=$('daGradeLbl'); gl.textContent=lbl; gl.style.color=col; $('daNote').textContent=note;
+    renderDailyStats();
+  }
+  $('daDate').textContent=prettyDate();
+  $('startDaily').addEventListener('click', startDaily);
+  $('daReview').addEventListener('click', function(){ switchTab('cards'); });
+  renderDailyStats();
+  (function(){ var s=getState(); if(s.doneDay===todayKey()){ $('startDaily').textContent='↻ Replay today (scored '+s.doneScore+'/20)'; } })();
+
+})();
+</script>
+</body>
+</html>
