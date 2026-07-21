@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>/*__GAME_MUTE__*/
+(function(){
+  if(window.__gameMuteInstalled) return; window.__gameMuteInstalled=true;
+  var KEY="game_sound_muted"; var muted=false; try{muted=localStorage.getItem(KEY)==="1";}catch(e){}
+  var ctxs=[];
+  ["AudioContext","webkitAudioContext"].forEach(function(n){var O=window[n]; if(!O||O.__wrapped) return;
+    function W(){ var c=Reflect.construct(O, arguments, W); ctxs.push(c);
+      var r=c.resume.bind(c); c.resume=function(){return muted?Promise.resolve():r();};
+      if(muted){try{c.suspend();}catch(e){}} return c; }
+    W.prototype=O.prototype; W.__wrapped=true; try{window[n]=W;}catch(e){}});
+  try{ var ss=window.speechSynthesis; if(ss&&ss.speak&&!ss.__wrapped){
+    var os=ss.speak.bind(ss); ss.speak=function(u){ if(muted) return; return os(u); }; ss.__wrapped=true; } }catch(e){}
+  function apply(){ ctxs.forEach(function(c){ try{ muted?c.suspend():c.resume(); }catch(e){} });
+    if(muted){ try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
+    var b=document.getElementById("__sndbtn");
+    if(b){ b.innerHTML = muted ? "&#128263;&nbsp;Sound off" : "&#128266;&nbsp;Sound on";
+           b.style.background = muted ? "rgba(150,30,30,.88)" : "rgba(17,17,17,.82)"; } }
+  window.__toggleGameSound=function(){ muted=!muted; try{localStorage.setItem(KEY,muted?"1":"0");}catch(e){} apply(); };
+  function add(){ if(document.getElementById("__sndbtn")) return;
+    var b=document.createElement("button"); b.id="__sndbtn"; b.type="button";
+    b.setAttribute("aria-label","Toggle all game sound on or off"); b.onclick=window.__toggleGameSound;
+    b.style.cssText="position:fixed;top:8px;left:8px;z-index:2147483647;font:700 12px system-ui,-apple-system,sans-serif;padding:6px 11px;border-radius:8px;border:1px solid rgba(255,255,255,.4);background:rgba(17,17,17,.82);color:#fff;cursor:pointer;box-shadow:0 2px 7px rgba(0,0,0,.4);opacity:.9;";
+    (document.body||document.documentElement).appendChild(b); apply(); }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",add); else add();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Patho Ward — DKA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#f0c840; --gold-bright:#ffd700;
+  --rare:#5ec8ff; --leg:#ffcd44; --com:#7ed85a; --myth:#ff6cb6;
+  --font-pixel:'Press Start 2P',monospace;
+  --font-read:'VT323',monospace;
+  --font-disp:'Cinzel Decorative',serif;
+  --bg:#070b12; --panel:#0e1626; --panel2:#13203a; --line:#243453;
+  --ink:#cfe2ff; --dim:#8aa0c4;
+  --ok:#52e0a0; --warn:#ffcc55; --bad:#ff5b6e; --crit:#ff2d4a;
+  --glu:#ffb347; --k:#b388ff; --hco3:#5ec8ff; --ph:#7ed85a; --vol:#56d0ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font-read);}
+body{min-height:100vh;overflow-x:hidden;-webkit-text-size-adjust:100%;}
+/* CRT phosphor */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9000;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0,rgba(0,0,0,0) 2px,rgba(0,0,0,.22) 3px,rgba(0,0,0,0) 4px);
+  mix-blend-mode:multiply;opacity:.55;}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9001;
+  background:radial-gradient(120% 120% at 50% 40%,transparent 55%,rgba(0,0,0,.55) 100%);}
+h1,h2,h3,.pixel{font-family:var(--font-pixel);}
+.wrap{max-width:1180px;margin:0 auto;padding:14px 14px 80px;}
+
+/* permanent teaching banner */
+.banner{position:sticky;top:0;z-index:50;font-family:var(--font-pixel);font-size:8px;
+  letter-spacing:.5px;text-align:center;padding:7px 8px;line-height:1.5;
+  background:linear-gradient(180deg,#1a1206,#120c04);color:#ffe39a;
+  border-bottom:1px solid #5a430f;text-shadow:0 1px 0 #000;}
+
+/* ===== Title screen ===== */
+#title{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:24px;background:
+  radial-gradient(80% 60% at 20% 18%,rgba(95,200,255,.10),transparent 60%),
+  radial-gradient(70% 60% at 82% 26%,rgba(179,136,255,.12),transparent 60%),
+  radial-gradient(90% 70% at 50% 100%,rgba(240,200,64,.08),transparent 60%),
+  var(--bg);}
+#title h1{font-family:var(--font-disp);font-size:clamp(34px,8vw,72px);margin:0;
+  background:linear-gradient(180deg,#ffffff,#ffe79a 45%,#f0a000);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 0 rgba(0,0,0,.5));letter-spacing:2px;}
+#title .sub{font-family:var(--font-pixel);font-size:11px;color:var(--rare);margin-top:14px;letter-spacing:3px;}
+#title .heart{font-size:40px;margin:18px 0 6px;animation:beat 1.1s ease-in-out infinite;}
+@keyframes beat{0%,100%{transform:scale(1)}14%{transform:scale(1.18)}28%{transform:scale(1)}42%{transform:scale(1.12)}}
+.startbtn{margin-top:26px;font-family:var(--font-pixel);font-size:13px;padding:16px 26px;cursor:pointer;
+  color:#0a0a0a;background:linear-gradient(180deg,#ffe79a,#f0c000);border:none;border-radius:8px;
+  box-shadow:0 5px 0 #8a6a00,0 8px 18px rgba(0,0,0,.5);letter-spacing:1px;}
+.startbtn:active{transform:translateY(3px);box-shadow:0 2px 0 #8a6a00;}
+#title .teach{margin-top:22px;max-width:560px;font-size:18px;color:var(--dim);line-height:1.35;}
+#title .creds{margin-top:18px;font-family:var(--font-pixel);font-size:8px;color:#5d7398;}
+
+/* ===== layout ===== */
+.casehead{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 18px;margin:6px 0 12px;border-bottom:1px solid var(--line);padding-bottom:10px;}
+.casehead h2{font-size:14px;margin:0;color:var(--gold);}
+.casehead .meta{font-size:18px;color:var(--dim);}
+.clk{margin-left:auto;font-family:var(--font-pixel);font-size:12px;color:var(--ink);}
+.clk b{color:var(--gold-bright);}
+
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;}
+@media(max-width:880px){.grid{grid-template-columns:1fr;}}
+.panel{background:linear-gradient(180deg,var(--panel),#0a1120);border:1px solid var(--line);border-radius:10px;padding:12px;}
+.panel h3{font-size:10px;margin:0 0 10px;color:var(--gold);letter-spacing:1px;}
+.col{display:flex;flex-direction:column;gap:14px;}
+
+/* monitor */
+.monitor{background:#05080f;border:1px solid #173050;border-radius:8px;padding:10px;}
+.vitrow{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.vit{background:#070d18;border:1px solid #142a44;border-radius:6px;padding:8px 10px;position:relative;overflow:hidden;}
+.vit .lab{font-family:var(--font-pixel);font-size:7px;color:var(--dim);letter-spacing:.5px;line-height:1.35;min-height:18px;}
+.vit .val{font-family:var(--font-read);font-size:30px;line-height:1;margin-top:3px;}
+.vit .u{font-size:14px;color:var(--dim);}
+.vit.ok .val{color:var(--ok);} .vit.warn .val{color:var(--warn);} .vit.bad .val{color:var(--bad);text-shadow:0 0 10px rgba(255,91,110,.5);}
+.vit.flash{animation:vflash .6s ease;}
+@keyframes vflash{0%{background:#3a0c14}100%{background:#070d18}}
+.ecgwrap{margin-top:8px;background:#03060c;border:1px solid #102844;border-radius:6px;padding:6px 4px 2px;}
+.ecglabel{font-family:var(--font-pixel);font-size:7px;color:var(--dim);padding:0 6px;display:flex;justify-content:space-between;}
+.ecglabel .rname{color:var(--ok);}
+.ecglabel .rname.warn{color:var(--warn);} .ecglabel .rname.bad{color:var(--bad);}
+canvas#ecg{display:block;width:100%;height:74px;}
+.loc{margin-top:8px;font-size:18px;color:var(--ink);}
+.loc b{color:var(--gold);}
+
+/* labs */
+.labgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.labcell{background:#0a1322;border:1px solid #1d3354;border-radius:6px;padding:8px 10px;}
+.labcell .lab{font-family:var(--font-pixel);font-size:7px;color:var(--dim);}
+.labcell .val{font-size:28px;line-height:1;margin-top:2px;color:var(--ink);}
+.labcell .val.stale{color:#6c84ad;}
+.labcell .val.pending{color:#46618c;font-size:18px;font-style:italic;}
+.labcell .u{font-size:13px;color:var(--dim);}
+.labcell.glu .val{color:var(--glu);} .labcell.k .val{color:var(--k);}
+.labcell.hco3 .val{color:var(--hco3);} .labcell.ph .val{color:var(--ph);} .labcell.gap .val{color:#ff9}
+.drawbar{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.drawbtn{font-family:var(--font-pixel);font-size:9px;padding:10px 14px;border:none;border-radius:6px;cursor:pointer;
+  color:#06121f;background:linear-gradient(180deg,#7fd4ff,#34a7e6);box-shadow:0 3px 0 #1c5d86;}
+.drawbtn:active{transform:translateY(2px);box-shadow:0 1px 0 #1c5d86;}
+.drawbtn:disabled{filter:grayscale(.7) brightness(.7);cursor:default;}
+.drawmeta{font-size:16px;color:var(--dim);}
+.drawmeta b{color:var(--warn);}
+.adv-toggle{font-size:15px;color:var(--rare);cursor:pointer;user-select:none;margin-top:6px;display:inline-block;}
+.adv-toggle:hover{text-decoration:underline;}
+#gapcell{display:none;}
+
+/* dials */
+.dial{margin-bottom:14px;}
+.dial .top{display:flex;justify-content:space-between;align-items:baseline;}
+.dial .nm{font-family:var(--font-pixel);font-size:9px;color:var(--ink);}
+.dial .rd{font-size:18px;color:var(--gold-bright);}
+.dial input[type=range]{width:100%;margin:6px 0 2px;accent-color:var(--gold);}
+.dial .hint{font-size:14px;color:var(--dim);line-height:1.25;}
+.dial.dx{display:flex;align-items:center;gap:12px;justify-content:space-between;}
+.tgl{font-family:var(--font-pixel);font-size:9px;padding:9px 14px;border-radius:6px;cursor:pointer;border:1px solid var(--line);
+  background:#0c1626;color:var(--dim);}
+.tgl.on{background:linear-gradient(180deg,#ffe79a,#f0c000);color:#0a0a0a;border-color:#f0c000;}
+
+/* alerts log */
+.alerts{max-height:150px;overflow-y:auto;font-size:16px;line-height:1.4;}
+.alert{padding:4px 8px;border-left:3px solid var(--line);margin-bottom:4px;background:#0a1322;border-radius:0 4px 4px 0;}
+.alert.warn{border-color:var(--warn);} .alert.bad{border-color:var(--bad);} .alert.good{border-color:var(--ok);} .alert.info{border-color:var(--rare);}
+.alert .tm{color:var(--dim);font-size:13px;}
+
+/* mentor */
+.mentor{display:flex;gap:10px;align-items:flex-start;background:linear-gradient(180deg,#10204a,#0a1530);
+  border:1px solid #2a4f8a;border-radius:8px;padding:10px;margin-bottom:14px;}
+.mentor .face{font-size:26px;}
+.mentor .txt{font-size:17px;line-height:1.3;color:#dce9ff;}
+.mentor .who{font-family:var(--font-pixel);font-size:7px;color:var(--rare);display:block;margin-bottom:3px;}
+
+/* run controls */
+.runbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.ctlbtn{font-family:var(--font-pixel);font-size:9px;padding:9px 13px;border-radius:6px;cursor:pointer;border:1px solid var(--line);
+  background:#0c1626;color:var(--ink);}
+.ctlbtn.primary{background:linear-gradient(180deg,#7ed85a,#3aa54a);color:#06210d;border-color:#3aa54a;}
+.ctlbtn:active{transform:translateY(1px);}
+.spd{font-size:15px;color:var(--dim);}
+
+/* critical moment */
+#crit{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(90% 90% at 50% 50%,rgba(60,0,8,.78),rgba(5,0,2,.95));}
+#crit.show{display:flex;animation:critin .4s ease;}
+@keyframes critin{from{opacity:0}to{opacity:1}}
+.critcard{max-width:560px;width:100%;background:linear-gradient(180deg,#1a0610,#0c0308);border:2px solid var(--crit);
+  border-radius:12px;padding:20px;box-shadow:0 0 50px rgba(255,45,74,.4);}
+.critcard h2{font-family:var(--font-disp);font-size:26px;color:#ff6377;margin:0 0 6px;text-align:center;letter-spacing:2px;
+  animation:critpulse 1s ease-in-out infinite;}
+@keyframes critpulse{0%,100%{filter:drop-shadow(0 0 6px rgba(255,45,74,.6))}50%{filter:drop-shadow(0 0 18px rgba(255,45,74,1))}}
+.critcard .read{font-size:19px;line-height:1.4;color:#ffd9de;margin:12px 0;}
+.critcard .read b{color:var(--gold-bright);}
+.critcard .acts{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.critbtn{font-family:var(--font-pixel);font-size:10px;padding:13px;border-radius:7px;cursor:pointer;border:1px solid #5a2230;
+  background:#1d0a12;color:#ffd9de;text-align:left;line-height:1.4;}
+.critbtn:hover{background:#2a0e18;border-color:var(--crit);}
+.crittimer{height:8px;background:#2a0a12;border-radius:5px;overflow:hidden;margin-top:14px;}
+.crittimer i{display:block;height:100%;background:linear-gradient(90deg,var(--crit),#ff7a8c);width:100%;transition:width .1s linear;}
+
+/* debrief */
+#debrief{position:fixed;inset:0;z-index:500;display:none;overflow-y:auto;background:var(--bg);}
+#debrief.show{display:block;}
+.dbwrap{max-width:1000px;margin:0 auto;padding:20px 16px 80px;}
+.dbwrap h2{font-family:var(--font-disp);font-size:30px;color:var(--gold);text-align:center;margin:6px 0 2px;}
+.dbwrap .verdict{text-align:center;font-family:var(--font-pixel);font-size:12px;margin-bottom:14px;}
+.dbwrap .verdict.win{color:var(--ok);} .dbwrap .verdict.loss{color:var(--bad);}
+.chartbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:14px;}
+.chartbox h3{font-size:10px;color:var(--gold);margin:0 0 4px;}
+.chartbox .cap{font-size:15px;color:var(--dim);margin:0 0 8px;line-height:1.3;}
+canvas.dbchart{display:block;width:100%;height:170px;background:#05080f;border:1px solid #122844;border-radius:6px;}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:15px;margin-top:8px;}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.legend i{width:14px;height:3px;display:inline-block;border-radius:2px;}
+.scrub{width:100%;margin:10px 0;accent-color:var(--gold);}
+.beats{font-size:17px;line-height:1.5;}
+.beat{padding:8px 10px;border-left:3px solid var(--gold);background:#0a1322;border-radius:0 5px 5px 0;margin-bottom:6px;}
+.beat.bad{border-color:var(--bad);} .beat.good{border-color:var(--ok);}
+.beat .t{color:var(--gold-bright);font-family:var(--font-pixel);font-size:8px;}
+.quiz{background:linear-gradient(180deg,#10204a,#0a1530);border:1px solid #2a4f8a;border-radius:10px;padding:14px;margin-top:14px;}
+.quiz h3{font-size:11px;color:var(--rare);margin:0 0 8px;}
+.quiz p{font-size:18px;margin:0 0 10px;}
+.quiz .opt{display:block;width:100%;text-align:left;font-size:16px;padding:10px 12px;margin-bottom:6px;border-radius:6px;
+  border:1px solid var(--line);background:#0c1626;color:var(--ink);cursor:pointer;}
+.quiz .opt:hover{border-color:var(--rare);}
+.quiz .opt.right{background:#103a22;border-color:var(--ok);color:#bfffd9;}
+.quiz .opt.wrong{background:#3a1018;border-color:var(--bad);color:#ffc9d1;}
+.quiz .ex{font-size:16px;color:var(--dim);margin-top:8px;display:none;line-height:1.4;}
+.dbactions{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+
+.hidden{display:none!important;}
+.flashwin{position:fixed;inset:0;z-index:480;pointer-events:none;background:#fff;opacity:0;}
+.flashwin.go{animation:fwin .5s ease;}
+@keyframes fwin{0%{opacity:.85}100%{opacity:0}}
+</style>
+</head>
+<body>
+
+<div class="banner">TEACHING SIMULATION &nbsp;•&nbsp; NUMBERS ARE SIMPLIFIED AND ARE NOT CLINICAL DOSING GUIDANCE</div>
+
+<!-- ===================== TITLE ===================== -->
+<div id="title">
+  <div class="heart">🫀</div>
+  <h1>PATHO&nbsp;WARD</h1>
+  <div class="sub">CASE 01 — DIABETIC KETOACIDOSIS</div>
+  <p class="teach">One patient. A clock that does not stop. You turn the dials and the body answers back. Read which variable is closest to the cliff before it falls.</p>
+  <button class="startbtn" onclick="startCase()">BEGIN CASE</button>
+  <div class="creds">A PATHO WARD PHYSIOLOGY ENGINE &nbsp;·&nbsp; DR. AKASH GARG</div>
+</div>
+
+<!-- ===================== GAME ===================== -->
+<div class="wrap hidden" id="game">
+  <div class="casehead">
+    <h2 id="ptName">BED 1 — DKA</h2>
+    <span class="meta" id="ptMeta"></span>
+    <span class="clk">SIM TIME <b id="simClock">00:00</b></span>
+  </div>
+
+  <div class="runbar">
+    <button class="ctlbtn primary" id="playBtn" onclick="togglePlay()">⏸ PAUSE</button>
+    <button class="ctlbtn" onclick="setSpeed(1)">1×</button>
+    <button class="ctlbtn" onclick="setSpeed(2)">2×</button>
+    <button class="ctlbtn" onclick="setSpeed(4)">4×</button>
+    <span class="spd" id="spdLabel">running · 1×</span>
+    <button class="ctlbtn" style="margin-left:auto" onclick="endCaseManual()">END &amp; DEBRIEF</button>
+  </div>
+
+  <div class="mentor" id="mentor">
+    <div class="face">🩺</div>
+    <div class="txt"><span class="who">MENTOR</span><span id="mentorTxt">Stabilize this patient. Vitals stream live. Labs you must draw — they come back after a short delay, and they are already a little stale when they do.</span></div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT: monitor + labs -->
+    <div class="col">
+      <div class="panel">
+        <h3>MONITOR · LIVE</h3>
+        <div class="monitor">
+          <div class="vitrow">
+            <div class="vit" id="vHR"><div class="lab">HEART RATE</div><div class="val">—<span class="u"> bpm</span></div></div>
+            <div class="vit" id="vBP"><div class="lab">BLOOD PRESSURE</div><div class="val">—<span class="u"> mmHg</span></div></div>
+            <div class="vit" id="vRR"><div class="lab">RESP / DEPTH</div><div class="val">—<span class="u"> /min</span></div></div>
+            <div class="vit" id="vSpO2"><div class="lab">SpO₂</div><div class="val">—<span class="u"> %</span></div></div>
+          </div>
+          <div class="ecgwrap">
+            <div class="ecglabel"><span>RHYTHM</span><span class="rname" id="ecgName">—</span></div>
+            <canvas id="ecg" width="520" height="74"></canvas>
+          </div>
+          <div class="loc">CONSCIOUSNESS: <b id="locTxt">—</b></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>LABS · DRAWN</h3>
+        <div class="labgrid">
+          <div class="labcell glu"><div class="lab">GLUCOSE</div><div class="val" id="lGlu">—<span class="u"> mg/dL</span></div></div>
+          <div class="labcell k"><div class="lab">POTASSIUM</div><div class="val" id="lK">—<span class="u"> mEq/L</span></div></div>
+          <div class="labcell hco3"><div class="lab">BICARBONATE</div><div class="val" id="lHco3">—<span class="u"> mEq/L</span></div></div>
+          <div class="labcell ph"><div class="lab">pH</div><div class="val" id="lPh">—</div></div>
+          <div class="labcell gap" id="gapcell"><div class="lab">ANION GAP</div><div class="val" id="lGap">—</div></div>
+        </div>
+        <div class="drawbar">
+          <button class="drawbtn" id="drawBtn" onclick="drawLabs()">⎙ DRAW LABS</button>
+          <span class="drawmeta" id="drawMeta">No labs drawn yet.</span>
+        </div>
+        <span class="adv-toggle" id="advToggle" onclick="toggleAdv()">▸ show advanced labs (anion gap)</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: dials + alerts -->
+    <div class="col">
+      <div class="panel">
+        <h3>INTERVENTIONS · DIALS</h3>
+        <div class="dial">
+          <div class="top"><span class="nm">IV FLUIDS</span><span class="rd" id="rdFluid">OFF</span></div>
+          <input type="range" id="dFluid" min="0" max="100" value="0" oninput="onDial()">
+          <div class="hint">Restores volume, improves perfusion, starts shutting off the osmotic loss. First move.</div>
+        </div>
+        <div class="dial">
+          <div class="top"><span class="nm">INSULIN</span><span class="rd" id="rdIns">OFF</span></div>
+          <input type="range" id="dIns" min="0" max="100" value="0" oninput="onDial()">
+          <div class="hint">Clears glucose and ketones — the engine of recovery. Also drives potassium into cells.</div>
+        </div>
+        <div class="dial">
+          <div class="top"><span class="nm">POTASSIUM REPLACEMENT</span><span class="rd" id="rdK">OFF</span></div>
+          <input type="range" id="dK" min="0" max="100" value="0" oninput="onDial()">
+          <div class="hint">Raises serum K and slowly refills the real, hidden total-body deficit.</div>
+        </div>
+        <div class="dial dx">
+          <span class="nm">DEXTROSE</span>
+          <span class="tgl" id="dDex" onclick="toggleDex()">OFF</span>
+        </div>
+        <div class="hint" style="margin-top:-6px">Add when glucose nears 250 so insulin can keep clearing acid without bottoming out sugar.</div>
+      </div>
+
+      <div class="panel">
+        <h3>ALERTS</h3>
+        <div class="alerts" id="alerts"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CRITICAL MOMENT ===================== -->
+<div id="crit">
+  <div class="critcard">
+    <h2 id="critTitle">CRITICAL</h2>
+    <div class="read" id="critRead"></div>
+    <div class="acts" id="critActs"></div>
+    <div class="crittimer"><i id="critBar"></i></div>
+  </div>
+</div>
+<div class="flashwin" id="flashWin"></div>
+
+<!-- ===================== DEBRIEF ===================== -->
+<div id="debrief">
+  <div class="dbwrap">
+    <h2>CASE DEBRIEF</h2>
+    <div class="verdict" id="dbVerdict"></div>
+
+    <div class="chartbox">
+      <h3>POTASSIUM — WHAT YOU SAW vs WHAT WAS TRUE</h3>
+      <p class="cap">The line is the true serum potassium, ticking continuously. The dots are the only readings you actually drew. The faint band below is total-body potassium — hidden the whole case, and depleted from the very first second.</p>
+      <canvas class="dbchart" id="cK" width="940" height="170"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--k)"></i>serum K (true)</span>
+        <span><i style="background:#fff"></i>your draws</span>
+        <span><i style="background:#5a4a8a"></i>total-body K (hidden)</span>
+        <span><i style="background:var(--bad)"></i>danger band</span>
+      </div>
+    </div>
+
+    <div class="chartbox">
+      <h3>COMPENSATION — THE STABLE-LOOKING TRAP</h3>
+      <p class="cap">pH stayed survivable because the lungs were blowing off acid (Kussmaul breathing). That reserve drains. When it ran low, pH fell faster than bicarbonate alone explains.</p>
+      <canvas class="dbchart" id="cComp" width="940" height="170"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--ph)"></i>pH</span>
+        <span><i style="background:var(--gold)"></i>compensation reserve (hidden)</span>
+        <span><i style="background:var(--hco3)"></i>bicarbonate</span>
+      </div>
+    </div>
+
+    <div class="chartbox">
+      <h3>GLUCOSE &amp; VOLUME</h3>
+      <canvas class="dbchart" id="cGlu" width="940" height="170"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--glu)"></i>glucose</span>
+        <span><i style="background:var(--vol)"></i>ECF volume</span>
+        <span><i style="background:#888"></i>dextrose on</span>
+      </div>
+    </div>
+
+    <div class="chartbox">
+      <h3>TIMELINE — SCRUB THE WHOLE CASE</h3>
+      <input type="range" class="scrub" id="dbScrub" min="0" max="100" value="100" oninput="scrubTo(this.value)">
+      <div id="scrubState" style="font-size:16px;color:var(--dim);line-height:1.5"></div>
+    </div>
+
+    <div class="chartbox">
+      <h3>KEY BEATS</h3>
+      <div class="beats" id="dbBeats"></div>
+    </div>
+
+    <div class="quiz" id="dbQuiz"></div>
+
+    <div class="dbactions">
+      <button class="ctlbtn primary" onclick="location.reload()">RUN THE CASE AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================================
+   PATHO WARD — physiology engine (generic) + DKA case (data)
+   Milestone 1: one patient, fully alive.
+   ALL clinical numbers are DRAFT pedagogical tunables — calibrate for feel.
+   ========================================================================= */
+
+/* ----------------------------------------------------------------------
+   ENGINE CONFIG — every tick constant is a named tunable in ONE block.
+   Calibration is a data edit, not a code edit. (spec §14)
+   ---------------------------------------------------------------------- */
+const CFG = {
+  TICK_MS: 2600,            // real ms per engine tick at 1x (wall-clock pace)
+  SIM_MIN_PER_TICK: 5,      // each tick = 5 sim minutes
+  RATE_SCALE: 0.62,         // stretches the physiology over MORE ticks (more decision
+                            // points, same endpoints — equilibria are preserved). Lower = slower.
+  LAB_DELAY_TICKS: 2,       // ticks until a drawn lab returns
+  CASE_MAX_TICKS: 320,      // safety cap
+  CRIT_WINDOW_MS: 26000,    // dilated-time window to read and act in a critical moment
+
+  // --- glucose ---
+  DISEASE_GLU_RISE: 5.5,        // while insulin inactive
+  INSULIN_GLU_CLEAR: 58,        // per unit insulin_rate
+  RENAL_GLU_LOSS: 14,           // scales with urine flow
+  GLU_DIURESIS_THRESHOLD: 180,
+  DEXTROSE_FLOOR: 250,          // dextrose starts propping glucose below this
+  DEXTROSE_BASE: 30,            // baseline dextrose push; with insulin offset, floors glucose ~130
+
+  // --- ketoacids / bicarbonate ---
+  DISEASE_KET_RISE: 2.4,        // while insulin inactive
+  INSULIN_KET_CLEAR: 8.5,
+  // bicarbonate relaxes toward a target set by the ketoacid load (acids consume buffer;
+  // as ketones clear, bicarb regenerates). Gentle so pH moves over ticks, not instantly.
+  HCO3_FROM_KET: 0.26,          // each unit of ket lowers the bicarb target
+  HCO3_RELAX: 0.17,             // how fast bicarb tracks its target
+
+  // --- ECF volume ---
+  OSMOTIC_DIURESIS: 0.0042,     // per (glu - threshold)
+  FLUID_RESTORE: 6.5,           // per unit fluid_rate
+
+  // --- potassium five-force model (spec §4d) ---
+  K_FLOOR_BASE: 2.2,            // serum floor when stores empty
+  K_FLOOR_RANGE: 1.85,          // + (k_total%/100)*range  → floor when full ~4.05
+  K_TOTAL_START: 46,            // % of normal stores at presentation (DEPLETED)
+  ACID_K_GAIN: 7.4,             // serum K held OUT of cells per (7.40 - pH)
+  K_RELAX: 0.16,               // how fast serum relaxes toward (floor + acid offset)
+  INSULIN_K_SHIFT: 0.55,        // insulin drives K into cells (fast, hard)
+  K_REPLACE: 0.85,              // replacement raises serum
+  RENAL_K_LOSS: 0.05,           // restored perfusion excretes some K (mild)
+  K_REPLACE_TO_TOTAL: 0.55,     // replacement slowly refills real deficit
+  DIURESIS_K_WASTE: 0.05,       // ongoing K loss until glucose controlled
+
+  // --- pH & respiratory compensation (spec §4e) ---
+  PH_NORMAL: 7.40,
+  PH_PER_HCO3: 0.031,           // pH drop per mEq below 24 bicarb
+  HCO3_NORMAL: 24,
+  RESP_GAIN: 0.18,              // max pH rescue from full Kussmaul
+  COMP_START: 100,              // reserve at presentation
+  COMP_DRAIN_BASE: 0.55,        // baseline drain / tick while acidotic
+  COMP_DRAIN_ACID: 2.2,         // extra drain scaled by acidosis severity
+  COMP_RECOVER: 0.9,            // reserve recovers as patient corrects
+
+  // --- thresholds: potassium → rhythm (spec §8) ---
+  K_FLAT: 3.3,                  // T-wave flattening / U waves
+  K_ECTOPY: 3.0,                // PVCs
+  K_UNSTABLE: 2.8,              // unstable arrhythmia → critical moment
+  K_PEAKED: 6.5,               // hyperkalemia branch
+  K_HYPER_CRIT: 7.2,
+
+  // --- other cliffs ---
+  PH_CRIT: 6.92,                // pH cliff (decompensated acidosis)
+  GLU_HYPO_CRIT: 55,            // profound hypoglycemia
+  VOL_SHOCK: 34,               // circulatory collapse
+};
+
+/* ----------------------------------------------------------------------
+   DKA CASE — pure data against the generic engine (spec §14)
+   ---------------------------------------------------------------------- */
+const CASE_DKA = {
+  name: "BED 1 — DKA",
+  meta: "F · 19 · type 1 diabetes · 2 days vomiting, polyuria, can't keep fluids down",
+  init: { glu:520, ket:62, hco3:8, k:5.4, vol:65, k_total:CFG.K_TOTAL_START, comp:CFG.COMP_START },
+  mentorIntro: "Serum potassium reads 5.4 — looks fine, maybe a touch high. But in DKA the body is ALWAYS depleted of potassium. The number you can see is lying about the thing that matters.",
+  mentorShown: false
+};
+
+/* ----------------------------------------------------------------------
+   RUNTIME STATE
+   ---------------------------------------------------------------------- */
+let S = null;          // live state
+let LOG = [];          // case log — single source of truth (spec §14)
+let tick = 0;
+let running = false, speedMul = 1, tickTimer = null;
+let pendingLabs = [];  // {readyTick, snap}
+let lastDraw = null;   // {tick, snap}
+let advShown = false;
+let critActive = false, critTimer = null, critResolved = false;
+let caseOver = false;
+let firedAlerts = {};  // de-dup alert keys
+let dials = { fluid:0, ins:0, k:0, dex:false };
+let firstInsulinTick = null, kFellTick = null, kPeakAfterInsulin = null;
+
+function fresh(){
+  S = Object.assign({}, CASE_DKA.init);
+  S.ph = derivePh(S.hco3, S.comp);
+  S.gap = deriveGap(S);
+  computeVitals();
+}
+
+/* ---------- derived helpers ---------- */
+function kFloor(k_total){ return CFG.K_FLOOR_BASE + (clamp(k_total,0,100)/100)*CFG.K_FLOOR_RANGE; }
+function derivePh(hco3, comp){
+  const metabolic = CFG.PH_PER_HCO3*(hco3 - CFG.HCO3_NORMAL);          // <0 when acidotic
+  // respiratory rescue only kicks in when there IS acidosis to compensate (Kussmaul tapers as pH normalizes)
+  const drive = clamp(-metabolic/0.5, 0, 1);
+  const rescue = CFG.RESP_GAIN * (clamp(comp,0,100)/100) * drive;
+  return clamp(CFG.PH_NORMAL + metabolic + rescue, 6.6, 7.50);
+}
+function deriveGap(s){
+  // simplified anion gap proxy: rises with ketoacid load, normal ~12
+  return clamp(12 + s.ket*0.22, 8, 45);
+}
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function r1(v){ return Math.round(v*10)/10; }
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+
+/* ---------- VITALS (downstream readouts) ---------- */
+function computeVitals(){
+  const acid = clamp(CFG.PH_NORMAL - S.ph, 0, 0.6);
+  const rawAcid = clamp(CFG.PH_NORMAL - (CFG.PH_NORMAL + CFG.PH_PER_HCO3*(S.hco3-CFG.HCO3_NORMAL)), 0, 0.7);
+  // heart rate: low volume → tachycardia; acidosis adds
+  S.hr = Math.round(clamp(72 + (100-S.vol)*1.05 + acid*40, 60, 180));
+  // BP holds while compensation reserve remains, then falls late
+  const reserve = clamp(S.comp/100,0,1);
+  S.bp = Math.round(clamp(118 - (100-S.vol)*0.22 - (1-reserve)*48, 58, 130));
+  // resp: Kussmaul driven by acidosis BUT only while reserve exists
+  S.rr = Math.round(clamp(15 + rawAcid*46*(0.35+0.65*reserve), 9, 48));
+  // SpO2 mostly fine; dips with shock
+  S.spo2 = Math.round(clamp(99 - Math.max(0,(40-S.vol))*0.25, 84, 100));
+  // LOC
+  S.locScore = clamp( (S.ph-6.9)*1.3 + (S.vol-30)/70 + (S.glu<70?-0.6:0) + (reserve-0.3), 0, 2);
+  S.loc = S.locScore>1.4?"Alert":(S.locScore>0.95?"Drowsy":(S.locScore>0.5?"Lethargic":"Obtunded"));
+  // rhythm from serum K
+  S.rhythm = rhythmFor(S.k);
+}
+function rhythmFor(k){
+  if(k>=CFG.K_HYPER_CRIT) return {name:"Sine-wave (severe hyperK)",cls:"bad",band:"hyper"};
+  if(k>=CFG.K_PEAKED)     return {name:"Peaked T waves",cls:"warn",band:"peaked"};
+  if(k<CFG.K_UNSTABLE)    return {name:"Unstable arrhythmia",cls:"bad",band:"unstable"};
+  if(k<CFG.K_ECTOPY)      return {name:"Frequent PVCs / ectopy",cls:"bad",band:"ectopy"};
+  if(k<CFG.K_FLAT)        return {name:"Flat T, U waves",cls:"warn",band:"flat"};
+  return {name:"Normal sinus",cls:"ok",band:"normal"};
+}
+
+/* ----------------------------------------------------------------------
+   THE TICK LOOP (spec §5)
+   ---------------------------------------------------------------------- */
+function doTick(){
+  if(caseOver || critActive) return;
+  tick++;
+
+  // 1. read interventions
+  const fluid = dials.fluid/100, ins = dials.ins/100, krep = dials.k/100, dex = dials.dex;
+  const SC = CFG.RATE_SCALE;   // global pace scale: smaller = changes land over more ticks
+
+  // 2. intermediates
+  const urineFlow = clamp((S.vol-40)/60, 0, 1) * clamp((S.glu-CFG.GLU_DIURESIS_THRESHOLD)/300, 0, 1.2) + 0.05;
+  const insulinActive = ins > 0.02;
+
+  // 3. influence terms per driven variable (track dominant force for the log)
+  const terms = {};
+
+  // --- glucose ---
+  let gRise = insulinActive ? 0 : CFG.DISEASE_GLU_RISE;
+  let gIns  = -CFG.INSULIN_GLU_CLEAR*ins;
+  let gRenal= -CFG.RENAL_GLU_LOSS*urineFlow;
+  // dextrose floors glucose by offsetting insulin's glucose clearance as sugar drops toward the floor
+  let gDex  = (dex && S.glu < CFG.DEXTROSE_FLOOR)
+              ? ((CFG.DEXTROSE_FLOOR - S.glu)/CFG.DEXTROSE_FLOOR) * (CFG.INSULIN_GLU_CLEAR*ins + CFG.DEXTROSE_BASE)
+              : 0;
+  terms.glu = { "disease rise":gRise, "insulin clearance":gIns, "renal loss":gRenal, "dextrose":gDex };
+  let glu = S.glu + SC*(gRise + gIns + gRenal + gDex);
+
+  // --- ketoacids ---
+  let kRise = insulinActive ? 0 : CFG.DISEASE_KET_RISE;
+  let kClr  = -CFG.INSULIN_KET_CLEAR*ins;
+  let ket = clamp(S.ket + SC*(kRise + kClr), 0, 120);
+
+  // --- bicarbonate: relax toward a target set by the acid load ---
+  const hco3Target = clamp(CFG.HCO3_NORMAL - ket*CFG.HCO3_FROM_KET, 2, 26);
+  let hDelta = CFG.HCO3_RELAX*(hco3Target - S.hco3);
+  terms.hco3 = { "ketoacid buffering":(hDelta<0?hDelta:0), "regeneration":(hDelta>=0?hDelta:0) };
+  let hco3 = clamp(S.hco3 + SC*hDelta, 2, 28);
+
+  // --- ECF volume ---
+  let vLoss = -CFG.OSMOTIC_DIURESIS*Math.max(0, S.glu-CFG.GLU_DIURESIS_THRESHOLD);
+  let vGain = CFG.FLUID_RESTORE*fluid;
+  terms.vol = { "osmotic diuresis":vLoss, "IV fluids":vGain };
+  let vol = clamp(S.vol + SC*(vLoss + vGain), 20, 100);
+
+  // --- potassium: FIVE FORCES (the trap) ---
+  const acidOffset = CFG.ACID_K_GAIN * Math.max(0, CFG.PH_NORMAL - S.ph); // K held outside cells
+  const floor = kFloor(S.k_total);
+  const target = floor + acidOffset;
+  let kRelax  =  CFG.K_RELAX*(target - S.k);          // toward (depleted floor + acid offset)
+  let kInsulin= -CFG.INSULIN_K_SHIFT*ins;             // insulin drives K into cells
+  let kRepl   =  CFG.K_REPLACE*krep;                  // replacement raises serum
+  let kRenal  = -CFG.RENAL_K_LOSS*urineFlow;          // perfusion excretes some
+  terms.k = { "shift toward depleted floor":kRelax, "insulin (into cells)":kInsulin, "replacement":kRepl, "renal loss":kRenal };
+  let k = clamp(S.k + SC*(kRelax + kInsulin + kRepl + kRenal), 1.4, 7.6);
+
+  // hidden: total-body potassium
+  let kt = clamp(S.k_total + SC*(CFG.K_REPLACE_TO_TOTAL*krep - CFG.DIURESIS_K_WASTE*urineFlow*100*0.06), 5, 100);
+
+  // 4/5. hidden compensation reserve + derived
+  const acidSeverity = clamp((CFG.PH_NORMAL - derivePh(hco3,100))/0.5, 0, 1); // how acidotic before rescue
+  const correcting = hco3 > 14 && vol > 55;
+  let comp = S.comp + SC*( -(CFG.COMP_DRAIN_BASE + CFG.COMP_DRAIN_ACID*acidSeverity)
+                    + (correcting ? CFG.COMP_RECOVER : 0) );
+  comp = clamp(comp, 0, 100);
+
+  // commit
+  S.glu=glu; S.ket=ket; S.hco3=hco3; S.vol=vol; S.k=k; S.k_total=kt; S.comp=comp;
+  S.ph = derivePh(hco3, comp);
+  S.gap = deriveGap(S);
+  S.urineFlow = urineFlow;
+  computeVitals();
+
+  // dominant force bookkeeping
+  S.dominant = {};
+  for(const v in terms){ S.dominant[v] = dominantTerm(terms[v]); }
+
+  // event tracking for debrief annotations
+  if(insulinActive && firstInsulinTick===null){ firstInsulinTick = tick; kPeakAfterInsulin = S.k; }
+  if(firstInsulinTick!==null && S.k < (kPeakAfterInsulin-0.4) && kFellTick===null && dials.k<10){ kFellTick = tick; }
+
+  // 8. snapshot
+  LOG.push(snapshot());
+
+  // 6/7. thresholds + alerts + cliffs
+  evalThresholds();
+
+  renderLive();
+
+  if(tick >= CFG.CASE_MAX_TICKS){ endCase("survived", "The clock ran out. Time to review."); }
+}
+
+function dominantTerm(obj){
+  let best=null, mag=0;
+  for(const k in obj){ if(Math.abs(obj[k])>mag){ mag=Math.abs(obj[k]); best=k; } }
+  return best || "steady";
+}
+
+function snapshot(){
+  return {
+    t:tick, simMin:tick*CFG.SIM_MIN_PER_TICK,
+    glu:r1(S.glu), ket:r1(S.ket), hco3:r1(S.hco3), k:r1(S.k), vol:r1(S.vol),
+    k_total:r1(S.k_total), comp:r1(S.comp), ph:Math.round(S.ph*100)/100, gap:r1(S.gap),
+    hr:S.hr, bp:S.bp, rr:S.rr, spo2:S.spo2, loc:S.loc, rhythm:S.rhythm.name, band:S.rhythm.band,
+    dials:Object.assign({},dials), dominant:Object.assign({},S.dominant)
+  };
+}
+
+/* ----------------------------------------------------------------------
+   THRESHOLDS, ALERTS, CLIFFS (spec §8, §9)
+   ---------------------------------------------------------------------- */
+function alertOnce(key, cls, msg){
+  if(firedAlerts[key]) return;
+  firedAlerts[key]=true;
+  addAlert(cls,msg);
+}
+function evalThresholds(){
+  // potassium degradation
+  if(S.k < CFG.K_FLAT && S.k>=CFG.K_ECTOPY) alertOnce("kflat","warn","Potassium "+r1(S.k)+" — T waves flattening, U waves appearing. Hypokalemia developing.");
+  if(S.k < CFG.K_ECTOPY && S.k>=CFG.K_UNSTABLE) alertOnce("kect","bad","Potassium "+r1(S.k)+" — ventricular ectopy (PVCs). This is escalating.");
+  if(S.k >= CFG.K_PEAKED && S.k<CFG.K_HYPER_CRIT) alertOnce("kpeak","warn","Potassium "+r1(S.k)+" — peaked T waves. Over-replacement / hyperkalemia.");
+  // compensation warning
+  if(S.comp < 35) alertOnce("comp","warn","Respiratory reserve running low. The pH is being held up by breathing — that won't last.");
+  if(S.glu < 90 && !dials.dex) alertOnce("glulow","warn","Glucose "+Math.round(S.glu)+" and falling. Consider dextrose so you can keep clearing acid.");
+
+  // CLIFFS → critical moment (never instant death)
+  if(S.k < CFG.K_UNSTABLE)      return triggerCritical("hypoK");
+  if(S.k >= CFG.K_HYPER_CRIT)   return triggerCritical("hyperK");
+  if(S.ph < CFG.PH_CRIT && S.comp < 18) return triggerCritical("acidosis");
+  if(S.glu < CFG.GLU_HYPO_CRIT) return triggerCritical("hypoglycemia");
+  if(S.vol < CFG.VOL_SHOCK)     return triggerCritical("shock");
+}
+
+/* ----------------------------------------------------------------------
+   RENDER — live
+   ---------------------------------------------------------------------- */
+function vitClass(id, level){ const e=document.getElementById(id); e.className="vit "+level; }
+function renderLive(){
+  // clock
+  const tot=tick*CFG.SIM_MIN_PER_TICK; const hh=String(Math.floor(tot/60)).padStart(2,'0'); const mm=String(tot%60).padStart(2,'0');
+  document.getElementById('simClock').textContent=hh+":"+mm;
+  // vitals
+  setVit('vHR', S.hr, S.hr>120||S.hr<55?"bad":(S.hr>105?"warn":"ok"));
+  setVit('vBP', S.bp, S.bp<80?"bad":(S.bp<95?"warn":"ok"));
+  setVit('vRR', S.rr, S.rr>34?"warn":(S.rr<11?"bad":"ok"));
+  setVit('vSpO2', S.spo2, S.spo2<90?"bad":(S.spo2<94?"warn":"ok"));
+  document.getElementById('locTxt').textContent=S.loc;
+  const en=document.getElementById('ecgName'); en.textContent=S.rhythm.name; en.className="rname "+S.rhythm.cls;
+  // labels with units kept
+  function setVit(id,val,lvl){ const e=document.getElementById(id); const u=e.querySelector('.u').outerHTML;
+    e.querySelector('.val').innerHTML=val+u; e.className="vit "+lvl; }
+  // draw meta staleness
+  if(lastDraw){
+    const age=(tick-lastDraw.tick)*CFG.SIM_MIN_PER_TICK;
+    document.getElementById('drawMeta').innerHTML="Last draw <b>"+age+" min ago</b>"+(pendingLabs.length?" · result pending…":"");
+  } else if(pendingLabs.length){
+    document.getElementById('drawMeta').textContent="Result pending…";
+  }
+}
+function setVit(id,val,lvl){
+  const e=document.getElementById(id); const uEl=e.querySelector('.u');
+  const u=uEl?uEl.textContent:"";
+  e.querySelector('.val').innerHTML=val+'<span class="u">'+u+'</span>';
+  e.className="vit "+lvl;
+}
+
+function paintLabs(snap, fresh){
+  function set(id, v, unit){
+    const e=document.getElementById(id);
+    e.innerHTML=v+'<span class="u"> '+unit+'</span>';
+    e.classList.toggle('stale', !fresh);
+  }
+  set('lGlu', Math.round(snap.glu), 'mg/dL');
+  set('lK', snap.k.toFixed(1), 'mEq/L');
+  set('lHco3', Math.round(snap.hco3), 'mEq/L');
+  set('lPh', snap.ph.toFixed(2), '');
+  set('lGap', Math.round(snap.gap), '');
+}
+
+/* ----------------------------------------------------------------------
+   LABS — draw & recheck (spec §7)
+   ---------------------------------------------------------------------- */
+function drawLabs(){
+  if(caseOver) return;
+  const snap = snapshot();              // value AS IT IS NOW
+  pendingLabs.push({ ready: tick+CFG.LAB_DELAY_TICKS, snap });
+  lastDraw = { tick, snap };
+  addAlert("info","Labs drawn at "+fmtTime(tick)+". Result back in "+(CFG.LAB_DELAY_TICKS*CFG.SIM_MIN_PER_TICK)+" min.");
+  document.getElementById('drawBtn').disabled=true;
+  document.getElementById('drawBtn').textContent="⌛ PENDING";
+}
+function processLabs(){
+  for(let i=pendingLabs.length-1;i>=0;i--){
+    if(tick>=pendingLabs[i].ready){
+      const snap=pendingLabs[i].snap;
+      paintLabs(snap, true);            // shows values as they WERE when drawn
+      addAlert("info","Lab result back (drawn "+fmtTime(snap.t)+"): K "+snap.k.toFixed(1)+" · glu "+Math.round(snap.glu)+" · HCO₃ "+Math.round(snap.hco3)+" · pH "+snap.ph.toFixed(2));
+      lastResultSnap = snap;
+      pendingLabs.splice(i,1);
+      document.getElementById('drawBtn').disabled=false;
+      document.getElementById('drawBtn').textContent="⎙ DRAW LABS";
+    }
+  }
+}
+let lastResultSnap=null;
+function fmtTime(t){ const m=t*CFG.SIM_MIN_PER_TICK; return String(Math.floor(m/60)).padStart(2,'0')+":"+String(m%60).padStart(2,'0'); }
+
+/* ----------------------------------------------------------------------
+   ALERTS UI
+   ---------------------------------------------------------------------- */
+function addAlert(cls,msg){
+  const box=document.getElementById('alerts');
+  const d=document.createElement('div'); d.className="alert "+cls;
+  d.innerHTML='<span class="tm">'+fmtTime(tick)+'</span> '+msg;
+  box.prepend(d);
+}
+
+/* ----------------------------------------------------------------------
+   CRITICAL MOMENT (spec §9) — decompensate into a teaching moment
+   ---------------------------------------------------------------------- */
+const CRIT = {
+  hypoK:{
+    title:"UNSTABLE — POTASSIUM",
+    read:"The rhythm just broke down. Serum potassium is <b>"+0+"</b> and the heart is firing ectopic beats it cannot sustain.<br><br>Insulin drove potassium into the cells, and as the acid cleared, even more potassium followed it inward. The serum number you watched was riding on a body that was empty of potassium the whole time.<br><br><b>What do you do right now?</b>",
+    acts:[
+      {t:"Hold insulin and run potassium replacement wide open before restarting insulin", ok:true,
+       why:"Correct. You shut off the force driving K into cells and flood the depleted stores. The shift reverses, the rhythm settles."},
+      {t:"Increase insulin to correct the acidosis faster and settle the rhythm", ok:false,
+       why:"This drives even MORE potassium into the cells. The arrhythmia worsens. Insulin was never the problem here — the empty potassium stores were."},
+      {t:"Give a rapid fluid bolus to dilute the potassium and steady the heart", ok:false,
+       why:"Fluids matter, but they do not replace potassium. The serum keeps falling and the rhythm does not recover in time."}
+    ]
+  },
+  hyperK:{
+    title:"UNSTABLE — HYPERKALEMIA",
+    read:"Potassium climbed too high — peaked T waves are collapsing into a sine wave. You replaced potassium faster than the body could take it, or kept replacing after the stores refilled.<br><br><b>What do you do right now?</b>",
+    acts:[
+      {t:"Stop potassium replacement and let insulin drive potassium back into the cells", ok:true,
+       why:"Correct. Insulin drives K intracellularly — exactly the force you fight in the hypo case, here used as the rescue. Replacement off, rhythm recovers."},
+      {t:"Open fluids wide and keep replacing potassium to flush the excess out", ok:false,
+       why:"Replacement is the cause. Continuing it deepens the hyperkalemia."},
+      {t:"Stop the insulin infusion so it no longer affects the potassium balance", ok:false,
+       why:"Insulin is the thing pulling K back into cells. Stopping it makes hyperkalemia worse."}
+    ]
+  },
+  acidosis:{
+    title:"DECOMPENSATED ACIDOSIS",
+    read:"The pH has fallen off a cliff. The lungs were holding it up with deep Kussmaul breathing, but that reserve is exhausted — and now there is nothing left to buffer the acid.<br><br>The acid source is unburned fat. Only insulin shuts that off.<br><br><b>What do you do right now?</b>",
+    acts:[
+      {t:"Start or raise insulin, with potassium covered, to shut off acid production", ok:true,
+       why:"Correct. Insulin stops fat being burned for fuel, ketoacid production falls, bicarbonate regenerates, pH climbs back."},
+      {t:"Push the respiratory rate higher to blow off more acid and lift the pH", ok:false,
+       why:"The reserve is already spent — you cannot squeeze more compensation out of a system that is maxed. You must fix the acid source."},
+      {t:"Give bicarbonate to buffer the acid and bring the pH up directly", ok:false,
+       why:"Without shutting off the acid source, you are bailing a boat with the hole still open. The acidosis returns."}
+    ]
+  },
+  hypoglycemia:{
+    title:"PROFOUND HYPOGLYCEMIA",
+    read:"Glucose has crashed. Insulin kept clearing sugar with nothing to floor it. The brain is starving.<br><br><b>What do you do right now?</b>",
+    acts:[
+      {t:"Start dextrose so insulin can keep clearing acid without dropping glucose", ok:true,
+       why:"Correct. Dextrose floors the glucose so insulin can keep clearing ketones without bottoming out sugar. You do not stop insulin — the acid still needs clearing."},
+      {t:"Stop the insulin infusion completely to let the glucose recover on its own", ok:false,
+       why:"Stopping insulin lets ketoacid production restart — the acidosis comes back. Floor the glucose instead, don't abandon the treatment."},
+      {t:"Give a fluid bolus to bring the blood sugar back into a safe range", ok:false,
+       why:"Fluids don't fix glucose. The patient stays hypoglycemic."}
+    ]
+  },
+  shock:{
+    title:"CIRCULATORY COLLAPSE",
+    read:"Volume is gone. The osmotic diuresis from sky-high glucose drained the tank, and blood pressure has finally fallen.<br><br><b>What do you do right now?</b>",
+    acts:[
+      {t:"Open IV fluids wide to refill the tank and restore perfusion", ok:true,
+       why:"Correct. Volume first. Fluids restore perfusion and also dilute glucose, shutting off the diuresis that emptied the tank."},
+      {t:"Start insulin to lower the glucose and shut off the osmotic fluid loss", ok:false,
+       why:"Insulin without volume can worsen perfusion and springs the potassium trap. Fill the tank first."},
+      {t:"Replace potassium to support the heart and hold up the blood pressure", ok:false,
+       why:"Potassium is not the immediate killer here — the empty tank is. Fluids first."}
+    ]
+  }
+};
+
+function triggerCritical(kind){
+  if(critActive || caseOver) return;
+  critActive=true; critResolved=false;
+  pause(true);
+  const c=CRIT[kind];
+  document.getElementById('critTitle').textContent=c.title;
+  let read=c.read;
+  if(kind==="hypoK") read=read.replace(">"+0+"<", ">"+S.k.toFixed(1)+"<");
+  document.getElementById('critRead').innerHTML=read;
+  const acts=document.getElementById('critActs'); acts.innerHTML="";
+  // shuffle so the correct choice is never in a predictable position
+  shuffle(c.acts).forEach(a=>{
+    const b=document.createElement('button'); b.className="critbtn"; b.textContent="▸ "+a.t;
+    b.onclick=()=>resolveCritical(kind,a);
+    acts.appendChild(b);
+  });
+  beep(140,0.5,'sawtooth',0.18); setTimeout(()=>beep(120,0.5,'sawtooth',0.18),300);
+  document.getElementById('crit').classList.add('show');
+  // dilated window timer
+  let tleft=CFG.CRIT_WINDOW_MS; const bar=document.getElementById('critBar'); const t0=tleft;
+  clearInterval(critTimer);
+  critTimer=setInterval(()=>{
+    tleft-=100; bar.style.width=Math.max(0,(tleft/t0*100))+"%";
+    if(tleft<=0){ clearInterval(critTimer); if(!critResolved) loseCritical(kind, c.acts.find(a=>!a.ok)); }
+  },100);
+}
+function resolveCritical(kind, act){
+  if(critResolved) return; critResolved=true;
+  clearInterval(critTimer);
+  document.getElementById('crit').classList.remove('show');
+  critActive=false;
+  if(act.ok){
+    // apply the rescue to the engine so the patient actually recovers
+    applyRescue(kind);
+    addAlert("good","CRITICAL RESOLVED — "+act.why);
+    flashWin();
+    pause(false);
+  } else {
+    loseCritical(kind, act);
+  }
+}
+function applyRescue(kind){
+  if(kind==="hypoK"){ dials.ins=0; dials.k=90; syncDials(); S.k=Math.max(S.k,3.2); S.k_total+=4; }
+  if(kind==="hyperK"){ dials.k=0; dials.ins=Math.max(dials.ins,30); syncDials(); S.k=Math.min(S.k,5.6); }
+  if(kind==="acidosis"){ dials.ins=Math.max(dials.ins,35); dials.k=Math.max(dials.k,40); syncDials(); S.comp=35; S.hco3+=2; }
+  if(kind==="hypoglycemia"){ dials.dex=true; syncDials(); S.glu=Math.max(S.glu,120); }
+  if(kind==="shock"){ dials.fluid=Math.max(dials.fluid,80); syncDials(); S.vol=Math.max(S.vol,48); }
+  computeVitals();
+}
+function loseCritical(kind, act){
+  critResolved=true; clearInterval(critTimer);
+  document.getElementById('crit').classList.remove('show');
+  critActive=false;
+  endCase("lost", "The patient was lost to "+CRIT[kind].title.toLowerCase()+". "+(act?act.why:""));
+}
+
+/* ----------------------------------------------------------------------
+   CLOCK CONTROL
+   ---------------------------------------------------------------------- */
+function loop(){
+  if(!running) return;
+  doTick();
+  processLabs();
+  if(!caseOver && !critActive) tickTimer=setTimeout(loop, CFG.TICK_MS/speedMul);
+}
+function pause(p){
+  running=!p;
+  document.getElementById('playBtn').innerHTML = running?"⏸ PAUSE":"▶ PLAY";
+  document.getElementById('spdLabel').textContent=(running?"running":"paused")+" · "+speedMul+"×";
+  if(running){ clearTimeout(tickTimer); tickTimer=setTimeout(loop,CFG.TICK_MS/speedMul); }
+}
+function togglePlay(){ pause(running); }
+function setSpeed(m){ speedMul=m; document.getElementById('spdLabel').textContent=(running?"running":"paused")+" · "+m+"×"; }
+
+/* ----------------------------------------------------------------------
+   DIALS
+   ---------------------------------------------------------------------- */
+function onDial(){
+  dials.fluid=+document.getElementById('dFluid').value;
+  dials.ins=+document.getElementById('dIns').value;
+  dials.k=+document.getElementById('dK').value;
+  paintDialReadouts();
+}
+function paintDialReadouts(){
+  document.getElementById('rdFluid').textContent=dials.fluid?dials.fluid+"%":"OFF";
+  document.getElementById('rdIns').textContent=dials.ins?dials.ins+"%":"OFF";
+  document.getElementById('rdK').textContent=dials.k?dials.k+"%":"OFF";
+  document.getElementById('dDex').textContent=dials.dex?"ON":"OFF";
+  document.getElementById('dDex').classList.toggle('on',dials.dex);
+}
+function syncDials(){
+  document.getElementById('dFluid').value=dials.fluid;
+  document.getElementById('dIns').value=dials.ins;
+  document.getElementById('dK').value=dials.k;
+  paintDialReadouts();
+}
+function toggleDex(){ dials.dex=!dials.dex; paintDialReadouts();
+  if(dials.dex) addAlert("info","Dextrose ON — glucose floored so insulin can keep clearing acid.");
+}
+function toggleAdv(){
+  advShown=!advShown;
+  document.getElementById('gapcell').style.display=advShown?"block":"none";
+  document.getElementById('advToggle').textContent=advShown?"▾ hide advanced labs":"▸ show advanced labs (anion gap)";
+}
+
+/* ----------------------------------------------------------------------
+   ECG STRIP — animated, morphology by K band
+   ---------------------------------------------------------------------- */
+let ecgX=0, ecgCtx=null, ecgPhase=0;
+function initEcg(){
+  const c=document.getElementById('ecg'); ecgCtx=c.getContext('2d');
+  ecgCtx.fillStyle="#03060c"; ecgCtx.fillRect(0,0,c.width,c.height);
+  requestAnimationFrame(ecgFrame);
+}
+function ecgY(band, p){
+  // p is phase 0..1 across one beat
+  const mid=40;
+  if(band==="unstable"){ return mid - (Math.sin(p*40)*16*Math.random()); }
+  if(band==="hyper"){ return mid - Math.sin(p*6.28)*22; } // sine-wave
+  let y=mid;
+  // P wave
+  if(p<0.12) y-= Math.sin((p/0.12)*Math.PI)*5;
+  // QRS
+  else if(p<0.22){ const q=(p-0.12)/0.10; y-= (q<0.4? -8*q : (q<0.6? 30*(q-0.4)/0.2 : 30-(q-0.6)/0.4*36)); }
+  // T wave — morphology varies by K
+  else if(p<0.5){ const tt=(p-0.22)/0.28; let amp=8;
+    if(band==="flat") amp=2.5; if(band==="ectopy") amp=3; if(band==="peaked") amp=20;
+    y-= Math.sin(tt*Math.PI)*amp;
+    if(band==="flat" && tt>0.6){ y+= Math.sin((tt-0.6)/0.4*Math.PI)*4; } // U wave
+  }
+  // ectopy: occasional wide PVC
+  if(band==="ectopy" && Math.floor(ecgPhase)%5===3 && p>0.55 && p<0.75){ y-= Math.sin((p-0.55)/0.2*Math.PI)*26*(p<0.65?1:-0.7); }
+  return y;
+}
+function ecgFrame(){
+  if(!ecgCtx){ return; }
+  const c=ecgCtx.canvas; const band=S?S.rhythm.band:"normal";
+  const speed = band==="unstable"?6:3;
+  for(let s=0;s<speed;s++){
+    // erase a vertical slice ahead
+    ecgCtx.fillStyle="#03060c"; ecgCtx.fillRect(ecgX,0,6,c.height);
+    const p=(ecgPhase%1);
+    const col = band==="normal"?"#52e0a0":(band==="flat"||band==="peaked"?"#ffcc55":"#ff5b6e");
+    ecgCtx.strokeStyle=col; ecgCtx.lineWidth=1.6; ecgCtx.beginPath();
+    ecgCtx.moveTo(ecgX, prevY||40);
+    const y=ecgY(band,p); ecgCtx.lineTo(ecgX+1, y); ecgCtx.stroke();
+    prevY=y;
+    ecgX+=1; if(ecgX>=c.width){ ecgX=0; }
+    ecgPhase += 0.018;
+  }
+  requestAnimationFrame(ecgFrame);
+}
+let prevY=40;
+
+/* ----------------------------------------------------------------------
+   AUDIO — minimal alert beeps
+   ---------------------------------------------------------------------- */
+let AC=null;
+function beep(freq,dur,type,vol){
+  try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type=type||'square'; o.frequency.value=freq; g.gain.value=vol||0.08;
+    o.connect(g); g.connect(AC.destination); o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
+    o.stop(AC.currentTime+dur);
+  }catch(e){}
+}
+function flashWin(){ const f=document.getElementById('flashWin'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); beep(660,0.18,'square',0.1); }
+
+/* ----------------------------------------------------------------------
+   CASE LIFECYCLE
+   ---------------------------------------------------------------------- */
+function startCase(){
+  document.getElementById('title').style.display="none";
+  document.getElementById('game').classList.remove('hidden');
+  document.getElementById('ptName').textContent=CASE_DKA.name;
+  document.getElementById('ptMeta').textContent=CASE_DKA.meta;
+  document.getElementById('debrief').classList.remove('show');
+  document.getElementById('crit').classList.remove('show');
+  document.getElementById('alerts').innerHTML="";
+  fresh(); LOG=[]; DRAWS=[]; tick=0; pendingLabs=[]; lastDraw=null; lastResultSnap=null; firedAlerts={};
+  caseOver=false; critActive=false; critResolved=false;
+  firstInsulinTick=null; kFellTick=null;
+  dials={fluid:0,ins:0,k:0,dex:false}; syncDials();
+  LOG.push(snapshot());
+  renderLive(); initEcg();
+  addAlert("info","Patient presents. Vitals are live. Draw labs to see glucose, potassium, bicarbonate and pH.");
+  // mentor (tutorial only, says it once)
+  document.getElementById('mentorTxt').textContent=CASE_DKA.mentorIntro;
+  running=true; speedMul=1;
+  document.getElementById('playBtn').innerHTML="⏸ PAUSE";
+  tickTimer=setTimeout(loop, CFG.TICK_MS);
+}
+function endCaseManual(){ endCase(S.k<3.2||S.hco3<10?"incomplete":"survived","You ended the case for review."); }
+function endCase(kind, msg){
+  if(caseOver) return; caseOver=true; running=false; clearTimeout(tickTimer); clearInterval(critTimer);
+  buildDebrief(kind,msg);
+  document.getElementById('debrief').classList.add('show');
+}
+
+/* ----------------------------------------------------------------------
+   DEBRIEF (spec §10) — where play becomes exam-ready understanding
+   ---------------------------------------------------------------------- */
+function buildDebrief(kind,msg){
+  const win = (kind==="survived" && lastLogStable());
+  const v=document.getElementById('dbVerdict');
+  if(kind==="lost"){ v.className="verdict loss"; v.textContent="PATIENT LOST — AND HERE IS EXACTLY WHY"; }
+  else if(win){ v.className="verdict win"; v.textContent="PATIENT STABILIZED"; }
+  else { v.className="verdict"; v.textContent="CASE REVIEW"; }
+
+  drawKChart();
+  drawCompChart();
+  drawGluChart();
+  buildBeats(kind,msg);
+  buildScrub();
+  buildQuiz(kind);
+}
+function lastLogStable(){
+  const l=LOG[LOG.length-1];
+  return l.k>3.2 && l.k<5.6 && l.hco3>15 && l.ph>7.25 && l.vol>55;
+}
+
+function chartCtx(id){ const c=document.getElementById(id); const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle="#05080f"; ctx.fillRect(0,0,c.width,c.height);
+  // grid
+  ctx.strokeStyle="#0e1d33"; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){ const y=i/4*c.height; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(c.width,y); ctx.stroke(); }
+  return {c,ctx};
+}
+function plot(ctx,c,arr,min,max,color,w){
+  ctx.strokeStyle=color; ctx.lineWidth=w||2; ctx.beginPath();
+  arr.forEach((val,i)=>{ const x=i/(arr.length-1||1)*c.width; const y=c.height-((val-min)/(max-min))*c.height;
+    if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+  ctx.stroke();
+}
+function drawKChart(){
+  const {c,ctx}=chartCtx('cK');
+  // danger band below K_UNSTABLE
+  const kmin=1.5,kmax=7.5;
+  const dangerY=c.height-((CFG.K_UNSTABLE-kmin)/(kmax-kmin))*c.height;
+  ctx.fillStyle="rgba(255,91,110,.12)"; ctx.fillRect(0,dangerY,c.width,c.height-dangerY);
+  ctx.strokeStyle="rgba(255,91,110,.4)"; ctx.setLineDash([4,4]); ctx.beginPath();
+  ctx.moveTo(0,dangerY); ctx.lineTo(c.width,dangerY); ctx.stroke(); ctx.setLineDash([]);
+  // total-body K (hidden) as filled area
+  const ktArr=LOG.map(l=>l.k_total);
+  ctx.fillStyle="rgba(90,74,138,.28)"; ctx.beginPath();
+  ctx.moveTo(0,c.height);
+  ktArr.forEach((val,i)=>{ const x=i/(ktArr.length-1||1)*c.width; const y=c.height-(val/100)*c.height; ctx.lineTo(x,y); });
+  ctx.lineTo(c.width,c.height); ctx.closePath(); ctx.fill();
+  // serum K true
+  plot(ctx,c,LOG.map(l=>l.k),kmin,kmax,"#b388ff",2.4);
+  // your draws (dots) — placed at draw tick, value as drawn
+  ctx.fillStyle="#fff";
+  drawnPoints().forEach(p=>{ const x=p.t/(LOG.length-1||1)*c.width; const y=c.height-((p.k-kmin)/(kmax-kmin))*c.height;
+    ctx.beginPath(); ctx.arc(x,y,4,0,6.28); ctx.fill();
+    ctx.strokeStyle="rgba(255,255,255,.4)"; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,c.height); ctx.stroke(); });
+}
+function drawnPoints(){
+  // reconstruct draws from alert history is fragile; track separately
+  return DRAWS;
+}
+function drawCompChart(){
+  const {c,ctx}=chartCtx('cComp');
+  plot(ctx,c,LOG.map(l=>l.ph),6.7,7.5,"#7ed85a",2.4);
+  plot(ctx,c,LOG.map(l=>l.comp/100*0.8+6.7),6.7,7.5,"#f0c840",1.8); // scaled comp onto same axis
+  plot(ctx,c,LOG.map(l=>6.7+(l.hco3/28)*0.8),6.7,7.5,"#5ec8ff",1.6);
+}
+function drawGluChart(){
+  const {c,ctx}=chartCtx('cGlu');
+  plot(ctx,c,LOG.map(l=>l.glu),0,600,"#ffb347",2.4);
+  plot(ctx,c,LOG.map(l=>l.vol*6),0,600,"#56d0ff",2);
+  // dextrose on shading
+  ctx.fillStyle="rgba(160,160,160,.18)";
+  LOG.forEach((l,i)=>{ if(l.dials.dex){ const x=i/(LOG.length-1||1)*c.width; ctx.fillRect(x,0,c.width/LOG.length+1,c.height); }});
+}
+
+function buildBeats(kind,msg){
+  const box=document.getElementById('dbBeats'); box.innerHTML="";
+  const beats=[];
+  beats.push({t:LOG[0],cls:"",txt:"Presentation: glucose "+Math.round(LOG[0].glu)+", serum K "+LOG[0].k.toFixed(1)+" (looked fine), bicarbonate "+Math.round(LOG[0].hco3)+", pH "+LOG[0].ph.toFixed(2)+". Hidden: total-body potassium was already only "+Math.round(LOG[0].k_total)+"% of normal."});
+  if(firstInsulinTick!==null) beats.push({t:LOG[firstInsulinTick]||LOG[0],cls:"",txt:"You started insulin here. From this point, potassium is being driven into the cells AND the clearing acid pulls still more in."});
+  if(kFellTick!==null) beats.push({t:LOG[kFellTick]||LOG[0],cls:"bad",txt:"Serum potassium began falling without replacement running. This is the trap springing — and it sprang slowly enough to have been caught."});
+  // recheck gap analysis
+  const gap=biggestRecheckGap();
+  if(gap) beats.push({t:LOG[gap.endIdx],cls:gap.missedFall?"bad":"",txt:gap.missedFall
+    ? "Your last potassium check was at "+fmtTime(gap.startT)+" reading "+gap.startK.toFixed(1)+". By "+fmtTime(gap.endT)+" the true value was "+gap.endK.toFixed(1)+". A recheck in that window is the catch you missed."
+    : "Longest gap between potassium checks was "+(gap.minutes)+" min — tight enough that you saw the curve move."});
+  // potassium management quality
+  const everReplaced = LOG.some(l=>l.dials.k>5);
+  beats.push({t:LOG[LOG.length-1],cls:everReplaced?"good":"bad",txt: everReplaced
+    ? "You did run potassium replacement — that is what kept serum K riding safely while insulin worked."
+    : "You never ran potassium replacement. In DKA the body is always depleted, so insulin alone walks the serum toward the floor."});
+  if(kind==="lost") beats.push({t:LOG[LOG.length-1],cls:"bad",txt:msg});
+  beats.forEach(b=>{ const d=document.createElement('div'); d.className="beat "+b.cls;
+    d.innerHTML='<span class="t">'+fmtTime(b.t.t)+'</span> '+b.txt; box.appendChild(d); });
+}
+function biggestRecheckGap(){
+  if(DRAWS.length<1) return {missedFall:true,startT:0,endT:LOG[LOG.length-1].t,startK:LOG[0].k,endK:LOG[LOG.length-1].k,endIdx:LOG.length-1,minutes:LOG[LOG.length-1].simMin};
+  let worst=null;
+  for(let i=0;i<DRAWS.length;i++){
+    const startT=DRAWS[i].t; const endT=(i+1<DRAWS.length)?DRAWS[i+1].t:LOG[LOG.length-1].t;
+    const trueEndK=LOG[Math.min(endT,LOG.length-1)].k;
+    const drop=DRAWS[i].k-trueEndK; const mins=(endT-startT)*CFG.SIM_MIN_PER_TICK;
+    if(!worst||drop>worst.drop) worst={drop,startT,endT,startK:DRAWS[i].k,endK:trueEndK,endIdx:Math.min(endT,LOG.length-1),minutes:mins,missedFall:drop>0.7};
+  }
+  return worst;
+}
+let DRAWS=[]; // {t, k, glu, hco3, ph}
+
+function buildScrub(){
+  const sc=document.getElementById('dbScrub'); sc.max=LOG.length-1; sc.value=LOG.length-1;
+  scrubTo(LOG.length-1);
+}
+function scrubTo(i){
+  i=+i; const l=LOG[i]; if(!l) return;
+  const dom=l.dominant||{};
+  document.getElementById('scrubState').innerHTML=
+    "<b style='color:var(--gold-bright)'>"+fmtTime(l.t)+"</b> &nbsp; "+
+    "glu "+Math.round(l.glu)+" · K "+l.k.toFixed(1)+" · HCO₃ "+Math.round(l.hco3)+" · pH "+l.ph.toFixed(2)+" · vol "+Math.round(l.vol)+"%<br>"+
+    "<span style='color:var(--k)'>hidden: total-body K "+Math.round(l.k_total)+"% · compensation reserve "+Math.round(l.comp)+"%</span><br>"+
+    "rhythm: "+l.rhythm+" · HR "+l.hr+" · BP "+l.bp+" · RR "+l.rr+" · "+l.loc+"<br>"+
+    "<span style='color:var(--dim)'>dominant force — K: "+(dom.k||"-")+" · glucose: "+(dom.glu||"-")+" · bicarb: "+(dom.hco3||"-")+"</span>";
+}
+
+function buildQuiz(kind){
+  const q=document.getElementById('dbQuiz');
+  const item={
+    q:"In DKA, why can a normal-looking serum potassium be dangerous the moment you start insulin?",
+    opts:[
+      {t:"Because total-body potassium is already depleted, and insulin shifts the remaining serum potassium into the cells, unmasking the deficit.", ok:true},
+      {t:"Because insulin raises serum potassium, pushing the patient toward dangerous hyperkalemia instead.", ok:false},
+      {t:"Because the serum potassium reading is simply inaccurate and cannot be trusted in DKA at all.", ok:false},
+      {t:"Because potassium and insulin act on completely separate systems and never influence each other.", ok:false}
+    ],
+    ex:"Acidosis holds potassium outside the cells, so serum reads normal or high while the body is profoundly depleted. Insulin (and the correcting pH) drive potassium back into cells, and the serum falls toward a floor set by the empty stores. That is why you cover potassium before, or with, insulin."
+  };
+  q.innerHTML="<h3>NAME THE MECHANISM</h3><p>"+item.q+"</p>";
+  shuffle(item.opts).forEach(o=>{ const b=document.createElement('button'); b.className="opt"; b.textContent=o.t;
+    b.onclick=()=>{ if(b.dataset.done)return;
+      document.querySelectorAll('#dbQuiz .opt').forEach(x=>x.dataset.done=1);
+      b.classList.add(o.ok?"right":"wrong");
+      if(!o.ok){ document.querySelectorAll('#dbQuiz .opt').forEach(x=>{ if(x.textContent===item.opts.find(z=>z.ok).t)x.classList.add('right'); }); }
+      document.querySelector('#dbQuiz .ex').style.display="block";
+    };
+    q.appendChild(b);
+  });
+  const ex=document.createElement('div'); ex.className="ex"; ex.textContent=item.ex; q.appendChild(ex);
+}
+
+/* hook draw tracking into drawLabs */
+const _drawLabs=drawLabs;
+drawLabs=function(){ if(caseOver)return; DRAWS.push({t:tick,k:S.k,glu:S.glu,hco3:S.hco3,ph:S.ph}); _drawLabs(); };
+
+/* keyboard: space = pause */
+document.addEventListener('keydown',e=>{
+  if(e.code==="Space" && !document.getElementById('game').classList.contains('hidden') && !critActive){ e.preventDefault(); togglePlay(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>/*__GAME_MUTE__*/
+(function(){
+  if(window.__gameMuteInstalled) return; window.__gameMuteInstalled=true;
+  var KEY="game_sound_muted"; var muted=false; try{muted=localStorage.getItem(KEY)==="1";}catch(e){}
+  var ctxs=[];
+  ["AudioContext","webkitAudioContext"].forEach(function(n){var O=window[n]; if(!O||O.__wrapped) return;
+    function W(){ var c=Reflect.construct(O, arguments, W); ctxs.push(c);
+      var r=c.resume.bind(c); c.resume=function(){return muted?Promise.resolve():r();};
+      if(muted){try{c.suspend();}catch(e){}} return c; }
+    W.prototype=O.prototype; W.__wrapped=true; try{window[n]=W;}catch(e){}});
+  try{ var ss=window.speechSynthesis; if(ss&&ss.speak&&!ss.__wrapped){
+    var os=ss.speak.bind(ss); ss.speak=function(u){ if(muted) return; return os(u); }; ss.__wrapped=true; } }catch(e){}
+  function apply(){ ctxs.forEach(function(c){ try{ muted?c.suspend():c.resume(); }catch(e){} });
+    if(muted){ try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
+    var b=document.getElementById("__sndbtn");
+    if(b){ b.innerHTML = muted ? "&#128263;&nbsp;Sound off" : "&#128266;&nbsp;Sound on";
+           b.style.background = muted ? "rgba(150,30,30,.88)" : "rgba(17,17,17,.82)"; } }
+  window.__toggleGameSound=function(){ muted=!muted; try{localStorage.setItem(KEY,muted?"1":"0");}catch(e){} apply(); };
+  function add(){ if(document.getElementById("__sndbtn")) return;
+    var b=document.createElement("button"); b.id="__sndbtn"; b.type="button";
+    b.setAttribute("aria-label","Toggle all game sound on or off"); b.onclick=window.__toggleGameSound;
+    b.style.cssText="position:fixed;top:8px;left:8px;z-index:2147483647;font:700 12px system-ui,-apple-system,sans-serif;padding:6px 11px;border-radius:8px;border:1px solid rgba(255,255,255,.4);background:rgba(17,17,17,.82);color:#fff;cursor:pointer;box-shadow:0 2px 7px rgba(0,0,0,.4);opacity:.9;";
+    (document.body||document.documentElement).appendChild(b); apply(); }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",add); else add();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Patho Ward — Hemorrhagic Shock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#f0c840; --gold-bright:#ffd700;
+  --rare:#5ec8ff; --leg:#ffcd44; --com:#7ed85a; --myth:#ff6cb6;
+  --font-pixel:'Press Start 2P',monospace;
+  --font-read:'VT323',monospace;
+  --font-disp:'Cinzel Decorative',serif;
+  --bg:#070b12; --panel:#0e1626; --panel2:#13203a; --line:#243453;
+  --ink:#cfe2ff; --dim:#8aa0c4;
+  --ok:#52e0a0; --warn:#ffcc55; --bad:#ff5b6e; --crit:#ff2d4a;
+  --glu:#ffb347; --k:#b388ff; --hco3:#5ec8ff; --ph:#7ed85a; --vol:#56d0ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font-read);}
+body{min-height:100vh;overflow-x:hidden;-webkit-text-size-adjust:100%;}
+/* CRT phosphor */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9000;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0,rgba(0,0,0,0) 2px,rgba(0,0,0,.22) 3px,rgba(0,0,0,0) 4px);
+  mix-blend-mode:multiply;opacity:.55;}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9001;
+  background:radial-gradient(120% 120% at 50% 40%,transparent 55%,rgba(0,0,0,.55) 100%);}
+h1,h2,h3,.pixel{font-family:var(--font-pixel);}
+.wrap{max-width:1180px;margin:0 auto;padding:14px 14px 80px;}
+
+/* permanent teaching banner */
+.banner{position:sticky;top:0;z-index:50;font-family:var(--font-pixel);font-size:8px;
+  letter-spacing:.5px;text-align:center;padding:7px 8px;line-height:1.5;
+  background:linear-gradient(180deg,#1a1206,#120c04);color:#ffe39a;
+  border-bottom:1px solid #5a430f;text-shadow:0 1px 0 #000;}
+
+/* ===== Title screen ===== */
+#title{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:24px;background:
+  radial-gradient(80% 60% at 20% 18%,rgba(95,200,255,.10),transparent 60%),
+  radial-gradient(70% 60% at 82% 26%,rgba(179,136,255,.12),transparent 60%),
+  radial-gradient(90% 70% at 50% 100%,rgba(240,200,64,.08),transparent 60%),
+  var(--bg);}
+#title h1{font-family:var(--font-disp);font-size:clamp(34px,8vw,72px);margin:0;
+  background:linear-gradient(180deg,#ffffff,#ffe79a 45%,#f0a000);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 0 rgba(0,0,0,.5));letter-spacing:2px;}
+#title .sub{font-family:var(--font-pixel);font-size:11px;color:var(--rare);margin-top:14px;letter-spacing:3px;}
+#title .heart{font-size:40px;margin:18px 0 6px;animation:beat 1.1s ease-in-out infinite;}
+@keyframes beat{0%,100%{transform:scale(1)}14%{transform:scale(1.18)}28%{transform:scale(1)}42%{transform:scale(1.12)}}
+.startbtn{margin-top:26px;font-family:var(--font-pixel);font-size:13px;padding:16px 26px;cursor:pointer;
+  color:#0a0a0a;background:linear-gradient(180deg,#ffe79a,#f0c000);border:none;border-radius:8px;
+  box-shadow:0 5px 0 #8a6a00,0 8px 18px rgba(0,0,0,.5);letter-spacing:1px;}
+.startbtn:active{transform:translateY(3px);box-shadow:0 2px 0 #8a6a00;}
+#title .teach{margin-top:22px;max-width:560px;font-size:18px;color:var(--dim);line-height:1.35;}
+#title .creds{margin-top:18px;font-family:var(--font-pixel);font-size:8px;color:#5d7398;}
+
+/* ===== layout ===== */
+.casehead{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 18px;margin:6px 0 12px;border-bottom:1px solid var(--line);padding-bottom:10px;}
+.casehead h2{font-size:14px;margin:0;color:var(--gold);}
+.casehead .meta{font-size:18px;color:var(--dim);}
+.clk{margin-left:auto;font-family:var(--font-pixel);font-size:12px;color:var(--ink);}
+.clk b{color:var(--gold-bright);}
+
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;}
+@media(max-width:880px){.grid{grid-template-columns:1fr;}}
+.panel{background:linear-gradient(180deg,var(--panel),#0a1120);border:1px solid var(--line);border-radius:10px;padding:12px;}
+.panel h3{font-size:10px;margin:0 0 10px;color:var(--gold);letter-spacing:1px;}
+.col{display:flex;flex-direction:column;gap:14px;}
+
+/* monitor */
+.monitor{background:#05080f;border:1px solid #173050;border-radius:8px;padding:10px;}
+.vitrow{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.vit{background:#070d18;border:1px solid #142a44;border-radius:6px;padding:8px 10px;position:relative;overflow:hidden;}
+.vit .lab{font-family:var(--font-pixel);font-size:7px;color:var(--dim);letter-spacing:.5px;line-height:1.35;min-height:18px;}
+.vit .val{font-family:var(--font-read);font-size:30px;line-height:1;margin-top:3px;}
+.vit .u{font-size:14px;color:var(--dim);}
+.vit.ok .val{color:var(--ok);} .vit.warn .val{color:var(--warn);} .vit.bad .val{color:var(--bad);text-shadow:0 0 10px rgba(255,91,110,.5);}
+.vit.flash{animation:vflash .6s ease;}
+@keyframes vflash{0%{background:#3a0c14}100%{background:#070d18}}
+.ecgwrap{margin-top:8px;background:#03060c;border:1px solid #102844;border-radius:6px;padding:6px 4px 2px;}
+.ecglabel{font-family:var(--font-pixel);font-size:7px;color:var(--dim);padding:0 6px;display:flex;justify-content:space-between;}
+.ecglabel .rname{color:var(--ok);}
+.ecglabel .rname.warn{color:var(--warn);} .ecglabel .rname.bad{color:var(--bad);}
+canvas#ecg{display:block;width:100%;height:74px;}
+.loc{margin-top:8px;font-size:18px;color:var(--ink);}
+.loc b{color:var(--gold);}
+
+/* labs */
+.labgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.labcell{background:#0a1322;border:1px solid #1d3354;border-radius:6px;padding:8px 10px;}
+.labcell .lab{font-family:var(--font-pixel);font-size:7px;color:var(--dim);}
+.labcell .val{font-size:28px;line-height:1;margin-top:2px;color:var(--ink);}
+.labcell .val.stale{color:#6c84ad;}
+.labcell .val.pending{color:#46618c;font-size:18px;font-style:italic;}
+.labcell .u{font-size:13px;color:var(--dim);}
+.labcell.glu .val{color:var(--glu);} .labcell.k .val{color:var(--k);}
+.labcell.hco3 .val{color:var(--hco3);} .labcell.ph .val{color:var(--ph);} .labcell.gap .val{color:#ff9}
+.drawbar{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.drawbtn{font-family:var(--font-pixel);font-size:9px;padding:10px 14px;border:none;border-radius:6px;cursor:pointer;
+  color:#06121f;background:linear-gradient(180deg,#7fd4ff,#34a7e6);box-shadow:0 3px 0 #1c5d86;}
+.drawbtn:active{transform:translateY(2px);box-shadow:0 1px 0 #1c5d86;}
+.drawbtn:disabled{filter:grayscale(.7) brightness(.7);cursor:default;}
+.drawmeta{font-size:16px;color:var(--dim);}
+.drawmeta b{color:var(--warn);}
+.adv-toggle{font-size:15px;color:var(--rare);cursor:pointer;user-select:none;margin-top:6px;display:inline-block;}
+.adv-toggle:hover{text-decoration:underline;}
+#gapcell{display:none;}
+
+/* dials */
+.dial{margin-bottom:14px;}
+.dial .top{display:flex;justify-content:space-between;align-items:baseline;}
+.dial .nm{font-family:var(--font-pixel);font-size:9px;color:var(--ink);}
+.dial .rd{font-size:18px;color:var(--gold-bright);}
+.dial input[type=range]{width:100%;margin:6px 0 2px;accent-color:var(--gold);}
+.dial .hint{font-size:14px;color:var(--dim);line-height:1.25;}
+.dial.dx{display:flex;align-items:center;gap:12px;justify-content:space-between;}
+.tgl{font-family:var(--font-pixel);font-size:9px;padding:9px 14px;border-radius:6px;cursor:pointer;border:1px solid var(--line);
+  background:#0c1626;color:var(--dim);}
+.tgl.on{background:linear-gradient(180deg,#ffe79a,#f0c000);color:#0a0a0a;border-color:#f0c000;}
+
+/* alerts log */
+.alerts{max-height:150px;overflow-y:auto;font-size:16px;line-height:1.4;}
+.alert{padding:4px 8px;border-left:3px solid var(--line);margin-bottom:4px;background:#0a1322;border-radius:0 4px 4px 0;}
+.alert.warn{border-color:var(--warn);} .alert.bad{border-color:var(--bad);} .alert.good{border-color:var(--ok);} .alert.info{border-color:var(--rare);}
+.alert .tm{color:var(--dim);font-size:13px;}
+
+/* mentor */
+.mentor{display:flex;gap:10px;align-items:flex-start;background:linear-gradient(180deg,#10204a,#0a1530);
+  border:1px solid #2a4f8a;border-radius:8px;padding:10px;margin-bottom:14px;}
+.mentor .face{font-size:26px;}
+.mentor .txt{font-size:17px;line-height:1.3;color:#dce9ff;}
+.mentor .who{font-family:var(--font-pixel);font-size:7px;color:var(--rare);display:block;margin-bottom:3px;}
+
+/* run controls */
+.runbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.ctlbtn{font-family:var(--font-pixel);font-size:9px;padding:9px 13px;border-radius:6px;cursor:pointer;border:1px solid var(--line);
+  background:#0c1626;color:var(--ink);}
+.ctlbtn.primary{background:linear-gradient(180deg,#7ed85a,#3aa54a);color:#06210d;border-color:#3aa54a;}
+.ctlbtn:active{transform:translateY(1px);}
+.spd{font-size:15px;color:var(--dim);}
+
+/* critical moment */
+#crit{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(90% 90% at 50% 50%,rgba(60,0,8,.78),rgba(5,0,2,.95));}
+#crit.show{display:flex;animation:critin .4s ease;}
+@keyframes critin{from{opacity:0}to{opacity:1}}
+.critcard{max-width:560px;width:100%;background:linear-gradient(180deg,#1a0610,#0c0308);border:2px solid var(--crit);
+  border-radius:12px;padding:20px;box-shadow:0 0 50px rgba(255,45,74,.4);}
+.critcard h2{font-family:var(--font-disp);font-size:26px;color:#ff6377;margin:0 0 6px;text-align:center;letter-spacing:2px;
+  animation:critpulse 1s ease-in-out infinite;}
+@keyframes critpulse{0%,100%{filter:drop-shadow(0 0 6px rgba(255,45,74,.6))}50%{filter:drop-shadow(0 0 18px rgba(255,45,74,1))}}
+.critcard .read{font-size:19px;line-height:1.4;color:#ffd9de;margin:12px 0;}
+.critcard .read b{color:var(--gold-bright);}
+.critcard .acts{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.critbtn{font-family:var(--font-pixel);font-size:10px;padding:13px;border-radius:7px;cursor:pointer;border:1px solid #5a2230;
+  background:#1d0a12;color:#ffd9de;text-align:left;line-height:1.4;}
+.critbtn:hover{background:#2a0e18;border-color:var(--crit);}
+.crittimer{height:8px;background:#2a0a12;border-radius:5px;overflow:hidden;margin-top:14px;}
+.crittimer i{display:block;height:100%;background:linear-gradient(90deg,var(--crit),#ff7a8c);width:100%;transition:width .1s linear;}
+
+/* debrief */
+#debrief{position:fixed;inset:0;z-index:500;display:none;overflow-y:auto;background:var(--bg);}
+#debrief.show{display:block;}
+.dbwrap{max-width:1000px;margin:0 auto;padding:20px 16px 80px;}
+.dbwrap h2{font-family:var(--font-disp);font-size:30px;color:var(--gold);text-align:center;margin:6px 0 2px;}
+.dbwrap .verdict{text-align:center;font-family:var(--font-pixel);font-size:12px;margin-bottom:14px;}
+.dbwrap .verdict.win{color:var(--ok);} .dbwrap .verdict.loss{color:var(--bad);}
+.chartbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:14px;}
+.chartbox h3{font-size:10px;color:var(--gold);margin:0 0 4px;}
+.chartbox .cap{font-size:15px;color:var(--dim);margin:0 0 8px;line-height:1.3;}
+canvas.dbchart{display:block;width:100%;height:170px;background:#05080f;border:1px solid #122844;border-radius:6px;}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:15px;margin-top:8px;}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.legend i{width:14px;height:3px;display:inline-block;border-radius:2px;}
+.scrub{width:100%;margin:10px 0;accent-color:var(--gold);}
+.beats{font-size:17px;line-height:1.5;}
+.beat{padding:8px 10px;border-left:3px solid var(--gold);background:#0a1322;border-radius:0 5px 5px 0;margin-bottom:6px;}
+.beat.bad{border-color:var(--bad);} .beat.good{border-color:var(--ok);}
+.beat .t{color:var(--gold-bright);font-family:var(--font-pixel);font-size:8px;}
+.quiz{background:linear-gradient(180deg,#10204a,#0a1530);border:1px solid #2a4f8a;border-radius:10px;padding:14px;margin-top:14px;}
+.quiz h3{font-size:11px;color:var(--rare);margin:0 0 8px;}
+.quiz p{font-size:18px;margin:0 0 10px;}
+.quiz .opt{display:block;width:100%;text-align:left;font-size:16px;padding:10px 12px;margin-bottom:6px;border-radius:6px;
+  border:1px solid var(--line);background:#0c1626;color:var(--ink);cursor:pointer;}
+.quiz .opt:hover{border-color:var(--rare);}
+.quiz .opt.right{background:#103a22;border-color:var(--ok);color:#bfffd9;}
+.quiz .opt.wrong{background:#3a1018;border-color:var(--bad);color:#ffc9d1;}
+.quiz .ex{font-size:16px;color:var(--dim);margin-top:8px;display:none;line-height:1.4;}
+.dbactions{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+
+.hidden{display:none!important;}
+.flashwin{position:fixed;inset:0;z-index:480;pointer-events:none;background:#fff;opacity:0;}
+.flashwin.go{animation:fwin .5s ease;}
+@keyframes fwin{0%{opacity:.85}100%{opacity:0}}
+</style>
+</head>
+<body>
+
+<div class="banner">TEACHING SIMULATION &nbsp;•&nbsp; NUMBERS ARE SIMPLIFIED AND ARE NOT CLINICAL DOSING GUIDANCE</div>
+
+<!-- ===================== TITLE ===================== -->
+<div id="title">
+  <div class="heart">🩸</div>
+  <h1>PATHO&nbsp;WARD</h1>
+  <div class="sub">CASE 02 — HEMORRHAGIC SHOCK</div>
+  <p class="teach">One patient. A clock that does not stop. The blood pressure will look normal far longer than it should. Read the signs that move before it does, and act before the cliff.</p>
+  <button class="startbtn" onclick="startCase()">BEGIN CASE</button>
+  <div class="creds">A PATHO WARD PHYSIOLOGY ENGINE &nbsp;·&nbsp; DR. AKASH GARG</div>
+</div>
+
+<!-- ===================== GAME ===================== -->
+<div class="wrap hidden" id="game">
+  <div class="casehead">
+    <h2 id="ptName">BED 1 — DKA</h2>
+    <span class="meta" id="ptMeta"></span>
+    <span class="clk">SIM TIME <b id="simClock">00:00</b></span>
+  </div>
+
+  <div class="runbar">
+    <button class="ctlbtn primary" id="playBtn" onclick="togglePlay()">⏸ PAUSE</button>
+    <button class="ctlbtn" onclick="setSpeed(1)">1×</button>
+    <button class="ctlbtn" onclick="setSpeed(2)">2×</button>
+    <button class="ctlbtn" onclick="setSpeed(4)">4×</button>
+    <span class="spd" id="spdLabel">running · 1×</span>
+    <button class="ctlbtn" style="margin-left:auto" onclick="endCaseManual()">END &amp; DEBRIEF</button>
+  </div>
+
+  <div class="mentor" id="mentor">
+    <div class="face">🩺</div>
+    <div class="txt"><span class="who">MENTOR</span><span id="mentorTxt">Stabilize this patient. Vitals stream live. Labs you must draw — they come back after a short delay, and they are already a little stale when they do.</span></div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT: monitor + labs -->
+    <div class="col">
+      <div class="panel">
+        <h3>MONITOR · LIVE</h3>
+        <div class="monitor">
+          <div class="vitrow">
+            <div class="vit" id="vHR"><div class="lab">HEART RATE</div><div class="val">—<span class="u"> bpm</span></div></div>
+            <div class="vit" id="vBP"><div class="lab">BLOOD PRESSURE</div><div class="val">—<span class="u"> mmHg</span></div></div>
+            <div class="vit" id="vRR"><div class="lab">RESP RATE</div><div class="val">—<span class="u"> /min</span></div></div>
+            <div class="vit" id="vUrine"><div class="lab">URINE OUTPUT</div><div class="val">—<span class="u"> mL/hr</span></div></div>
+          </div>
+          <div class="ecgwrap">
+            <div class="ecglabel"><span>ARTERIAL WAVEFORM</span><span class="rname" id="ecgName">—</span></div>
+            <canvas id="ecg" width="520" height="74"></canvas>
+          </div>
+          <div class="loc">MENTAL STATUS: <b id="locTxt">—</b></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>LABS · DRAWN</h3>
+        <div class="labgrid">
+          <div class="labcell glu"><div class="lab">HEMOGLOBIN</div><div class="val" id="lHgb">—<span class="u"> g/dL</span></div></div>
+          <div class="labcell k"><div class="lab">LACTATE</div><div class="val" id="lLact">—<span class="u"> mmol/L</span></div></div>
+          <div class="labcell hco3"><div class="lab">BASE DEFICIT</div><div class="val" id="lBd">—<span class="u"> mEq/L</span></div></div>
+          <div class="labcell gap" id="gapcell"><div class="lab">INR</div><div class="val" id="lInr">—</div></div>
+        </div>
+        <div class="drawbar">
+          <button class="drawbtn" id="drawBtn" onclick="drawLabs()">⎙ DRAW LABS</button>
+          <span class="drawmeta" id="drawMeta">No labs drawn yet.</span>
+        </div>
+        <span class="adv-toggle" id="advToggle" onclick="toggleAdv()">▸ show advanced labs (INR)</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: dials + alerts -->
+    <div class="col">
+      <div class="panel">
+        <h3>INTERVENTIONS · DIALS</h3>
+        <div class="dial">
+          <div class="top"><span class="nm">IV CRYSTALLOID</span><span class="rd" id="rdCryst">OFF</span></div>
+          <input type="range" id="dCryst" min="0" max="100" value="0" oninput="onDial()">
+          <div class="hint">Raises volume fast, but carries no oxygen and dilutes hemoglobin and clotting factors. Useful early, dangerous as a crutch.</div>
+        </div>
+        <div class="dial">
+          <div class="top"><span class="nm">BLOOD PRODUCTS</span><span class="rd" id="rdBlood">OFF</span></div>
+          <input type="range" id="dBlood" min="0" max="100" value="0" oninput="onDial()">
+          <div class="hint">Refills volume AND restores oxygen carriage and clotting. The real resuscitation in hemorrhage.</div>
+        </div>
+        <div class="dial">
+          <div class="top"><span class="nm">SOURCE CONTROL</span><span class="rd" id="rdSource">OFF</span></div>
+          <input type="range" id="dSource" min="0" max="100" value="0" oninput="onDial()">
+          <div class="hint">Pressure now, definitive control over time. Without it you are filling a leaking tank.</div>
+        </div>
+        <div class="dial">
+          <div class="top"><span class="nm">VASOPRESSORS</span><span class="rd" id="rdPressor">OFF</span></div>
+          <input type="range" id="dPressor" min="0" max="100" value="0" oninput="onDial()">
+          <div class="hint">Squeezes the vessels to raise the pressure reading — but it cannot fill an empty tank, and it worsens tissue perfusion.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>ALERTS</h3>
+        <div class="alerts" id="alerts"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CRITICAL MOMENT ===================== -->
+<div id="crit">
+  <div class="critcard">
+    <h2 id="critTitle">CRITICAL</h2>
+    <div class="read" id="critRead"></div>
+    <div class="acts" id="critActs"></div>
+    <div class="crittimer"><i id="critBar"></i></div>
+  </div>
+</div>
+<div class="flashwin" id="flashWin"></div>
+
+<!-- ===================== DEBRIEF ===================== -->
+<div id="debrief">
+  <div class="dbwrap">
+    <h2>CASE DEBRIEF</h2>
+    <div class="verdict" id="dbVerdict"></div>
+
+    <div class="chartbox">
+      <h3>BLOOD PRESSURE — WHAT YOU WATCHED vs THE EMPTYING TANK</h3>
+      <p class="cap">The pink line is the blood pressure you saw on the monitor the whole time. It held normal while the hidden blood volume (the shaded band) drained and the compensation reserve (gold) burned down. The pressure only warned you once the reserve was nearly gone.</p>
+      <canvas class="dbchart" id="cK" width="940" height="170"></canvas>
+      <div class="legend">
+        <span><i style="background:#ff8aa0"></i>blood pressure (monitor)</span>
+        <span><i style="background:#5650a0"></i>blood volume (hidden)</span>
+        <span><i style="background:var(--gold)"></i>compensation reserve (hidden)</span>
+      </div>
+    </div>
+
+    <div class="chartbox">
+      <h3>LACTATE — THE TRUTH YOU COULD DRAW</h3>
+      <p class="cap">The pressure lied; lactate told the truth — but only when you drew it. The line is the true lactate rising with every under-perfused minute. The dots are the readings you actually drew. The gaps are where you were blind.</p>
+      <canvas class="dbchart" id="cComp" width="940" height="170"></canvas>
+      <div class="legend">
+        <span><i style="background:#ff8aa0"></i>lactate (true)</span>
+        <span><i style="background:#fff"></i>your draws</span>
+        <span><i style="background:var(--warn)"></i>warning line</span>
+      </div>
+    </div>
+
+    <div class="chartbox">
+      <h3>HEMOGLOBIN &amp; CLOTTING</h3>
+      <p class="cap">Hemoglobin lags — it can look near-normal right after acute loss. Crystalloid-heavy stretches (shaded) dilute both the hemoglobin and the hidden clotting reserve, so the blood thins exactly when it needs to clot.</p>
+      <canvas class="dbchart" id="cGlu" width="940" height="170"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--hco3)"></i>hemoglobin</span>
+        <span><i style="background:var(--gold)"></i>clotting reserve (hidden)</span>
+        <span><i style="background:#888"></i>crystalloid-heavy</span>
+      </div>
+    </div>
+
+    <div class="chartbox">
+      <h3>TIMELINE — SCRUB THE WHOLE CASE</h3>
+      <input type="range" class="scrub" id="dbScrub" min="0" max="100" value="100" oninput="scrubTo(this.value)">
+      <div id="scrubState" style="font-size:16px;color:var(--dim);line-height:1.5"></div>
+    </div>
+
+    <div class="chartbox">
+      <h3>KEY BEATS</h3>
+      <div class="beats" id="dbBeats"></div>
+    </div>
+
+    <div class="quiz" id="dbQuiz"></div>
+
+    <div class="dbactions">
+      <button class="ctlbtn primary" onclick="location.reload()">RUN THE CASE AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================================
+   PATHO WARD — physiology engine (generic) + HEMORRHAGIC SHOCK case (data)
+   Case 02. Reuses the compensation-reserve + lying-number mechanics from DKA.
+   ALL clinical numbers are DRAFT pedagogical tunables — calibrate for feel.
+   ========================================================================= */
+
+/* ----------------------------------------------------------------------
+   ENGINE CONFIG — every tick constant is a named tunable in ONE block.
+   Calibration is a data edit, not a code edit. (spec §14)
+   ---------------------------------------------------------------------- */
+const CFG = {
+  TICK_MS: 2600,            // real ms per engine tick at 1x (wall-clock pace)
+  SIM_MIN_PER_TICK: 5,      // each tick = 5 sim minutes
+  RATE_SCALE: 0.62,         // stretches the physiology over MORE ticks (more decision
+                            // points, same endpoints — equilibria are preserved). Lower = slower.
+  LAB_DELAY_TICKS: 2,       // ticks until a drawn lab returns
+  CASE_MAX_TICKS: 320,      // safety cap
+  CRIT_WINDOW_MS: 26000,    // dilated-time window to read and act in a critical moment
+
+  // --- bleeding & blood volume ---
+  BLEED_START: 3.0,             // blood volume % lost per tick at presentation
+  SOURCE_REDUCE: 0.16,          // definitive source control lowers the bleed rate per tick
+  SOURCE_DAMP: 0.6,             // active pressure instantly slows current bleeding (fraction)
+  BLEED_COAG_PENALTY: 1.4,      // low clotting worsens bleeding (x-factor at coag 0)
+  CRYST_BV: 5.2,                // blood-volume gain per unit crystalloid
+  BLOOD_BV: 4.4,                // blood-volume gain per unit blood products
+
+  // --- hemoglobin (lags acutely — the deceptive lab) ---
+  HGB_START: 13,                // looks near-normal at presentation despite real loss
+  HGB_DILUTE: 0.95,             // crystalloid dilutes hemoglobin (reveals true anemia)
+  HGB_BLEED: 0.045,             // slow fall with ongoing loss
+  HGB_BLOOD: 0.72,              // transfusion raises it
+
+  // --- coagulation reserve (hidden) ---
+  COAG_START: 92,
+  COAG_DILUTE: 1.7,             // crystalloid dilutes clotting factors
+  COAG_CONSUME: 0.85,           // active bleeding consumes factors
+  COAG_BLOOD: 1.8,              // blood / plasma restores them
+
+  // --- lactate (the perfusion TRUTH — drawn) ---
+  LACT_START: 4.0,
+  PERF_GOOD: 0.60,              // perfusion index above this clears lactate
+  LACT_RISE: 1.1,               // per unit perfusion deficit
+  LACT_CLEAR: 0.55,             // per unit perfusion surplus
+
+  // --- compensation reserve (hidden) — vasoconstriction / tachycardia ---
+  COMP_START: 100,              // reserve at presentation
+  COMP_NEED: 88,                // compensation works whenever blood volume is below this
+  COMP_DRAIN: 0.085,            // drain per (blood-volume deficit below COMP_NEED) per tick
+  COMP_RECOVER: 0.7,            // recovers once volume restored
+  COMP_FLOOR: 32,               // BP stays propped until reserve falls BELOW this, then cliffs
+
+  // --- thresholds: early-warning alerts ---
+  HR_WARN: 118,                 // tachycardia — the first visible sign
+  LACT_WARN: 5.0,               // rising lactate
+  COMP_WARN: 35,                // reserve nearly spent
+  COAG_WARN: 45,                // dilutional coagulopathy developing
+  BP_WARN: 92,
+  URINE_LOW: 25,                // oliguria (mL/hr)
+
+  // --- cliffs (→ critical moment, never instant death) ---
+  BV_CRIT: 33,                  // tank nearly empty
+  COMP_CRIT: 13,                // reserve exhausted
+  BP_CRIT: 64,                  // pressure has fallen off the cliff
+  LACT_CRIT: 13,                // profound under-perfusion
+  COAG_CRIT: 20,                // coagulopathic bleeding spiral
+};
+
+/* ----------------------------------------------------------------------
+   HEMORRHAGIC SHOCK CASE — pure data against the generic engine (spec §14)
+   ---------------------------------------------------------------------- */
+const CASE_SHOCK = {
+  name: "BED 2 — HEMORRHAGIC SHOCK",
+  meta: "M · 24 · motorcycle crash · blunt abdominal trauma · ongoing internal bleeding",
+  init: { bv:82, bleed:CFG.BLEED_START, hgb:CFG.HGB_START, coag:CFG.COAG_START, lactate:CFG.LACT_START, comp:CFG.COMP_START },
+  mentorIntro: "Blood pressure reads normal — but in hemorrhage that is the LAST thing to fall. The body clamps down every vessel to protect it. Watch the heart rate, the urine, the lactate. They warn you long before the pressure does.",
+  mentorShown: false
+};
+
+/* ----------------------------------------------------------------------
+   RUNTIME STATE
+   ---------------------------------------------------------------------- */
+let S = null;          // live state
+let LOG = [];          // case log — single source of truth (spec §14)
+let tick = 0;
+let running = false, speedMul = 1, tickTimer = null;
+let pendingLabs = [];  // {readyTick, snap}
+let lastDraw = null;   // {tick, snap}
+let advShown = false;
+let critActive = false, critTimer = null, critResolved = false;
+let caseOver = false;
+let firedAlerts = {};  // de-dup alert keys
+let dials = { cryst:0, blood:0, source:0, pressor:0 };
+let firstBloodTick = null, bpFellTick = null;
+
+function fresh(){
+  S = Object.assign({}, CASE_SHOCK.init);
+  computeVitals();
+}
+
+/* ---------- derived helpers ---------- */
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function r1(v){ return Math.round(v*10)/10; }
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function compSupport(comp){ return clamp(comp/CFG.COMP_FLOOR, 0, 1); }   // 1 until reserve drops below floor
+function perfusionIndex(s, pressor){
+  // tissue flow: mostly blood volume, slightly protected by compensation, HURT by pressors (squeeze ≠ flow)
+  const volIdx = clamp((s.bv-30)/70, 0, 1);
+  return clamp(0.80*volIdx + 0.20*compSupport(s.comp) - 0.18*pressor, 0, 1.15);
+}
+
+/* ---------- VITALS (downstream readouts) ---------- */
+function computeVitals(){
+  const pressor = dials.pressor/100;
+  const volIdx = clamp((S.bv-30)/70, 0, 1);
+  const support = compSupport(S.comp);
+  const perf = perfusionIndex(S, pressor);
+  S.perf = perf;
+  // BLOOD PRESSURE — the liar. Held near-normal while reserve has support, then cliffs. Pressors prop it artificially.
+  S.bp = Math.round(clamp(40 + 75*(0.25*volIdx + 0.75*support) + 22*pressor, 36, 132));
+  // HEART RATE — rises early with volume loss (the first visible sign) and with compensation effort
+  S.hr = Math.round(clamp(70 + (100-S.bv)*1.45 + (100-S.comp)*0.18 + S.lactate*2.0, 60, 180));
+  // RESP — rises with the metabolic acidosis of hypoperfusion
+  S.rr = Math.round(clamp(14 + S.lactate*1.9, 10, 46));
+  // URINE OUTPUT (mL/hr) — falls early as kidneys are sacrificed to defend pressure
+  S.urine = Math.round(clamp((perf-0.22)*78, 0, 75));
+  // capillary refill (s) — prolongs early (clamped-down periphery)
+  S.capRefill = (clamp(2 + (1-perf)*5.5, 1.6, 9)).toFixed(1);
+  // LOC — anxiety first, then confusion, then obtunded
+  S.loc = perf>0.62?"Alert":(perf>0.46?"Anxious / restless":(perf>0.3?"Confused":"Obtunded"));
+  // arterial waveform quality (repurposed strip): strong → weak → thready
+  S.wave = waveFor(perf, support);
+}
+function waveFor(perf, support){
+  if(perf<0.32) return {name:"Thready, near-flat",cls:"bad",band:"thready"};
+  if(perf<0.5)  return {name:"Weak, narrow pulse",cls:"warn",band:"weak"};
+  if(support<0.6) return {name:"Narrowing pulse pressure",cls:"warn",band:"narrow"};
+  return {name:"Strong arterial pulse",cls:"ok",band:"strong"};
+}
+
+/* ----------------------------------------------------------------------
+   THE TICK LOOP (spec §5)
+   ---------------------------------------------------------------------- */
+function doTick(){
+  if(caseOver || critActive) return;
+  tick++;
+
+  // 1. read interventions
+  const cryst = dials.cryst/100, blood = dials.blood/100, source = dials.source/100, pressor = dials.pressor/100;
+  const SC = CFG.RATE_SCALE;   // global pace scale: smaller = changes land over more ticks
+
+  // 2. intermediates — effective bleeding: worsened by low clotting, slowed by active pressure
+  const coagPenalty = 1 + CFG.BLEED_COAG_PENALTY*(1 - S.coag/100);
+  const effBleed = S.bleed * coagPenalty * (1 - source*CFG.SOURCE_DAMP);
+
+  // 3. influence terms per driven variable (track dominant force for the log)
+  const terms = {};
+
+  // --- blood volume ---
+  let bvBleed = -effBleed;
+  let bvCryst = CFG.CRYST_BV*cryst;
+  let bvBlood = CFG.BLOOD_BV*blood;
+  terms.bv = { "hemorrhage":bvBleed, "crystalloid":bvCryst, "blood products":bvBlood };
+  let bv = clamp(S.bv + SC*(bvBleed + bvCryst + bvBlood), 18, 100);
+
+  // --- the bleed source itself: definitive control reduces it over time ---
+  let bleed = clamp(S.bleed - SC*CFG.SOURCE_REDUCE*source, 0, 20);
+
+  // --- hemoglobin: lags, then dilution + slow loss vs transfusion ---
+  let hDil = -CFG.HGB_DILUTE*cryst, hBleed = -CFG.HGB_BLEED*effBleed, hBlood = CFG.HGB_BLOOD*blood;
+  terms.hgb = { "crystalloid dilution":hDil, "ongoing loss":hBleed, "transfusion":hBlood };
+  let hgb = clamp(S.hgb + SC*(hDil + hBleed + hBlood), 3, 17);
+
+  // --- coagulation reserve (hidden): diluted by crystalloid, consumed by bleeding, restored by blood ---
+  let cDil = -CFG.COAG_DILUTE*cryst, cCons = -CFG.COAG_CONSUME*effBleed, cBlood = CFG.COAG_BLOOD*blood;
+  let coag = clamp(S.coag + SC*(cDil + cCons + cBlood), 5, 100);
+
+  // --- lactate (the perfusion truth) ---
+  const perf = perfusionIndex(S, pressor);
+  let lactD = (perf < CFG.PERF_GOOD) ? CFG.LACT_RISE*(CFG.PERF_GOOD - perf) : -CFG.LACT_CLEAR*(perf - CFG.PERF_GOOD);
+  terms.lactate = { "under-perfusion":(lactD>0?lactD:0), "clearance":(lactD<0?lactD:0) };
+  let lactate = clamp(S.lactate + SC*lactD, 0.4, 20);
+
+  // --- hidden compensation reserve: drains while defending pressure against low volume ---
+  const need = Math.max(0, CFG.COMP_NEED - bv);
+  let compD = -CFG.COMP_DRAIN*need + (bv > 78 ? CFG.COMP_RECOVER : 0);
+  let comp = clamp(S.comp + SC*compD, 0, 100);
+
+  // commit
+  S.bv=bv; S.bleed=bleed; S.hgb=hgb; S.coag=coag; S.lactate=lactate; S.comp=comp;
+  computeVitals();
+
+  // dominant force bookkeeping
+  S.dominant = {};
+  for(const v in terms){ S.dominant[v] = dominantTerm(terms[v]); }
+
+  // event tracking for debrief annotations
+  if(blood > 0.02 && firstBloodTick===null) firstBloodTick = tick;
+  if(bpFellTick===null && S.bp < 90 && S.comp < CFG.COMP_FLOOR) bpFellTick = tick;
+
+  // 8. snapshot
+  LOG.push(snapshot());
+
+  // 6/7. thresholds + alerts + cliffs
+  evalThresholds();
+
+  renderLive();
+
+  if(tick >= CFG.CASE_MAX_TICKS){ endCase("survived", "The clock ran out. Time to review."); }
+}
+
+function dominantTerm(obj){
+  let best=null, mag=0;
+  for(const k in obj){ if(Math.abs(obj[k])>mag){ mag=Math.abs(obj[k]); best=k; } }
+  return best || "steady";
+}
+
+function snapshot(){
+  return {
+    t:tick, simMin:tick*CFG.SIM_MIN_PER_TICK,
+    bv:r1(S.bv), bleed:r1(S.bleed), hgb:r1(S.hgb), coag:r1(S.coag), lactate:r1(S.lactate),
+    comp:r1(S.comp), perf:Math.round(S.perf*100)/100,
+    hr:S.hr, bp:S.bp, rr:S.rr, urine:S.urine, capRefill:S.capRefill, loc:S.loc,
+    wave:S.wave.name, band:S.wave.band,
+    dials:Object.assign({},dials), dominant:Object.assign({},S.dominant)
+  };
+}
+
+/* ----------------------------------------------------------------------
+   THRESHOLDS, ALERTS, CLIFFS (spec §8, §9)
+   ---------------------------------------------------------------------- */
+function alertOnce(key, cls, msg){
+  if(firedAlerts[key]) return;
+  firedAlerts[key]=true;
+  addAlert(cls,msg);
+}
+function evalThresholds(){
+  // early-warning signs (the ones that move BEFORE blood pressure does)
+  if(S.hr > CFG.HR_WARN) alertOnce("hr","warn","Heart rate "+S.hr+" — tachycardia is often the FIRST sign of blood loss, while the pressure still reads normal.");
+  if(S.urine < CFG.URINE_LOW) alertOnce("urine","warn","Urine output "+S.urine+" mL/hr — the kidneys are being sacrificed to defend the blood pressure. An early warning.");
+  if(S.lactate > CFG.LACT_WARN) alertOnce("lact","bad","Lactate "+r1(S.lactate)+" — tissues are starved of oxygen. This is the true severity, regardless of what the pressure says.");
+  if(S.coag < CFG.COAG_WARN) alertOnce("coag","warn","Clotting reserve dropping — too much crystalloid dilutes the blood's ability to clot.");
+  if(S.comp < CFG.COMP_WARN) alertOnce("comp","bad","Compensation nearly spent. The pressure is being held up by vasoconstriction, and that is about to fail.");
+  if(S.bp < CFG.BP_WARN) alertOnce("bp","bad","Blood pressure "+S.bp+" — the reserve has given out and pressure is now falling. This is late.");
+
+  // CLIFFS → critical moment (never instant death)
+  if(S.coag < CFG.COAG_CRIT)                       return triggerCritical("coag");
+  if(S.bv < CFG.BV_CRIT || (S.comp < CFG.COMP_CRIT && S.bp < CFG.BP_CRIT) || S.lactate > CFG.LACT_CRIT)
+                                                   return triggerCritical("decomp");
+}
+
+/* ----------------------------------------------------------------------
+   RENDER — live
+   ---------------------------------------------------------------------- */
+function vitClass(id, level){ const e=document.getElementById(id); e.className="vit "+level; }
+function renderLive(){
+  // clock
+  const tot=tick*CFG.SIM_MIN_PER_TICK; const hh=String(Math.floor(tot/60)).padStart(2,'0'); const mm=String(tot%60).padStart(2,'0');
+  document.getElementById('simClock').textContent=hh+":"+mm;
+  // vitals
+  setVit('vHR', S.hr, S.hr>130||S.hr<55?"bad":(S.hr>110?"warn":"ok"));
+  setVit('vBP', S.bp, S.bp<80?"bad":(S.bp<95?"warn":"ok"));
+  setVit('vRR', S.rr, S.rr>30?"warn":(S.rr<11?"bad":"ok"));
+  setVit('vUrine', S.urine, S.urine<15?"bad":(S.urine<25?"warn":"ok"));
+  document.getElementById('locTxt').textContent=S.loc;
+  const en=document.getElementById('ecgName'); en.textContent=S.wave.name; en.className="rname "+S.wave.cls;
+  // labels with units kept
+  function setVit(id,val,lvl){ const e=document.getElementById(id); const u=e.querySelector('.u').outerHTML;
+    e.querySelector('.val').innerHTML=val+u; e.className="vit "+lvl; }
+  // draw meta staleness
+  if(lastDraw){
+    const age=(tick-lastDraw.tick)*CFG.SIM_MIN_PER_TICK;
+    document.getElementById('drawMeta').innerHTML="Last draw <b>"+age+" min ago</b>"+(pendingLabs.length?" · result pending…":"");
+  } else if(pendingLabs.length){
+    document.getElementById('drawMeta').textContent="Result pending…";
+  }
+}
+function setVit(id,val,lvl){
+  const e=document.getElementById(id); const uEl=e.querySelector('.u');
+  const u=uEl?uEl.textContent:"";
+  e.querySelector('.val').innerHTML=val+'<span class="u">'+u+'</span>';
+  e.className="vit "+lvl;
+}
+
+function paintLabs(snap, fresh){
+  function set(id, v, unit){
+    const e=document.getElementById(id);
+    e.innerHTML=v+'<span class="u"> '+unit+'</span>';
+    e.classList.toggle('stale', !fresh);
+  }
+  set('lHgb', snap.hgb.toFixed(1), 'g/dL');
+  set('lLact', snap.lactate.toFixed(1), 'mmol/L');
+  set('lBd', Math.round(baseDeficit(snap)), 'mEq/L');
+  set('lInr', inrFor(snap.coag).toFixed(1), '');
+}
+function baseDeficit(snap){ return clamp(snap.lactate*1.5 + (snap.bv<70?(70-snap.bv)*0.12:0), 0, 30); }
+function inrFor(coag){ return clamp(1.0 + (100-coag)*0.022, 1.0, 4.0); }
+
+/* ----------------------------------------------------------------------
+   LABS — draw & recheck (spec §7)
+   ---------------------------------------------------------------------- */
+function drawLabs(){
+  if(caseOver) return;
+  const snap = snapshot();              // value AS IT IS NOW
+  pendingLabs.push({ ready: tick+CFG.LAB_DELAY_TICKS, snap });
+  lastDraw = { tick, snap };
+  addAlert("info","Labs drawn at "+fmtTime(tick)+". Result back in "+(CFG.LAB_DELAY_TICKS*CFG.SIM_MIN_PER_TICK)+" min.");
+  document.getElementById('drawBtn').disabled=true;
+  document.getElementById('drawBtn').textContent="⌛ PENDING";
+}
+function processLabs(){
+  for(let i=pendingLabs.length-1;i>=0;i--){
+    if(tick>=pendingLabs[i].ready){
+      const snap=pendingLabs[i].snap;
+      paintLabs(snap, true);            // shows values as they WERE when drawn
+      addAlert("info","Lab result back (drawn "+fmtTime(snap.t)+"): Hgb "+snap.hgb.toFixed(1)+" · lactate "+snap.lactate.toFixed(1)+" · base deficit "+Math.round(baseDeficit(snap)));
+      lastResultSnap = snap;
+      pendingLabs.splice(i,1);
+      document.getElementById('drawBtn').disabled=false;
+      document.getElementById('drawBtn').textContent="⎙ DRAW LABS";
+    }
+  }
+}
+let lastResultSnap=null;
+function fmtTime(t){ const m=t*CFG.SIM_MIN_PER_TICK; return String(Math.floor(m/60)).padStart(2,'0')+":"+String(m%60).padStart(2,'0'); }
+
+/* ----------------------------------------------------------------------
+   ALERTS UI
+   ---------------------------------------------------------------------- */
+function addAlert(cls,msg){
+  const box=document.getElementById('alerts');
+  const d=document.createElement('div'); d.className="alert "+cls;
+  d.innerHTML='<span class="tm">'+fmtTime(tick)+'</span> '+msg;
+  box.prepend(d);
+}
+
+/* ----------------------------------------------------------------------
+   CRITICAL MOMENT (spec §9) — decompensate into a teaching moment
+   ---------------------------------------------------------------------- */
+const CRIT = {
+  decomp:{
+    title:"DECOMPENSATED HEMORRHAGIC SHOCK",
+    read:"The pressure just fell off a cliff. It held normal for so long because the body clamped down every vessel to protect it — but that reserve is now spent and the tank is nearly empty.<br><br>Crystalloid will not carry oxygen or help the blood clot. Pressors only squeeze an empty tank.<br><br><b>What do you do right now?</b>",
+    acts:[
+      {t:"Give blood products wide open and get definitive source control now", ok:true,
+       why:"Correct. Blood refills the tank AND carries oxygen and clotting factors, while source control stops the loss. The only combination that actually reverses this."},
+      {t:"Pour in crystalloid as fast as possible to refill the empty tank", ok:false,
+       why:"Saline raises the volume number but carries no oxygen and dilutes the clotting factors, so the bleeding and the under-perfusion both worsen."},
+      {t:"Start vasopressors to bring the blood pressure back up immediately", ok:false,
+       why:"Pressors squeeze an empty tank — the pressure number rises while tissue perfusion falls further. You are treating the monitor, not the patient."}
+    ]
+  },
+  coag:{
+    title:"COAGULOPATHIC BLEEDING",
+    read:"The bleeding is accelerating and the blood has stopped clotting. Flooding the patient with saline diluted the clotting factors faster than the body could replace them.<br><br><b>What do you do right now?</b>",
+    acts:[
+      {t:"Switch to blood products and plasma to replace clotting factors and cells", ok:true,
+       why:"Correct. Replacing factors and red cells restores clotting and oxygen carriage. The crystalloid that caused the dilution comes down."},
+      {t:"Increase the crystalloid rate to keep the blood pressure propped up", ok:false,
+       why:"Crystalloid is exactly what diluted the clotting factors. More of it deepens the coagulopathy and the bleeding accelerates."},
+      {t:"Start vasopressors and hold all fluids and products for now", ok:false,
+       why:"Squeezing the vessels does nothing for clotting or volume. The bleeding continues and perfusion falls further."}
+    ]
+  }
+};
+
+function triggerCritical(kind){
+  if(critActive || caseOver) return;
+  critActive=true; critResolved=false;
+  pause(true);
+  const c=CRIT[kind];
+  document.getElementById('critTitle').textContent=c.title;
+  document.getElementById('critRead').innerHTML=c.read;
+  const acts=document.getElementById('critActs'); acts.innerHTML="";
+  // shuffle so the correct choice is never in a predictable position
+  shuffle(c.acts).forEach(a=>{
+    const b=document.createElement('button'); b.className="critbtn"; b.textContent="▸ "+a.t;
+    b.onclick=()=>resolveCritical(kind,a);
+    acts.appendChild(b);
+  });
+  beep(140,0.5,'sawtooth',0.18); setTimeout(()=>beep(120,0.5,'sawtooth',0.18),300);
+  document.getElementById('crit').classList.add('show');
+  // dilated window timer
+  let tleft=CFG.CRIT_WINDOW_MS; const bar=document.getElementById('critBar'); const t0=tleft;
+  clearInterval(critTimer);
+  critTimer=setInterval(()=>{
+    tleft-=100; bar.style.width=Math.max(0,(tleft/t0*100))+"%";
+    if(tleft<=0){ clearInterval(critTimer); if(!critResolved) loseCritical(kind, c.acts.find(a=>!a.ok)); }
+  },100);
+}
+function resolveCritical(kind, act){
+  if(critResolved) return; critResolved=true;
+  clearInterval(critTimer);
+  document.getElementById('crit').classList.remove('show');
+  critActive=false;
+  if(act.ok){
+    // apply the rescue to the engine so the patient actually recovers
+    applyRescue(kind);
+    addAlert("good","CRITICAL RESOLVED — "+act.why);
+    flashWin();
+    pause(false);
+  } else {
+    loseCritical(kind, act);
+  }
+}
+function applyRescue(kind){
+  if(kind==="decomp"){ dials.blood=90; dials.source=80; dials.cryst=20; dials.pressor=0; syncDials();
+    S.bv=Math.max(S.bv,46); S.comp=30; S.coag=Math.max(S.coag,40); }
+  if(kind==="coag"){ dials.blood=85; dials.cryst=10; dials.pressor=0; syncDials();
+    S.coag=Math.max(S.coag,42); S.bv=Math.max(S.bv,44); }
+  computeVitals();
+}
+function loseCritical(kind, act){
+  critResolved=true; clearInterval(critTimer);
+  document.getElementById('crit').classList.remove('show');
+  critActive=false;
+  endCase("lost", "The patient was lost to "+CRIT[kind].title.toLowerCase()+". "+(act?act.why:""));
+}
+
+/* ----------------------------------------------------------------------
+   CLOCK CONTROL
+   ---------------------------------------------------------------------- */
+function loop(){
+  if(!running) return;
+  doTick();
+  processLabs();
+  if(!caseOver && !critActive) tickTimer=setTimeout(loop, CFG.TICK_MS/speedMul);
+}
+function pause(p){
+  running=!p;
+  document.getElementById('playBtn').innerHTML = running?"⏸ PAUSE":"▶ PLAY";
+  document.getElementById('spdLabel').textContent=(running?"running":"paused")+" · "+speedMul+"×";
+  if(running){ clearTimeout(tickTimer); tickTimer=setTimeout(loop,CFG.TICK_MS/speedMul); }
+}
+function togglePlay(){ pause(running); }
+function setSpeed(m){ speedMul=m; document.getElementById('spdLabel').textContent=(running?"running":"paused")+" · "+m+"×"; }
+
+/* ----------------------------------------------------------------------
+   DIALS
+   ---------------------------------------------------------------------- */
+function onDial(){
+  dials.cryst=+document.getElementById('dCryst').value;
+  dials.blood=+document.getElementById('dBlood').value;
+  dials.source=+document.getElementById('dSource').value;
+  dials.pressor=+document.getElementById('dPressor').value;
+  paintDialReadouts();
+}
+function paintDialReadouts(){
+  document.getElementById('rdCryst').textContent=dials.cryst?dials.cryst+"%":"OFF";
+  document.getElementById('rdBlood').textContent=dials.blood?dials.blood+"%":"OFF";
+  document.getElementById('rdSource').textContent=dials.source?dials.source+"%":"OFF";
+  document.getElementById('rdPressor').textContent=dials.pressor?dials.pressor+"%":"OFF";
+}
+function syncDials(){
+  document.getElementById('dCryst').value=dials.cryst;
+  document.getElementById('dBlood').value=dials.blood;
+  document.getElementById('dSource').value=dials.source;
+  document.getElementById('dPressor').value=dials.pressor;
+  paintDialReadouts();
+}
+function toggleAdv(){
+  advShown=!advShown;
+  document.getElementById('gapcell').style.display=advShown?"block":"none";
+  document.getElementById('advToggle').textContent=advShown?"▾ hide advanced labs":"▸ show advanced labs (INR)";
+}
+
+/* ----------------------------------------------------------------------
+   ARTERIAL WAVEFORM STRIP — pulse amplitude narrows / weakens with shock
+   ---------------------------------------------------------------------- */
+let ecgX=0, ecgCtx=null, ecgPhase=0;
+function initEcg(){
+  const c=document.getElementById('ecg'); ecgCtx=c.getContext('2d');
+  ecgCtx.fillStyle="#03060c"; ecgCtx.fillRect(0,0,c.width,c.height);
+  requestAnimationFrame(ecgFrame);
+}
+function artY(band, p){
+  // arterial pressure pulse: steep upstroke, dicrotic notch, decay. Amplitude shrinks as perfusion falls.
+  const base=64;
+  let amp = band==="strong"?42 : band==="narrow"?30 : band==="weak"?17 : 7;
+  let y=base;
+  if(p<0.16){ y -= amp * Math.sin((p/0.16)*(Math.PI/2)); }              // sharp systolic upstroke
+  else if(p<0.34){ const d=(p-0.16)/0.18; y -= amp*(1 - 0.45*d); }      // early decline
+  else if(p<0.42){ const d=(p-0.34)/0.08; y -= amp*(0.55 + 0.12*Math.sin(d*Math.PI)); } // dicrotic notch
+  else if(p<0.9){ const d=(p-0.42)/0.48; y -= amp*0.55*(1-d); }         // diastolic runoff
+  if(band==="thready"){ y += (Math.random()-0.5)*4; }
+  return y;
+}
+function ecgFrame(){
+  if(!ecgCtx){ return; }
+  const c=ecgCtx.canvas; const band=S?S.wave.band:"strong";
+  const hr = S?S.hr:90;
+  const speed = 3;
+  for(let s=0;s<speed;s++){
+    ecgCtx.fillStyle="#03060c"; ecgCtx.fillRect(ecgX,0,6,c.height);
+    const p=(ecgPhase%1);
+    const col = band==="strong"?"#52e0a0":(band==="narrow"||band==="weak"?"#ffcc55":"#ff5b6e");
+    ecgCtx.strokeStyle=col; ecgCtx.lineWidth=1.6; ecgCtx.beginPath();
+    ecgCtx.moveTo(ecgX, prevY||64);
+    const y=artY(band,p); ecgCtx.lineTo(ecgX+1, y); ecgCtx.stroke();
+    prevY=y;
+    ecgX+=1; if(ecgX>=c.width){ ecgX=0; }
+    ecgPhase += 0.010 + (hr/90)*0.011;   // beat rate tracks heart rate
+  }
+  requestAnimationFrame(ecgFrame);
+}
+let prevY=64;
+
+/* ----------------------------------------------------------------------
+   AUDIO — minimal alert beeps
+   ---------------------------------------------------------------------- */
+let AC=null;
+function beep(freq,dur,type,vol){
+  try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type=type||'square'; o.frequency.value=freq; g.gain.value=vol||0.08;
+    o.connect(g); g.connect(AC.destination); o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
+    o.stop(AC.currentTime+dur);
+  }catch(e){}
+}
+function flashWin(){ const f=document.getElementById('flashWin'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); beep(660,0.18,'square',0.1); }
+
+/* ----------------------------------------------------------------------
+   CASE LIFECYCLE
+   ---------------------------------------------------------------------- */
+function startCase(){
+  document.getElementById('title').style.display="none";
+  document.getElementById('game').classList.remove('hidden');
+  document.getElementById('ptName').textContent=CASE_SHOCK.name;
+  document.getElementById('ptMeta').textContent=CASE_SHOCK.meta;
+  document.getElementById('debrief').classList.remove('show');
+  document.getElementById('crit').classList.remove('show');
+  document.getElementById('alerts').innerHTML="";
+  fresh(); LOG=[]; DRAWS=[]; tick=0; pendingLabs=[]; lastDraw=null; lastResultSnap=null; firedAlerts={};
+  caseOver=false; critActive=false; critResolved=false;
+  firstBloodTick=null; bpFellTick=null;
+  dials={cryst:0,blood:0,source:0,pressor:0}; syncDials();
+  LOG.push(snapshot());
+  renderLive(); initEcg();
+  addAlert("info","Trauma patient arrives. Vitals are live. Draw labs to see hemoglobin, lactate and base deficit.");
+  // mentor (tutorial only, says it once)
+  document.getElementById('mentorTxt').textContent=CASE_SHOCK.mentorIntro;
+  running=true; speedMul=1;
+  document.getElementById('playBtn').innerHTML="⏸ PAUSE";
+  tickTimer=setTimeout(loop, CFG.TICK_MS);
+}
+function endCaseManual(){ endCase(S.bv<60||S.lactate>3?"incomplete":"survived","You ended the case for review."); }
+function endCase(kind, msg){
+  if(caseOver) return; caseOver=true; running=false; clearTimeout(tickTimer); clearInterval(critTimer);
+  buildDebrief(kind,msg);
+  document.getElementById('debrief').classList.add('show');
+}
+
+/* ----------------------------------------------------------------------
+   DEBRIEF (spec §10) — where play becomes exam-ready understanding
+   ---------------------------------------------------------------------- */
+function buildDebrief(kind,msg){
+  const win = (kind==="survived" && lastLogStable());
+  const v=document.getElementById('dbVerdict');
+  if(kind==="lost"){ v.className="verdict loss"; v.textContent="PATIENT LOST — AND HERE IS EXACTLY WHY"; }
+  else if(win){ v.className="verdict win"; v.textContent="PATIENT STABILIZED"; }
+  else { v.className="verdict"; v.textContent="CASE REVIEW"; }
+
+  drawKChart();
+  drawCompChart();
+  drawGluChart();
+  buildBeats(kind,msg);
+  buildScrub();
+  buildQuiz(kind);
+}
+function lastLogStable(){
+  const l=LOG[LOG.length-1];
+  return l.bv>62 && l.bleed<0.6 && l.lactate<3.0 && l.comp>42 && l.bp>96;
+}
+
+function chartCtx(id){ const c=document.getElementById(id); const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle="#05080f"; ctx.fillRect(0,0,c.width,c.height);
+  // grid
+  ctx.strokeStyle="#0e1d33"; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){ const y=i/4*c.height; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(c.width,y); ctx.stroke(); }
+  return {c,ctx};
+}
+function plot(ctx,c,arr,min,max,color,w){
+  ctx.strokeStyle=color; ctx.lineWidth=w||2; ctx.beginPath();
+  arr.forEach((val,i)=>{ const x=i/(arr.length-1||1)*c.width; const y=c.height-((val-min)/(max-min))*c.height;
+    if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+  ctx.stroke();
+}
+function drawKChart(){   // BLOOD PRESSURE (what you watched) vs the HIDDEN tank + reserve
+  const {c,ctx}=chartCtx('cK');
+  // hidden blood volume as filled area (0-100%)
+  ctx.fillStyle="rgba(86,80,160,.26)"; ctx.beginPath(); ctx.moveTo(0,c.height);
+  LOG.forEach((l,i)=>{ const x=i/(LOG.length-1||1)*c.width; const y=c.height-(l.bv/100)*c.height; ctx.lineTo(x,y); });
+  ctx.lineTo(c.width,c.height); ctx.closePath(); ctx.fill();
+  // compensation reserve (hidden) line
+  plot(ctx,c,LOG.map(l=>l.comp),0,100,"#f0c840",1.8);
+  // blood pressure — what the monitor showed (stays flat, then cliffs)
+  plot(ctx,c,LOG.map(l=>l.bp),0,140,"#ff8aa0",2.6);
+}
+function drawCompChart(){   // LACTATE — the truth you could draw
+  const {c,ctx}=chartCtx('cComp');
+  const lmin=0,lmax=16;
+  const warnY=c.height-((CFG.LACT_WARN-lmin)/(lmax-lmin))*c.height;
+  ctx.fillStyle="rgba(255,91,110,.10)"; ctx.fillRect(0,0,c.width,warnY);
+  ctx.strokeStyle="rgba(255,204,85,.45)"; ctx.setLineDash([4,4]); ctx.beginPath();
+  ctx.moveTo(0,warnY); ctx.lineTo(c.width,warnY); ctx.stroke(); ctx.setLineDash([]);
+  // true lactate
+  plot(ctx,c,LOG.map(l=>l.lactate),lmin,lmax,"#ff8aa0",2.4);
+  // your draws (dots) — value as drawn
+  ctx.fillStyle="#fff";
+  DRAWS.forEach(p=>{ const x=p.t/(LOG.length-1||1)*c.width; const y=c.height-((p.lactate-lmin)/(lmax-lmin))*c.height;
+    ctx.beginPath(); ctx.arc(x,y,4,0,6.28); ctx.fill();
+    ctx.strokeStyle="rgba(255,255,255,.4)"; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,c.height); ctx.stroke(); });
+}
+function drawGluChart(){   // HEMOGLOBIN (lags) & CLOTTING (hidden)
+  const {c,ctx}=chartCtx('cGlu');
+  // crystalloid-heavy shading
+  ctx.fillStyle="rgba(160,160,160,.16)";
+  LOG.forEach((l,i)=>{ if(l.dials.cryst>40){ const x=i/(LOG.length-1||1)*c.width; ctx.fillRect(x,0,c.width/LOG.length+1,c.height); }});
+  plot(ctx,c,LOG.map(l=>l.coag),0,100,"#f0c840",1.8);   // clotting reserve (hidden)
+  plot(ctx,c,LOG.map(l=>l.hgb),0,17,"#5ec8ff",2.4);     // hemoglobin (lags)
+}
+
+function buildBeats(kind,msg){
+  const box=document.getElementById('dbBeats'); box.innerHTML="";
+  const L0=LOG[0], LN=LOG[LOG.length-1];
+  const beats=[];
+  beats.push({t:L0,cls:"",txt:"Arrival: blood pressure "+L0.bp+" (looked normal), heart rate already "+L0.hr+". Hidden: blood volume was only "+Math.round(L0.bv)+"% and the patient was actively bleeding."});
+  // first early-warning the monitor showed
+  const hrIdx=LOG.findIndex(l=>l.hr>CFG.HR_WARN);
+  if(hrIdx>0) beats.push({t:LOG[hrIdx],cls:"",txt:"Heart rate crossed "+CFG.HR_WARN+" here while the pressure was still flat — the earliest sign you could see, long before the cliff."});
+  if(bpFellTick!==null) beats.push({t:LOG[bpFellTick]||L0,cls:"bad",txt:"Blood pressure finally fell here. It held normal until the compensation reserve was nearly spent, then dropped fast. The pressure was the LAST thing to warn you."});
+  // recheck (lactate) gap analysis
+  const gap=biggestRecheckGap();
+  if(gap) beats.push({t:LOG[gap.endIdx],cls:gap.missed?"bad":"",txt:gap.missed
+    ? "Your last lactate was at "+fmtTime(gap.startT)+" reading "+gap.startL.toFixed(1)+". By "+fmtTime(gap.endT)+" it was "+gap.endL.toFixed(1)+". Redrawing in that window is the catch the pressure could not give you."
+    : "Longest gap between lactate draws was "+gap.minutes+" min — tight enough that you tracked the true severity."});
+  // management quality
+  const gaveBlood = LOG.some(l=>l.dials.blood>10);
+  const gaveSource = LOG.some(l=>l.dials.source>10);
+  const crystHeavy = LOG.filter(l=>l.dials.cryst>50).length > LOG.length*0.4;
+  beats.push({t:LN,cls:(gaveBlood&&gaveSource)?"good":"bad",txt:(gaveBlood&&gaveSource)
+    ? "You gave blood products AND controlled the source — the combination that actually reverses hemorrhage: refill the tank, carry oxygen, stop the leak."
+    : (gaveSource?"You controlled the source but leaned on volume that carried no oxygen or clotting factors.":"You never achieved definitive source control — filling a leaking tank only buys time.")});
+  if(crystHeavy) beats.push({t:LN,cls:"bad",txt:"You relied heavily on crystalloid. It raised the volume number but diluted the hemoglobin and the clotting factors — the pressure looked better while the blood got thinner."});
+  if(kind==="lost") beats.push({t:LN,cls:"bad",txt:msg});
+  beats.forEach(b=>{ const d=document.createElement('div'); d.className="beat "+b.cls;
+    d.innerHTML='<span class="t">'+fmtTime(b.t.t)+'</span> '+b.txt; box.appendChild(d); });
+}
+function biggestRecheckGap(){
+  const LN=LOG[LOG.length-1];
+  if(DRAWS.length<1) return {missed:true,startT:0,endT:LN.t,startL:LOG[0].lactate,endL:LN.lactate,endIdx:LOG.length-1,minutes:LN.simMin};
+  let worst=null;
+  for(let i=0;i<DRAWS.length;i++){
+    const startT=DRAWS[i].t; const endT=(i+1<DRAWS.length)?DRAWS[i+1].t:LN.t;
+    const trueEndL=LOG[Math.min(endT,LOG.length-1)].lactate;
+    const rise=trueEndL-DRAWS[i].lactate; const mins=(endT-startT)*CFG.SIM_MIN_PER_TICK;
+    if(!worst||rise>worst.rise) worst={rise,startT,endT,startL:DRAWS[i].lactate,endL:trueEndL,endIdx:Math.min(endT,LOG.length-1),minutes:mins,missed:rise>1.5};
+  }
+  return worst;
+}
+let DRAWS=[]; // {t, hgb, lactate, bp, coag}
+
+function buildScrub(){
+  const sc=document.getElementById('dbScrub'); sc.max=LOG.length-1; sc.value=LOG.length-1;
+  scrubTo(LOG.length-1);
+}
+function scrubTo(i){
+  i=+i; const l=LOG[i]; if(!l) return;
+  const dom=l.dominant||{};
+  document.getElementById('scrubState').innerHTML=
+    "<b style='color:var(--gold-bright)'>"+fmtTime(l.t)+"</b> &nbsp; "+
+    "BP "+l.bp+" · HR "+l.hr+" · lactate "+l.lactate.toFixed(1)+" · Hgb "+l.hgb.toFixed(1)+" · urine "+l.urine+" mL/hr<br>"+
+    "<span style='color:#b3a0ff'>hidden: blood volume "+Math.round(l.bv)+"% · compensation reserve "+Math.round(l.comp)+"% · clotting "+Math.round(l.coag)+"%</span><br>"+
+    "waveform: "+l.wave+" · RR "+l.rr+" · "+l.loc+"<br>"+
+    "<span style='color:var(--dim)'>dominant force — volume: "+(dom.bv||"-")+" · lactate: "+(dom.lactate||"-")+" · hemoglobin: "+(dom.hgb||"-")+"</span>";
+}
+
+function buildQuiz(kind){
+  const q=document.getElementById('dbQuiz');
+  const item={
+    q:"Why can blood pressure stay normal during significant hemorrhage, then fall suddenly?",
+    opts:[
+      {t:"Because compensatory vasoconstriction and tachycardia defend the pressure until roughly a third of the blood volume is gone, then it cliffs.", ok:true},
+      {t:"Because blood pressure rises during hemorrhage as the heart pumps harder to push the remaining blood around.", ok:false},
+      {t:"Because the blood pressure reading is simply unreliable and should be ignored entirely in trauma.", ok:false},
+      {t:"Because blood pressure has no real relationship to blood volume and the two move independently.", ok:false}
+    ],
+    ex:"The body clamps down peripheral vessels and speeds the heart to defend central pressure, so the pressure reads normal while volume falls. That reserve is finite — once it is spent (around Class III shock), pressure drops fast. The early warnings are tachycardia, narrowing pulse pressure, falling urine output, and rising lactate, not the systolic number itself."
+  };
+  q.innerHTML="<h3>NAME THE MECHANISM</h3><p>"+item.q+"</p>";
+  shuffle(item.opts).forEach(o=>{ const b=document.createElement('button'); b.className="opt"; b.textContent=o.t;
+    b.onclick=()=>{ if(b.dataset.done)return;
+      document.querySelectorAll('#dbQuiz .opt').forEach(x=>x.dataset.done=1);
+      b.classList.add(o.ok?"right":"wrong");
+      if(!o.ok){ document.querySelectorAll('#dbQuiz .opt').forEach(x=>{ if(x.textContent===item.opts.find(z=>z.ok).t)x.classList.add('right'); }); }
+      document.querySelector('#dbQuiz .ex').style.display="block";
+    };
+    q.appendChild(b);
+  });
+  const ex=document.createElement('div'); ex.className="ex"; ex.textContent=item.ex; q.appendChild(ex);
+}
+
+/* hook draw tracking into drawLabs */
+const _drawLabs=drawLabs;
+drawLabs=function(){ if(caseOver)return; DRAWS.push({t:tick,hgb:S.hgb,lactate:S.lactate,bp:S.bp,coag:S.coag}); _drawLabs(); };
+
+/* keyboard: space = pause */
+document.addEventListener('keydown',e=>{
+  if(e.code==="Space" && !document.getElementById('game').classList.contains('hidden') && !critActive){ e.preventDefault(); togglePlay(); }
+});
+</script>
+</body>
+</html>

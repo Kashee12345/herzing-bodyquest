@@ -1,0 +1,2478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>/*__GAME_MUTE__*/
+(function(){
+  if(window.__gameMuteInstalled) return; window.__gameMuteInstalled=true;
+  var KEY="game_sound_muted"; var muted=false; try{muted=localStorage.getItem(KEY)==="1";}catch(e){}
+  var ctxs=[];
+  ["AudioContext","webkitAudioContext"].forEach(function(n){var O=window[n]; if(!O||O.__wrapped) return;
+    function W(){ var c=Reflect.construct(O, arguments, W); ctxs.push(c);
+      var r=c.resume.bind(c); c.resume=function(){return muted?Promise.resolve():r();};
+      if(muted){try{c.suspend();}catch(e){}} return c; }
+    W.prototype=O.prototype; W.__wrapped=true; try{window[n]=W;}catch(e){}});
+  try{ var ss=window.speechSynthesis; if(ss&&ss.speak&&!ss.__wrapped){
+    var os=ss.speak.bind(ss); ss.speak=function(u){ if(muted) return; return os(u); }; ss.__wrapped=true; } }catch(e){}
+  function apply(){ ctxs.forEach(function(c){ try{ muted?c.suspend():c.resume(); }catch(e){} });
+    if(muted){ try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
+    var b=document.getElementById("__sndbtn");
+    if(b){ b.innerHTML = muted ? "&#128263;&nbsp;Sound off" : "&#128266;&nbsp;Sound on";
+           b.style.background = muted ? "rgba(150,30,30,.88)" : "rgba(17,17,17,.82)"; } }
+  window.__toggleGameSound=function(){ muted=!muted; try{localStorage.setItem(KEY,muted?"1":"0");}catch(e){} apply(); };
+  function add(){ if(document.getElementById("__sndbtn")) return;
+    var b=document.createElement("button"); b.id="__sndbtn"; b.type="button";
+    b.setAttribute("aria-label","Toggle all game sound on or off"); b.onclick=window.__toggleGameSound;
+    b.style.cssText="position:fixed;top:8px;left:8px;z-index:2147483647;font:700 12px system-ui,-apple-system,sans-serif;padding:6px 11px;border-radius:8px;border:1px solid rgba(255,255,255,.4);background:rgba(17,17,17,.82);color:#fff;cursor:pointer;box-shadow:0 2px 7px rgba(0,0,0,.4);opacity:.9;";
+    (document.body||document.documentElement).appendChild(b); apply(); }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",add); else add();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ChemQuest">
+<meta name="application-name" content="ChemQuest">
+<title>ChemQuest Herzing — Discover Your Future in Chemistry</title>
+<link rel="apple-touch-icon" id="cqAppleIcon">
+<link rel="icon" id="cqFavicon">
+<link rel="manifest" id="cqManifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Cinzel+Decorative:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cq-gold:#f0c840;
+  --cq-gold-bright:#ffd700;
+  --cq-rare:#5ec8ff;
+  --cq-leg:#ffcd44;
+  --cq-com:#7ed85a;
+  --cq-myth:#ff6cb6;
+  --cq-bg:#070b12;
+  --cq-panel:#0d1422;
+  --cq-line:#26344d;
+  --font-pixel:'Press Start 2P',monospace;
+  --font-read:'VT323',monospace;
+  --font-disp:'Cinzel Decorative',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--cq-bg);color:#dce8ff;font-family:var(--font-read);
+  font-size:18px;line-height:1.35;user-select:none;-webkit-user-select:none;
+  position:relative;
+}
+/* CRT scanlines + vignette */
+body::before{
+  content:'';position:fixed;inset:0;z-index:9000;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px);
+  mix-blend-mode:multiply;
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:9001;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%);
+}
+.cq-screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.cq-screen.on{display:flex}
+button{font-family:inherit;cursor:pointer}
+.cq-btn{
+  font-family:var(--font-pixel);font-size:12px;color:#081018;
+  background:linear-gradient(180deg,var(--cq-gold-bright),#c89a18);
+  border:0;border-radius:4px;padding:13px 22px;letter-spacing:1px;
+  box-shadow:0 4px 0 #7a5c08,0 0 18px rgba(240,200,64,.35);
+  transition:transform .08s,box-shadow .08s;
+}
+.cq-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #7a5c08}
+.cq-btn.ghost{
+  background:transparent;color:var(--cq-gold);border:2px solid var(--cq-gold);
+  box-shadow:none;
+}
+/* ============ TITLE SCREEN ============ */
+#cqTitle{background:radial-gradient(circle at 50% 35%,#101a2e 0%,#070b12 70%)}
+.cq-aurora{position:absolute;inset:0;overflow:hidden;filter:blur(46px);opacity:.55}
+.cq-aurora i{position:absolute;width:55vmax;height:55vmax;border-radius:50%}
+.cq-aurora i:nth-child(1){background:radial-gradient(circle,rgba(94,200,255,.5),transparent 60%);animation:cqDrift1 17s ease-in-out infinite alternate}
+.cq-aurora i:nth-child(2){background:radial-gradient(circle,rgba(240,200,64,.4),transparent 60%);right:-10%;top:30%;animation:cqDrift2 21s ease-in-out infinite alternate}
+.cq-aurora i:nth-child(3){background:radial-gradient(circle,rgba(126,216,90,.35),transparent 60%);left:20%;bottom:-20%;animation:cqDrift3 25s ease-in-out infinite alternate}
+@keyframes cqDrift1{from{transform:translate(-12%,-8%)}to{transform:translate(10%,12%)}}
+@keyframes cqDrift2{from{transform:translate(8%,-10%) scale(1.1)}to{transform:translate(-10%,6%) scale(.9)}}
+@keyframes cqDrift3{from{transform:translate(-6%,8%)}to{transform:translate(12%,-10%)}}
+.cq-sparkles{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen}
+.cq-sparkles s{position:absolute;width:3px;height:3px;background:#fff;border-radius:50%;opacity:0;animation:cqTwinkle 3.4s linear infinite}
+@keyframes cqTwinkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:.95;transform:scale(1.4)}}
+.cq-kicker{
+  font-family:var(--font-pixel);font-size:11px;color:var(--cq-rare);
+  letter-spacing:3px;margin-bottom:18px;text-shadow:0 0 12px rgba(94,200,255,.7);
+  animation:cqFadeDown 1.1s .2s both;
+}
+.cq-logo{
+  font-family:var(--font-disp);font-weight:900;text-align:center;
+  font-size:clamp(40px,9vw,84px);line-height:1.02;
+  background:linear-gradient(180deg,#fff8e0 8%,var(--cq-gold-bright) 45%,#9a6e10 95%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 18px rgba(240,200,64,.45));
+  animation:cqLogoFall 1.2s .45s cubic-bezier(.2,1.4,.4,1) both;
+}
+@keyframes cqLogoFall{from{opacity:0;transform:translateY(-46px) scale(1.12);filter:blur(10px)}to{opacity:1;transform:none;filter:blur(0) drop-shadow(0 4px 18px rgba(240,200,64,.45))}}
+@keyframes cqFadeDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+.cq-divider{height:3px;width:min(420px,72vw);margin:20px 0 14px;position:relative;overflow:hidden;background:rgba(240,200,64,.16);border-radius:2px}
+.cq-divider::after{content:'';position:absolute;top:0;left:-40%;width:40%;height:100%;background:linear-gradient(90deg,transparent,var(--cq-gold-bright),transparent);animation:cqSweep 2.6s linear infinite}
+@keyframes cqSweep{to{left:110%}}
+.cq-sub{
+  font-family:var(--font-pixel);font-size:11px;color:#bcd2f5;letter-spacing:1em;
+  animation:cqLetters 1.6s .9s both;white-space:nowrap;
+}
+@keyframes cqLetters{from{opacity:0;letter-spacing:1em}to{opacity:1;letter-spacing:.42em}}
+.cq-tag{font-size:21px;color:#9fb6dd;margin-top:14px;text-align:center;max-width:560px;padding:0 18px;animation:cqFadeDown 1s 1.4s both}
+.cq-tag b{color:var(--cq-gold)}
+.cq-press{
+  font-family:var(--font-pixel);font-size:13px;color:var(--cq-gold-bright);margin-top:34px;
+  animation:cqPulse 1.5s ease-in-out infinite;
+}
+@keyframes cqPulse{0%,100%{opacity:.55;filter:drop-shadow(0 0 2px rgba(255,215,0,.2))}50%{opacity:1;filter:drop-shadow(0 0 14px rgba(255,215,0,.85))}}
+.cq-titlerow{display:flex;gap:14px;margin-top:26px;flex-wrap:wrap;justify-content:center;animation:cqFadeDown 1s 1.7s both}
+.cq-foot{position:absolute;bottom:14px;width:100%;text-align:center;font-size:17px;color:#5c7398;z-index:2}
+.cq-skyline{position:absolute;bottom:0;left:0;width:100%;height:16vh;min-height:80px;opacity:.85;pointer-events:none;z-index:0}
+.cq-shoot{
+  position:absolute;top:11%;left:-8%;width:90px;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,#ffffff,transparent);opacity:0;pointer-events:none;
+  animation:cqShoot 9s linear infinite;
+}
+@keyframes cqShoot{
+  0%{opacity:0;transform:translate(0,0) rotate(16deg)}
+  2%{opacity:.9}
+  11%{opacity:0;transform:translate(72vw,24vh) rotate(16deg)}
+  100%{opacity:0;transform:translate(72vw,24vh) rotate(16deg)}
+}
+.cq-flask{margin-top:26px;animation:cqBob 2.6s ease-in-out infinite,cqFadeDown 1s 1.2s both}
+@keyframes cqBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.cq-pedestal{width:120px;height:14px;margin:-4px auto 0;border-radius:50%;background:radial-gradient(ellipse,rgba(94,200,255,.55),transparent 70%);animation:cqPulse 2.6s infinite}
+/* ============ MAP SCREEN ============ */
+#cqMap{background:#0a1322;justify-content:flex-start}
+.cq-hud{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px 14px;background:linear-gradient(180deg,rgba(7,11,18,.95),rgba(7,11,18,.6));
+  z-index:30;
+}
+.cq-hud .ttl{font-family:var(--font-pixel);font-size:11px;color:var(--cq-gold)}
+.cq-hud .sub2{font-size:16px;color:#8fa8cf}
+.cq-hudbtns{display:flex;gap:8px}
+.cq-hudbtns button{
+  font-family:var(--font-read);font-size:17px;color:#cfe0ff;background:#152038;
+  border:1px solid var(--cq-line);border-radius:4px;padding:6px 12px;
+}
+.cq-mapwrap{position:relative;flex:1;width:100%;max-width:1100px;overflow:auto;display:block;background:#08131c;cursor:grab;touch-action:pan-x pan-y}
+.cq-mapwrap.dragging{cursor:grabbing}
+.cq-mapinner{position:relative;width:100%;height:100%}
+.cq-mapwrap::-webkit-scrollbar{height:14px;width:14px}
+.cq-mapwrap::-webkit-scrollbar-track{background:#0a1422}
+.cq-mapwrap::-webkit-scrollbar-thumb{background:#3a5170;border-radius:7px;border:3px solid #0a1422}
+.cq-mapwrap::-webkit-scrollbar-thumb:hover{background:#4d6890}
+.cq-mapinner>svg{position:absolute;inset:0;width:100%;height:100%}
+.cq-zoomctl{position:absolute;top:62px;left:12px;z-index:40;display:flex;flex-direction:column;gap:7px}
+.cq-zoomctl button{
+  width:46px;height:46px;border-radius:10px;background:rgba(13,20,34,.93);
+  border:2px solid var(--cq-line);color:#cfe0ff;font-size:24px;font-family:var(--font-read);line-height:1;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.55);
+}
+.cq-zoomctl button:active{transform:scale(.9)}
+.cq-zoomctl button:disabled{opacity:.32}
+.cq-zoomctl .lvl{
+  width:46px;text-align:center;font-family:var(--font-pixel);font-size:8px;color:#8fa8cf;
+  background:rgba(13,20,34,.93);border-radius:6px;padding:4px 0;
+}
+#cqBattleZoom{position:fixed;left:14px;bottom:14px;z-index:60;display:none;flex-direction:column;gap:7px}
+#cqBattleZoom.on{display:flex}
+#cqBattleZoom button{
+  width:44px;height:44px;border-radius:10px;background:rgba(13,20,34,.93);
+  border:2px solid var(--cq-line);color:#cfe0ff;font-size:20px;font-family:var(--font-read);line-height:1;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.55);
+}
+#cqBattleZoom button:active{transform:scale(.9)}
+#cqBattleZoom button:disabled{opacity:.32}
+#cqBattleZoom .lvl{width:44px;text-align:center;font-family:var(--font-pixel);font-size:8px;color:#8fa8cf;background:rgba(13,20,34,.93);border-radius:6px;padding:4px 0}
+@media(max-width:520px){
+  .cq-zoomctl button{width:40px;height:40px;font-size:21px}.cq-zoomctl .lvl{width:40px}
+  .cq-node{width:66px}
+  .cq-node .pin{width:38px;height:38px;font-size:19px}
+  .cq-node .lbl{font-size:11px;margin-top:3px}
+  #cqBattleZoom button{width:38px;height:38px;font-size:18px}#cqBattleZoom .lvl{width:38px}
+}
+.cq-clouds{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.5}
+.cq-clouds i{position:absolute;width:240px;height:90px;border-radius:50%;background:radial-gradient(ellipse,rgba(10,16,28,.7),transparent 70%);animation:cqCloud 38s linear infinite}
+.cq-clouds i:nth-child(2){top:42%;animation-duration:52s;animation-delay:-18s;width:330px}
+.cq-clouds i:nth-child(3){top:70%;animation-duration:44s;animation-delay:-30s}
+@keyframes cqCloud{from{left:-30%}to{left:110%}}
+.cq-node{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;z-index:10;width:96px}
+.cq-node .pin{
+  width:46px;height:46px;margin:0 auto;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  background:#0d1828;border:2px solid var(--zc,#5ec8ff);
+  box-shadow:0 0 14px var(--zc,#5ec8ff),inset 0 0 8px rgba(0,0,0,.6);
+  font-size:24px;transition:transform .15s;
+}
+.cq-node:hover .pin{transform:scale(1.12)}
+.cq-node.sel .pin{animation:cqNodePulse 1.1s ease-in-out infinite}
+@keyframes cqNodePulse{0%,100%{box-shadow:0 0 10px var(--zc)}50%{box-shadow:0 0 26px var(--zc),0 0 40px var(--zc)}}
+.cq-node .lbl{
+  margin-top:5px;font-size:15px;line-height:1.1;color:#cfe0ff;
+  text-shadow:0 2px 4px #000,0 0 8px rgba(0,0,0,.9);
+}
+.cq-node .lbl em{font-style:normal;color:var(--zc,#5ec8ff)}
+.cq-node.done .pin{border-color:var(--cq-com);box-shadow:0 0 12px rgba(126,216,90,.7)}
+.cq-node.done .pin::after{content:'✔';position:absolute;margin-top:-34px;margin-left:34px;color:var(--cq-com);font-size:16px;text-shadow:0 0 6px #000}
+.cq-node.locked{filter:grayscale(1) brightness(.55)}
+.cq-node.locked .pin{border-color:#445}
+#cqAvatar{position:absolute;z-index:12;transform:translate(-50%,-86%);transition:left 1.1s cubic-bezier(.45,0,.25,1),top 1.1s cubic-bezier(.45,0,.25,1);pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,.7))}
+#cqAvatar .walker{animation:cqBob 1.2s ease-in-out infinite}
+.cq-zonecard{
+  position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:45;
+  width:min(560px,94vw);background:rgba(10,18,32,.96);border:2px solid var(--zc,#5ec8ff);
+  border-radius:8px;padding:12px 14px;display:none;box-shadow:0 8px 30px rgba(0,0,0,.7);
+}
+.cq-zonecard.on{display:block;animation:cqCardPop .25s both}
+@keyframes cqCardPop{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.cq-zonecard h3{font-family:var(--font-pixel);font-size:12px;color:var(--zc,#5ec8ff);margin-bottom:6px}
+.cq-zonecard p{font-size:18px;color:#bcd2f5;margin-bottom:4px}
+.cq-zonecard .boss{color:#ff8888}
+.cq-zonecard .row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+/* ============ BATTLE ============ */
+#cqBattle{background:radial-gradient(circle at 50% 30%,rgba(var(--arena-rgb,40,80,140),.30) 0%,#070b12 75%);justify-content:flex-start;--bz:1;overflow-y:auto}
+.cq-bt-top{width:100%;max-width:760px;padding:12px 14px 0}
+.cq-bossrow{display:flex;align-items:center;gap:12px}
+.cq-bossface{
+  width:74px;height:74px;border-radius:10px;flex:0 0 auto;
+  border:2px solid var(--zc,#5ec8ff);background:#0d1828;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 18px var(--zc,#5ec8ff);font-size:38px;position:relative;
+}
+.cq-bossface.hit{animation:cqShake .4s}
+@keyframes cqShake{0%,100%{transform:none}20%{transform:translate(-6px,2px) rotate(-3deg)}40%{transform:translate(5px,-3px) rotate(2deg)}60%{transform:translate(-4px,-2px)}80%{transform:translate(3px,2px)}}
+.cq-bossmeta{flex:1;min-width:0}
+.cq-bossname{font-family:var(--font-pixel);font-size:13px;color:var(--zc,#5ec8ff);text-shadow:0 0 10px var(--zc)}
+.cq-bosssub{font-size:16px;color:#8fa8cf}
+.cq-hpbar{height:16px;margin-top:7px;background:#1a2336;border:1px solid #324768;border-radius:8px;overflow:hidden}
+.cq-hpfill{height:100%;width:100%;border-radius:7px;background:linear-gradient(90deg,#ff4d4d,#ffae3a);transition:width .5s cubic-bezier(.3,1.2,.4,1)}
+.cq-hearts{font-size:21px;letter-spacing:3px;margin-top:4px}
+.cq-streak{font-family:var(--font-pixel);font-size:10px;color:var(--cq-gold);margin-top:4px;min-height:14px}
+.cq-bt-mid{width:100%;max-width:760px;flex:1;display:flex;flex-direction:column;justify-content:flex-start;padding:14px 14px 8px}
+.cq-qbox{
+  background:rgba(13,20,34,.94);border:2px solid var(--cq-line);border-radius:10px;
+  padding:16px;box-shadow:0 10px 34px rgba(0,0,0,.6);
+}
+.cq-qnum{font-family:var(--font-pixel);font-size:10px;color:#7e96c2;margin-bottom:10px}
+.cq-qtext{font-size:calc(23px * var(--bz,1));color:#eef4ff;margin-bottom:14px;line-height:1.3}
+.cq-answers{display:grid;grid-template-columns:1fr;gap:9px}
+@media(min-width:620px){.cq-answers{grid-template-columns:1fr 1fr}}
+.cq-ans{
+  font-family:var(--font-read);font-size:calc(20px * var(--bz,1));text-align:left;color:#dce8ff;
+  background:#152038;border:2px solid #2c3f60;border-radius:8px;padding:11px 13px;
+  transition:transform .08s,border-color .15s,background .15s;
+}
+.cq-ans:not(:disabled):hover{border-color:var(--zc,#5ec8ff);transform:translateY(-2px)}
+.cq-ans.good{background:#15381f;border-color:var(--cq-com);color:#d8ffd0}
+.cq-ans.bad{background:#3a1520;border-color:#ff5d6e;color:#ffd0d6}
+.cq-tipbox{
+  margin-top:12px;border-left:4px solid var(--cq-gold);background:rgba(240,200,64,.08);
+  padding:10px 12px;border-radius:0 8px 8px 0;font-size:calc(19px * var(--bz,1));color:#ffe9b0;display:none;
+}
+.cq-tipbox.on{display:block;animation:cqFadeDown .3s both}
+.cq-tipbox b{color:var(--cq-gold-bright)}
+.cq-nextrow{margin-top:12px;display:none;text-align:right}
+.cq-nextrow.on{display:block}
+.cq-bt-quit{position:absolute;top:10px;right:12px;z-index:40;background:#152038;border:1px solid var(--cq-line);color:#8fa8cf;border-radius:4px;font-size:16px;padding:5px 10px}
+/* boss intro banner */
+#cqIntro{
+  position:fixed;inset:0;z-index:9100;display:none;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(4,7,12,.92);text-align:center;padding:20px;
+}
+#cqIntro.on{display:flex}
+#cqIntro .z{font-family:var(--font-pixel);font-size:13px;color:#bcd2f5;animation:cqFadeDown .5s both}
+#cqIntro .vs{font-family:var(--font-disp);font-size:54px;color:#ff5d6e;margin:16px 0;animation:cqVs .7s .35s cubic-bezier(.2,1.6,.4,1) both;text-shadow:0 0 30px rgba(255,93,110,.8)}
+@keyframes cqVs{from{opacity:0;transform:scale(3)}to{opacity:1;transform:scale(1)}}
+#cqIntro .b{
+  font-family:var(--font-disp);font-weight:900;font-size:clamp(30px,7vw,56px);color:var(--zc,#5ec8ff);
+  text-shadow:0 0 16px var(--zc),0 0 50px var(--zc);animation:cqFadeDown .6s .7s both;
+}
+#cqIntro .quote{font-size:21px;color:#9fb6dd;margin-top:18px;font-style:italic;max-width:520px;animation:cqFadeDown .6s 1.1s both}
+#cqIntroSprite{width:170px;height:185px;margin:4px auto;filter:drop-shadow(0 0 26px var(--zc,#5ec8ff));animation:cqVs .8s .45s cubic-bezier(.2,1.5,.4,1) both}
+#cqIntroSprite svg{width:100%;height:100%;overflow:visible}
+#cqChaser.dissolve{animation:cqDissolve 1s ease-in forwards}
+@keyframes cqDissolve{
+  0%{filter:none;opacity:1;transform:none}
+  35%{filter:brightness(2) hue-rotate(40deg);opacity:1;transform:scale(1.15) rotate(20deg)}
+  100%{filter:brightness(3) hue-rotate(140deg) blur(8px);opacity:0;transform:scale(.18) rotate(560deg)}
+}
+#cqMusicBtn{
+  position:fixed;right:14px;bottom:14px;z-index:9400;width:46px;height:46px;border-radius:50%;
+  background:#0e1a30;border:2px solid var(--cq-gold);color:#ffd700;font-size:20px;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(240,200,64,.35);
+}
+#cqInstallChip{
+  position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9420;display:none;
+  align-items:center;gap:8px;font-family:var(--font-pixel);font-size:11px;color:#081018;letter-spacing:1px;
+  background:linear-gradient(180deg,var(--cq-gold-bright),#c89a18);border:0;border-radius:8px;padding:12px 16px;
+  box-shadow:0 4px 0 #7a5c08,0 0 22px rgba(255,215,0,.5);animation:cqPulse 1.8s infinite;max-width:92vw;
+}
+#cqInstallChip.on{display:inline-flex}
+#cqInstallChip .x{margin-left:4px;font-size:13px;opacity:.6}
+#cqIosInstall{
+  position:fixed;inset:0;z-index:9520;display:none;align-items:center;justify-content:center;
+  background:rgba(4,7,12,.92);padding:20px;text-align:center;
+}
+#cqIosInstall.on{display:flex}
+#cqIosInstall .box{background:#0d1422;border:2px solid var(--cq-gold);border-radius:12px;padding:22px;max-width:400px}
+#cqIosInstall h3{font-family:var(--font-pixel);font-size:13px;color:var(--cq-gold);margin-bottom:14px}
+#cqIosInstall p{font-size:20px;color:#dce8ff;margin:10px 0;line-height:1.4}
+#cqIosInstall b{color:#ffe9b0}
+#cqIosInstall .shareicon{display:inline-block;width:26px;height:26px;vertical-align:middle;
+  border:2px solid #5ec8ff;border-radius:6px;color:#5ec8ff;font-size:16px;line-height:22px}
+#cqAttractBanner{
+  position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:9450;display:none;
+  font-family:var(--font-pixel);font-size:clamp(11px,2.6vw,15px);color:#081018;letter-spacing:2px;
+  background:linear-gradient(180deg,var(--cq-gold-bright),#c89a18);border-radius:6px;padding:11px 20px;
+  box-shadow:0 0 26px rgba(255,215,0,.65);animation:cqPulse 1.4s infinite;pointer-events:none;white-space:nowrap;
+}
+#cqAttractBanner.on{display:block}
+.cq-photofin{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:7;
+  font-family:var(--font-pixel);font-size:clamp(16px,4vw,30px);color:#ffffff;letter-spacing:2px;
+  text-shadow:0 0 18px var(--cq-gold-bright),0 0 44px var(--cq-gold);pointer-events:none;
+}
+.cq-photofin.on{display:flex;animation:cqVs .5s both}
+.cq-daynight{
+  position:absolute;inset:0;pointer-events:none;z-index:4;mix-blend-mode:multiply;
+  animation:cqDayCycle 90s linear infinite;
+}
+@keyframes cqDayCycle{
+  0%,22%{background:rgba(255,255,255,0)}
+  34%{background:rgba(214,148,86,.30)}
+  48%,68%{background:rgba(30,44,88,.46)}
+  82%{background:rgba(222,160,150,.26)}
+  100%{background:rgba(255,255,255,0)}
+}
+/* phase 2 banner */
+#cqPhase2{
+  position:fixed;inset:0;z-index:9100;display:none;align-items:center;justify-content:center;
+  background:rgba(120,10,20,.32);pointer-events:none;
+}
+#cqPhase2.on{display:flex;animation:cqP2 2.4s both}
+#cqPhase2 span{font-family:var(--font-pixel);font-size:clamp(14px,4vw,26px);color:#ff5d6e;text-shadow:0 0 22px #ff0022;letter-spacing:2px}
+@keyframes cqP2{0%{opacity:0}12%{opacity:1}80%{opacity:1}100%{opacity:0}}
+/* projectile + flashes */
+#cqProj{position:fixed;z-index:9050;font-size:30px;display:none;pointer-events:none;filter:drop-shadow(0 0 10px var(--zc,#5ec8ff))}
+#cqFlashR{position:fixed;inset:0;z-index:9040;background:rgba(255,30,50,.28);display:none;pointer-events:none}
+#cqFlashW{position:fixed;inset:0;z-index:9200;background:#fff;display:none;pointer-events:none}
+.cq-particle{position:fixed;z-index:9150;width:7px;height:7px;pointer-events:none}
+/* ============ CHASE SCENE ============ */
+.cq-bossstrip{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.cq-chasebar{display:flex;justify-content:space-between;align-items:center;margin:7px 0 0;gap:10px}
+.cq-lifelines{display:flex;gap:8px}
+.cq-lifelines button{font-family:var(--font-pixel);font-size:9px;color:var(--cq-gold);background:#152038;border:1px solid var(--cq-gold);border-radius:5px;padding:7px 10px;letter-spacing:1px}
+.cq-lifelines button:disabled{opacity:.35;border-color:#445566;color:#7788aa}
+.cq-scene{position:relative;height:calc(clamp(150px,23vh,210px) * var(--bz,1));border:2px solid var(--cq-line);border-radius:10px;overflow:hidden;background:#0a0f1c}
+.cq-scene.danger{border-color:#ff5d6e;animation:cqDangerPulse .8s infinite}
+@keyframes cqDangerPulse{0%,100%{box-shadow:0 0 8px rgba(255,40,60,.35)}50%{box-shadow:0 0 24px rgba(255,40,60,.85)}}
+.cq-scene.shake{animation:cqShake .4s}
+#cqBgCanvas{position:absolute;inset:0;width:100%;height:100%}
+.cq-char{position:absolute;bottom:2px;width:88px;height:108px;transition:left .45s cubic-bezier(.3,1.1,.4,1);z-index:3}
+.cq-char svg{width:100%;height:100%;overflow:visible}
+.cq-leadtag{position:absolute;top:6px;left:9px;font-family:var(--font-pixel);font-size:9px;color:#cfe0ff;text-shadow:0 1px 3px #000,0 0 8px #000;z-index:5}
+.cq-bubble{position:absolute;top:6px;right:9px;max-width:56%;background:rgba(13,20,34,.95);border:1px solid var(--zc,#5ec8ff);border-radius:8px;padding:7px 10px;font-size:17px;line-height:1.2;color:#ffe9b0;opacity:0;transform:translateY(-8px);transition:.25s;z-index:6;pointer-events:none}
+.cq-bubble.show{opacity:1;transform:none}
+.cq-redflash{position:absolute;inset:0;background:rgba(255,30,50,.32);opacity:0;pointer-events:none;z-index:4}
+.cq-redflash.go{animation:cqRf .5s}
+@keyframes cqRf{0%{opacity:1}100%{opacity:0}}
+.cq-timer{height:9px;background:#1a2336;border:1px solid #324768;border-radius:5px;margin-top:8px;overflow:hidden}
+#cqTimerFill{height:100%;width:100%;background:linear-gradient(90deg,#ff5d6e,#f0c840 45%,#39d98a);transition:width .1s linear}
+/* sprite animation classes */
+.cq-hbob{animation:cqHbob .4s infinite alternate ease-in-out}
+@keyframes cqHbob{from{transform:translateY(0)}to{transform:translateY(-4px)}}
+.cq-legF{animation:cqLegF .4s infinite alternate ease-in-out}
+.cq-legB{animation:cqLegB .4s infinite alternate ease-in-out}
+@keyframes cqLegF{from{transform:rotate(24deg)}to{transform:rotate(-24deg)}}
+@keyframes cqLegB{from{transform:rotate(-24deg)}to{transform:rotate(24deg)}}
+.cq-hover{animation:cqHover 1s infinite alternate ease-in-out}
+@keyframes cqHover{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-7px) rotate(2deg)}}
+.cq-spin{transform-box:fill-box;transform-origin:center;animation:cqSpin 2.4s linear infinite}
+@keyframes cqSpin{to{transform:rotate(360deg)}}
+.cq-wig{transform-box:fill-box;transform-origin:center;animation:cqWig .5s infinite alternate ease-in-out}
+@keyframes cqWig{from{transform:rotate(-9deg)}to{transform:rotate(9deg)}}
+.cq-slith{animation:cqSlith .9s infinite alternate ease-in-out}
+@keyframes cqSlith{from{transform:translateX(0) scaleY(1)}to{transform:translateX(5px) scaleY(.93)}}
+.cq-fade{animation:cqGhost 1.6s infinite ease-in-out}
+@keyframes cqGhost{0%,100%{opacity:.95}50%{opacity:.55}}
+#cqChaser.lunge{animation:cqLunge .6s ease}
+@keyframes cqLunge{0%{transform:none}45%{transform:translateX(28px) scale(1.07)}100%{transform:none}}
+#cqHero.surge{animation:cqSurge .5s ease}
+@keyframes cqSurge{40%{transform:translateX(18px)}100%{transform:none}}
+.cq-ans.faded{opacity:.22;pointer-events:none}
+@media(max-width:520px){.cq-char{width:66px;height:82px}.cq-bubble{font-size:15px;max-width:52%}}
+/* victory / card reveal */
+#cqCardOv{
+  position:fixed;inset:0;z-index:9300;display:none;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(4,7,12,.94);padding:18px;overflow:auto;
+}
+#cqCardOv.on{display:flex}
+.cq-vbanner{font-family:var(--font-disp);font-weight:900;font-size:clamp(28px,6vw,46px);color:var(--cq-gold-bright);text-shadow:0 0 26px rgba(255,215,0,.8);animation:cqVs .7s both}
+.cq-vsub{font-family:var(--font-pixel);font-size:11px;color:#bcd2f5;margin:8px 0 18px;animation:cqFadeDown .6s .3s both}
+.cq-card{
+  width:min(330px,88vw);border-radius:14px;padding:3px;position:relative;
+  background:linear-gradient(135deg,var(--cardc,#5ec8ff),#10203a 40%,var(--cardc,#5ec8ff) 80%);
+  box-shadow:0 14px 50px rgba(0,0,0,.8),0 0 30px var(--cardc,#5ec8ff);
+  animation:cqCardIn .8s .45s cubic-bezier(.2,1.3,.4,1) both;transform-style:preserve-3d;
+}
+@keyframes cqCardIn{from{opacity:0;transform:translateY(60px) rotateY(28deg) scale(.8)}to{opacity:1;transform:none}}
+.cq-card .inner{background:linear-gradient(180deg,#0e1830,#0a1020);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.cq-card.holo .inner::after{
+  content:'';position:absolute;inset:-60%;
+  background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.22) 46%,rgba(94,200,255,.25) 50%,rgba(255,108,182,.22) 54%,transparent 62%);
+  animation:cqHolo 3.2s linear infinite;mix-blend-mode:screen;pointer-events:none;
+}
+@keyframes cqHolo{from{transform:translateX(-34%) rotate(0.001deg)}to{transform:translateX(34%) rotate(0.001deg)}}
+.cq-card .rar{font-family:var(--font-pixel);font-size:9px;color:var(--cardc,#5ec8ff);letter-spacing:2px}
+.cq-card h2{font-family:var(--font-pixel);font-size:14px;color:#fff;margin:8px 0 2px;line-height:1.45}
+.cq-card .sal{
+  font-family:var(--font-pixel);font-size:12px;color:var(--cq-gold-bright);
+  margin:10px 0;text-shadow:0 0 12px rgba(255,215,0,.6);
+}
+.cq-card .icon{font-size:44px;text-align:center;margin:6px 0;filter:drop-shadow(0 0 12px var(--cardc,#5ec8ff))}
+.cq-card p{font-size:17px;color:#bcd2f5;margin:5px 0}
+.cq-card p b{color:#e8f1ff}
+.cq-card .hook{margin-top:10px;border-top:1px dashed #2c3f60;padding-top:8px;font-size:17px;color:#9ed9a0}
+.cq-cardbtns{display:flex;gap:12px;margin-top:22px;animation:cqFadeDown .6s 1.2s both}
+/* flippable card */
+.cq-card{perspective:1100px}
+.cq-flip{position:relative;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.3,1.2,.4,1);cursor:pointer}
+.cq-flip.flip{transform:rotateY(180deg)}
+.cq-card .inner.cq-face{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.cq-card .inner.cq-front{min-height:min(560px,72vh);display:flex;flex-direction:column;justify-content:center}
+.cq-card .inner.cq-front .fliphint{margin-top:14px}
+.cq-card .inner.cq-back{position:absolute;inset:0;transform:rotateY(180deg);overflow-y:auto;scrollbar-width:thin}
+.cq-back::-webkit-scrollbar{width:6px}
+.cq-back::-webkit-scrollbar-thumb{background:#26344d;border-radius:3px}
+.cq-card .fliphint{margin-top:10px;font-family:var(--font-pixel);font-size:8px;color:#7e96c2;text-align:center;letter-spacing:1px;animation:cqPulse 2.2s infinite}
+.cq-back h5{font-family:var(--font-pixel);font-size:9px;color:var(--cardc,#5ec8ff);margin:10px 0 5px;letter-spacing:1px}
+.cq-statrow{display:flex;align-items:center;gap:8px;margin:4px 0}
+.cq-statrow .lb{font-size:15px;color:#9fb6dd;width:98px;flex:none;line-height:1}
+.cq-statrow .bar{flex:1;height:8px;background:#1a2336;border-radius:4px;overflow:hidden}
+.cq-statrow .bar i{display:block;height:100%;background:var(--cardc,#5ec8ff);border-radius:4px}
+.cq-statrow .vl{font-size:15px;color:#e8f1ff;width:24px;text-align:right;line-height:1}
+.cq-back .duty{font-size:16px;color:#bcd2f5;margin:3px 0;padding-left:13px;position:relative;line-height:1.25}
+.cq-back .duty::before{content:'▸';position:absolute;left:0;color:var(--cardc,#5ec8ff)}
+.cq-back .salnote{font-size:15px;line-height:1.3;color:#ffe9b0;background:rgba(240,200,64,.08);border-left:3px solid var(--cq-gold);padding:6px 8px;border-radius:0 6px 6px 0;margin-top:4px}
+.cq-back .meta{font-size:15px;color:#bcd2f5;margin:3px 0}
+.cq-back .meta b{color:#e8f1ff}
+.cq-minicard.got{cursor:pointer;transition:transform .15s}
+.cq-minicard.got:hover{transform:translateY(-4px)}
+.cq-minicard .tapme{font-size:13px;color:#7e96c2;margin-top:5px}
+/* defeat */
+#cqDefeat{position:fixed;inset:0;z-index:9300;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(4,7,12,.93);text-align:center;padding:20px}
+#cqDefeat.on{display:flex}
+#cqDefeat h2{font-family:var(--font-disp);font-size:clamp(26px,6vw,44px);color:#ff5d6e;text-shadow:0 0 22px rgba(255,40,60,.7)}
+#cqDefeat p{font-size:21px;color:#9fb6dd;margin:14px 0 22px;max-width:480px}
+/* ============ COLLECTION ============ */
+#cqColl{background:#0a1322;justify-content:flex-start;overflow:auto}
+.cq-collgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;width:100%;max-width:860px;padding:16px}
+.cq-minicard{
+  border:2px solid var(--cardc,#26344d);border-radius:10px;background:#0d1626;padding:12px 10px;text-align:center;
+  box-shadow:0 0 14px rgba(0,0,0,.5);position:relative;overflow:hidden;
+}
+.cq-minicard.got{box-shadow:0 0 16px var(--cardc)}
+.cq-minicard.miss{filter:grayscale(1) brightness(.5)}
+.cq-minicard .icon{font-size:34px}
+.cq-minicard h4{font-family:var(--font-pixel);font-size:9px;color:#e8f1ff;margin:8px 0 4px;line-height:1.5}
+.cq-minicard p{font-size:15px;color:#8fa8cf}
+.cq-minicard .rr{font-family:var(--font-pixel);font-size:8px;color:var(--cardc);margin-top:6px}
+/* ============ FINALE ============ */
+#cqFinale{background:radial-gradient(circle at 50% 40%,#16213a 0%,#05080f 75%);text-align:center}
+#cqFinale .stars{position:absolute;inset:0;pointer-events:none}
+.cq-fin-icons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:24px}
+.cq-fin-icons i{
+  font-style:normal;font-size:34px;opacity:0;animation:cqRise 1s both;
+  filter:drop-shadow(0 0 12px var(--cq-gold));
+}
+@keyframes cqRise{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+#cqFinale h1{font-family:var(--font-disp);font-weight:900;font-size:clamp(34px,8vw,64px);color:var(--cq-gold-bright);text-shadow:0 0 34px rgba(255,215,0,.75);animation:cqVs 1s .9s both}
+#cqFinale .credit{font-family:var(--font-pixel);font-size:12px;color:#bcd2f5;margin-top:26px;line-height:2.4;animation:cqFadeDown 1s 1.6s both}
+#cqFinale .credit b{color:var(--cq-gold);font-size:14px}
+#cqFinale .quote{font-size:22px;font-style:italic;color:#9fb6dd;max-width:560px;margin:20px auto 26px;animation:cqFadeDown 1s 2.1s both}
+/* toast */
+#cqToast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(120px);z-index:9500;
+  background:#0e1a30;border:2px solid var(--cq-gold);border-radius:8px;padding:11px 18px;
+  font-size:19px;color:#ffe9b0;box-shadow:0 0 24px rgba(240,200,64,.4);transition:transform .4s cubic-bezier(.2,1.4,.4,1);
+  max-width:92vw;text-align:center;
+}
+#cqToast.on{transform:translateX(-50%) translateY(0)}
+/* how-to overlay */
+#cqHow,#cqCodeOv,#cqResetOv{position:fixed;inset:0;z-index:9300;display:none;align-items:center;justify-content:center;background:rgba(4,7,12,.9);padding:18px}
+#cqHow.on,#cqCodeOv.on,#cqResetOv.on{display:flex}
+#cqCodeInput{
+  width:100%;font-family:var(--font-read);font-size:22px;color:#ffe9b0;letter-spacing:2px;
+  background:#0a111f;border:2px solid var(--cq-gold);border-radius:6px;padding:10px 12px;outline:none;
+}
+#cqCodeInput::placeholder{color:#5c7398}
+.cq-howbox{background:#0d1422;border:2px solid var(--cq-line);border-radius:12px;padding:20px;max-width:520px;width:100%}
+.cq-howbox h3{font-family:var(--font-pixel);font-size:13px;color:var(--cq-gold);margin-bottom:12px}
+.cq-howbox p{font-size:19px;color:#bcd2f5;margin:7px 0}
+.cq-howbox b{color:#e8f1ff}
+@media(max-height:560px){.cq-flask svg{width:64px;height:64px}.cq-logo{font-size:clamp(30px,7vw,52px)}}
+@media(max-width:520px){.cq-bossmeta{padding-right:88px}.cq-bt-quit{top:8px;right:8px}}
+</style>
+</head>
+<body>
+<!-- ============ TITLE ============ -->
+<div class="cq-screen on" id="cqTitle">
+  <div class="cq-aurora"><i></i><i></i><i></i></div>
+  <div class="cq-sparkles" id="cqSpark"></div>
+  <div class="cq-kicker">HERZING UNIVERSITY PRESENTS</div>
+  <div class="cq-logo">ChemQuest<br>Herzing</div>
+  <div class="cq-divider"></div>
+  <div class="cq-sub">DISCOVER&nbsp;YOUR&nbsp;FUTURE</div>
+  <div class="cq-tag">7 real careers. Real Herzing SC employers. Real salaries.<br>One <b>chemistry degree</b> unlocks them all.</div>
+  <div class="cq-flask">
+    <svg width="84" height="84" viewBox="0 0 16 16" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+      <rect x="6" y="1" width="4" height="1" fill="#9fb6dd"/>
+      <rect x="7" y="2" width="2" height="4" fill="#cfe0ff"/>
+      <rect x="5" y="6" width="6" height="1" fill="#cfe0ff"/>
+      <rect x="4" y="7" width="8" height="1" fill="#cfe0ff"/>
+      <rect x="3" y="8" width="10" height="5" fill="#cfe0ff"/>
+      <rect x="4" y="9" width="8" height="4" fill="#39d98a"/>
+      <rect x="5" y="8" width="2" height="1" fill="#7df0b5"/>
+      <rect x="10" y="10" width="1" height="1" fill="#7df0b5"/>
+      <rect x="6" y="10" width="1" height="1" fill="#0f7a4a"/>
+      <rect x="3" y="13" width="10" height="1" fill="#9fb6dd"/>
+      <rect x="8" y="5" width="1" height="1" fill="#7df0b5"/>
+      <rect x="9" y="3" width="1" height="1" fill="#7df0b5"/>
+    </svg>
+    <div class="cq-pedestal"></div>
+  </div>
+  <div class="cq-press" id="cqPress">▶ TAP TO BEGIN ◀</div>
+  <div class="cq-titlerow">
+    <button class="cq-btn ghost" id="cqBtnHow">HOW TO PLAY</button>
+    <button class="cq-btn ghost" id="cqBtnColl">CAREER CARDS</button>
+    <button class="cq-btn ghost" id="cqBtnCode" style="font-size:10px">🔑 DEMO CODE</button>
+    <button class="cq-btn" id="cqBtnFinale" style="display:none;font-size:10px">🏆 FINALE</button>
+    <button class="cq-btn ghost" id="cqBtnReset" style="font-size:10px;border-color:#ff5d6e;color:#ff5d6e">🔄 RESET</button>
+  </div>
+  <div class="cq-shoot"></div>
+  <svg class="cq-skyline" viewBox="0 0 100 14" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="9" width="100" height="5" fill="#0b1424"/>
+    <rect x="4" y="6.5" width="5" height="7.5" fill="#0e1830"/>
+    <rect x="11" y="4.5" width="6" height="9.5" fill="#101c38"/>
+    <rect x="19" y="7" width="4" height="7" fill="#0e1830"/>
+    <rect x="30" y="5.5" width="7" height="8.5" fill="#0e1830"/>
+    <rect x="40" y="8" width="5" height="6" fill="#101c38"/>
+    <rect x="55" y="6" width="6" height="8" fill="#0e1830"/>
+    <rect x="64" y="4" width="5" height="10" fill="#101c38"/>
+    <rect x="72" y="7.5" width="6" height="6.5" fill="#0e1830"/>
+    <rect x="84" y="5" width="6" height="9" fill="#0e1830"/>
+    <rect x="93" y="7.5" width="5" height="6.5" fill="#101c38"/>
+    <line x1="66.5" y1="4" x2="66.5" y2="1.6" stroke="#101c38" stroke-width="0.4"/>
+    <circle cx="66.5" cy="1.4" r="0.45" fill="#ff3b53"><animate attributeName="opacity" values="1;0.1;1" dur="1.6s" repeatCount="indefinite"/></circle>
+    <rect x="12.5" y="6" width="0.7" height="0.7" fill="#ffd27a"><animate attributeName="opacity" values="1;0.2;1" dur="3.1s" repeatCount="indefinite"/></rect>
+    <rect x="32" y="7.2" width="0.7" height="0.7" fill="#ffd27a"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.4s" repeatCount="indefinite"/></rect>
+    <rect x="65.4" y="6" width="0.7" height="0.7" fill="#ffd27a"><animate attributeName="opacity" values="1;0.25;1" dur="2.8s" repeatCount="indefinite"/></rect>
+    <rect x="86" y="6.6" width="0.7" height="0.7" fill="#ffd27a"><animate attributeName="opacity" values="0.4;1;0.4" dur="3.6s" repeatCount="indefinite"/></rect>
+  </svg>
+  <div class="cq-foot">Dept. of Chemistry · Herzing University · Herzington, SC</div>
+</div>
+<!-- ============ MAP ============ -->
+<div class="cq-screen" id="cqMap">
+  <div class="cq-hud">
+    <div>
+      <div class="ttl">CHEMQUEST HERZING</div>
+      <div class="sub2" id="cqHudProg">Careers discovered: 0 / 7</div>
+    </div>
+    <div class="cq-hudbtns">
+      <button id="cqMapColl">🃏 Cards</button>
+      <button id="cqMapHow">?</button>
+      <button id="cqMapHome">🏠 Title</button>
+    </div>
+  </div>
+  <div class="cq-mapwrap" id="cqMapWrap">
+   <div class="cq-mapinner" id="cqMapInner">
+    <svg viewBox="0 0 100 62" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="cqLand" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#15291e"/><stop offset="1" stop-color="#0d1b13"/>
+        </linearGradient>
+        <path id="i85" d="M3,60 C22,53 40,44 58,35 C73,27 86,19 99,11" fill="none"/>
+        <g id="tre">
+          <rect x="-0.16" y="-0.1" width="0.32" height="0.8" fill="#3a2c18"/>
+          <polygon points="0,-1.7 0.95,0 -0.95,0" fill="#1e3d26"/>
+          <polygon points="0,-1.7 0.6,-0.6 -0.6,-0.6" fill="#2a5434"/>
+        </g>
+        <g id="sh85">
+          <rect x="-1.4" y="-1.7" width="2.8" height="3.2" rx="0.8" fill="#1d3f8f" stroke="#e8edf4" stroke-width="0.16"/>
+          <path d="M-1.4,-0.7 v-0.2 a0.8,0.8 0 0 1 0.8,-0.8 h1.2 a0.8,0.8 0 0 1 0.8,0.8 v0.2 z" fill="#b3242c"/>
+          <text x="0" y="0.95" font-size="1.7" fill="#ffffff" text-anchor="middle" font-family="monospace" font-weight="bold">85</text>
+        </g>
+        <g id="carA"><rect x="-0.9" y="0.18" width="1.8" height="0.74" rx="0.2" fill="#d23b3b"/><rect x="-0.32" y="0.26" width="0.75" height="0.58" rx="0.12" fill="#bfe3ff"/><rect x="0.76" y="0.3" width="0.16" height="0.5" fill="#fff8c8"/></g>
+        <g id="carB"><rect x="-0.9" y="0.18" width="1.8" height="0.74" rx="0.2" fill="#e8edf4"/><rect x="-0.32" y="0.26" width="0.75" height="0.58" rx="0.12" fill="#9fd7ff"/><rect x="0.76" y="0.3" width="0.16" height="0.5" fill="#fff8c8"/></g>
+        <g id="carC"><rect x="-0.75" y="0.2" width="1.5" height="0.7" rx="0.2" fill="#5ec8ff"/><rect x="-0.25" y="0.28" width="0.6" height="0.54" fill="#dff2ff"/><rect x="0.62" y="0.32" width="0.14" height="0.46" fill="#fff8c8"/></g>
+        <g id="carT"><rect x="-1.6" y="0.12" width="2.3" height="0.86" rx="0.1" fill="#dfe6ee"/><rect x="0.85" y="0.2" width="0.75" height="0.72" rx="0.16" fill="#f0c840"/><rect x="1.52" y="0.3" width="0.16" height="0.5" fill="#fff8c8"/></g>
+        <path id="cqRail" d="M0,33 L30,25 L62,16 L100,5" fill="none"/>
+        <g id="cqLoco"><rect x="-2.2" y="-1.6" width="4.4" height="1.6" rx="0.2" fill="#2b3038"/><rect x="-2.2" y="-2.4" width="1.7" height="0.9" rx="0.2" fill="#3c4654"/><rect x="1.9" y="-1.1" width="0.3" height="0.5" fill="#fff8c8"/></g>
+        <g id="cqCarA"><rect x="-2" y="-1.5" width="4" height="1.5" rx="0.15" fill="#7a3030"/></g>
+        <g id="cqCarB"><rect x="-2" y="-1.5" width="4" height="1.5" rx="0.15" fill="#31556e"/></g>
+        <g id="cqCarC"><rect x="-2" y="-1.5" width="4" height="1.5" rx="0.15" fill="#56612e"/></g>
+        <radialGradient id="cqAmb" cx="0.5" cy="0.42" r="0.75">
+          <stop offset="0" stop-color="#ffd28c" stop-opacity="0.09"/>
+          <stop offset="0.55" stop-color="#000000" stop-opacity="0"/>
+          <stop offset="1" stop-color="#081028" stop-opacity="0.32"/>
+        </radialGradient>
+      </defs>
+      <rect x="0" y="0" width="100" height="62" fill="url(#cqLand)"/>
+      <!-- farmland patches -->
+      <polygon points="50,18 60,14 66,18 56,24" fill="#1a3322" opacity="0.9"/>
+      <polygon points="28,26 37,21 43,27 33,32" fill="#183020" opacity="0.9"/>
+      <polygon points="60,44 70,40 76,45 66,50" fill="#1a3322" opacity="0.8"/>
+      <polygon points="20,46 27,43 31,47 24,51" fill="#183020" opacity="0.8"/>
+      <!-- Blue Ridge escarpment -->
+      <polygon points="0,14 6,6 11,12 17,4 23,11 30,6 36,12 40,10 42,16 0,16" fill="#24403a"/>
+      <polygon points="0,18 8,10 14,15 21,8 28,14 34,10 40,15 42,20 0,20" fill="#1a322a"/>
+      <polygon points="16.2,5.4 17,4 17.8,5.4" fill="#cfe0e8" opacity="0.85"/>
+      <polygon points="29.3,7.3 30,6 30.7,7.3" fill="#cfe0e8" opacity="0.7"/>
+      <polygon points="6.3,7.3 6,6 6.9,7.4" fill="#cfe0e8" opacity="0.6"/>
+      <!-- lakes -->
+      <polygon points="0,44 6,41 11,44 13,49 10,55 4,57 0,54" fill="#173550" stroke="#2b577e" stroke-width="0.3"/>
+      <polygon points="2,46 7,44 10,47 8,52 4,53" fill="#1f4565" opacity="0.7">
+        <animate attributeName="opacity" values="0.4;0.75;0.4" dur="4s" repeatCount="indefinite"/>
+      </polygon>
+      <polygon points="5,33 8,31 10,34 8,37 5,36" fill="#173550" stroke="#2b577e" stroke-width="0.25"/>
+      <!-- rivers -->
+      <polyline points="38,14 41,22 39,33 43,45 41,58" fill="none" stroke="#1d3c57" stroke-width="0.8" opacity="0.9"/>
+      <polyline points="78,10 76,20 80,31 77,43 79,56" fill="none" stroke="#1d3c57" stroke-width="0.8" opacity="0.9"/>
+      <!-- city glows -->
+      <circle cx="47" cy="46" r="8" fill="#5ec8ff" opacity="0.06"/>
+      <circle cx="80" cy="13" r="7" fill="#f0c840" opacity="0.07"/>
+      <!-- exit ramps / secondary roads -->
+      <g stroke="#3a4150" stroke-width="0.95" fill="none" stroke-linecap="round">
+        <path d="M85.5,19.3 L84,17"/>
+        <path d="M88.8,16.9 C89.6,14.4 90,12.4 90,10.6"/>
+        <path d="M88.5,17.2 C90,18.6 90.6,21 91,24"/>
+        <path d="M65,31.6 L65,30"/>
+        <path d="M55,36.8 L55,38"/>
+        <path d="M44.5,41.9 C45,43.5 46,46 47,48 C48,50.5 48.6,51.8 49,53"/>
+        <path d="M44.6,42.6 L44,44"/>
+        <path d="M13.5,56.8 C13,54.2 12.5,52 12,50"/>
+      </g>
+      <!-- I-85: shoulder, asphalt, lanes, median -->
+      <use href="#i85" stroke="#11141a" stroke-width="5.0" stroke-linecap="round"/>
+      <use href="#i85" stroke="#2b3038" stroke-width="4.4" stroke-linecap="round"/>
+      <use href="#i85" transform="translate(1.0,1.45)" stroke="#e8edf4" stroke-width="0.15" opacity="0.4"/>
+      <use href="#i85" transform="translate(-1.0,-1.45)" stroke="#e8edf4" stroke-width="0.15" opacity="0.4"/>
+      <use href="#i85" transform="translate(0.5,0.72)" stroke="#cfd6e2" stroke-width="0.14" stroke-dasharray="1.1 1.7" opacity="0.65"/>
+      <use href="#i85" transform="translate(-0.5,-0.72)" stroke="#cfd6e2" stroke-width="0.14" stroke-dasharray="1.1 1.7" opacity="0.65"/>
+      <use href="#i85" stroke="#f0c840" stroke-width="0.2" stroke-dasharray="2.2 1.5" opacity="0.8"/>
+      <use href="#sh85" transform="translate(27,45)"/>
+      <use href="#sh85" transform="translate(77,19.6)"/>
+      <!-- traffic -->
+      <g><use href="#carA"/><animateMotion dur="13s" begin="-2s" repeatCount="indefinite" rotate="auto"><mpath href="#i85"/></animateMotion></g>
+      <g><use href="#carB"/><animateMotion dur="17s" begin="-9s" repeatCount="indefinite" rotate="auto"><mpath href="#i85"/></animateMotion></g>
+      <g><use href="#carT"/><animateMotion dur="26s" begin="-14s" repeatCount="indefinite" rotate="auto"><mpath href="#i85"/></animateMotion></g>
+      <g><use href="#carC"/><animateMotion dur="15s" begin="-5s" repeatCount="indefinite" rotate="auto" calcMode="linear" keyPoints="1;0" keyTimes="0;1"><mpath href="#i85"/></animateMotion></g>
+      <g><use href="#carB"/><animateMotion dur="21s" begin="-12s" repeatCount="indefinite" rotate="auto" calcMode="linear" keyPoints="1;0" keyTimes="0;1"><mpath href="#i85"/></animateMotion></g>
+      <!-- railroad + freight train (Hub City!) -->
+      <use href="#cqRail" stroke="#15120c" stroke-width="1.5" stroke-dasharray="0.6 1.1"/>
+      <use href="#cqRail" stroke="#4a4030" stroke-width="0.5"/>
+      <g><use href="#cqLoco"/><animateMotion dur="38s" begin="-6.4s" repeatCount="indefinite" rotate="auto"><mpath href="#cqRail"/></animateMotion></g>
+      <g><use href="#cqCarA"/><animateMotion dur="38s" begin="-4.8s" repeatCount="indefinite" rotate="auto"><mpath href="#cqRail"/></animateMotion></g>
+      <g><use href="#cqCarB"/><animateMotion dur="38s" begin="-3.2s" repeatCount="indefinite" rotate="auto"><mpath href="#cqRail"/></animateMotion></g>
+      <g><use href="#cqCarC"/><animateMotion dur="38s" begin="-1.6s" repeatCount="indefinite" rotate="auto"><mpath href="#cqRail"/></animateMotion></g>
+      <!-- radio tower on the ridge -->
+      <path d="M20.2,8.5 L21,3.5 L21.8,8.5 M20.4,6.4 L21.6,6.4 M20.3,7.5 L21.7,7.5" stroke="#3c4654" stroke-width="0.25" fill="none"/>
+      <circle cx="21" cy="3.2" r="0.5" fill="#ff3b53"><animate attributeName="opacity" values="1;0.1;1" dur="1.4s" repeatCount="indefinite"/></circle>
+      <!-- street lamps along I-85 -->
+      <g>
+        <circle cx="20" cy="50.4" r="1.7" fill="#ffd27a" opacity="0.12"/><circle cx="20" cy="50.4" r="0.4" fill="#ffd27a"/>
+        <circle cx="40" cy="43.2" r="1.7" fill="#ffd27a" opacity="0.12"/><circle cx="40" cy="43.2" r="0.4" fill="#ffd27a"/>
+        <circle cx="60" cy="33.4" r="1.7" fill="#ffd27a" opacity="0.12"/><circle cx="60" cy="33.4" r="0.4" fill="#ffd27a"/>
+        <circle cx="80" cy="22.8" r="1.7" fill="#ffd27a" opacity="0.12"/><circle cx="80" cy="22.8" r="0.4" fill="#ffd27a"/>
+      </g>
+      <!-- birds -->
+      <g opacity="0.7"><path d="M0,0 q0.5,-0.7 1,0 q0.5,-0.7 1,0" stroke="#2c3a52" stroke-width="0.3" fill="none"/><animateMotion dur="28s" repeatCount="indefinite" path="M-6,22 Q50,13 106,26"/></g>
+      <g opacity="0.6"><path d="M0,0 q0.4,-0.6 0.8,0 q0.4,-0.6 0.8,0" stroke="#2c3a52" stroke-width="0.28" fill="none"/><animateMotion dur="36s" begin="-14s" repeatCount="indefinite" path="M-6,38 Q48,30 106,40"/></g>
+      <!-- Greenville skyline -->
+      <g shape-rendering="crispEdges">
+        <rect x="45" y="45" width="1.4" height="3.4" fill="#202c40"/>
+        <rect x="46.6" y="44" width="1.5" height="4.4" fill="#243349"/>
+        <rect x="48.3" y="45.6" width="1.2" height="2.8" fill="#1d2a3d"/>
+        <rect x="49.7" y="46.4" width="1.1" height="2.0" fill="#202c40"/>
+        <rect x="45.3" y="45.5" width="0.25" height="0.25" fill="#f0c840"/><rect x="45.8" y="46.4" width="0.25" height="0.25" fill="#f0c840"/>
+        <rect x="46.9" y="44.6" width="0.25" height="0.25" fill="#f0c840"/><rect x="47.5" y="45.6" width="0.25" height="0.25" fill="#ffe9b0"/><rect x="46.9" y="46.8" width="0.25" height="0.25" fill="#f0c840"/>
+        <rect x="48.6" y="46.2" width="0.25" height="0.25" fill="#ffe9b0"/><rect x="49.1" y="47.2" width="0.25" height="0.25" fill="#f0c840"/>
+      </g>
+      <!-- Herzington skyline -->
+      <g shape-rendering="crispEdges">
+        <rect x="76" y="9.5" width="1.4" height="3" fill="#243349"/>
+        <rect x="77.7" y="8.7" width="1.6" height="3.8" fill="#202c40"/>
+        <rect x="79.6" y="10" width="1.3" height="2.5" fill="#1d2a3d"/>
+        <rect x="81.1" y="10.7" width="1.1" height="1.8" fill="#243349"/>
+        <rect x="76.3" y="10.1" width="0.25" height="0.25" fill="#f0c840"/><rect x="76.9" y="11" width="0.25" height="0.25" fill="#ffe9b0"/>
+        <rect x="78" y="9.3" width="0.25" height="0.25" fill="#f0c840"/><rect x="78.6" y="10.4" width="0.25" height="0.25" fill="#f0c840"/>
+        <rect x="79.9" y="10.6" width="0.25" height="0.25" fill="#ffe9b0"/>
+      </g>
+      <!-- twinkling city windows -->
+      <rect x="78.2" y="9.6" width="0.3" height="0.3" fill="#ffe9b0"><animate attributeName="opacity" values="1;0.15;1" dur="2.6s" repeatCount="indefinite"/></rect>
+      <rect x="76.5" y="10.6" width="0.3" height="0.3" fill="#ffe9b0"><animate attributeName="opacity" values="0.3;1;0.3" dur="3.4s" repeatCount="indefinite"/></rect>
+      <rect x="47.1" y="45.2" width="0.3" height="0.3" fill="#ffe9b0"><animate attributeName="opacity" values="1;0.2;1" dur="2.9s" repeatCount="indefinite"/></rect>
+      <rect x="45.6" y="47" width="0.3" height="0.3" fill="#ffe9b0"><animate attributeName="opacity" values="0.25;1;0.25" dur="3.8s" repeatCount="indefinite"/></rect>
+      <!-- Herzing University home campus -->
+      <g>
+        <polygon points="87.6,8.5 90,7 92.4,8.5" fill="#f0c840"/>
+        <rect x="88" y="8.5" width="4" height="1.8" fill="#c8cfdb"/>
+        <rect x="89.6" y="9.3" width="0.8" height="1.0" fill="#2a3a55"/>
+        <rect x="88.5" y="8.9" width="0.5" height="0.5" fill="#2a3a55"/><rect x="91" y="8.9" width="0.5" height="0.5" fill="#2a3a55"/>
+        <text x="84" y="6.2" font-size="1.9" fill="#ffd700" font-family="monospace">★ HERZING UNIVERSITY</text>
+      </g>
+      <!-- BMW-style plant, Greer -->
+      <g>
+        <rect x="59" y="24.6" width="6" height="2.4" fill="#3c4654"/>
+        <polygon points="59,24.6 60,23.6 61,24.6" fill="#56627a"/><polygon points="61,24.6 62,23.6 63,24.6" fill="#56627a"/><polygon points="63,24.6 64,23.6 65,24.6" fill="#56627a"/>
+        <rect x="59.6" y="25.4" width="0.6" height="0.6" fill="#9fd7ff"/><rect x="61" y="25.4" width="0.6" height="0.6" fill="#9fd7ff"/><rect x="62.4" y="25.4" width="0.6" height="0.6" fill="#9fd7ff"/>
+        <rect x="65.4" y="22.8" width="0.55" height="4.2" fill="#4a5568"/>
+        <circle cx="65.7" cy="22.2" r="0.55" fill="#aab6c8" opacity="0.25"/>
+        <circle cx="66.3" cy="21.4" r="0.75" fill="#aab6c8" opacity="0.16"/>
+      </g>
+      <!-- Milliken research campus -->
+      <g>
+        <rect x="85.6" y="13.2" width="4.2" height="1.6" fill="#aab6c8"/>
+        <rect x="85.6" y="12.9" width="4.2" height="0.35" fill="#f0c840"/>
+        <rect x="86.2" y="13.7" width="0.5" height="0.5" fill="#2a3a55"/><rect x="87.4" y="13.7" width="0.5" height="0.5" fill="#2a3a55"/><rect x="88.6" y="13.7" width="0.5" height="0.5" fill="#2a3a55"/>
+      </g>
+      <!-- Bausch + Lomb plant -->
+      <g>
+        <rect x="51" y="34.2" width="4.4" height="1.8" fill="#3e5a52"/>
+        <rect x="51" y="33.9" width="4.4" height="0.35" fill="#39d98a"/>
+        <rect x="51.6" y="34.8" width="0.55" height="0.55" fill="#bfe3ff"/><rect x="52.8" y="34.8" width="0.55" height="0.55" fill="#bfe3ff"/><rect x="54" y="34.8" width="0.55" height="0.55" fill="#bfe3ff"/>
+      </g>
+      <!-- hospital -->
+      <g>
+        <rect x="92.6" y="20.4" width="3.2" height="2.2" fill="#dfe6ee"/>
+        <rect x="93.9" y="20.9" width="0.6" height="1.4" fill="#d23b3b"/>
+        <rect x="93.5" y="21.3" width="1.4" height="0.6" fill="#d23b3b"/>
+      </g>
+      <!-- ReWa treatment tanks -->
+      <g>
+        <circle cx="51" cy="55.6" r="1.2" fill="#26506e" stroke="#5ec8ff" stroke-width="0.22"/>
+        <circle cx="53.6" cy="55.2" r="0.95" fill="#26506e" stroke="#5ec8ff" stroke-width="0.22"/>
+        <circle cx="51" cy="55.6" r="0.5" fill="#1a3a52"/>
+      </g>
+      <!-- BASF stacks, Seneca -->
+      <g>
+        <rect x="7.4" y="45.4" width="3.6" height="1.9" fill="#41475a"/>
+        <rect x="8" y="43.4" width="0.55" height="2" fill="#525a70"/>
+        <rect x="9.2" y="42.8" width="0.55" height="2.6" fill="#525a70"/>
+        <circle cx="9.5" cy="42.2" r="0.55" fill="#aab6c8" opacity="0.22"/>
+        <circle cx="10.1" cy="41.4" r="0.75" fill="#aab6c8" opacity="0.14"/>
+      </g>
+      <!-- trees -->
+      <use href="#tre" transform="translate(20,57.5)"/>
+      <use href="#tre" transform="translate(24,56.5) scale(0.85)"/>
+      <use href="#tre" transform="translate(30,36) scale(1.1)"/>
+      <use href="#tre" transform="translate(34,30) scale(0.9)"/>
+      <use href="#tre" transform="translate(55,46) scale(1.05)"/>
+      <use href="#tre" transform="translate(59,50) scale(0.8)"/>
+      <use href="#tre" transform="translate(70,40)"/>
+      <use href="#tre" transform="translate(74,35) scale(0.85)"/>
+      <use href="#tre" transform="translate(40,55) scale(1.15)"/>
+      <use href="#tre" transform="translate(16,38) scale(0.9)"/>
+      <use href="#tre" transform="translate(22,42)"/>
+      <use href="#tre" transform="translate(58,18) scale(0.9)"/>
+      <use href="#tre" transform="translate(50,14) scale(1.1)"/>
+      <use href="#tre" transform="translate(45,11) scale(0.85)"/>
+      <use href="#tre" transform="translate(68,55) scale(1.1)"/>
+      <use href="#tre" transform="translate(85,42) scale(0.95)"/>
+      <use href="#tre" transform="translate(89,48) scale(1.15)"/>
+      <use href="#tre" transform="translate(93,35) scale(0.85)"/>
+      <!-- ambient color grade -->
+      <rect x="0" y="0" width="100" height="62" fill="url(#cqAmb)"/>
+      <!-- labels -->
+      <text x="73.5" y="7.4" font-size="2.6" fill="#9fb6dd" font-family="monospace">HERZINGTON</text>
+      <text x="31.5" y="50.4" font-size="2.8" fill="#9fb6dd" font-family="monospace">GREENVILLE</text>
+      <text x="67.8" y="26.2" font-size="2.2" fill="#8fa8cf" font-family="monospace">GREER</text>
+      <text x="3" y="38.8" font-size="2" fill="#6d83a8" font-family="monospace">SENECA · CLEMSON</text>
+      <text x="1.5" y="59.8" font-size="1.8" fill="#4f7ca6" font-family="monospace">LAKE HARTWELL</text>
+      <text x="17" y="23.2" font-size="2.2" fill="#46608a" font-family="monospace">BLUE RIDGE</text>
+    </svg>
+    <div class="cq-clouds"><i style="top:12%"></i><i></i><i></i></div>
+    <div class="cq-daynight"></div>
+    <div id="cqNodes"></div>
+    <div id="cqAvatar">
+      <svg class="walker" width="34" height="34" viewBox="0 0 12 12" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="0" width="4" height="1" fill="#3b2a1a"/>
+        <rect x="3" y="1" width="6" height="3" fill="#e8b88a"/>
+        <rect x="4" y="2" width="1" height="1" fill="#101418"/>
+        <rect x="7" y="2" width="1" height="1" fill="#101418"/>
+        <rect x="2" y="4" width="8" height="4" fill="#f4f7ff"/>
+        <rect x="3" y="5" width="2" height="2" fill="#5ec8ff"/>
+        <rect x="1" y="4" width="1" height="3" fill="#f4f7ff"/>
+        <rect x="10" y="4" width="1" height="3" fill="#f4f7ff"/>
+        <rect x="3" y="8" width="2" height="3" fill="#26344d"/>
+        <rect x="7" y="8" width="2" height="3" fill="#26344d"/>
+        <rect x="3" y="11" width="2" height="1" fill="#101418"/>
+        <rect x="7" y="11" width="2" height="1" fill="#101418"/>
+      </svg>
+    </div>
+   </div>
+    <div class="cq-zonecard" id="cqZoneCard"></div>
+  </div>
+  <div class="cq-zoomctl">
+    <button id="cqZoomIn" title="Zoom in">+</button>
+    <button id="cqZoomFit" title="Fit whole map">⊡</button>
+    <button id="cqZoomOut" title="Zoom out">−</button>
+    <div class="lvl" id="cqZoomLvl">FIT</div>
+  </div>
+</div>
+<!-- ============ BATTLE ============ -->
+<div class="cq-screen" id="cqBattle">
+  <button class="cq-bt-quit" id="cqQuit">✕ Retreat</button>
+  <div class="cq-bt-top">
+    <div class="cq-bossstrip">
+      <div class="cq-bossname" id="cqBossName">BOSS</div>
+      <div class="cq-bosssub" id="cqBossSub"></div>
+    </div>
+    <div class="cq-scene" id="cqScene">
+      <canvas id="cqBgCanvas"></canvas>
+      <div class="cq-leadtag" id="cqLeadTag"></div>
+      <div class="cq-char" id="cqChaser"></div>
+      <div class="cq-char" id="cqHero"></div>
+      <div class="cq-redflash" id="cqRedflash"></div>
+      <div class="cq-bubble" id="cqBubble"></div>
+      <div class="cq-photofin" id="cqPhotoFin">📸 PHOTO FINISH!</div>
+    </div>
+    <div class="cq-chasebar">
+      <div class="cq-lifelines">
+        <button id="cqLL50">50:50</button>
+        <button id="cqLLFreeze">❄️ FREEZE</button>
+      </div>
+      <div class="cq-streak" id="cqStreak"></div>
+    </div>
+    <div class="cq-timer" id="cqTimerBar"><div id="cqTimerFill"></div></div>
+  </div>
+  <div class="cq-bt-mid">
+    <div class="cq-qbox">
+      <div class="cq-qnum" id="cqQNum">QUESTION 1 / 8</div>
+      <div class="cq-qtext" id="cqQText"></div>
+      <div class="cq-answers" id="cqAnswers"></div>
+      <div class="cq-tipbox" id="cqTip"></div>
+      <div class="cq-nextrow" id="cqNextRow"><button class="cq-btn" id="cqNext">NEXT ▶</button></div>
+    </div>
+  </div>
+</div>
+<!-- boss intro -->
+<div id="cqIntro"><div class="z" id="cqIntroZone"></div><div class="vs">VS</div><div id="cqIntroSprite"></div><div class="b" id="cqIntroBoss"></div><div class="quote" id="cqIntroQuote"></div></div>
+<!-- phase 2 -->
+<div id="cqPhase2"><span id="cqPhase2Text">⚠ THE BOSS IS CLOSING IN ⚠</span></div>
+<div id="cqFlashR"></div>
+<div id="cqFlashW"></div>
+<!-- card reveal -->
+<div id="cqCardOv">
+  <div class="cq-vbanner" id="cqVTitle">CAREER UNLOCKED!</div>
+  <div class="cq-vsub" id="cqVSub"></div>
+  <div class="cq-card" id="cqBigCard"></div>
+  <div class="cq-cardbtns">
+    <button class="cq-btn" id="cqCardCont">CONTINUE ▶</button>
+    <button class="cq-btn ghost" id="cqCardColl">VIEW CARDS</button>
+  </div>
+</div>
+<!-- defeat -->
+<div id="cqDefeat">
+  <h2 id="cqDefeatT">THE BOSS SURVIVED...</h2>
+  <p id="cqDefeatP">Every chemist repeats an experiment. Review the tips and try again — the career is still waiting for you.</p>
+  <button class="cq-btn" id="cqDefeatBtn">TRY AGAIN</button>
+</div>
+<!-- ============ COLLECTION ============ -->
+<div class="cq-screen" id="cqColl">
+  <div class="cq-hud">
+    <div>
+      <div class="ttl">CAREER CARD COLLECTION</div>
+      <div class="sub2" id="cqCollProg"></div>
+    </div>
+    <div class="cq-hudbtns"><button id="cqCollBack">◀ Back</button></div>
+  </div>
+  <div class="cq-collgrid" id="cqCollGrid"></div>
+</div>
+<!-- ============ FINALE ============ -->
+<div class="cq-screen" id="cqFinale">
+  <div class="stars" id="cqFinStars"></div>
+  <div class="cq-fin-icons" id="cqFinIcons"></div>
+  <h1>QUEST COMPLETE</h1>
+  <div class="quote">"Somewhere in the Herzing, a lab bench already has your name on it."</div>
+  <div class="credit">
+    A RECRUITMENT QUEST BY<br><b>DR. AKASH GARG</b><br>
+    FOR THE DEPARTMENT OF CHEMISTRY<br>HERZING UNIVERSITY
+  </div>
+  <div class="cq-titlerow">
+    <button class="cq-btn" id="cqFinCards">VIEW YOUR 8 CARDS</button>
+    <button class="cq-btn ghost" id="cqFinHome">TITLE SCREEN</button>
+  </div>
+</div>
+<!-- toast + how to -->
+<button id="cqInstallChip">📲 Install ChemQuest<span class="x">✕</span></button>
+<div id="cqIosInstall">
+  <div class="box">
+    <h3>📲 ADD TO HOME SCREEN</h3>
+    <p>Install ChemQuest as an app on your iPhone:</p>
+    <p>1. Tap the <span class="shareicon">⬆</span> <b>Share</b> button below</p>
+    <p>2. Scroll down and tap <b>"Add to Home Screen"</b></p>
+    <p>3. Tap <b>Add</b> — done! 🧪</p>
+    <div style="margin-top:16px"><button class="cq-btn" id="cqIosClose">GOT IT</button></div>
+  </div>
+</div>
+<button id="cqMusicBtn" title="Music on/off">🔊</button>
+<div id="cqBattleZoom">
+  <button id="cqBZIn" title="Bigger">+</button>
+  <button id="cqBZFit" title="Reset size">⊡</button>
+  <button id="cqBZOut" title="Smaller">−</button>
+  <div class="lvl" id="cqBZLvl">1x</div>
+</div>
+<div id="cqAttractBanner">🎮 DEMO MODE — TAP ANYWHERE TO PLAY</div>
+<div id="cqToast"></div>
+<div id="cqResetOv">
+  <div class="cq-howbox" style="max-width:400px">
+    <h3 style="color:#ff5d6e">🔄 RESET QUEST?</h3>
+    <p>This wipes all unlocked careers, cards, and progress so someone new can play from the start.</p>
+    <p style="color:#8fa8cf">(The demo code can re-unlock everything later.)</p>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
+      <button class="cq-btn ghost" id="cqResetNo">CANCEL</button>
+      <button class="cq-btn" id="cqResetYes" style="background:linear-gradient(180deg,#ff7a8a,#c2303f);box-shadow:0 4px 0 #6e1620">RESET</button>
+    </div>
+  </div>
+</div>
+<div id="cqCodeOv">
+  <div class="cq-howbox" style="max-width:380px">
+    <h3>🔑 ENTER CODE</h3>
+    <input type="text" id="cqCodeInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="secret code...">
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
+      <button class="cq-btn ghost" id="cqCodeCancel">CANCEL</button>
+      <button class="cq-btn" id="cqCodeGo">UNLOCK</button>
+    </div>
+  </div>
+</div>
+<div id="cqHow">
+  <div class="cq-howbox">
+    <h3>HOW TO PLAY</h3>
+    <p>🗺️ <b>Tap a glowing site</b> on the Herzing map to travel there. Drag, scroll, or use arrow keys to explore the map.</p>
+    <p>🏃 Each site's <b>boss chases you</b> down I-85! Answer 8 questions before the timer runs out. Correct = you pull ahead. Wrong = the boss gains a step.</p>
+    <p>💀 If your <b>LEAD hits 0</b>, you're caught. Outlast all 8 questions to defeat the boss.</p>
+    <p>🧪 Lifelines: <b>50:50</b> removes two wrong answers, <b>❄️ FREEZE</b> blocks the boss's next step. Earn more every 3-streak!</p>
+    <p>🃏 Each boss defeated unlocks its <b>Career Card</b>: real local employers, real salaries, and the course path at Herzing University.</p>
+    <p>🏆 Clear all 6 sites to unlock the final challenge near Seneca...</p>
+    <div style="text-align:right;margin-top:14px"><button class="cq-btn" id="cqHowClose">GOT IT</button></div>
+  </div>
+</div>
+<script>
+'use strict';
+/* ============================================================
+   ChemQuest Herzing — single-file recruitment quest
+   Dept. of Chemistry, Herzing University. Engineering: hot-built 2026.
+   ============================================================ */
+var ZONES=[
+{
+ id:'zone1',name:'Milliken Research Campus',city:'Herzington',sector:'Specialty Chemicals & Textiles',
+ boss:'THE POLYMER BARON',bossIcon:'🧵',proj:'🧶',color:'#f0c840',rgb:'240,200,64',x:84,y:17,
+ intro:"I am a million repeating units of pure profit. You cannot un-knit ME.",
+ career:{
+  icon:'🔬',title:'SYNTHETIC / R&D CHEMIST',rarity:'RARE',rcolor:'#5ec8ff',
+  salary:'$74K–$113K (posted, Herzington)',
+  where:'Milliken & Co. HQ + Research (Herzington), Contec, Toray',
+  path:'Gen Chem I–II → Organic I–II → Polymer & Materials electives → B.S. Chemistry',
+  hook:'Milliken runs one of the largest private chemical research campuses in America — 15 minutes from the Herzing University campus.'
+ },
+ questions:[
+  {q:"Polymers are giant molecules built from repeating units called...",a:["Monomers","Isotopes","Electrolytes","Alloys"],c:0,tip:"Poly = many, mer = part. Milliken chemists in Herzington design polymer additives used in products worldwide."},
+  {q:"Milliken & Company's world headquarters and research campus is located in...",a:["Herzington, SC","Atlanta, GA","Charlotte, NC","Boston, MA"],c:0,tip:"True story: one of the largest private chemical research operations in the U.S. sits right here in Herzington."},
+  {q:"For a dye to bond permanently to a fabric fiber, it needs to form...",a:["A chemical bond","No bond at all","A magnetic field","A vacuum seal"],c:0,tip:"Reactive dyes form covalent bonds with the fiber — that is why your jeans survive the wash."},
+  {q:"Recent posted salaries for chemist roles at Herzington specialty chemical companies reach about...",a:["$74K–$113K","$18K–$22K","Minimum wage","$25K flat"],c:0,tip:"Real numbers from real Herzington job postings. Chemistry pays."},
+  {q:"Which instrument separates a mixture so a chemist can identify each component?",a:["A chromatograph","A telescope","A stethoscope","A seismograph"],c:0,tip:"GC and LC — gas and liquid chromatography — appear by name in Milliken's actual R&D job postings."},
+  {q:"Nylon and polyester are both examples of...",a:["Synthetic polymers","Natural proteins","Pure metals","Ceramics"],c:0,tip:"Both were invented by industrial chemists — the same kind of job this zone is about."},
+  {q:"Adding a 'clarifying agent' makes plastic more transparent by controlling how it...",a:["Crystallizes","Smells","Weighs","Sounds"],c:0,tip:"Milliken really makes clarifiers — tiny additives that control crystal size so light passes through. That clear food container? Chemistry."},
+  {q:"The degree that opens the door to an R&D chemistry bench is...",a:["B.S. in Chemistry","No degree needed","Art History","Culinary School"],c:0,tip:"Herzing University's B.S. Chemistry program is built to feed exactly these Herzing labs."}
+ ]
+},
+{
+ id:'zone2',name:'Automotive Materials Lab',city:'Greer',sector:'Automotive & Advanced Materials',
+ boss:'THE CORROSION KING',bossIcon:'⚙️',proj:'🔩',color:'#5ec8ff',rgb:'94,200,255',x:65,y:30,
+ intro:"Every bolt, every panel, every bond — I rust them ALL in time.",
+ career:{
+  icon:'🚗',title:'MATERIALS & COATINGS CHEMIST',rarity:'RARE',rcolor:'#5ec8ff',
+  salary:'$46K–$116K (SC posted range)',
+  where:'BMW supplier network (Greer), Michelin N.A. (Greenville), Toray carbon fiber',
+  path:'Gen Chem → Organic → Analytical & Instrumental Analysis → B.S. Chemistry',
+  hook:'BMW builds more cars in Greer than anywhere else on Earth — and every coating, adhesive, and composite needs a chemist.'
+ },
+ questions:[
+  {q:"Rust forming on steel is an everyday example of...",a:["Oxidation","Sublimation","Fermentation","Condensation"],c:0,tip:"Iron loses electrons to oxygen. Coatings chemists fight this electron transfer for a living."},
+  {q:"BMW's largest assembly plant in the world is located in...",a:["Greer, SC","Detroit, MI","Munich, Germany","Austin, TX"],c:0,tip:"Right on I-85 between Greenville and Herzington — surrounded by materials labs and suppliers that hire chemists."},
+  {q:"Carbon fiber is prized in cars and aircraft because it is...",a:["Strong AND lightweight","Heavy and soft","Cheap and edible","Magnetic"],c:0,tip:"The Herzing has a growing carbon-fiber cluster (Toray) feeding automotive and aerospace. Composites = chemistry."},
+  {q:"A coatings chemist testing 'adhesion' is measuring how well paint...",a:["Sticks to the surface","Smells","Costs","Glows in the dark"],c:0,tip:"Crosshatch tests, salt-spray chambers, accelerated weathering — real daily work in an automotive coatings lab."},
+  {q:"Michelin's North American headquarters is in...",a:["Greenville, SC","Paris, France","New York City","Miami, FL"],c:0,tip:"Tire chemistry is deep science: polymers, silica, sulfur networks. And it is headquartered up the road."},
+  {q:"Tire rubber is toughened by heating it with sulfur — a process called...",a:["Vulcanization","Pasteurization","Distillation","Electrolysis"],c:0,tip:"Sulfur builds cross-links between rubber chains. Discovered by Goodyear, perfected by chemists like the ones Michelin hires."},
+  {q:"Corrosion is ultimately a chemistry problem because it involves the transfer of...",a:["Electrons","Neutrons","Sound waves","Heat only"],c:0,tip:"Electrochemistry! The same redox concepts from Gen Chem protect every car body on I-85."},
+  {q:"Materials chemists at automotive suppliers usually start with which degree?",a:["B.S. Chemistry","No schooling","Law degree","Music theory"],c:0,tip:"A chemistry B.S. plus instrumental analysis skills is the standard ticket into these labs."}
+ ]
+},
+{
+ id:'zone3',name:'Bausch + Lomb Plant',city:'Greenville (Pelham Rd)',sector:'Pharma & Medical Manufacturing',
+ boss:'THE CONTAMINANT',bossIcon:'🦠',proj:'🦠',color:'#39d98a',rgb:'57,217,138',x:55,y:38,
+ intro:"One speck of me in your sterile batch and your whole lot is MINE.",
+ career:{
+  icon:'💊',title:'QC / ANALYTICAL CHEMIST (PHARMA)',rarity:'RARE',rcolor:'#5ec8ff',
+  salary:'$46K–$116K (SC posted range)',
+  where:'Bausch + Lomb (Greenville, 500+ employees, $150M expansion)',
+  path:'Gen Chem → Analytical Chemistry → Instrumental Analysis → B.S. Chemistry',
+  hook:'The Bausch + Lomb plant on Pelham Road makes 30+ medical products and is adding up to 200 new jobs. QC chemists guard every batch.'
+ },
+ questions:[
+  {q:"Contact lens solution must match your tears' pH — which is closest to...",a:["7.4","1.0","14.0","0"],c:0,tip:"Slightly basic, like blood. Get it wrong and eyes burn — which is why QC chemists test every batch."},
+  {q:"Bausch + Lomb's Greenville plant on Pelham Road employs more than...",a:["500 people","5 people","50 people","12 people"],c:0,tip:"Over 500 employees making 30+ essential medical products — with a $150M expansion announced."},
+  {q:"In a pharma lab, 'QC' stands for...",a:["Quality Control","Quick Cash","Quiet Chemistry","Quantum Computing"],c:0,tip:"QC chemists are the last line of defense between the factory and the patient."},
+  {q:"A solution with the same salt concentration as your cells is called...",a:["Isotonic","Radioactive","Volcanic","Supersonic"],c:0,tip:"Iso = equal. Saline solutions for eyes and IVs must be isotonic — that is solution chemistry from Gen Chem."},
+  {q:"'Sterile manufacturing' means the product is free of...",a:["Microorganisms","Electrons","Color","Water"],c:0,tip:"Sterile dose manufacturing is a specialized, high-paying corner of pharma chemistry."},
+  {q:"A QC chemist finds a batch out of specification. The right move is to...",a:["Reject it and document everything","Ship it anyway","Hide the data","Taste it to check"],c:0,tip:"Data integrity is sacred in pharma. Honest chemists keep patients safe — and companies out of court."},
+  {q:"Bausch + Lomb announced a $150M Greenville expansion adding up to how many jobs?",a:["200","2","2 million","Zero"],c:0,tip:"That is 200 reasons a chemistry degree in the Herzing is a growth stock."},
+  {q:"The instrument that measures how much light a solution absorbs is a...",a:["Spectrophotometer","Barometer","Odometer","Metronome"],c:0,tip:"Beer's Law in action — you will meet it in Analytical Chemistry, then use it for a paycheck."}
+ ]
+},
+{
+ id:'zone4',name:'County Forensic Division',city:'Greenville',sector:'Forensic Chemistry',
+ boss:'THE PHANTOM TRACE',bossIcon:'👻',proj:'🌫️',color:'#b76cff',rgb:'183,108,255',x:44,y:44,
+ intro:"No fingerprint, no fiber, no residue. I was never here... prove it.",
+ career:{
+  icon:'🕵️',title:'FORENSIC CHEMIST',rarity:'RARE',rcolor:'#b76cff',
+  salary:'Govt pay + 10% bonus for a chemistry B.S.',
+  where:'Greenville Co. Forensic Division — drug analysis, DNA, ballistics, prints',
+  path:'B.S. Chemistry — FORENSIC FOCUS (chemistry + criminal justice + ethics)',
+  hook:'Herzing University already offers a B.S. in Chemistry with Forensic Focus — built for exactly this lab.'
+ },
+ questions:[
+  {q:"Greenville County's Forensic Division analyzes fingerprints, ballistics, drugs, and...",a:["DNA","Weather","Taxes","Traffic"],c:0,tip:"A real county lab, hiring real scientists, 30 minutes down I-85 from campus."},
+  {q:"To confirm the identity of an unknown white powder, a forensic chemist uses...",a:["Mass spectrometry","A taste test","A coin flip","Astrology"],c:0,tip:"GC-MS is the gold standard in drug analysis — you learn the principles in Instrumental Analysis."},
+  {q:"Greenville County pays forensic hires an educational incentive for a bachelor's in chemistry of...",a:["+10%","0%","+1%","+90%"],c:0,tip:"A real posted policy: the chemistry degree literally raises the paycheck."},
+  {q:"'Chain of custody' exists to protect...",a:["The integrity of evidence","Lab snacks","Parking spots","Passwords"],c:0,tip:"If the paper trail breaks, the evidence dies in court. Forensic chemists are meticulous record-keepers."},
+  {q:"Herzing University offers a customized chemistry degree with a focus in...",a:["Forensics","Astrology","Fashion","Surfing"],c:0,tip:"B.S. Chemistry with Forensic Focus: upper-level chemistry plus criminal justice and ethics coursework."},
+  {q:"Luminol glows blue at crime scenes when it reacts with the iron in...",a:["Hemoglobin","Table sugar","Plastic","Gold"],c:0,tip:"A chemiluminescence reaction — CSI made it famous, chemistry makes it work."},
+  {q:"Fingerprints can be developed with superglue fumes. The chemical is...",a:["Cyanoacrylate","Water","Table salt","Helium"],c:0,tip:"Cyanoacrylate polymerizes on fingerprint residue — polymers again! Chemistry connects everything."},
+  {q:"Forensic chemists must be ready to present and defend their results in...",a:["Court","Movies only","Karaoke","Nowhere"],c:0,tip:"Expert testimony is part of the job — science plus communication skills."}
+ ]
+},
+{
+ id:'zone5',name:'ReWa Water Recovery',city:'Greenville',sector:'Environmental & Water Chemistry',
+ boss:'THE SLUDGE SERPENT',bossIcon:'🐍',proj:'💧',color:'#2f9dff',rgb:'47,157,255',x:49,y:53,
+ intro:"Every drain in the Herzing feeds me. Your rivers are my coils.",
+ career:{
+  icon:'💧',title:'ENVIRONMENTAL / WATER QUALITY CHEMIST',rarity:'RARE',rcolor:'#2f9dff',
+  salary:'$46K–$116K (SC range) + tuition help',
+  where:'ReWa (Greenville, 9 facilities + certified lab), Herzington Water',
+  path:'Gen Chem → Analytical Chemistry → Environmental electives → B.S. Chemistry',
+  hook:'ReWa has protected Herzing water since 1925 and runs its own laboratory. Herzington Water even advertises tuition reimbursement.'
+ },
+ questions:[
+  {q:"ReWa has been cleaning the Herzing's water since...",a:["1925","2020","1776","Last year"],c:0,tip:"A century of water chemistry in Greenville — 9 water resource recovery facilities and an in-house certified lab."},
+  {q:"Safe drinking water has a pH closest to...",a:["7","0","14","100"],c:0,tip:"Neutral-ish. Water chemists titrate, buffer, and monitor pH daily — straight out of Gen Chem lab."},
+  {q:"Chlorination of drinking water is done to destroy...",a:["Pathogens","Oxygen","Nitrogen","Nothing"],c:0,tip:"Disinfection chemistry has saved more lives than almost any other public-health measure in history."},
+  {q:"A chemist measuring dissolved oxygen in a river is checking whether it can support...",a:["Aquatic life","Boats","Bridges","Wi-Fi"],c:0,tip:"Low dissolved oxygen suffocates fish. Environmental chemists are the river's physicians."},
+  {q:"Herzington Water's laboratory team is state-certified, and the utility advertises which perk?",a:["Tuition reimbursement","Free cars","Unlimited vacation","A yacht"],c:0,tip:"Real posting language: paid training and tuition reimbursement. They will help pay for your chemistry degree."},
+  {q:"Nitrogen and phosphorus runoff cause lakes to choke with...",a:["Algae","Gold","Sand","Ice"],c:0,tip:"Eutrophication — nutrient chemistry gone wrong. Chemists monitor N and P to keep Lake Hartwell swimmable."},
+  {q:"'Water resource recovery' means turning wastewater back into...",a:["Clean water","Soda","Gasoline","Glitter"],c:0,tip:"Modern plants are chemistry-driven recovery machines — some even harvest energy and nutrients."},
+  {q:"Heavy metals like lead in water are detected at parts-per-BILLION levels using...",a:["Sensitive lab instruments","Smell","Guesswork","A magnet"],c:0,tip:"ICP and atomic absorption spectroscopy — instruments you can train on as a chemistry major."}
+ ]
+},
+{
+ id:'zone6',name:'Regional Hospital Labs',city:'Herzington · Greenville',sector:'Clinical & Biomedical Chemistry',
+ boss:'THE FALSE POSITIVE',bossIcon:'🩸',proj:'💉',color:'#ff5d8a',rgb:'255,93,138',x:91,y:24,
+ intro:"I am the result that LOOKS true. Misread me, and the patient pays.",
+ career:{
+  icon:'🏥',title:'CLINICAL CHEMIST / LAB SCIENTIST',rarity:'RARE',rcolor:'#ff5d8a',
+  salary:'$46K–$116K (SC posted range)',
+  where:'Herzington Regional Healthcare, Prisma Health (Greenville)',
+  path:'Gen Chem → Organic → Biochemistry → B.S. Chemistry (pre-health track)',
+  hook:'Hospital labs run on chemistry — and the major doubles as the classic launchpad to med, pharmacy, and dental school.'
+ },
+ questions:[
+  {q:"A blood glucose test is chemistry applied to...",a:["Medicine","Geology","Astronomy","Carpentry"],c:0,tip:"Nearly every number on a hospital lab report comes from a chemical reaction run by a machine a chemist maintains and validates."},
+  {q:"Which two Herzing health systems hire chemistry grads into their labs?",a:["Herzington Regional & Prisma Health","NASA & SpaceX","Netflix & Hulu","None"],c:0,tip:"Herzington Regional shows up among the top chemistry-job employers in Herzington listings."},
+  {q:"Electrolytes on a basic metabolic panel include sodium and...",a:["Potassium","Gold","Uranium","Neon"],c:0,tip:"Na+ and K+ — ions from week one of Gen Chem, measured a thousand times a day in every hospital."},
+  {q:"A 'false positive' is a test result that signals disease when...",a:["There is none","It is always right","The patient sleeps","The lab closes"],c:0,tip:"Specificity and sensitivity — statistics meets chemistry. Lab scientists exist to keep results trustworthy."},
+  {q:"Chemistry is the classic launchpad major for which professional schools?",a:["Medicine, pharmacy, dentistry","Circus arts","Sailing school","Film school"],c:0,tip:"Herzing University chemistry grads have gone on to medical, pharmacy, and dental programs — it is a named outcome of the program."},
+  {q:"Hemoglobin carries oxygen using which metal at its core?",a:["Iron","Silver","Mercury","Sodium"],c:0,tip:"One Fe atom per heme group. Bioinorganic chemistry keeps you alive every second."},
+  {q:"Troponin detected in the blood signals damage to the...",a:["Heart","Hair","Toenails","Eardrum"],c:0,tip:"The troponin assay is pure analytical chemistry — and it decides who goes to the cath lab at 3 a.m."},
+  {q:"Above all, results from a clinical chemistry lab must be...",a:["Accurate and fast","Decorative","Secret","Random"],c:0,tip:"Doctors treat based on your numbers. Clinical chemists carry real responsibility — and are paid accordingly."}
+ ]
+},
+{
+ id:'zone7',name:'BASF Catalyst Works',city:'Seneca · Clemson',sector:'THE FINAL FRONTIER — Research & Beyond',
+ boss:'THE CATALYST',bossIcon:'⚛️',proj:'⚛️',color:'#ff6cb6',rgb:'255,108,182',x:12,y:50,final:true,
+ intro:"Six bosses fell — six careers freed. But I accelerate EVERYTHING... including your doom.",
+ career:{
+  icon:'⚛️',title:'RESEARCH SCIENTIST (PH.D. TRACK)',rarity:'LEGENDARY',rcolor:'#ffcd44',holo:true,
+  salary:'Ph.D. stipend (they pay YOU) → $100K+ industry R&D',
+  where:'BASF (~750 employees, 5 SC sites), grad schools nationwide',
+  path:'B.S. Chemistry at Herzing University → funded M.S./Ph.D. → research leadership',
+  hook:'BASF recycles precious-metal catalysts in Seneca. And chemistry Ph.D. programs are typically FUNDED — graduate school that pays you a stipend.'
+ },
+ questions:[
+  {q:"A catalyst speeds up a reaction while itself being...",a:["Not consumed","Destroyed","Frozen","Sold"],c:0,tip:"It lowers the activation energy and walks away unchanged. The Catalyst chose its name well."},
+  {q:"BASF employs roughly how many people across its five South Carolina sites?",a:["750","7","2","Half a person"],c:0,tip:"Clemson, Converse, Mauldin, Seneca, and White Stone — the world's largest chemical company, scattered across the Herzing."},
+  {q:"The BASF site in Seneca specializes in recycling precious-metal...",a:["Catalysts","Coupons","Batteries only","Newspapers"],c:0,tip:"Spent catalysts come in, platinum-group metals come out. Sustainability IS chemistry."},
+  {q:"Precious metals recovered from spent catalysts include platinum and...",a:["Palladium","Plutonium","Pasta","Pewter"],c:0,tip:"Pt, Pd, Rh — the platinum group. Your catalytic converter carries more precious metal than your jewelry."},
+  {q:"A funded chemistry Ph.D. typically costs the student...",a:["Nothing — they receive a stipend","One million dollars","A kidney","Full tuition"],c:0,tip:"The best-kept secret in science: chemistry doctoral programs usually waive tuition AND pay you to do research."},
+  {q:"A car's catalytic converter turns poisonous carbon monoxide into...",a:["Carbon dioxide","Gold","Pure oxygen","Smoke"],c:0,tip:"Heterogeneous catalysis on a platinum surface, running under your car right now."},
+  {q:"Which is a real destination for chemistry Ph.D.s?",a:["Research director at a global company","Nothing exists","Only retail","Only one job total"],c:0,tip:"R&D leadership, national labs, professorships, biotech startups — the ceiling is high."},
+  {q:"You have now seen 7 Herzing careers. The one requirement they all share is...",a:["A chemistry degree","Pure luck","An inheritance","A cape"],c:0,tip:"Every door you just opened starts at the same place: a B.S. in Chemistry. Herzing University is waiting."}
+ ]
+},
+];
+/* ============ STATE ============ */
+var SAVE_KEY='cq_herzing_v1';
+var S={beaten:[],seenFinale:false};
+try{var raw=localStorage.getItem(SAVE_KEY);if(raw){var p=JSON.parse(raw);if(p&&p.beaten)S=p;}}catch(e){}
+function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
+function isBeaten(id){return S.beaten.indexOf(id)>=0;}
+function el(id){return document.getElementById(id);}
+function allMainBeaten(){return ZONES.filter(function(z){return !z.final;}).every(function(z){return isBeaten(z.id);});}
+
+/* ============ AUDIO ============ */
+var AC=null;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC;}
+function tone(f,d,type,vol,when,slide){
+  var c=ac();if(!c)return;
+  var o=c.createOscillator(),g=c.createGain();
+  o.type=type||'square';var t=c.currentTime+(when||0);
+  o.frequency.setValueAtTime(f,t);
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);
+  g.gain.setValueAtTime(vol||0.08,t);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+  o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+d+0.05);
+}
+var sfx={
+  click:function(){tone(660,0.07,'square',0.05);},
+  correct:function(){tone(523,0.09,'square',0.07);tone(659,0.09,'square',0.07,0.09);tone(784,0.16,'square',0.07,0.18);},
+  wrong:function(){tone(160,0.25,'sawtooth',0.09,0,80);},
+  hurt:function(){tone(200,0.12,'square',0.08,0,120);},
+  intro:function(){tone(65,1.4,'sawtooth',0.06);tone(98,1.4,'sawtooth',0.04,0.1);},
+  phase2:function(){tone(110,0.4,'sawtooth',0.09,0,55);tone(220,0.3,'square',0.06,0.15);},
+  shatter:function(){tone(880,0.5,'sawtooth',0.09,0,60);tone(440,0.6,'square',0.07,0.05,40);},
+  step:function(){tone(420,0.08,'square',0.06);},
+  chaser:function(){tone(110,0.22,'sawtooth',0.1);tone(80,0.26,'sawtooth',0.08,0.07);},
+  tick:function(){tone(980,0.05,'square',0.04);},
+  victory:function(){[523,659,784,1047].forEach(function(f,i){tone(f,0.22,'square',0.08,i*0.13);});},
+  finale:function(){[392,523,659,784,1047,1319].forEach(function(f,i){tone(f,0.3,'square',0.08,i*0.16);});}
+};
+
+/* ============ MUSIC ============ */
+var TRACKS={
+title:{bpm:76,len:32,leadType:'triangle',leadVol:0.04,leadSus:3,bassVol:0.045,bassSus:3.5,harmVol:0.02,
+ bass:[36,0,0,0,0,0,0,0, 43,0,0,0,0,0,0,0, 45,0,0,0,0,0,0,0, 41,0,0,0,43,0,0,0],
+ harm:[60,64,67,72,76,72,67,64, 59,62,67,71,74,71,67,62, 57,60,64,69,72,69,64,60, 53,57,60,65,69,65,60,57],
+ lead:[76,0,0,0,79,0,0,0, 74,0,0,0,71,0,0,0, 72,0,0,0,76,0,69,0, 67,0,0,0,69,0,71,0]},
+map:{bpm:116,len:32,leadVol:0.032,bassVol:0.05,
+ bass:[36,0,43,0,45,0,43,0, 41,0,43,0,36,0,43,0, 45,0,40,0,41,0,43,0, 36,0,43,0,40,0,43,0],
+ lead:[67,0,72,74,76,0,74,72, 77,76,74,72,69,0,72,0, 76,0,72,0,74,76,77,76, 74,72,69,67,0,0,67,0],
+ hat:[0,0,1,0,0,0,1,0, 0,0,1,0,0,0,1,0, 0,0,1,0,0,0,1,0, 0,0,1,0,0,0,1,1],
+ kick:[1,0,0,0,1,0,0,0, 1,0,0,0,1,0,0,0, 1,0,0,0,1,0,0,0, 1,0,0,0,1,0,1,0]},
+battle:{bpm:152,len:32,leadVol:0.034,bassType:'square',bassVol:0.045,bassSus:0.9,
+ bass:[45,45,52,45,43,45,52,43, 45,45,52,45,43,45,52,43, 41,41,48,41,43,43,50,43, 45,45,52,45,48,47,45,43],
+ lead:[69,0,72,76,0,74,72,74, 76,0,74,72,69,0,72,0, 77,0,76,74,72,0,74,76, 81,79,76,74,72,74,69,0],
+ hat:[1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1],
+ kick:[1,0,0,0,1,0,1,0, 1,0,0,0,1,0,0,0, 1,0,0,0,1,0,1,0, 1,0,0,0,1,0,1,1]},
+finale:{bpm:100,len:32,leadType:'triangle',leadVol:0.04,leadSus:1.6,bassVol:0.04,bassSus:6,
+ bass:[36,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 41,0,0,0,0,0,0,0,43,0,0,0,0,0,0,0],
+ lead:[60,62,64,67,69,72,74,76, 79,76,74,72,69,67,64,62, 60,64,67,72,76,79,84,79, 76,72,67,64,62,64,67,69]}
+};
+var MUSIC=(function(){
+  var on=true;try{on=localStorage.getItem('cq_music')!=='0';}catch(e){}
+  var cur=null,timer=null,step=0,nextT=0,noiseBuf=null,gainNode=null,rate=1;
+  function master(){var c=ac();if(!c)return null;if(!gainNode){gainNode=c.createGain();gainNode.gain.value=0.55;gainNode.connect(c.destination);}return gainNode;}
+  function noise(){var c=ac();if(!noiseBuf){var len=Math.floor(c.sampleRate*0.08);noiseBuf=c.createBuffer(1,len,c.sampleRate);var d=noiseBuf.getChannelData(0);for(var i=0;i<len;i++)d[i]=Math.random()*2-1;}return noiseBuf;}
+  function fq(m){return 440*Math.pow(2,(m-69)/12);}
+  function vc(type,m,t,d,vol){
+    var c=ac();var o=c.createOscillator(),g=c.createGain();
+    o.type=type;o.frequency.setValueAtTime(fq(m),t);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0008,t+d);
+    o.connect(g);g.connect(master());o.start(t);o.stop(t+d+0.03);
+  }
+  function hat(t,vol){
+    var c=ac();var s=c.createBufferSource();s.buffer=noise();
+    var f=c.createBiquadFilter();f.type='highpass';f.frequency.value=6500;
+    var g=c.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0008,t+0.05);
+    s.connect(f);f.connect(g);g.connect(master());s.start(t);
+  }
+  function kick(t,vol){
+    var c=ac();var o=c.createOscillator(),g=c.createGain();
+    o.type='sine';o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(42,t+0.1);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0008,t+0.13);
+    o.connect(g);g.connect(master());o.start(t);o.stop(t+0.16);
+  }
+  function tick(){
+    var c=ac();if(!c||!cur)return;
+    var T=TRACKS[cur];var spb=60/(T.bpm*rate)/2;
+    while(nextT<c.currentTime+0.18){
+      var i=step%T.len;
+      if(T.bass&&T.bass[i])vc(T.bassType||'triangle',T.bass[i],nextT,spb*(T.bassSus||1.8),T.bassVol||0.05);
+      if(T.lead&&T.lead[i])vc(T.leadType||'square',T.lead[i],nextT,spb*(T.leadSus||0.9),T.leadVol||0.035);
+      if(T.harm&&T.harm[i])vc('triangle',T.harm[i],nextT,spb*0.95,T.harmVol||0.02);
+      if(T.hat&&T.hat[i])hat(nextT,0.03);
+      if(T.kick&&T.kick[i])kick(nextT,0.07);
+      nextT+=spb;step++;
+    }
+  }
+  function play(name){
+    cur=name;if(!on)return;
+    var c=ac();if(!c)return;
+    if(timer){clearInterval(timer);timer=null;}
+    step=0;nextT=c.currentTime+0.06;rate=1;
+    timer=setInterval(tick,60);
+  }
+  function stop(){if(timer){clearInterval(timer);timer=null;}cur=null;}
+  function toggle(){
+    on=!on;try{localStorage.setItem('cq_music',on?'1':'0');}catch(e){}
+    if(!on&&timer){clearInterval(timer);timer=null;}
+    else if(on&&cur)play(cur);
+    return on;
+  }
+  return {play:play,stop:stop,toggle:toggle,setRate:function(r){rate=r;},isOn:function(){return on;},cur:function(){return cur;}};
+})();
+var MROUTE={cqTitle:'title',cqMap:'map',cqBattle:'battle',cqFinale:'finale'};
+/* per-zone battle themes — same engine, different key/riff/tempo */
+var BATTLE_BASE={
+ hat:[1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1],
+ kick:[1,0,0,0,1,0,1,0, 1,0,0,0,1,0,0,0, 1,0,0,0,1,0,1,0, 1,0,0,0,1,0,1,1]};
+var BATTLE_VAR={
+zone1:{bpm:140, /* C major — regal mill march */
+ bass:[48,48,55,48,52,48,55,52, 48,48,55,48,52,48,55,52, 53,53,60,53,52,52,59,52, 48,48,55,48,55,53,52,50],
+ lead:[72,0,76,79,0,76,72,76, 84,0,79,76,79,0,72,0, 77,76,77,81,0,79,76,79, 72,74,76,79,76,74,72,0]},
+zone2:{bpm:148, /* E minor — corroded grind */
+ bass:[40,40,47,40,38,40,47,38, 40,40,47,40,43,42,40,38, 36,36,43,36,38,38,45,38, 40,40,47,40,47,45,43,42],
+ lead:[76,0,79,76,74,0,76,0, 79,81,79,76,74,76,0,0, 72,0,76,72,74,0,77,74, 76,0,79,82,81,79,76,74]},
+zone3:{bpm:156, /* D minor — skittering spores */
+ bass:[38,0,38,45,38,0,38,46, 38,0,38,45,41,43,45,46, 38,0,38,45,38,0,38,46, 43,0,43,50,45,45,45,0],
+ lead:[74,77,0,74,81,0,79,77, 74,77,0,74,82,0,81,79, 77,0,74,77,81,82,81,79, 79,0,77,76,77,74,0,0]},
+zone4:{bpm:144, /* B minor — phantom waltz of dread */
+ bass:[47,0,47,54,47,0,47,54, 45,0,45,52,45,0,45,52, 43,0,43,50,42,0,42,49, 47,0,47,54,49,49,42,0],
+ lead:[71,0,74,0,78,0,74,71, 70,0,71,74,0,71,0,0, 69,0,71,0,74,0,78,81, 79,78,74,71,70,71,0,0]},
+zone5:{bpm:150, /* G minor — slithering current */
+ bass:[43,0,43,46,48,46,43,41, 43,0,43,46,50,48,46,43, 51,0,51,48,46,0,46,43, 41,0,41,43,50,48,46,45],
+ lead:[79,0,82,79,77,75,74,0, 79,0,82,84,0,82,79,77, 75,0,79,75,74,0,77,74, 70,72,74,77,75,74,70,0]},
+zone6:{bpm:158, /* C minor — code-blue urgency */
+ bass:[48,48,55,48,48,48,55,46, 44,44,51,44,46,46,53,46, 48,48,55,48,51,51,58,51, 46,46,53,46,43,46,48,50],
+ lead:[72,0,75,79,0,77,75,77, 80,0,79,77,75,0,72,0, 74,0,75,77,79,80,79,77, 75,77,75,74,72,74,75,0]},
+zone7:{bpm:162, /* A minor — final acceleration, extra arp layer */
+ bass:[45,45,52,45,43,45,52,43, 45,45,52,45,43,45,52,43, 41,41,48,41,43,43,50,43, 45,45,52,45,48,47,45,43],
+ lead:[69,0,72,76,0,74,72,74, 76,0,74,72,69,0,72,0, 77,0,76,74,72,0,74,76, 81,79,76,74,72,74,69,0],
+ harm:[57,60,64,60,57,60,64,60, 57,60,64,60,57,60,64,60, 53,57,60,57,53,57,60,57, 55,59,62,59,55,59,62,59]}
+};
+function setBattleTrack(id){
+  var v=BATTLE_VAR[id];if(!v)return;
+  TRACKS.battle={bpm:v.bpm,len:32,leadVol:0.034,bassType:'square',bassVol:0.045,bassSus:0.9,
+    bass:v.bass,lead:v.lead,harm:v.harm||null,harmVol:0.02,hat:BATTLE_BASE.hat,kick:BATTLE_BASE.kick};
+}
+/* ============ SCREENS / OVERLAYS ============ */
+function show(id){
+  ['cqTitle','cqMap','cqBattle','cqColl','cqFinale'].forEach(function(s){el(s).classList.remove('on');});
+  el(id).classList.add('on');
+  if(MROUTE[id]&&MUSIC.cur()!==MROUTE[id])MUSIC.play(MROUTE[id]);
+  if(id==='cqMap')applyZoom();
+  el('cqBattleZoom').classList.toggle('on',id==='cqBattle');
+  if(id==='cqTitle')armAttract();else if(window.ATTRACT&&!ATTRACT.on)clearTimeout(ATTRACT.t);
+}
+function toast(msg){
+  var t=el('cqToast');t.innerHTML=msg;t.classList.add('on');
+  clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('on');},2800);
+}
+
+/* ============ TITLE FX ============ */
+(function(){
+  var sp=el('cqSpark'),h='';
+  for(var i=0;i<26;i++){
+    h+='<s style="left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;animation-delay:'+(Math.random()*3.4)+'s"></s>';
+  }
+  sp.innerHTML=h;
+})();
+
+/* ============ MAP ============ */
+var selZone=null;
+function nodeTop(y){return (y/62*100)+'%';}
+function renderMap(){
+  var wrap=el('cqNodes'),h='';
+  ZONES.forEach(function(z){
+    var locked=z.final&&!allMainBeaten();
+    var cls='cq-node'+(isBeaten(z.id)?' done':'')+(locked?' locked':'')+(selZone===z.id?' sel':'');
+    h+='<div class="'+cls+'" data-z="'+z.id+'" style="--zc:'+z.color+';left:'+z.x+'%;top:'+nodeTop(z.y)+'">'
+      +'<div class="pin">'+(locked?'🔒':z.bossIcon)+'</div>'
+      +'<div class="lbl"><em>'+z.name+'</em><br>'+z.city+'</div></div>';
+  });
+  wrap.innerHTML=h;
+  var done=S.beaten.length;
+  el('cqHudProg').textContent='Careers discovered: '+Math.min(done,7)+' / 7';
+  Array.prototype.forEach.call(wrap.children,function(n){
+    n.addEventListener('click',function(){selectZone(n.getAttribute('data-z'));});
+  });
+}
+function zoneById(id){for(var i=0;i<ZONES.length;i++)if(ZONES[i].id===id)return ZONES[i];return null;}
+/* ---- map zoom ---- */
+var mapZoom=1,ZOOM_MIN=1,ZOOM_MAX=3.2;
+function fitHeight(){var w=el('cqMapWrap');if(!w.clientWidth)return 300;return Math.min(w.clientHeight,w.clientWidth/(100/62));}
+function applyZoom(){
+  var w=el('cqMapWrap'),inner=el('cqMapInner');
+  var ow=inner.offsetWidth||1,oh=inner.offsetHeight||1;
+  var cx=(w.scrollLeft+w.clientWidth/2)/ow, cy=(w.scrollTop+w.clientHeight/2)/oh;
+  var nh=fitHeight()*mapZoom, nw=nh*(100/62);
+  inner.style.width=nw+'px';
+  inner.style.height=nh+'px';
+  inner.style.marginLeft=nw<w.clientWidth?((w.clientWidth-nw)/2)+'px':'0';
+  inner.style.marginTop=nh<w.clientHeight?((w.clientHeight-nh)/2)+'px':'0';
+  w.scrollLeft=Math.max(0,Math.min(nw-w.clientWidth, cx*nw-w.clientWidth/2));
+  w.scrollTop=Math.max(0,Math.min(nh-w.clientHeight, cy*nh-w.clientHeight/2));
+  var lv=el('cqZoomLvl');if(lv)lv.textContent=mapZoom<=ZOOM_MIN+0.01?'FIT':('x'+mapZoom.toFixed(1));
+  var bi=el('cqZoomIn'),bo=el('cqZoomOut');
+  if(bi)bi.disabled=mapZoom>=ZOOM_MAX-0.01;
+  if(bo)bo.disabled=mapZoom<=ZOOM_MIN+0.01;
+}
+function setZoom(z){cancelFollow();mapZoom=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,z));applyZoom();}
+/* ---- battle zoom (scene + question/answer text) ---- */
+var battleZoom=1,BZ_MIN=0.85,BZ_MAX=1.6;
+function applyBattleZoom(){
+  el('cqBattle').style.setProperty('--bz',battleZoom);
+  var lv=el('cqBZLvl');if(lv)lv.textContent=(Math.round(battleZoom*100)/100)+'x';
+  var bi=el('cqBZIn'),bo=el('cqBZOut');
+  if(bi)bi.disabled=battleZoom>=BZ_MAX-0.01;
+  if(bo)bo.disabled=battleZoom<=BZ_MIN+0.01;
+  requestAnimationFrame(function(){var c=el('cqBgCanvas');if(c&&c.clientWidth){c.width=c.clientWidth;c.height=c.clientHeight;}});
+}
+function setBattleZoom(z){battleZoom=Math.max(BZ_MIN,Math.min(BZ_MAX,Math.round(z*100)/100));applyBattleZoom();}
+function placeAvatar(x,y,instant){
+  var a=el('cqAvatar');
+  if(instant){a.style.transition='none';}
+  a.style.left=x+'%';a.style.top=nodeTop(y);
+  if(instant){void a.offsetWidth;a.style.transition='';}
+}
+function scrollToNode(z){
+  var w=el('cqMapWrap'),inner=el('cqMapInner');
+  var ix=z.x/100*inner.clientWidth,iy=z.y/62*inner.clientHeight;
+  try{w.scrollTo({left:ix-w.clientWidth/2,top:iy-w.clientHeight/2,behavior:'smooth'});}
+  catch(e){w.scrollLeft=ix-w.clientWidth/2;w.scrollTop=iy-w.clientHeight/2;}
+}
+/* camera tracks the avatar while he walks */
+function cancelFollow(){
+  if(cancelFollow._raf){cancelAnimationFrame(cancelFollow._raf);cancelFollow._raf=null;}
+}
+function followAvatar(dur){
+  var w=el('cqMapWrap'),a=el('cqAvatar');
+  var t0=null;
+  cancelFollow();
+  function step(t){
+    if(t0===null)t0=t;
+    var ar=a.getBoundingClientRect(),wr=w.getBoundingClientRect();
+    var tx=w.scrollLeft+(ar.left+ar.width/2-wr.left)-w.clientWidth/2;
+    var ty=w.scrollTop+(ar.top+ar.height/2-wr.top)-w.clientHeight/2;
+    w.scrollLeft+=(tx-w.scrollLeft)*0.14;
+    w.scrollTop+=(ty-w.scrollTop)*0.14;
+    if(t-t0<dur)cancelFollow._raf=requestAnimationFrame(step);
+    else cancelFollow._raf=null;
+  }
+  cancelFollow._raf=requestAnimationFrame(step);
+}
+function selectZone(id){
+  var z=zoneById(id);if(!z)return;
+  sfx.click();
+  if(z.final&&!allMainBeaten()){
+    toast('🔒 Defeat the other 6 bosses to unlock <b>'+z.boss+'</b>!');
+    return;
+  }
+  var already=selZone===id;
+  selZone=id;renderMap();
+  el('cqZoneCard').classList.remove('on');
+  placeAvatar(z.x,z.y-4);
+  followAvatar(1600);
+  setTimeout(function(){openZoneCard(z);},already?80:1120);
+}
+function openZoneCard(z){
+  var c=el('cqZoneCard');
+  c.style.setProperty('--zc',z.color);
+  c.innerHTML='<h3>'+z.bossIcon+' '+z.name+' · '+z.city+'</h3>'
+    +'<p>'+z.sector+'</p>'
+    +'<p class="boss">Guarded by: <b>'+z.boss+'</b>'+(isBeaten(z.id)?' — DEFEATED ✔':'')+'</p>'
+    +'<div class="row"><button class="cq-btn" id="cqFight">'+(isBeaten(z.id)?'⚔️ REMATCH':'⚔️ CHALLENGE')+'</button>'
+    +'<button class="cq-btn ghost" id="cqZcClose">CLOSE</button></div>';
+  c.classList.add('on');
+  el('cqFight').addEventListener('click',function(){c.classList.remove('on');startBattle(z);});
+  el('cqZcClose').addEventListener('click',function(){c.classList.remove('on');sfx.click();});
+}
+
+/* ============ BATTLE: THE CHASE ============ */
+var B=null; /* battle state */
+var START_LEAD=4,Q_SECONDS=25;
+function shuffled(n){var a=[];for(var i=0;i<n;i++)a.push(i);for(var j=a.length-1;j>0;j--){var k=Math.floor(Math.random()*(j+1));var t=a[j];a[j]=a[k];a[k]=t;}return a;}
+var TAUNTS={
+zone1:{start:["Run, little monomer. I shall polymerize your DEFEAT.","My chains are endless. Your stamina is not."],
+ ahead:["Hmph. A clean elimination.","You repeat units well enough... for a student."],
+ gain:["CROSS-LINKED! You cannot escape my network!","Another strand binds you!"],
+ danger:["Feel my TENSILE STRENGTH!","Your chain is about to TERMINATE!"],
+ caught:["Caught — and woven into my fabric forever."],
+ beaten:["Unraveled... thread... by... thread..."]},
+zone2:{start:["I rust everything. Even hope.","Your electrons are MINE, runner."],
+ ahead:["Bah! Galvanized, are we?","Annoying little anode..."],
+ gain:["Oxidation never sleeps!","I taste iron... and FEAR!"],
+ danger:["Your protective coating is FAILING!","Pit by pit, I claim you!"],
+ caught:["Corroded to the core. ROYALLY."],
+ beaten:["No... I have been... PASSIVATED..."]},
+zone3:{start:["One slip, and your whole batch is mine.","Sterile? We shall SEE."],
+ ahead:["Curses! Quality controlled!","Filtered?! How clinical of you."],
+ gain:["Your spec is DRIFTING! I spread!","Colony forming... unit by unit!"],
+ danger:["The batch is nearly MINE!","Out of spec! OUT OF SPEC!"],
+ caught:["REJECTED! Your whole lot — contaminated."],
+ beaten:["Autoclaved... I am... autoclaved..."]},
+zone4:{start:["You cannot chase what leaves no trace.","I was never here. Neither were you."],
+ ahead:["Impossible... my residue, DETECTED?","Who taught you to dust for prints?!"],
+ gain:["Your evidence grows cold!","The chain of custody... BREAKS!"],
+ danger:["Your case is falling apart!","Objection sustained... FOREVER!"],
+ caught:["Case dismissed. The phantom walks."],
+ beaten:["The mass spec... saw through me... verdict... GUILTY..."]},
+zone5:{start:["Every drain in the Herzing feedsss me.","Your riversss are my coilsss."],
+ ahead:["Hisss! Filtered AGAIN!","Chlorine?! You fight dirty."],
+ gain:["Your dissolved oxygen dropsss!","The algae bloom RISESSS!"],
+ danger:["I am coiling around your intake!","Glub glub, little chemist!"],
+ caught:["The Herzing drinksss ME tonight."],
+ beaten:["Clarified... disssinfected... drained..."]},
+zone6:{start:["I am the result that LOOKS true.","Trust me. That is exactly the trap."],
+ ahead:["Re-tested?! How DARE you verify!","Confirmed with a second assay... sickening."],
+ gain:["Misdiagnosis, spreading!","Your sensitivity is slipping!"],
+ danger:["The patient chart is MINE!","Sign it out! Sign the ERROR!"],
+ caught:["Signed out, uncorrected. The error stands."],
+ beaten:["Quality control... confirmed me... false..."]},
+zone7:{start:["Six bosses fell. I accelerate EVERYTHING — including your doom.","I lower every barrier... except yours."],
+ ahead:["You... resist acceleration?","Your rate law defies me!"],
+ gain:["Reaction rate RISING!","Your activation energy CRUMBLES!"],
+ danger:["The transition state is upon you!","Equilibrium shifts to MY side!"],
+ caught:["Reaction complete. Product: your defeat."],
+ beaten:["I am... consumed...? But that breaks... the definition..."]}
+};
+function taunt(kind){
+  if(!B)return;
+  var set=TAUNTS[B.z.id];if(!set||!set[kind])return;
+  var arr=set[kind],b=el('cqBubble');
+  b.textContent=arr[Math.floor(Math.random()*arr.length)];
+  b.classList.add('show');
+  clearTimeout(taunt._t);taunt._t=setTimeout(function(){b.classList.remove('show');},2400);
+}
+/* ---- sprites ---- */
+function svgHero(){
+  return '<svg viewBox="0 0 120 150" xmlns="http://www.w3.org/2000/svg">'
+  +'<ellipse cx="58" cy="146" rx="32" ry="6" fill="rgba(0,0,0,.35)"/>'
+  +'<g class="cq-hbob">'
+  +'<g class="cq-legF" style="transform-origin:64px 62px"><rect x="60" y="58" width="10" height="30" rx="5" fill="#e8b88a"/></g>'
+  +'<g class="cq-legB" style="transform-origin:58px 96px"><rect x="50" y="92" width="12" height="34" rx="6" fill="#26344d"/><rect x="46" y="120" width="22" height="10" rx="4" fill="#f5f5f5"/></g>'
+  +'<rect x="40" y="52" width="38" height="48" rx="12" fill="#f4f7ff"/>'
+  +'<rect x="56" y="58" width="5" height="36" fill="#f0c840"/>'
+  +'<rect x="40" y="52" width="38" height="9" rx="4.5" fill="#dfe6ee"/>'
+  +'<circle cx="60" cy="35" r="19" fill="#f4b283"/>'
+  +'<path d="M41 31 Q45 14 60 14 Q75 14 79 31 Q70 23 60 24 Q50 23 41 31Z" fill="#3a2a1a"/>'
+  +'<rect x="49" y="29" width="23" height="9" rx="4" fill="#5ec8ff" opacity="0.85"/>'
+  +'<line x1="49" y1="33" x2="42" y2="31" stroke="#2a3a55" stroke-width="2"/>'
+  +'<path d="M63 45 Q69 48 74 44" stroke="#1a1a2e" stroke-width="2.4" fill="none" stroke-linecap="round"/>'
+  +'<g class="cq-legB" style="transform-origin:50px 60px"><rect x="42" y="56" width="11" height="28" rx="5.5" fill="#f4b283"/>'
+  +'<rect x="40" y="80" width="7" height="7" rx="1" fill="#cfe0ff"/><polygon points="36,100 51,100 47,87 40,87" fill="#39d98a"/><polygon points="38,94 49,94 47,87 40,87" fill="#7df0b5"/></g>'
+  +'<g class="cq-legF" style="transform-origin:58px 96px"><rect x="54" y="92" width="13" height="36" rx="6" fill="#324768"/><rect x="52" y="122" width="24" height="11" rx="4" fill="#ffffff"/></g>'
+  +'</g></svg>';
+}
+function svgChaser(z){
+  var s='<svg viewBox="0 0 140 150" xmlns="http://www.w3.org/2000/svg">'
+  +'<ellipse cx="70" cy="146" rx="40" ry="6" fill="rgba(0,0,0,.35)"/>';
+  if(z.id==='zone1'){ /* POLYMER BARON — royal thread-spool */
+    s+='<g class="cq-hover">'
+    +'<path class="cq-wig" d="M30 90 Q10 96 6 116" stroke="#f0c840" stroke-width="4" fill="none" stroke-linecap="round"/>'
+    +'<path class="cq-wig" d="M110 90 Q130 98 132 118" stroke="#c89a18" stroke-width="4" fill="none" stroke-linecap="round"/>'
+    +'<ellipse cx="70" cy="118" rx="38" ry="11" fill="#c89a18"/>'
+    +'<rect x="40" y="52" width="60" height="66" fill="#7a4a1e"/>'
+    +'<path d="M40 60 H100 M40 72 H100 M40 84 H100 M40 96 H100 M40 108 H100" stroke="#a9692f" stroke-width="4"/>'
+    +'<path d="M40 66 H100 M40 78 H100 M40 90 H100 M40 102 H100" stroke="#5d3414" stroke-width="2"/>'
+    +'<ellipse cx="70" cy="52" rx="38" ry="12" fill="#f0c840"/>'
+    +'<ellipse cx="70" cy="49" rx="38" ry="11" fill="#ffd700"/>'
+    +'<polygon points="48,44 54,28 62,42 70,26 78,42 86,28 92,44" fill="#ffd700" stroke="#c89a18" stroke-width="2"/>'
+    +'<circle cx="54" cy="30" r="3" fill="#ff5d8a"/><circle cx="70" cy="28" r="3" fill="#5ec8ff"/><circle cx="86" cy="30" r="3" fill="#7ed85a"/>'
+    +'<ellipse cx="58" cy="76" rx="6" ry="8" fill="#ffd700"/><ellipse cx="84" cy="76" rx="6" ry="8" fill="#ffd700"/>'
+    +'<circle cx="59" cy="78" r="3" fill="#1a1208"/><circle cx="85" cy="78" r="3" fill="#1a1208"/>'
+    +'<path d="M58 98 Q70 92 84 98" stroke="#ffd700" stroke-width="3.5" fill="none" stroke-linecap="round"/>'
+    +'</g>';
+  }else if(z.id==='zone2'){ /* CORROSION KING — rusted gear crab */
+    s+='<g class="cq-hover">'
+    +'<g class="cq-wig"><path d="M30 86 Q12 80 10 64" stroke="#6d4a2c" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M12 64 L2 54 M12 64 L22 52" stroke="#8a5a30" stroke-width="6" stroke-linecap="round"/></g>'
+    +'<g class="cq-wig"><path d="M110 86 Q128 80 130 64" stroke="#6d4a2c" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M130 64 L122 52 M130 64 L138 54" stroke="#8a5a30" stroke-width="6" stroke-linecap="round"/></g>'
+    +'<g class="cq-spin" style="animation-duration:5s">'
+    +'<rect x="64" y="28" width="12" height="14" fill="#5a6578"/><rect x="64" y="118" width="12" height="14" fill="#5a6578"/>'
+    +'<rect x="22" y="72" width="14" height="12" fill="#5a6578"/><rect x="104" y="72" width="14" height="12" fill="#5a6578"/>'
+    +'<rect x="34" y="40" width="13" height="13" fill="#5a6578" transform="rotate(45 40 46)"/><rect x="93" y="40" width="13" height="13" fill="#5a6578" transform="rotate(45 100 46)"/>'
+    +'<rect x="34" y="104" width="13" height="13" fill="#5a6578" transform="rotate(45 40 110)"/><rect x="93" y="104" width="13" height="13" fill="#5a6578" transform="rotate(45 100 110)"/>'
+    +'</g>'
+    +'<circle cx="70" cy="79" r="40" fill="#707d94"/>'
+    +'<circle cx="70" cy="79" r="40" fill="none" stroke="#4a5568" stroke-width="5"/>'
+    +'<path d="M44 58 Q56 48 66 56 Q60 66 48 66 Z" fill="#a9692f"/>'
+    +'<path d="M92 96 Q102 88 98 76 Q88 80 86 92 Z" fill="#8a5a30"/>'
+    +'<circle cx="48" cy="96" r="7" fill="#a9692f"/><circle cx="92" cy="56" r="5" fill="#c8803a"/>'
+    +'<polygon points="52,28 58,12 64,26 70,10 76,26 82,12 88,28" fill="#8a5a30" stroke="#5d3414" stroke-width="2"/>'
+    +'<rect x="52" y="66" width="14" height="10" rx="3" fill="#1a1208"/><rect x="74" y="66" width="14" height="10" rx="3" fill="#1a1208"/>'
+    +'<rect x="55" y="69" width="8" height="4" fill="#ff8a3a"/><rect x="77" y="69" width="8" height="4" fill="#ff8a3a"/>'
+    +'<path d="M54 96 L62 90 L70 96 L78 90 L86 96" stroke="#1a1208" stroke-width="3.5" fill="none" stroke-linecap="round"/>'
+    +'</g>';
+  }else if(z.id==='zone3'){ /* THE CONTAMINANT — germ blob */
+    s+='<g class="cq-hover">'
+    +'<g class="cq-wig"><line x1="70" y1="22" x2="70" y2="6" stroke="#2a9d62" stroke-width="4" stroke-linecap="round"/><circle cx="70" cy="5" r="4" fill="#7df0b5"/></g>'
+    +'<g class="cq-wig"><line x1="34" y1="44" x2="20" y2="32" stroke="#2a9d62" stroke-width="4" stroke-linecap="round"/><circle cx="19" cy="31" r="3.5" fill="#7df0b5"/></g>'
+    +'<g class="cq-wig"><line x1="106" y1="44" x2="120" y2="32" stroke="#2a9d62" stroke-width="4" stroke-linecap="round"/><circle cx="121" cy="31" r="3.5" fill="#7df0b5"/></g>'
+    +'<g class="cq-wig"><line x1="28" y1="92" x2="12" y2="98" stroke="#2a9d62" stroke-width="4" stroke-linecap="round"/><circle cx="11" cy="99" r="3.5" fill="#7df0b5"/></g>'
+    +'<g class="cq-wig"><line x1="112" y1="92" x2="128" y2="98" stroke="#2a9d62" stroke-width="4" stroke-linecap="round"/><circle cx="129" cy="99" r="3.5" fill="#7df0b5"/></g>'
+    +'<path d="M70 22 Q104 22 112 58 Q120 96 92 116 Q70 132 48 116 Q20 96 28 58 Q36 22 70 22Z" fill="#39d98a"/>'
+    +'<path d="M70 28 Q98 28 106 58 Q112 90 88 110 Q70 122 52 110 Q28 90 34 58 Q42 28 70 28Z" fill="#2fbf76"/>'
+    +'<circle cx="52" cy="56" r="8" fill="#1c7a4a"/><circle cx="94" cy="92" r="10" fill="#1c7a4a"/><circle cx="44" cy="92" r="6" fill="#23925a"/>'
+    +'<circle cx="74" cy="62" r="15" fill="#eafff2"/><circle cx="77" cy="64" r="7" fill="#0e2a1c"/><circle cx="79.5" cy="61.5" r="2.2" fill="#fff"/>'
+    +'<circle cx="50" cy="74" r="7" fill="#eafff2"/><circle cx="52" cy="75" r="3.5" fill="#0e2a1c"/>'
+    +'<path d="M56 98 Q70 108 86 96" stroke="#0e2a1c" stroke-width="4" fill="none" stroke-linecap="round"/>'
+    +'<polygon points="62,99 66,106 70,99" fill="#eafff2"/><polygon points="74,98 78,105 82,97" fill="#eafff2"/>'
+    +'</g>';
+  }else if(z.id==='zone4'){ /* PHANTOM TRACE — fingerprint ghost */
+    s+='<g class="cq-hover cq-fade">'
+    +'<path d="M70 16 Q104 16 106 58 L106 112 L94 102 L86 116 L74 104 L62 118 L52 104 L38 114 L36 58 Q38 16 70 16Z" fill="#b76cff" opacity="0.9"/>'
+    +'<path d="M70 24 Q98 24 100 58 L100 100 L70 100 L42 102 L42 58 Q44 24 70 24Z" fill="#9a4ee6" opacity="0.8"/>'
+    +'<path d="M54 70 Q70 60 86 70 M50 80 Q70 66 90 80 M48 90 Q70 74 92 90" stroke="#e3c8ff" stroke-width="2.4" fill="none" opacity="0.8"/>'
+    +'<ellipse cx="58" cy="48" rx="7" ry="10" fill="#1c0b30"/><ellipse cx="84" cy="48" rx="7" ry="10" fill="#1c0b30"/>'
+    +'<circle cx="60" cy="51" r="2.5" fill="#e3c8ff"/><circle cx="86" cy="51" r="2.5" fill="#e3c8ff"/>'
+    +'<ellipse cx="71" cy="64" rx="5" ry="7" fill="#1c0b30" opacity="0.85"/>'
+    +'<path class="cq-wig" d="M36 60 Q18 64 12 80" stroke="#b76cff" stroke-width="9" fill="none" stroke-linecap="round" opacity="0.75"/>'
+    +'<path class="cq-wig" d="M104 60 Q124 66 130 84" stroke="#b76cff" stroke-width="9" fill="none" stroke-linecap="round" opacity="0.75"/>'
+    +'</g>';
+  }else if(z.id==='zone5'){ /* SLUDGE SERPENT */
+    s+='<g class="cq-slith">'
+    +'<path d="M16 124 Q34 134 50 122 Q68 108 60 92 Q52 78 68 68 Q86 58 80 42" stroke="#1f6e8f" stroke-width="19" fill="none" stroke-linecap="round"/>'
+    +'<path d="M16 124 Q34 134 50 122 Q68 108 60 92 Q52 78 68 68 Q86 58 80 42" stroke="#2f9dff" stroke-width="12" fill="none" stroke-linecap="round" opacity="0.75"/>'
+    +'<path d="M22 124 Q36 130 48 120 M58 94 Q54 82 66 72" stroke="#9fd7ff" stroke-width="3" fill="none" opacity="0.6"/>'
+    +'<circle cx="82" cy="34" r="19" fill="#1f6e8f"/>'
+    +'<circle cx="82" cy="34" r="19" fill="none" stroke="#2f9dff" stroke-width="3" opacity="0.7"/>'
+    +'<path d="M96 28 L112 22 L102 36 L114 40 L96 40Z" fill="#1f6e8f"/>'
+    +'<circle cx="76" cy="29" r="5.5" fill="#ffdf6b"/><circle cx="77.5" cy="30" r="2.6" fill="#7a1212"/>'
+    +'<circle cx="90" cy="29" r="5.5" fill="#ffdf6b"/><circle cx="91.5" cy="30" r="2.6" fill="#7a1212"/>'
+    +'<polygon points="74,46 78,54 82,46" fill="#eafff8"/><polygon points="84,46 88,54 92,46" fill="#eafff8"/>'
+    +'<path class="cq-wig" d="M98 44 Q108 50 106 60" stroke="#ff5d6e" stroke-width="3" fill="none" stroke-linecap="round"/>'
+    +'<circle cx="40" cy="100" r="3" fill="#5ec8ff" opacity="0.7"/><circle cx="30" cy="116" r="2.4" fill="#5ec8ff" opacity="0.6"/>'
+    +'</g>';
+  }else if(z.id==='zone6'){ /* FALSE POSITIVE — clinical specter w/ syringe */
+    s+='<g class="cq-hover">'
+    +'<path d="M70 18 Q100 18 102 56 L102 110 L90 102 L80 114 L70 104 L60 114 L50 102 L38 110 L38 56 Q40 18 70 18Z" fill="#f4f7ff"/>'
+    +'<path d="M70 24 Q96 24 98 56 L98 100 L42 100 L42 56 Q44 24 70 24Z" fill="#dfe6ee"/>'
+    +'<polyline points="44,88 54,88 58,78 64,96 70,72 76,92 80,88 96,88" stroke="#ff5d8a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'<rect x="52" y="40" width="14" height="14" rx="3" fill="#1a0c14"/><rect x="74" y="40" width="14" height="14" rx="3" fill="#1a0c14"/>'
+    +'<rect x="56" y="44" width="6" height="6" fill="#ff5d8a"/><rect x="78" y="44" width="6" height="6" fill="#ff5d8a"/>'
+    +'<rect x="66" y="58" width="8" height="3" fill="#ff5d8a"/><rect x="68.5" y="55.5" width="3" height="8" fill="#ff5d8a"/>'
+    +'<g class="cq-wig"><rect x="100" y="60" width="34" height="11" rx="4" fill="#cfd6e2"/><rect x="104" y="62" width="20" height="7" fill="#ff5d8a" opacity="0.8"/><line x1="134" y1="65.5" x2="140" y2="65.5" stroke="#9aa6b8" stroke-width="2.6"/><rect x="96" y="58" width="6" height="15" rx="2" fill="#9aa6b8"/></g>'
+    +'<path class="cq-wig" d="M40 64 Q24 70 20 84" stroke="#dfe6ee" stroke-width="9" fill="none" stroke-linecap="round"/>'
+    +'</g>';
+  }else{ /* THE CATALYST — living atom */
+    s+='<g class="cq-hover">'
+    +'<ellipse class="cq-spin" style="animation-duration:2.2s" cx="70" cy="74" rx="56" ry="20" fill="none" stroke="#ff6cb6" stroke-width="3" opacity="0.8"/>'
+    +'<ellipse class="cq-spin" style="animation-duration:3.1s;animation-direction:reverse" cx="70" cy="74" rx="56" ry="20" fill="none" stroke="#5ec8ff" stroke-width="3" opacity="0.7" transform="rotate(60 70 74)"/>'
+    +'<ellipse class="cq-spin" style="animation-duration:2.7s" cx="70" cy="74" rx="56" ry="20" fill="none" stroke="#ffd700" stroke-width="3" opacity="0.7" transform="rotate(120 70 74)"/>'
+    +'<circle cx="126" cy="74" r="5" fill="#ff6cb6"/><circle cx="42" cy="46" r="5" fill="#5ec8ff"/><circle cx="42" cy="102" r="5" fill="#ffd700"/>'
+    +'<circle cx="70" cy="74" r="30" fill="#ff6cb6" opacity="0.25"/>'
+    +'<circle cx="70" cy="74" r="24" fill="#c2347e"/>'
+    +'<circle cx="70" cy="74" r="24" fill="none" stroke="#ff6cb6" stroke-width="3"/>'
+    +'<circle cx="63" cy="68" r="6" fill="#ff8ac4"/><circle cx="78" cy="66" r="5" fill="#ff8ac4"/><circle cx="72" cy="82" r="5.5" fill="#e85aa0"/>'
+    +'<rect x="58" y="68" width="9" height="4" rx="2" fill="#2a0818" transform="rotate(-12 62 70)"/>'
+    +'<rect x="74" y="68" width="9" height="4" rx="2" fill="#2a0818" transform="rotate(12 78 70)"/>'
+    +'<path d="M62 84 Q70 80 78 84" stroke="#2a0818" stroke-width="3" fill="none" stroke-linecap="round"/>'
+    +'</g>';
+  }
+  return s+'</svg>';
+}
+/* ---- parallax ---- */
+var chaseRaf=null,chaseScroll=0,chaseSpeed=1.4,chaseTarget=1.4;
+function rgbOf(z){var p=z.rgb.split(',');return {r:+p[0],g:+p[1],b:+p[2]};}
+var SKYLINE={zone1:'mill',zone2:'saw',zone3:'tank',zone4:'city',zone5:'pipe',zone6:'hosp',zone7:'refinery'};
+function drawUnit(ctx,x,H,prof){
+  if(prof==='mill'){
+    ctx.fillRect(x+8,H*0.40,52,H*0.38);
+    ctx.fillRect(x+14,H*0.34,10,H*0.08);
+    ctx.fillRect(x+64,H*0.26,9,H*0.52);
+    ctx.fillRect(x+96,H*0.48,60,H*0.30);
+    ctx.fillRect(x+170,H*0.30,12,H*0.48);
+  }else if(prof==='saw'){
+    ctx.fillRect(x+6,H*0.52,110,H*0.26);
+    ctx.beginPath();
+    ctx.moveTo(x+6,H*0.52);
+    for(var i=0;i<5;i++){ctx.lineTo(x+6+i*22+11,H*0.42);ctx.lineTo(x+6+(i+1)*22,H*0.52);}
+    ctx.fill();
+    ctx.fillRect(x+140,H*0.36,14,H*0.42);
+    ctx.fillRect(x+170,H*0.56,50,H*0.22);
+  }else if(prof==='tank'){
+    ctx.beginPath();ctx.arc(x+34,H*0.6,H*0.17,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(x+74,H*0.64,H*0.12,0,Math.PI*2);ctx.fill();
+    ctx.fillRect(x+100,H*0.48,70,H*0.30);
+    ctx.fillRect(x+115,H*0.42,12,H*0.06);
+    ctx.fillRect(x+190,H*0.55,34,H*0.23);
+  }else if(prof==='city'){
+    ctx.fillRect(x+10,H*0.42,22,H*0.36);
+    ctx.fillRect(x+38,H*0.28,28,H*0.50);
+    ctx.fillRect(x+72,H*0.48,18,H*0.30);
+    ctx.fillRect(x+120,H*0.36,24,H*0.42);
+    ctx.fillRect(x+51,H*0.20,2,H*0.08);
+    ctx.fillRect(x+170,H*0.5,40,H*0.28);
+  }else if(prof==='pipe'){
+    ctx.fillRect(x+4,H*0.5,120,5);
+    ctx.fillRect(x+20,H*0.5,6,H*0.28);
+    ctx.fillRect(x+70,H*0.5,6,H*0.28);
+    ctx.fillRect(x+110,H*0.5,6,H*0.28);
+    ctx.beginPath();ctx.arc(x+170,H*0.66,H*0.14,0,Math.PI*2);ctx.fill();
+    ctx.fillRect(x+200,H*0.46,10,H*0.32);
+  }else if(prof==='hosp'){
+    ctx.fillRect(x+12,H*0.40,64,H*0.38);
+    ctx.fillRect(x+84,H*0.30,26,H*0.48);
+    ctx.fillRect(x+150,H*0.52,56,H*0.26);
+    var f=ctx.fillStyle;
+    ctx.fillStyle='rgba(255,120,140,0.5)';
+    ctx.fillRect(x+93,H*0.36,8,3);ctx.fillRect(x+95.5,H*0.33,3,9);
+    ctx.fillStyle=f;
+  }else{ /* refinery */
+    ctx.fillRect(x+14,H*0.26,10,H*0.52);
+    ctx.fillRect(x+34,H*0.36,9,H*0.42);
+    ctx.fillRect(x+52,H*0.30,9,H*0.48);
+    ctx.beginPath();ctx.arc(x+106,H*0.64,H*0.15,0,Math.PI*2);ctx.fill();
+    ctx.fillRect(x+140,H*0.5,70,H*0.28);
+    ctx.fillRect(x+160,H*0.42,8,H*0.08);
+  }
+}
+function drawChase(){
+  if(!B)return;
+  var c=el('cqBgCanvas');var ctx=c.getContext('2d');
+  var W=c.width,H=c.height;var col=rgbOf(B.z);
+  var g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#0a0f1e');
+  g.addColorStop(1,'rgba('+col.r+','+col.g+','+col.b+',0.22)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  for(var i=0;i<22;i++){var sx=(i*97)%W,sy=(i*53)%Math.max(20,(H*0.45));ctx.fillRect(sx,sy,1.6,1.6);}
+  /* moon */
+  ctx.fillStyle='rgba(235,240,255,0.07)';
+  ctx.beginPath();ctx.arc(W*0.84,H*0.2,H*0.13,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(235,240,255,0.85)';
+  ctx.beginPath();ctx.arc(W*0.84,H*0.2,H*0.065,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(180,190,215,0.5)';
+  ctx.beginPath();ctx.arc(W*0.85,H*0.185,H*0.014,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(W*0.828,H*0.215,H*0.01,0,Math.PI*2);ctx.fill();
+  /* far silhouettes — per-zone skyline */
+  var prof=SKYLINE[B.z.id]||'city';
+  var UW=260,off=(chaseScroll*0.3)%UW;
+  ctx.fillStyle='rgba('+col.r+','+col.g+','+col.b+',0.16)';
+  for(var x=-off-UW;x<W+UW;x+=UW){drawUnit(ctx,x,H,prof);}
+  /* mid layer */
+  var UW2=170,off2=(chaseScroll*0.65)%UW2;
+  ctx.fillStyle='rgba(8,12,22,0.85)';
+  for(var x2=-off2-UW2;x2<W+UW2;x2+=UW2){
+    ctx.fillRect(x2+20,H*0.56,8,H*0.24);
+    ctx.fillRect(x2+14,H*0.52,20,8);
+    ctx.fillRect(x2+90,H*0.62,40,H*0.18);
+  }
+  /* ground */
+  ctx.fillStyle='#10182a';ctx.fillRect(0,H-26,W,26);
+  ctx.fillStyle='#0b1220';ctx.fillRect(0,H-26,W,4);
+  var DW=70,off3=(chaseScroll*1.6)%DW;
+  ctx.fillStyle='rgba(240,200,64,0.8)';
+  for(var x3=-off3;x3<W;x3+=DW){ctx.fillRect(x3,H-14,30,3);}
+  /* foreground roadside — fast layer for speed feel */
+  var UF=190,offF=(chaseScroll*2.3)%UF;
+  ctx.fillStyle='#05080f';
+  for(var xf=-offF-UF;xf<W+UF;xf+=UF){
+    ctx.beginPath();
+    ctx.moveTo(xf+30,H-22);ctx.lineTo(xf+42,H-62);ctx.lineTo(xf+54,H-22);
+    ctx.fill();
+    ctx.fillRect(xf+40,H-30,4,10);
+    ctx.fillRect(xf+130,H-48,4,26);
+    ctx.fillRect(xf+124,H-50,16,4);
+  }
+  /* wind streaks at high speed */
+  if(chaseSpeed>3){
+    ctx.strokeStyle='rgba(255,255,255,0.13)';
+    ctx.lineWidth=1.5;
+    for(var s=0;s<6;s++){
+      var yy=(s*61+17)%(H-30)+8;
+      var xx=W-((chaseScroll*9+s*173)%(W+90));
+      ctx.beginPath();ctx.moveTo(xx,yy);ctx.lineTo(xx+58,yy);ctx.stroke();
+    }
+  }
+  /* per-zone weather */
+  if(B.parts){
+    var wz=WEATHER[B.z.id];
+    for(var p=0;p<B.parts.length;p++){
+      var pt=B.parts[p];
+      if(wz.mode==='rain'){
+        pt.y+=6.5;pt.x-=2.2;
+        if(pt.y>H){pt.y=-8;pt.x=Math.random()*(W+60);}
+        ctx.strokeStyle='rgba('+wz.c+',0.45)';ctx.lineWidth=1.2;
+        ctx.beginPath();ctx.moveTo(pt.x,pt.y);ctx.lineTo(pt.x-2.5,pt.y+8);ctx.stroke();
+      }else if(wz.mode==='fall'){
+        pt.y+=1.6;pt.x-=1.1+Math.sin(pt.y*0.05)*0.4;
+        if(pt.y>H||pt.x<-5){pt.y=-4;pt.x=Math.random()*(W+40);}
+        ctx.fillStyle='rgba('+wz.c+',0.6)';
+        ctx.fillRect(pt.x,pt.y,2.2,2.2);
+      }else if(wz.mode==='rise'){
+        pt.y-=0.7;pt.x+=Math.sin(pt.y*0.04+p)*0.5;
+        if(pt.y<-5){pt.y=H+4;pt.x=Math.random()*W;}
+        ctx.fillStyle='rgba('+wz.c+',0.5)';
+        ctx.beginPath();ctx.arc(pt.x,pt.y,pt.r,0,Math.PI*2);ctx.fill();
+      }else if(wz.mode==='fog'){
+        pt.x-=pt.r*0.06;
+        if(pt.x<-90)pt.x=W+90;
+        var fg=ctx.createRadialGradient(pt.x,pt.y,4,pt.x,pt.y,55+pt.r*8);
+        fg.addColorStop(0,'rgba('+wz.c+',0.07)');fg.addColorStop(1,'rgba('+wz.c+',0)');
+        ctx.fillStyle=fg;
+        ctx.beginPath();ctx.arc(pt.x,pt.y,55+pt.r*8,0,Math.PI*2);ctx.fill();
+      }else{ /* drift */
+        pt.x-=0.55;pt.y+=Math.sin(pt.x*0.03+p)*0.25;
+        if(pt.x<-5){pt.x=W+4;pt.y=Math.random()*H;}
+        ctx.fillStyle='rgba('+wz.c+',0.45)';
+        ctx.beginPath();ctx.arc(pt.x,pt.y,pt.r*0.8,0,Math.PI*2);ctx.fill();
+      }
+    }
+  }
+}
+var WEATHER={
+  zone1:{c:'255,214,110',mode:'drift'},
+  zone2:{c:'255,150,70',mode:'fall'},
+  zone3:{c:'130,255,180',mode:'rise'},
+  zone4:{c:'205,170,255',mode:'fog'},
+  zone5:{c:'130,185,255',mode:'rain'},
+  zone6:{c:'255,130,170',mode:'drift'},
+  zone7:{c:'255,130,205',mode:'rise'}
+};
+function initWeather(){
+  var c=el('cqBgCanvas');var n=WEATHER[B.z.id].mode==='fog'?5:26;
+  B.parts=[];
+  for(var i=0;i<n;i++){
+    B.parts.push({x:Math.random()*c.width,y:Math.random()*c.height,r:1.4+Math.random()*2.2});
+  }
+}
+function chaseLoop(){
+  chaseScroll+=chaseSpeed;
+  chaseSpeed+=(chaseTarget-chaseSpeed)*0.05;
+  chaseTarget+=(1.4-chaseTarget)*0.02;
+  drawChase();
+  chaseRaf=requestAnimationFrame(chaseLoop);
+}
+function stopChase(){
+  if(chaseRaf){cancelAnimationFrame(chaseRaf);chaseRaf=null;}
+  if(B&&B.timer){clearInterval(B.timer);B.timer=null;}
+}
+/* ---- battle flow ---- */
+function startBattle(z){
+  stopChase();
+  B={z:z,qi:0,player:START_LEAD,chaser:0,streak:0,phase2:false,answered:0,
+     charges:{fifty:1,freeze:1},freezeArmed:false,timer:null,timeLeft:0,
+     order:shuffled(z.questions.length)};
+  var bt=el('cqBattle');
+  bt.style.setProperty('--arena-rgb',z.rgb);
+  bt.style.setProperty('--zc',z.color);
+  el('cqBossName').textContent=z.boss;
+  el('cqBossSub').textContent=z.name+' · '+z.city;
+  el('cqHero').innerHTML=svgHero();
+  var chEl=el('cqChaser');
+  chEl.classList.remove('dissolve','lunge');
+  chEl.innerHTML=svgChaser(z);
+  el('cqScene').style.setProperty('--zc',z.color);
+  el('cqBubble').classList.remove('show');
+  el('cqPhotoFin').classList.remove('on');
+  setBattleTrack(z.id);
+  show('cqBattle');
+  battleZoom=1;applyBattleZoom();
+  MUSIC.setRate(1);
+  if(MUSIC.isOn())MUSIC.play('battle');
+  var cv=el('cqBgCanvas');cv.width=cv.clientWidth||800;cv.height=cv.clientHeight||180;
+  chaseScroll=0;chaseSpeed=1.4;chaseTarget=1.4;
+  initWeather();
+  updateScene();updateLifelines();
+  el('cqLL50').onclick=use5050;el('cqLLFreeze').onclick=useFreeze;
+  var iv=el('cqIntro');
+  iv.style.setProperty('--zc',z.color);
+  el('cqIntroSprite').innerHTML=svgChaser(z);
+  el('cqIntroZone').textContent=z.sector.toUpperCase();
+  el('cqIntroBoss').textContent=z.boss;
+  el('cqIntroBoss').style.setProperty('--zc',z.color);
+  el('cqIntroQuote').textContent='"'+z.intro+'"';
+  iv.classList.add('on');sfx.intro();
+  setTimeout(function(){
+    iv.classList.remove('on');
+    if(!B)return;
+    chaseLoop();askQuestion();
+    setTimeout(function(){taunt('start');},400);
+  },3100);
+}
+function leadNow(){return B.player-B.chaser;}
+function updateScene(){
+  if(!B)return;
+  var lead=leadNow();
+  var heroX=58,chX=heroX-lead*13;
+  if(chX<-20)chX=-20;if(lead<=0)chX=heroX-6;
+  el('cqHero').style.left=heroX+'%';
+  el('cqChaser').style.left=chX+'%';
+  el('cqLeadTag').textContent='LEAD: '+Math.max(0,lead)+' · Q '+Math.min(B.answered+1,8)+'/8';
+  el('cqScene').classList.toggle('danger',lead<=1);
+  MUSIC.setRate(lead<=1?1.13:1);
+  var st=el('cqStreak');
+  if(B.streak>=7)st.textContent='🔥 ×'+B.streak+' NOBEL TIER!';
+  else if(B.streak>=5)st.textContent='🔥 ×'+B.streak+' EXOTHERMIC!';
+  else if(B.streak>=3)st.textContent='⚡ ×'+B.streak+' CATALYZED!';
+  else st.textContent='';
+}
+function updateLifelines(){
+  var b5=el('cqLL50'),bf=el('cqLLFreeze');
+  b5.textContent='50:50'+(B.charges.fifty>1?' ×'+B.charges.fifty:'');
+  bf.textContent=(B.freezeArmed?'❄️ ARMED':'❄️ FREEZE')+(B.charges.freeze>1?' ×'+B.charges.freeze:'');
+  b5.disabled=B.charges.fifty<=0||B.locked;
+  bf.disabled=(B.charges.freeze<=0&&!B.freezeArmed)||B.freezeArmed;
+}
+function use5050(){
+  if(!B||B.locked||B.charges.fifty<=0)return;
+  B.charges.fifty--;sfx.tick();
+  var q=B.z.questions[B.order[B.qi]];
+  var wrongs=[];
+  Array.prototype.forEach.call(el('cqAnswers').children,function(b){
+    if(parseInt(b.getAttribute('data-i'),10)!==q.c&&!b.classList.contains('faded'))wrongs.push(b);
+  });
+  for(var i=wrongs.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=wrongs[i];wrongs[i]=wrongs[j];wrongs[j]=t;}
+  wrongs.slice(0,2).forEach(function(b){b.classList.add('faded');b.disabled=true;});
+  updateLifelines();
+}
+function useFreeze(){
+  if(!B||B.charges.freeze<=0||B.freezeArmed)return;
+  B.charges.freeze--;B.freezeArmed=true;sfx.tick();
+  toast('❄️ Freeze armed — blocks the boss\'s next step!');
+  updateLifelines();
+}
+function awardCharge(){
+  var k=B.charges.fifty<=B.charges.freeze?'fifty':'freeze';
+  B.charges[k]++;updateLifelines();
+  toast('🔥 '+B.streak+'-streak! +1 '+(k==='fifty'?'50:50':'❄️ Freeze')+' charge');
+}
+function startQTimer(){
+  clearInterval(B.timer);
+  B.timeLeft=Q_SECONDS;
+  el('cqTimerFill').style.width='100%';
+  B.timer=setInterval(function(){
+    if(!B){return;}
+    B.timeLeft-=0.1;
+    var pct=Math.max(0,B.timeLeft/Q_SECONDS*100);
+    el('cqTimerFill').style.width=pct+'%';
+    if(B.timeLeft<=3&&B.timeLeft>0&&Math.abs(B.timeLeft%1)<0.06)sfx.tick();
+    if(B.timeLeft<=0){clearInterval(B.timer);B.timer=null;timeOut();}
+  },100);
+}
+function askQuestion(){
+  if(!B)return;
+  B.locked=false;
+  var q=B.z.questions[B.order[B.qi]];
+  el('cqQNum').textContent='QUESTION '+(B.qi+1)+' / '+B.z.questions.length;
+  el('cqQText').textContent=q.q;
+  el('cqTip').classList.remove('on');
+  el('cqNextRow').classList.remove('on');
+  var ord=shuffled(4),h='';
+  ord.forEach(function(ai,i){
+    h+='<button class="cq-ans" data-i="'+ai+'">'+String.fromCharCode(65+i)+'. '+q.a[ai]+'</button>';
+  });
+  var box=el('cqAnswers');box.innerHTML=h;
+  Array.prototype.forEach.call(box.children,function(btn){
+    btn.addEventListener('click',function(){answer(q,parseInt(btn.getAttribute('data-i'),10),btn);});
+  });
+  updateLifelines();updateScene();
+  startQTimer();
+}
+function lockAnswers(){
+  B.locked=true;
+  clearInterval(B.timer);B.timer=null;
+  Array.prototype.forEach.call(el('cqAnswers').children,function(b){b.disabled=true;});
+}
+function timeOut(){
+  if(!B||B.locked)return;
+  var q=B.z.questions[B.order[B.qi]];
+  lockAnswers();
+  Array.prototype.forEach.call(el('cqAnswers').children,function(b){
+    if(parseInt(b.getAttribute('data-i'),10)===q.c)b.classList.add('good');
+  });
+  resolveAnswer(false,q,'⏰ TIME\'S UP!');
+}
+function answer(q,ai,btn){
+  if(!B||B.locked)return;
+  lockAnswers();
+  var correct=ai===q.c;
+  if(correct){btn.classList.add('good');}
+  else{
+    btn.classList.add('bad');
+    Array.prototype.forEach.call(el('cqAnswers').children,function(b){
+      if(parseInt(b.getAttribute('data-i'),10)===q.c)b.classList.add('good');
+    });
+  }
+  resolveAnswer(correct,q,correct?'✔ YOU PULL AHEAD!':'✘ THE BOSS GAINS!');
+}
+function resolveAnswer(correct,q,verdict){
+  B.answered++;
+  if(correct){
+    sfx.correct();B.streak++;
+    el('cqTip').innerHTML='<b>'+verdict+'</b> '+q.tip;
+    var hr=el('cqHero');hr.classList.remove('surge');void hr.offsetWidth;hr.classList.add('surge');
+    chaseTarget=2.4+Math.min(2,B.streak*0.3);
+    if(B.streak>0&&B.streak%3===0)awardCharge();
+    else if(Math.random()<0.4)taunt('ahead');
+    setTimeout(function(){if(!B)return;B.player++;sfx.step();updateScene();checkEnd();},400);
+  }else{
+    B.streak=0;
+    if(B.freezeArmed){
+      B.freezeArmed=false;sfx.tick();updateLifelines();
+      el('cqTip').innerHTML='<b>'+verdict+'</b> <em style="color:#9fd7ff">❄️ FREEZE blocked the boss\'s step!</em> '+q.tip;
+    }else{
+      sfx.wrong();
+      el('cqTip').innerHTML='<b>'+verdict+'</b> '+q.tip;
+      var ch=el('cqChaser');ch.classList.remove('lunge');void ch.offsetWidth;ch.classList.add('lunge');
+      var rf=el('cqRedflash');rf.classList.remove('go');void rf.offsetWidth;rf.classList.add('go');
+      var sc=el('cqScene');sc.classList.remove('shake');void sc.offsetWidth;sc.classList.add('shake');
+      setTimeout(function(){
+        if(!B)return;
+        B.chaser++;sfx.chaser();updateScene();
+        var ld=leadNow();
+        if(ld<=1)taunt('danger');else taunt('gain');
+        if(!B.phase2&&ld<=2&&ld>0){
+          B.phase2=true;
+          el('cqPhase2Text').textContent='⚠ '+B.z.boss+' IS CLOSING IN ⚠';
+          var p=el('cqPhase2');p.classList.remove('on');void p.offsetWidth;p.classList.add('on');sfx.phase2();
+        }
+        checkEnd();
+      },400);
+    }
+  }
+  el('cqTip').classList.add('on');
+  updateScene();
+  setTimeout(function(){
+    if(!B)return;
+    if(leadNow()>0&&B.answered<8)el('cqNextRow').classList.add('on');
+  },450);
+  el('cqNext').onclick=function(){
+    sfx.click();
+    if(!B)return;
+    B.qi++;
+    askQuestion();
+  };
+}
+function checkEnd(){
+  if(!B)return;
+  if(leadNow()<=0)return endCaught();
+  if(B.answered>=8)return winChase();
+}
+function winChase(){
+  var z=B.z;
+  el('cqNextRow').classList.remove('on');
+  taunt('beaten');
+  var chEl=el('cqChaser');
+  var ch=chEl.getBoundingClientRect();
+  /* clutch win — boss one step behind = photo finish slow-mo */
+  var extra=0;
+  if(leadNow()<=1){
+    extra=1500;
+    chaseTarget=0.22;chaseSpeed=0.4;
+    MUSIC.setRate(0.78);
+    var pf=el('cqPhotoFin');pf.classList.add('on');
+    tone(392,0.5,'triangle',0.07);tone(523,0.6,'triangle',0.07,0.45);
+    setTimeout(function(){pf.classList.remove('on');},extra+500);
+  }
+  setTimeout(function(){
+    MUSIC.stop();
+    chEl.classList.add('dissolve');
+    sfx.shatter();
+    spawnParticles(ch.left+ch.width/2,ch.top+ch.height/2,z.color,40);
+    var w=el('cqFlashW');w.style.display='block';w.style.opacity='1';
+    setTimeout(function(){w.style.transition='opacity .6s';w.style.opacity='0';},80);
+    setTimeout(function(){w.style.display='none';w.style.transition='';stopChase();showCard();},700);
+  },900+extra);
+}
+function endCaught(){
+  var z=B.z;
+  el('cqNextRow').classList.remove('on');
+  taunt('caught');
+  var ch=el('cqChaser');ch.classList.remove('lunge');void ch.offsetWidth;ch.classList.add('lunge');
+  setTimeout(function(){
+    if(ATTRACT.on){attractNext();return;}
+    stopChase();MUSIC.stop();
+    var lines=TAUNTS[z.id]&&TAUNTS[z.id].caught?TAUNTS[z.id].caught[0]:'Caught!';
+    el('cqDefeatT').textContent=z.boss+' CAUGHT YOU!';
+    el('cqDefeatP').innerHTML='"'+lines+'"<br><br>Every chemist repeats an experiment. Review the tips and outrun it next time — the career is still waiting.';
+    el('cqDefeat').classList.add('on');
+    B=null;
+    el('cqDefeatBtn').onclick=function(){el('cqDefeat').classList.remove('on');startBattle(z);};
+  },1000);
+}
+function spawnParticles(x,y,color,n){
+  for(var i=0;i<n;i++){
+    var d=document.createElement('div');d.className='cq-particle';
+    d.style.background=color;d.style.left=x+'px';d.style.top=y+'px';
+    d.style.transition='transform .8s ease-out, opacity .8s';
+    document.body.appendChild(d);
+    (function(dd){
+      requestAnimationFrame(function(){
+        var ang=Math.random()*Math.PI*2,dist=60+Math.random()*120;
+        dd.style.transform='translate('+(Math.cos(ang)*dist)+'px,'+(Math.sin(ang)*dist)+'px) scale(.3)';
+        dd.style.opacity='0';
+      });
+      setTimeout(function(){dd.remove();},900);
+    })(d);
+  }
+}
+
+/* ============ CARD REVEAL + DOSSIER BACKS ============ */
+var CARD_BACKS={
+zone1:{
+ duties:['Design and run synthesis experiments','Characterize products with NMR, GC/LC, FTIR','Scale winning compounds with engineers','Keep meticulous lab notebooks and reports','Pitch findings to the project team'],
+ stats:[['LAB TIME',9],['INSTRUMENTS',8],['MATH',6],['PEOPLE SKILLS',7],['CREATIVITY',9],['JOB DEMAND',7]],
+ setting:'Research campus lab · weekday schedule',
+ growth:'Bench chemist → senior scientist → group leader → R&D director',
+ note:'STARTING RANGE: posted local figures — a new B.S. chemist starts near the lower end and climbs with every instrument mastered. Advanced degrees push the ceiling far higher.'},
+zone2:{
+ duties:['Run corrosion, adhesion & weathering tests','Formulate and tweak coatings & adhesives','Operate FTIR, DSC and salt-spray chambers','Troubleshoot chemistry on the production line','Write test reports for suppliers and OEMs'],
+ stats:[['LAB TIME',8],['INSTRUMENTS',8],['MATH',6],['PEOPLE SKILLS',8],['CREATIVITY',7],['JOB DEMAND',8]],
+ setting:'Plant + materials lab on the I-85 auto corridor',
+ growth:'QC chemist → formulation lead → technical manager',
+ note:'STARTING RANGE: the wide SC posted range reflects entry tech roles up through senior formulators. New grads enter low, but the auto cluster promotes fast.'},
+zone3:{
+ duties:['Test raw materials & batches against specs','Run HPLC, GC and spectrophotometry daily','Work sterile technique under GMP rules','Investigate out-of-spec results','Release — or reject — the batch'],
+ stats:[['LAB TIME',9],['INSTRUMENTS',9],['MATH',7],['PEOPLE SKILLS',5],['CREATIVITY',4],['JOB DEMAND',8]],
+ setting:'GMP cleanroom & QC lab · shift options',
+ growth:'QC analyst → QA specialist → quality manager',
+ note:'STARTING RANGE: entry QC analysts begin at the lower end; GMP experience is a fast escalator — quality managers in pharma clear six figures.'},
+zone4:{
+ duties:['Analyze seized drugs & trace evidence (GC-MS)','Develop fingerprints & process samples','Guard the chain of custody on every item','Write court-ready scientific reports','Testify as an expert witness'],
+ stats:[['LAB TIME',8],['INSTRUMENTS',8],['MATH',5],['PEOPLE SKILLS',7],['CREATIVITY',5],['JOB DEMAND',6]],
+ setting:'County crime lab + courtroom appearances',
+ growth:'Analyst → senior forensic chemist → laboratory director',
+ note:'STARTING RANGE: government pay scales start modest BUT are posted, stable, and pension-backed — and Greenville County adds +10% just for your chemistry B.S.'},
+zone5:{
+ duties:['Sample rivers, intakes & effluent in the field','Run pH, dissolved oxygen, nutrient & metal tests','Keep state & EPA compliance records','Calibrate sensors and lab instruments','Respond when a quality alarm trips'],
+ stats:[['LAB TIME',7],['INSTRUMENTS',7],['MATH',6],['PEOPLE SKILLS',6],['CREATIVITY',5],['JOB DEMAND',8]],
+ setting:'Half lab, half outdoors — trucks, boats & boots',
+ growth:'Lab tech → water quality chemist → lab supervisor',
+ note:'STARTING RANGE: utilities start steady rather than flashy — then add tuition reimbursement, pensions, and overtime. They will literally pay for your next degree.'},
+zone6:{
+ duties:['Run the chemistry analyzers: glucose, electrolytes, troponin','QC and calibrate instruments every shift','Flag critical values to nurses & physicians STAT','Keep documentation to CLIA standards','Keep results accurate at 3 a.m.'],
+ stats:[['LAB TIME',9],['INSTRUMENTS',8],['MATH',6],['PEOPLE SKILLS',8],['CREATIVITY',3],['JOB DEMAND',9]],
+ setting:'Hospital lab · 24/7 — nights & weekends exist',
+ growth:'MLS → lead tech → lab manager · or springboard to med/pharmacy/PA school',
+ note:'STARTING RANGE: healthcare labs are chronically short-staffed — demand is the highest on this map, and shift differentials raise real take-home pay.'},
+zone7:{
+ duties:['Own a research question end-to-end','Publish papers and file patents','Mentor junior chemists and students','Present at national conferences','Lead projects and chase grant funding'],
+ stats:[['LAB TIME',8],['INSTRUMENTS',9],['MATH',8],['PEOPLE SKILLS',7],['CREATIVITY',10],['JOB DEMAND',7]],
+ setting:'Industrial R&D campus or university lab',
+ growth:'Funded Ph.D. → postdoc → senior scientist → R&D director / professor / founder',
+ note:'STARTING RANGE: the Ph.D. years pay a modest stipend (~$30K) — but tuition is waived, and industry R&D salaries afterward routinely clear six figures.'},
+you:{
+ duties:['Visit campus and meet the chemistry faculty','Take General Chemistry I','Join a research lab early','Collect internships like cards','Graduate into any zone on this map'],
+ stats:[['LAB TIME','?'],['INSTRUMENTS','?'],['MATH','?'],['PEOPLE SKILLS','?'],['CREATIVITY','?'],['JOB DEMAND','?']],
+ setting:'Herzington, SC — 15 minutes from everything on this map',
+ growth:'Undeclared → CHEM major → anywhere on this map',
+ note:'STARTING RANGE: unwritten. This stat block is yours to fill in.'}
+};
+var YOU_CARD={id:'you',boss:null,career:{icon:'🧑‍🔬',title:'YOU — FUTURE CHEMIST',rarity:'MYTHIC',rcolor:'#ff6cb6',holo:true,
+ salary:'Starting range: unwritten · Ceiling: none',
+ where:'Herzing University Dept. of Chemistry',
+ path:'Apply → declare the CHEM major → pick your zone',
+ hook:'Every card in this collection started exactly where you are standing.'}};
+function cardFrontHTML(z){
+  var c=z.career;
+  return '<div class="rar">'+c.rarity+' · CAREER CARD</div>'
+    +'<div class="icon">'+c.icon+'</div>'
+    +'<h2>'+c.title+'</h2>'
+    +'<div class="sal">💰 '+c.salary+'</div>'
+    +'<p><b>WHERE:</b> '+c.where+'</p>'
+    +'<p><b>PATH:</b> '+c.path+'</p>'
+    +'<div class="hook">💡 '+c.hook+'</div>'
+    +'<div class="fliphint">↻ TAP CARD FOR STATS &amp; DUTIES</div>';
+}
+function cardBackHTML(z){
+  var bk=CARD_BACKS[z.id];var c=z.career;
+  if(!bk)return '<div class="rar">DOSSIER MISSING</div>';
+  var h='<div class="rar">'+c.rarity+' · CAREER DOSSIER</div>'
+    +'<h2 style="font-size:11px">'+c.title+'</h2>'
+    +'<div class="salnote">⚠ '+bk.note+'</div>'
+    +'<h5>APTITUDE STATS</h5>';
+  bk.stats.forEach(function(s){
+    var v=s[1],pct=(v==='?'?100:v*10);
+    h+='<div class="cq-statrow"><span class="lb">'+s[0]+'</span><div class="bar"><i style="width:'+pct+'%'+(v==='?'?';opacity:.35':'')+'"></i></div><span class="vl">'+v+'</span></div>';
+  });
+  h+='<h5>JOB DUTIES</h5>';
+  bk.duties.forEach(function(d){h+='<div class="duty">'+d+'</div>';});
+  h+='<h5>THE LADDER</h5><div class="meta">'+bk.growth+'</div>'
+   +'<div class="meta"><b>SETTING:</b> '+bk.setting+'</div>'
+   +'<div class="fliphint">↻ TAP TO FLIP BACK</div>';
+  return h;
+}
+function renderBigCard(z){
+  var big=el('cqBigCard');
+  big.className='cq-card'+(z.career.holo?' holo':'');
+  big.style.setProperty('--cardc',z.career.rcolor);
+  big.innerHTML='<div class="cq-flip">'
+    +'<div class="inner cq-face cq-front">'+cardFrontHTML(z)+'</div>'
+    +'<div class="inner cq-face cq-back">'+cardBackHTML(z)+'</div>'
+    +'</div>';
+  big.onclick=function(){
+    sfx.click();
+    big.querySelector('.cq-flip').classList.toggle('flip');
+  };
+}
+function showCard(){
+  if(ATTRACT.on){attractNext();return;}
+  var z=B.z;B=null;
+  if(!isBeaten(z.id)){S.beaten.push(z.id);save();}
+  sfx.victory();
+  renderBigCard(z);
+  el('cqVTitle').textContent=z.final?'FINAL BOSS DEFEATED!':'CAREER UNLOCKED!';
+  el('cqVSub').textContent=z.boss+' HAS FALLEN';
+  el('cqCardColl').style.display='';
+  el('cqCardOv').classList.add('on');
+  spawnParticles(window.innerWidth/2,window.innerHeight*0.3,'#ffd700',20);
+  el('cqCardCont').onclick=function(){
+    el('cqCardOv').classList.remove('on');sfx.click();
+    if(z.final){runFinale();}
+    else{selZone=null;show('cqMap');renderMap();
+      if(allMainBeaten())toast('⚛️ The final challenge near Seneca has awakened...');
+    }
+  };
+  el('cqCardColl').onclick=function(){el('cqCardOv').classList.remove('on');openCollection('battle');};
+}
+function viewCard(z){
+  sfx.click();
+  renderBigCard(z);
+  el('cqVTitle').textContent='CAREER DOSSIER';
+  el('cqVSub').textContent=z.boss?z.boss+' — DEFEATED':'THE FINAL CARD IN THE SERIES';
+  el('cqCardColl').style.display='none';
+  el('cqCardOv').classList.add('on');
+  el('cqCardCont').onclick=function(){el('cqCardOv').classList.remove('on');sfx.click();};
+}
+
+/* ============ COLLECTION ============ */
+var collFrom='title';
+function openCollection(from){
+  collFrom=from||'title';sfx.click();
+  var g=el('cqCollGrid'),h='';
+  var got=0;
+  ZONES.forEach(function(z){
+    var has=isBeaten(z.id);if(has)got++;
+    h+='<div class="cq-minicard '+(has?'got':'miss')+'" data-z="'+(has?z.id:'')+'" style="--cardc:'+z.career.rcolor+'">'
+      +'<div class="icon">'+(has?z.career.icon:'❓')+'</div>'
+      +'<h4>'+(has?z.career.title:'???')+'</h4>'
+      +'<p>'+(has?z.career.salary:'Defeat '+z.boss)+'</p>'
+      +'<div class="rr">'+(has?z.career.rarity:'LOCKED')+'</div>'
+      +(has?'<div class="tapme">👆 tap for full dossier</div>':'')+'</div>';
+  });
+  var allDone=S.beaten.length>=7;
+  h+='<div class="cq-minicard '+(allDone?'got':'miss')+'" data-z="'+(allDone?'you':'')+'" style="--cardc:#ff6cb6">'
+    +'<div class="icon">'+(allDone?'🧑‍🔬':'❓')+'</div>'
+    +'<h4>'+(allDone?'YOU — FUTURE CHEMIST':'???')+'</h4>'
+    +'<p>'+(allDone?'B.S. Chemistry · Herzing University':'Collect all 7 careers')+'</p>'
+    +'<div class="rr">'+(allDone?'MYTHIC':'LOCKED')+'</div>'
+    +(allDone?'<div class="tapme">👆 tap for full dossier</div>':'')+'</div>';
+  g.innerHTML=h;
+  Array.prototype.forEach.call(g.children,function(n){
+    var zid=n.getAttribute('data-z');
+    if(!zid)return;
+    n.addEventListener('click',function(){
+      viewCard(zid==='you'?YOU_CARD:zoneById(zid));
+    });
+  });
+  el('cqCollProg').textContent=got+' / 7 careers + '+(allDone?'1':'0')+' / 1 mythic · tap any unlocked card for stats & duties';
+  show('cqColl');
+}
+el('cqCollBack').addEventListener('click',function(){
+  sfx.click();
+  if(collFrom==='map'||collFrom==='battle'){show('cqMap');renderMap();}
+  else show('cqTitle');
+});
+
+/* ============ FINALE ============ */
+function runFinale(){
+  sfx.finale();S.seenFinale=true;save();
+  var ic=el('cqFinIcons'),h='';
+  ZONES.forEach(function(z,i){h+='<i style="animation-delay:'+(0.15+i*0.18)+'s">'+z.bossIcon+'</i>';});
+  ic.innerHTML=h;
+  var st=el('cqFinStars'),sh='';
+  for(var i=0;i<40;i++){
+    sh+='<s style="position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:0;left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;animation:cqTwinkle '+(2.4+Math.random()*2.5)+'s linear infinite;animation-delay:'+(Math.random()*3)+'s"></s>';
+  }
+  st.innerHTML=sh;
+  show('cqFinale');
+}
+el('cqFinCards').addEventListener('click',function(){openCollection('map');});
+el('cqFinHome').addEventListener('click',function(){sfx.click();show('cqTitle');});
+
+/* ============ WIRING ============ */
+el('cqTitle').addEventListener('click',function(e){
+  if(e.target.closest('button'))return;
+  ac();sfx.click();
+  show('cqMap');selZone=null;renderMap();
+  placeAvatar(90,10,true);
+  var w=el('cqMapWrap');w.scrollLeft=w.scrollWidth;w.scrollTop=0;
+});
+el('cqZoomIn').addEventListener('click',function(e){e.stopPropagation();sfx.click();setZoom(mapZoom*1.35);});
+el('cqZoomOut').addEventListener('click',function(e){e.stopPropagation();sfx.click();setZoom(mapZoom/1.35);});
+el('cqZoomFit').addEventListener('click',function(e){e.stopPropagation();sfx.click();setZoom(ZOOM_MIN);
+  var w=el('cqMapWrap');w.scrollLeft=(w.scrollWidth-w.clientWidth)/2;w.scrollTop=(w.scrollHeight-w.clientHeight)/2;});
+window.addEventListener('resize',function(){if(el('cqMap').classList.contains('on'))applyZoom();});
+el('cqBZIn').addEventListener('click',function(e){e.stopPropagation();sfx.click();setBattleZoom(battleZoom+0.15);});
+el('cqBZOut').addEventListener('click',function(e){e.stopPropagation();sfx.click();setBattleZoom(battleZoom-0.15);});
+el('cqBZFit').addEventListener('click',function(e){e.stopPropagation();sfx.click();setBattleZoom(1);});
+el('cqBtnHow').addEventListener('click',function(){sfx.click();el('cqHow').classList.add('on');});
+el('cqMapHow').addEventListener('click',function(){sfx.click();el('cqHow').classList.add('on');});
+el('cqHowClose').addEventListener('click',function(){sfx.click();el('cqHow').classList.remove('on');});
+el('cqBtnColl').addEventListener('click',function(){openCollection('title');});
+el('cqMapColl').addEventListener('click',function(){openCollection('map');});
+el('cqMapHome').addEventListener('click',function(){sfx.click();show('cqTitle');});
+el('cqQuit').addEventListener('click',function(){sfx.click();stopChase();B=null;show('cqMap');renderMap();});
+
+/* ============ SECRET CODE ============ */
+function updateTitleButtons(){
+  el('cqBtnFinale').style.display=S.beaten.length>=7?'':'none';
+}
+function applyCode(code){
+  if((code||'').trim().toLowerCase()==='brooks'){
+    ZONES.forEach(function(z){if(!isBeaten(z.id))S.beaten.push(z.id);});
+    save();renderMap();updateTitleButtons();
+    toast('🔓 DEMO MODE — all 7 careers + mythic card unlocked! Tap CAREER CARDS or 🏆 FINALE.');
+    sfx.victory();return true;
+  }
+  return false;
+}
+function openCodeOv(){
+  sfx.click();
+  el('cqCodeOv').classList.add('on');
+  var inp=el('cqCodeInput');inp.value='';
+  setTimeout(function(){inp.focus();},80);
+}
+function submitCode(){
+  var v=el('cqCodeInput').value;
+  el('cqCodeOv').classList.remove('on');
+  if(v&&!applyCode(v))toast('Unknown code.');
+}
+el('cqBtnCode').addEventListener('click',openCodeOv);
+el('cqCodeGo').addEventListener('click',submitCode);
+el('cqCodeCancel').addEventListener('click',function(){sfx.click();el('cqCodeOv').classList.remove('on');});
+el('cqCodeInput').addEventListener('keydown',function(e){if(e.key==='Enter')submitCode();e.stopPropagation();});
+el('cqBtnFinale').addEventListener('click',function(){sfx.click();runFinale();});
+/* ============ RESET ============ */
+el('cqBtnReset').addEventListener('click',function(){sfx.click();el('cqResetOv').classList.add('on');});
+el('cqResetNo').addEventListener('click',function(){sfx.click();el('cqResetOv').classList.remove('on');});
+el('cqResetYes').addEventListener('click',function(){
+  try{localStorage.removeItem(SAVE_KEY);}catch(e){}
+  S={beaten:[],seenFinale:false};
+  selZone=null;renderMap();updateTitleButtons();
+  el('cqResetOv').classList.remove('on');
+  show('cqTitle');
+  toast('🧪 Fresh quest — the bosses are waiting. Good luck!');
+  sfx.victory();
+});
+updateTitleButtons();
+var keyBuf='';
+document.addEventListener('keydown',function(e){
+  if(e.key&&e.key.length===1){keyBuf=(keyBuf+e.key.toLowerCase()).slice(-12);
+    if(keyBuf.indexOf('brooks')>=0){keyBuf='';applyCode('brooks');}}
+});
+/* ============ MUSIC WIRING ============ */
+(function(){
+  var mb=el('cqMusicBtn');
+  mb.textContent=MUSIC.isOn()?'🔊':'🔇';
+  mb.addEventListener('click',function(e){
+    e.stopPropagation();ac();
+    var on=MUSIC.toggle();
+    mb.textContent=on?'🔊':'🔇';
+    if(on&&!MUSIC.cur()){
+      var act='title';
+      ['cqTitle','cqMap','cqBattle','cqFinale'].forEach(function(s){if(el(s).classList.contains('on')&&MROUTE[s])act=MROUTE[s];});
+      MUSIC.play(act);
+    }
+  });
+  var kicked=false;
+  function firstGesture(){
+    if(kicked)return;kicked=true;
+    ac();
+    if(MUSIC.isOn()&&!MUSIC.cur()){
+      var act=null;
+      ['cqTitle','cqMap','cqBattle','cqFinale'].forEach(function(s){if(el(s).classList.contains('on'))act=MROUTE[s];});
+      if(act)MUSIC.play(act);
+    }
+  }
+  document.addEventListener('pointerdown',firstGesture,{once:true});
+  document.addEventListener('keydown',firstGesture,{once:true});
+})();
+/* ============ MAP EXPLORATION (drag / wheel / arrows) ============ */
+(function(){
+  var w=el('cqMapWrap'),down=false,moved=false,sx=0,sy=0,sl=0,st=0;
+  w.addEventListener('pointerdown',function(e){
+    cancelFollow();
+    if(e.pointerType==='touch')return; /* native touch panning handles itself */
+    down=true;moved=false;
+    sx=e.clientX;sy=e.clientY;sl=w.scrollLeft;st=w.scrollTop;
+    w.classList.add('dragging');
+  });
+  w.addEventListener('pointermove',function(e){
+    if(!down)return;
+    var dx=e.clientX-sx,dy=e.clientY-sy;
+    if(!moved&&Math.abs(dx)+Math.abs(dy)>7){
+      moved=true;
+      try{w.setPointerCapture(e.pointerId);}catch(err){}
+    }
+    if(moved){w.scrollLeft=sl-dx;w.scrollTop=st-dy;e.preventDefault();}
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(function(ev){
+    w.addEventListener(ev,function(){down=false;w.classList.remove('dragging');});
+  });
+  /* a drag must not register as a node tap */
+  w.addEventListener('click',function(e){
+    if(moved){e.stopPropagation();e.preventDefault();moved=false;}
+  },true);
+  w.addEventListener('wheel',function(e){
+    e.preventDefault();cancelFollow();
+    w.scrollLeft+=e.deltaY+e.deltaX;
+  },{passive:false});
+  document.addEventListener('keydown',function(e){
+    if(!el('cqMap').classList.contains('on'))return;
+    var step=64;
+    if(e.key.indexOf('Arrow')===0)cancelFollow();
+    if(e.key==='ArrowLeft')w.scrollLeft-=step;
+    else if(e.key==='ArrowRight')w.scrollLeft+=step;
+    else if(e.key==='ArrowUp')w.scrollTop-=step;
+    else if(e.key==='ArrowDown')w.scrollTop+=step;
+  });
+})();
+/* ============ ATTRACT MODE ============ */
+var ATTRACT={on:false,t:null,iv:null};
+function armAttract(){
+  clearTimeout(ATTRACT.t);
+  if(ATTRACT.on)return;
+  ATTRACT.t=setTimeout(function(){
+    if(el('cqTitle').classList.contains('on')&&!ATTRACT.on)startAttract();
+  },30000);
+}
+function startAttract(){
+  ATTRACT.on=true;
+  el('cqAttractBanner').classList.add('on');
+  attractNext();
+}
+function attractNext(){
+  if(!ATTRACT.on)return;
+  stopChase();
+  var z=ZONES[Math.floor(Math.random()*6)];
+  startBattle(z);
+  clearInterval(ATTRACT.iv);
+  ATTRACT.iv=setInterval(function(){
+    if(!ATTRACT.on)return;
+    if(!B)return;
+    var open=document.querySelectorAll('.cq-ans:not(:disabled)');
+    if(open.length){
+      var q=B.z.questions[B.order[B.qi]];
+      var btn=Math.random()<0.78
+        ?document.querySelector('.cq-ans[data-i="'+q.c+'"]')
+        :open[Math.floor(Math.random()*open.length)];
+      if(btn&&!btn.disabled)btn.click();
+      return;
+    }
+    if(el('cqNextRow').classList.contains('on'))el('cqNext').onclick();
+  },2300);
+}
+function stopAttract(){
+  if(!ATTRACT.on)return;
+  ATTRACT.on=false;
+  clearInterval(ATTRACT.iv);clearTimeout(ATTRACT.t);
+  el('cqAttractBanner').classList.remove('on');
+  stopChase();B=null;
+  el('cqIntro').classList.remove('on');
+  el('cqDefeat').classList.remove('on');
+  el('cqCardOv').classList.remove('on');
+  show('cqTitle');
+}
+document.addEventListener('pointerdown',function(e){
+  if(ATTRACT.on){e.preventDefault();e.stopPropagation();stopAttract();return;}
+  if(el('cqTitle').classList.contains('on'))armAttract();
+},true);
+document.addEventListener('keydown',function(e){
+  if(ATTRACT.on){e.preventDefault();e.stopPropagation();stopAttract();return;}
+  if(el('cqTitle').classList.contains('on'))armAttract();
+},true);
+armAttract();
+/* ============ PWA — installable "app" ============ */
+(function(){
+  /* draw the app icon on a canvas at any size (pixel flask on gold-rimmed dark tile) */
+  function drawIcon(size){
+    var c=document.createElement('canvas');c.width=c.height=size;
+    var x=c.getContext('2d'),s=size/16;
+    /* background */
+    var g=x.createLinearGradient(0,0,0,size);g.addColorStop(0,'#101a2e');g.addColorStop(1,'#070b12');
+    x.fillStyle=g;x.fillRect(0,0,size,size);
+    /* gold border ring */
+    x.strokeStyle='#f0c840';x.lineWidth=s*0.7;x.strokeRect(s*0.6,s*0.6,size-s*1.2,size-s*1.2);
+    function px(gx,gy,gw,gh,col){x.fillStyle=col;x.fillRect(gx*s,gy*s,gw*s,gh*s);}
+    /* flask (from the title-screen sprite, scaled to the 16-grid) */
+    px(7,2,2,4,'#cfe0ff');
+    px(5,6,6,1,'#cfe0ff');
+    px(4,7,8,1,'#cfe0ff');
+    px(3,8,10,5,'#cfe0ff');
+    px(4,9,8,4,'#39d98a');
+    px(5,8,2,1,'#7df0b5');
+    px(3,13,10,1,'#9fb6dd');
+    px(8,5,1,1,'#7df0b5');
+    px(9,3,1,1,'#7df0b5');
+    return c.toDataURL('image/png');
+  }
+  var icon192=drawIcon(192),icon512=drawIcon(512),icon180=drawIcon(180);
+  var al=el('cqAppleIcon');if(al)al.setAttribute('href',icon180);
+  var fv=el('cqFavicon');if(fv)fv.setAttribute('href',icon192);
+  /* build manifest with ABSOLUTE urls (data-url manifests can't resolve relative paths) */
+  var base=location.href.split('?')[0].split('#')[0];
+  var dir=base.substring(0,base.lastIndexOf('/')+1);
+  var manifest={
+    name:'ChemQuest Herzing',short_name:'ChemQuest',
+    description:'Discover real chemistry careers in Herzing SC.',
+    id:dir,start_url:base,scope:dir,display:'standalone',orientation:'any',
+    background_color:'#070b12',theme_color:'#070b12',
+    icons:[
+      {src:icon192,sizes:'192x192',type:'image/png',purpose:'any'},
+      {src:icon512,sizes:'512x512',type:'image/png',purpose:'any'},
+      {src:icon512,sizes:'512x512',type:'image/png',purpose:'maskable'}
+    ]
+  };
+  var mf=el('cqManifest');
+  if(mf)mf.setAttribute('href','data:application/manifest+json,'+encodeURIComponent(JSON.stringify(manifest)));
+  /* service worker for offline (http/https only; harmless if sw.js is absent) */
+  if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+    window.addEventListener('load',function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    });
+  }
+  /* install affordance */
+  function standalone(){return window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;}
+  var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
+  var chip=el('cqInstallChip'),deferred=null;
+  function showChip(txt){if(standalone())return;if(chip){chip.firstChild.textContent=txt;chip.classList.add('on');}}
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();deferred=e;showChip('📲 Install ChemQuest');
+  });
+  window.addEventListener('appinstalled',function(){if(chip)chip.classList.remove('on');});
+  if(isIOS&&!standalone()){setTimeout(function(){showChip('📲 Add ChemQuest to Home Screen');},1200);}
+  if(chip){
+    chip.addEventListener('click',function(e){
+      /* the ✕ dismisses */
+      if(e.target&&e.target.classList&&e.target.classList.contains('x')){chip.classList.remove('on');return;}
+      sfx&&sfx.click&&sfx.click();
+      if(deferred){deferred.prompt();deferred=null;chip.classList.remove('on');}
+      else if(isIOS){el('cqIosInstall').classList.add('on');}
+      else{chip.classList.remove('on');}
+    });
+  }
+  var ic=el('cqIosClose');if(ic)ic.addEventListener('click',function(){el('cqIosInstall').classList.remove('on');});
+})();
+</script>
+</body>
+</html>
