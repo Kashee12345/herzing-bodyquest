@@ -2,6 +2,45 @@ const BOSS_VOICE_INDEX = {zone1:0,zone2:1,zone3:2,zone4:3,zone5:4,zone6:0,zone7:
 <ht
   if(gamePaused) return;ml lang="en">
 <head>
+<script>/*__GAME_MUTE__*/
+(function(){
+  if(window.__gameMuteInstalled) return; window.__gameMuteInstalled=true;
+  var KEY="game_sound_muted";
+  var muted=false; try{muted=localStorage.getItem(KEY)==="1";}catch(e){}
+  var ctxs=[];
+  ["AudioContext","webkitAudioContext"].forEach(function(n){
+    var O=window[n]; if(!O||O.__wrapped) return;
+    function W(){ var c=Reflect.construct(O, arguments, W);
+      ctxs.push(c);
+      var r=c.resume.bind(c); c.resume=function(){return muted?Promise.resolve():r();};
+      if(muted){try{c.suspend();}catch(e){}}
+      return c; }
+    W.prototype=O.prototype; W.__wrapped=true;
+    try{window[n]=W;}catch(e){}
+  });
+  try{ var ss=window.speechSynthesis; if(ss&&ss.speak&&!ss.__wrapped){
+    var os=ss.speak.bind(ss); ss.speak=function(u){ if(muted) return; return os(u); }; ss.__wrapped=true; } }catch(e){}
+  function apply(){
+    ctxs.forEach(function(c){ try{ muted?c.suspend():c.resume(); }catch(e){} });
+    if(muted){ try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
+    var b=document.getElementById("__sndbtn");
+    if(b){ b.innerHTML = muted ? "&#128263;&nbsp;Sound off" : "&#128266;&nbsp;Sound on";
+           b.style.background = muted ? "rgba(150,30,30,.88)" : "rgba(17,17,17,.82)";
+           b.setAttribute("aria-pressed", muted?"true":"false"); }
+  }
+  window.__toggleGameSound=function(){ muted=!muted; try{localStorage.setItem(KEY,muted?"1":"0");}catch(e){} apply(); };
+  function add(){
+    if(document.getElementById("__sndbtn")) return;
+    var b=document.createElement("button"); b.id="__sndbtn"; b.type="button";
+    b.setAttribute("aria-label","Toggle all game sound on or off");
+    b.onclick=window.__toggleGameSound;
+    b.style.cssText="position:fixed;top:8px;left:8px;z-index:2147483647;font:700 12px system-ui,-apple-system,sans-serif;padding:6px 11px;border-radius:8px;border:1px solid rgba(255,255,255,.4);background:rgba(17,17,17,.82);color:#fff;cursor:pointer;box-shadow:0 2px 7px rgba(0,0,0,.4);opacity:.9;-webkit-tap-highlight-color:transparent;";
+    (document.body||document.documentElement).appendChild(b); apply();
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",add); else add();
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BodyQuest SC 154 Herzing</title>
