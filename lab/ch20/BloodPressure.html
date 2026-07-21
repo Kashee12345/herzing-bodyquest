@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ee">
+<title>Blood Pressure</title>
+<meta name="description" content="Interactive blood pressure — systolic and diastolic, and how pressure falls across the circulation. For anatomy & physiology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_ap.css">
+<style>.wrap{grid-template-columns:1.15fr 0.85fr;}</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 20</a></div>
+<header>
+  <div class="kick">Anatomy &amp; Physiology · Chapter 20</div>
+  <h1>Blood Pressure</h1>
+  <div class="intro">Blood pressure is <b>highest</b> as it leaves the heart and <b>falls steadily</b> as it travels — the gradient that keeps blood moving. Tap a segment of the journey.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Aorta &amp; large arteries</h2><svg viewBox="0 0 320 220" aria-label="blood pressure curve"><g id="art"></g></svg><div style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px;">pressure (mmHg) across the circulation</div></div></div>
+  <div>
+    <div id="stage">Blood pressure<small>the driving gradient</small></div>
+    <div class="card"><h2>Along the journey</h2><div class="list" id="list"></div><div id="info"></div>
+      <div class="mnem" style="margin-top:10px;"><b>A normal reading is ~120/80:</b> the top number is <b>systolic</b> (peak, when the ventricles contract), the bottom is <b>diastolic</b> (trough, when they relax).</div>
+    </div>
+  </div>
+</div>
+<div class="apx-ref" style="max-width:960px;margin:22px auto 0;background:#fffdf8;border:1px solid #e7ddcb;border-radius:16px;padding:16px 18px;box-shadow:0 6px 20px rgba(90,70,40,.06);"><div style="font-family:'Fraunces',Georgia,serif;font-weight:700;color:#0b5a50;font-size:16px;margin-bottom:4px;">📷 Reference image</div><div style="font-size:12.5px;color:#8a8175;margin-bottom:10px;">A real labeled figure to compare with the interactive above.</div><img src="img/BloodPressure.jpg" alt="Blood Pressure reference figure" loading="lazy" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:10px;" onerror="this.closest('.apx-ref').style.display='none'"><div style="font-size:12px;color:#8a8175;text-align:center;margin-top:8px;font-style:italic;">Blood Pressure — OpenStax, CC BY 4.0 (via Wikimedia Commons)</div></div>
+<footer>Anatomy &amp; Physiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var HL='#0d7a6a';
+  // segments with x-range and typical pressure
+  var SEG=[
+    {k:'arteries',x0:20,x1:110,p:'120 / 80',n:'Aorta & large arteries',dd:'Pressure is <b>highest and pulsatile</b> here — it swings between <b>systolic (~120)</b> and <b>diastolic (~80)</b> with each heartbeat. This is where a cuff measures BP.'},
+    {k:'arterioles',x0:110,x1:170,p:'~60',n:'Arterioles',dd:'The <b>biggest pressure drop</b> happens across the arterioles. Their muscular walls constrict or dilate to become the main <b>resistance</b> valves that control flow and BP.'},
+    {k:'capillaries',x0:170,x1:230,p:'~30',n:'Capillaries',dd:'Pressure is now <b>low and steady</b> (no more pulse). Gentle pressure is essential — too high would rupture these one-cell-thick walls.'},
+    {k:'venules',x0:230,x1:280,p:'~15',n:'Venules & veins',dd:'Pressure is very low. Blood needs <b>valves and the muscle pump</b> to return to the heart — pressure alone isn\'t enough.'},
+    {k:'venae',x0:280,x1:300,p:'~5',n:'Venae cavae',dd:'At the return to the right atrium, pressure is <b>nearly zero</b>. The gradient from ~120 down to ~0 is what drives blood all the way around.'}
+  ];
+  function curveY(x){
+    // approximate pressure curve, mapped to y (200 bottom, 30 top)
+    var p;
+    if(x<110) p=100 - (x-20)*0.15; // high, slowly falling
+    else if(x<170) p=87 - (x-110)*0.8; // steep drop
+    else if(x<230) p=39 - (x-170)*0.15;
+    else p=30 - (x-230)*0.35;
+    return 200 - p*1.5;
+  }
+  function draw(sel){ var s='';
+    // grid + axis
+    s+='<line x1="20" y1="200" x2="300" y2="200" stroke="#d8ccb4"/><line x1="20" y1="30" x2="20" y2="200" stroke="#d8ccb4"/>';
+    // highlight band
+    if(sel){ var g=SEG.filter(function(x){return x.k===sel;})[0]; s+='<rect x="'+g.x0+'" y="30" width="'+(g.x1-g.x0)+'" height="170" fill="#4fb3a2" opacity="0.16"/>'; }
+    // pulsatile wave in arteries, smoothing to flat
+    var path='M20 '+curveY(20).toFixed(1);
+    for(var x=22;x<=300;x+=2){ var y=curveY(x); var amp=x<150?(10*(1-(x-20)/130)):0; var wob=amp*Math.sin(x*0.6); path+=' L'+x+' '+(y-wob).toFixed(1); }
+    s+='<path d="'+path+'" fill="none" stroke="'+HL+'" stroke-width="2.5"/>';
+    // segment labels
+    SEG.forEach(function(g){ s+='<text x="'+((g.x0+g.x1)/2)+'" y="214" font-size="7" fill="#8a7a6a" text-anchor="middle">'+g.k+'</text>'; });
+    return s;
+  }
+  function renderList(){ $("list").innerHTML=SEG.map(function(g,i){return '<button class="it'+(i===0?' on':'')+'" data-k="'+g.k+'"><span class="nm">'+g.n+'</span><span class="dd" style="margin-left:auto;font-weight:800">'+g.p+'</span></button>';}).join('');
+    document.querySelectorAll('#list .it').forEach(function(b){b.addEventListener('click',function(){setS(b.dataset.k);});}); }
+  function setS(k){ var X=SEG.filter(function(x){return x.k===k;})[0]; $("art").innerHTML=draw(k); $("cardTitle").innerHTML=X.n; $("stage").innerHTML=X.n+'<small>~'+X.p+' mmHg</small>';
+    $("info").innerHTML='<span class="n">'+X.n+' · '+X.p+' mmHg</span>'+X.dd; document.querySelectorAll('#list .it').forEach(function(b){b.classList.toggle('on',b.dataset.k===k);}); }
+  renderList(); setS('arteries');
+})();
+</script>
+</body>
+</html>

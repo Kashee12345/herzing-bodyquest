@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ee">
+<title>Peristalsis &amp; Segmentation</title>
+<meta name="description" content="Interactive gut motility — peristalsis moves food along, segmentation mixes it. For anatomy & physiology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_ap.css">
+<style>.wrap{grid-template-columns:1.1fr 1fr;}</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 23</a></div>
+<header>
+  <div class="kick">Anatomy &amp; Physiology · Chapter 23</div>
+  <h1>Peristalsis &amp; Segmentation</h1>
+  <div class="intro">The gut wall's smooth muscle moves food two ways: <b>peristalsis</b> pushes it <b>along</b>, and <b>segmentation</b> <b>mixes</b> it in place. Switch between them and watch.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Peristalsis</h2><svg viewBox="0 0 320 160" aria-label="gut motility"><g id="art"></g></svg>
+    <div class="row" style="justify-content:center;margin-top:8px;"><button class="btn" id="play">⏸ Pause</button></div></div></div>
+  <div>
+    <div id="stage">Gut motility<small>move it or mix it</small></div>
+    <div class="card">
+      <div class="seg" id="modeseg"><button class="on" data-m="peri">➡️ Peristalsis</button><button data-m="seg">🔀 Segmentation</button></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<div class="apx-ref" style="max-width:960px;margin:22px auto 0;background:#fffdf8;border:1px solid #e7ddcb;border-radius:16px;padding:16px 18px;box-shadow:0 6px 20px rgba(90,70,40,.06);"><div style="font-family:'Fraunces',Georgia,serif;font-weight:700;color:#0b5a50;font-size:16px;margin-bottom:4px;">📷 Reference image</div><div style="font-size:12.5px;color:#8a8175;margin-bottom:10px;">A real labeled figure to compare with the interactive above.</div><img src="img/Peristalsis.jpg" alt="Peristalsis & Segmentation reference figure" loading="lazy" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:10px;" onerror="this.closest('.apx-ref').style.display='none'"><div style="font-size:12px;color:#8a8175;text-align:center;margin-top:8px;font-style:italic;">Peristalsis & Segmentation — OpenStax, CC BY 3.0 (via Wikimedia Commons)</div></div>
+<footer>Anatomy &amp; Physiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var mode='peri', t=0, lastT=0, playing=true;
+  function draw(){
+    var s='';
+    var cx0=20, cx1=300, midY=80, baseR=26;
+    // build a wavy tube by drawing top and bottom edges
+    function radiusAt(x){
+      if(mode==='peri'){ // single moving constriction
+        var wave = (t*90) % 360; var cxw = 20 + ((t*80)%300); // constriction position moving right
+        var d = x - cxw; return baseR - 16*Math.exp(-(d*d)/700);
+      } else { // segmentation: multiple stationary constrictions pulsing
+        var pinch = (Math.sin(t*3)+1)/2; // 0..1
+        var seg = Math.cos((x-20)/40*Math.PI); return baseR - 14*pinch*Math.max(0,seg);
+      }
+    }
+    var top='M'+cx0+' '+(midY-baseR), bot='M'+cx0+' '+(midY+baseR);
+    for(var x=cx0;x<=cx1;x+=6){ var r=radiusAt(x); top+=' L'+x+' '+(midY-r).toFixed(1); bot+=' L'+x+' '+(midY+r).toFixed(1); }
+    s+='<path d="'+top+'" fill="none" stroke="#e08a5a" stroke-width="4"/>';
+    s+='<path d="'+bot+'" fill="none" stroke="#e08a5a" stroke-width="4"/>';
+    // lumen fill
+    s+='<path d="'+top+' L'+cx1+' '+(midY+baseR)+' '+bot.substring(1).split(' ').reverse().join(' ')+'" fill="#fbeadd" opacity="0.4"/>';
+    // food bolus
+    if(mode==='peri'){ var bx = 20 + ((t*80)%300) + 24; if(bx>300) bx-=300; s+='<ellipse cx="'+bx.toFixed(1)+'" cy="'+midY+'" rx="16" ry="12" fill="#c79234"/>'; }
+    else { // scattered chunks getting mixed
+      for(var i=0;i<5;i++){ var bx=50+i*55 + Math.sin(t*2+i)*8; s+='<circle cx="'+bx.toFixed(1)+'" cy="'+(midY+Math.cos(t*3+i)*6).toFixed(1)+'" r="8" fill="#c79234"/>'; }
+    }
+    return s;
+  }
+  var D={
+    peri:{n:'Peristalsis',dd:'<span class="n">Moving food along</span>A <b>wave of contraction</b> travels down the tube behind the food, squeezing it <b>forward</b> — like pushing toothpaste through a tube. This propels the bolus from esophagus to stomach to intestines. It even works upside down.'},
+    seg:{n:'Segmentation',dd:'<span class="n">Mixing food in place</span>The intestine pinches at <b>several points at once</b>, then relaxes, then pinches at new spots — <b>sloshing chyme back and forth</b> without moving it far. This mixes food with enzymes and maximizes contact with the absorptive wall.'}
+  };
+  function setInfo(){ var D1=D[mode]; $("cardTitle").innerHTML=D1.n; $("stage").innerHTML=D1.n+'<small>'+(mode==='peri'?'propulsion':'mechanical mixing')+'</small>'; $("info").innerHTML=D1.dd;
+    document.querySelectorAll('#modeseg button').forEach(function(b){b.classList.toggle('on',(b.dataset.m==='peri')===(mode==='peri'));}); }
+  document.querySelectorAll('#modeseg button').forEach(function(b){b.addEventListener('click',function(){mode=b.dataset.m; setInfo(); $("art").innerHTML=draw();});});
+  $("play").onclick=function(){ playing=!playing; $("play").innerHTML=playing?'⏸ Pause':'▶ Play'; if(playing) requestAnimationFrame(frame); };
+  function frame(ts){ if(!playing)return; if(!lastT)lastT=ts; var dt=(ts-lastT)/1000; lastT=ts; t+=dt; $("art").innerHTML=draw(); requestAnimationFrame(frame); }
+  setInfo(); $("art").innerHTML=draw(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

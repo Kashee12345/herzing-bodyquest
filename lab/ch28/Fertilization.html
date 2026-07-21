@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ee">
+<title>Fertilization</title>
+<meta name="description" content="Interactive fertilization — how a sperm reaches and fuses with an egg to form a zygote. For anatomy & physiology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_ap.css">
+<style>.wrap{grid-template-columns:1.05fr 1fr;}</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 28</a></div>
+<header>
+  <div class="kick">Anatomy &amp; Physiology · Chapter 28</div>
+  <h1>Fertilization</h1>
+  <div class="intro">Of millions of sperm, only <b>one</b> fuses with the egg — and the egg has clever ways to make sure it's exactly one. Step through the meeting.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The journey</h2><svg viewBox="0 0 260 200" aria-label="fertilization"><g id="art"></g></svg></div></div>
+  <div>
+    <div id="stage">Fertilization<small>sperm + egg → zygote</small></div>
+    <div class="card"><h2>The steps</h2><div id="info"></div>
+      <div class="row" style="margin-top:12px;"><button class="btn" id="prev">‹ Prev</button><button class="btn" id="play">▶ Play</button><button class="btn" id="next">Next ›</button></div>
+      <div class="modeseg" id="dots" style="margin-top:10px;"></div>
+    </div>
+  </div>
+</div>
+<div class="apx-ref" style="max-width:960px;margin:22px auto 0;background:#fffdf8;border:1px solid #e7ddcb;border-radius:16px;padding:16px 18px;box-shadow:0 6px 20px rgba(90,70,40,.06);"><div style="font-family:'Fraunces',Georgia,serif;font-weight:700;color:#0b5a50;font-size:16px;margin-bottom:4px;">📷 Reference image</div><div style="font-size:12.5px;color:#8a8175;margin-bottom:10px;">A real labeled figure to compare with the interactive above.</div><img src="img/Fertilization.jpg" alt="Fertilization reference figure" loading="lazy" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:10px;" onerror="this.closest('.apx-ref').style.display='none'"><div style="font-size:12px;color:#8a8175;text-align:center;margin-top:8px;font-style:italic;">Fertilization — OpenStax, CC BY 3.0 (via Wikimedia Commons)</div></div>
+<footer>Anatomy &amp; Physiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var STEP=[
+    {t:'1 · The race',sperm:60,d:'Hundreds of <b>sperm</b> reach the egg in the uterine tube. Along the way they were <b>capacitated</b> — chemically primed to be able to fertilize.'},
+    {t:'2 · Acrosome reaction',sperm:20,d:'Sperm bind the egg\'s outer coat. Their <b>acrosome</b> (a cap of enzymes) bursts, <b>digesting a path</b> through the layers surrounding the egg.'},
+    {t:'3 · Fusion',sperm:5,d:'The <b>first sperm to reach the egg membrane fuses</b> with it, and its nucleus enters. Just one gets in.'},
+    {t:'4 · Blocking the rest',sperm:1,d:'Instantly, the egg triggers the <b>cortical reaction</b> — hardening its coat so <b>no other sperm can enter</b>. This prevents an abnormal double set of chromosomes.'},
+    {t:'5 · The zygote',sperm:0,zygote:true,d:'The sperm and egg nuclei fuse. The egg finishes meiosis II, and the two <b>haploid sets combine into one diploid cell</b> — the <b>zygote</b>. A new individual\'s genome is complete.'}
+  ];
+  var i=0, playing=false, timer=null;
+  function draw(S){ var s='';
+    // egg (right)
+    var eggStroke=S.sperm<=1?'#c79234':'#d89aa4';
+    s+='<circle cx="180" cy="100" r="46" fill="#f4c9d0" stroke="'+eggStroke+'" stroke-width="'+(S.sperm<=1?4:2)+'"/><circle cx="180" cy="100" r="18" fill="#c07a9a"/>';
+    if(S.zygote){ s+='<circle cx="180" cy="100" r="18" fill="#7a5a8a"/><text x="180" y="160" font-size="11" fill="#0d7a6a" text-anchor="middle" font-weight="800">zygote (2n)</text>'; }
+    // sperm approaching (count varies)
+    var n=Math.min(S.sperm,12);
+    for(var k=0;k<n;k++){ var ang=(k/12)*Math.PI - Math.PI/2; var dist = 70 - (12-S.sperm)*0; var sx=40+ (k%4)*8, sy=40+k*10; if(sy>170) sy-=140;
+      s+='<circle cx="'+sx+'" cy="'+sy+'" r="6" fill="#5aa0c9"/><path d="M'+(sx-6)+' '+sy+' q-8 -4 -14 0" fill="none" stroke="#5aa0c9" stroke-width="1.5"/>'; }
+    // one sperm at membrane when fusing
+    if(S.sperm<=5 && !S.zygote){ s+='<circle cx="138" cy="100" r="7" fill="#5aa0c9"/><path d="M131 100 q-8 -4 -14 0" fill="none" stroke="#5aa0c9" stroke-width="2"/>'; }
+    return s;
+  }
+  function renderDots(){ $("dots").innerHTML=STEP.map(function(x,k){return '<span class="pill'+(k===i?' on':'')+'" data-k="'+k+'">'+(k+1)+'</span>';}).join('');
+    document.querySelectorAll('#dots .pill').forEach(function(p){p.addEventListener('click',function(){stop();i=+p.dataset.k;render();});}); }
+  function render(){ var S=STEP[i]; $("art").innerHTML=draw(S); $("cardTitle").innerHTML=S.t; $("stage").innerHTML=S.t.split(' · ')[1]+'<small>step '+(i+1)+' of '+STEP.length+'</small>';
+    $("info").innerHTML='<span class="n">'+S.t+'</span>'+S.d; document.querySelectorAll('#dots .pill').forEach(function(p){p.classList.toggle('on',+p.dataset.k===i);}); }
+  function stop(){ playing=false; if(timer){clearInterval(timer);timer=null;} $("play").innerHTML='▶ Play'; }
+  function play(){ if(playing){stop();return;} playing=true; $("play").innerHTML='⏸ Pause'; timer=setInterval(function(){ if(i>=STEP.length-1){stop();return;} i++; render(); },4500); }
+  $("prev").onclick=function(){stop(); i=(i-1+STEP.length)%STEP.length; render();};
+  $("next").onclick=function(){stop(); i=(i+1)%STEP.length; render();};
+  $("play").onclick=play;
+  renderDots(); render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ee">
+<title>Motor Units &amp; Muscle Tension</title>
+<meta name="description" content="Interactive muscle tension — single twitch, wave summation, and tetanus, plus motor units and recruitment. For A&P students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_ap.css">
+<style>.wrap{grid-template-columns:1.1fr 1fr;}</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Anatomy &amp; Physiology · Chapter 10</div>
+  <h1>Motor Units &amp; Tension</h1>
+  <div class="intro">A single nerve zap gives a quick <b>twitch</b>. Fire them faster and the twitches pile up into a smooth, powerful, sustained pull. Pick a stimulation pattern and watch the tension.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Single twitch</h2><svg viewBox="0 0 340 180" aria-label="tension graph"><g id="art"></g></svg></div></div>
+  <div>
+    <div id="stage">Muscle tension<small>stimulate faster → more force</small></div>
+    <div class="card">
+      <div class="seg" id="seg"><button data-k="twitch" class="on">Single twitch</button><button data-k="summation">Summation</button><button data-k="tetanus">Tetanus</button></div>
+      <div id="info"></div>
+      <div class="mnem">💡 The body also gets <b>more force by recruitment</b> — activating <b>more (and bigger) motor units</b>. A motor unit = one motor neuron + every muscle fiber it controls.</div>
+    </div>
+  </div>
+</div>
+<div class="apx-ref" style="max-width:960px;margin:22px auto 0;background:#fffdf8;border:1px solid #e7ddcb;border-radius:16px;padding:16px 18px;box-shadow:0 6px 20px rgba(90,70,40,.06);"><div style="font-family:'Fraunces',Georgia,serif;font-weight:700;color:#0b5a50;font-size:16px;margin-bottom:4px;">📷 Reference image</div><div style="font-size:12.5px;color:#8a8175;margin-bottom:10px;">A real labeled figure to compare with the interactive above.</div><img src="img/MotorUnits.jpg" alt="Motor Units & Tension reference figure" loading="lazy" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:10px;" onerror="this.closest('.apx-ref').style.display='none'"><div style="font-size:12px;color:#8a8175;text-align:center;margin-top:8px;font-style:italic;">Motor Units & Tension — OpenStax, CC BY 4.0 (via Wikimedia Commons)</div></div>
+<footer>Anatomy &amp; Physiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var mode='twitch', t=0, lastT=0, stims=[], nextStim=0;
+  var W=340,H=180, x0=14,x1=326,y0=16,y1=150;
+  function twitch(age){ var rise=0.09; if(age<0)return 0; return Math.max(0, (age<rise? age/rise : Math.exp(-(age-rise)/0.28)) ); }
+  function period(){ return mode==='twitch'?9 : mode==='summation'?0.34 : 0.09; }
+  function render(){
+    // schedule stimuli
+    if(t>=nextStim){ stims.push(t); nextStim = t + period(); if(mode==='twitch' && stims.length>1){ /* single: only one per long gap */ } }
+    if(stims.length>60) stims.shift();
+    // sample tension over the last 4.5s window
+    var s='<line x1="'+x0+'" y1="'+y1+'" x2="'+x1+'" y2="'+y1+'" stroke="#cdbfa6" stroke-width="1.2"/><line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="#cdbfa6" stroke-width="1.2"/>';
+    s+='<text x="'+(x0-2)+'" y="24" font-size="8.5" fill="#8a8175" transform="rotate(-90 '+(x0-2)+' 24)" text-anchor="end">tension</text><text x="170" y="168" text-anchor="middle" font-size="8.5" fill="#8a8175">time →</text>';
+    var win=4.5, pts=[], maxT=0.001;
+    for(var i=0;i<=80;i++){ var tt=t-win+(i/80)*win; var ten=0; for(var k=0;k<stims.length;k++){ ten+=twitch(tt-stims[k]); } pts.push([i,ten]); if(ten>maxT)maxT=ten; }
+    var scale = Math.min(1, 1); var norm = mode==='tetanus'?3.6:mode==='summation'?2.4:1.05;
+    var poly = pts.map(function(p){ var x=x0+(p[0]/80)*(x1-x0); var y=y1-(Math.min(p[1],norm)/norm)*(y1-y0); return x.toFixed(1)+','+y.toFixed(1); }).join(' ');
+    s+='<polyline points="'+poly+'" fill="none" stroke="#0d7a6a" stroke-width="2.4"/>';
+    // stimulus marks
+    stims.forEach(function(st){ if(st>t-win){ var x=x0+((st-(t-win))/win)*(x1-x0); s+='<line x1="'+x.toFixed(1)+'" y1="'+(y1-4)+'" x2="'+x.toFixed(1)+'" y2="'+(y1+4)+'" stroke="#c79234" stroke-width="1.5"/>'; } });
+    $("art").innerHTML=s;
+  }
+  var M={
+    twitch:{n:'Single twitch',dd:'One stimulus produces one brief <b>contraction then relaxation</b> — a single twitch. Between stimuli, the muscle fully relaxes.'},
+    summation:{n:'Wave summation',dd:'Stimulate again <b>before it fully relaxes</b>, and the second twitch <b>adds onto</b> the first. Faster stimuli = higher, bumpy tension (unfused tetanus).'},
+    tetanus:{n:'Complete tetanus',dd:'Stimulate <b>very rapidly</b> and the twitches fuse into one <b>smooth, maximal, sustained</b> contraction — tetanus. This is how you hold a steady grip.'}
+  };
+  function setM(k){ mode=k; stims=[]; nextStim=t; document.querySelectorAll('#seg button').forEach(function(b){b.classList.toggle('on',b.dataset.k===k);});
+    var X=M[k]; $("cardTitle").innerHTML=X.n; $("stage").innerHTML=X.n+'<small>stimulation pattern</small>'; $("info").innerHTML='<span class="n">'+X.n+'</span>'+X.dd; }
+  function frame(ts){ if(!lastT)lastT=ts; var dt=Math.min((ts-lastT)/1000,0.05); lastT=ts; t+=dt; render(); requestAnimationFrame(frame); }
+  document.querySelectorAll('#seg button').forEach(function(b){b.addEventListener('click',function(){setM(b.dataset.k);});});
+  setM('twitch'); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

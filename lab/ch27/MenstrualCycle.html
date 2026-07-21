@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ee">
+<title>The Menstrual Cycle</title>
+<meta name="description" content="Interactive menstrual cycle — the ovarian and uterine phases and the hormones that drive them. For anatomy & physiology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_ap.css">
+<style>.wrap{grid-template-columns:1.15fr 0.85fr;}</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 27</a></div>
+<header>
+  <div class="kick">Anatomy &amp; Physiology · Chapter 27</div>
+  <h1>The Menstrual Cycle</h1>
+  <div class="intro">Roughly every <b>28 days</b>, a coordinated dance of four hormones ripens an egg and prepares the uterus. Tap a phase to see the hormones, the ovary, and the lining.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Menstrual phase</h2><svg viewBox="0 0 320 220" aria-label="menstrual cycle"><g id="art"></g></svg><div style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px;">hormone levels · day 1 → 28</div></div></div>
+  <div>
+    <div id="stage">The menstrual cycle<small>~28 days</small></div>
+    <div class="card"><h2>The phases</h2><div class="list" id="list"></div><div id="info"></div></div>
+  </div>
+</div>
+<div class="apx-ref" style="max-width:960px;margin:22px auto 0;background:#fffdf8;border:1px solid #e7ddcb;border-radius:16px;padding:16px 18px;box-shadow:0 6px 20px rgba(90,70,40,.06);"><div style="font-family:'Fraunces',Georgia,serif;font-weight:700;color:#0b5a50;font-size:16px;margin-bottom:4px;">📷 Reference image</div><div style="font-size:12.5px;color:#8a8175;margin-bottom:10px;">A real labeled figure to compare with the interactive above.</div><img src="img/MenstrualCycle.jpg" alt="The Menstrual Cycle reference figure" loading="lazy" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:10px;" onerror="this.closest('.apx-ref').style.display='none'"><div style="font-size:12px;color:#8a8175;text-align:center;margin-top:8px;font-style:italic;">The Menstrual Cycle — Mikael Häggström, Public domain (via Wikimedia Commons)</div></div>
+<footer>Anatomy &amp; Physiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var HL='#4fb3a2';
+  var PH={
+    menstrual:{days:'1–5',x0:20,x1:70,n:'Menstrual phase',dd:'Hormones are at their <b>lowest</b>. Without a pregnancy, the corpus luteum has died, so estrogen and progesterone fall — and the <b>uterine lining sheds</b> as the period.'},
+    follicular:{days:'6–13',x0:70,x1:170,n:'Follicular phase',dd:'<b>FSH</b> stimulates several ovarian follicles to grow. The dominant follicle pours out <b>estrogen</b>, which <b>rebuilds the endometrium</b> (the proliferative phase).'},
+    ovulation:{days:'14',x0:170,x1:200,n:'Ovulation',dd:'Soaring estrogen triggers a sharp <b>LH surge</b>, which <b>bursts the follicle and releases the egg</b> (~day 14). This is the fertile window.'},
+    luteal:{days:'15–28',x0:200,x1:300,n:'Luteal phase',dd:'The emptied follicle becomes the <b>corpus luteum</b>, which secretes <b>progesterone</b> to <b>maintain the thick lining</b> for a possible embryo (the secretory phase). No pregnancy → it degenerates and the cycle restarts.'}
+  };
+  function curve(peakX,spread,x){ return Math.exp(-Math.pow((x-peakX)/spread,2)); }
+  function draw(sel){ var s='';
+    // axes
+    s+='<line x1="20" y1="150" x2="300" y2="150" stroke="#d8ccb4"/>';
+    // highlight band
+    if(sel&&PH[sel]){ var p=PH[sel]; s+='<rect x="'+p.x0+'" y="20" width="'+(p.x1-p.x0)+'" height="130" fill="#4fb3a2" opacity="0.15"/>'; }
+    // day markers
+    [1,7,14,21,28].forEach(function(d){ var x=20+(d-1)/27*280; s+='<text x="'+x+'" y="164" font-size="8" fill="#a8a" text-anchor="middle">'+d+'</text>'; });
+    // hormone curves across x 20..300 mapping day1..28
+    function path(fn,col){ var p='M20 '+ (150-fn(20)*100).toFixed(1); for(var x=22;x<=300;x+=3){ p+=' L'+x+' '+(150-fn(x)*100).toFixed(1); } return '<path d="'+p+'" fill="none" stroke="'+col+'" stroke-width="2"/>'; }
+    // estrogen: peaks ~day 13 (x~145) and smaller luteal bump ~day 21
+    s+=path(function(x){ return 0.9*curve(145,26,x)+0.5*curve(240,34,x); }, '#0d7a6a');
+    // progesterone: luteal peak ~day 21 (x~230)
+    s+=path(function(x){ return 0.95*curve(235,32,x); }, '#c0603a');
+    // LH: sharp surge ~day 14 (x~170)
+    s+=path(function(x){ return 0.85*curve(170,10,x); }, '#5aa0c9');
+    // FSH: early rise + small mid bump
+    s+=path(function(x){ return 0.45*curve(60,30,x)+0.35*curve(168,10,x); }, '#c79234');
+    // legend
+    s+='<text x="24" y="30" font-size="8" fill="#0d7a6a">— estrogen</text><text x="24" y="42" font-size="8" fill="#c0603a">— progesterone</text>';
+    s+='<text x="230" y="30" font-size="8" fill="#5aa0c9">— LH</text><text x="230" y="42" font-size="8" fill="#c79234">— FSH</text>';
+    // endometrium thickness bar (bottom)
+    s+='<text x="20" y="186" font-size="8" fill="#a05a68">lining:</text>';
+    for(var d=1;d<=28;d++){ var x=20+(d-1)/27*280; var th= d<=5? 3 : d<=14? 3+(d-5)*1.2 : 3+9+(d-14)*0.7; if(d>26) th=4; s+='<rect x="'+x+'" y="'+(210-th)+'" width="8" height="'+th+'" fill="#e0a0b0"/>'; }
+    return s;
+  }
+  var order=['menstrual','follicular','ovulation','luteal'];
+  function renderList(){ $("list").innerHTML=order.map(function(k,i){return '<button class="it'+(i===0?' on':'')+'" data-k="'+k+'"><span class="nm">'+PH[k].n+'</span><span class="dd" style="margin-left:auto;">day '+PH[k].days+'</span></button>';}).join('');
+    document.querySelectorAll('#list .it').forEach(function(b){b.addEventListener('click',function(){setP(b.dataset.k);});}); }
+  function setP(k){ var X=PH[k]; $("art").innerHTML=draw(k); $("cardTitle").innerHTML=X.n; $("stage").innerHTML=X.n+'<small>day '+X.days+'</small>';
+    $("info").innerHTML='<span class="n">'+X.n+' (day '+X.days+')</span>'+X.dd; document.querySelectorAll('#list .it').forEach(function(b){b.classList.toggle('on',b.dataset.k===k);}); }
+  renderList(); setP('menstrual');
+})();
+</script>
+</body>
+</html>

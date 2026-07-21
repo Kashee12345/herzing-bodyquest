@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ee">
+<title>Saltatory Conduction</title>
+<meta name="description" content="Interactive saltatory conduction — a nerve signal jumping node to node on a myelinated axon vs crawling along an unmyelinated one. For A&P students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_ap.css">
+<style>.wrap{grid-template-columns:1.15fr 1fr;}</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Anatomy &amp; Physiology · Chapter 12</div>
+  <h1>Saltatory Conduction</h1>
+  <div class="intro">Why is a myelinated axon so much faster? The signal doesn't crawl along every inch — it <b>leaps from node to node</b>, skipping the insulated stretches. Watch two signals race.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2>Two axons, one signal each</h2><svg viewBox="0 0 320 200" aria-label="conduction"><g id="art"></g></svg><div id="winner" style="text-align:center;font-size:13px;font-weight:700;color:var(--teal-dk);margin-top:6px;">&nbsp;</div></div></div>
+  <div>
+    <div id="stage">Conduction speed<small>myelin makes it leap</small></div>
+    <div class="card"><h2>&nbsp;</h2><div class="row"><button class="btn solid" id="fire">▶ Fire both signals</button></div>
+      <div id="info"><span class="n">Two ways to conduct</span>On the <b>unmyelinated</b> axon (top), the signal must regenerate at <b>every point</b> — slow. On the <b>myelinated</b> axon (bottom), it only regenerates at the bare <b>nodes of Ranvier</b>, <b>jumping</b> the myelinated gaps. This is <b>saltatory conduction</b> — faster and more energy-efficient.</div>
+    </div>
+  </div>
+</div>
+<div class="apx-ref" style="max-width:960px;margin:22px auto 0;background:#fffdf8;border:1px solid #e7ddcb;border-radius:16px;padding:16px 18px;box-shadow:0 6px 20px rgba(90,70,40,.06);"><div style="font-family:'Fraunces',Georgia,serif;font-weight:700;color:#0b5a50;font-size:16px;margin-bottom:4px;">📷 Reference image</div><div style="font-size:12.5px;color:#8a8175;margin-bottom:10px;">A real labeled figure to compare with the interactive above.</div><img src="img/SaltatoryConduction.jpg" alt="Saltatory Conduction reference figure" loading="lazy" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:10px;" onerror="this.closest('.apx-ref').style.display='none'"><div style="font-size:12px;color:#8a8175;text-align:center;margin-top:8px;font-style:italic;">Saltatory Conduction — OpenStax, CC BY 4.0 (via Wikimedia Commons)</div></div>
+<footer>Anatomy &amp; Physiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var x0=20, x1=300, running=false, t=0, lastT=0;
+  var NODES=[20,90,160,230,300];
+  function draw(){
+    var s='';
+    // unmyelinated axon (top)
+    s+='<line x1="'+x0+'" y1="60" x2="'+x1+'" y2="60" stroke="#c9a86a" stroke-width="7"/><text x="'+x0+'" y="42" font-size="9" fill="#8a8175" font-weight="700">unmyelinated (slow)</text>';
+    // myelinated axon (bottom)
+    s+='<line x1="'+x0+'" y1="140" x2="'+x1+'" y2="140" stroke="#c9a86a" stroke-width="4"/>';
+    for(var i=0;i<NODES.length-1;i++) s+='<ellipse cx="'+((NODES[i]+NODES[i+1])/2)+'" cy="140" rx="'+((NODES[i+1]-NODES[i])/2-6)+'" ry="12" fill="#e6d9a8" stroke="#c9a86a" stroke-width="1.5"/>';
+    NODES.forEach(function(nx){ s+='<rect x="'+(nx-2)+'" y="132" width="4" height="16" fill="#8a6a2a"/>'; });
+    s+='<text x="'+x0+'" y="176" font-size="9" fill="#8a8175" font-weight="700">myelinated (fast · jumps nodes)</text>';
+    // signals
+    var uProg = Math.min(1, t*0.34), mProg = Math.min(1, t*0.85);
+    var ux = x0 + uProg*(x1-x0);
+    // myelinated snaps to the node it has reached
+    var mReach = x0 + mProg*(x1-x0), mx=x0; for(var i=0;i<NODES.length;i++){ if(NODES[i]<=mReach) mx=NODES[i]; }
+    if(running || t>0){
+      s+='<circle cx="'+ux.toFixed(1)+'" cy="60" r="9" fill="#f0c840" opacity="0.4"/><circle cx="'+ux.toFixed(1)+'" cy="60" r="5" fill="#f0c840"/>';
+      s+='<circle cx="'+mx.toFixed(1)+'" cy="140" r="9" fill="#0d7a6a" opacity="0.4"/><circle cx="'+mx.toFixed(1)+'" cy="140" r="5" fill="#0d7a6a"/>';
+    }
+    $("art").innerHTML=s;
+    if(mProg>=1 && uProg<1) $("winner").textContent='⚡ Myelinated axon wins — signal already delivered!';
+    else if(uProg>=1) $("winner").textContent='Both arrived — the myelinated one got there far sooner.';
+    else $("winner").innerHTML='&nbsp;';
+  }
+  function frame(ts){ if(!lastT)lastT=ts; var dt=(ts-lastT)/1000; lastT=ts; if(running){ t+=dt; if(t>3.2) running=false; } draw(); requestAnimationFrame(frame); }
+  $("fire").addEventListener('click',function(){ t=0; running=true; });
+  draw(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

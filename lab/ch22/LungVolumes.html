@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ee">
+<title>Lung Volumes</title>
+<meta name="description" content="Interactive lung volumes and capacities on a spirometry trace — tidal volume, reserves, and vital capacity. For anatomy & physiology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_ap.css">
+<style>.wrap{grid-template-columns:1.15fr 0.85fr;}</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 22</a></div>
+<header>
+  <div class="kick">Anatomy &amp; Physiology · Chapter 22</div>
+  <h1>Lung Volumes</h1>
+  <div class="intro">A <b>spirometer</b> traces how much air you move. Quiet breathing uses only a sliver of your lungs' capacity — tap each volume to see it on the trace.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Tidal volume</h2><svg viewBox="0 0 320 220" aria-label="spirometry"><g id="art"></g></svg><div style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px;">volume (mL) over time →</div></div></div>
+  <div>
+    <div id="stage">Lung volumes<small>a spirometry trace</small></div>
+    <div class="card"><h2>Volumes &amp; capacities</h2><div class="list" id="list" style="max-height:280px;overflow:auto;"></div><div id="info"></div></div>
+  </div>
+</div>
+<div class="apx-ref" style="max-width:960px;margin:22px auto 0;background:#fffdf8;border:1px solid #e7ddcb;border-radius:16px;padding:16px 18px;box-shadow:0 6px 20px rgba(90,70,40,.06);"><div style="font-family:'Fraunces',Georgia,serif;font-weight:700;color:#0b5a50;font-size:16px;margin-bottom:4px;">📷 Reference image</div><div style="font-size:12.5px;color:#8a8175;margin-bottom:10px;">A real labeled figure to compare with the interactive above.</div><img src="img/LungVolumes.jpg" alt="Lung Volumes reference figure" loading="lazy" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:10px;" onerror="this.closest('.apx-ref').style.display='none'"><div style="font-size:12px;color:#8a8175;text-align:center;margin-top:8px;font-style:italic;">Lung Volumes — OpenStax, CC BY 3.0 (via Wikimedia Commons)</div></div>
+<footer>Anatomy &amp; Physiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var HL='#4fb3a2';
+  // y-levels (mL mapped to svg y). baseline tidal between 2400 and 2900; max inhale 5800; min exhale 1200; RV 1200 down to 0.
+  // svg: y=20 top (6000mL), y=200 bottom (0mL). scale: y = 200 - vol/6000*180
+  function Y(v){ return 200 - v/6000*180; }
+  var V={
+    tv:{band:[2400,2900],val:'~500 mL',n:'Tidal volume (TV)',dd:'The air moved in <b>one normal, quiet breath</b> — only about half a liter. This is the small wave at rest.'},
+    irv:{band:[2900,5800],val:'~3000 mL',n:'Inspiratory reserve (IRV)',dd:'The <b>extra air you can force IN</b> beyond a normal breath — a deep gasp on top of tidal inhale.'},
+    erv:{band:[1200,2400],val:'~1100 mL',n:'Expiratory reserve (ERV)',dd:'The <b>extra air you can force OUT</b> after a normal exhale.'},
+    rv:{band:[0,1200],val:'~1200 mL',n:'Residual volume (RV)',dd:'Air that <b>always stays</b> in the lungs — you can never fully empty them. It keeps the alveoli from collapsing.'},
+    vc:{band:[1200,5800],val:'~4600 mL',n:'Vital capacity (VC)',dd:'The <b>most air you can move</b> in one breath — IRV + TV + ERV. A key measure of lung health.'},
+    tlc:{band:[0,5800],val:'~5800 mL',n:'Total lung capacity (TLC)',dd:'<b>Everything</b> the lungs can hold — vital capacity plus the residual volume that can\'t be exhaled.'}
+  };
+  function draw(sel){ var s='';
+    // grid
+    for(var v=0;v<=6000;v+=1000){ var y=Y(v); s+='<line x1="30" y1="'+y+'" x2="310" y2="'+y+'" stroke="#eee6d6"/><text x="26" y="'+(y+3)+'" font-size="7" fill="#b0a488" text-anchor="end">'+v+'</text>'; }
+    // highlight band
+    if(sel&&V[sel]){ var b=V[sel].band; s+='<rect x="30" y="'+Y(b[1])+'" width="280" height="'+(Y(b[0])-Y(b[1]))+'" fill="#4fb3a2" opacity="0.2"/>';
+      s+='<text x="170" y="'+((Y(b[0])+Y(b[1]))/2)+'" font-size="10" fill="#0b5a50" text-anchor="middle" font-weight="800">'+V[sel].n.split(' (')[0]+'</text>'; }
+    // spirometry trace: tidal waves, then a big breath (max in, max out), back to tidal
+    var path='M30 '+Y(2650);
+    var x=30;
+    // 3 tidal breaths
+    for(var b=0;b<3;b++){ path+=' Q'+(x+15)+' '+Y(2900)+' '+(x+30)+' '+Y(2650)+' Q'+(x+45)+' '+Y(2400)+' '+(x+60)+' '+Y(2650); x+=60; }
+    // max inhale
+    path+=' Q'+(x+15)+' '+Y(5800)+' '+(x+30)+' '+Y(5800);
+    // max exhale
+    path+=' Q'+(x+45)+' '+Y(1200)+' '+(x+60)+' '+Y(1200); x+=60;
+    // back to tidal
+    path+=' Q'+(x+15)+' '+Y(2650)+' '+(x+30)+' '+Y(2650);
+    s+='<path d="'+path+'" fill="none" stroke="#0d7a6a" stroke-width="2.5"/>';
+    // RV line
+    s+='<line x1="30" y1="'+Y(1200)+'" x2="310" y2="'+Y(1200)+'" stroke="#c0603a" stroke-width="1.5" stroke-dasharray="4 3"/>';
+    return s;
+  }
+  var order=['tv','irv','erv','rv','vc','tlc'];
+  function renderList(){ $("list").innerHTML=order.map(function(k,i){return '<button class="it'+(i===0?' on':'')+'" data-k="'+k+'"><span class="nm">'+V[k].n+'</span><span class="dd" style="margin-left:auto;font-weight:800">'+V[k].val+'</span></button>';}).join('');
+    document.querySelectorAll('#list .it').forEach(function(b){b.addEventListener('click',function(){setV(b.dataset.k);});}); }
+  function setV(k){ var X=V[k]; $("art").innerHTML=draw(k); $("cardTitle").innerHTML=X.n; $("stage").innerHTML=X.n+'<small>'+X.val+'</small>';
+    $("info").innerHTML='<span class="n">'+X.n+' · '+X.val+'</span>'+X.dd; document.querySelectorAll('#list .it').forEach(function(b){b.classList.toggle('on',b.dataset.k===k);}); }
+  renderList(); setV('tv');
+})();
+</script>
+</body>
+</html>

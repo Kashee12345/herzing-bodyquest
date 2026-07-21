@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ee">
+<title>Oxygen Transport</title>
+<meta name="description" content="Interactive oxygen transport — how red cells load oxygen in the lungs and release it in the tissues. For anatomy & physiology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_ap.css">
+<style>.wrap{grid-template-columns:1.1fr 1fr;}</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 18</a></div>
+<header>
+  <div class="kick">Anatomy &amp; Physiology · Chapter 18</div>
+  <h1>Oxygen Transport</h1>
+  <div class="intro">A red blood cell is a delivery truck for oxygen. Watch it <b>load O₂ in the lungs</b> (turning bright red) and <b>drop it off in the tissues</b> (turning darker), on a loop.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The oxygen loop</h2><svg viewBox="0 0 300 220" aria-label="oxygen transport"><g id="art"></g></svg></div></div>
+  <div>
+    <div id="stage">Oxygen transport<small>lungs ↔ tissues</small></div>
+    <div class="card"><h2>How it works</h2><div id="info"></div>
+      <div class="row" style="margin-top:12px;"><button class="btn" id="play">⏸ Pause</button></div>
+      <div class="mnem" style="margin-top:10px;"><b>Hemoglobin</b> is 4 protein chains, each with an iron-containing <b>heme</b> — so <b>one RBC's hemoglobin carries up to 4 O₂ each</b>, and a single red cell holds ~1 billion oxygen molecules.</div>
+    </div>
+  </div>
+</div>
+<div class="apx-ref" style="max-width:960px;margin:22px auto 0;background:#fffdf8;border:1px solid #e7ddcb;border-radius:16px;padding:16px 18px;box-shadow:0 6px 20px rgba(90,70,40,.06);"><div style="font-family:'Fraunces',Georgia,serif;font-weight:700;color:#0b5a50;font-size:16px;margin-bottom:4px;">📷 Reference image</div><div style="font-size:12.5px;color:#8a8175;margin-bottom:10px;">A real labeled figure to compare with the interactive above.</div><img src="img/OxygenTransport.jpg" alt="Oxygen Transport reference figure" loading="lazy" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:10px;" onerror="this.closest('.apx-ref').style.display='none'"><div style="font-size:12px;color:#8a8175;text-align:center;margin-top:8px;font-style:italic;">Oxygen Transport — OpenStax, CC BY 3.0 (via Wikimedia Commons)</div></div>
+<footer>Anatomy &amp; Physiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  // track: oval loop. progress 0..1. 0-0.25 lungs load, 0.5-0.75 tissue unload
+  var t=0, lastT=0, playing=true;
+  function pos(p){ var a=p*2*Math.PI - Math.PI/2; return [150+Math.cos(a)*110, 110+Math.sin(a)*70]; }
+  function draw(){
+    var s='';
+    // track
+    s+='<ellipse cx="150" cy="110" rx="110" ry="70" fill="none" stroke="#e6dcc8" stroke-width="10"/>';
+    // lungs (top) and tissue (bottom)
+    s+='<ellipse cx="150" cy="34" rx="34" ry="20" fill="#f4c9d0" stroke="#d89aa4"/><text x="150" y="38" font-size="10" fill="#a05a68" text-anchor="middle" font-weight="700">LUNGS</text>';
+    s+='<text x="150" y="20" font-size="8" fill="#8a7a6a" text-anchor="middle">pick up O₂</text>';
+    s+='<rect x="120" y="168" width="60" height="30" rx="8" fill="#e6c9a8" stroke="#c9a878"/><text x="150" y="187" font-size="10" fill="#8a6a3a" text-anchor="middle" font-weight="700">TISSUES</text>';
+    s+='<text x="150" y="212" font-size="8" fill="#8a7a6a" text-anchor="middle">drop off O₂</text>';
+    // determine oxygenation by progress (loaded near top, unloaded near bottom)
+    var p=(t*0.12)%1;
+    // oxygen level: high after lungs (0->0.5), low after tissue (0.5->1)
+    var loaded = p<0.5;
+    var col = loaded? '#e23a4a' : '#9a2a3a';
+    var xy=pos(p);
+    // O2 molecules floating at lungs and tissues
+    for(var i=0;i<4;i++){ var lx=120+i*20; s+='<circle cx="'+lx+'" cy="'+(58+ (i%2)*6)+'" r="3" fill="#5aa0d0"/>'; }
+    // RBC with O2 dots if loaded
+    s+='<g transform="translate('+xy[0].toFixed(1)+','+xy[1].toFixed(1)+')"><circle r="14" fill="'+col+'"/><circle r="6" fill="'+(loaded?'#b02838':'#7a2030')+'"/>';
+    if(loaded){ for(var i=0;i<4;i++){ var a=i*Math.PI/2; s+='<circle cx="'+(Math.cos(a)*10).toFixed(1)+'" cy="'+(Math.sin(a)*10).toFixed(1)+'" r="2.4" fill="#8fd0ff"/>'; } }
+    s+='</g>';
+    // status label
+    s+='<text x="150" y="112" font-size="11" fill="'+col+'" text-anchor="middle" font-weight="800">'+(loaded?'oxygenated (bright red)':'deoxygenated (dark red)')+'</text>';
+    return s;
+  }
+  function setInfo(){ $("info").innerHTML='<span class="n">Load &amp; unload</span>In the <b>lungs</b>, oxygen is plentiful, so it <b>binds hemoglobin</b> — the cell turns bright red (oxyhemoglobin). In the <b>tissues</b>, oxygen is scarce, so hemoglobin <b>releases it</b> to the cells and the blood turns darker. Then the cell loops back for more.'; }
+  $("play").onclick=function(){ playing=!playing; $("play").innerHTML=playing?'⏸ Pause':'▶ Play'; if(playing) requestAnimationFrame(frame); };
+  function frame(ts){ if(!playing)return; if(!lastT)lastT=ts; var dt=(ts-lastT)/1000; lastT=ts; t+=dt; $("art").innerHTML=draw(); requestAnimationFrame(frame); }
+  setInfo(); $("art").innerHTML=draw(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

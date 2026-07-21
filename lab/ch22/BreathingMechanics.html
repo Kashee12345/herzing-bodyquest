@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ee">
+<title>Breathing Mechanics</title>
+<meta name="description" content="Interactive breathing mechanics — the diaphragm, thoracic volume, and Boyle's law drive air in and out. For anatomy & physiology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_ap.css">
+<style>.wrap{grid-template-columns:1fr 1fr;}
+.gauge{display:flex;gap:8px;margin-top:10px;}
+.gbox{flex:1;text-align:center;border-radius:11px;padding:9px 6px;border:1px solid var(--line);background:#faf6ee;}
+.gbox .gv{font-family:'Fraunces',serif;font-weight:800;font-size:17px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 22</a></div>
+<header>
+  <div class="kick">Anatomy &amp; Physiology · Chapter 22</div>
+  <h1>Breathing Mechanics</h1>
+  <div class="intro">You don't suck air in — you <b>make room for it</b>. The diaphragm changes the chest's volume, which changes its pressure (<b>Boyle's law</b>), and air follows. Watch it breathe.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Inhalation</h2><svg viewBox="0 0 220 240" aria-label="breathing"><g id="art"></g></svg></div></div>
+  <div>
+    <div id="stage">Breathing mechanics<small>volume drives pressure</small></div>
+    <div class="card">
+      <div class="seg" id="modeseg"><button class="on" data-m="in">⬇ Inhale</button><button data-m="out">⬆ Exhale</button><button data-m="auto">🔁 Auto</button></div>
+      <div class="gauge"><div class="gbox"><div style="font-size:11px;color:var(--muted)">Thoracic volume</div><div class="gv" id="vol"></div></div><div class="gbox"><div style="font-size:11px;color:var(--muted)">Lung pressure</div><div class="gv" id="pres"></div></div></div>
+      <div id="info" style="margin-top:10px;"></div>
+    </div>
+  </div>
+</div>
+<div class="apx-ref" style="max-width:960px;margin:22px auto 0;background:#fffdf8;border:1px solid #e7ddcb;border-radius:16px;padding:16px 18px;box-shadow:0 6px 20px rgba(90,70,40,.06);"><div style="font-family:'Fraunces',Georgia,serif;font-weight:700;color:#0b5a50;font-size:16px;margin-bottom:4px;">📷 Reference image</div><div style="font-size:12.5px;color:#8a8175;margin-bottom:10px;">A real labeled figure to compare with the interactive above.</div><img src="img/BreathingMechanics.jpg" alt="Breathing Mechanics reference figure" loading="lazy" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:10px;" onerror="this.closest('.apx-ref').style.display='none'"><div style="font-size:12px;color:#8a8175;text-align:center;margin-top:8px;font-style:italic;">Breathing Mechanics — OpenStax, CC BY 4.0 (via Wikimedia Commons)</div></div>
+<footer>Anatomy &amp; Physiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var HL='#4fb3a2';
+  var phase=0; // 0=inhale full ... uses a value 0..1 where 1=inhaled
+  var mode='in', t=0, lastT=0, playing=false;
+  function draw(inh){ // inh 0..1
+    var s='';
+    // rib cage rises/expands with inhale
+    var expand=inh*10;
+    s+='<path d="M'+(50-expand)+' 50 Q110 '+(30-expand)+' '+(170+expand)+' 50 L'+(170+expand)+' 150 Q110 170 '+(50-expand)+' 150 Z" fill="#f6ecec" stroke="#d8a8a8" stroke-width="2"/>';
+    // lungs (bigger when inhaled)
+    var lr=30+inh*14;
+    s+='<ellipse cx="82" cy="100" rx="'+(lr*0.7)+'" ry="'+lr+'" fill="#f4c9d0" stroke="#d89aa4"/><ellipse cx="138" cy="100" rx="'+(lr*0.7)+'" ry="'+lr+'" fill="#f4c9d0" stroke="#d89aa4"/>';
+    // trachea + air arrow
+    s+='<rect x="104" y="20" width="12" height="40" rx="4" fill="#c79234"/>';
+    if(inh>0.5) s+='<path d="M110 8 L110 20" stroke="#5aa0d0" stroke-width="4"/><text x="110" y="6" font-size="9" fill="#3a7aa0" text-anchor="middle">air in ↓</text>';
+    else s+='<path d="M110 20 L110 8" stroke="#c0603a" stroke-width="4"/><text x="110" y="6" font-size="9" fill="#a04828" text-anchor="middle">air out ↑</text>';
+    // diaphragm: flat when inhaled, domed when exhaled
+    var domY = 190 - inh*18; var ctrlY = 190 + (1-inh)*30;
+    s+='<path d="M50 190 Q110 '+ctrlY.toFixed(0)+' 170 190" fill="none" stroke="'+HL+'" stroke-width="5"/>';
+    s+='<text x="110" y="216" font-size="9" fill="#0d7a6a" text-anchor="middle" font-weight="700">diaphragm '+(inh>0.5?'CONTRACTS (flattens)':'RELAXES (domes up)')+'</text>';
+    return s;
+  }
+  function setVals(inh){
+    var inhale = inh>0.5;
+    $("vol").innerHTML=inhale?'↑ increases':'↓ decreases'; $("vol").style.color=inhale?'#0d7a6a':'#c0603a';
+    $("pres").innerHTML=inhale?'↓ decreases':'↑ increases'; $("pres").style.color=inhale?'#0d7a6a':'#c0603a';
+    $("cardTitle").innerHTML=inhale?'Inhalation':'Exhalation';
+    $("stage").innerHTML=(inhale?'Inhalation':'Exhalation')+'<small>'+(inhale?'active — diaphragm contracts':'passive — diaphragm relaxes')+'</small>';
+    $("info").innerHTML=inhale
+      ? '<span class="n">Inhalation (active)</span>The <b>diaphragm contracts and flattens</b>, and the rib cage lifts. Chest <b>volume increases</b>, so by Boyle\'s law the pressure inside <b>drops below</b> the outside air — and air rushes <b>in</b> to equalize.'
+      : '<span class="n">Exhalation (passive)</span>The <b>diaphragm relaxes and domes upward</b>, and the rib cage drops. Chest <b>volume decreases</b>, so pressure <b>rises above</b> the outside air — and air flows <b>out</b>. At rest this needs no muscle effort.';
+  }
+  function render(inh){ $("art").innerHTML=draw(inh); setVals(inh); }
+  function setMode(m){ mode=m; playing=(m==='auto');
+    document.querySelectorAll('#modeseg button').forEach(function(b){b.classList.toggle('on',b.dataset.m===m);});
+    if(m==='in'){ render(1); }
+    else if(m==='out'){ render(0); }
+    else { t=0; lastT=0; requestAnimationFrame(frame); }
+  }
+  function frame(ts){ if(!playing)return; if(!lastT)lastT=ts; var dt=(ts-lastT)/1000; lastT=ts; t+=dt; var inh=(Math.sin(t*1.4)+1)/2; render(inh); requestAnimationFrame(frame); }
+  document.querySelectorAll('#modeseg button').forEach(function(b){b.addEventListener('click',function(){setMode(b.dataset.m);});});
+  setMode('in');
+})();
+</script>
+</body>
+</html>

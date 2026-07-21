@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ee">
+<title>Blood Flow Through the Heart</title>
+<meta name="description" content="Interactive path of blood through the heart and lungs, chamber by chamber. For anatomy & physiology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_ap.css">
+<style>.wrap{grid-template-columns:1.1fr 1fr;}</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 19</a></div>
+<header>
+  <div class="kick">Anatomy &amp; Physiology · Chapter 19</div>
+  <h1>Blood Flow Through the Heart</h1>
+  <div class="intro">Follow one drop of blood on its full loop — through the right heart to the lungs, back through the left heart, and out to the body. Step or play.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">From the body</h2><svg viewBox="0 0 300 260" aria-label="blood flow"><g id="art"></g></svg></div></div>
+  <div>
+    <div id="stage">Blood flow<small>the whole circuit</small></div>
+    <div class="card"><h2>The path</h2><div id="info"></div>
+      <div class="row" style="margin-top:12px;"><button class="btn" id="prev">‹ Prev</button><button class="btn" id="play">▶ Play</button><button class="btn" id="next">Next ›</button></div>
+      <div class="modeseg" id="dots" style="margin-top:10px;"></div>
+    </div>
+  </div>
+</div>
+<div class="apx-ref" style="max-width:960px;margin:22px auto 0;background:#fffdf8;border:1px solid #e7ddcb;border-radius:16px;padding:16px 18px;box-shadow:0 6px 20px rgba(90,70,40,.06);"><div style="font-family:'Fraunces',Georgia,serif;font-weight:700;color:#0b5a50;font-size:16px;margin-bottom:4px;">📷 Reference image</div><div style="font-size:12.5px;color:#8a8175;margin-bottom:10px;">A real labeled figure to compare with the interactive above.</div><img src="img/BloodFlow.jpg" alt="Blood Flow Through the Heart reference figure" loading="lazy" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:10px;" onerror="this.closest('.apx-ref').style.display='none'"><div style="font-size:12px;color:#8a8175;text-align:center;margin-top:8px;font-style:italic;">Blood Flow Through the Heart — OpenStax, CC BY 3.0 (via Wikimedia Commons)</div></div>
+<footer>Anatomy &amp; Physiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var HL='#4fb3a2', BLUE='#5a8ac0', RED='#d1495b';
+  // node positions for the moving drop
+  var POS={venacava:[90,40],ra:[95,90],rv:[105,160],lungs:[150,30],la:[195,90],lv:[190,165],aorta:[200,40]};
+  var STEP=[
+    {k:'venacava',o:0,t:'From the body',d:'Deoxygenated blood (low O₂) drains from the whole body into the <b>venae cavae</b>.'},
+    {k:'ra',o:0,t:'Right atrium',d:'Blood enters the <b>right atrium</b>, then passes through the <b>tricuspid valve</b> into the right ventricle.'},
+    {k:'rv',o:0,t:'Right ventricle',d:'The <b>right ventricle</b> pumps blood through the <b>pulmonary valve</b> into the pulmonary trunk.'},
+    {k:'lungs',o:1,t:'To the lungs',d:'Blood travels to the <b>lungs</b>, where it <b>drops off CO₂ and picks up oxygen</b> — turning bright red.'},
+    {k:'la',o:1,t:'Left atrium',d:'Now oxygenated, blood returns via the <b>pulmonary veins</b> to the <b>left atrium</b>, then through the <b>mitral valve</b>.'},
+    {k:'lv',o:1,t:'Left ventricle',d:'The powerful <b>left ventricle</b> pumps blood through the <b>aortic valve</b> into the aorta.'},
+    {k:'aorta',o:1,t:'Out to the body',d:'Oxygen-rich blood leaves through the <b>aorta</b> to supply every tissue — and the loop begins again.'}
+  ];
+  var i=0, playing=false, timer=null;
+  function draw(idx){ var S=STEP[idx];
+    var s='';
+    // heart outline
+    s+='<path d="M70 70 Q70 44 116 48 Q146 50 152 74 Q160 50 200 50 Q244 52 240 96 Q238 156 160 214 Q142 228 122 214 Q64 156 66 96 Z" fill="#f6e0e0" stroke="#d8a8a8"/>';
+    // chambers (colored by oxygen)
+    s+='<circle cx="95" cy="90" r="20" fill="'+BLUE+'" opacity="0.85"/><text x="95" y="93" font-size="8" fill="#fff" text-anchor="middle">RA</text>';
+    s+='<ellipse cx="105" cy="160" rx="22" ry="30" fill="#6a9ad0" opacity="0.85"/><text x="105" y="163" font-size="8" fill="#fff" text-anchor="middle">RV</text>';
+    s+='<circle cx="195" cy="90" r="20" fill="'+RED+'" opacity="0.85"/><text x="195" y="93" font-size="8" fill="#fff" text-anchor="middle">LA</text>';
+    s+='<ellipse cx="190" cy="165" rx="24" ry="32" fill="#e06a7a" opacity="0.9"/><text x="190" y="168" font-size="8" fill="#fff" text-anchor="middle">LV</text>';
+    // vessels
+    s+='<rect x="82" y="16" width="16" height="40" rx="6" fill="'+BLUE+'"/>';
+    s+='<path d="M155 46 Q155 16 195 18" fill="none" stroke="'+RED+'" stroke-width="12"/>';
+    // lungs
+    s+='<ellipse cx="150" cy="28" rx="30" ry="16" fill="#f4c9d0" stroke="#d89aa4"/><text x="150" y="31" font-size="8" fill="#a05a68" text-anchor="middle" font-weight="700">LUNGS</text>';
+    // moving drop
+    var p=POS[S.k]; var col=S.o?RED:BLUE;
+    s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="9" fill="'+col+'" stroke="#fff" stroke-width="2"/>';
+    // glow ring
+    s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="15" fill="none" stroke="'+HL+'" stroke-width="2" opacity="0.7"/>';
+    return s;
+  }
+  function renderDots(){ $("dots").innerHTML=STEP.map(function(x,k){return '<span class="pill'+(k===i?' on':'')+'" data-k="'+k+'">'+(k+1)+'</span>';}).join('');
+    document.querySelectorAll('#dots .pill').forEach(function(p){p.addEventListener('click',function(){stop();i=+p.dataset.k;render();});}); }
+  function render(){ var S=STEP[i]; $("art").innerHTML=draw(i); $("cardTitle").innerHTML=S.t; $("stage").innerHTML=S.t+'<small>step '+(i+1)+' of '+STEP.length+' · '+(S.o?'oxygenated':'deoxygenated')+'</small>';
+    $("info").innerHTML='<span class="n">'+S.t+'</span>'+S.d; document.querySelectorAll('#dots .pill').forEach(function(p){p.classList.toggle('on',+p.dataset.k===i);}); }
+  function stop(){ playing=false; if(timer){clearInterval(timer);timer=null;} $("play").innerHTML='▶ Play'; }
+  function play(){ if(playing){stop();return;} playing=true; $("play").innerHTML='⏸ Pause'; timer=setInterval(function(){ i=(i+1)%STEP.length; render(); if(i===0){/*loop*/} },4500); }
+  $("prev").onclick=function(){stop(); i=(i-1+STEP.length)%STEP.length; render();};
+  $("next").onclick=function(){stop(); i=(i+1)%STEP.length; render();};
+  $("play").onclick=play;
+  renderDots(); render();
+})();
+</script>
+</body>
+</html>

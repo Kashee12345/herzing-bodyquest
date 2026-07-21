@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ee">
+<title>The ECG</title>
+<meta name="description" content="Interactive ECG — the P wave, QRS complex, and T wave and what each represents. For anatomy & physiology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_ap.css">
+<style>.wrap{grid-template-columns:1.1fr 1fr;}</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 19</a></div>
+<header>
+  <div class="kick">Anatomy &amp; Physiology · Chapter 19</div>
+  <h1>The ECG</h1>
+  <div class="intro">An <b>electrocardiogram (ECG)</b> records the heart's electrical signal from the skin. Each bump matches an event in the conduction system. Tap a wave.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">P wave</h2><svg viewBox="0 0 320 200" aria-label="ECG trace"><g id="art"></g></svg>
+    <div class="row" style="justify-content:center;margin-top:8px;"><button class="btn" id="play">▶ Sweep</button></div></div></div>
+  <div>
+    <div id="stage">The ECG<small>P · QRS · T</small></div>
+    <div class="card"><h2>The waves</h2><div class="list" id="list"></div><div id="info"></div></div>
+  </div>
+</div>
+<div class="apx-ref" style="max-width:960px;margin:22px auto 0;background:#fffdf8;border:1px solid #e7ddcb;border-radius:16px;padding:16px 18px;box-shadow:0 6px 20px rgba(90,70,40,.06);"><div style="font-family:'Fraunces',Georgia,serif;font-weight:700;color:#0b5a50;font-size:16px;margin-bottom:4px;">📷 Reference image</div><div style="font-size:12.5px;color:#8a8175;margin-bottom:10px;">A real labeled figure to compare with the interactive above.</div><img src="img/TheECG.jpg" alt="The ECG reference figure" loading="lazy" style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:10px;" onerror="this.closest('.apx-ref').style.display='none'"><div style="font-size:12px;color:#8a8175;text-align:center;margin-top:8px;font-style:italic;">The ECG — OpenStax, CC BY 3.0 (via Wikimedia Commons)</div></div>
+<footer>Anatomy &amp; Physiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var HL='#0d7a6a';
+  // ECG path as a function; segments have x-ranges for highlight
+  // baseline y=120, x 20..300
+  function ecgPath(){
+    return 'M20 120 L60 120 '+       // flat
+      'Q75 95 90 120 '+              // P wave
+      'L110 120 '+                   // PR segment
+      'L118 122 L124 60 L130 160 L136 118 '+ // QRS
+      'L160 118 '+                   // ST segment
+      'Q185 90 210 118 '+            // T wave
+      'L300 118';                    // flat
+  }
+  var W={
+    p:{x0:60,x1:95,n:'P wave',dd:'<b>Atrial depolarization</b> — the SA node\'s signal spreading across the atria, just before they contract. A small, rounded bump.'},
+    pr:{x0:95,x1:118,n:'PR interval',dd:'The flat stretch from the start of P to the QRS. It reflects the <b>delay at the AV node</b> — the pause that lets the ventricles fill. A long PR interval signals a conduction block.'},
+    qrs:{x0:118,x1:140,n:'QRS complex',dd:'<b>Ventricular depolarization</b> — the big spike as the signal races through the bundle branches and Purkinje fibers and the ventricles contract. (Atrial repolarization is hidden inside it.)'},
+    st:{x0:140,x1:165,n:'ST segment',dd:'The level stretch after QRS, while the ventricles are fully depolarized and contracting. <b>Elevation or depression here is a key sign of a heart attack</b> (ischemia).'},
+    t:{x0:165,x1:215,n:'T wave',dd:'<b>Ventricular repolarization</b> — the ventricles resetting electrically so they can relax and refill. A rounded bump after the QRS.'}
+  };
+  var sweep=false, sx=20, timer=null;
+  function draw(sel){ var s='';
+    // grid
+    for(var gx=20;gx<=300;gx+=20) s+='<line x1="'+gx+'" y1="20" x2="'+gx+'" y2="180" stroke="#f0d8d8" stroke-width="1"/>';
+    for(var gy=20;gy<=180;gy+=20) s+='<line x1="20" y1="'+gy+'" x2="300" y2="'+gy+'" stroke="#f0d8d8" stroke-width="1"/>';
+    // highlight band for selected segment
+    if(sel&&W[sel]) s+='<rect x="'+W[sel].x0+'" y="20" width="'+(W[sel].x1-W[sel].x0)+'" height="160" fill="#4fb3a2" opacity="0.18"/>';
+    // ecg trace
+    s+='<path d="'+ecgPath()+'" fill="none" stroke="'+HL+'" stroke-width="2.5"/>';
+    // labels
+    s+='<text x="77" y="88" font-size="10" fill="#8a6a2a" text-anchor="middle" font-weight="700">P</text>';
+    s+='<text x="127" y="52" font-size="10" fill="#c0603a" text-anchor="middle" font-weight="700">QRS</text>';
+    s+='<text x="197" y="82" font-size="10" fill="#5a6ab0" text-anchor="middle" font-weight="700">T</text>';
+    // sweep line
+    if(sweep) s+='<line x1="'+sx+'" y1="20" x2="'+sx+'" y2="180" stroke="#d1495b" stroke-width="2"/>';
+    return s;
+  }
+  var order=[['p','P wave'],['pr','PR interval'],['qrs','QRS complex'],['st','ST segment'],['t','T wave']];
+  function renderList(){ $("list").innerHTML=order.map(function(o,i){return '<button class="it'+(i===0?' on':'')+'" data-k="'+o[0]+'"><span class="nm">'+o[1]+'</span></button>';}).join('');
+    document.querySelectorAll('#list .it').forEach(function(b){b.addEventListener('click',function(){setW(b.dataset.k);});}); }
+  var curSel='p';
+  function setW(k){ curSel=k; var X=W[k]; $("art").innerHTML=draw(k); $("cardTitle").innerHTML=X.n; $("stage").innerHTML=X.n+'<small>ECG waveform</small>';
+    $("info").innerHTML='<span class="n">'+X.n+'</span>'+X.dd; document.querySelectorAll('#list .it').forEach(function(b){b.classList.toggle('on',b.dataset.k===k);}); }
+  $("play").onclick=function(){ if(sweep){ sweep=false; if(timer)clearInterval(timer); $("play").innerHTML='▶ Sweep'; $("art").innerHTML=draw(curSel); return; }
+    sweep=true; sx=20; $("play").innerHTML='⏸ Stop'; timer=setInterval(function(){ sx+=4; if(sx>300){sx=20;} $("art").innerHTML=draw(curSel); },40); };
+  renderList(); setW('p');
+})();
+</script>
+</body>
+</html>
