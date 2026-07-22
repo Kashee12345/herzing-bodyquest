@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f7f2">
+<title>Marcia's Four Identity Statuses</title>
+<meta name="description" content="Interactive 2×2 map of James Marcia's four identity statuses — place a teen by their level of exploration and commitment. For human development students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_humdev.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+.axlab{font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:12px 0 6px;}
+.axlab:first-child{margin-top:0;}
+svg text{font-family:var(--sans);}
+@keyframes hdPulse{0%,100%{opacity:.35;transform:scale(1);}50%{opacity:.05;transform:scale(1.55);}}
+#ring{transform-box:fill-box;transform-origin:center;animation:hdPulse 1.8s ease-in-out infinite;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Human Development · Chapter 10</div>
+  <h1>Marcia's Four Identity Statuses</h1>
+  <div class="intro">James Marcia expanded Erikson's <b>identity vs. role confusion</b> stage into two questions: has the teen <b>explored</b> the options, and have they <b>committed</b> to a choice? Two answers, four statuses. Flip the switches — or drop in a real teen — and watch where they land.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Pick exploration &amp; commitment</h2>
+    <svg viewBox="0 0 240 232" aria-label="Marcia identity status matrix"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">Marcia's identity map<small>set both axes to place a teen</small></div>
+    <div class="card">
+      <div class="axlab">Exploration — has the teen searched?</div>
+      <div class="seg" id="segE">
+        <button data-v="0">Not exploring<small>hasn't questioned</small></button>
+        <button data-v="1">Exploring<small>actively searching</small></button>
+      </div>
+      <div class="axlab">Commitment — has the teen chosen?</div>
+      <div class="seg" id="segC">
+        <button data-v="0">No commitment<small>nothing settled</small></button>
+        <button data-v="1">Committed<small>a firm choice</small></button>
+      </div>
+      <div id="info"></div>
+      <div class="axlab">Or meet a teen — where do they belong?</div>
+      <div class="list" id="teens"></div>
+    </div>
+  </div>
+</div>
+<footer>Human Development · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // Four quadrants of Marcia's 2x2. e = exploration, c = commitment.
+ // Grid: X axis = commitment (left:no, right:yes). Y axis = exploration (top:yes, bottom:no).
+ var D={
+  moratorium:{nm:'Moratorium',col:'#b8862f',e:1,c:0,x:40,y:16,
+    def:'The teen is in the thick of the search &mdash; trying on majors, roles, beliefs, and relationships &mdash; but <b>hasn\'t committed</b> yet. Marcia saw this active questioning as the healthy "crisis" that leads to a real identity.',
+    ex:'Sam is sampling different majors, clubs, and worldviews, unsure which fits &mdash; and comfortable not yet deciding.'},
+  achievement:{nm:'Identity Achievement',col:'#2f9e5b',e:1,c:1,x:130,y:16,
+    def:'The teen has <b>explored the options and then committed</b> to self-chosen values, goals, and roles. This is the <b>most mature</b> status: the identity is owned, not inherited.',
+    ex:'Alex weighed several paths, chose teaching after trying it out, and can explain exactly why it fits.'},
+  diffusion:{nm:'Identity Diffusion',col:'#7a5a8a',e:0,c:0,x:40,y:106,
+    def:'The teen has <b>neither explored nor committed</b>. Identity questions are avoided or shrugged off &mdash; "whatever." Marcia rated this the <b>least mature</b> status.',
+    ex:'Maya hasn\'t thought about careers or beliefs, avoids the question, and just drifts with whatever comes.'},
+  foreclosure:{nm:'Foreclosure',col:'#2f6f9f',e:0,c:1,x:130,y:106,
+    def:'The teen is firmly <b>committed without ever exploring</b> &mdash; adopting a career, faith, or politics handed down by parents or others. Confident, but untested.',
+    ex:'Jordan will be a doctor "because we\'re a family of doctors," and has never questioned it.'}
+ };
+ var teens=[
+  {k:'diffusion', ic:'🤷', nm:'Maya', s:'"I haven\'t really thought about it."'},
+  {k:'foreclosure',ic:'👨‍⚕️',nm:'Jordan',s:'"I\'ll be a doctor — we all are."'},
+  {k:'moratorium', ic:'🧭', nm:'Sam', s:'"I\'m trying a bit of everything."'},
+  {k:'achievement',ic:'🎓', nm:'Alex', s:'"I chose teaching, and here\'s why."'}
+ ];
+ var e=null, c=null; // current axis state, null = not yet chosen
+ var W=90,H=90; // quadrant size
+
+ function keyFor(ev,cv){
+   for(var k in D){ if(D[k].e===ev && D[k].c===cv) return k; }
+   return null;
+ }
+ function draw(active){
+   var s='';
+   // quadrant fills
+   for(var k in D){ var q=D[k]; var on=(k===active);
+     s+='<rect x="'+q.x+'" y="'+q.y+'" width="'+W+'" height="'+H+'" rx="4" fill="'+q.col+'" opacity="'+(on?'1':(active?'.12':'.2'))+'"/>';
+     // short label in quadrant
+     var short=q.nm.replace('Identity ','');
+     s+='<text x="'+(q.x+W/2)+'" y="'+(q.y+H/2+3)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="'+(on?'#fff':q.col)+'" opacity="'+(on?1:.75)+'">'+short+'</text>';
+   }
+   // grid outline
+   s+='<rect x="40" y="16" width="180" height="180" rx="6" fill="none" stroke="var(--line)" stroke-width="1.5"/>';
+   s+='<line x1="130" y1="16" x2="130" y2="196" stroke="#fff" stroke-width="2"/>';
+   s+='<line x1="40" y1="106" x2="220" y2="106" stroke="#fff" stroke-width="2"/>';
+   // marker (teen figure) in active quadrant
+   if(active){ var q=D[active]; var mx=q.x+W/2, my=q.y+22;
+     s+='<circle id="ring" cx="'+mx+'" cy="'+(my+6)+'" r="20" fill="'+q.col+'"/>';
+     s+='<circle cx="'+mx+'" cy="'+my+'" r="7" fill="#fff"/>';
+     s+='<path d="M'+(mx-9)+' '+(my+22)+' q9 -14 18 0 z" fill="#fff"/>';
+   }
+   // axis labels
+   s+='<text x="130" y="222" text-anchor="middle" font-size="11" font-weight="800" fill="var(--soft)">COMMITMENT →</text>';
+   s+='<text x="70" y="210" text-anchor="middle" font-size="9" font-weight="700" fill="var(--muted)">none</text>';
+   s+='<text x="190" y="210" text-anchor="middle" font-size="9" font-weight="700" fill="var(--muted)">firm</text>';
+   s+='<text x="12" y="106" text-anchor="middle" font-size="11" font-weight="800" fill="var(--soft)" transform="rotate(-90 12 106)">EXPLORATION →</text>';
+   s+='<text x="30" y="30" text-anchor="middle" font-size="9" font-weight="700" fill="var(--muted)" transform="rotate(-90 30 30)">high</text>';
+   s+='<text x="30" y="185" text-anchor="middle" font-size="9" font-weight="700" fill="var(--muted)" transform="rotate(-90 30 185)">low</text>';
+   return s;
+ }
+ function chip(label,val){
+   return '<span>'+label+': <b style="color:var(--teal-dk)">'+(val?'yes':'no')+'</b></span>';
+ }
+ function render(){
+   // segmented button states
+   [['segE',e],['segC',c]].forEach(function(p){
+     document.querySelectorAll('#'+p[0]+' button').forEach(function(b){
+       b.className=(p[1]!==null && +b.dataset.v===p[1])?'on':'';
+     });
+   });
+   var active=(e!==null&&c!==null)?keyFor(e,c):null;
+   $("art").innerHTML=draw(active);
+   // teen highlight
+   document.querySelectorAll('#teens .it').forEach(function(b){
+     b.className='it'+((active&&b.dataset.k===active)?' on':'');
+   });
+   if(!active){
+     $("cardTitle").innerHTML='Pick exploration &amp; commitment';
+     $("stage").style.background='var(--teal)';
+     $("stage").innerHTML='Marcia\'s identity map<small>set both axes to place a teen</small>';
+     $("info").innerHTML='<span class="n">Two questions, four answers</span>Every combination of <b>exploration</b> and <b>commitment</b> lands in one of Marcia\'s four statuses. Set both switches above &mdash; or tap a teen below &mdash; to see which.';
+     return;
+   }
+   var q=D[active];
+   $("cardTitle").innerHTML=q.nm;
+   $("stage").style.background=q.col;
+   $("stage").innerHTML=q.nm+'<small>exploration '+(e?'high':'low')+' · commitment '+(c?'firm':'none')+'</small>';
+   $("info").innerHTML='<span class="n">'+q.nm+'</span>'+q.def+
+     '<div class="ex">'+chip('Exploration',e)+chip('Commitment',c)+'</div>'+
+     '<div class="loc">'+q.ex+'</div>'+
+     '<div class="mnem"><b>Marcia (1966):</b> identity forms along two axes &mdash; exploration and commitment &mdash; deepening Erikson\'s adolescent identity stage.</div>';
+ }
+ // wire segmented controls
+ document.querySelectorAll('#segE button').forEach(function(b){ b.onclick=function(){ e=+b.dataset.v; render(); }; });
+ document.querySelectorAll('#segC button').forEach(function(b){ b.onclick=function(){ c=+b.dataset.v; render(); }; });
+ // teen list
+ $("teens").innerHTML=teens.map(function(t){
+   return '<button class="it" data-k="'+t.k+'"><span class="ic">'+t.ic+'</span><span><span class="nm">'+t.nm+'</span><br><span class="s">'+t.s+'</span></span></button>';
+ }).join('');
+ document.querySelectorAll('#teens .it').forEach(function(b){ b.onclick=function(){ var q=D[b.dataset.k]; e=q.e; c=q.c; render(); }; });
+ render();
+})();
+</script>
+</body>
+</html>

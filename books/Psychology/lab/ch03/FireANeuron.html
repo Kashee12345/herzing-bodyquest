@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Fire a Neuron</title>
+<meta name="description" content="Trigger an action potential and watch a neuron move through its phases — resting, threshold, depolarization, repolarization, and refractory recovery.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:1.05fr 0.95fr;}
+.seg button small{white-space:nowrap;font-variant-numeric:tabular-nums;}
+#info .loc i,#info .n i{font-style:italic;}
+.pq-halo{animation:pqp 1.3s ease-in-out infinite;}
+@keyframes pqp{0%,100%{opacity:.12;}50%{opacity:.4;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 3</div>
+  <h1>Fire a Neuron</h1>
+  <div class="intro">A neuron speaks in tiny electrical spikes. Press <b>Fire</b> and step through the life of a single <b>action potential</b> &mdash; from a charged, waiting membrane to <b>threshold</b>, up through <b>depolarization</b>, and back down through <b>repolarization</b> to rest.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Membrane potential</h2>
+    <svg viewBox="0 0 240 200" aria-label="action potential graph"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">The action potential<small>press Fire, or tap a phase</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-i="0">Resting<small>&minus;70 mV</small></button>
+        <button data-i="1">Threshold<small>&minus;55 mV</small></button>
+        <button data-i="2">Depolarize<small>+30 mV</small></button>
+        <button data-i="3">Repolarize<small>&minus;70 mV</small></button>
+        <button data-i="4">Refractory<small>&minus;80 mV</small></button>
+      </div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">⚡ Fire ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // curve sample points [x,y]; y = 20 + (40 - mV)  so +30mV->y30, -70mV->y130, -80mV->y140
+ var pts=[[40,130],[85,130],[92,120],[97,115],[105,100],[112,60],[120,30],[128,50],[138,100],[148,130],[158,140],[180,138],[210,130]];
+ var S=[
+  {t:'Resting potential',col:'#2f6f9f',volt:'&minus;70 mV',prog:1,mark:1,lx:85,ly:120,la:'middle',
+   text:'At rest the neuron is <b>polarized</b>: the inside sits about <b>&minus;70 mV</b> relative to the outside. The <b>sodium&ndash;potassium pump</b> pushes 3 Na⁺ out for every 2 K⁺ it pulls in, and K⁺ leak channels let potassium drift back out &mdash; leaving the interior <b>negatively charged</b>. The voltage-gated channels are <b>closed</b>, and the cell waits, charged like a battery.',
+   loc:'Ready state &middot; A stored electrical gradient poised to discharge the instant it is triggered.',
+   mnem:'<b>Polarized</b> &mdash; a difference in charge across the membrane, with the inside more negative than the outside.'},
+  {t:'Threshold',col:'#b8862f',volt:'&minus;55 mV',prog:3,mark:3,lx:97,ly:106,la:'middle',
+   text:'Signals arriving from other neurons nudge the membrane toward zero. If these <b>graded potentials</b> summate enough to cross the <b>threshold near &minus;55 mV</b>, voltage-gated <b>Na⁺ channels snap open</b> and an impulse fires. Fall even slightly short of threshold and <b>nothing happens at all</b>.',
+   loc:'All-or-none &middot; A stimulus either reaches threshold and triggers a <b>full</b> action potential, or it does not fire &mdash; there is no half-spike.',
+   mnem:'<b>Threshold</b> &mdash; the critical level of depolarization (about &minus;55 mV) that must be crossed to launch an action potential.'},
+  {t:'Depolarization',col:'#d1495b',volt:'+30 mV',prog:6,mark:6,lx:120,ly:22,la:'middle',
+   text:'With the <b>Na⁺ channels open</b>, sodium ions <b>rush into</b> the cell down their electrochemical gradient. That flood of positive charge <b>reverses the membrane</b>, driving the inside from negative all the way up to about <b>+30 to +40 mV</b>. This steep climb is the rising spike of the action potential.',
+   loc:'Sodium in &middot; For a brief moment the inside is <b>more positive than the outside</b> &mdash; the peak of the spike.',
+   mnem:'<b>Depolarization</b> &mdash; the membrane potential rapidly becoming less negative, then positive, as Na⁺ pours in.'},
+  {t:'Repolarization',col:'#2f9e5b',volt:'&minus;70 mV',prog:9,mark:9,lx:156,ly:126,la:'start',
+   text:'Almost as fast as they opened, the <b>Na⁺ channels inactivate</b> while voltage-gated <b>K⁺ channels open</b>. Potassium now <b>flows out</b> of the cell, carrying positive charge away and driving the inside <b>back toward negative</b>. The spike falls as the membrane repolarizes toward its resting value.',
+   loc:'Potassium out &middot; Sodium in, then potassium out &mdash; the two ion flows that build the spike and then erase it.',
+   mnem:'<b>Repolarization</b> &mdash; the return of the membrane potential toward its negative resting value as K⁺ exits.'},
+  {t:'Refractory recovery',col:'#7a5a8a',volt:'&minus;80 mV',prog:12,mark:10,lx:158,ly:154,la:'middle',
+   text:'The K⁺ channels are <b>slow to close</b>, so a little too much potassium escapes and the membrane briefly dips <b>below &minus;70 mV</b> &mdash; a <b>hyperpolarized</b> undershoot. During this <b>refractory period</b> the neuron cannot fire again, which forces the impulse to travel in <b>one direction</b> down the axon. The Na⁺/K⁺ pump then restores the <b>&minus;70 mV</b> rest, ready to fire once more.',
+   loc:'Down the axon &middot; Each spike regenerates along the axon to the terminal, where it releases <b>neurotransmitters</b> into the synapse.',
+   note:'The <b>refractory period</b> caps how fast a neuron can fire and keeps the signal moving forward. A <i>stronger</i> stimulus is coded by firing <b>more often</b> &mdash; never by a bigger spike.'}
+ ];
+ var i=0;
+
+ function poly(upto,col,w){
+   var p='';
+   for(var k=0;k<=upto;k++){ p+=(k?' ':'')+pts[k][0]+','+pts[k][1]; }
+   return '<polyline points="'+p+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round"/>';
+ }
+ function arrows(cx,dir,col){ // dir 1 = up (in), -1 = down (out)
+   var s='',xs=[cx-12,cx,cx+12];
+   for(var a=0;a<3;a++){ var x=xs[a];
+     if(dir>0){ s+='<line x1="'+x+'" y1="98" x2="'+x+'" y2="74" stroke="'+col+'" stroke-width="2.4"/><polygon points="'+(x-4)+',80 '+(x+4)+',80 '+x+',72" fill="'+col+'"/>'; }
+     else { s+='<line x1="'+x+'" y1="74" x2="'+x+'" y2="98" stroke="'+col+'" stroke-width="2.4"/><polygon points="'+(x-4)+',92 '+(x+4)+',92 '+x+',100" fill="'+col+'"/>'; }
+   }
+   return s;
+ }
+ function scene(){
+   var s=S[i],out='';
+   // axis + reference lines
+   out+='<line x1="38" y1="18" x2="38" y2="152" stroke="#cbb7c2" stroke-width="1.5"/>';
+   out+='<line x1="38" y1="130" x2="222" y2="130" stroke="#cbb7c2" stroke-width="1" stroke-dasharray="4 4"/>';
+   out+='<line x1="38" y1="115" x2="222" y2="115" stroke="#d8b26a" stroke-width="1" stroke-dasharray="3 3"/>';
+   out+='<text x="33" y="33" font-size="8.5" fill="#94818b" text-anchor="end">+30</text>';
+   out+='<text x="33" y="63" font-size="8.5" fill="#94818b" text-anchor="end">0</text>';
+   out+='<text x="33" y="118" font-size="8.5" fill="#b8862f" text-anchor="end">&minus;55</text>';
+   out+='<text x="33" y="133" font-size="8.5" fill="#94818b" text-anchor="end">&minus;70</text>';
+   out+='<text x="214" y="112" font-size="8" fill="#b8862f" text-anchor="end" font-weight="700">threshold</text>';
+   out+='<text transform="rotate(-90 12 88)" x="12" y="88" font-size="8.5" fill="#94818b" text-anchor="middle">membrane potential (mV)</text>';
+   out+='<text x="212" y="166" font-size="8.5" fill="#94818b" text-anchor="end">time →</text>';
+   // curves
+   out+=poly(12,'#e2cdd8',3);
+   out+=poly(s.prog,s.col,3.6);
+   // ion flow cue
+   if(i===2){ out+=arrows(62,1,'#d1495b')+'<text x="62" y="66" font-size="10.5" font-weight="800" fill="#d1495b" text-anchor="middle">Na⁺ in</text>'; }
+   if(i===3){ out+=arrows(190,-1,'#2f9e5b')+'<text x="190" y="66" font-size="10.5" font-weight="800" fill="#2f9e5b" text-anchor="middle">K⁺ out</text>'; }
+   if(i===0){ out+='<text x="150" y="150" font-size="9" fill="#2f6f9f" text-anchor="middle" font-weight="700">Na⁺/K⁺ pump holds the charge</text>'; }
+   if(i===4){ out+='<text x="120" y="182" font-size="9" fill="#7a5a8a" text-anchor="middle" font-weight="700">brief undershoot, then reset to rest</text>'; }
+   // marker
+   var m=pts[s.mark];
+   out+='<circle class="pq-halo" cx="'+m[0]+'" cy="'+m[1]+'" r="11" fill="'+s.col+'"/>';
+   out+='<circle cx="'+m[0]+'" cy="'+m[1]+'" r="5.5" fill="'+s.col+'" stroke="#fff" stroke-width="2"/>';
+   out+='<text x="'+s.lx+'" y="'+s.ly+'" font-size="10.5" font-weight="800" fill="'+s.col+'" text-anchor="'+s.la+'">'+s.volt+'</text>';
+   return out;
+ }
+
+ function render(){
+   var s=S[i];
+   $("art").innerHTML=scene();
+   $("cardTitle").innerHTML='Phase '+(i+1)+' &middot; '+s.t;
+   $("stage").style.background=s.col;
+   $("stage").innerHTML=s.t+'<small>phase '+(i+1)+' of 5 &middot; '+s.volt+'</small>';
+   $("info").innerHTML='<span class="n">'+s.t+'</span>'+s.text
+     +'<div class="loc">'+s.loc+'</div>'
+     +(s.mnem?'<div class="mnem">'+s.mnem+'</div>':'')
+     +(s.note?'<div class="note">'+s.note+'</div>':'');
+   var b=document.querySelectorAll('#seg button');
+   for(var k=0;k<b.length;k++){ b[k].className=(k===i?'on':''); }
+   $("prev").disabled=(i===0);
+   $("next").disabled=(i===S.length-1);
+   $("next").innerHTML=(i===0?'⚡ Fire ›':'Next ›');
+ }
+
+ var segs=document.querySelectorAll('#seg button');
+ for(var k=0;k<segs.length;k++){ segs[k].onclick=function(){ i=+this.getAttribute('data-i'); render(); }; }
+ $("prev").onclick=function(){ if(i>0){i--;render();} };
+ $("next").onclick=function(){ if(i<S.length-1){i++;render();} };
+ render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Tour the GI Tract</title>
+<meta name="description" content="Interactive tour of the digestive tract — tap each organ from mouth to colon to see what happens to food there, then follow one meal through with a transit-time slider.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.cap{font-size:11px;color:var(--muted);line-height:1.45;margin-top:7px;text-align:center;}
+.tractbox{max-width:288px;margin:0 auto;}
+.tlcap{font-size:10.4px;color:var(--muted);text-align:center;margin-top:2px;line-height:1.4;}
+.it .s{margin-left:auto;font-size:10.5px;font-weight:800;color:var(--teal-dk);flex:none;font-variant-numeric:tabular-nums;}
+.it.on .s{color:#fff;}
+.it .nm small{display:block;font-weight:600;font-size:10.4px;color:var(--muted);margin-top:1px;}
+.it.on .nm small{color:rgba(255,255,255,.85);}
+.ev{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:2px 8px;vertical-align:middle;margin-left:4px;}
+.ev.s{background:#e5f3ea;color:#237a45;} .ev.p{background:#fdf0dd;color:#8a6a20;}
+.slab{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+.slab b{font-family:var(--disp);font-size:22px;color:var(--teal-dk);text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums;}
+input[type=range]{width:100%;margin-top:5px;height:22px;accent-color:var(--teal);cursor:pointer;display:block;}
+.ends{display:flex;justify-content:space-between;font-size:10.4px;color:var(--muted);font-weight:700;margin-top:-1px;}
+.tlwrap{margin-top:9px;}
+.pct{height:9px;border-radius:5px;background:#efe6d6;overflow:hidden;margin-top:9px;}
+.pct i{display:block;height:100%;background:var(--teal);transition:width .12s linear;}
+.dd2{font-size:12.5px;color:var(--soft);margin-top:6px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 2</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 2</div>
+  <h1>Tour the GI Tract</h1>
+  <div class="intro">A meal takes a one-way trip through about nine metres of tube, and each stretch does a different job &mdash; grinding, acidifying, splitting apart, absorbing, fermenting. <b>Tap any organ</b> to see what happens there, or switch to <b>Follow a meal</b> and watch one travel.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The digestive tract</h2>
+    <div class="tractbox"><svg viewBox="0 0 220 330" aria-label="diagram of the digestive tract"><g id="art"></g></svg></div>
+    <div class="cap" id="cap">Anterior view &mdash; the patient's right side is on your left. Tap any organ in the diagram.</div>
+  </div></div>
+  <div>
+    <div id="stage">Mouth to colon<small>tap an organ to begin</small></div>
+    <div class="card">
+      <div class="modeseg"><button id="mTap" class="on">Tap an organ</button><button id="mMeal">Follow a meal</button></div>
+      <div id="paneTap"><div class="list" id="list"></div></div>
+      <div id="paneMeal" style="display:none">
+        <div class="seg" id="mealSeg"></div>
+        <div class="slab"><span>Time since swallowing</span><b id="tval">0 s</b></div>
+        <input type="range" id="tSlider" min="0" max="1000" value="0" step="1" aria-label="time since swallowing">
+        <div class="ends"><span>swallow</span><span id="tmax"></span></div>
+        <div class="tlwrap"><svg viewBox="0 0 300 54" aria-label="transit timeline"><g id="tlart"></g></svg>
+          <div class="tlcap">Segment widths are compressed &mdash; the mouth and esophagus stages are seconds long and would otherwise vanish.</div></div>
+        <div class="pct"><i id="pctbar" style="width:0"></i></div>
+        <div class="row"><button class="btn" id="reset">↺ Restart</button><button class="btn solid" id="play">▶ Play</button></div>
+      </div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var O={
+  mouth:{nm:'Mouth',ct:'Chew · saliva · amylase',col:'#c98a2e',t:'sec–1 min',ph:'pH ~6–7',
+   mech:'Teeth grind food into a soft <b>bolus</b>. Cutting one lump into many small pieces multiplies the surface area enzymes can reach &mdash; this is why chewing matters more than it looks.',
+   chem:'Saliva (roughly <b>0.5–1.5 L a day</b>) lubricates and carries <b>salivary amylase</b>, which starts snipping starch into shorter chains. <b>Lingual lipase</b> makes a small start on fat; it matters most in infants.',
+   abs:'Essentially nothing is absorbed. A few medicines given under the tongue are the exception.',
+   key:'Digestion is already chemical, not just mechanical, before you swallow.'},
+  eso:{nm:'Esophagus',ct:'A muscular delivery tube',col:'#8a6a9a',t:'~8–12 sec',ph:'—',
+   mech:'Rings of muscle contract in sequence &mdash; <b>peristalsis</b> &mdash; and squeeze the bolus down in about ten seconds. It is not gravity: swallowing works lying flat. During the swallow the epiglottis folds over the airway.',
+   chem:'No enzymes are secreted here. Salivary amylase keeps working inside the bolus until stomach acid shuts it down.',
+   abs:'Nothing.',
+   key:'The <b>lower esophageal sphincter</b> is the gate to the stomach. When it relaxes at the wrong moment, acidic stomach contents move up &mdash; reflux.'},
+  stom:{nm:'Stomach',ct:'Acid bath and mixer',col:'#d1495b',t:'~2–4 h',ph:'pH ~1.5–3.5',
+   mech:'Muscular churning blends food with gastric juice into a soupy <b>chyme</b>. The <b>pylorus</b> then meters it into the small intestine in small squirts rather than all at once &mdash; the small intestine can only handle so much at a time.',
+   chem:'<b>Hydrochloric acid</b> unfolds protein and converts pepsinogen into <b>pepsin</b>, which begins protein digestion. <b>Gastric lipase</b> handles some fat. The acid also stops salivary amylase.',
+   abs:'Very little: some water, roughly <b>20% of any alcohol</b>, and a few drugs such as aspirin.',
+   key:'The stomach makes <b>intrinsic factor</b>, without which vitamin B12 cannot be absorbed later in the ileum. <span class="ev s">strong</span> That is why stomach surgery can cause a B12 problem years afterward.'},
+  liver:{nm:'Liver & gallbladder',ct:'Bile maker · bile store',col:'#9a6a3a',t:'accessory',ph:'bile pH ~7–8',
+   mech:'The gallbladder concentrates and stores bile, then squeezes when the hormone <b>CCK</b> is released &mdash; triggered by fat and protein arriving in the duodenum.',
+   chem:'Bile contains <b>no enzymes</b>. Bile salts are detergents: they break large fat globules into tiny droplets so water-soluble lipase can reach them. Without emulsification, fat digestion nearly stalls.',
+   abs:'Not an absorbing surface &mdash; but nearly everything absorbed by the intestine reaches the liver first through the <b>hepatic portal vein</b>, so the liver screens the meal before the rest of the body sees it.',
+   key:'Food never enters the liver or gallbladder. They pipe secretions into the tract.'},
+  panc:{nm:'Pancreas',ct:'The enzyme factory',col:'#2f6f9f',t:'accessory',ph:'raises duodenal pH to ~6–7',
+   mech:'Sits behind the stomach and empties into the duodenum through a duct shared with the bile duct.',
+   chem:'Roughly <b>1–1.5 L a day</b> of pancreatic juice: <b>bicarbonate</b> to neutralise the acid chyme, plus <b>amylase</b> (starch), <b>lipase</b> (fat) and protease precursors such as trypsinogen (protein). Pancreatic enzymes do most of the heavy chemical work of digestion.',
+   abs:'None. The pancreas also has an endocrine job &mdash; insulin and glucagon &mdash; but that acts after nutrients are absorbed, not inside the tract.',
+   key:'Neutralising acid is not housekeeping: pancreatic enzymes are inactive at stomach pH.'},
+  si:{nm:'Small intestine',ct:'Duodenum · jejunum · ileum',col:'#b07a1e',t:'~3–5 h',ph:'pH ~6–7.5',
+   mech:'About <b>6 m</b> long by anatomical measurement. <b>Segmentation</b> shuffles chyme back and forth against the wall, and <b>villi</b> and <b>microvilli</b> fold the surface into an enormous absorbing area.',
+   chem:'Bile emulsifies fat, pancreatic enzymes split the large molecules, and <b>brush-border enzymes</b> on the villi themselves &mdash; lactase, sucrase, maltase, peptidases &mdash; make the final cut into units small enough to cross the wall.',
+   abs:'<b>Over 90% of carbohydrate, protein and fat</b>, plus most vitamins and minerals. The terminal ileum is the one place that absorbs <b>vitamin B12</b> (bound to intrinsic factor) and reclaims about <b>95% of bile salts</b> for reuse.',
+   key:'Absorbed macronutrients supply <b>carbohydrate 4</b>, <b>protein 4</b>, <b>fat 9</b> and <b>alcohol 7 kcal per gram</b>. Surface area is often quoted as 250 m²; careful modern measurement puts it closer to <b>30 m²</b> <span class="ev p">figure debated</span> &mdash; either way, vast.'},
+  col:{nm:'Large intestine',ct:'Water recovery · fermentation',col:'#7a7f3a',t:'~10–59 h',ph:'pH ~5.5–7',
+   mech:'About <b>1.5 m</b> long. Slow mixing punctuated by <b>mass movements</b> a few times a day. Nothing arriving here still needs to be split by human enzymes.',
+   chem:'Your gut bacteria ferment what you could not digest &mdash; fibre and resistant starch &mdash; into <b>short-chain fatty acids</b> (acetate, propionate, butyrate) plus gas. Butyrate is the preferred fuel of the cells lining the colon. <span class="ev s">strong</span> Bacteria also make some vitamin K and biotin; how much of your requirement that covers is less certain. <span class="ev p">preliminary</span>',
+   abs:'<b>Water</b> &mdash; about 1–1.5 L a day, with reserve capacity up to roughly 4–5 L &mdash; plus sodium and other electrolytes.',
+   key:'Fibre <b>Adequate Intake</b> for adults: <b>25 g/day for women, 38 g/day for men</b> (about 14 g per 1,000 kcal), Institute of Medicine, 2005. An AI is a population reference point, not a personal target. Broader claims that particular microbiome patterns cause specific diseases remain an active research area. <span class="ev p">preliminary</span>'},
+  rect:{nm:'Rectum & anus',ct:'Storage · controlled release',col:'#8d7a5a',t:'variable',ph:'—',
+   mech:'Stool collects in the rectum; stretching the wall creates the urge. The internal sphincter is involuntary, the external sphincter voluntary &mdash; that pairing is what makes continence possible.',
+   chem:'None.',
+   abs:'A little water and some electrolytes; some medicines are given rectally for this reason.',
+   key:'Stool is roughly <b>75% water</b>. The solid quarter is bacteria, undigested fibre and shed intestinal cells &mdash; it is not simply leftover food.'}
+ };
+ var ORD=['mouth','eso','stom','liver','panc','si','col','rect'];
+
+ var MEAL=[
+  {nm:'Light liquid',sub:'water, little fat',mouth:0.5/60,eso:8/3600,stom:0.5,si:3,col:24,
+   note:'Liquids with little fat or protein leave the stomach fastest &mdash; water can start passing through within minutes.'},
+  {nm:'Mixed meal',sub:'~600 kcal, carb+protein+fat',mouth:1/60,eso:10/3600,stom:3,si:4,col:30,
+   note:'A typical mixed meal empties from the stomach over a few hours as the pylorus releases it in small amounts.'},
+  {nm:'Larger, higher-fat',sub:'bigger volume, more fat',mouth:1.5/60,eso:12/3600,stom:5,si:4.5,col:33,
+   note:'Fat arriving in the duodenum triggers CCK, which slows gastric emptying &mdash; so a larger or fattier meal sits in the stomach longer. This is normal physiology, not a fault of the meal.'}
+ ];
+ var STG=['mouth','eso','stom','si','col','rect'];
+ var STGNM=['Mouth','Esophagus','Stomach','Small intestine','Large intestine','Rectum'];
+ var STGTXT=[
+  'Chewing and salivary amylase. The bolus is being cut up and starch digestion has already begun.',
+  'Peristalsis carries the bolus down. Nothing is added and nothing is absorbed &mdash; this stretch is pure transport.',
+  'Churning with acid and pepsin. Protein digestion starts, amylase is switched off, and the pylorus releases chyme a little at a time.',
+  'The main event. Bile and pancreatic enzymes finish the breakdown and the villi absorb over 90% of the carbohydrate, protein and fat.',
+  'What is left is mostly fibre, water and bacteria. Water and electrolytes are reclaimed and gut bacteria ferment the fibre into short-chain fatty acids.',
+  'The residue is stored in the rectum until it is eliminated. Total mouth-to-toilet transit for adults is typically 24–72 h, with wide normal variation.'
+ ];
+
+ var mode=0, sel='', mi=1, tv=0, timer=null;
+
+ function plan(){var m=MEAL[mi];var d=[m.mouth,m.eso,m.stom,m.si,m.col];var c=[],s=0;
+  for(var i=0;i<5;i++){s+=d[i];c.push(s);} return {d:d,c:c,tot:s};}
+ function tnow(){var p=plan();return (p.tot+0.6)*Math.pow(tv/1000,2.2);}
+ function locate(t){var p=plan();
+  for(var i=0;i<5;i++){var st=i===0?0:p.c[i-1]; if(t<p.c[i]){return {i:i,f:(t-st)/p.d[i]};}}
+  return {i:5,f:Math.min(1,(t-p.tot)/0.6)};}
+ function fmt(h){ if(h<1/60){return Math.round(h*3600)+' s';}
+  if(h<2){var m=h*60; return (m<10?m.toFixed(1):Math.round(m))+' min';}
+  return h.toFixed(1)+' h';}
+
+ var PATH={
+  mouth:[[58,30]],
+  eso:[[80,48],[88,86],[95,122]],
+  stom:[[104,130],[128,138],[120,154],[100,162],[80,186]],
+  si:[[96,206],[138,224],[76,240],[140,258],[86,272]],
+  col:[[52,282],[52,210],[68,198],[152,198],[168,212],[168,274],[132,292],[112,300]],
+  rect:[[112,300],[112,314]]
+ };
+ function ptOn(k,f){var P=PATH[k]; if(P.length===1){return P[0];}
+  var L=[],tot=0,i;
+  for(i=1;i<P.length;i++){var dx=P[i][0]-P[i-1][0],dy=P[i][1]-P[i-1][1];var d=Math.sqrt(dx*dx+dy*dy);L.push(d);tot+=d;}
+  var want=Math.max(0,Math.min(1,f))*tot,acc=0;
+  for(i=0;i<L.length;i++){ if(acc+L[i]>=want||i===L.length-1){var r=L[i]?(want-acc)/L[i]:0; r=Math.max(0,Math.min(1,r));
+     return [P[i][0]+(P[i+1][0]-P[i][0])*r, P[i][1]+(P[i+1][1]-P[i][1])*r];}
+   acc+=L[i];}
+  return P[P.length-1];}
+
+ function tract(hi,mk){
+  var s='';
+  function op(k){ return hi?(k===hi?1:0.24):0.88; }
+  function halo(k,d,w){ return k===hi?'<path d="'+d+'" stroke="#4a3a22" stroke-width="'+(w+6)+'" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".22"/>':''; }
+  function rim(k){ return k===hi?' stroke="#4a3a22" stroke-width="2"':''; }
+
+  s+='<g class="rgn" data-k="liver" opacity="'+op('liver')+'">';
+  s+='<path d="M14 102 C36 90 76 90 96 100 L96 124 C74 138 34 138 16 126 Z" fill="'+O.liver.col+'"'+rim('liver')+'/>';
+  s+='<path d="M60 94 L58 130" stroke="#fffdf9" stroke-width="2" opacity=".5"/>';
+  s+='<ellipse cx="70" cy="137" rx="8" ry="11" fill="#3f8f5b"/>';
+  s+='<path d="M74 147 C80 156 84 162 88 170" stroke="#3f8f5b" stroke-width="3" fill="none"/></g>';
+
+  s+='<g class="rgn" data-k="panc" opacity="'+op('panc')+'">';
+  s+=halo('panc','M152 148 C130 160 108 170 88 176',12);
+  s+='<path d="M152 148 C130 160 108 170 88 176" stroke="'+O.panc.col+'" stroke-width="12" fill="none" stroke-linecap="round"/></g>';
+
+  var cd='M52 284 L52 210 C52 202 58 198 68 198 L152 198 C162 198 168 203 168 212 L168 274 C168 288 150 292 132 292 C120 292 112 294 112 300';
+  s+='<g class="rgn" data-k="col" opacity="'+op('col')+'">';
+  s+=halo('col',cd,13);
+  s+='<path d="'+cd+'" stroke="'+O.col.col+'" stroke-width="13" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+  s+='<circle cx="52" cy="286" r="10" fill="'+O.col.col+'"/></g>';
+
+  s+='<g class="rgn" data-k="rect" opacity="'+op('rect')+'">';
+  s+=halo('rect','M112 298 L112 313',14);
+  s+='<path d="M112 298 L112 313" stroke="'+O.rect.col+'" stroke-width="14" fill="none" stroke-linecap="round"/>';
+  s+='<path d="M104 318 L120 318" stroke="'+O.rect.col+'" stroke-width="4" stroke-linecap="round"/></g>';
+
+  var sd='M96 206 C120 206 140 214 138 224 C136 234 78 228 76 240 C74 252 142 246 140 258 C138 270 88 264 86 272 C80 278 66 280 58 281';
+  s+='<g class="rgn" data-k="si" opacity="'+op('si')+'">';
+  s+=halo('si',sd,10);
+  s+='<path d="'+sd+'" stroke="'+O.si.col+'" stroke-width="10" fill="none" stroke-linecap="round"/>';
+  s+='<path d="M80 186 C86 194 90 200 96 206" stroke="'+O.si.col+'" stroke-width="10" fill="none" stroke-linecap="round"/></g>';
+
+  s+='<g class="rgn" data-k="stom" opacity="'+op('stom')+'">';
+  s+='<ellipse cx="120" cy="142" rx="34" ry="27" transform="rotate(-22 120 142)" fill="'+O.stom.col+'"'+rim('stom')+'/>';
+  s+='<path d="M100 160 C94 172 88 180 80 186" stroke="'+O.stom.col+'" stroke-width="11" fill="none" stroke-linecap="round"/>';
+  s+='<path d="M108 128 C120 136 126 148 122 160" stroke="#fffdf9" stroke-width="2.5" fill="none" opacity=".45"/></g>';
+
+  s+='<g class="rgn" data-k="eso" opacity="'+op('eso')+'">';
+  s+=halo('eso','M80 46 C82 80 84 100 95 124',13);
+  s+='<path d="M80 46 C82 80 84 100 95 124" stroke="'+O.eso.col+'" stroke-width="13" fill="none" stroke-linecap="round"/></g>';
+
+  s+='<g class="rgn" data-k="mouth" opacity="'+op('mouth')+'">';
+  s+='<ellipse cx="58" cy="30" rx="28" ry="18" fill="'+O.mouth.col+'"'+rim('mouth')+'/>';
+  s+='<path d="M34 26 q24 -13 48 0" stroke="#fffdf9" stroke-width="4" fill="none" opacity=".6"/>';
+  s+='<ellipse cx="56" cy="37" rx="15" ry="6" fill="#fffdf9" opacity=".3"/></g>';
+
+  if(mk){ var p=ptOn(mk.k,mk.f);
+   s+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="11" fill="#33291a" opacity=".13"/>';
+   s+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="6.5" fill="#33291a"/>';
+   s+='<circle cx="'+(p[0]-2).toFixed(1)+'" cy="'+(p[1]-2).toFixed(1)+'" r="2" fill="#fffdf9" opacity=".65"/>'; }
+  return s;}
+
+ function bindRgn(){ var n=document.querySelectorAll('#art .rgn');
+  for(var i=0;i<n.length;i++){ n[i].onclick=function(){ var k=this.getAttribute('data-k');
+    if(mode===1){ var si=STG.indexOf(k);
+      if(si>=0){ var p=plan(); var st=si===0?0:(si<5?p.c[si-1]:p.tot); var en=si<5?p.c[si]:p.tot+0.6;
+        setT(st+(en-st)*0.5); return; }
+      mode=0; setMode(); }
+    sel=k; renderTap(); }; } }
+
+ function info(k){var o=O[k];
+  return '<span class="n">'+o.nm+'</span><b>Mechanical:</b> '+o.mech+
+   '<div class="dd"><b>Chemical:</b> '+o.chem+'</div>'+
+   '<div class="loc"><b>Absorbed here:</b> '+o.abs+'</div>'+
+   '<div class="org"><span>time here: '+o.t+'</span><span>'+o.ph+'</span></div>'+
+   '<div class="mnem">'+o.key+'</div>';}
+
+ function list(){ var h='';
+  for(var i=0;i<ORD.length;i++){ var k=ORD[i],o=O[k];
+   h+='<button class="it'+(k===sel?' on':'')+'" data-k="'+k+'"><span class="sw" style="background:'+o.col+'"></span>'+
+      '<span class="nm">'+o.nm+'<small>'+o.ct+'</small></span><span class="s">'+o.t+'</span></button>'; }
+  $("list").innerHTML=h;
+  var n=document.querySelectorAll('#list .it');
+  for(var j=0;j<n.length;j++){ n[j].onclick=function(){ sel=this.getAttribute('data-k'); renderTap(); }; } }
+
+ function renderTap(){ $("art").innerHTML=tract(sel,null); bindRgn(); list();
+  if(!sel){ $("cardTitle").innerHTML='The digestive tract';
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='Mouth to colon<small>tap an organ to begin</small>';
+   $("info").innerHTML='<span class="n">One tube, many jobs</span>The tract itself runs mouth &rarr; esophagus &rarr; stomach &rarr; small intestine &rarr; large intestine &rarr; rectum. The <b>liver, gallbladder and pancreas</b> are accessory organs: food never passes through them, but they pipe in bile and enzymes without which digestion barely works.<div class="dd">Anything still in the tube is technically <b>outside</b> the body &mdash; a nutrient only counts as taken in once it crosses the intestinal wall.</div>';
+   $("cap").innerHTML='Anterior view &mdash; the patient\'s right side is on your left. Tap any organ in the diagram.';
+   return; }
+  var o=O[sel];
+  $("cardTitle").innerHTML=o.nm; $("stage").style.background=o.col;
+  $("stage").innerHTML=o.nm+'<small>'+o.ct+'</small>';
+  $("info").innerHTML=info(sel);
+  $("cap").innerHTML='Highlighted: <b>'+o.nm+'</b>. Diagram is schematic, not to scale.'; }
+
+ function tl(t){ var p=plan(), i, w=[], sum=0;
+  for(i=0;i<5;i++){ w.push(Math.pow(p.d[i],0.25)); sum+=w[i]; }
+  var x=6, out='', L=locate(t), mx=6;
+  for(i=0;i<5;i++){ var ww=w[i]/sum*288, k=STG[i];
+   out+='<rect x="'+x.toFixed(1)+'" y="20" width="'+(ww-2).toFixed(1)+'" height="18" rx="4" fill="'+O[k].col+'" opacity="'+(L.i===i?1:0.32)+'"/>';
+   if(ww>=30){ out+='<text x="'+(x+ww/2-1).toFixed(1)+'" y="50" font-size="8" text-anchor="middle" fill="'+(L.i===i?'#5f5340':'#8d8270')+'" font-weight="'+(L.i===i?800:700)+'" font-family="Inter,sans-serif">'+fmt(p.d[i])+'</text>'; }
+   if(L.i===i){ mx=x+(ww-2)*Math.max(0,Math.min(1,L.f)); }
+   if(L.i===5){ mx=294; }
+   x+=ww; }
+  out+='<path d="M'+mx.toFixed(1)+' 4 L'+(mx-5).toFixed(1)+' 13 L'+(mx+5).toFixed(1)+' 13 Z" fill="#33291a"/>';
+  out+='<rect x="'+(mx-0.9).toFixed(1)+'" y="13" width="1.8" height="26" fill="#33291a"/>';
+  $("tlart").innerHTML=out; }
+
+ function segs(){ var h='';
+  for(var i=0;i<MEAL.length;i++){ h+='<button data-i="'+i+'"'+(i===mi?' class="on"':'')+'>'+MEAL[i].nm+'<small>'+MEAL[i].sub+'</small></button>'; }
+  $("mealSeg").innerHTML=h;
+  var n=$("mealSeg").getElementsByTagName('button');
+  for(var j=0;j<n.length;j++){ n[j].onclick=function(){ mi=parseInt(this.getAttribute('data-i'),10); segs(); renderMeal(); }; } }
+
+ function setT(hours){ var p=plan(); var f=Math.max(0,Math.min(1,hours/(p.tot+0.6)));
+  tv=Math.round(Math.pow(f,1/2.2)*1000); $("tSlider").value=tv; renderMeal(); }
+
+ function renderMeal(){ var p=plan(), t=tnow(), L=locate(t), k=STG[L.i];
+  $("art").innerHTML=tract(k,{k:k,f:L.f}); bindRgn();
+  $("tval").innerHTML=fmt(t);
+  $("tmax").innerHTML='≈'+Math.round(p.tot)+' h (typical)';
+  $("cardTitle").innerHTML=STGNM[L.i];
+  $("stage").style.background=O[k].col;
+  $("stage").innerHTML=STGNM[L.i]+'<small>'+fmt(t)+' after swallowing · '+MEAL[mi].nm.toLowerCase()+'</small>';
+  $("cap").innerHTML='The dot is the meal. Tap an organ to jump the clock to that stage.';
+  var pct=Math.min(100,Math.round(t/p.tot*100));
+  $("pctbar").style.width=pct+'%';
+  var extra = L.i===5 ? '' : '<div class="dd2"><b>Still to come:</b> '+fmt(p.tot-t)+' before elimination, on these typical values.</div>';
+  $("info").innerHTML='<span class="n">'+STGNM[L.i]+' &middot; '+fmt(t)+'</span>'+STGTXT[L.i]+
+   extra+
+   '<div class="loc">'+MEAL[mi].note+'</div>'+
+   '<div class="org"><span>'+pct+'% of the journey</span><span>this stage: '+(L.i<5?fmt(p.d[L.i]):'variable')+'</span></div>'+
+   '<div class="mnem">These are <b>typical adult values</b>, not a schedule. Transit varies a great deal between people and from day to day with meal size, fibre, fluid, activity, medicines, hormones and health conditions &mdash; a faster or slower gut is not a better or worse one.</div>'; }
+
+ function stop(){ if(timer){clearInterval(timer);timer=null;} $("play").innerHTML='▶ Play'; }
+ $("play").onclick=function(){ if(timer){stop();return;}
+  if(tv>=1000){tv=0;}
+  $("play").innerHTML='❚❚ Pause';
+  timer=setInterval(function(){ tv+=6; if(tv>=1000){tv=1000;stop();}
+   $("tSlider").value=tv; renderMeal(); },40); };
+ $("reset").onclick=function(){ stop(); tv=0; $("tSlider").value=0; renderMeal(); };
+ $("tSlider").oninput=function(){ stop(); tv=parseInt(this.value,10); renderMeal(); };
+
+ function setMode(){ stop();
+  $("mTap").className=mode===0?'on':''; $("mMeal").className=mode===1?'on':'';
+  $("paneTap").style.display=mode===0?'':'none';
+  $("paneMeal").style.display=mode===1?'':'none';
+  if(mode===0){ renderTap(); } else { segs(); renderMeal(); } }
+ $("mTap").onclick=function(){ mode=0; setMode(); };
+ $("mMeal").onclick=function(){ mode=1; setMode(); };
+
+ setMode();
+})();
+</script>
+</body>
+</html>

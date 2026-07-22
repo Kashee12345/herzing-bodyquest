@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Parallel and Perpendicular</title>
+<meta name="description" content="Drag one line around the coordinate plane and watch its parallel and perpendicular partners follow. Includes a geometric proof of the negative-reciprocal rule and a step-by-step machine for finding both partner lines through a given point.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;--par:#2f9e5b;--per:#d1495b;}
+.wrap{grid-template-columns:0.96fr 1.04fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.modeseg button{font-size:12.5px;padding:10px 4px;line-height:1.25;}
+.modeseg button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:2px;}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+#plane{touch-action:none;cursor:grab;}
+#plane.locked{cursor:default;}
+#stage .big{font-family:var(--math);font-size:25px;font-weight:700;letter-spacing:.4px;}
+/* HTML-only fractions — there is no math renderer on this page */
+.fr{display:inline-flex;flex-direction:column;vertical-align:-0.52em;text-align:center;margin:0 3px;}
+.fr .fn{border-bottom:1.7px solid currentColor;padding:0 4px 1px;line-height:1.16;}
+.fr .fd{padding:1px 4px 0;line-height:1.16;}
+.why{font-family:var(--math);font-size:14.5px;color:var(--teal-dk);text-align:center;background:#f1f2f9;border:1px solid var(--line);border-radius:9px;padding:10px 10px;margin-top:11px;line-height:1.85;}
+.why em{font-family:var(--sans);font-style:normal;font-size:10.5px;font-weight:800;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.why .sm{font-size:12.5px;color:var(--soft);}
+.slopes{margin-top:4px;}
+.sl{display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:1px dashed var(--line);}
+.sl:last-child{border-bottom:none;}
+.sl i{width:12px;height:12px;border-radius:3px;flex:none;}
+.sl .k{font-size:9.6px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);width:66px;flex:none;line-height:1.2;}
+.sl .v{font-family:var(--math);font-size:17px;color:var(--ink);font-weight:600;white-space:nowrap;}
+.sl .e{margin-left:auto;font-family:var(--math);font-size:13.5px;color:var(--soft);text-align:right;padding-left:8px;}
+.sldgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 15px;}
+.sld{margin-top:11px;}
+.sld .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:1px;}
+.sld .lab b{font-family:var(--math);font-size:19px;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+.ptcap{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;display:flex;align-items:center;gap:7px;}
+.ptcap i{width:11px;height:11px;border-radius:50%;flex:none;font-style:normal;}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;display:block;}
+input[type=range]:focus{outline:none;}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);margin-top:-8px;}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);}
+#p2b input[type=range]::-webkit-slider-thumb{background:var(--gold);}
+#p2b input[type=range]::-moz-range-thumb{background:var(--gold);}
+#offbox input[type=range]::-webkit-slider-thumb{background:var(--par);}
+#offbox input[type=range]::-moz-range-thumb{background:var(--par);}
+#offbox .lab b{color:#1d6b3c;}
+.hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:11px;line-height:1.5;}
+#presets .it{display:block;text-align:left;}
+#presets .it .nm,#presets .it .s{display:block;}
+#presets .it .s{font-family:var(--math);margin-top:1px;}
+.seg button{font-size:11.5px;padding:9px 3px;}
+.seg button small{font-family:var(--math);font-size:10px;}
+@media (max-width:600px){
+  #picker{display:grid;grid-template-columns:1fr;}
+  .seg button{font-size:12px;padding:10px 6px;}
+  .sl .e{display:none;}
+}
+#mb{min-height:150px;margin-top:12px;}
+.dl{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:7px 2px;border-bottom:1px dashed var(--line);}
+.dl:last-child{border-bottom:none;}
+.mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.55;}
+.mx sub{font-size:.62em;vertical-align:sub;}
+.dl.cur .mx{font-size:18px;color:var(--ink);font-weight:600;}
+.pl{flex:none;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);white-space:nowrap;}
+.dl.cur .pl{color:var(--gold);}
+.tg{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.dl:not(.cur) .tg{background:transparent;box-shadow:none;padding:0;}
+.ok{border-radius:4px;padding:1px 5px;background:#dff0e4;box-shadow:inset 0 0 0 1.5px #a6d3b4;}
+.dl:not(.cur) .ok{background:transparent;box-shadow:none;padding:0;}
+.exlab{font-size:12.5px;color:var(--soft);margin-top:11px;line-height:1.6;border-top:1px solid var(--line);padding-top:10px;}
+.exlab b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 3</div>
+  <h1>Parallel and Perpendicular</h1>
+  <div class="intro">Two lines can relate to each other in exactly two special ways: they can run alongside each other forever, or they can cross at a square corner. Both relationships live entirely in the <b>slope</b> &mdash; one copies it, the other turns it a quarter turn. Drag the indigo line below and watch its two partners follow.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="artTitle">One line and its two partners</h2>
+      <svg id="plane" viewBox="0 0 250 250" aria-label="a draggable line on the coordinate plane with its parallel and perpendicular partner lines"><g id="art"></g></svg>
+      <div class="why" id="why"></div>
+    </div>
+    <div class="card"><h2>The two rules, and the one exception</h2>
+      <svg viewBox="0 0 250 132" aria-label="left panel: two parallel lines with identical slope triangles; right panel: two perpendicular lines meeting at a right angle">
+        <rect x="0" y="0" width="250" height="132" fill="#fbfbfe"/>
+        <line x1="124" y1="10" x2="124" y2="124" stroke="#e0e2ef" stroke-width="1"/>
+        <text x="62" y="22" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="800" fill="#7d7f94">PARALLEL</text>
+        <text x="187" y="22" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="800" fill="#7d7f94">PERPENDICULAR</text>
+        <polygon points="14,84 62,84 62,68" fill="#43458f" opacity=".13"/>
+        <polygon points="14,110 62,110 62,94" fill="#2f9e5b" opacity=".13"/>
+        <line x1="10" y1="85.33" x2="114" y2="50.67" stroke="#43458f" stroke-width="2.4"/>
+        <line x1="10" y1="111.33" x2="114" y2="76.67" stroke="#2f9e5b" stroke-width="2.4"/>
+        <line x1="14" y1="84" x2="62" y2="84" stroke="#2f6f9f" stroke-width="2"/>
+        <line x1="62" y1="84" x2="62" y2="68" stroke="#d1495b" stroke-width="2"/>
+        <line x1="14" y1="110" x2="62" y2="110" stroke="#2f6f9f" stroke-width="2"/>
+        <line x1="62" y1="110" x2="62" y2="94" stroke="#d1495b" stroke-width="2"/>
+        <text x="38" y="80" text-anchor="middle" font-family="Georgia,serif" font-size="8.5" font-weight="700" fill="#2f6f9f">3</text>
+        <text x="66" y="79" text-anchor="start" font-family="Georgia,serif" font-size="8.5" font-weight="700" fill="#d1495b">1</text>
+        <text x="38" y="106" text-anchor="middle" font-family="Georgia,serif" font-size="8.5" font-weight="700" fill="#2f6f9f">3</text>
+        <text x="66" y="105" text-anchor="start" font-family="Georgia,serif" font-size="8.5" font-weight="700" fill="#d1495b">1</text>
+        <text x="62" y="128" text-anchor="middle" font-family="Georgia,serif" font-size="10" font-weight="700" fill="#262a5c">same 1/3 &#183; never meet</text>
+        <line x1="138" y1="102" x2="234" y2="54" stroke="#43458f" stroke-width="2.4"/>
+        <line x1="168" y1="42" x2="204" y2="114" stroke="#d1495b" stroke-width="2.4"/>
+        <path d="M186 78 L194.9 73.5 L199.4 82.5 L190.5 87" fill="none" stroke="#7d7f94" stroke-width="1.2"/>
+        <circle cx="186" cy="78" r="3.2" fill="#262a5c"/>
+        <text x="228" y="48" text-anchor="end" font-family="Georgia,serif" font-size="10" font-weight="700" fill="#43458f">m = 1/2</text>
+        <text x="209" y="110" text-anchor="start" font-family="Georgia,serif" font-size="10" font-weight="700" fill="#d1495b">&#8722;2</text>
+        <text x="187" y="128" text-anchor="middle" font-family="Georgia,serif" font-size="10" font-weight="700" fill="#262a5c">(1/2)(&#8722;2) = &#8722;1</text>
+      </svg>
+      <div class="mnem"><b>Parallel means: copy the slope, change the intercept.</b> Two lines are parallel exactly when <i>m</i><sub>1</sub> = <i>m</i><sub>2</sub> <b>and</b> <i>b</i><sub>1</sub> &ne; <i>b</i><sub>2</sub>. That second half matters &mdash; if the intercepts match too, you have not drawn two parallel lines, you have drawn the same line twice.<br><br><b>Perpendicular means: flip the fraction and change the sign.</b> Two lines meet at a square corner exactly when <i>m</i><sub>1</sub> &middot; <i>m</i><sub>2</sub> = &minus;1, which is the same as saying <i>m</i><sub>2</sub> = &minus;1 &divide; <i>m</i><sub>1</sub>. Slope <sup>2</sup>&frasl;<sub>3</sub> pairs with &minus;<sup>3</sup>&frasl;<sub>2</sub>; slope 5 pairs with &minus;<sup>1</sup>&frasl;<sub>5</sub>.</div>
+      <div class="note"><b>The exception nobody warns you about.</b> The product rule needs both slopes to exist and to be nonzero. A <b>horizontal</b> line has <i>m</i> = 0, and &minus;1 &divide; 0 is <b>undefined</b> &mdash; so the formula simply refuses to answer. A <b>vertical</b> line has no slope at all, so it cannot be multiplied by anything. Yet horizontal and vertical lines obviously do meet at a perfect right angle. That pair is genuinely perpendicular; it is just the one pair you must recognize by sight instead of by arithmetic.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage"><span class="big"><i>m</i> = 0</span><small>drag the line to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="modes">
+        <button data-m="0" class="on">Drag the line<small>partners follow</small></button>
+        <button data-m="1">Why &minus;1&#8725;<i>m</i><small>the quarter turn</small></button>
+        <button data-m="2">Do the arithmetic<small>step by step</small></button>
+      </div>
+
+      <div id="p0">
+        <div class="slopes" id="slopes"></div>
+        <div class="ptcap"><i style="background:#43458f"></i>Anchor point &mdash; the corner where the right angle sits</div>
+        <div class="sldgrid">
+          <div class="sld">
+            <div class="lab"><span><i>x</i><sub>1</sub></span><b id="o_x1">&minus;1</b></div>
+            <input type="range" id="r_x1" min="-6" max="6" step="1" value="-1" aria-label="x coordinate of the anchor point">
+          </div>
+          <div class="sld">
+            <div class="lab"><span><i>y</i><sub>1</sub></span><b id="o_y1">&minus;1</b></div>
+            <input type="range" id="r_y1" min="-6" max="6" step="1" value="-1" aria-label="y coordinate of the anchor point">
+          </div>
+        </div>
+        <div class="ptcap"><i style="background:#b8862f"></i>Direction point &mdash; sets which way the line leans</div>
+        <div class="sldgrid" id="p2b">
+          <div class="sld">
+            <div class="lab"><span><i>x</i><sub>2</sub></span><b id="o_x2">3</b></div>
+            <input type="range" id="r_x2" min="-6" max="6" step="1" value="3" aria-label="x coordinate of the direction point">
+          </div>
+          <div class="sld">
+            <div class="lab"><span><i>y</i><sub>2</sub></span><b id="o_y2">2</b></div>
+            <input type="range" id="r_y2" min="-6" max="6" step="1" value="2" aria-label="y coordinate of the direction point">
+          </div>
+        </div>
+        <div class="sld" id="offbox">
+          <div class="lab"><span>Slide the parallel partner away</span><b id="o_off">3</b></div>
+          <input type="range" id="r_off" min="-6" max="6" step="1" value="3" aria-label="how far the parallel partner is shifted from the original line">
+        </div>
+        <div class="grid" id="presets" style="margin-top:12px"></div>
+        <div class="hint">Drag either dot straight on the grid, or nudge a slider with the arrow keys.</div>
+      </div>
+
+      <div id="p1" style="display:none">
+        <div id="rb"></div>
+      </div>
+
+      <div id="p2" style="display:none">
+        <div class="seg" id="picker"></div>
+        <div id="mb"></div>
+        <div class="exlab" id="exlab"></div>
+      </div>
+
+      <div id="info"></div>
+      <div class="note" id="note" style="display:none"></div>
+      <div class="row" id="nav" style="display:none"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var INK='#22243a', MUT='#7d7f94', LINE='#e0e2ef', TEAL='#43458f', TDK='#262a5c',
+     GOLD='#b8862f', CORAL='#d1495b', BLUE='#2f6f9f', GREEN='#2f9e5b', PURP='#7a5a8a',
+     PALE='#c6c9de', CARD='#fffdf9';
+ var MIN='&#8722;';
+ var PERP='<i>m</i><sub>&#8869;</sub>', PARA='<i>m</i><sub>&#8741;</sub>';
+
+ /* ---------------- formatting: HTML only, never LaTeX ---------------- */
+ function h(n){ return n<0 ? '&minus;'+(-n) : ''+n; }
+ function sv(n){ return n<0 ? MIN+(-n) : ''+n; }
+ function pair(x,y){ return '('+h(x)+', '+h(y)+')'; }
+ function par(n){ return n<0 ? '(&minus;'+(-n)+')' : ''+n; }
+ function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=a%b; a=b; b=t; } return a; }
+ function fr(n,d){ return '<span class="fr"><span class="fn">'+n+'</span><span class="fd">'+d+'</span></span>'; }
+ function tg(s){ return '<span class="tg">'+s+'</span>'; }
+ function ok(s){ return '<span class="ok">'+s+'</span>'; }
+
+ /* exact rational arithmetic so no displayed number is ever a rounded one */
+ function rat(n,d){
+   if(d<0){ n=-n; d=-d; }
+   if(n===0) return {n:0,d:1};
+   var g=gcd(n,d)||1;
+   return {n:n/g, d:d/g};
+ }
+ function ratTxt(r){
+   if(r.n===0) return '0';
+   if(r.d===1) return h(r.n);
+   return (r.n<0?'&minus;':'')+fr(Math.abs(r.n), r.d);
+ }
+ function ratVal(r){ return r.n/r.d; }
+ /* intercept of the line through (x0,y0) with slope m, kept exact */
+ function bOf(m,x0,y0){ return rat(y0*m.d - m.n*x0, m.d); }
+ function eqTxt(m,b){
+   if(m.n===0) return '<i>y</i> = '+ratTxt(b);
+   var s='<i>y</i> = ';
+   if(m.n===1 && m.d===1) s+='<i>x</i>';
+   else if(m.n===-1 && m.d===1) s+='&minus;<i>x</i>';
+   else s+=ratTxt(m)+'<i>x</i>';
+   if(b.n!==0) s += (b.n<0?' &minus; ':' + ') + ratTxt({n:Math.abs(b.n),d:b.d});
+   return s;
+ }
+
+ /* ---------------- world -> screen ---------------- */
+ var R=6, U=18, X0=125, Y0=125;
+ function sx(x){ return X0 + U*x; }
+ function sy(y){ return Y0 - U*y; }
+
+ function linePath(x0,y0,m){
+   var d='', pen=false, N=400, i, x, y;
+   for(i=0;i<=N;i++){
+     x = -R + i*(2*R/N);
+     y = y0 + m*(x-x0);
+     if(y>=-R-1e-9 && y<=R+1e-9){
+       d += (pen?'L':'M') + sx(x).toFixed(2) + ' ' + sy(y).toFixed(2) + ' ';
+       pen = true;
+     } else { pen = false; }
+   }
+   return d;
+ }
+ function halo(x,y,anch,size,col,txt){
+   return '<text x="'+x+'" y="'+y+'" text-anchor="'+anch+'" font-family="Georgia,serif" font-size="'+size+
+          '" font-weight="700" fill="'+col+'" stroke="'+CARD+'" stroke-width="3.2" paint-order="stroke" stroke-linejoin="round">'+txt+'</text>';
+ }
+ function hArrow(x1,x2,y,col,w){
+   if(Math.abs(x2-x1)<1) return '';
+   var dir=(x2>x1)?1:-1, e=x2-dir*6;
+   return '<line x1="'+x1+'" y1="'+y+'" x2="'+e.toFixed(1)+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"/>'+
+          '<polygon points="'+x2.toFixed(1)+','+y+' '+e.toFixed(1)+','+(y-4.4)+' '+e.toFixed(1)+','+(y+4.4)+'" fill="'+col+'"/>';
+ }
+ function vArrow(x,y1,y2,col,w){
+   if(Math.abs(y2-y1)<1) return '';
+   var dir=(y2>y1)?1:-1, e=y2-dir*6;
+   return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+e.toFixed(1)+'" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"/>'+
+          '<polygon points="'+x+','+y2.toFixed(1)+' '+(x-4.4)+','+e.toFixed(1)+' '+(x+4.4)+','+e.toFixed(1)+'" fill="'+col+'"/>';
+ }
+ function grid(){
+   var s='<rect x="17" y="17" width="216" height="216" fill="#fbfbfe"/>', i;
+   for(i=-R;i<=R;i++){
+     s+='<line x1="'+sx(i)+'" y1="17" x2="'+sx(i)+'" y2="233" stroke="'+LINE+'" stroke-width="0.8"/>';
+     s+='<line x1="17" y1="'+sy(i)+'" x2="233" y2="'+sy(i)+'" stroke="'+LINE+'" stroke-width="0.8"/>';
+   }
+   s+='<line x1="14" y1="'+Y0+'" x2="236" y2="'+Y0+'" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<line x1="'+X0+'" y1="14" x2="'+X0+'" y2="236" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<polygon points="241,125 233,121 233,129" fill="'+INK+'"/><polygon points="9,125 17,121 17,129" fill="'+INK+'"/>';
+   s+='<polygon points="125,9 121,17 129,17" fill="'+INK+'"/><polygon points="125,241 121,233 129,233" fill="'+INK+'"/>';
+   s+='<text x="237" y="116" text-anchor="end" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">x</text>';
+   s+='<text x="133" y="17" text-anchor="start" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">y</text>';
+   var T=[-6,-4,-2,2,4,6];
+   for(i=0;i<T.length;i++){
+     s+='<text x="'+sx(T[i])+'" y="'+(Y0+11.5)+'" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="'+PALE+'">'+sv(T[i])+'</text>';
+     s+='<text x="'+(X0-5)+'" y="'+(sy(T[i])+3)+'" text-anchor="end" font-family="Georgia,serif" font-size="8" fill="'+PALE+'">'+sv(T[i])+'</text>';
+   }
+   return s;
+ }
+
+ /* a line is {vert:true,x:c} or {vert:false,m:slope,x0:,y0:} */
+ function VL(c){ return {vert:true, x:c}; }
+ function SL(m,x0,y0){ return {vert:false, m:m, x0:x0, y0:y0}; }
+ function drawLine(L,col,w,dash){
+   var da = dash ? ' stroke-dasharray="'+dash+'"' : '';
+   if(L.vert) return '<line x1="'+sx(L.x)+'" y1="17" x2="'+sx(L.x)+'" y2="233" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"'+da+'/>';
+   return '<path d="'+linePath(L.x0,L.y0,L.m)+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"'+da+'/>';
+ }
+ function labelLine(L,col,txt,prefX){
+   var cands=[prefX, 4.1, 2.1, 0, -2.1, -4.1], i, x, y;
+   if(L.vert){
+     y = 5.2;
+     var lx = Math.max(30, Math.min(220, sx(L.x)));
+     return halo(lx, sy(y), 'middle', 10, col, txt);
+   }
+   for(i=0;i<cands.length;i++){
+     x = cands[i];
+     if(x===undefined || x<-R || x>R) continue;
+     y = L.m*(x-L.x0)+L.y0;
+     if(y>-R+0.45 && y<R-0.45){
+       return halo(Math.max(30,Math.min(220,sx(x))), sy(y)-7, 'middle', 10, col, txt);
+     }
+   }
+   return '';
+ }
+ function rightAngle(px,py,dx,dy,size,col){
+   var n=Math.hypot(dx,dy); if(n===0) return '';
+   var ux=dx/n, uy=dy/n, vx=-uy, vy=ux, s=size;
+   return '<path d="M'+(px+ux*s).toFixed(1)+' '+(py+uy*s).toFixed(1)+
+          ' L'+(px+ux*s+vx*s).toFixed(1)+' '+(py+uy*s+vy*s).toFixed(1)+
+          ' L'+(px+vx*s).toFixed(1)+' '+(py+vy*s).toFixed(1)+'" fill="none" stroke="'+col+'" stroke-width="1.4"/>';
+ }
+ function dot(px,py,col,lab,labdy){
+   var s='';
+   if(lab) s+=halo(Math.max(28,Math.min(222,px)), py+(labdy||-13), 'middle', 10.5, col, lab.replace(/&minus;/g,MIN));
+   s+='<circle cx="'+px+'" cy="'+py+'" r="6.5" fill="'+col+'" stroke="#fff" stroke-width="2"/>';
+   return s;
+ }
+
+ /* ---------------- state ---------------- */
+ var P={x1:-1,y1:-1,x2:3,y2:2}, off=3;
+ var HOME={x1:-1,y1:-1,x2:3,y2:2,off:3};
+ var mode=0, rstep=0, exi=0, estep=0, drag=null;
+
+ function riseOf(){ return P.y2-P.y1; }
+ function runOf(){ return P.x2-P.x1; }
+ /* how far the parallel partner may be pushed and still show a point on screen */
+ function offRange(){
+   var base = (runOf()===0) ? P.x1 : P.y1;
+   return {lo:-R-base, hi:R-base};
+ }
+ function offEff(){ var r=offRange(); return Math.max(r.lo, Math.min(r.hi, off)); }
+
+ /* ---------------- MODE 0: the live plane ---------------- */
+ function art0(){
+   var x1=P.x1,y1=P.y1, rise=riseOf(), run=runOf(), k=offEff();
+   var s=grid();
+   var base, para, perp, mB=null, mP=null;
+
+   if(run===0){                       /* the original line is vertical */
+     base=VL(x1); para=VL(x1+k); perp=SL(0,x1,y1); mP=rat(0,1);
+   } else if(rise===0){               /* the original line is horizontal */
+     mB=rat(0,1); base=SL(0,x1,y1); para=SL(0,x1,y1+k); perp=VL(x1);
+   } else {
+     mB=rat(rise,run); mP=rat(-run,rise);
+     base=SL(ratVal(mB),x1,y1);
+     para=SL(ratVal(mB),x1,y1+k);
+     perp=SL(ratVal(mP),x1,y1);
+   }
+
+   s+=drawLine(para, GREEN, 2.6, '');
+   s+=drawLine(perp, CORAL, 2.6, '');
+   s+=drawLine(base, TEAL, 2.9, '');
+
+   /* the slope triangle that defines the original line */
+   var ax=sx(x1), ay=sy(y1), bx=sx(P.x2), by=sy(P.y2), cx=sx(P.x2), cy=sy(y1);
+   if(rise!==0 && run!==0){
+     s+='<polygon points="'+ax+','+ay+' '+cx+','+cy+' '+bx+','+by+'" fill="'+TEAL+'" opacity=".10"/>';
+   }
+   s+=hArrow(ax,cx,cy,BLUE,2.8);
+   s+=vArrow(cx,cy,by,CORAL,2.8);
+   if(run!==0){
+     var ly=(rise>0 ? cy+14 : cy-8); if(ly<26) ly=cy+14; if(ly>232) ly=cy-8;
+     s+=halo(Math.max(30,Math.min(220,(ax+cx)/2)), ly, 'middle', 9.5, BLUE, 'run '+sv(run));
+   }
+   if(rise!==0){
+     var right=(cx<188), tx=cx+(right?8:-8), ty=(cy+by)/2+3.5;
+     s+=halo(tx, Math.max(26,Math.min(230,ty)), right?'start':'end', 9.5, CORAL, 'rise '+sv(rise));
+   }
+
+   /* the square corner where the perpendicular crosses, drawn at the anchor */
+   s+=rightAngle(ax, ay, U*run, -U*rise, 9.5, MUT);
+
+   s+=labelLine(para, GREEN, 'parallel', undefined);
+   s+=labelLine(perp, CORAL, 'perpendicular', undefined);
+   s+=dot(bx,by,GOLD,pair(P.x2,P.y2), (by>44?-12:20));
+   s+=dot(ax,ay,TEAL,pair(x1,y1), (ay>44?-12:20));
+   return {svg:s, mB:mB, mP:mP, base:base, para:para, perp:perp, k:k};
+ }
+
+ function render0(){
+   var A=art0(); $("art").innerHTML=A.svg;
+   var rise=riseOf(), run=runOf(), k=A.k, x1=P.x1, y1=P.y1;
+   var vertical=(run===0), horizontal=(rise===0 && run!==0);
+
+   /* --- the three slopes, side by side --- */
+   var rows='';
+   function row(col,name,val,eq){
+     return '<div class="sl"><i style="background:'+col+'"></i><span class="k">'+name+'</span>'+
+            '<span class="v">'+val+'</span><span class="e">'+eq+'</span></div>';
+   }
+   if(vertical){
+     rows+=row(TEAL,'Original','<i>m</i> undefined','<i>x</i> = '+h(x1));
+     rows+=row(GREEN,'Parallel',PARA+' undefined','<i>x</i> = '+h(x1+k));
+     rows+=row(CORAL,'Perpend.',PERP+' = 0', eqTxt(rat(0,1), rat(y1,1)));
+   } else if(horizontal){
+     rows+=row(TEAL,'Original','<i>m</i> = 0', eqTxt(rat(0,1), rat(y1,1)));
+     rows+=row(GREEN,'Parallel',PARA+' = 0', eqTxt(rat(0,1), rat(y1+k,1)));
+     rows+=row(CORAL,'Perpend.',PERP+' undefined','<i>x</i> = '+h(x1));
+   } else {
+     var mB=A.mB, mP=A.mP, bB=bOf(mB,x1,y1), bA=bOf(mB,x1,y1+k), bP=bOf(mP,x1,y1);
+     rows+=row(TEAL,'Original','<i>m</i> = '+ratTxt(mB), eqTxt(mB,bB));
+     rows+=row(GREEN,'Parallel',PARA+' = '+ratTxt(mB), eqTxt(mB,bA));
+     rows+=row(CORAL,'Perpend.',PERP+' = '+ratTxt(mP), eqTxt(mP,bP));
+   }
+   $("slopes").innerHTML=rows;
+
+   /* --- headline --- */
+   var big, sub;
+   if(vertical){ big='<i>m</i> is undefined'; sub='a vertical original line &mdash; the special case'; }
+   else if(horizontal){ big='<i>m</i> = 0'; sub='a horizontal original line &mdash; the special case'; }
+   else { big='<i>m</i> = '+ratTxt(A.mB)+' &nbsp;&rarr;&nbsp; '+PERP+' = '+ratTxt(A.mP);
+          sub='green copies the slope, coral turns it a quarter turn'; }
+   $("stage").innerHTML='<span class="big">'+big+'</span><small>'+sub+'</small>';
+   $("stage").style.background=(vertical||horizontal)?PURP:TEAL;
+
+   /* --- the why box: the cancellation, in general and with these numbers --- */
+   var w='';
+   if(vertical||horizontal){
+     w='<em>why the product rule goes quiet here</em>'+
+       'one slope is <b>0</b>, the other does not exist<br>'+
+       '<span class="sm">0 &middot; (nothing) is not &minus;1 &mdash; it is not anything. These two lines are still perpendicular; you can see the square corner. The arithmetic test just has nothing to bite on.</span>';
+   } else {
+     var ri=riseOf(), ru=runOf();
+     w='<em>why the product is always &minus;1</em>'+
+       '<i>m</i> &middot; '+PERP+' = '+fr('rise','run')+' &middot; &minus;'+fr('run','rise')+' = &minus;'+fr('rise &middot; run','run &middot; rise')+' = &minus;1<br>'+
+       '<span class="sm">with your numbers: '+ratTxt(A.mB)+' &middot; '+ratTxt(A.mP)+' = &minus;'+fr(Math.abs(ri*ru),Math.abs(ru*ri))+' = &minus;1</span>';
+   }
+   $("why").innerHTML=w;
+
+   /* --- the running commentary --- */
+   var d;
+   if(vertical){
+     d='Your original line is <b>vertical</b>: both dots share <i>x</i> = '+h(x1)+', so the run is 0 and the slope is <b>undefined</b>. '+
+       'Its parallel partner is another vertical line &mdash; same direction, different <i>x</i>. Its perpendicular partner is <b>horizontal</b>, slope <b>0</b>. '+
+       'You cannot get there by computing &minus;1 &divide; <i>m</i>, because there is no <i>m</i> to divide into. You get there by looking.';
+   } else if(horizontal){
+     d='Your original line is <b>horizontal</b>: both dots share <i>y</i> = '+h(y1)+', so the rise is 0 and the slope is exactly <b>0</b> &mdash; a real number, not a missing one. '+
+       'Parallel partner: another horizontal line. Perpendicular partner: a <b>vertical</b> line, whose slope is undefined. '+
+       'Here the formula &minus;1 &divide; 0 asks you to divide by zero, and there is no number that answers it.';
+   } else {
+     d='The <b>green</b> line has the identical slope '+ratTxt(A.mB)+'. Walk one unit right on either line and you climb by the same amount, forever &mdash; which is precisely why they never meet. '+
+       'The <b>coral</b> line takes that same rise and run and <b>swaps them, then flips one sign</b>: run '+sv(runOf())+' and rise '+sv(riseOf())+
+       ' become run '+sv(-riseOf())+' and rise '+sv(runOf())+', giving '+ratTxt(A.mP)+'. That swap is a quarter turn, which is why the corner at the anchor is square.';
+   }
+   $("info").innerHTML='<span class="n">'+(vertical?'Vertical original':horizontal?'Horizontal original':'Slanted original')+'</span>'+d;
+
+   /* --- the offset-zero warning --- */
+   if(k===0){
+     $("note").style.display='';
+     $("note").innerHTML='<b>Offset 0 &mdash; look closely: there is only one line under the indigo.</b> The green partner now has the same slope <b>and</b> the same intercept, so it is not a parallel line at all, it is the <i>same</i> line written twice. Two lines are parallel only when the slopes match and the intercepts differ. Push the slider off zero to separate them.';
+   } else { $("note").style.display='none'; }
+
+   /* --- slider mirrors --- */
+   $("o_x1").innerHTML=h(P.x1); $("o_y1").innerHTML=h(P.y1);
+   $("o_x2").innerHTML=h(P.x2); $("o_y2").innerHTML=h(P.y2);
+   var r=offRange();
+   $("r_off").min=r.lo; $("r_off").max=r.hi;
+   if(off<r.lo) off=r.lo; if(off>r.hi) off=r.hi;
+   $("r_off").value=off; $("o_off").innerHTML=h(off);
+   $("r_x1").value=P.x1; $("r_y1").value=P.y1; $("r_x2").value=P.x2; $("r_y2").value=P.y2;
+   renderPresets();
+ }
+
+ var PRE=[
+  {nm:'Gentle climb', s:'<i>m</i> = 3/4', p:{x1:-1,y1:-1,x2:3,y2:2}, off:3},
+  {nm:'Steep climb', s:'<i>m</i> = 3', p:{x1:0,y1:-3,x2:2,y2:3}, off:3},
+  {nm:'Horizontal', s:'<i>m</i> = 0', p:{x1:-2,y1:1,x2:3,y2:1}, off:-4},
+  {nm:'Vertical', s:'no slope', p:{x1:2,y1:-3,x2:2,y2:3}, off:-5}
+ ];
+ function renderPresets(){
+   var cur=-1, i;
+   for(i=0;i<PRE.length;i++){
+     var q=PRE[i].p;
+     if(q.x1===P.x1&&q.y1===P.y1&&q.x2===P.x2&&q.y2===P.y2) cur=i;
+   }
+   $("presets").innerHTML=PRE.map(function(K,j){
+     return '<button class="it'+(j===cur?' on':'')+'" data-j="'+j+'"><span class="nm">'+K.nm+'</span><span class="s">'+K.s+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#presets .it'),function(b){
+     b.onclick=function(){ var K=PRE[+b.dataset.j]; P.x1=K.p.x1; P.y1=K.p.y1; P.x2=K.p.x2; P.y2=K.p.y2; off=K.off; render(); };
+   });
+ }
+
+ /* ---------------- MODE 1: why the negative reciprocal ---------------- */
+ /* Pivot at the origin. The walk is run 3 right, rise 2 up  ->  m = 2/3.
+    A quarter turn counter-clockwise sends (x,y) to (-y,x):
+      (3,0) -> (0,3)      the run of 3 becomes a rise of 3
+      (3,2) -> (-2,3)     so the new run is -2 and the new rise is 3
+    New slope = 3 / (-2) = -3/2, which is exactly -1 divided by 2/3.        */
+ var ROT=[
+  {p:'the walk',
+   d:'Every line is a repeated instruction: <b>go right 3, then up 2</b>. That single walk is what the slope <sup>2</sup>&frasl;<sub>3</sub> encodes &mdash; rise 2 over run 3. Hold on to the two legs of this triangle; everything that follows happens to <i>them</i>.'},
+  {p:'turn the whole picture',
+   d:'To build a perpendicular line, rotate the entire walk a <b>quarter turn</b> about the anchor. A rotation is rigid &mdash; it does not stretch or bend anything &mdash; so the turned line is a genuine straight line meeting the original at exactly 90&deg;. Now watch what the turn does to each leg.'},
+  {p:'the run becomes a rise',
+   d:'A quarter turn sends the direction <b>right</b> to the direction <b>up</b>. So the leg that was <b>3 to the right</b> is now <b>3 straight up</b>. The number 3 has not changed at all &mdash; only the job it holds. It used to sit in the denominator as a run; now it sits in the numerator as a rise.'},
+  {p:'the rise becomes a run &mdash; backwards',
+   d:'The same quarter turn sends the direction <b>up</b> to the direction <b>left</b>. So the leg that was <b>2 up</b> is now <b>2 to the left</b>, and leftward motion is a <b>negative run</b>: run = &minus;2. The number 2 kept its size and lost its sign &mdash; and moved downstairs.'},
+  {p:'read the new slope',
+   d:'The turned walk is rise 3 over run &minus;2, so the perpendicular slope is <b>&minus;<sup>3</sup>&frasl;<sub>2</sub></b>. Compare it with <sup>2</sup>&frasl;<sub>3</sub>: the 2 and the 3 have traded floors and one sign has flipped. That is the whole rule. <b>Flip the fraction, change the sign.</b>'}
+ ];
+ function art1(k){
+   var s=grid(), i;
+   var fade=(k>=2)?'0.30':'1';
+   /* the original line and its walk */
+   s+='<g opacity="'+fade+'">';
+   s+=drawLine(SL(2/3,0,0), TEAL, 2.8, '');
+   s+='<polygon points="'+sx(0)+','+sy(0)+' '+sx(3)+','+sy(0)+' '+sx(3)+','+sy(2)+'" fill="'+TEAL+'" opacity=".12"/>';
+   s+=hArrow(sx(0),sx(3),sy(0),BLUE,3.2);
+   s+=vArrow(sx(3),sy(0),sy(2),CORAL,3.2);
+   s+=halo(sx(1.5), sy(0)+15, 'middle', 10.5, BLUE, 'run 3');
+   s+=halo(sx(3)+8, sy(1)+3.5, 'start', 10.5, CORAL, 'rise 2');
+   s+=halo(sx(4.4), sy(2.9)+3, 'middle', 11, TEAL, 'm = 2/3');
+   s+='</g>';
+   /* the quarter-turn arc */
+   if(k>=1){
+     s+='<path d="M165 125 A40 40 0 0 0 125 85" fill="none" stroke="'+GOLD+'" stroke-width="2" stroke-dasharray="4 3"/>';
+     s+='<polygon points="118,85 128,80 128,90" fill="'+GOLD+'"/>';
+     s+=halo(sx(1.15), sy(1.35), 'middle', 10, GOLD, '90&#176;');
+   }
+   /* the turned run leg: 3 to the right becomes 3 up */
+   if(k>=2){
+     s+=vArrow(sx(0),sy(0),sy(3),BLUE,3.2);
+     s+=halo(sx(0)-8, sy(1.5)+3.5, 'end', 10.5, BLUE, '3 up');
+   }
+   /* the turned rise leg: 2 up becomes 2 to the left */
+   if(k>=3){
+     s+=hArrow(sx(0),sx(-2),sy(3),CORAL,3.2);
+     s+=halo(sx(-1), sy(3)-8, 'middle', 10.5, CORAL, '2 left');
+     s+='<polygon points="'+sx(0)+','+sy(0)+' '+sx(0)+','+sy(3)+' '+sx(-2)+','+sy(3)+'" fill="'+CORAL+'" opacity=".10"/>';
+   }
+   /* the finished perpendicular */
+   if(k>=4){
+     s+=drawLine(SL(-3/2,0,0), CORAL, 2.8, '');
+     s+=rightAngle(sx(0), sy(0), U*3, -U*2, 11, MUT);
+     s+=halo(sx(-3.2), sy(4.4), 'middle', 11, CORAL, 'new m = '+MIN+'3/2');
+   }
+   s+=dot(sx(3),sy(2),GOLD,'',0);
+   if(k>=3) s+=dot(sx(-2),sy(3),GOLD,'',0);
+   s+=dot(sx(0),sy(0),TDK,'',0);
+   return s;
+ }
+ function render1(){
+   $("art").innerHTML=art1(rstep);
+   var S=ROT[rstep];
+   $("artTitle").innerHTML='A quarter turn, leg by leg';
+   var lines=[
+    {p:'original walk', m:'<i>m</i> = '+fr('rise 2','run 3')+' = '+fr(2,3)},
+    {p:'after the turn', m:'run 3 &nbsp;&rarr;&nbsp; '+tg('rise 3')},
+    {p:'after the turn', m:'rise 2 &nbsp;&rarr;&nbsp; '+tg('run &minus;2')},
+    {p:'new slope', m:PERP+' = '+fr('rise 3','run &minus;2')+' = &minus;'+fr(3,2)},
+    {p:'the check', m:fr(2,3)+' &middot; &minus;'+fr(3,2)+' = &minus;'+fr(6,6)+' = '+ok('&minus;1')}
+   ];
+   var vis=[1,1,2,3,5][rstep];
+   var out='';
+   for(var i=0;i<lines.length && i<vis;i++){
+     out+='<div class="dl'+((i===vis-1)?' cur':'')+'"><span class="mx">'+lines[i].m+'</span><span class="pl">'+lines[i].p+'</span></div>';
+   }
+   $("rb").innerHTML=out;
+   $("stage").style.background=TEAL;
+   $("stage").innerHTML='<span class="big">'+fr(2,3)+' &nbsp;&rarr;&nbsp; &minus;'+fr(3,2)+'</span><small>step '+(rstep+1)+' of '+ROT.length+' &middot; '+S.p+'</small>';
+   $("info").innerHTML='<span class="n">'+S.p.charAt(0).toUpperCase()+S.p.slice(1)+'</span>'+S.d;
+   $("why").innerHTML='<em>the algebra behind the picture</em>'+
+     '<i>m</i> &middot; ( &minus;1 &divide; <i>m</i> ) = &minus;'+fr('<i>m</i>','<i>m</i>')+' = &minus;1 &nbsp;&nbsp;(<i>m</i> &ne; 0)<br>'+
+     '<span class="sm">The product is forced to be &minus;1 for any nonzero slope &mdash; a fraction over itself is 1, and the minus sign rides along. If <i>m</i> = 0 the expression &minus;1 &divide; <i>m</i> does not exist, which is exactly the horizontal-and-vertical exception.</span>';
+   $("note").style.display='none';
+   $("prev").disabled=(rstep===0); $("next").disabled=(rstep===ROT.length-1);
+ }
+
+ /* ---------------- MODE 2: the worked-step machine ---------------- */
+ /* Each example is verified by substituting the point back into the answer. */
+ var EX=[
+  {nm:'Standard form', sub:'x + 2y = 6',
+   given:SL(-0.5,0,3), pt:[2,-1], para:SL(-0.5,0,0), perp:SL(2,0,-5),
+   tail:'Both answers were checked by putting <b>'+'(2, &minus;1)'+'</b> back in, and the two slopes multiply to &minus;1. Notice the point was <b>not</b> on the original line &mdash; 2 + 2(&minus;1) = 0, not 6 &mdash; which is the usual setup: you are given a line to imitate and a different place to put the new one.',
+   steps:[
+    {p:'what you were handed', m:'<i>x</i> + 2<i>y</i> = 6 &nbsp;&nbsp; through '+tg('(2, &minus;1)'), sh:3,
+     d:'Two ingredients, always: a line whose direction you must copy or turn, and a point the new line has to pass through. The trouble is that standard form <b>hides the slope</b> &mdash; there is no <i>m</i> visible anywhere in <i>x</i> + 2<i>y</i> = 6.'},
+    {p:'solve for y', m:'2<i>y</i> = &minus;<i>x</i> + 6 &nbsp;&rarr;&nbsp; <i>y</i> = '+tg('&minus;'+fr(1,2))+'<i>x</i> + 3', sh:3,
+     d:'Move the <i>x</i> across, then divide <b>every</b> term by 2. Now the slope is standing in the open: <b><i>m</i> = &minus;<sup>1</sup>&frasl;<sub>2</sub></b>. Read it as: go 2 to the right, drop 1. The intercept 3 is real information too, but it plays no part in what comes next &mdash; the partners care about slope only.'},
+    {p:'parallel: copy it', m:PARA+' = '+tg('&minus;'+fr(1,2)), sh:3,
+     d:'Nothing is computed here, and that is the point. A parallel line has the <b>same slope, full stop</b>. Students often expect a formula; the formula is &ldquo;write it down again.&rdquo;'},
+    {p:'point-slope', m:'<i>y</i> &minus; '+tg('(&minus;1)')+' = &minus;'+fr(1,2)+'( <i>x</i> &minus; '+tg('2')+' )', sh:7,
+     d:'Point-slope form is the tool built for exactly this job: you have a slope and a point, and nothing else. Watch the double sign &mdash; the point&rsquo;s <i>y</i> is &minus;1, so <i>y</i> &minus; (&minus;1) becomes <i>y</i> <b>+</b> 1.'},
+    {p:'simplify', m:'<i>y</i> + 1 = &minus;'+fr(1,2)+'<i>x</i> + 1 &nbsp;&rarr;&nbsp; '+tg('<i>y</i> = &minus;'+fr(1,2)+'<i>x</i>'), sh:7,
+     d:'Distribute, then move the 1 across. <b>Check it:</b> at <i>x</i> = 2 the answer gives <i>y</i> = &minus;1, which is the point we were aiming at. Same slope as the original, different intercept (0 instead of 3) &mdash; so it really is a second line, not the first one in disguise.'},
+    {p:'perpendicular: flip and negate', m:'&minus;'+fr(1,2)+' &nbsp;flip&rarr;&nbsp; &minus;'+fr(2,1)+' &nbsp;negate&rarr;&nbsp; '+tg('2'), sh:7,
+     d:'Turn the fraction upside down, then change its sign. Do both, in either order. A quick sanity check on sign: the original falls as you walk right, so its perpendicular must <b>climb</b> &mdash; and 2 is positive. <b>Confirm:</b> (&minus;<sup>1</sup>&frasl;<sub>2</sub>)(2) = &minus;1.'},
+    {p:'point-slope again', m:'<i>y</i> + 1 = 2( <i>x</i> &minus; 2 ) &nbsp;&rarr;&nbsp; '+tg('<i>y</i> = 2<i>x</i> &minus; 5'), sh:15,
+     d:'Identical machinery, new slope, same point. Distribute: <i>y</i> + 1 = 2<i>x</i> &minus; 4, then subtract 1. <b>Check:</b> at <i>x</i> = 2, 2(2) &minus; 5 = &minus;1. Correct. Both new lines pass through the same point, which is why they cross each other there at a square corner.'},
+    {p:'the final test', m:'&minus;'+fr(1,2)+' &middot; 2 = &minus;'+fr(2,2)+' = '+ok('&minus;1'), sh:15,
+     d:'One multiplication confirms the perpendicular answer without redrawing anything. If this product had come out as anything other than &minus;1 &mdash; including +1, a favourite slip when only the flip is done and the sign forgotten &mdash; the corner would not be square.'}
+   ]},
+  {nm:'Integer slope', sub:'y = 3x &minus; 4',
+   given:SL(3,0,-4), pt:[3,1], para:SL(3,0,-8), perp:SL(-1/3,0,2),
+   tail:'The reciprocal of a whole number is the trap here. 3 is really <sup>3</sup>&frasl;<sub>1</sub>, so its flip is <sup>1</sup>&frasl;<sub>3</sub> and the perpendicular slope is &minus;<sup>1</sup>&frasl;<sub>3</sub> &mdash; not &minus;3.',
+   steps:[
+    {p:'what you were handed', m:'<i>y</i> = '+tg('3')+'<i>x</i> &minus; 4 &nbsp;&nbsp; through '+tg('(3, 1)'), sh:3,
+     d:'This one arrives already in slope-intercept form, so no rearranging is needed: <b><i>m</i> = 3</b>. Check that the point is somewhere new &mdash; at <i>x</i> = 3 the given line sits at 3(3) &minus; 4 = 5, not 1, so (3, 1) is genuinely off the line.'},
+    {p:'parallel: copy it', m:PARA+' = '+tg('3')+' = '+fr(3,1), sh:3,
+     d:'Same slope again. Writing 3 as <sup>3</sup>&frasl;<sub>1</sub> looks fussy, but do it anyway &mdash; in one more step you will need to turn this fraction over, and you cannot flip a number you have not written as a fraction.'},
+    {p:'point-slope', m:'<i>y</i> &minus; 1 = 3( <i>x</i> &minus; 3 ) &nbsp;&rarr;&nbsp; '+tg('<i>y</i> = 3<i>x</i> &minus; 8'), sh:7,
+     d:'Distribute to <i>y</i> &minus; 1 = 3<i>x</i> &minus; 9, then add 1. <b>Check:</b> at <i>x</i> = 3, 3(3) &minus; 8 = 1. Correct. Slope 3 matches the original, intercept &minus;8 does not match &minus;4 &mdash; a true parallel pair.'},
+    {p:'perpendicular: flip and negate', m:fr(3,1)+' &nbsp;flip&rarr;&nbsp; '+fr(1,3)+' &nbsp;negate&rarr;&nbsp; '+tg('&minus;'+fr(1,3)), sh:7,
+     d:'Here is the most common wrong answer in the whole section: &minus;3. That only changed the sign and never flipped the fraction. The perpendicular of a <b>steep</b> line has to be <b>shallow</b> &mdash; steep up pairs with gentle down. <b>Confirm:</b> 3 &middot; (&minus;<sup>1</sup>&frasl;<sub>3</sub>) = &minus;1.'},
+    {p:'point-slope again', m:'<i>y</i> &minus; 1 = &minus;'+fr(1,3)+'( <i>x</i> &minus; 3 ) &nbsp;&rarr;&nbsp; '+tg('<i>y</i> = &minus;'+fr(1,3)+'<i>x</i> + 2'), sh:15,
+     d:'Distribute: <i>y</i> &minus; 1 = &minus;<sup>1</sup>&frasl;<sub>3</sub><i>x</i> + 1, then add 1 to both sides. <b>Check:</b> at <i>x</i> = 3, &minus;<sup>1</sup>&frasl;<sub>3</sub>(3) + 2 = &minus;1 + 2 = 1. Correct. Look at the picture: the steep line and the shallow line really do meet squarely.'},
+    {p:'the final test', m:'3 &middot; &minus;'+fr(1,3)+' = &minus;'+fr(3,3)+' = '+ok('&minus;1'), sh:15,
+     d:'The 3 on top cancels the 3 underneath and the minus sign survives. This is the same cancellation as the general proof &mdash; the numbers just happen to be small enough to see at a glance.'}
+   ]},
+  {nm:'The exception', sub:'y = 2',
+   given:SL(0,0,2), pt:[-3,-4], para:SL(0,0,-4), perp:VL(-3),
+   tail:'This is the one case the multiply-to-&minus;1 test cannot certify. The two lines are unmistakably perpendicular in the picture; it is the <b>arithmetic</b>, not the geometry, that runs out of road.',
+   steps:[
+    {p:'what you were handed', m:'<i>y</i> = 2 &nbsp;&nbsp; through '+tg('(&minus;3, &minus;4)'), sh:3,
+     d:'No <i>x</i> appears in <i>y</i> = 2. That is not a typo &mdash; it means the height is pinned at 2 no matter which <i>x</i> you choose. The graph is a <b>horizontal</b> line.'},
+    {p:'its slope is zero', m:'<i>m</i> = '+fr('2 &minus; 2','5 &minus; 0')+' = '+fr(tg('0'),5)+' = '+tg('0'), sh:3,
+     d:'Take any two points on it, say (0, 2) and (5, 2), and run the slope formula. The rise is 0 while the run is not, and <b>zero divided by a nonzero number is 0</b>. Note carefully: 0 is an <i>answer</i>. It is not the same thing as &ldquo;no answer.&rdquo;'},
+    {p:'parallel: copy it', m:PARA+' = 0 &nbsp;&rarr;&nbsp; '+tg('<i>y</i> = &minus;4'), sh:7,
+     d:'Slope 0 through (&minus;3, &minus;4) is another horizontal line, and a horizontal line is named by its height alone: <b><i>y</i> = &minus;4</b>. The &minus;3 never gets used, because a horizontal line does not care what <i>x</i> is. <b>Check:</b> the point&rsquo;s height is &minus;4, and the line&rsquo;s height is &minus;4.'},
+    {p:'the formula fails', m:PERP+' = &minus;1 &divide; '+tg('0')+' = '+tg('<b>undefined</b>'), sh:7,
+     d:'Now the rule &minus;1 &divide; <i>m</i> asks for &minus;1 divided by 0, and <b>no number answers that</b> &mdash; nothing multiplied by 0 will ever give you &minus;1. This is a genuine excluded value, not a technicality: <b>the negative-reciprocal rule requires <i>m</i> &ne; 0</b>, and requires the given line to have a slope in the first place.'},
+    {p:'answer it by looking', m:tg('<i>x</i> = &minus;3')+' &nbsp;&nbsp; (slope undefined)', sh:15,
+     d:'Abandon the formula and use the picture. The only lines that cross a horizontal line at a right angle are <b>vertical</b>, and a vertical line through (&minus;3, &minus;4) is <b><i>x</i> = &minus;3</b>. <b>Check:</b> every point on it has <i>x</i> = &minus;3, including our point. Its own slope is undefined, so the product <i>m</i> &middot; '+PERP+' can never even be written down.'},
+    {p:'what to remember', m:'horizontal &#8869; vertical &nbsp;&mdash;&nbsp; '+ok('no product to test'), sh:15,
+     d:'Keep both facts. <b>When both slopes exist and neither is 0</b>, perpendicular means the product is &minus;1. <b>When one line is horizontal and the other vertical</b>, they are perpendicular and the product test simply does not apply. Any problem mentioning <i>y</i> = a number or <i>x</i> = a number should send you to the picture, not the formula.'}
+   ]}
+ ];
+
+ function art2(){
+   var E=EX[exi], S=E.steps[estep], sh=S.sh, s=grid();
+   if(sh & 1){ s+=drawLine(E.given, TEAL, 2.8, ''); }
+   if(sh & 4){ s+=drawLine(E.para, GREEN, 2.8, ''); }
+   if(sh & 8){ s+=drawLine(E.perp, CORAL, 2.8, ''); }
+   if(sh & 1){ s+=labelLine(E.given, TEAL, 'given', -3.6); }
+   if(sh & 4){ s+=labelLine(E.para, GREEN, 'parallel', undefined); }
+   if(sh & 8){ s+=labelLine(E.perp, CORAL, 'perpendicular', undefined); }
+   if((sh & 4) && (sh & 8)){
+     var px=sx(E.pt[0]), py=sy(E.pt[1]);
+     var dx, dy;
+     if(E.para.vert){ dx=0; dy=-1; } else { dx=1; dy=-E.para.m; }
+     s+=rightAngle(px, py, dx, dy, 10, MUT);
+   }
+   if(sh & 2){ s+=dot(sx(E.pt[0]), sy(E.pt[1]), GOLD, pair(E.pt[0],E.pt[1]), (sy(E.pt[1])>44?-12:20)); }
+   return s;
+ }
+ function renderPicker(){
+   $("picker").innerHTML=EX.map(function(E,j){
+     return '<button class="'+(j===exi?'on':'')+'" data-j="'+j+'">'+E.nm+'<small>'+E.sub+'</small></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#picker button'),function(b){
+     b.onclick=function(){ exi=+b.dataset.j; estep=0; render(); };
+   });
+ }
+ function render2(){
+   var E=EX[exi], S=E.steps[estep];
+   $("art").innerHTML=art2();
+   $("artTitle").innerHTML=E.nm+' &mdash; '+E.sub;
+   renderPicker();
+   var out='';
+   for(var i=0;i<=estep;i++){
+     out+='<div class="dl'+((i===estep)?' cur':'')+'"><span class="mx">'+E.steps[i].m+'</span><span class="pl">'+E.steps[i].p+'</span></div>';
+   }
+   $("mb").innerHTML=out;
+   $("exlab").innerHTML=E.tail;
+   $("stage").style.background=TEAL;
+   $("stage").innerHTML='<span class="big">'+E.sub+'</span><small>step '+(estep+1)+' of '+E.steps.length+' &middot; '+S.p+'</small>';
+   $("info").innerHTML='<span class="n">'+S.p.charAt(0).toUpperCase()+S.p.slice(1)+'</span>'+S.d;
+   $("why").innerHTML='<em>the two questions every problem asks</em>'+
+     'parallel &rarr; <b>same</b> slope &nbsp;&middot;&nbsp; perpendicular &rarr; <b>flip and negate</b><br>'+
+     '<span class="sm">Then push whichever slope you need through the given point with point-slope form, and substitute the point back in to check.</span>';
+   $("note").style.display='none';
+   $("prev").disabled=(estep===0); $("next").disabled=(estep===E.steps.length-1);
+ }
+
+ /* ---------------- dragging the line ---------------- */
+ var svg=$("plane");
+ function toWorld(e){
+   var r=svg.getBoundingClientRect();
+   var vx=(e.clientX-r.left)*(250/r.width), vy=(e.clientY-r.top)*(250/r.height);
+   return {x:Math.round((vx-X0)/U), y:Math.round((Y0-vy)/U), vx:vx, vy:vy};
+ }
+ function clamp(n){ return Math.max(-R,Math.min(R,n)); }
+ svg.addEventListener('pointerdown',function(e){
+   if(mode!==0) return;
+   var w=toWorld(e);
+   var d1=Math.hypot(w.vx-sx(P.x1), w.vy-sy(P.y1));
+   var d2=Math.hypot(w.vx-sx(P.x2), w.vy-sy(P.y2));
+   if(Math.min(d1,d2)>46) return;
+   drag=(d1<=d2)?1:2;
+   svg.setPointerCapture(e.pointerId); e.preventDefault();
+   move(w);
+ });
+ svg.addEventListener('pointermove',function(e){ if(drag){ e.preventDefault(); move(toWorld(e)); } });
+ svg.addEventListener('pointerup',function(){ drag=null; });
+ svg.addEventListener('pointercancel',function(){ drag=null; });
+ function move(w){
+   var nx=clamp(w.x), ny=clamp(w.y);
+   if(drag===1){
+     if(nx===P.x2 && ny===P.y2) return;      /* the two dots must stay distinct */
+     P.x1=nx; P.y1=ny;
+   } else {
+     if(nx===P.x1 && ny===P.y1) return;
+     P.x2=nx; P.y2=ny;
+   }
+   render();
+ }
+
+ /* ---------------- sliders ---------------- */
+ ['x1','y1','x2','y2'].forEach(function(k){
+   $("r_"+k).addEventListener('input',function(){
+     var v=parseInt(this.value,10), old=P[k];
+     P[k]=v;
+     if(P.x1===P.x2 && P.y1===P.y2){ P[k]=old; this.value=old; return; }
+     render();
+   });
+ });
+ $("r_off").addEventListener('input',function(){ off=parseInt(this.value,10); render(); });
+
+ /* ---------------- mode switching ---------------- */
+ Array.prototype.forEach.call(document.querySelectorAll('#modes button'),function(b){
+   b.onclick=function(){
+     mode=+b.dataset.m;
+     Array.prototype.forEach.call(document.querySelectorAll('#modes button'),function(x){ x.className=''; });
+     b.className='on';
+     render();
+   };
+ });
+ $("prev").onclick=function(){
+   if(mode===1 && rstep>0){ rstep--; }
+   else if(mode===2 && estep>0){ estep--; }
+   render();
+ };
+ $("next").onclick=function(){
+   if(mode===1 && rstep<ROT.length-1){ rstep++; }
+   else if(mode===2 && estep<EX[exi].steps.length-1){ estep++; }
+   render();
+ };
+
+ function render(){
+   $("p0").style.display=(mode===0)?'':'none';
+   $("p1").style.display=(mode===1)?'':'none';
+   $("p2").style.display=(mode===2)?'':'none';
+   $("nav").style.display=(mode===0)?'none':'';
+   svg.className.baseVal=(mode===0)?'':'locked';
+   if(mode===0){ $("artTitle").innerHTML='One line and its two partners'; render0(); }
+   else if(mode===1){ render1(); }
+   else { render2(); }
+ }
+
+ render();
+})();
+</script>
+</body>
+</html>

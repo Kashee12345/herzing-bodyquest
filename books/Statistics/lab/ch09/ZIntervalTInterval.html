@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>The z Interval and the t Interval</title>
+<meta name="description" content="Build a confidence interval for a mean from a real simulated sample, switch between the z case and the t case, and run thousands of studies to see which multiplier actually keeps its promise.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:104px;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:58px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.gk{text-transform:none;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.tiles div.hi{border-color:var(--teal);background:#eff5f8;}
+.calc{border:1px solid var(--line);border-left:5px solid var(--teal-dk);background:#fff;border-radius:10px;padding:11px 13px;margin-top:11px;}
+.calc .cl{font-size:9.3px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:800;}
+.calc .ce{font-size:14.5px;font-weight:700;color:var(--soft);margin-top:6px;line-height:1.7;font-variant-numeric:tabular-nums;}
+.calc .ce b{color:var(--teal-dk);font-weight:800;}
+.calc .cr{font-size:17px;font-weight:800;color:var(--teal-dk);margin-top:7px;padding-top:7px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;}
+.calc .cr span{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.lgd i.mdl{width:14px;height:0;border-top:2px dashed #2f9e5b;border-radius:0;vertical-align:3px;}
+#info .loc{font-variant-numeric:tabular-nums;font-size:12.2px;line-height:1.75;}
+.grid .it .nm{display:block;} .grid .it .s{display:block;margin-top:2px;font-weight:600;font-variant-numeric:tabular-nums;}
+.vd{border-radius:10px;padding:9px 12px;margin-top:11px;font-size:12.4px;font-weight:700;line-height:1.5;}
+.vd.hit{background:#e5f3ea;color:#237a45;border:1px solid #bfe3cd;}
+.vd.miss{background:#fae5e8;color:#b23145;border:1px solid #f0c9d0;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 9</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 9</div>
+  <h1>The z Interval and the t Interval</h1>
+  <div class="intro">Every confidence interval for a mean has the same three-part shape: <b>x&#772; &plusmn; (multiplier &times; standard error)</b>. The only real question is which multiplier you have earned. If &sigma; is genuinely <b>known</b>, the standard error involves no guessing and the multiplier is <b>z*</b>. If &sigma; is <b>unknown</b> &mdash; which is nearly always &mdash; you must estimate it with <b>s</b> from the very same sample, and that extra guess has to be paid for with a wider multiplier <b>t*</b> on <b>n &minus; 1</b> degrees of freedom. Draw real samples below, build both intervals side by side, then run thousands of studies and see which one actually keeps its promise.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">This sample &rarr; this interval</h2>
+      <svg viewBox="0 0 480 296" id="chart" aria-label="a simulated sample drawn on the population scale, with the z interval and the t interval built from it shown magnified below"></svg>
+      <div class="lgd">
+        <span><i style="background:#9fc4d4"></i>the n values you drew</span>
+        <span><i style="background:#1c4454;border-radius:50%"></i>x&#772; &mdash; point estimate</span>
+        <span><i class="mdl"></i>&mu; &mdash; the true value</span>
+        <span><i style="background:#e8f2f7"></i>zoom window</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>Where the multiplier is read off</h2>
+      <div class="cap" style="margin-top:2px;">The multiplier is never a style choice &mdash; it is the reach, in standard errors, that encloses the middle C% of a curve. Which curve depends on what you had to estimate. <b>Knowing &sigma; buys you the normal curve; estimating it with s costs you the t curve</b>, whose heavier tails push the same middle percentage further out.</div>
+      <svg viewBox="0 0 460 218" id="curves" aria-label="the standard normal curve and the t curve overlaid, with the middle C percent of area shaded under the active curve and the multiplier marked"></svg>
+      <div class="cap" id="ccap"></div>
+    </div>
+    <div class="card">
+      <h2>How fast t* settles down toward z*</h2>
+      <div class="cap" style="margin-top:2px;">The t penalty is not a fixed surcharge &mdash; it is a small-sample tax that fades as your estimate of &sigma; gets trustworthy. Every extra observation sharpens s, so the curve falls toward the z* floor and never quite touches it.</div>
+      <svg viewBox="0 0 460 196" id="conv" aria-label="t star plotted against sample size, falling toward the horizontal z star line"></svg>
+      <div class="cap" id="vcap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Resting heart rate<small>press &ldquo;Draw a new sample&rdquo; to build an interval</small></div>
+    <div class="card">
+      <div class="hd">What do you actually know about the spread?</div>
+      <div class="seg" id="mseg">
+        <button data-m="t" class="on">&sigma; is unknown<small>estimate it with s &rarr; use t*, df = n &minus; 1</small></button>
+        <button data-m="z">&sigma; is known<small>no guessing &rarr; use z*</small></button>
+      </div>
+      <div class="hd">What you are measuring</div>
+      <div class="grid" id="ctxs"></div>
+      <div class="sl"><label>sample size n</label><input type="range" id="nSl" min="3" max="100" step="1" value="12"><span class="nv" id="nVal">12</span></div>
+      <div class="sl"><label>confidence</label><input type="range" id="cSl" min="50" max="99" step="1" value="95"><span class="nv" id="cVal">95%</span></div>
+      <div class="tiles">
+        <div id="kXb"><span class="lb">Estimate<br><span class="gk">x&#772;</span></span><span class="vv" id="tXb">&mdash;</span></div>
+        <div id="kSd"><span class="lb">Spread used<br><span class="gk" id="kSdL">s</span></span><span class="vv" id="tSd">&mdash;</span></div>
+        <div id="kSe"><span class="lb">Std. error<br><span class="gk" id="kSeL">s/&radic;n</span></span><span class="vv" id="tSe">&mdash;</span></div>
+        <div id="kMu" class="hi"><span class="lb">Multiplier<br><span class="gk" id="kMuL">t*</span></span><span class="vv" id="tMu">&mdash;</span><span class="sub" id="tDf">df = 11</span></div>
+      </div>
+      <div class="calc">
+        <span class="cl">The interval, built from this sample</span>
+        <div class="ce" id="ce">&mdash;</div>
+        <div class="cr" id="cr"><span>resulting interval</span>&mdash;</div>
+      </div>
+      <div class="row"><button class="btn solid" id="d1">Draw a new sample</button><button class="btn" id="rst">Reset</button></div>
+      <div class="vd" id="verd"></div>
+      <div id="info"></div>
+    </div>
+    <div class="card">
+      <h2>Which multiplier keeps its promise?</h2>
+      <div class="cap" style="margin-top:2px;">Talk is cheap, so let the machine settle it. Below, the whole study is repeated <b>2,000 times</b> at your current settings, and three different intervals are built from each and every sample. All that is counted is how often each one actually contained &mu; &mdash; and how wide it had to be to manage that.</div>
+      <svg viewBox="0 0 460 224" id="cov" aria-label="actual coverage of the t interval, the z interval misused with s, and the z interval with a truly known sigma, compared against the promised confidence level"></svg>
+      <div class="cap" id="covcap"></div>
+      <div class="row"><button class="btn" id="rerun">Re-run with fresh randomness</button></div>
+    </div>
+    <div class="card">
+      <h2>The recipe, and the fine print</h2>
+      <div class="mnem"><b>x&#772; &plusmn; (multiplier &times; standard error)</b> &mdash; then answer one question to fill it in. <b>Is &sigma; known?</b> If yes, the standard error is &sigma;/&radic;n and the multiplier is z*. If no &mdash; the usual answer &mdash; the standard error is s/&radic;n and the multiplier is t* with <b>df = n &minus; 1</b>. That is the entire difference between the two cases. Everything else about the arithmetic is identical, which is why it is worth being precise about the one thing that changes: the &radic;n underneath is the same either way, so a wider t interval is never punishment for a noisier sample &mdash; it is the price of having estimated the spread instead of knowing it.</div>
+      <div class="note"><b>Six things to keep straight.</b> <b>(1) The confidence level describes the procedure, not this interval.</b> Once you have computed two actual numbers, &mu; is either between them or it is not; no chance remains. The 95% is the long-run hit rate of the recipe, which is precisely what the 2,000-study panel above is measuring. <b>(2) It is an interval for &mu;, not for individuals.</b> Compare the two panels in the first chart: the interval is far narrower than the data it came from. It is not the range where 95% of values fall. <b>(3) df = n &minus; 1, not n.</b> One degree of freedom is spent the moment you use x&#772; to compute s &mdash; the deviations from x&#772; must sum to zero, so only n &minus; 1 of them are free to vary. <b>(4) t requires a roughly normal population when n is small.</b> With &sigma; unknown the t interval is exact only if the underlying values are normal. Try the strongly right-skewed setting at n = 5 and watch even the correct t interval fall short of its promise; push n up and watch the Central Limit Theorem gradually repair it. <b>(5) Never use z* with s.</b> It is the single most common mistake in this chapter and the coverage panel shows exactly what it costs: an interval that looks satisfyingly narrow and quietly misses &mu; more often than you promised. The narrowness is the tell, not the reward. <b>(6) None of this covers bias.</b> Every formula here is built out of random sampling wobble alone. A convenience sample, a mis-calibrated instrument, or a leading question produces a tight interval confidently centered on the wrong number &mdash; and collecting more data only tightens it further.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ================= seeded PRNG (mulberry32) so every run reproduces ================= */
+ function mk(s0){
+   var s=s0|0;
+   return function(){
+     s=s+0x6D2B79F5|0;
+     var t=Math.imul(s^s>>>15,1|s);
+     t=t+Math.imul(t^t>>>7,61|t)^t;
+     return ((t^t>>>14)>>>0)/4294967296;
+   };
+ }
+ var SEED0=20260869;
+ var R1=mk(SEED0);
+ function gs(r){
+   var u1=r(); if(u1<1e-12)u1=1e-12;
+   return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*r());
+ }
+
+ /* ================= inverse standard normal (Acklam) ================= */
+ function invNorm(p){
+   var a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+   var b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+   var c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+   var d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+   var pl=0.02425, ph=1-pl, q, r;
+   if(p<pl){ q=Math.sqrt(-2*Math.log(p));
+     return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+   if(p<=ph){ q=p-0.5; r=q*q;
+     return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1); }
+   q=Math.sqrt(-2*Math.log(1-p));
+   return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+ }
+ function zStar(C){ return invNorm(1-(1-C/100)/2); }
+ function nPdf(x){ return 0.3989422804014327*Math.exp(-0.5*x*x); }
+
+ /* ================= t distribution: lgamma, incomplete beta, tail, quantile ================= */
+ var LG=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,
+         -176.61502916214059,12.507343278686905,-0.13857109526572012,
+         9.9843695780195716e-6,1.5056327351493116e-7];
+ function lgamma(x){
+   if(x<0.5) return Math.log(Math.PI/Math.sin(Math.PI*x))-lgamma(1-x);
+   x-=1;
+   var a=LG[0], t=x+7.5, i;
+   for(i=1;i<9;i++) a+=LG[i]/(x+i);
+   return 0.5*Math.log(2*Math.PI)+(x+0.5)*Math.log(t)-t+Math.log(a);
+ }
+ function betacf(a,b,x){
+   var MAXIT=250, EPS=3e-14, FPMIN=1e-300;
+   var qab=a+b, qap=a+1, qam=a-1;
+   var c=1, d=1-qab*x/qap, m, m2, aa, del, h;
+   if(Math.abs(d)<FPMIN)d=FPMIN;
+   d=1/d; h=d;
+   for(m=1;m<=MAXIT;m++){
+     m2=2*m;
+     aa=m*(b-m)*x/((qam+m2)*(a+m2));
+     d=1+aa*d; if(Math.abs(d)<FPMIN)d=FPMIN;
+     c=1+aa/c; if(Math.abs(c)<FPMIN)c=FPMIN;
+     d=1/d; h*=d*c;
+     aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+     d=1+aa*d; if(Math.abs(d)<FPMIN)d=FPMIN;
+     c=1+aa/c; if(Math.abs(c)<FPMIN)c=FPMIN;
+     d=1/d; del=d*c; h*=del;
+     if(Math.abs(del-1)<EPS)break;
+   }
+   return h;
+ }
+ function betai(a,b,x){
+   if(x<=0)return 0;
+   if(x>=1)return 1;
+   var bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));
+   if(x<(a+1)/(a+b+2)) return bt*betacf(a,b,x)/a;
+   return 1-bt*betacf(b,a,1-x)/b;
+ }
+ /* two-sided tail area P(|T| > t) for v degrees of freedom */
+ function tTail(t,v){ t=Math.abs(t); return betai(v/2,0.5,v/(v+t*t)); }
+ var TC={};
+ function tStar(C,v){
+   var key=C+'|'+v; if(TC[key]!==undefined) return TC[key];
+   var al=1-C/100, lo=0, hi=400, mid, i;
+   for(i=0;i<90;i++){ mid=(lo+hi)/2; if(tTail(mid,v)>al) lo=mid; else hi=mid; }
+   TC[key]=(lo+hi)/2; return TC[key];
+ }
+ function tPdf(t,v){
+   return Math.exp(lgamma((v+1)/2)-lgamma(v/2)-0.5*Math.log(v*Math.PI)-((v+1)/2)*Math.log(1+t*t/v));
+ }
+
+ /* ================= the quantities being measured ================= */
+ var CTX=[
+  {t:'Resting heart rate',s:'&mu; 72 &middot; &sigma; 9 bpm',mu:72,sd:9,u:'bpm',dec:2,col:'#2f6f8a',
+   xlo:44,xhi:100,sk:null,
+   why:'Adults vary a great deal, and nobody has ever handed you the true &sigma; for &ldquo;all adults.&rdquo; You would estimate it with s from your own sample &mdash; which is exactly the situation the t distribution was invented for.'},
+  {t:'Bag fill weight',s:'&mu; 340 &middot; &sigma; 6 g',mu:340,sd:6,u:'g',dec:2,col:'#b8862f',
+   xlo:320,xhi:360,sk:null,
+   why:'A filling machine with years of calibration records is the rare honest case for the z interval: &sigma; is a settled property of the equipment, measured over millions of bags, while &mu; drifts and must be re-estimated from each new sample.'},
+  {t:'Bolt diameter',s:'&mu; 12.00 &middot; &sigma; 0.40 mm',mu:12,sd:0.4,u:'mm',dec:3,col:'#2f9e5b',
+   xlo:10.7,xhi:13.3,sk:null,
+   why:'A tight tolerance and a small &sigma;, so every number on the axis is small &mdash; but the arithmetic never changes. The margin of error is always a multiplier times a standard error, whatever the units happen to be.'},
+  {t:'Repair time (skewed)',s:'&mu; 4.50 &middot; &sigma; 2.96 hr',mu:4.5,sd:2.9622,u:'hr',dec:2,col:'#7a5a8a',
+   xlo:0,xhi:16,sk:[1.32409,0.6],
+   why:'Times-to-complete pile up near zero and trail off to the right &mdash; a strongly <b>skewed</b> population, not a normal one. The t interval is exact only for normal data, so at small n even the correct interval quietly misses its promise. Watch the coverage panel repair itself as you raise n.'}
+ ];
+
+ /* ================= state ================= */
+ var ci=0, mode='t', n=12, conf=95;
+ var zs=0, ts=0, sdU=0, se=0, mult=0, moe=0;
+ var cur=null;                 /* {dat,m,s,zLo,zHi,tLo,tHi,lo,hi,ok} */
+ var COV=null, covSeed=777001;
+
+ function P(){ return CTX[ci]; }
+ function f(v){ return v.toFixed(P().dec); }
+ function tk(v,span){
+   var d=span>=200?0:(span>=20?1:(span>=2?2:(span>=0.2?3:4)));
+   return v.toFixed(d);
+ }
+ function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+
+ function recompute(){
+   zs=zStar(conf);
+   ts=tStar(conf,n-1);
+   sdU=(mode==='z')?P().sd:(cur?cur.s:P().sd);
+   mult=(mode==='z')?zs:ts;
+   se=sdU/Math.sqrt(n);
+   moe=mult*se;
+ }
+
+ /* ================= draw one real sample ================= */
+ function one(p,r){
+   var g=gs(r);
+   return p.sk? Math.exp(p.sk[0]+p.sk[1]*g) : p.mu+p.sd*g;
+ }
+ function sampleStats(p,r,keep){
+   var i,v,sm=0,dat=keep?[]:null,acc=[];
+   for(i=0;i<n;i++){ v=one(p,r); sm+=v; acc.push(v); if(dat)dat.push(v); }
+   var m=sm/n, ss=0;
+   for(i=0;i<n;i++){ ss+=(acc[i]-m)*(acc[i]-m); }
+   return {m:m,s:Math.sqrt(ss/(n-1)),dat:dat};
+ }
+ function drawSample(){
+   var p=P(), st=sampleStats(p,R1,true);
+   recomputeFrom(st);
+ }
+ function recomputeFrom(st){
+   var p=P();
+   zs=zStar(conf); ts=tStar(conf,n-1);
+   var zMo=zs*p.sd/Math.sqrt(n);        /* sigma known  -> z* and the true sigma */
+   var tMo=ts*st.s/Math.sqrt(n);        /* sigma unknown-> t* and the sample s   */
+   cur={dat:st.dat,m:st.m,s:st.s,
+        zLo:st.m-zMo,zHi:st.m+zMo,
+        tLo:st.m-tMo,tHi:st.m+tMo};
+   cur.lo=(mode==='z')?cur.zLo:cur.tLo;
+   cur.hi=(mode==='z')?cur.zHi:cur.tHi;
+   cur.ok=(cur.lo<=p.mu&&p.mu<=cur.hi);
+   recompute();
+ }
+ function reStat(){ if(cur) recomputeFrom({m:cur.m,s:cur.s,dat:cur.dat}); }
+
+ /* ================= coverage experiment ================= */
+ function runCoverage(reps,seed){
+   var p=P(), r=mk(seed), i;
+   var zz=zStar(conf), tt=tStar(conf,n-1), rn=Math.sqrt(n);
+   var h1=0,h2=0,h3=0,w1=0,w2=0,w3=0,st,mo;
+   for(i=0;i<reps;i++){
+     st=sampleStats(p,r,false);
+     mo=tt*st.s/rn;  w1+=2*mo; if(st.m-mo<=p.mu&&p.mu<=st.m+mo)h1++;   /* t interval      */
+     mo=zz*st.s/rn;  w2+=2*mo; if(st.m-mo<=p.mu&&p.mu<=st.m+mo)h2++;   /* z misused with s */
+     mo=zz*p.sd/rn;  w3+=2*mo; if(st.m-mo<=p.mu&&p.mu<=st.m+mo)h3++;   /* z with true sigma*/
+   }
+   COV={reps:reps,
+        c:[100*h1/reps,100*h2/reps,100*h3/reps],
+        w:[w1/reps,w2/reps,w3/reps]};
+ }
+
+ /* ================= chart 1: the sample, and both intervals magnified ================= */
+ var VW=480, ML=34, MR=34, PW=VW-ML-MR;
+ var BT=26, BB=92, AX1=100;         /* dot band top/bottom, panel-1 axis   */
+ var FY=122, FY2=150;               /* fan line span                        */
+ var LZ=168, BZ=186;                /* z label, z bar                       */
+ var LT=214, BT2=232;               /* t label, t bar                       */
+ var AX2=268;                       /* panel-2 axis                         */
+
+ function drawChart(){
+   var p=P(), s='', i;
+   var lo1=p.xlo, hi1=p.xhi, sp1=hi1-lo1;
+   function x1(v){ return ML+(clamp(v,lo1,hi1)-lo1)/sp1*PW; }
+
+   /* ---- panel 1: the population scale ---- */
+   s+='<text x="'+ML+'" y="16" font-size="10" font-weight="800" fill="#78868d" letter-spacing="1">THE n VALUES YOU DREW &mdash; '+p.t.toUpperCase().replace(' (SKEWED)','')+' ('+p.u+')</text>';
+
+   var wLo,wHi;
+   if(cur){
+     wLo=Math.min(cur.zLo,cur.tLo); wHi=Math.max(cur.zHi,cur.tHi);
+     if(p.mu<wLo)wLo=p.mu; if(p.mu>wHi)wHi=p.mu;
+     var pad=(wHi-wLo)*0.16+1e-9; wLo-=pad; wHi+=pad;
+     /* zoom window */
+     s+='<rect x="'+x1(wLo).toFixed(1)+'" y="'+BT+'" width="'+(x1(wHi)-x1(wLo)).toFixed(1)+'" height="'+(AX1-BT)+'" fill="#e8f2f7" stroke="#b9d3e0" stroke-width="1"/>';
+   }
+
+   /* mu reference */
+   s+='<line x1="'+x1(p.mu).toFixed(1)+'" y1="'+BT+'" x2="'+x1(p.mu).toFixed(1)+'" y2="'+AX1+'" stroke="#2f9e5b" stroke-width="2" stroke-dasharray="5 4"/>';
+   s+='<text x="'+x1(p.mu).toFixed(1)+'" y="'+(BT-4)+'" font-size="10.5" font-weight="800" fill="#2f9e5b" text-anchor="middle">&mu; = '+f(p.mu)+'</text>';
+
+   /* the sampled values */
+   if(cur&&cur.dat){
+     for(i=0;i<cur.dat.length;i++){
+       var h=(i*2654435761)>>>0;
+       var yy=BT+10+((h>>>8)%(BB-BT-16));
+       s+='<circle cx="'+x1(cur.dat[i]).toFixed(1)+'" cy="'+yy+'" r="3.4" fill="#9fc4d4" opacity=".85"/>';
+     }
+     s+='<line x1="'+x1(cur.m).toFixed(1)+'" y1="'+(BT+4)+'" x2="'+x1(cur.m).toFixed(1)+'" y2="'+AX1+'" stroke="#1c4454" stroke-width="2"/>';
+     s+='<circle cx="'+x1(cur.m).toFixed(1)+'" cy="'+AX1+'" r="4.6" fill="#1c4454"/>';
+   }
+
+   /* panel-1 axis */
+   s+='<line x1="'+ML+'" y1="'+AX1+'" x2="'+(VW-MR)+'" y2="'+AX1+'" stroke="#c6d6de" stroke-width="1.5"/>';
+   for(i=0;i<=4;i++){
+     var tv=lo1+sp1*i/4, tx=ML+PW*i/4;
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+AX1+'" x2="'+tx.toFixed(1)+'" y2="'+(AX1+4)+'" stroke="#c6d6de" stroke-width="1.5"/>';
+     s+='<text x="'+tx.toFixed(1)+'" y="'+(AX1+15)+'" font-size="9.6" fill="#78868d" font-weight="700" text-anchor="middle">'+tk(tv,sp1)+'</text>';
+   }
+
+   if(!cur){ return s+'<text x="240" y="200" font-size="13" fill="#78868d" font-weight="700" text-anchor="middle">Press &ldquo;Draw a new sample&rdquo;</text>'; }
+
+   /* ---- fan lines into panel 2 ---- */
+   s+='<line x1="'+x1(wLo).toFixed(1)+'" y1="'+FY+'" x2="'+ML+'" y2="'+FY2+'" stroke="#b9d3e0" stroke-width="1" stroke-dasharray="3 3"/>';
+   s+='<line x1="'+x1(wHi).toFixed(1)+'" y1="'+FY+'" x2="'+(VW-MR)+'" y2="'+FY2+'" stroke="#b9d3e0" stroke-width="1" stroke-dasharray="3 3"/>';
+   s+='<rect x="'+ML+'" y="'+FY2+'" width="'+PW+'" height="'+(AX2-FY2+2)+'" fill="#fbfdfe" stroke="#e6eef2" stroke-width="1" rx="6"/>';
+
+   /* ---- panel 2: magnified ---- */
+   var sp2=wHi-wLo;
+   function x2(v){ return ML+(v-wLo)/sp2*PW; }
+   s+='<line x1="'+x2(p.mu).toFixed(1)+'" y1="'+(FY2+4)+'" x2="'+x2(p.mu).toFixed(1)+'" y2="'+AX2+'" stroke="#2f9e5b" stroke-width="2" stroke-dasharray="5 4"/>';
+
+   function bar(lo,hi,y,col,on){
+     var a=x2(lo), b=x2(hi), o='';
+     var op=on?1:0.32, w=on?9:6;
+     o+='<line x1="'+a.toFixed(1)+'" y1="'+y+'" x2="'+b.toFixed(1)+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+w+'" opacity="'+op+'" stroke-linecap="butt"/>';
+     o+='<line x1="'+a.toFixed(1)+'" y1="'+(y-11)+'" x2="'+a.toFixed(1)+'" y2="'+(y+11)+'" stroke="'+col+'" stroke-width="2.6" opacity="'+op+'"/>';
+     o+='<line x1="'+b.toFixed(1)+'" y1="'+(y-11)+'" x2="'+b.toFixed(1)+'" y2="'+(y+11)+'" stroke="'+col+'" stroke-width="2.6" opacity="'+op+'"/>';
+     o+='<circle cx="'+x2(cur.m).toFixed(1)+'" cy="'+y+'" r="4" fill="#1c4454" opacity="'+op+'"/>';
+     o+='<text x="'+a.toFixed(1)+'" y="'+(y+24)+'" font-size="10" font-weight="800" fill="'+col+'" text-anchor="middle" opacity="'+op+'">'+f(lo)+'</text>';
+     o+='<text x="'+b.toFixed(1)+'" y="'+(y+24)+'" font-size="10" font-weight="800" fill="'+col+'" text-anchor="middle" opacity="'+op+'">'+f(hi)+'</text>';
+     return o;
+   }
+   var onZ=(mode==='z'), onT=(mode==='t');
+   s+='<text x="'+ML+'" y="'+LZ+'" font-size="10.2" font-weight="800" fill="'+(onZ?'#2f6f9f':'#a9b8c0')+'">z INTERVAL &nbsp;x&#772; &plusmn; z*&sigma;/&radic;n &nbsp;&mdash;&nbsp; width '+f(cur.zHi-cur.zLo)+' '+p.u+(onZ?'':' (not selected)')+'</text>';
+   s+=bar(cur.zLo,cur.zHi,BZ,'#2f6f9f',onZ);
+   s+='<text x="'+ML+'" y="'+LT+'" font-size="10.2" font-weight="800" fill="'+(onT?'#1c4454':'#a9b8c0')+'">t INTERVAL &nbsp;x&#772; &plusmn; t*s/&radic;n &nbsp;&mdash;&nbsp; width '+f(cur.tHi-cur.tLo)+' '+p.u+(onT?'':' (not selected)')+'</text>';
+   s+=bar(cur.tLo,cur.tHi,BT2,'#1c4454',onT);
+
+   /* panel-2 axis */
+   s+='<line x1="'+ML+'" y1="'+AX2+'" x2="'+(VW-MR)+'" y2="'+AX2+'" stroke="#c6d6de" stroke-width="1.5"/>';
+   for(i=0;i<=4;i++){
+     var tv2=wLo+sp2*i/4, tx2=ML+PW*i/4;
+     s+='<line x1="'+tx2.toFixed(1)+'" y1="'+AX2+'" x2="'+tx2.toFixed(1)+'" y2="'+(AX2+4)+'" stroke="#c6d6de" stroke-width="1.5"/>';
+     s+='<text x="'+tx2.toFixed(1)+'" y="'+(AX2+15)+'" font-size="9.6" fill="#78868d" font-weight="700" text-anchor="middle">'+tk(tv2,sp2)+'</text>';
+   }
+   s+='<text x="'+(VW-MR)+'" y="'+(FY2+14)+'" font-size="9.4" fill="#a9b8c0" font-weight="700" text-anchor="end">MAGNIFIED &times;'+(sp1/sp2).toFixed(1)+'</text>';
+   return s;
+ }
+
+ /* ================= chart 2: normal vs t, middle C% shaded ================= */
+ function drawCurves(){
+   var s='', i, XL=26, XR=434, W=XR-XL, BASE=176, TOP=22, XM=4.4;
+   var df=n-1;
+   var yMax=0.4;
+   function px(t){ return XL+(t+XM)/(2*XM)*W; }
+   function py(d){ return BASE-(d/yMax)*(BASE-TOP); }
+   function path(fn){
+     var o='', k, t, first=true;
+     for(k=0;k<=280;k++){
+       t=-XM+2*XM*k/280;
+       o+=(first?'M':'L')+px(t).toFixed(1)+' '+py(fn(t)).toFixed(1);
+       first=false;
+     }
+     return o;
+   }
+   var act=(mode==='z')?function(t){return nPdf(t);}:function(t){return tPdf(t,df);};
+   var m=(mode==='z')?zs:ts;
+
+   /* shaded middle C% under the active curve */
+   var sh='M'+px(-Math.min(m,XM)).toFixed(1)+' '+BASE, k2, tt;
+   for(k2=0;k2<=200;k2++){
+     tt=-Math.min(m,XM)+2*Math.min(m,XM)*k2/200;
+     sh+='L'+px(tt).toFixed(1)+' '+py(act(tt)).toFixed(1);
+   }
+   sh+='L'+px(Math.min(m,XM)).toFixed(1)+' '+BASE+'Z';
+   s+='<path d="'+sh+'" fill="'+((mode==='z')?'#2f6f9f':'#1c4454')+'" opacity=".17"/>';
+
+   /* the two curves */
+   s+='<path d="'+path(function(t){return nPdf(t);})+'" fill="none" stroke="#2f6f9f" stroke-width="'+((mode==='z')?2.6:1.6)+'" opacity="'+((mode==='z')?1:0.5)+'" stroke-dasharray="'+((mode==='z')?'':'5 4')+'"/>';
+   s+='<path d="'+path(function(t){return tPdf(t,df);})+'" fill="none" stroke="#1c4454" stroke-width="'+((mode==='t')?2.6:1.6)+'" opacity="'+((mode==='t')?1:0.5)+'" stroke-dasharray="'+((mode==='t')?'':'5 4')+'"/>';
+
+   /* baseline + ticks */
+   s+='<line x1="'+XL+'" y1="'+BASE+'" x2="'+XR+'" y2="'+BASE+'" stroke="#c6d6de" stroke-width="1.5"/>';
+   for(i=-4;i<=4;i++){
+     s+='<line x1="'+px(i).toFixed(1)+'" y1="'+BASE+'" x2="'+px(i).toFixed(1)+'" y2="'+(BASE+4)+'" stroke="#c6d6de" stroke-width="1.5"/>';
+     s+='<text x="'+px(i).toFixed(1)+'" y="'+(BASE+15)+'" font-size="9.4" fill="#78868d" font-weight="700" text-anchor="middle">'+i+'</text>';
+   }
+   s+='<text x="'+((XL+XR)/2)+'" y="'+(BASE+31)+'" font-size="9.6" fill="#a9b8c0" font-weight="700" text-anchor="middle">standard errors away from x&#772;</text>';
+
+   /* the multiplier marks */
+   function mark(v,col,lab,up){
+     if(v>XM) return '';
+     var o='';
+     o+='<line x1="'+px(v).toFixed(1)+'" y1="'+py(act(v)).toFixed(1)+'" x2="'+px(v).toFixed(1)+'" y2="'+BASE+'" stroke="'+col+'" stroke-width="2"/>';
+     o+='<line x1="'+px(-v).toFixed(1)+'" y1="'+py(act(-v)).toFixed(1)+'" x2="'+px(-v).toFixed(1)+'" y2="'+BASE+'" stroke="'+col+'" stroke-width="2"/>';
+     o+='<text x="'+px(v).toFixed(1)+'" y="'+up+'" font-size="10.4" font-weight="800" fill="'+col+'" text-anchor="middle">+'+lab+'</text>';
+     o+='<text x="'+px(-v).toFixed(1)+'" y="'+up+'" font-size="10.4" font-weight="800" fill="'+col+'" text-anchor="middle">&minus;'+lab+'</text>';
+     return o;
+   }
+   var other=(mode==='z')?ts:zs, oc=(mode==='z')?'#1c4454':'#2f6f9f', ol=(mode==='z')?'t*':'z*';
+   if(Math.abs(other-m)>0.012&&other<=XM){
+     s+='<line x1="'+px(other).toFixed(1)+'" y1="'+(BASE-26)+'" x2="'+px(other).toFixed(1)+'" y2="'+BASE+'" stroke="'+oc+'" stroke-width="1.6" stroke-dasharray="3 3" opacity=".75"/>';
+     s+='<line x1="'+px(-other).toFixed(1)+'" y1="'+(BASE-26)+'" x2="'+px(-other).toFixed(1)+'" y2="'+BASE+'" stroke="'+oc+'" stroke-width="1.6" stroke-dasharray="3 3" opacity=".75"/>';
+     s+='<text x="'+px(other).toFixed(1)+'" y="'+(BASE-30)+'" font-size="9.4" font-weight="800" fill="'+oc+'" text-anchor="middle" opacity=".8">'+ol+' = '+other.toFixed(2)+'</text>';
+   }
+   var mc=(mode==='z')?'#2f6f9f':'#1c4454', ml2=(mode==='z')?'z*':'t*';
+   if(m<=XM){
+     s+=mark(m,mc,m.toFixed(3),52);
+     s+='<text x="'+px(m).toFixed(1)+'" y="40" font-size="9.6" font-weight="800" fill="'+mc+'" text-anchor="middle">'+ml2+'</text>';
+     s+='<text x="'+px(-m).toFixed(1)+'" y="40" font-size="9.6" font-weight="800" fill="'+mc+'" text-anchor="middle">'+ml2+'</text>';
+   } else {
+     s+='<text x="'+((XL+XR)/2)+'" y="46" font-size="10.6" font-weight="800" fill="'+mc+'" text-anchor="middle">'+ml2+' = '+m.toFixed(3)+' &mdash; reaches past the edge of this scale</text>';
+   }
+   s+='<text x="'+px(0).toFixed(1)+'" y="'+(BASE-56)+'" font-size="12.5" font-weight="800" fill="'+mc+'" text-anchor="middle">middle '+conf+'%</text>';
+   s+='<text x="'+px(0).toFixed(1)+'" y="'+(BASE-42)+'" font-size="9.8" font-weight="700" fill="#78868d" text-anchor="middle">'+((100-conf)/2).toFixed(1)+'% left in each tail</text>';
+
+   /* legend */
+   s+='<text x="'+XL+'" y="14" font-size="9.6" font-weight="800" fill="#2f6f9f">&mdash;&mdash; standard normal</text>';
+   s+='<text x="'+XR+'" y="14" font-size="9.6" font-weight="800" fill="#1c4454" text-anchor="end">&mdash;&mdash; t with df = '+df+'</text>';
+   return s;
+ }
+
+ /* ================= chart 3: t* against n, falling toward z* ================= */
+ function drawConv(){
+   var s='', i, XL=40, XR=440, W=XR-XL, BASE=152, TOP=22;
+   var nLo=3, nHi=100;
+   var yLo=zs, yHi=tStar(conf,2);
+   if(yHi-yLo<1e-6) yHi=yLo+1;
+   function px(v){ return XL+(v-nLo)/(nHi-nLo)*W; }
+   function py(v){ return BASE-(clamp(v,yLo,yHi)-yLo)/(yHi-yLo)*(BASE-TOP); }
+
+   /* z* floor */
+   s+='<line x1="'+XL+'" y1="'+BASE+'" x2="'+XR+'" y2="'+BASE+'" stroke="#2f6f9f" stroke-width="2" stroke-dasharray="6 4"/>';
+   s+='<text x="'+(XL+6)+'" y="'+(BASE-6)+'" font-size="10" font-weight="800" fill="#2f6f9f">z* = '+zs.toFixed(3)+' &mdash; the floor t* never reaches</text>';
+
+   /* the t* curve */
+   var d='', first=true;
+   for(i=nLo;i<=nHi;i++){
+     d+=(first?'M':'L')+px(i).toFixed(1)+' '+py(tStar(conf,i-1)).toFixed(1);
+     first=false;
+   }
+   s+='<path d="'+d+'" fill="none" stroke="#1c4454" stroke-width="2.6"/>';
+
+   /* current n */
+   var cx=px(clamp(n,nLo,nHi)), cy=py(ts);
+   s+='<line x1="'+cx.toFixed(1)+'" y1="'+cy.toFixed(1)+'" x2="'+cx.toFixed(1)+'" y2="'+BASE+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="3 3"/>';
+   s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="5.2" fill="#d1495b"/>';
+   s+='<text x="'+clamp(cx,XL+42,XR-42).toFixed(1)+'" y="'+(cy-11).toFixed(1)+'" font-size="10.4" font-weight="800" fill="#d1495b" text-anchor="middle">n = '+n+' &rarr; t* = '+ts.toFixed(3)+'</text>';
+
+   /* axes */
+   s+='<line x1="'+XL+'" y1="'+TOP+'" x2="'+XL+'" y2="'+(BASE+6)+'" stroke="#c6d6de" stroke-width="1.5"/>';
+   var ns=[3,10,20,40,60,80,100];
+   for(i=0;i<ns.length;i++){
+     s+='<line x1="'+px(ns[i]).toFixed(1)+'" y1="'+(BASE+6)+'" x2="'+px(ns[i]).toFixed(1)+'" y2="'+(BASE+10)+'" stroke="#c6d6de" stroke-width="1.5"/>';
+     s+='<text x="'+px(ns[i]).toFixed(1)+'" y="'+(BASE+22)+'" font-size="9.4" fill="#78868d" font-weight="700" text-anchor="middle">'+ns[i]+'</text>';
+   }
+   s+='<text x="'+((XL+XR)/2)+'" y="'+(BASE+37)+'" font-size="9.6" fill="#a9b8c0" font-weight="700" text-anchor="middle">sample size n</text>';
+   s+='<text x="'+(XL-6)+'" y="'+(TOP+4)+'" font-size="9.4" fill="#78868d" font-weight="700" text-anchor="end">'+yHi.toFixed(2)+'</text>';
+   s+='<text x="'+(XL-6)+'" y="'+(BASE+4)+'" font-size="9.4" fill="#78868d" font-weight="700" text-anchor="end">'+yLo.toFixed(2)+'</text>';
+   s+='<text x="'+XL+'" y="14" font-size="9.6" font-weight="800" fill="#1c4454">t* at '+conf+'% confidence, df = n &minus; 1</text>';
+   return s;
+ }
+
+ /* ================= chart 4: actual coverage of three procedures ================= */
+ function drawCov(){
+   if(!COV) return '';
+   var s='', i, XL=138, XR=428, W=XR-XL, LO=60, HI=100;
+   var rows=[
+    {nm:'t interval',fm:'x&#772; &plusmn; t* s/&radic;n',col:'#1c4454',note:'the standard tool'},
+    {nm:'z with s',fm:'x&#772; &plusmn; z* s/&radic;n',col:'#d1495b',note:'the common mistake'},
+    {nm:'z with &sigma;',fm:'x&#772; &plusmn; z* &sigma;/&radic;n',col:'#2f6f9f',note:'only if &sigma; is truly known'}
+   ];
+   function px(v){ return XL+(clamp(v,LO,HI)-LO)/(HI-LO)*W; }
+   var ys=[36,94,152], BH=20;
+
+   /* promised level */
+   s+='<line x1="'+px(conf).toFixed(1)+'" y1="18" x2="'+px(conf).toFixed(1)+'" y2="186" stroke="#2f9e5b" stroke-width="2" stroke-dasharray="5 4"/>';
+   s+='<text x="'+px(conf).toFixed(1)+'" y="12" font-size="10" font-weight="800" fill="#2f9e5b" text-anchor="middle">promised '+conf+'%</text>';
+
+   for(i=0;i<rows.length;i++){
+     var y=ys[i], c=COV.c[i], w=COV.w[i], bx=px(c);
+     s+='<text x="0" y="'+(y+2)+'" font-size="11.4" font-weight="800" fill="'+rows[i].col+'">'+rows[i].nm+'</text>';
+     s+='<text x="0" y="'+(y+15)+'" font-size="9.6" font-weight="700" fill="#a9b8c0">'+rows[i].fm+'</text>';
+     s+='<text x="0" y="'+(y+28)+'" font-size="9" font-weight="700" fill="#c2ced4">'+rows[i].note+'</text>';
+     s+='<rect x="'+XL+'" y="'+(y-4)+'" width="'+W+'" height="'+BH+'" fill="#f0f6f9" rx="4"/>';
+     s+='<rect x="'+XL+'" y="'+(y-4)+'" width="'+(bx-XL).toFixed(1)+'" height="'+BH+'" fill="'+rows[i].col+'" rx="4"/>';
+     /* keep the % label on canvas: outside the bar when there is room, inside it otherwise */
+     if(bx<XR-46){
+       s+='<text x="'+(bx+7).toFixed(1)+'" y="'+(y+10)+'" font-size="12" font-weight="800" fill="'+rows[i].col+'">'+c.toFixed(1)+'%</text>';
+     } else {
+       s+='<text x="'+(bx-7).toFixed(1)+'" y="'+(y+10)+'" font-size="12" font-weight="800" fill="#fff" text-anchor="end">'+c.toFixed(1)+'%</text>';
+     }
+     s+='<text x="'+XR+'" y="'+(y+28)+'" font-size="9.4" font-weight="700" fill="#a9b8c0" text-anchor="end">average width '+w.toFixed(P().dec)+' '+P().u+'</text>';
+   }
+
+   /* axis */
+   s+='<line x1="'+XL+'" y1="192" x2="'+XR+'" y2="192" stroke="#c6d6de" stroke-width="1.5"/>';
+   var tks=[60,70,80,90,100];
+   for(i=0;i<tks.length;i++){
+     s+='<line x1="'+px(tks[i]).toFixed(1)+'" y1="192" x2="'+px(tks[i]).toFixed(1)+'" y2="196" stroke="#c6d6de" stroke-width="1.5"/>';
+     s+='<text x="'+px(tks[i]).toFixed(1)+'" y="207" font-size="9.4" fill="#78868d" font-weight="700" text-anchor="middle">'+tks[i]+'%</text>';
+   }
+   s+='<text x="'+((XL+XR)/2)+'" y="220" font-size="9.6" fill="#a9b8c0" font-weight="700" text-anchor="middle">share of '+COV.reps.toLocaleString()+' intervals that actually contained &mu; &mdash; axis starts at 60%</text>';
+   return s;
+ }
+
+ /* ================= panels ================= */
+ function renderCtx(){
+   $('ctxs').innerHTML=CTX.map(function(c,i){
+     return '<button class="it'+(i===ci?' on':'')+'" data-i="'+i+'"><span class="nm">'+c.t+'</span><span class="s">'+c.s+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#ctxs .it'),function(b){
+     b.onclick=function(){ ci=+b.dataset.i; R1=mk(SEED0); drawSample(); update(true); };
+   });
+ }
+ function renderSeg(){
+   Array.prototype.forEach.call(document.querySelectorAll('#mseg button'),function(b){
+     b.className=(b.dataset.m===mode)?'on':'';
+   });
+ }
+
+ function update(reCov){
+   var p=P();
+   recompute();
+   renderSeg();
+   renderCtx();
+
+   $('nVal').textContent=n;
+   $('cVal').textContent=conf+'%';
+   $('stage').style.background=p.col;
+   $('stage').innerHTML=p.t+'<small>'+(mode==='z'
+     ? '&sigma; known &rarr; z interval &middot; z* = '+zs.toFixed(3)
+     : '&sigma; unknown &rarr; t interval &middot; t* = '+ts.toFixed(3)+' on '+(n-1)+' df')+'</small>';
+   $('cardTitle').innerHTML=p.t+' &mdash; this sample, this interval';
+
+   /* tiles */
+   $('kSdL').innerHTML=(mode==='z')?'&sigma; (known)':'s (from this sample)';
+   $('kSeL').innerHTML=(mode==='z')?'&sigma;/&radic;n':'s/&radic;n';
+   $('kMuL').innerHTML=(mode==='z')?'z*':'t*';
+   $('tMu').textContent=mult.toFixed(3);
+   $('tDf').innerHTML=(mode==='z')?'from the normal curve':'df = n &minus; 1 = '+(n-1);
+   $('kSd').className=(mode==='z')?'':'hi';
+
+   if(cur){
+     $('tXb').textContent=f(cur.m);
+     $('tSd').textContent=f(sdU);
+     $('tSe').textContent=se.toFixed(Math.min(4,p.dec+1));
+     var lo=(mode==='z')?cur.zLo:cur.tLo, hi=(mode==='z')?cur.zHi:cur.tHi;
+     $('ce').innerHTML='x&#772; &plusmn; '+((mode==='z')?'z*':'t*')+' &times; '+((mode==='z')?'&sigma;':'s')+'/&radic;n'+
+       '<br><b>'+f(cur.m)+'</b> &plusmn; <b>'+mult.toFixed(3)+'</b> &times; <b>'+f(sdU)+'</b> / &radic;<b>'+n+'</b>'+
+       '<br><b>'+f(cur.m)+'</b> &plusmn; <b>'+f(moe)+'</b> '+p.u;
+     $('cr').innerHTML='<span>resulting interval</span>('+f(lo)+', '+f(hi)+') '+p.u;
+
+     var okNow=(lo<=p.mu&&p.mu<=hi);
+     $('verd').className='vd '+(okNow?'hit':'miss');
+     $('verd').innerHTML=okNow
+       ? '&#10003; This interval does contain &mu; = '+f(p.mu)+' '+p.u+'. In real work you would never get to check this &mdash; &mu; is exactly the thing you do not know.'
+       : '&#10007; This interval misses &mu; = '+f(p.mu)+' '+p.u+'. Nothing went wrong: at '+conf+'% confidence, roughly '+(100-conf)+' out of every 100 intervals are supposed to miss. Draw again.';
+
+     var tW=cur.tHi-cur.tLo, zW=cur.zHi-cur.zLo;
+     var relTxt=(tW>=zW)
+       ? '<b>'+((tW/Math.max(zW,1e-12)-1)*100).toFixed(0)+'% wider</b> than'
+       : '<b>'+((1-tW/Math.max(zW,1e-12))*100).toFixed(0)+'% narrower</b> than';
+     $('cap').innerHTML='The top panel is the whole population scale, with your '+n+' values scattered across it and x&#772; = <b>'+f(cur.m)+'</b> marked. The bottom panel magnifies the boxed window so you can compare the two intervals built from that same x&#772;. They share a center and differ only in reach &mdash; here the t interval is '+relTxt+' the z interval. '+
+       (tW<zW?'It came out narrower this time only because this particular sample\'s s landed below the true &sigma;; that is exactly the luck the t multiplier exists to protect against, and over many samples the t interval averages wider. ':'')+
+       'Notice also how much narrower <i>either</i> interval is than the spread of the data itself &mdash; you are estimating the <i>mean</i>, not predicting the next value.';
+   }
+
+   $('chart').innerHTML=drawChart();
+   $('curves').innerHTML=drawCurves();
+   $('conv').innerHTML=drawConv();
+
+   /* curve caption */
+   var gap=((ts/zs-1)*100);
+   $('ccap').innerHTML='At n = '+n+' the t curve has <b>'+(n-1)+'</b> degrees of freedom. To fence off the same middle '+conf+'% of area you must reach out to <b>t* = '+ts.toFixed(3)+'</b> instead of <b>z* = '+zs.toFixed(3)+'</b> &mdash; a reach <b>'+gap.toFixed(1)+'% longer</b>. That surcharge is not arbitrary: it is exactly what compensates for the fact that s, the number sitting in your standard error, is itself a guess that could have come out too small.';
+
+   /* convergence caption: t* falls monotonically in df, so binary-search the crossing */
+   var need=0, blo=3, bhi=4000, bm;
+   if(tStar(conf,bhi-1)<=zs*1.02){
+     while(blo<bhi){ bm=(blo+bhi)>>1; if(tStar(conf,bm-1)<=zs*1.02) bhi=bm; else blo=bm+1; }
+     need=blo;
+   }
+   $('vcap').innerHTML='At n = 3 the multiplier is <b>'+tStar(conf,2).toFixed(2)+'</b>; by n = 30 it is down to <b>'+tStar(conf,29).toFixed(3)+'</b>, and it comes within 2% of z* at about <b>n = '+(need?need:'&gt; 4000')+'</b>. This is why you may have been told that t and z are &ldquo;about the same for large samples&rdquo; &mdash; true, and irrelevant to whether you should use t. With a large sample the two answers agree, so using t costs you nothing; with a small sample they disagree sharply, and t is the one that is right. <b>When &sigma; is unknown, t is never the wrong choice.</b>';
+
+   if(reCov) runCoverage(2000,covSeed);
+   $('cov').innerHTML=drawCov();
+   if(COV){
+     var c0=COV.c[0], c1=COV.c[1], c2=COV.c[2];
+     var okT=Math.abs(c0-conf)<1.6;
+     var txt='Across '+COV.reps.toLocaleString()+' simulated studies at n = '+n+' and '+conf+'% confidence: the <b>t interval</b> captured &mu; <b>'+c0.toFixed(1)+'%</b> of the time, the same interval built with <b>z* and s</b> captured it <b>'+c1.toFixed(1)+'%</b> of the time, and the z interval using the <b>genuinely known &sigma;</b> captured it <b>'+c2.toFixed(1)+'%</b> of the time. ';
+     if(c1<conf-1.6){
+       txt+='Look at the middle bar and then at its average width: it is the <b>narrowest of the three</b> and it <b>misses most often</b>. That is the whole indictment of using z with s &mdash; it does not fail loudly, it just quietly buys its tidy-looking precision by breaking the promise printed on the label. ';
+     } else {
+       txt+='At a sample this large the middle bar has nearly caught up &mdash; t* and z* have almost converged, so the mistake barely shows. It is still a mistake; it is simply a cheap one here, and you cannot tell in advance which samples will be forgiving. ';
+     }
+     if(P().sk && !okT){
+       txt+='Notice that even the <b>t interval falls short of '+conf+'%</b> on this setting. Nothing is wrong with the formula &mdash; this population is strongly right-skewed, and the t interval is exact only when the underlying values are normal. Raise n and watch the Central Limit Theorem gradually pull the top bar back onto its promise.';
+     } else if(okT){
+       txt+='The top bar lands on the promised line, which is what &ldquo;'+conf+'% confidence&rdquo; is supposed to mean: not a claim about any one interval, but a measured long-run hit rate for the procedure that produces them.';
+     }
+     $('covcap').innerHTML=txt;
+   }
+
+   /* info */
+   $('info').innerHTML='<span class="n">'+(mode==='z'?'&sigma; known &mdash; the rare case':'&sigma; unknown &mdash; the ordinary case')+'</span>'+
+     (mode==='z'
+      ? 'Here the spread is a <b>settled, externally known property</b> of the process, not something you are reading off your own data. Nothing in the standard error &sigma;/&radic;n is being guessed, so the sampling distribution of x&#772; is exactly normal and the multiplier comes straight off the normal curve: <b>z* = '+zs.toFixed(3)+'</b>. Be honest about how seldom this holds. If you found &sigma; by computing it from the sample in front of you, it is not known &mdash; it is s, and you owe the t multiplier.'
+      : 'You do not know &sigma;, so you estimate it with <b>s = '+(cur?f(cur.s):'&mdash;')+'</b> computed from the very same '+n+' values that gave you x&#772;. Now <i>two</i> things wobble from sample to sample instead of one, and s runs small about as often as it runs large &mdash; which would make a z interval too narrow too often. The fix is to widen the multiplier: take it from the <b>t distribution on df = n &minus; 1 = '+(n-1)+'</b>, giving <b>t* = '+ts.toFixed(3)+'</b>.')+
+     '<div class="dd">'+P().why+'</div>'+
+     (cur?'<div class="loc"><b>How to say it out loud:</b> &ldquo;We are '+conf+'% confident that the true mean '+P().t.toLowerCase().replace(' (skewed)','')+' is between <b>'+f((mode==='z')?cur.zLo:cur.tLo)+'</b> and <b>'+f((mode==='z')?cur.zHi:cur.tHi)+' '+P().u+'</b>.&rdquo; The '+conf+'% attaches to the <i>method</i>, not to this pair of numbers.</div>':'');
+ }
+
+ /* ================= wiring ================= */
+ Array.prototype.forEach.call(document.querySelectorAll('#mseg button'),function(b){
+   b.onclick=function(){ mode=b.dataset.m; reStat(); update(false); };
+ });
+ $('nSl').oninput=function(){ n=+this.value; R1=mk(SEED0); drawSample(); update(false); };
+ $('nSl').onchange=function(){ update(true); };
+ $('cSl').oninput=function(){ conf=+this.value; reStat(); update(false); };
+ $('cSl').onchange=function(){ update(true); };
+ $('d1').onclick=function(){ drawSample(); update(false); };
+ $('rst').onclick=function(){ R1=mk(SEED0); covSeed=777001; drawSample(); update(true); };
+ $('rerun').onclick=function(){ covSeed=(covSeed+2654435761)>>>0; update(true); };
+
+ drawSample();
+ update(true);
+})();
+</script>
+</body>
+</html>

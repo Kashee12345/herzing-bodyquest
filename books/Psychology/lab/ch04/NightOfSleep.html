@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>A Night of Sleep</title>
+<meta name="description" content="Step through a whole night of sleep on an interactive hypnogram — Stages 1, 2, 3 and REM, the brain waves of each, and how deep sleep and REM trade places across the night. For psychology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:1.12fr 0.88fr;}
+#art text{pointer-events:none;}
+.rgn{cursor:pointer;} .rgn2{cursor:pointer;}
+.wavebox{margin-top:11px;border:1px solid var(--line);border-radius:10px;background:#fbf5f8;padding:8px 11px 4px;}
+.wavehd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:1px;}
+.wavehd #waveName{font-weight:800;font-size:12px;color:var(--teal-dk);letter-spacing:.3px;}
+.wavehd #waveDesc{font-size:11px;color:var(--muted);font-weight:600;text-align:right;}
+.mlbl{margin-top:11px;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);}
+.cont{margin-top:9px;font-size:12.5px;color:var(--soft);background:#f8e2ec;border-radius:9px;padding:8px 11px;line-height:1.45;} .cont b{color:var(--teal-dk);}
+#counter{flex:none;font-size:11.5px;font-weight:800;color:var(--muted);min-width:56px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 4</div>
+  <h1>A Night of Sleep</h1>
+  <div class="intro">Sleep isn't one flat state &mdash; across a night the brain repeatedly sinks into deep <b>NREM</b> sleep and rises into dreaming <b>REM</b>. A chart of those stages over time is called a <b>hypnogram</b>. Press <b>Next</b> to walk through one whole night, or tap any part of the chart to jump there.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">A whole night of sleep</h2>
+    <svg viewBox="0 0 460 236" aria-label="hypnogram of one night of sleep"><g id="art"></g></svg>
+    <div class="wavebox">
+      <div class="wavehd"><span id="waveName">Brain waves</span><span id="waveDesc">press Next to begin</span></div>
+      <svg viewBox="0 0 420 48" aria-label="EEG brain-wave trace"><path id="eeg" d="M0 24 L420 24" fill="none" stroke="#a1466b" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    </div>
+    <div class="cont">The red band is <b>REM</b> &mdash; dreaming sleep. Notice how <b>deep sleep (Stage 3) dominates early</b> in the night, while <b>REM periods grow longer toward morning</b>.</div>
+  </div></div>
+  <div>
+    <div id="stage">A night of sleep<small>press Next to begin the night</small></div>
+    <div class="card">
+      <div id="info"><span class="n">Cycles of about 90 minutes</span>A typical night runs through <b>4&ndash;6 cycles</b>, each roughly <b>90 minutes</b> long. Every cycle descends through the NREM stages toward deep sleep and then climbs back into REM. Step through one night to see how the pattern shifts from dusk to dawn.</div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><span id="counter">1 / 9</span><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var COL={awake:'#63505a',rem:'#d1495b',n1:'#b8862f',n2:'#2f6f9f',n3:'#5e2846'};
+ // Full night, drawn as a staircase. Each entry: stage + duration (minutes).
+ var SEGS=[
+  {st:'awake',dur:12},{st:'n1',dur:6},{st:'n2',dur:28},{st:'n3',dur:45},{st:'n2',dur:14},
+  {st:'rem',dur:10},{st:'n2',dur:22},{st:'n3',dur:28},{st:'n2',dur:16},{st:'rem',dur:20},
+  {st:'n2',dur:26},{st:'n3',dur:10},{st:'n2',dur:20},{st:'rem',dur:26},{st:'awake',dur:4},
+  {st:'n2',dur:28},{st:'rem',dur:30},{st:'n2',dur:12},{st:'rem',dur:24},{st:'awake',dur:8}
+ ];
+ var starts=[],t0=0; for(var i=0;i<SEGS.length;i++){starts[i]=t0;t0+=SEGS[i].dur;} var T=t0;
+ // Curated teaching beats. seg = index into SEGS (marker position); wk = brain-wave kind.
+ var STEPS=[
+  {seg:0,wk:'alpha',bnm:'Awake',when:'0:00 · lights out',
+   wave:'Alpha waves',waved:'relaxed, eyes closed',
+   nm:'Awake &mdash; settling in',
+   def:'You lie in bed with your eyes closed, still fully aware. As you relax, the fast, low <b>beta waves</b> of alert wakefulness give way to slower, rhythmic <b>alpha waves</b> &mdash; the brain\'s relaxed idle.',
+   facts:['Beta &rarr; alpha waves','Muscles loosening','Still easily roused'],
+   ntype:'loc',note:'You are not asleep yet &mdash; but the descent through the stages is about to begin.'},
+  {seg:1,wk:'n1',bnm:'Stage 1 · N1',when:'~0:12 · falling asleep',
+   wave:'Theta waves',waved:'drifting into sleep',
+   nm:'Stage 1 (N1) &mdash; drifting off',
+   def:'The lightest sleep and the doorway into it. Alpha waves fade into slower <b>theta waves</b>. Stage 1 lasts only a few minutes, and people woken from it often insist they were still awake.',
+   facts:['~5% of the night','Hypnagogic sensations','Hypnic (myoclonic) jerks'],
+   ntype:'mnem',note:'That sudden "falling" jolt as you doze off is a <b>hypnic jerk</b> of Stage 1.'},
+  {seg:2,wk:'n2',bnm:'Stage 2 · N2',when:'~0:18 · now truly asleep',
+   wave:'Spindles &amp; K-complexes',waved:'over slow theta waves',
+   nm:'Stage 2 (N2) &mdash; light sleep',
+   def:'Now you are genuinely asleep. Theta waves continue, punctuated by two signatures: <b>sleep spindles</b> (quick bursts of activity) and <b>K-complexes</b> (single large, slow waves). Heart rate slows and body temperature drops.',
+   facts:['~45% of the night','Sleep spindles','K-complexes','Body cools'],
+   ntype:'loc',note:'You spend <b>more of the night in Stage 2</b> than in any other stage.'},
+  {seg:3,wk:'n3',bnm:'Stage 3 · N3 (deep)',when:'~0:45 · Cycle 1, deepest',
+   wave:'Delta waves',waved:'slow &amp; tall &mdash; deep sleep',
+   nm:'Stage 3 (N3) &mdash; deep sleep',
+   def:'The deepest, most restorative sleep, dominated by slow, tall <b>delta waves</b> &mdash; hence "slow-wave sleep." You are very hard to wake, and if roused you feel groggy and disoriented.',
+   facts:['~25% of the night','Growth hormone released','Tissue repair &amp; memory','Hardest to wake'],
+   ntype:'note',note:'Sleepwalking, night terrors, and bedwetting happen <b>here, in deep NREM</b> &mdash; not during dreams.'},
+  {seg:5,wk:'rem',bnm:'REM sleep',when:'~1:40 · end of Cycle 1',
+   wave:'Sawtooth / beta-like',waved:'looks almost awake',
+   nm:'REM sleep &mdash; first dream period',
+   def:'About 90 minutes in, the brain rises out of deep sleep into <b>rapid eye movement</b> sleep. The EEG looks nearly awake &mdash; "paradoxical sleep" &mdash; the eyes dart beneath closed lids, and vivid, story-like <b>dreaming</b> is most common.',
+   facts:['Vivid dreaming','Rapid eye movements','Muscle atonia (paralysis)'],
+   ntype:'loc',note:'REM was discovered by <b>Aserinsky and Kleitman (1953)</b>. Muscle <b>atonia</b> keeps you from acting out your dreams.'},
+  {seg:7,wk:'n3',bnm:'Stage 3 · N3',when:'~2:15 · Cycle 2',
+   wave:'Delta waves',waved:'briefer than Cycle 1',
+   nm:'Cycle 2 &mdash; the descent repeats',
+   def:'The night moves in roughly <b>90-minute cycles</b>. You sink back toward deep sleep &mdash; but each cycle brings <b>less Stage 3</b> than the one before. Deep sleep is front-loaded into the first half of the night.',
+   facts:['4&ndash;6 cycles per night','~90 min each','Deep sleep shrinks'],
+   ntype:'loc',note:'This is why the <b>first few hours</b> of sleep are the most physically restorative.'},
+  {seg:14,wk:'awake',bnm:'Brief awakening',when:'~4:45 · between cycles',
+   wave:'Alpha / beta',waved:'a momentary arousal',
+   nm:'A brief awakening',
+   def:'Short awakenings between cycles are completely <b>normal</b>. Most are so brief they are forgotten by morning, and the sleeper resettles within seconds.',
+   facts:['Usually not remembered','Only seconds long','Part of healthy sleep'],
+   ntype:'loc',note:'Remembering many <b>long</b> awakenings &mdash; not these brief ones &mdash; is what signals disrupted sleep.'},
+  {seg:16,wk:'rem',bnm:'REM sleep',when:'~5:15 · Cycle 4',
+   wave:'Sawtooth / beta-like',waved:'longer REM burst',
+   nm:'REM lengthens toward morning',
+   def:'As the night goes on the pattern flips: <b>Stage 3 fades</b> while <b>REM periods grow longer</b> &mdash; from about 10 minutes early on to 30 minutes or more. Most of your dreaming happens in these final hours.',
+   facts:['~20&ndash;25% of the night','REM grows each cycle','Most dreams before waking'],
+   ntype:'loc',note:'REM supports <b>memory consolidation</b>, especially of emotional and procedural learning.'},
+  {seg:19,wk:'awake',bnm:'Awake',when:'~6:20 · morning',
+   wave:'Beta waves',waved:'wide awake',
+   nm:'Waking up',
+   def:'After the last and longest REM period, the brain returns to <b>alpha and beta waves</b> and you wake. A full night is 4&ndash;6 cycles that trade <b>deep NREM early</b> for <b>long REM late</b>.',
+   facts:['~7&ndash;9 hours ideal','4&ndash;6 full cycles','Refreshed &amp; consolidated'],
+   ntype:'loc',note:'Waking at the end of a cycle &mdash; in light sleep &mdash; feels far better than being pulled out of deep Stage 3.'}
+ ];
+ var levelY={awake:44,rem:80,n1:116,n2:152,n3:188};
+ var rows=[['awake','Awake'],['rem','REM'],['n1','Stage 1'],['n2','Stage 2'],['n3','Stage 3']];
+ var idx=0;
+ function x(t){return 66+t/T*382;}
+ function draw(curSeg){ var s='';
+   // gridlines + clickable y-axis stage labels
+   rows.forEach(function(r){ var y=levelY[r[0]];
+     s+='<line x1="66" y1="'+y+'" x2="448" y2="'+y+'" stroke="#eee0e6" stroke-width="1"/>';
+     s+='<g class="rgn2" data-st="'+r[0]+'"><rect x="0" y="'+(y-8)+'" width="62" height="16" fill="transparent"/>';
+     s+='<circle cx="8" cy="'+y+'" r="4" fill="'+COL[r[0]]+'"/>';
+     s+='<text x="16" y="'+(y+3.3)+'" font-size="9.5" fill="#63505a" font-weight="700">'+r[1]+'</text></g>';
+   });
+   // hour ticks
+   for(var h=1;h*60<T;h++){ var xt=x(h*60);
+     s+='<line x1="'+xt+'" y1="30" x2="'+xt+'" y2="196" stroke="#f3e3ea" stroke-width="1"/>';
+     s+='<text x="'+xt+'" y="211" font-size="9" fill="#94818b" text-anchor="middle" font-weight="700">'+h+'h</text>';
+   }
+   s+='<text x="257" y="229" font-size="9.5" fill="#94818b" text-anchor="middle" font-weight="700" letter-spacing="1">HOURS OF SLEEP &rarr;</text>';
+   // staircase line
+   var pts=[];
+   for(var i=0;i<SEGS.length;i++){ var xs=x(starts[i]),xe=x(starts[i]+SEGS[i].dur),y=levelY[SEGS[i].st]; pts.push(xs+','+y); pts.push(xe+','+y); }
+   s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="#c9a9bb" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"/>';
+   // REM overlay in red
+   for(var j=0;j<SEGS.length;j++){ if(SEGS[j].st==='rem'){ var rxs=x(starts[j]),rxe=x(starts[j]+SEGS[j].dur); s+='<line x1="'+rxs+'" y1="'+levelY.rem+'" x2="'+rxe+'" y2="'+levelY.rem+'" stroke="'+COL.rem+'" stroke-width="4.2" stroke-linecap="round"/>'; } }
+   // current-segment highlight
+   var g=SEGS[curSeg],cxs=x(starts[curSeg]),cxe=x(starts[curSeg]+g.dur),cy=levelY[g.st],xm=(cxs+cxe)/2,c=COL[g.st];
+   s+='<rect x="'+cxs+'" y="30" width="'+Math.max(3,cxe-cxs)+'" height="166" fill="'+c+'" opacity="0.13"/>';
+   s+='<line x1="'+xm+'" y1="30" x2="'+xm+'" y2="196" stroke="'+c+'" stroke-width="1.3" stroke-dasharray="3 3" opacity=".5"/>';
+   s+='<line x1="'+cxs+'" y1="'+cy+'" x2="'+cxe+'" y2="'+cy+'" stroke="'+c+'" stroke-width="5" stroke-linecap="round"/>';
+   s+='<circle cx="'+xm+'" cy="'+cy+'" r="6.5" fill="'+c+'" stroke="#fff" stroke-width="2.5"><animate attributeName="r" values="6.5;8.5;6.5" dur="1.4s" repeatCount="indefinite"/></circle>';
+   // transparent click targets on top
+   for(var k=0;k<SEGS.length;k++){ var hxs=x(starts[k]); s+='<rect class="rgn" data-i="'+k+'" x="'+hxs+'" y="30" width="'+Math.max(2,x(starts[k]+SEGS[k].dur)-hxs)+'" height="166" fill="transparent"/>'; }
+   return s;
+ }
+ function eeg(k){ var w=420,mid=24,d='';
+   var cfg={awake:{f:0.85,a:4},alpha:{f:0.5,a:6},n1:{f:0.34,a:8},n2:{f:0.3,a:6},n3:{f:0.13,a:15},rem:{f:0.82,a:5}};
+   var c=cfg[k]||cfg.n2;
+   for(var xx=0;xx<=w;xx+=3){ var y=mid+c.a*Math.sin(xx*c.f);
+     if(k==='awake'||k==='rem'){ y+=2.2*Math.sin(xx*2.1); }
+     if(k==='n2'){ y+=8*Math.exp(-Math.pow((xx-165)/15,2))*Math.sin(xx*1.4); y+=-13*Math.exp(-Math.pow((xx-275)/11,2)); }
+     if(y<4)y=4; if(y>44)y=44;
+     d+=(xx===0?'M':'L')+xx+' '+y.toFixed(1);
+   }
+   return d;
+ }
+ function go(n){ idx=Math.max(0,Math.min(STEPS.length-1,n)); render(); }
+ function pickBySeg(i){ var best=0,bd=1e9; for(var j=0;j<STEPS.length;j++){ var dd=Math.abs(STEPS[j].seg-i); if(dd<bd){bd=dd;best=j;} } go(best); }
+ function pickByStage(st){ for(var j=0;j<STEPS.length;j++){ if(SEGS[STEPS[j].seg].st===st){ go(j); return; } } }
+ function render(){ var s=STEPS[idx], g=SEGS[s.seg], c=COL[g.st];
+   $("art").innerHTML=draw(s.seg);
+   document.querySelectorAll('#art .rgn').forEach(function(r){ r.onclick=function(){ pickBySeg(+r.dataset.i); }; });
+   document.querySelectorAll('#art .rgn2').forEach(function(r){ r.onclick=function(){ pickByStage(r.dataset.st); }; });
+   $("eeg").setAttribute('d',eeg(s.wk)); $("eeg").setAttribute('stroke',c);
+   $("waveName").innerHTML=s.wave; $("waveDesc").innerHTML=s.waved;
+   $("stage").style.background=c; $("stage").innerHTML=s.bnm+'<small>'+s.when+'</small>';
+   $("counter").innerHTML=(idx+1)+' / '+STEPS.length;
+   $("info").innerHTML='<span class="n">'+s.nm+'</span>'+s.def+
+     '<div class="mlbl">Key features</div>'+
+     '<div class="ex"><span>'+s.facts.join('</span><span>')+'</span></div>'+
+     '<div class="'+s.ntype+'">'+s.note+'</div>';
+   $("prev").disabled=(idx===0); $("next").disabled=(idx===STEPS.length-1);
+ }
+ $("prev").onclick=function(){ go(idx-1); };
+ $("next").onclick=function(){ go(idx+1); };
+ render();
+})();
+</script>
+</body>
+</html>

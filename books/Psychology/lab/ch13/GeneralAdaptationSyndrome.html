@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>General Adaptation Syndrome</title>
+<meta name="description" content="Interactive plot of Hans Selye's General Adaptation Syndrome — drag through time to ride the stress curve through alarm, resistance, and exhaustion. For psychology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:1.1fr .9fr;}
+.leg{display:flex;gap:15px;justify-content:center;margin-top:8px;font-size:11.5px;font-weight:700;color:var(--muted);flex-wrap:wrap;}
+.leg span{display:inline-flex;align-items:center;gap:6px;}
+.leg i{width:20px;height:0;border-top:3px solid var(--muted);display:inline-block;}
+.leg i.act{border-top:3px solid var(--teal);} .leg i.base{border-top:3px dashed #b7a6ae;}
+.leg i.al{border-top:9px solid #b8862f;opacity:.55;} .leg i.re{border-top:9px solid #2f9e5b;opacity:.55;} .leg i.ex{border-top:9px solid #d1495b;opacity:.55;}
+.slab{font-size:12.5px;font-weight:700;color:var(--soft);display:flex;justify-content:space-between;margin:2px 0 6px;}
+.slab b{color:var(--teal-dk);font-family:var(--disp);font-size:15px;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;background:var(--line);outline:none;margin:4px 0 12px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);cursor:pointer;border:3px solid #fff;box-shadow:0 1px 5px rgba(70,30,45,.35);}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal);cursor:pointer;border:3px solid #fff;}
+.sub{font-size:12px;font-weight:700;color:var(--muted);margin:4px 0 6px;}
+.grid.ph3{grid-template-columns:repeat(3,1fr);}
+.two{display:flex;gap:8px;margin-top:10px;}
+.two div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 4px;background:#fff;}
+.two div .lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.two div .v{display:block;font-family:var(--disp);font-size:20px;font-weight:700;margin-top:2px;}
+.two div.act .v{color:var(--teal-dk);} .two div.base .v{color:#a08d95;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 13</div>
+  <h1>General Adaptation Syndrome</h1>
+  <div class="intro">In 1936 physiologist <b>Hans Selye</b> noticed that wildly different stressors &mdash; cold, injury, toxins &mdash; all triggered the <i>same</i> three-stage bodily reaction. He named it the <b>General Adaptation Syndrome</b>. Drag the time marker to ride the curve through <b>alarm</b>, <b>resistance</b>, and <b>exhaustion</b>.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Resistance to stress over time</h2>
+    <svg viewBox="0 0 360 236" aria-label="General Adaptation Syndrome curve"><g id="art"></g></svg>
+    <div class="leg">
+      <span><i class="act"></i>Resistance</span>
+      <span><i class="base"></i>Normal level</span>
+      <span><i class="al"></i>Alarm</span>
+      <span><i class="re"></i>Resistance</span>
+      <span><i class="ex"></i>Exhaustion</span>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">Selye's stress curve<small>drag the marker to begin</small></div>
+    <div class="card">
+      <div class="slab"><span>Time under the stressor</span><b id="tval">Alarm</b></div>
+      <input id="slider" type="range" min="0" max="100" step="1" value="10">
+      <div class="sub">Or jump straight to a stage:</div>
+      <div class="grid ph3" id="phases"></div>
+      <div class="two">
+        <div class="act"><span class="lbl">Resistance</span><span class="v" id="vRes">—</span></div>
+        <div class="base"><span class="lbl">Reserves</span><span class="v" id="vResv">—</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>Order = ARE:</b> <b>A</b>larm → <b>R</b>esistance → <b>E</b>xhaustion. If the stressor ends during alarm or resistance the body recovers &mdash; only <b>prolonged, unrelenting</b> stress ever reaches exhaustion.</div>
+      <div class="note"><b>Eustress vs. distress:</b> Selye distinguished <b>eustress</b> (motivating, manageable stress) from <b>distress</b> (harmful, overwhelming stress). The body climbs the <i>same</i> curve for both &mdash; what differs is the meaning and the dose.</div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var PX={x0:46,x1:344,yTop:22,yBot:192};
+ var rMin=0.25, rMax=1.75;
+ var time=10;
+
+ var PH=[
+  {nm:'Alarm reaction',col:'#b8862f',t0:0,t1:22,mid:10,sub:'shock, then fight-or-flight',
+   d:'The stressor hits. In the first moments &mdash; the <b>shock phase</b> &mdash; resistance briefly drops <i>below</i> normal as the body is caught off guard. Then <b>countershock</b>: the <b>sympathetic nervous system</b> and <b>adrenal medulla</b> flood the blood with <b>epinephrine</b>, while the <b>HPA axis</b> (hypothalamus &rarr; pituitary &rarr; adrenal cortex) releases <b>cortisol</b>. Heart rate, blood pressure and blood sugar surge in a <b>fight-or-flight</b> mobilization that lifts resistance <i>above</i> normal.'},
+  {nm:'Resistance',col:'#2f9e5b',t0:22,t1:62,mid:42,sub:'the body adapts &mdash; at a cost',
+   d:'If the stressor persists, the body settles into a costly steady state. Outwardly the person copes &mdash; cortisol stays elevated and resistance holds <i>above</i> normal &mdash; but <b>adaptive reserves are quietly draining</b>. This is the stage where chronic stress does its damage while the person still &ldquo;looks fine.&rdquo;'},
+  {nm:'Exhaustion',col:'#d1495b',t0:62,t1:100,mid:84,sub:'reserves run out',
+   d:'Reserves are spent and resistance collapses <i>below</i> normal. Prolonged cortisol now <b>suppresses the immune system</b>, driving Selye&rsquo;s <b>&ldquo;diseases of adaptation&rdquo;</b> &mdash; hypertension, ulcers, and heightened vulnerability to illness. Burnout and fatigue set in; in Selye&rsquo;s original animal studies, unrelenting stress at this stage could be fatal.'}
+ ];
+
+ function dx(t){ return PX.x0 + t/100*(PX.x1-PX.x0); }
+ function dy(r){ return PX.yBot - (r-rMin)/(rMax-rMin)*(PX.yBot-PX.yTop); }
+
+ // control points (time, resistance where 1 = normal), smoothstep-interpolated
+ var CP=[[0,1.0],[6,0.55],[20,1.62],[35,1.52],[62,1.40],[100,0.38]];
+ function res(t){
+   for(var i=0;i<CP.length-1;i++){
+     if(t<=CP[i+1][0]){
+       var a=CP[i], b=CP[i+1];
+       var f=(t-a[0])/(b[0]-a[0]);
+       var sf=f*f*(3-2*f);
+       return a[1]+(b[1]-a[1])*sf;
+     }
+   }
+   return CP[CP.length-1][1];
+ }
+ function reserves(t){ return Math.max(0,100*(1-Math.pow(t/100,1.4))); }
+ function phaseIdx(t){ return t<22?0 : t<62?1 : 2; }
+
+ function curvePts(){
+   var p='';
+   for(var t=0;t<=100.001;t+=0.6){ p+=(p?' ':'')+dx(t).toFixed(1)+','+dy(res(t)).toFixed(1); }
+   return p;
+ }
+
+ function drawChart(cur){
+   var s='';
+   // phase bands + top labels
+   PH.forEach(function(p){
+     var xa=dx(p.t0), xb=dx(p.t1);
+     s+='<rect x="'+xa+'" y="'+PX.yTop+'" width="'+(xb-xa)+'" height="'+(PX.yBot-PX.yTop)+'" fill="'+p.col+'" opacity="'+(p===cur?'.16':'.07')+'"/>';
+     s+='<text x="'+((xa+xb)/2)+'" y="'+(PX.yTop+11)+'" font-size="8.5" fill="'+p.col+'" text-anchor="middle" font-weight="800">'+p.nm.split(' ')[0].toUpperCase()+'</text>';
+   });
+   // normal baseline
+   var yN=dy(1.0);
+   s+='<line x1="'+PX.x0+'" y1="'+yN+'" x2="'+PX.x1+'" y2="'+yN+'" stroke="#b7a6ae" stroke-width="1.4" stroke-dasharray="4 3"/>';
+   s+='<text x="'+(PX.x0-4)+'" y="'+(yN+3)+'" font-size="8.5" fill="#94818b" text-anchor="end" font-weight="700">normal</text>';
+   s+='<text x="'+(PX.x0-4)+'" y="'+(PX.yTop+9)+'" font-size="8.5" fill="#94818b" text-anchor="end" font-weight="700">high</text>';
+   s+='<text x="'+(PX.x0-4)+'" y="'+(PX.yBot-1)+'" font-size="8.5" fill="#94818b" text-anchor="end" font-weight="700">low</text>';
+   // curve area + line
+   var pts=curvePts();
+   s+='<polyline points="'+PX.x0+','+PX.yBot+' '+pts+' '+PX.x1+','+PX.yBot+'" fill="rgba(161,70,107,.08)" stroke="none"/>';
+   s+='<polyline points="'+pts+'" fill="none" stroke="#a1466b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+   // x axis title
+   s+='<text x="'+((PX.x0+PX.x1)/2)+'" y="'+(PX.yBot+26)+'" font-size="9" fill="#63505a" text-anchor="middle" font-weight="700">Time exposed to the stressor &rarr;</text>';
+   // marker
+   var r=res(time);
+   s+='<line x1="'+dx(time)+'" y1="'+PX.yTop+'" x2="'+dx(time)+'" y2="'+PX.yBot+'" stroke="#5e2846" stroke-width="1.5"/>';
+   s+='<circle cx="'+dx(time)+'" cy="'+dy(r)+'" r="5.5" fill="'+cur.col+'" stroke="#fff" stroke-width="2"/>';
+   $("art").innerHTML=s;
+ }
+
+ function drawPhases(cur){
+   $("phases").innerHTML=PH.map(function(p,i){
+     return '<button class="it'+(p===cur?' on':'')+'" data-i="'+i+'">'+(i+1)+'. '+p.nm.split(' ')[0]+'</button>';
+   }).join('');
+   document.querySelectorAll('#phases .it').forEach(function(b){
+     b.onclick=function(){ time=PH[+b.dataset.i].mid; $("slider").value=time; update(); };
+   });
+ }
+
+ function update(){
+   var idx=phaseIdx(time), cur=PH[idx];
+   var resPct=Math.round(res(time)*100), resv=Math.round(reserves(time));
+   $("tval").innerHTML=cur.nm.split(' ')[0];
+   $("cardTitle").innerHTML='Resistance to stress over time';
+   $("vRes").innerHTML=resPct+'%';
+   $("vResv").innerHTML=resv+'%';
+   $("stage").style.background=cur.col;
+   $("stage").innerHTML=cur.nm+'<small>Stage '+(idx+1)+' of 3 &middot; '+cur.sub+'</small>';
+   $("info").innerHTML='<span class="n">'+cur.nm+'</span>'+cur.d+
+     '<div class="loc">At this point: resistance <b>'+resPct+'%</b> of normal &middot; adaptive reserves <b>'+resv+'%</b> remaining.</div>';
+   drawChart(cur);
+   drawPhases(cur);
+ }
+
+ $("slider").oninput=function(){ time=+this.value; update(); };
+ update();
+})();
+</script>
+</body>
+</html>

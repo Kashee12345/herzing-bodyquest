@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Anatomy of a Virus</title>
+<meta name="description" content="Interactive virus anatomy — toggle naked vs enveloped and tap the capsid, genome, envelope, and glycoprotein spikes. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>
+.wrap{grid-template-columns:0.95fr 1.05fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+#seg{margin-bottom:12px;}
+svg{max-width:330px;margin:2px auto 0;}
+.cap{font-size:12px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.45;}
+.it.absent{opacity:.6;}
+.ab{display:inline-block;font-size:9px;font-weight:800;background:#fae5e8;color:#b23145;border-radius:10px;padding:1px 6px;margin-left:5px;vertical-align:middle;letter-spacing:.3px;}
+.it.on .ab{background:#fff;color:#b23145;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 5</div>
+  <h1>Anatomy of a Virus</h1>
+  <div class="intro">A virus is not a cell &mdash; just <b>genetic material in a protein coat</b>, and sometimes a stolen membrane on top. Switch between a naked and an enveloped virus, then tap each part to see what it does and why it matters at the bedside.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Enveloped virus</h2>
+    <svg viewBox="0 0 220 235" aria-label="virus particle"><g id="art"></g></svg>
+    <div class="cap">Tap a labeled part on the right &mdash; or flip the virus type &mdash; to explore it.</div>
+  </div></div>
+  <div>
+    <div class="seg" id="seg">
+      <button data-m="env" class="on">Enveloped<small>lipid coat + spikes</small></button>
+      <button data-m="naked">Naked<small>capsid only</small></button>
+    </div>
+    <div id="stage">Enveloped virus<small>genome · capsid · envelope · spikes</small></div>
+    <div class="card">
+      <div class="list" id="list"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var mode='env', hl='';
+
+ var MODE={
+  env:{nm:'Enveloped virus',sub:'genome · capsid · envelope · spikes',col:'#6d3f9c',
+   d:'This particle wraps its <b>nucleocapsid</b> (genome + capsid) inside a <b>lipid envelope</b> studded with glycoprotein spikes. Tap each labeled part to explore it.',
+   ex:'Influenza, SARS-CoV-2, HIV, Herpes, Hepatitis B, RSV, Measles',
+   cls:'mnem',clin:'<b>Bright side for infection control:</b> the lipid coat is fragile &mdash; <b>soap, alcohol gel, drying, and heat destroy it</b>. These viruses spread by droplets, blood, and secretions but die fast on surfaces, so hand hygiene works well.'},
+  naked:{nm:'Naked (nonenveloped) virus',sub:'genome · capsid only',col:'#b8862f',
+   d:'This particle is just a bare <b>nucleocapsid</b> &mdash; genome inside a protein capsid, with <b>no envelope</b>. The capsid itself is the outer surface. Tap each labeled part to explore it.',
+   ex:'Norovirus, Rotavirus, Hepatitis A, Poliovirus, HPV, Adenovirus',
+   cls:'note',clin:'<b>Tough and hardy:</b> no lipid coat means these resist alcohol, drying, and stomach acid and survive on surfaces for days. They spread by the <b>fecal&ndash;oral route and fomites</b> &mdash; use <b>bleach / hypochlorite and contact precautions</b>; alcohol gel alone is unreliable.'}
+ };
+
+ var P=[
+  {k:'genome',ic:'🧬',nm:'Genome',ct:'Nucleic acid — DNA or RNA',
+   d:'The virus&rsquo;s <b>genetic instructions</b> &mdash; DNA <i>or</i> RNA, never both. It may be single- or double-stranded, linear, circular, or <b>segmented</b>. Once inside a host cell it hijacks that cell&rsquo;s machinery to mass-produce viral parts. Genome + capsid together are the <b>nucleocapsid</b>.',
+   pearl:'Segmented genomes (influenza) can reassort between strains &rarr; new pandemic viruses.'},
+  {k:'capsid',ic:'🛡️',nm:'Capsid',ct:'Protein shell of capsomeres',
+   d:'A shell of repeating protein subunits called <b>capsomeres</b> that self-assemble around the genome. It <b>protects the nucleic acid</b> and helps the virus attach to and enter host cells. Common shapes: <b>icosahedral</b> (20-sided), <b>helical</b>, or complex.',
+   pearl:'In a naked virus the capsid is the outermost layer &mdash; and it is remarkably durable.'},
+  {k:'envelope',ic:'🫧',nm:'Envelope',ct:'Host-derived lipid bilayer',
+   d:'An outer <b>lipid bilayer</b> the virus <b>steals from the host cell membrane</b> as it buds out. <b>Only enveloped viruses have it.</b> The lipid coat is delicate, which paradoxically makes the whole virus easy to kill outside the body.',
+   dN:'A naked virus has <b>no envelope</b> &mdash; the capsid is its outer surface. That missing lipid coat is exactly why naked viruses shrug off alcohol gel, drying, and stomach acid and linger on surfaces.',
+   pearl:'No envelope survives soap and alcohol &mdash; hand hygiene defeats enveloped viruses.',
+   pearlN:'No envelope = hardy: reach for bleach, not just alcohol gel.'},
+  {k:'spikes',ic:'📍',nm:'Spikes',ct:'Glycoproteins — attachment',
+   d:'<b>Glycoprotein spikes</b> studding the envelope. They are the <b>key</b> that binds a specific host-cell receptor to gain entry (SARS-CoV-2 spike &rarr; ACE2; influenza uses hemagglutinin). Because they sit exposed on the surface, they are the prime <b>target of antibodies and vaccines</b>.',
+   dN:'A naked virus has <b>no envelope spikes</b>. Instead, attachment proteins sit directly on the <b>capsid</b> surface to grip host receptors &mdash; but there is no lipid-anchored spike layer here.',
+   pearl:'Spikes are the classic vaccine target &mdash; the COVID spike and flu hemagglutinin, for example.',
+   pearlN:'Naked viruses attach via capsid proteins, so those become the immune target instead.'}
+ ];
+
+ function hex(cx,cy,r){var p=[],i,a;for(i=0;i<6;i++){a=(i*60-90)*Math.PI/180;p.push((cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1));}return p.join(' ');}
+
+ function drawable(k){ if(k==='envelope'||k==='spikes') return mode==='env'; return k!==''; }
+ function op(k){ if(!hl||!drawable(hl)) return '1'; return k===hl?'1':'0.26'; }
+
+ function draw(){
+  var s='',d=Math.PI/180,i,a,x1,y1,x2,y2,x,y,env=(mode==='env');
+  if(env){
+   // envelope (lipid bilayer)
+   s+='<g opacity="'+op('envelope')+'">';
+   s+='<circle cx="110" cy="118" r="98" fill="#fbeef0"/>';
+   s+='<circle cx="110" cy="118" r="98" fill="none" stroke="'+(hl==='envelope'?'#d1495b':'#dca7b2')+'" stroke-width="'+(hl==='envelope'?9:5)+'"/>';
+   s+='<circle cx="110" cy="118" r="89" fill="none" stroke="#ecc7ce" stroke-width="2"/>';
+   s+='</g>';
+   // glycoprotein spikes
+   s+='<g opacity="'+op('spikes')+'">';
+   for(i=0;i<14;i++){ a=i*(360/14)*d; x1=110+96*Math.cos(a); y1=118+96*Math.sin(a); x2=110+113*Math.cos(a); y2=118+113*Math.sin(a);
+    var sc=(hl==='spikes'?'#1f6fc0':'#2f6f9f');
+    s+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+sc+'" stroke-width="'+(hl==='spikes'?4:3)+'" stroke-linecap="round"/>';
+    s+='<circle cx="'+x2.toFixed(1)+'" cy="'+y2.toFixed(1)+'" r="'+(hl==='spikes'?6.5:5)+'" fill="'+sc+'"/>';
+   }
+   s+='</g>';
+  }
+  // capsid (icosahedral shell of capsomeres)
+  s+='<g opacity="'+op('capsid')+'">';
+  s+='<polygon points="'+hex(110,118,62)+'" fill="'+(hl==='capsid'?'#8a5fc0':'#7a4fb0')+'" stroke="'+(hl==='capsid'?'#3d2a5c':'#5b3486')+'" stroke-width="'+(hl==='capsid'?4.5:2.5)+'"/>';
+  s+='<circle cx="110" cy="118" r="7.5" fill="#6a3fa0" stroke="#4a2c78" stroke-width="1"/>';
+  for(i=0;i<6;i++){a=i*60*d;x=110+27*Math.cos(a);y=118+27*Math.sin(a);s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="7.5" fill="#6a3fa0" stroke="#4a2c78" stroke-width="1"/>';}
+  for(i=0;i<12;i++){a=(i*30+15)*d;x=110+44*Math.cos(a);y=118+44*Math.sin(a);s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="6.5" fill="#6a3fa0" stroke="#4a2c78" stroke-width="1"/>';}
+  s+='</g>';
+  // genome (coiled nucleic acid)
+  s+='<g opacity="'+op('genome')+'">';
+  var gc=(hl==='genome'?'#e0a52e':'#b8862f');
+  s+='<path d="M108,94 c16,4 -16,12 0,16 c16,4 -16,12 0,16 c16,4 -16,12 0,16" fill="none" stroke="'+gc+'" stroke-width="'+(hl==='genome'?5:3.5)+'" stroke-linecap="round"/>';
+  s+='</g>';
+  // labels along the top
+  s+='<text x="110" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="#837a94" font-family="Inter,sans-serif">'+(env?'ENVELOPED PARTICLE':'NAKED NUCLEOCAPSID')+'</text>';
+  return s;
+ }
+
+ function renderList(){
+  $("list").innerHTML=P.map(function(p){
+   var absent=(mode==='naked'&&(p.k==='envelope'||p.k==='spikes'));
+   return '<button class="it'+(p.k===hl?' on':'')+(absent?' absent':'')+'" data-k="'+p.k+'">'
+    +'<span class="ic">'+p.ic+'</span>'
+    +'<span><span class="nm">'+p.nm+(absent?' <span class="ab">absent</span>':'')+'</span><br>'
+    +'<span class="ct">'+p.ct+'</span></span></button>';
+  }).join('');
+  Array.prototype.forEach.call(document.querySelectorAll('#list .it'),function(b){b.onclick=function(){hl=b.getAttribute('data-k');render();};});
+ }
+
+ function infoPart(p){
+  var naked=(mode==='naked'&&(p.k==='envelope'||p.k==='spikes'));
+  var body=(naked&&p.dN)?p.dN:p.d;
+  var pearl=(naked&&p.pearlN)?p.pearlN:p.pearl;
+  var absentTag=naked?' <span class="ab">absent here</span>':'';
+  return '<span class="n">'+p.nm+absentTag+'</span>'+body+'<div class="loc">'+pearl+'</div>';
+ }
+
+ function infoMode(){
+  var m=MODE[mode];
+  var pills=m.ex.split(', ').map(function(e){return '<span>'+e+'</span>';}).join('');
+  return '<span class="n">'+m.nm+'</span>'+m.d
+   +'<div class="ex">'+pills+'</div>'
+   +'<div class="'+m.cls+'">'+m.clin+'</div>';
+ }
+
+ function render(){
+  var m=MODE[mode];
+  $("art").innerHTML=draw();
+  $("cardTitle").innerHTML=m.nm;
+  $("stage").style.background=m.col;
+  $("stage").innerHTML=m.nm+'<small>'+m.sub+'</small>';
+  renderList();
+  var sel=null,i;
+  for(i=0;i<P.length;i++){if(P[i].k===hl){sel=P[i];break;}}
+  $("info").innerHTML=sel?infoPart(sel):infoMode();
+ }
+
+ Array.prototype.forEach.call(document.querySelectorAll('#seg button'),function(b){
+  b.onclick=function(){
+   mode=b.getAttribute('data-m');
+   Array.prototype.forEach.call(document.querySelectorAll('#seg button'),function(x){x.className=(x===b)?'on':'';});
+   render();
+  };
+ });
+
+ render();
+})();
+</script>
+</body>
+</html>

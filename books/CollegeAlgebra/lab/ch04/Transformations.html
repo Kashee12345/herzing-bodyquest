@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Transformations: Shift, Stretch, Reflect</title>
+<meta name="description" content="Drag a, h, and k and watch a parent graph shift, stretch, and reflect in real time — with the reasoning for why inside changes run backwards, a live point-by-point map, and a substitution check.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.mx{font-family:var(--math);}
+sup{font-size:.62em;vertical-align:super;line-height:0;}
+.rad{border-top:1.4px solid currentColor;padding:1px 3px 0 2px;margin-left:1px;}
+.fr{display:inline-block;vertical-align:middle;text-align:center;line-height:1.14;}
+.fr .nu{display:block;border-bottom:1.5px solid currentColor;padding:0 5px 1px;}
+.fr .de{display:block;padding:1px 5px 0;}
+/* ---- equation banner ---- */
+#stage{font-family:var(--math);font-size:clamp(19px,3.4vw,25px);font-weight:400;padding:14px 15px 13px;}
+#stage .lab{display:block;font-family:var(--sans);font-size:10.5px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;opacity:.86;margin-bottom:7px;}
+#stage .dim{opacity:.34;}
+#stage .hl{background:#ffe08a;color:#3a2d05;border-radius:5px;padding:1px 5px;box-shadow:0 1px 0 rgba(0,0,0,.12);}
+#stage .cap{display:block;font-family:var(--sans);font-size:12.5px;font-weight:600;opacity:.94;margin-top:9px;}
+/* ---- sliders ---- */
+.trlab{display:flex;justify-content:space-between;align-items:baseline;margin-top:13px;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);}
+.trlab:first-child{margin-top:2px;}
+.trlab em{font-family:var(--math);font-style:italic;font-size:15px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--teal-dk);}
+.trlab b{font-family:var(--math);font-size:19px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--teal-dk);}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:6px;background:#dfe2f1;outline:none;margin:7px 0 0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:21px;height:21px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.4);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.4);cursor:pointer;}
+.scale{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-family:var(--math);margin-top:1px;}
+/* ---- parent gallery ---- */
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.gal button{border:1px solid var(--line);background:#fff;border-radius:11px;padding:6px 3px 5px;cursor:pointer;font-family:var(--sans);text-align:center;color:var(--teal);transition:.12s;}
+.gal button:hover{border-color:var(--teal);}
+.gal button svg{width:100%;max-width:74px;margin:0 auto;}
+.gal .fx{font-family:var(--math);font-size:14px;color:var(--teal-dk);margin-top:1px;line-height:1.3;}
+.gal button.on{background:var(--teal);border-color:var(--teal);color:#fff;}
+.gal button.on .fx{color:#fff;}
+/* ---- fact strip ---- */
+.facts{display:flex;gap:7px;margin-top:13px;}
+.facts div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 4px;background:#fff;}
+.facts .k{font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+.facts .v{display:block;font-size:12.5px;font-weight:700;color:var(--teal-dk);margin-top:3px;line-height:1.3;}
+.facts div.act{border-color:var(--teal);background:#eef0f8;}
+/* ---- graph legend ---- */
+.leg{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:8px;font-size:11.5px;color:var(--muted);font-weight:600;}
+.leg span{display:flex;align-items:center;gap:5px;}
+.leg i{display:block;width:20px;height:0;border-top-width:3px;border-top-style:solid;}
+.leg u{display:block;width:10px;height:10px;border-radius:50%;text-decoration:none;}
+/* ---- point map table ---- */
+.map{display:grid;grid-template-columns:1fr auto 1fr;gap:2px 8px;align-items:center;font-family:var(--math);font-size:14.5px;}
+.map .hd{font-family:var(--sans);font-size:9.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);padding-bottom:3px;}
+.map .p{text-align:right;color:var(--muted);padding:3px 6px;border-radius:6px;}
+.map .ar{color:var(--teal);font-size:13px;font-weight:700;}
+.map .q{text-align:left;color:var(--teal-dk);font-weight:600;padding:3px 6px;border-radius:6px;}
+.map .fe .p,.map .fe .q{background:#e6e8f5;}
+.map .fe .q{box-shadow:inset 0 0 0 1.5px #b9bfe0;}
+/* ---- substitution check ---- */
+.subst{font-family:var(--math);font-size:16.5px;text-align:center;color:var(--teal-dk);background:#eef0f8;border:1px solid var(--line);border-radius:10px;padding:11px 8px;line-height:1.85;margin-top:12px;}
+.subst .res{background:#ffeaa8;border-radius:4px;padding:1px 6px;box-shadow:inset 0 0 0 1.5px #e5c46a;font-weight:600;}
+.subst .cap{display:block;font-family:var(--sans);font-size:9.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;line-height:1.4;}
+.subst .ok{display:block;font-family:var(--sans);font-size:12px;font-weight:700;color:#237a45;margin-top:4px;line-height:1.45;}
+.dr{font-size:12.5px;color:var(--soft);background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 11px;margin-top:11px;line-height:1.6;}
+.dr b{font-family:var(--math);font-size:14px;color:var(--teal-dk);font-weight:600;}
+#info .sub{display:block;font-size:12.5px;color:var(--soft);background:#e6e8f5;border-radius:8px;padding:7px 11px;margin-top:9px;line-height:1.55;}
+.steps{display:flex;gap:5px;margin-bottom:11px;}
+.steps div{flex:1;height:5px;border-radius:3px;background:#e3e5f0;}
+.steps div.on{background:var(--teal);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 4</div>
+  <h1>Transformations: Shift, Stretch, Reflect</h1>
+  <div class="intro">Every graph in this course is some parent function that has been <b>moved, resized, or flipped</b>. Master one formula &mdash; <span class="mx"><i>g</i>(<i>x</i>) = <i>a</i>&thinsp;<i>f</i>(<i>x</i> &minus; <i>h</i>) + <i>k</i></span> &mdash; and you can graph all of them without plotting a single table of values. Drag the three knobs and watch what each one actually does.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="gTitle">The graph</h2>
+      <svg viewBox="0 0 320 320" aria-label="coordinate plane with the parent graph and its transformation"><g id="art"></g></svg>
+      <div class="leg">
+        <span><i style="border-top-style:dashed;border-color:#a9adc8;"></i> parent <span class="mx" id="legP">&nbsp;</span></span>
+        <span><i style="border-color:#43458f;"></i> current graph</span>
+        <span><u style="background:#43458f;"></u> moved points</span>
+        <span><u style="background:#b8862f;"></u> the one we check</span>
+      </div>
+    </div>
+    <div class="card"><h2>Where every point lands</h2>
+      <div class="map" id="map"></div>
+      <div class="subst" id="subst"></div>
+      <div class="dr" id="dr"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage"></div>
+    <div class="card"><h2>1 &middot; Pick a parent function</h2>
+      <div class="gal" id="gal"></div>
+    </div>
+    <div class="card"><h2>2 &middot; Drag the three knobs</h2>
+      <div class="trlab"><span><em>a</em> &nbsp;stretch / reflect</span><b id="va">1</b></div>
+      <input type="range" id="sa" min="-3" max="3" step="0.25" value="1">
+      <div class="scale"><span>&minus;3</span><span>0</span><span>3</span></div>
+      <div class="trlab"><span><em>h</em> &nbsp;horizontal shift <span style="text-transform:none;letter-spacing:0;">(inside)</span></span><b id="vh">0</b></div>
+      <input type="range" id="sh" min="-6" max="6" step="0.5" value="0">
+      <div class="scale"><span>&minus;6</span><span>0</span><span>6</span></div>
+      <div class="trlab"><span><em>k</em> &nbsp;vertical shift <span style="text-transform:none;letter-spacing:0;">(outside)</span></span><b id="vk">0</b></div>
+      <input type="range" id="sk" min="-6" max="6" step="0.5" value="0">
+      <div class="scale"><span>&minus;6</span><span>0</span><span>6</span></div>
+      <div class="facts">
+        <div id="f1"><span class="k">Horizontal</span><span class="v">&mdash;</span></div>
+        <div id="f2"><span class="k">Vertical size</span><span class="v">&mdash;</span></div>
+        <div id="f3"><span class="k">Vertical shift</span><span class="v">&mdash;</span></div>
+      </div>
+      <div class="grid" style="margin-top:11px;">
+        <button class="it" id="p0">Reset to parent</button>
+        <button class="it" id="p1">Slide right 3</button>
+        <button class="it" id="p2">Flip upside down</button>
+        <button class="it" id="p3">All three at once</button>
+      </div>
+    </div>
+    <div class="card"><h2>3 &middot; Build it up, one change at a time</h2>
+      <div class="steps"><div id="b0"></div><div id="b1"></div><div id="b2"></div><div id="b3"></div></div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+      <div class="mnem"><b>The one rule to remember:</b> changes <b>outside</b> the function (<i>a</i> and <i>k</i>) affect the <b>outputs</b> &mdash; heights &mdash; and do exactly what they say. Changes <b>inside</b> the function (<i>h</i>) affect the <b>inputs</b> and do the <b>opposite</b> of what they look like.</div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- parent functions ---------- */
+ var P=[
+  {k:'lin', nm:'Linear', fx:'<i>x</i>',
+   f:function(x){return x;}, dom:'all',
+   pts:[[-2,-2],[-1,-1],[0,0],[1,1],[2,2]], anc:4, rng:'line'},
+  {k:'quad', nm:'Quadratic', fx:'<i>x</i><sup>2</sup>',
+   f:function(x){return x*x;}, dom:'all',
+   pts:[[-2,4],[-1,1],[0,0],[1,1],[2,4]], anc:4, rng:'bowl'},
+  {k:'cub', nm:'Cubic', fx:'<i>x</i><sup>3</sup>',
+   f:function(x){return x*x*x;}, dom:'all',
+   pts:[[-2,-8],[-1,-1],[0,0],[1,1],[2,8]], anc:3, rng:'line'},
+  {k:'abs', nm:'Absolute value', fx:'|<i>x</i>|',
+   f:function(x){return Math.abs(x);}, dom:'all',
+   pts:[[-2,2],[-1,1],[0,0],[1,1],[2,2]], anc:0, rng:'bowl'},
+  {k:'sqrt', nm:'Square root', fx:'&radic;<span class="rad"><i>x</i></span>',
+   f:function(x){return Math.sqrt(x);}, dom:'nonneg',
+   pts:[[0,0],[1,1],[4,2]], anc:2, rng:'bowl'},
+  {k:'rec', nm:'Reciprocal', fx:'<span class="fr"><span class="nu">1</span><span class="de"><i>x</i></span></span>',
+   f:function(x){return 1/x;}, dom:'nonzero',
+   pts:[[-2,-0.5],[-1,-1],[-0.5,-2],[0.5,2],[1,1],[2,0.5]], anc:5, rng:'hyp'}
+ ];
+
+ var pi=1, a=1, h=0, k=0, step=3;
+ var PC=P[pi];
+
+ /* ---------- number formatting (HTML only, no LaTeX) ---------- */
+ function fmt(n){ n=Math.round(n*10000)/10000;
+   if(Math.abs(n-Math.round(n))<1e-9) return String(Math.round(n));
+   return String(parseFloat(n.toFixed(4))); }
+ function fh(n){ return n<0 ? '&minus;'+fmt(-n) : fmt(n); }          /* signed, HTML minus */
+ function nf(n){ return n<0 ? '(&minus;'+fmt(-n)+')' : fmt(n); }      /* parenthesise negatives */
+ function pt(x,y){ return '('+fh(x)+', '+fh(y)+')'; }
+
+ /* ---------- equation assembly ---------- */
+ /* inside of the function: x - h, with the -h piece wrapped so it can be highlighted */
+ function inside(tok,hh,cls){
+   if(hh===0) return tok;
+   var tail=(hh>0?' &minus; ':' + ')+fmt(Math.abs(hh));
+   return tok+(cls?'<span class="'+cls+'">'+tail+'</span>':tail);
+ }
+ /* f( inside ) rendered in this parent's own notation */
+ function body(tok,hh,forceP,cls){
+   var s=inside(tok,hh,cls), needP=(hh!==0)||forceP;
+   if(PC.k==='lin')  return needP?'('+s+')':s;
+   if(PC.k==='quad') return (needP?'('+s+')':s)+'<sup>2</sup>';
+   if(PC.k==='cub')  return (needP?'('+s+')':s)+'<sup>3</sup>';
+   if(PC.k==='abs')  return '|'+s+'|';
+   if(PC.k==='sqrt') return '&radic;<span class="rad">'+s+'</span>';
+   return s; /* reciprocal: caller builds the fraction */
+ }
+ /* a * f(x-h)  — for the reciprocal the a becomes the numerator */
+ function aBody(tok,aa,hh,forceP,ca,ch){
+   var w=function(c,t){ return c?'<span class="'+c+'">'+t+'</span>':t; };
+   if(PC.k==='rec'){
+     var num=(Math.abs(aa)===1)?'1':fmt(Math.abs(aa));
+     var sign=(aa<0)?w(ca,'&minus;'):'';
+     return sign+'<span class="fr"><span class="nu">'+w(ca,num)+'</span><span class="de">'+inside(tok,hh,ch)+'</span></span>';
+   }
+   var pre='';
+   if(aa===-1) pre=w(ca,'&minus;');
+   else if(aa!==1) pre=w(ca,fmt(aa));
+   return pre+body(tok,hh,forceP,ch);
+ }
+ function kPart(kk,cls){
+   if(kk===0) return '';
+   var t=(kk>0?' + ':' &minus; ')+fmt(Math.abs(kk));
+   return cls?'<span class="'+cls+'">'+t+'</span>':t;
+ }
+
+ /* ---------- plane geometry ---------- */
+ /* YDOT: past this a point is off-screen and not drawn.
+    YDRAW: the curve is drawn a little further so it always runs through
+    (and past) any point that IS drawn, right up to the edge of the box. */
+ var CX=160, CY=160, S=17.1, XM=9, YDOT=9.05, YDRAW=9.3;
+ function PX(x){ return CX+x*S; }
+ function PY(y){ return CY-y*S; }
+ function okDom(t){
+   if(PC.dom==='nonneg') return t>=0;
+   if(PC.dom==='nonzero') return Math.abs(t)>1e-9;
+   return true;
+ }
+ function curve(hh,aa,kk){
+   var d='', pen=false, x0=(PC.dom==='nonneg')?Math.max(-XM,hh):-XM;
+   for(var x=x0; x<=XM+1e-9; x+=0.03){
+     var t=x-hh;
+     if(!okDom(t)){ pen=false; continue; }
+     var y=aa*PC.f(t)+kk;
+     if(!isFinite(y)||Math.abs(y)>YDRAW){ pen=false; continue; }
+     d+=(pen?'L':'M')+PX(x).toFixed(1)+' '+PY(y).toFixed(1)+' ';
+     pen=true;
+   }
+   return d;
+ }
+ function dot(x,y,fill,r,stroke){
+   if(Math.abs(x)>XM+0.1||Math.abs(y)>YDOT) return '';
+   return '<circle cx="'+PX(x).toFixed(1)+'" cy="'+PY(y).toFixed(1)+'" r="'+r+'" fill="'+fill+'"'+(stroke?' stroke="'+stroke+'" stroke-width="2"':'')+'/>';
+ }
+ function arrow(x1,y1,x2,y2,col){
+   var dx=x2-x1, dy=y2-y1, L=Math.sqrt(dx*dx+dy*dy);
+   if(L<9) return '';
+   var ux=dx/L, uy=dy/L, ex=x2-ux*8, ey=y2-uy*8, px=-uy, py=ux;
+   return '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+ex.toFixed(1)+'" y2="'+ey.toFixed(1)+'" stroke="'+col+'" stroke-width="1.7" stroke-dasharray="4 3" opacity=".9"/>'+
+          '<polygon points="'+x2.toFixed(1)+','+y2.toFixed(1)+' '+(ex+px*4.2).toFixed(1)+','+(ey+py*4.2).toFixed(1)+' '+(ex-px*4.2).toFixed(1)+','+(ey-py*4.2).toFixed(1)+'" fill="'+col+'"/>';
+ }
+ function plane(){
+   var s='<rect x="0" y="0" width="320" height="320" rx="10" fill="#fbfaff"/>', i;
+   for(i=-9;i<=9;i++){
+     if(i===0) continue;
+     s+='<line x1="'+PX(i).toFixed(1)+'" y1="'+PY(9)+'" x2="'+PX(i).toFixed(1)+'" y2="'+PY(-9)+'" stroke="#e6e8f3" stroke-width="1"/>';
+     s+='<line x1="'+PX(-9)+'" y1="'+PY(i).toFixed(1)+'" x2="'+PX(9)+'" y2="'+PY(i).toFixed(1)+'" stroke="#e6e8f3" stroke-width="1"/>';
+   }
+   s+='<line x1="'+PX(-9)+'" y1="'+CY+'" x2="'+PX(9)+'" y2="'+CY+'" stroke="#9498b8" stroke-width="1.6"/>';
+   s+='<line x1="'+CX+'" y1="'+PY(9)+'" x2="'+CX+'" y2="'+PY(-9)+'" stroke="#9498b8" stroke-width="1.6"/>';
+   for(i=-8;i<=8;i+=2){
+     if(i===0) continue;
+     s+='<text x="'+PX(i).toFixed(1)+'" y="'+(CY+12)+'" font-size="8.5" fill="#8a8daa" text-anchor="middle" font-family="Georgia,serif">'+(i<0?'−'+(-i):i)+'</text>';
+     s+='<text x="'+(CX-6)+'" y="'+(PY(i)+3).toFixed(1)+'" font-size="8.5" fill="#8a8daa" text-anchor="end" font-family="Georgia,serif">'+(i<0?'−'+(-i):i)+'</text>';
+   }
+   s+='<text x="'+(PX(9)-3)+'" y="'+(CY-6)+'" font-size="10" fill="#6b6e8c" text-anchor="end" font-style="italic" font-family="Georgia,serif">x</text>';
+   s+='<text x="'+(CX+7)+'" y="'+(PY(9)+10)+'" font-size="10" fill="#6b6e8c" font-style="italic" font-family="Georgia,serif">y</text>';
+   return s;
+ }
+
+ /* stage parameters: 0 parent, 1 shift, 2 stretch/reflect, 3 vertical shift */
+ function par(s){
+   return { hh:(s>=1?h:0), aa:(s>=2?a:1), kk:(s>=3?k:0) };
+ }
+
+ function drawGraph(){
+   var s=plane(), cur=par(step), i;
+   if(PC.k==='rec'){
+     s+='<line x1="'+PX(cur.hh).toFixed(1)+'" y1="'+PY(9)+'" x2="'+PX(cur.hh).toFixed(1)+'" y2="'+PY(-9)+'" stroke="#d1495b" stroke-width="1.3" stroke-dasharray="5 4" opacity=".55"/>';
+     s+='<line x1="'+PX(-9)+'" y1="'+PY(cur.kk).toFixed(1)+'" x2="'+PX(9)+'" y2="'+PY(cur.kk).toFixed(1)+'" stroke="#d1495b" stroke-width="1.3" stroke-dasharray="5 4" opacity=".55"/>';
+   }
+   /* parent, always visible as the reference */
+   s+='<path d="'+curve(0,1,0)+'" fill="none" stroke="#a9adc8" stroke-width="2" stroke-dasharray="6 4" stroke-linecap="round"/>';
+   /* faint ghosts of the earlier stages */
+   for(i=1;i<step;i++){
+     var g=par(i);
+     s+='<path d="'+curve(g.hh,g.aa,g.kk)+'" fill="none" stroke="#43458f" stroke-width="1.6" opacity=".2" stroke-linecap="round"/>';
+   }
+   /* the live graph */
+   s+='<path d="'+curve(cur.hh,cur.aa,cur.kk)+'" fill="none" stroke="#43458f" stroke-width="2.8" stroke-linecap="round"/>';
+   /* anchor points */
+   for(i=0;i<PC.pts.length;i++){
+     s+=dot(PC.pts[i][0],PC.pts[i][1],'#fbfaff',3.4,'#a9adc8');
+   }
+   var fp=PC.pts[PC.anc], nfx=fp[0]+cur.hh, nfy=cur.aa*fp[1]+cur.kk;
+   for(i=0;i<PC.pts.length;i++){
+     var nx=PC.pts[i][0]+cur.hh, ny=cur.aa*PC.pts[i][1]+cur.kk;
+     s+=dot(nx,ny,(i===PC.anc?'#b8862f':'#43458f'),(i===PC.anc?4.6:3.6));
+   }
+   if(Math.abs(fp[0]-nfx)>1e-9||Math.abs(fp[1]-nfy)>1e-9){
+     if(Math.abs(nfx)<=XM&&Math.abs(nfy)<=YDOT&&Math.abs(fp[1])<=YDOT){
+       s+=arrow(PX(fp[0]),PY(fp[1]),PX(nfx),PY(nfy),'#b8862f');
+     }
+   }
+   $("art").innerHTML=s;
+ }
+
+ /* ---------- mini gallery sketches ---------- */
+ function mini(p,col){
+   var d='', pen=false, x, x0=(p.dom==='nonneg')?0:-6;
+   for(x=x0;x<=6.001;x+=0.06){
+     var ok=(p.dom==='nonneg')?(x>=0):((p.dom==='nonzero')?Math.abs(x)>1e-9:true);
+     if(!ok){ pen=false; continue; }
+     var y=p.f(x);
+     if(!isFinite(y)||Math.abs(y)>5.2){ pen=false; continue; }
+     d+=(pen?'L':'M')+(23+x*3.6).toFixed(1)+' '+(20-y*3.6).toFixed(1)+' ';
+     pen=true;
+   }
+   return '<svg viewBox="0 0 46 40"><line x1="1.4" y1="20" x2="44.6" y2="20" stroke="'+col+'" stroke-width=".8" opacity=".45"/>'+
+     '<line x1="23" y1="1.3" x2="23" y2="38.7" stroke="'+col+'" stroke-width=".8" opacity=".45"/>'+
+     '<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round"/></svg>';
+ }
+ var galAt=-1;
+ function drawGal(){
+   if(galAt===pi) return;
+   galAt=pi;
+   $("gal").innerHTML=P.map(function(p,i){
+     var on=(i===pi);
+     return '<button class="'+(on?'on':'')+'" data-i="'+i+'">'+mini(p,on?'#ffffff':'#43458f')+
+            '<div class="fx"><i>f</i>(<i>x</i>) = '+p.fx+'</div></button>';
+   }).join('');
+   Array.prototype.forEach.call($("gal").querySelectorAll('button'),function(b){
+     b.onclick=function(){ pi=+b.dataset.i; PC=P[pi]; render(); };
+   });
+ }
+
+ /* ---------- domain and range of the transformed function ---------- */
+ function domRange(){
+   var d,r;
+   if(PC.dom==='nonneg')      d='<i>x</i> &ge; '+fh(h);
+   else if(PC.dom==='nonzero')d='<i>x</i> &ne; '+fh(h)+'  (the input '+inside('<i>x</i>',h)+' can never be 0)';
+   else                       d='all real numbers';
+   if(a===0)                  r='<i>y</i> = '+fh(k)+' only';
+   else if(PC.rng==='bowl')   r='<i>y</i> '+(a>0?'&ge;':'&le;')+' '+fh(k);
+   else if(PC.rng==='hyp')    r='<i>y</i> &ne; '+fh(k)+'  (the fraction is never 0)';
+   else                       r='all real numbers';
+   return '<b>Domain:</b> '+d+' &nbsp;&middot;&nbsp; <b>Range:</b> '+r;
+ }
+
+ /* ---------- the four build steps ---------- */
+ var STC=['#5b5d78','#2f6f9f','#d1495b','#2f9e5b'];
+ var STN=['the parent','shift sideways','stretch / reflect','shift up or down'];
+
+ function stepInfo(){
+   var n,t,cur=par(step);
+   if(step===0){
+     n='Start with the parent';
+     t='Every transformation begins from a <b>parent function</b> &mdash; the plain version, unshifted and unstretched. Here it is: <span class="mx"><i>y</i> = '+PC.fx+'</span>. '+
+       'Keep your eye on the labelled points. The whole story of this section is simply <b>where those points end up</b>. '+
+       'The dashed gray curve stays on screen the entire time so you always have the original to compare against.'+
+       '<span class="sub">Notice that the graph on screen right now matches the dashed reference exactly &mdash; nothing has been done to it yet.</span>';
+   } else if(step===1){
+     n='Inside the function: replace x with (x &minus; h)';
+     if(h===0){
+       t='Right now <span class="mx"><i>h</i> = 0</span>, so there is no horizontal shift &mdash; <span class="mx"><i>x</i> &minus; 0</span> is just <span class="mx"><i>x</i></span>. '+
+         '<b>Drag the <i>h</i> slider</b> and this step comes alive.'+
+         '<span class="sub">Before you drag: predict which way <span class="mx"><i>f</i>(<i>x</i> &minus; 3)</span> moves the graph. Most people guess left. Then check.</span>';
+     } else {
+       var dir=(h>0?'right':'left'), mag=fmt(Math.abs(h));
+       t='The <span class="mx"><i>h</i></span> sits <b>inside</b> the function, right next to <span class="mx"><i>x</i></span> &mdash; and inside changes do the <b>opposite</b> of what they look like. '+
+         'This graph moved <b>'+mag+' units '+dir+'</b>, even though the formula says '+(h>0?'&ldquo;minus&rdquo;':'&ldquo;plus&rdquo;')+'.'+
+         '<span class="sub"><b>Why:</b> the parent does its special thing when the number you hand it is <b>0</b>. '+
+         'In <span class="mx"><i>f</i>('+inside('<i>x</i>',h)+')</span> the number handed in is 0 when <span class="mx">'+inside('<i>x</i>',h)+' = 0</span>, that is when <span class="mx"><i>x</i> = '+fh(h)+'</span>. '+
+         'So whatever the parent did at <span class="mx"><i>x</i> = 0</span>, this graph now does at <span class="mx"><i>x</i> = '+fh(h)+'</span>. '+
+         'To feed the function the same input as before, you must supply an <span class="mx"><i>x</i></span> that is '+mag+' '+(h>0?'<b>larger</b>':'<b>smaller</b>')+' &mdash; so every point slides '+dir+'.</span>'+
+         'Heights are untouched at this step: every point <span class="mx">(<i>p</i>, <i>q</i>)</span> becomes <span class="mx">(<i>p</i> '+(h>0?'+':'&minus;')+' '+mag+', <i>q</i>)</span>.';
+     }
+   } else if(step===2){
+     n='Outside the function: multiply the output by a';
+     if(a===1){
+       t='Right now <span class="mx"><i>a</i> = 1</span>. Multiplying every height by 1 changes nothing. <b>Drag the <i>a</i> slider</b> to stretch, squash, or flip the graph.';
+     } else if(a===0){
+       t='<span class="mx"><i>a</i> = 0</span> multiplies every height by zero, so <b>every</b> output collapses onto a single horizontal line. '+
+         'Nothing of the original shape survives &mdash; which is exactly why <span class="mx"><i>a</i> = 0</span> is excluded from this family of transformations. Nudge the slider off zero.';
+     } else {
+       var A=Math.abs(a);
+       t='The <span class="mx"><i>a</i></span> sits <b>outside</b> the function, so it does exactly what it looks like: it multiplies every <b>output</b> &mdash; every height &mdash; by '+fh(a)+'.';
+       if(A>1)      t+=' Since <span class="mx">|<i>a</i>| = '+fmt(A)+' &gt; 1</span>, the graph is <b>stretched vertically</b>, pulled away from the <span class="mx"><i>x</i></span>-axis. A point 1 unit tall becomes '+fmt(A)+'; a point 4 units tall becomes '+fmt(4*A)+'.';
+       else if(A<1) t+=' Since <span class="mx">0 &lt; |<i>a</i>| = '+fmt(A)+' &lt; 1</span>, the graph is <b>compressed vertically</b>, squashed toward the <span class="mx"><i>x</i></span>-axis. A point 4 units tall drops to <span class="mx">4 &middot; '+fmt(A)+' = '+fmt(4*A)+'</span>.';
+       if(a<0) t+=' The <b>negative sign flips the sign of every output</b>, so the graph also <b>reflects across the <span class="mx"><i>x</i></span>-axis</b> &mdash; what was above goes below, and the other way round.';
+       t+='<span class="sub"><b>Why the <span class="mx"><i>x</i></span>-intercepts never move under <span class="mx"><i>a</i></span>:</b> a point sitting <i>on</i> the <span class="mx"><i>x</i></span>-axis has height 0, and <span class="mx">'+fh(a)+' &middot; 0 = 0</span>. Zero times anything is still zero, so those points are pinned in place while everything else moves.</span>'+
+         'Widths are untouched: every point <span class="mx">(<i>p</i>, <i>q</i>)</span> becomes <span class="mx">(<i>p</i>, '+fh(a)+'<i>q</i>)</span>.';
+     }
+   } else {
+     n='Outside again: add k to the finished output';
+     if(k===0){
+       t='Right now <span class="mx"><i>k</i> = 0</span>, so there is no vertical shift. <b>Drag the <i>k</i> slider</b> to lift or drop the whole graph.';
+     } else {
+       t='The <span class="mx"><i>k</i></span> is added <b>after</b> everything else, so it lifts the finished graph straight <b>'+(k>0?'up':'down')+' '+fmt(Math.abs(k))+' units</b>. '+
+         'Nothing sideways changes, because <span class="mx"><i>x</i></span> is never touched: every point <span class="mx">(<i>p</i>, <i>q</i>)</span> becomes <span class="mx">(<i>p</i>, <i>q</i> '+(k>0?'+':'&minus;')+' '+fmt(Math.abs(k))+')</span>.';
+     }
+     t+='<span class="sub"><b>Order matters &mdash; here is the proof.</b> The formula multiplies by <span class="mx"><i>a</i></span> first and adds <span class="mx"><i>k</i></span> second. '+
+        'If you shifted up first and stretched afterwards you would get <span class="mx"><i>a</i>&thinsp;(<i>f</i>(<i>x</i>) + <i>k</i>) = <i>a</i>&thinsp;<i>f</i>(<i>x</i>) + <i>a</i><i>k</i></span> &mdash; the shift gets multiplied too, so it lands at <span class="mx"><i>ak</i></span> instead of <span class="mx"><i>k</i></span>. '+
+        'Those are different graphs unless <span class="mx"><i>a</i> = 1</span>. Stretch first, then shift.</span>';
+   }
+   $("info").innerHTML='<span class="n">'+n+'</span>'+t;
+ }
+
+ /* ---------- point map + substitution check ---------- */
+ function drawMap(){
+   var cur=par(step), i;
+   var rows='<div class="hd" style="text-align:right;">Parent point</div><div></div><div class="hd">Lands at</div>';
+   PC.pts.forEach(function(p,j){
+     var nx=p[0]+cur.hh, ny=Math.round((cur.aa*p[1]+cur.kk)*10000)/10000;
+     var fe=(j===PC.anc);
+     rows+='<div class="p" style="'+(fe?'background:#f6ecd4;color:#7a5a12;font-weight:600;':'')+'">'+pt(p[0],p[1])+'</div>'+
+           '<div class="ar">&rarr;</div>'+
+           '<div class="q" style="'+(fe?'background:#f6ecd4;box-shadow:inset 0 0 0 1.5px #dcc079;color:#6b4f0e;':'')+'">'+pt(nx,ny)+'</div>';
+   });
+   $("map").innerHTML=rows;
+
+   /* worked substitution on the featured (gold) point, using the CURRENT stage's formula */
+   var fp=PC.pts[PC.anc], p0=fp[0], q0=fp[1];
+   var nx=p0+cur.hh, ny=Math.round((cur.aa*q0+cur.kk)*10000)/10000;
+   var L=[];
+   L.push(aBody(fh(nx),cur.aa,cur.hh,true,'','')+kPart(cur.kk,''));           /* substitute x */
+   if(cur.hh!==0) L.push(aBody(fh(p0),cur.aa,0,true,'','')+kPart(cur.kk,'')); /* inside collapses to p */
+   var mult=(cur.aa===1)?fh(q0):(fh(cur.aa)+' &middot; '+nf(q0));
+   var mid=mult+kPart(cur.kk,'');                                             /* the parent's height */
+   if(mid!==fh(ny)&&mid!==L[L.length-1]) L.push(mid);
+   var out='<div class="cap">Check the gold point by substituting</div><div>when <i>x</i> = '+fh(nx)+': &nbsp;<i>y</i> = '+L[0]+'</div>';
+   for(i=1;i<L.length;i++) out+='<div>= '+L[i]+'</div>';
+   out+='<div>= <span class="res">'+fh(ny)+'</span></div>'+
+        '<span class="ok">&check; and that is exactly the point '+pt(nx,ny)+' plotted on the graph</span>';
+   $("subst").innerHTML=out;
+   $("dr").innerHTML=domRange();
+ }
+
+ /* ---------- banner ---------- */
+ function drawStage(){
+   var hc=(step===1?'hl':(step<1?'dim':''));
+   var ac=(step===2?'hl':(step<2?'dim':''));
+   var kc=(step===3?'hl':(step<3?'dim':''));
+   var eq='<i>g</i>(<i>x</i>) = '+aBody('<i>x</i>',a,h,false,ac,hc)+kPart(k,kc);
+   $("stage").style.background=STC[step];
+   $("stage").innerHTML='<span class="lab">Step '+(step+1)+' of 4 &nbsp;&middot;&nbsp; '+STN[step]+'</span>'+eq+
+     '<span class="cap">from the parent <span class="mx"><i>f</i>(<i>x</i>) = '+PC.fx+'</span></span>';
+ }
+
+ /* ---------- facts ---------- */
+ function drawFacts(){
+   $("f1").querySelector('.v').innerHTML = (h===0)?'none':((h>0?'right ':'left ')+fmt(Math.abs(h)));
+   var A=Math.abs(a), v2;
+   if(a===0) v2='collapsed';
+   else if(A===1) v2=(a<0?'flip only':'none');
+   else v2=(A>1?'stretch &times;':'squash &times;')+fmt(A)+(a<0?'<br>+ flip':'');
+   $("f2").querySelector('.v').innerHTML=v2;
+   $("f3").querySelector('.v').innerHTML = (k===0)?'none':((k>0?'up ':'down ')+fmt(Math.abs(k)));
+   $("f1").className=(step===1?'act':''); $("f2").className=(step===2?'act':''); $("f3").className=(step===3?'act':'');
+ }
+
+ /* ---------- master render ---------- */
+ function render(){
+   PC=P[pi];
+   $("va").innerHTML=fh(a); $("vh").innerHTML=fh(h); $("vk").innerHTML=fh(k);
+   $("gTitle").innerHTML=PC.nm+' &mdash; parent and transformation';
+   $("legP").innerHTML='<i>y</i> = '+PC.fx;
+   for(var i=0;i<4;i++){ $("b"+i).className=(i<=step?'on':''); }
+   drawGal(); drawStage(); drawGraph(); drawMap(); drawFacts(); stepInfo();
+   $("prev").disabled=(step===0); $("next").disabled=(step===3);
+ }
+
+ /* ---------- wiring ---------- */
+ function bump(need){ if(step<need) step=need; }
+ $("sa").oninput=function(){ a=parseFloat(this.value); bump(2); render(); };
+ $("sh").oninput=function(){ h=parseFloat(this.value); bump(1); render(); };
+ $("sk").oninput=function(){ k=parseFloat(this.value); bump(3); render(); };
+ $("prev").onclick=function(){ if(step>0){ step--; render(); } };
+ $("next").onclick=function(){ if(step<3){ step++; render(); } };
+ function preset(aa,hh,kk){ a=aa; h=hh; k=kk; $("sa").value=aa; $("sh").value=hh; $("sk").value=kk; step=3; render(); }
+ $("p0").onclick=function(){ preset(1,0,0); step=0; render(); };
+ $("p1").onclick=function(){ preset(1,3,0); };
+ $("p2").onclick=function(){ preset(-1,0,0); };
+ $("p3").onclick=function(){ preset(-0.5,-4,3); };
+
+ render();
+})();
+</script>
+</body>
+</html>

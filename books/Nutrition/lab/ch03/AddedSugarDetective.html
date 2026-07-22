@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>The Added Sugar Detective</title>
+<meta name="description" content="Find added sugars hiding under other names on ingredient lists — scan real-style labels, decode more than fifty aliases into glucose and fructose, and run the teaspoon and percent-of-calories arithmetic yourself.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.st3{display:flex;gap:7px;margin-bottom:11px;}
+.st3 div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 4px;font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);background:#fff;}
+.st3 div .v{display:block;font-size:14px;font-weight:800;letter-spacing:0;text-transform:none;color:var(--teal-dk);margin-top:3px;line-height:1.2;font-variant-numeric:tabular-nums;}
+.st3 div .v i{font-style:normal;font-size:9.4px;color:var(--muted);margin-left:2px;}
+.st3 div.hot{border-color:var(--teal);background:#faf6ee;}
+.ingwrap{border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px 11px 11px;}
+.ingwrap .lb{font-size:9.6px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.ingwrap .lb b{color:var(--teal-dk);}
+.ing{display:flex;flex-wrap:wrap;gap:5px;}
+.ing button{border:1px solid var(--line);background:#fdfbf7;color:var(--ink);border-radius:8px;padding:6px 9px;font-size:11.8px;font-weight:600;font-family:var(--sans);cursor:pointer;line-height:1.2;transition:.12s;}
+.ing button:hover{border-color:var(--teal);}
+.ing button i{font-style:normal;font-weight:800;margin-left:3px;}
+.ing button.hit{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:800;}
+.ing button.miss{background:#f2eee7;border-color:#ded6c6;color:var(--muted);}
+.ing button.near{background:#fdf0dd;border-color:#e8cf9e;color:#8a6a20;font-weight:700;}
+.ing button.rev{background:#fbf1dc;border-color:var(--teal);color:var(--teal-dk);font-weight:800;border-style:dashed;}
+.hdr{font-size:9.6px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:13px 0 5px;}
+.hdr:first-child{margin-top:0;}
+.grid .it{display:block;text-align:left;font-weight:700;font-size:11.6px;padding:8px 10px;line-height:1.25;}
+.grid .it small{display:block;font-weight:600;font-size:9.6px;color:var(--muted);margin-top:2px;}
+.grid .it.on small{color:rgba(255,255,255,.85);}
+.ctl{border:1px solid var(--line);border-radius:11px;padding:9px 12px 8px;background:#fff;margin-bottom:8px;}
+.ctl .hd{display:flex;align-items:baseline;gap:8px;}
+.ctl .hd b{font-size:12.4px;color:var(--ink);white-space:nowrap;}
+.ctl .hd small{font-size:10.2px;color:var(--muted);font-weight:600;flex:1;line-height:1.3;}
+.ctl .hd .v{font-weight:800;font-size:14.5px;color:var(--teal-dk);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.ctl input[type=range]{width:100%;margin-top:6px;height:20px;accent-color:var(--teal);cursor:pointer;display:block;}
+.math{margin-top:11px;border-top:1px solid var(--line);padding-top:8px;}
+.math .ln{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--soft);padding:3.5px 0;font-variant-numeric:tabular-nums;}
+.math .ln .lf b{color:var(--ink);}
+.math .ln .rt{font-weight:800;color:var(--teal-dk);white-space:nowrap;}
+.math .ln.tt{border-top:1px dashed #ddd2ba;margin-top:5px;padding-top:8px;}
+.ev{display:inline-block;font-size:9.4px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:2px 8px;vertical-align:1px;margin-right:5px;}
+.ev.s{background:#e5f3ea;color:#237a45;} .ev.p{background:#fdf0dd;color:#8a6a20;} .ev.n{background:#eef2f7;color:#3d5f80;}
+.claim{font-size:12px;color:var(--soft);line-height:1.5;padding:7px 0;border-bottom:1px solid var(--line);}
+.claim:last-child{border-bottom:none;}
+.lg{display:flex;gap:11px;justify-content:center;flex-wrap:wrap;margin-top:8px;font-size:10.4px;font-weight:700;color:var(--muted);}
+.lg i{display:inline-block;width:12px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.hint{font-size:11px;color:var(--muted);margin-top:9px;line-height:1.45;text-align:center;}
+.strip{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+.strip span{font-size:10.5px;font-weight:800;background:#f4ead8;color:var(--teal-dk);border-radius:20px;padding:3px 9px;font-variant-numeric:tabular-nums;}
+.strip span i{font-style:normal;color:var(--muted);font-weight:700;}
+.pill.amb{background:#fbf1dc;color:#6b4710;} .pill.dep{background:#eef2f7;color:#3d5f80;} .pill.non{background:#f1efe9;color:#6a6152;}
+.les{margin-top:11px;border-top:1px dashed #ddd2ba;padding-top:10px;font-size:13px;line-height:1.55;}
+.les b.t{display:block;font-family:var(--disp);font-weight:600;font-size:14.5px;color:var(--teal-dk);margin-bottom:3px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 3</div>
+  <h1>The Added Sugar Detective</h1>
+  <div class="intro">Added sugars answer to dozens of names on an ingredient list, and one product can carry four of them at once &mdash; each small enough to sit low in the list. This isn&rsquo;t about good foods and bad foods. It&rsquo;s a <b>reading skill</b>: learn the names, find them on the label, then do the arithmetic yourself.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Pick a product</h2>
+      <svg id="viz" viewBox="0 0 250 316" aria-label="label visual"><g id="art"></g></svg>
+      <div class="lg" id="legend"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">The Added Sugar Detective<small>choose a mode to begin</small></div>
+    <div class="modeseg" id="modes">
+      <button data-m="0" class="on">Scan a label</button>
+      <button data-m="1">Name decoder</button>
+      <button data-m="2">Run the numbers</button>
+    </div>
+    <div class="card" id="panel"></div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var SPID=0;
+ var C={add:'#b07a1e',nat:'#7a9ab5',glu:'#2f6f9f',fru:'#7a5a8a',oth:'#8d8270',ink:'#2b2318',line:'#ddd2ba'};
+
+ /* ---------------- data: products ---------------- */
+ var PROD=[
+  {k:'yog',nm:'Strawberry lowfat yogurt',serv:'1 container (150 g)',kcal:130,carb:24,tot:18,add:11,
+   hint:'Two of these nine ingredients are counted as added sugars. Two others are sugars that were already in the food before anyone sweetened it &mdash; those don&rsquo;t count.',
+   les:'This is the cleanest demonstration of <b>total sugars vs added sugars</b>. Milk arrives with lactose and strawberries arrive with their own fructose and glucose. Both land in the 18 g <b>Total Sugars</b> line. Only the sucrose and the juice concentrate land in the 11 g <b>Added Sugars</b> line. One number on the panel cannot tell you both stories &mdash; that is exactly why the Added Sugars line exists.',
+   ing:[
+    {t:'Cultured Lowfat Milk',a:0,w:'Milk brings <b>lactose</b> &mdash; genuinely a sugar, but a <b>naturally occurring</b> one. It counts in Total Sugars and not in Added Sugars.'},
+    {t:'Sugar',a:1,w:'Sucrose. The plainest word on the list and the one eyes skim right past. Half glucose, half fructose once your intestinal sucrase splits it. <b>4 kcal per gram.</b>'},
+    {t:'Strawberries',a:0,w:'The fruit&rsquo;s own fructose, glucose and sucrose came packaged with its water, fibre, potassium and vitamin C. Naturally occurring &mdash; not counted as added.'},
+    {t:'Water',a:0,w:'No energy, no sugar.'},
+    {t:'Modified Corn Starch',a:0,w:'A thickener. Starch is a carbohydrate and digests to glucose, so it carries about <b>4 kcal per gram</b> &mdash; but it is a polysaccharide, not a sugar, so it never appears on the Added Sugars line.'},
+    {t:'Fruit Juice Concentrate',a:1,w:'Here the concentrate is doing a <b>sweetener&rsquo;s job</b>, so the FDA counts it as an added sugar. Compare this with the 100% juice product, where the same ingredient is <i>not</i> counted &mdash; role decides.'},
+    {t:'Natural Flavor',a:0,w:'A flavouring, present in tiny amounts. Not a sugar and not an energy source at these quantities.'},
+    {t:'Pectin',a:0,w:'A soluble fibre from fruit, used to set the texture. Fibre is carbohydrate your enzymes can&rsquo;t break down, so it is not a sugar.'},
+    {t:'Vitamin D3',a:0,w:'A micronutrient added for fortification. No energy.'}
+   ]},
+  {k:'bar',nm:'Oat &amp; almond granola bar',serv:'1 bar (40 g)',kcal:180,carb:29,tot:13,add:12,
+   hint:'This one hides its sweeteners by <b>splitting</b> them. Look for four separate names, none of which is near the top.',
+   les:'This is the single most useful detective habit: <b>add the sweeteners together</b>. Ingredients are listed in descending order by weight, so a manufacturer that uses one sweetener would see it sit high in the list. Four different sweeteners each weigh less individually, so each sits lower &mdash; even though their combined 12 g would rank them second overall, just behind the oats. Nothing about this is illegal or deceptive; it is simply what the ordering rule does when a formula uses several syrups. Your job is to re-add them.',
+   ing:[
+    {t:'Whole Grain Rolled Oats',a:0,w:'Starch and fibre, plus beta-glucan. Digests to glucose eventually, but oats are not a sugar ingredient.'},
+    {t:'Brown Rice Syrup',a:1,w:'Rice starch broken down by enzymes into <b>maltose and glucose</b>. Essentially <b>no fructose</b> at all &mdash; but still a sugar, still 4 kcal per gram, still an added sugar.'},
+    {t:'Cane Sugar',a:1,w:'Sucrose from sugarcane. Chemically identical to beet sugar and to the word &ldquo;sugar.&rdquo;'},
+    {t:'Almonds',a:0,w:'Fat, protein, fibre, vitamin E, magnesium. Trace sugars only.'},
+    {t:'Sunflower Oil',a:0,w:'Pure fat &mdash; <b>9 kcal per gram</b>, more than double any sugar. No carbohydrate.'},
+    {t:'Honey',a:1,w:'Roughly half fructose, half glucose, already split apart by the bee&rsquo;s enzymes. The FDA counts honey as an added sugar whenever it is an ingredient in another food.'},
+    {t:'Molasses',a:1,w:'The syrup left after sucrose is crystallised out. It keeps trace iron, calcium and potassium &mdash; real, but in amounts far too small at a serving of this size to change what you get in a day.'},
+    {t:'Sea Salt',a:0,w:'Sodium chloride. A mineral, not a sugar, no energy.'},
+    {t:'Natural Flavor',a:0,w:'Flavouring in trace amounts.'},
+    {t:'Mixed Tocopherols',a:0,w:'Vitamin E compounds used to keep the oil from going rancid.'}
+   ]},
+  {k:'bbq',nm:'Barbecue sauce',serv:'2 Tbsp (34 g)',kcal:70,carb:17,tot:16,add:15,
+   hint:'Savoury products carry added sugars too. Three sweeteners are on this list.',
+   les:'People hunt for added sugars in desserts and drinks and stop looking there. <b>Condiments, sauces, dressings, marinades, breads and cured meats</b> are routine sources. Sugar is doing real technical work here &mdash; it balances the acid of the vinegar and tomato, browns on the grill, and helps the sauce cling. Recognising it is label literacy, not an accusation.',
+   ing:[
+    {t:'Tomato Puree',a:0,w:'Tomatoes carry their own glucose and fructose. Naturally occurring &mdash; which is why 16 g total sugars is only 15 g added.'},
+    {t:'High Fructose Corn Syrup',a:1,w:'Corn starch enzymatically broken to glucose, then part of that glucose converted to fructose. The common beverage grade is about <b>55% fructose, 42% glucose</b> &mdash; very close to sucrose&rsquo;s 50/50. The name oversells the difference.'},
+    {t:'Distilled Vinegar',a:0,w:'Acetic acid in water. Sour, not sweet, no sugar.'},
+    {t:'Molasses',a:1,w:'A sugarcane syrup. Contributes colour, a bitter-sweet depth, and added sugars.'},
+    {t:'Corn Syrup',a:1,w:'Not the same thing as high-fructose corn syrup. Plain corn syrup is <b>glucose and maltose with essentially no fructose</b>. Still an added sugar, still 4 kcal per gram.'},
+    {t:'Salt',a:0,w:'Sodium chloride. Worth watching on this label for a different reason, but it is not a sugar.'},
+    {t:'Modified Corn Starch',a:0,w:'Thickener. A starch, not a sugar &mdash; never appears on the Added Sugars line.'},
+    {t:'Spices',a:0,w:'Trace amounts, no meaningful energy.'},
+    {t:'Caramel Color',a:0,w:'A colouring made by heating a carbohydrate. Despite the sugary name it is used in tiny amounts as a <b>colour</b>, and is not counted as an added sugar.'},
+    {t:'Natural Smoke Flavor',a:0,w:'Flavouring, trace amounts.'}
+   ]},
+  {k:'spo',nm:'Sports drink',serv:'12 fl oz (355 mL)',kcal:80,carb:20,tot:20,add:20,
+   hint:'Two sweeteners here, and both end in the same three letters. One decoy ends in different letters entirely.',
+   les:'The <b>&ndash;ose ending</b> is a chemistry convention for a sugar: sucrose, glucose, dextrose, fructose, maltose, lactose, galactose. It is the fastest scan you can run on an ingredient list. Beware the near-misses: <b>citric acid</b> is an acid, <b>cellulose</b> is a fibre you cannot digest, and <b>sucralose</b> &mdash; despite the ending &mdash; is a non-nutritive sweetener with essentially no calories. Note also that here total sugars and added sugars are the same number, because there is no food in the bottle that brought sugar of its own.',
+   ing:[
+    {t:'Water',a:0,w:'The main ingredient by weight, which is why it is listed first.'},
+    {t:'Sucrose',a:1,w:'Table sugar under its chemistry name. Glucose + fructose bonded together.'},
+    {t:'Dextrose',a:1,w:'Pure <b>glucose</b>. &ldquo;Dextrose&rdquo; is simply the name for the form of glucose found in food. Absorbed directly, no digestion needed.'},
+    {t:'Citric Acid',a:0,w:'A near-miss. Ends in &ndash;ic, not &ndash;ose. It is the tart acid of citrus fruit, used for flavour, and is not a sugar.'},
+    {t:'Salt',a:0,w:'Sodium. Together with potassium below, it is the reason this is called an electrolyte drink.'},
+    {t:'Sodium Citrate',a:0,w:'A salt of citric acid used as a buffer. Not a sugar.'},
+    {t:'Monopotassium Phosphate',a:0,w:'A potassium and phosphate salt. A mineral, not a sugar.'},
+    {t:'Natural Flavor',a:0,w:'Trace flavouring.'},
+    {t:'Modified Food Starch',a:0,w:'Starch, not a sugar &mdash; even though it digests to glucose and carries the same 4 kcal per gram.'}
+   ]},
+  {k:'pln',nm:'Plain unsweetened yogurt',serv:'1 cup (170 g)',kcal:120,carb:12,tot:9,add:0,
+   hint:'The panel says 9 g of Total Sugars. How many of these two ingredients are added sugars?',
+   les:'<b>None.</b> Every one of those 9 g is <b>lactose</b>, the sugar milk arrives with, and the ingredient list is two items long. This is the control case that proves the point of the whole section: the <b>Total Sugars</b> number alone tells you nothing about whether anything was sweetened. You need either the <b>Includes 0 g Added Sugars</b> line or the ingredient list. Comparing two products on Total Sugars alone will mislead you every time one of them is a dairy or fruit product.',
+   ing:[
+    {t:'Cultured Pasteurized Grade A Nonfat Milk',a:0,w:'The lactose in this milk is the entire 9 g. Naturally occurring, so the Added Sugars line reads zero. Culturing actually consumes some of the original lactose &mdash; the bacteria eat it and produce lactic acid, which is what makes yogurt tart.'},
+    {t:'Live Active Cultures',a:0,w:'Bacteria, chiefly <i>Lactobacillus</i> and <i>Streptococcus thermophilus</i>. They add no sugar; they remove a little.'}
+   ]},
+  {k:'cer',nm:'Toasted corn cereal',serv:'1 cup (39 g)',kcal:150,carb:32,tot:12,add:12,
+   hint:'Three sweeteners. One of them sounds like something you&rsquo;d find in a beehive rather than a factory.',
+   les:'Notice that <b>Total Carbohydrate is 32 g while Total Sugars is only 12 g</b>. The other 20 g are starch and a little fibre from the corn. Starch is still carbohydrate at 4 kcal per gram and still ends up as glucose &mdash; the sugar lines describe <i>chemical form</i>, not total carbohydrate load. Reading only the sugar lines on a grain product will systematically under-read the carbohydrate.',
+   ing:[
+    {t:'Whole Grain Corn',a:0,w:'Starch, fibre and some protein. Not a sugar ingredient, though it supplies most of the 32 g of carbohydrate.'},
+    {t:'Sugar',a:1,w:'Sucrose.'},
+    {t:'Corn Syrup',a:1,w:'Glucose and maltose from corn starch. Used here as much for the crisp glaze it forms as for sweetness.'},
+    {t:'Honey',a:1,w:'An added sugar when used as an ingredient. Worth knowing separately: <b>honey should never be given to infants under 12 months</b> because of the risk of infant botulism &mdash; a well-established safety rule that has nothing to do with its sugar content.'},
+    {t:'Salt',a:0,w:'Sodium chloride.'},
+    {t:'Calcium Carbonate',a:0,w:'A calcium fortificant. A mineral, no energy.'},
+    {t:'Trisodium Phosphate',a:0,w:'A processing aid that controls acidity during cooking. Not a sugar.'},
+    {t:'Tocopherols',a:0,w:'Vitamin E compounds used as a preservative.'}
+   ]},
+  {k:'sce',nm:'Tomato pasta sauce',serv:'1/2 cup (125 g)',kcal:70,carb:12,tot:9,add:4,
+   hint:'Only one added sugar on this list &mdash; but the panel still shows 9 g of total sugars. Where did the other 5 g come from?',
+   les:'From the <b>vegetables</b>. Tomatoes and onions carry their own glucose and fructose, which is why 9 g of total sugars sits above only 4 g of added sugars. This is the same arithmetic as the yogurt, running in a savoury product. It also shows why the added-sugars figure cannot be reverse-engineered from the ingredient list alone &mdash; the list tells you <i>which names</i>, the panel tells you <i>how much</i>. You need both.',
+   ing:[
+    {t:'Tomatoes',a:0,w:'Naturally occurring fructose and glucose, plus lycopene, potassium and vitamin C.'},
+    {t:'Tomato Puree',a:0,w:'Concentrated tomato &mdash; and therefore more concentrated natural sugars. Still naturally occurring, because nothing was added; the water was removed.'},
+    {t:'Onions',a:0,w:'Onions are surprisingly sugary, especially once cooked. Naturally occurring.'},
+    {t:'Sugar',a:1,w:'Sucrose, added to soften the acidity of the tomatoes. The only added sugar on this list, at 4 g per half cup &mdash; about a teaspoon.'},
+    {t:'Olive Oil',a:0,w:'Fat, at 9 kcal per gram. No carbohydrate.'},
+    {t:'Garlic',a:0,w:'Trace amounts.'},
+    {t:'Salt',a:0,w:'Sodium chloride.'},
+    {t:'Basil',a:0,w:'A herb, trace amounts.'},
+    {t:'Citric Acid',a:0,w:'Acidity regulator. Not a sugar.'}
+   ]},
+  {k:'juc',nm:'100% apple juice, no sugar added',serv:'8 fl oz (240 mL)',kcal:110,carb:27,tot:24,add:0,
+   hint:'The hardest one. The panel says <b>0 g added sugars</b> next to <b>24 g total sugars</b>. Tap the ingredient you suspect and read why the answer is genuinely subtle.',
+   les:'Juice concentrate that is simply <b>reconstituted back to single-strength juice</b> is not counted as an added sugar by the FDA &mdash; the water was taken out and put back, and nothing was sweetened. That same concentrate used to sweeten a yogurt or a granola bar <i>is</i> counted. The role decides, not the ingredient.<br><br>Two things worth holding at once. First, <b>the WHO uses a wider category called free sugars</b>, which does include the sugars in fruit juice, so an international guideline and a US label can disagree about this exact glass. Second, juice separates the fruit&rsquo;s sugars from its fibre and its chewing time, so 240 mL goes down far faster than the several apples it took to fill it &mdash; a real physiological difference, and a good reason the two definitions exist.',
+   ing:[
+    {t:'Filtered Water',a:0,w:'The water that was evaporated out of the juice, put back in.'},
+    {t:'Apple Juice Concentrate',a:2,w:'<b>A genuinely subtle call &mdash; good instinct.</b> Because it is reconstituted back to ordinary single-strength juice and nothing is sweetened beyond that, the FDA does <b>not</b> count it as an added sugar here. Put the identical ingredient into a yogurt as a sweetener and it <b>is</b> counted. The WHO&rsquo;s wider &ldquo;free sugars&rdquo; category counts it either way.'},
+    {t:'Ascorbic Acid (Vitamin C)',a:0,w:'Vitamin C, added to restore what processing costs and to protect colour. Not a sugar, no energy.'}
+   ]}
+ ];
+
+ /* ---------------- data: name decoder ---------------- */
+ var FAM=[
+  {h:'The &ndash;ose family: chemistry names'},
+  {k:'suc',nm:'Sucrose',sub:'sugar, cane sugar, beet sugar',gl:50,fr:50,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'One glucose bonded to one fructose. Your intestinal <b>sucrase</b> snips the bond at the brush border and the two halves are absorbed separately.',
+   sp:'Cane sugar, beet sugar, granulated, caster, confectioners&rsquo;, brown sugar and plain &ldquo;sugar&rdquo; are all the same molecule. Brown sugar is sucrose with a little molasses returned to it.'},
+  {k:'dex',nm:'Dextrose / Glucose',sub:'corn sugar, glucose',gl:100,fr:0,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'Free glucose &mdash; the monosaccharide itself, needing no digestion at all. It crosses the enterocyte on <b>SGLT1</b> the moment it reaches the small intestine.',
+   sp:'&ldquo;Dextrose&rdquo; is the food-industry name for glucose. If you see it, the product contains the sugar your bloodstream is measured in.'},
+  {k:'fru',nm:'Fructose',sub:'crystalline fructose, fruit sugar',gl:0,fr:100,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'Free fructose. It enters the enterocyte on <b>GLUT5</b> and is handled largely by the liver rather than being released straight into the circulation as glucose is.',
+   sp:'Because it bypasses the direct glucose route, fructose raises blood glucose less sharply gram for gram. That is a statement about <i>route</i>, not about energy &mdash; it is still 4 kcal per gram.'},
+  {k:'mal',nm:'Maltose / Malt syrup',sub:'barley malt, malt extract, maltose',gl:100,fr:0,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'Two glucose units bonded together, split by <b>maltase</b>. Everything it delivers arrives as glucose; there is no fructose in it.',
+   sp:'Common in cereals, crackers, malted drinks and some breads. &ldquo;Barley malt extract&rdquo; reads like a grain ingredient and functions as a sweetener.'},
+  {k:'lac',nm:'Lactose',sub:'milk sugar',gl:50,fr:0,ot:50,ad:2,kc:'4 kcal/g',
+   wt:'Glucose bonded to <b>galactose</b>, split by <b>lactase</b>. It is the one common dietary sugar that delivers galactose rather than fructose.',
+   sp:'In plain milk and plain yogurt it is <b>naturally occurring</b> and is not an added sugar. Lactose added to a product as a separate ingredient &mdash; it is used as a mild bulking sweetener &mdash; <i>is</i> counted as added.'},
+  {h:'Syrups'},
+  {k:'hfcs',nm:'High-fructose corn syrup',sub:'HFCS, glucose-fructose syrup',gl:45,fr:55,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'Corn starch broken to glucose, then part of that glucose enzymatically isomerised to fructose. The usual beverage grade is about <b>55% fructose / 42% glucose</b>.',
+   sp:'The name implies something dramatically different from table sugar. Compare the two bars: <b>55/45 versus 50/50</b>. Reviews comparing the two at matched calories have not found a clear metabolic difference between them; the interesting question is total intake, not which of the two is used.'},
+  {k:'cs',nm:'Corn syrup',sub:'glucose syrup, corn sweetener',gl:100,fr:0,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'Plain corn syrup is <b>not</b> high-fructose corn syrup. It is glucose and maltose from corn starch, with essentially <b>no fructose at all</b>.',
+   sp:'Two very similar words, two different compositions. Read to the end of the phrase.'},
+  {k:'brs',nm:'Brown rice syrup',sub:'rice syrup, tapioca syrup',gl:100,fr:0,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'Rice or tapioca starch broken down enzymatically into maltose and glucose. <b>Fructose-free</b>, which is why it appears in products aimed at people avoiding fructose.',
+   sp:'Frequently marketed as the gentler option. It is still an added sugar, still 4 kcal per gram, and gram for gram it raises blood glucose <i>more</i> promptly than sucrose does, because all of it is glucose.'},
+  {k:'aga',nm:'Agave syrup',sub:'agave nectar',gl:15,fr:85,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'Fructans from the agave plant hydrolysed to free fructose. The <b>most fructose-heavy</b> common sweetener, at roughly 85%.',
+   sp:'Sold on a low glycaemic index, which is true and is a direct consequence of that fructose. Low glycaemic index does not mean low energy &mdash; the calories per gram are identical to table sugar.'},
+  {k:'map',nm:'Maple syrup',sub:'maple sugar',gl:50,fr:50,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'Boiled-down tree sap, and overwhelmingly <b>sucrose</b> &mdash; so it behaves essentially as table sugar in water, with manganese, zinc and a set of polyphenols along for the ride.',
+   sp:'Those trace nutrients are real and measurable. At the amounts anyone actually pours, they are not a meaningful contribution to a day&rsquo;s intake.'},
+  {k:'inv',nm:'Invert sugar',sub:'golden syrup, treacle, invert syrup',gl:50,fr:50,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'Sucrose that has already been split into free glucose and free fructose with acid or enzyme &mdash; the same halves, just pre-separated.',
+   sp:'Used because it resists crystallising and holds moisture. Chemically it is what sucrose becomes in your small intestine anyway.'},
+  {h:'Names that never say &ldquo;sugar&rdquo;'},
+  {k:'hon',nm:'Honey',sub:'',gl:47,fr:50,ot:3,ad:1,kc:'4 kcal/g',
+   wt:'Bee-inverted nectar: roughly half fructose, half glucose, already unbonded, plus a few percent of other sugars and traces of enzymes and polyphenols.',
+   sp:'Counted as an added sugar whenever it is an ingredient in another food. Separate safety point: <b>never give honey to an infant under 12 months</b> &mdash; infant botulism risk, unrelated to its sugar content.'},
+  {k:'mol',nm:'Molasses',sub:'blackstrap molasses, treacle',gl:45,fr:45,ot:10,ad:1,kc:'4 kcal/g',
+   wt:'What is left after sucrose is crystallised out of cane juice, so it concentrates the <b>minerals</b> that came with the plant &mdash; iron, calcium, potassium, magnesium.',
+   sp:'Blackstrap is genuinely mineral-rich per 100 g. Per tablespoon, in a real recipe, the contribution is modest. Real, but easy to overstate.'},
+  {k:'ecj',nm:'Evaporated cane juice',sub:'cane juice, cane syrup, dehydrated cane juice',gl:50,fr:50,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'Sucrose. That is all it is &mdash; sugarcane juice with the water taken out.',
+   sp:'The FDA has issued guidance that this should be declared as <b>&ldquo;cane sugar&rdquo;</b>, precisely because &ldquo;evaporated cane juice&rdquo; obscures the fact that the ingredient is sugar. You may still meet the old phrasing.'},
+  {k:'coc',nm:'Coconut, date &amp; palm sugar',sub:'coconut sugar, date sugar, palm sugar, jaggery',gl:50,fr:50,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'Boiled-down palm sap or ground dried dates &mdash; predominantly <b>sucrose</b>, with small amounts of inulin, potassium and iron.',
+   sp:'Positioned as the natural alternative. The bar looks identical to table sugar because the molecule is the same one.'},
+  {k:'raw',nm:'Turbinado, demerara, muscovado',sub:'raw sugar, sucanat, panela, piloncillo',gl:50,fr:50,ot:0,ad:1,kc:'4 kcal/g',
+   wt:'Sucrose crystallised with more of the original molasses left clinging to it. That is the entire difference: how much refining stopped short.',
+   sp:'Bigger crystals, darker colour, more caramel flavour, trace minerals. Same monosaccharides, same 4 kcal per gram, same Added Sugars line.'},
+  {k:'fjc',nm:'Fruit juice concentrate',sub:'fruit puree concentrate, fruit nectar',gl:35,fr:65,ot:0,ad:2,kc:'4 kcal/g',
+   wt:'Juice with the water boiled off. Apple and pear concentrates &mdash; the two used most often as sweeteners &mdash; are <b>fructose-dominant</b>, near 65%.',
+   sp:'The one ingredient whose answer genuinely depends on its job. Sweetening another food: <b>counted as added</b>. Reconstituted back into 100% juice: <b>not counted</b> by the FDA, though the WHO&rsquo;s wider &ldquo;free sugars&rdquo; category counts it regardless.'},
+  {h:'Reads like sugar &mdash; not counted as one'},
+  {k:'mdx',nm:'Maltodextrin / Dextrin',sub:'modified food starch',gl:100,fr:0,ot:0,ad:0,kc:'4 kcal/g',
+   wt:'A short chain of glucose units &mdash; a <b>polysaccharide</b>, not a sugar. It digests to glucose quickly, and some grades raise blood glucose as fast as pure glucose does.',
+   sp:'The sharpest edge case in this whole list: <b>not an added sugar</b> on the label, still <b>4 kcal per gram of carbohydrate</b>, and still glucose by the time it is absorbed. A product can carry a low Added Sugars figure and a good deal of maltodextrin.'},
+  {k:'alc',nm:'Sugar alcohols',sub:'sorbitol, xylitol, erythritol, maltitol, isomalt',gl:0,fr:0,ot:0,ad:0,ns:1,kc:'about 0.2&ndash;3 kcal/g',
+   wt:'Polyols &mdash; sugar molecules with an alcohol group swapped in. Incompletely absorbed, which is what lowers their usable energy: erythritol lands near 0.2, xylitol near 2.4, sorbitol near 2.6, maltitol near 2.1 kcal per gram.',
+   sp:'Declared on their own line, never on the Added Sugars line. The unabsorbed fraction ferments in the colon, so larger amounts commonly cause gas, bloating and osmotic diarrhoea &mdash; the reason packages carry that warning.'},
+  {k:'nns',nm:'Non-nutritive sweeteners',sub:'sucralose, aspartame, stevia leaf extract, monk fruit, acesulfame K, saccharin',gl:0,fr:0,ot:0,ad:0,ns:1,kc:'effectively 0 kcal in use',
+   wt:'Hundreds of times sweeter than sucrose, so the quantity used is vanishingly small. Not sugars, not counted as added sugars, and they contribute essentially no energy at use levels.',
+   sp:'Note the trap: <b>sucralose</b> ends in &ndash;ose but is not a sugar. Aspartame is built from two amino acids, which is why products containing it must carry a <b>phenylketonuria</b> warning for people who cannot metabolise phenylalanine.'},
+  {k:'not',nm:'Not sugars at all',sub:'caramel color, citric acid, pectin, cellulose',gl:0,fr:0,ot:0,ad:0,ns:1,kc:'negligible at use levels',
+   wt:'Colours, acids and fibres. <b>Caramel color</b> is made by heating a carbohydrate but is used as a pigment in tiny amounts. <b>Citric acid</b> is sour. <b>Pectin and cellulose</b> are fibres your enzymes cannot break.',
+   sp:'These are the decoys that make a first scan slow. Once you can name them, the real sweeteners jump out.'},
+  {k:'nat',nm:'Naturally occurring sugars',sub:'whole fruit, plain milk, plain yogurt, vegetables',gl:45,fr:45,ot:10,ad:0,kc:'4 kcal/g',
+   wt:'The same monosaccharides &mdash; but arriving inside a food that also brings water, fibre, potassium, calcium, protein or vitamin C, and that takes time to chew.',
+   sp:'They count in <b>Total Sugars</b> and never in <b>Added Sugars</b>. This single distinction is why comparing two products on Total Sugars alone will mislead you whenever one of them is a dairy or fruit product.'}
+ ];
+
+ /* ---------------- svg helpers ---------------- */
+ function spoons(n,x0,y0,per,col){
+  var s='',full=Math.floor(n+1e-9),rem=n-full,tot=full+(rem>0.05?1:0),i;
+  if(tot<1)return '<text x="125" y="'+(y0+4)+'" font-size="11" fill="'+C.oth+'" text-anchor="middle" font-weight="700">none</text>';
+  if(tot>24)tot=24;
+  for(i=0;i<tot;i++){
+   var cx=x0+(i%per)*24,cy=y0+Math.floor(i/per)*26,f=(i<full)?1:rem,id='sp'+(SPID++);
+   s+='<rect x="'+(cx-2.2)+'" y="'+(cy-1)+'" width="4.4" height="14" rx="2.2" fill="#fff" stroke="'+col+'" stroke-width="1.3"/>';
+   s+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="8.4" ry="6.2" fill="#fff" stroke="'+col+'" stroke-width="1.6"/>';
+   if(f>0.02){
+    s+='<clipPath id="'+id+'"><rect x="'+(cx-8.4)+'" y="'+(cy-6.2)+'" width="'+(16.8*f)+'" height="12.4"/></clipPath>';
+    s+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="8.4" ry="6.2" fill="'+col+'" clip-path="url(#'+id+')"/>';
+   }
+  }
+  return s;
+ }
+ function bar(x,y,w,h,segs){
+  var s='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+(h/2)+'" fill="#f2ece0"/>',cx=x,i,tot=0;
+  for(i=0;i<segs.length;i++)tot+=segs[i][0];
+  if(tot<=0)return s;
+  var id='bc'+(SPID++);
+  s+='<clipPath id="'+id+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+(h/2)+'"/></clipPath><g clip-path="url(#'+id+')">';
+  for(i=0;i<segs.length;i++){
+   var ww=w*segs[i][0]/tot;
+   s+='<rect x="'+cx+'" y="'+y+'" width="'+(ww+0.6)+'" height="'+h+'" fill="'+segs[i][1]+'"/>';
+   cx+=ww;
+  }
+  return s+'</g>';
+ }
+ function tx(x,y,t,sz,col,w,an){
+  return '<text x="'+x+'" y="'+y+'" font-size="'+sz+'" fill="'+col+'" font-weight="'+(w||500)+'"'+(an?' text-anchor="'+an+'"':'')+' font-family="Inter,sans-serif">'+t+'</text>';
+ }
+
+ /* ---------------- mode A: label ---------------- */
+ function drawLabel(p){
+  var s='',dv=Math.round(p.add/50*100),tsp=p.add/4.2,natg=Math.max(0,p.tot-p.add);
+  s+='<rect x="8" y="6" width="234" height="178" rx="4" fill="#fff" stroke="'+C.ink+'" stroke-width="2"/>';
+  s+=tx(18,31,'Nutrition Facts',19,C.ink,800);
+  s+='<line x1="14" y1="39" x2="236" y2="39" stroke="'+C.ink+'"/>';
+  s+=tx(18,53,'Serving size',9.6,C.ink,500)+tx(236,53,p.serv,9.6,C.ink,800,'end');
+  s+='<rect x="14" y="59" width="222" height="7" fill="'+C.ink+'"/>';
+  s+=tx(18,79,'Amount per serving',8.6,C.ink,700);
+  s+=tx(18,97,'Calories',17,C.ink,800)+tx(236,97,''+p.kcal,17,C.ink,800,'end');
+  s+='<rect x="14" y="103" width="222" height="3.4" fill="'+C.ink+'"/>';
+  s+=tx(18,121,'Total Carbohydrate',10.6,C.ink,800)+tx(236,121,p.carb+' g',10.6,C.ink,500,'end');
+  s+='<line x1="14" y1="126" x2="236" y2="126" stroke="#d8d0c0"/>';
+  s+=tx(32,140,'Total Sugars',10.6,C.ink,500)+tx(236,140,p.tot+' g',10.6,C.ink,500,'end');
+  s+='<line x1="28" y1="145" x2="236" y2="145" stroke="#d8d0c0"/>';
+  var hot=p.add>0,hc=hot?'#6b4710':'#3d5f80';
+  s+='<rect x="28" y="148" width="208" height="20" rx="4" fill="'+(hot?'#fbf1dc':'#eef2f7')+'" stroke="'+(hot?'#e8cf9e':'#c4d3e2')+'"/>';
+  s+=tx(38,162,'Includes '+p.add+' g Added Sugars',10.3,hc,800);
+  s+=tx(230,162,dv+'%',10.3,hc,800,'end');
+  s+='<rect x="14" y="173" width="222" height="4" fill="'+C.ink+'"/>';
+  s+=tx(125,205,'WHERE THOSE '+p.tot+' g OF SUGAR CAME FROM',9.2,C.oth,800,'middle');
+  s+=bar(16,212,218,20,p.tot>0?[[natg,C.nat],[p.add,C.add]]:[[1,'#e8e0d0']]);
+  if(p.tot>0){
+   if(natg/p.tot>0.16)s+=tx(16+218*(natg/p.tot)/2,226,natg+' g',10.4,'#fff',800,'middle');
+   if(p.add/p.tot>0.16)s+=tx(16+218*(natg/p.tot)+218*(p.add/p.tot)/2,226,p.add+' g',10.4,'#fff',800,'middle');
+  }else{ s+=tx(125,226,'no sugar in this product',9.6,C.oth,700,'middle'); }
+  s+=tx(125,256,'ADDED SUGAR IN TEASPOONS',9.2,C.oth,800,'middle');
+  s+=tx(125,269,'1 level teaspoon of granulated sugar &asymp; 4.2 g',9,C.oth,500,'middle');
+  s+=spoons(tsp,26,288,8,C.add);
+  s+=tx(125,312,p.add>0?(Math.round(tsp*10)/10)+' tsp &middot; '+(p.add*4)+' kcal from added sugars':'0 tsp &middot; 0 kcal from added sugars',10.4,'#6b4710',800,'middle');
+  return s;
+ }
+
+ /* ---------------- mode B: composition ---------------- */
+ function drawFam(a){
+  var s='',parts=[],i;
+  s+='<rect x="16" y="8" width="218" height="40" rx="9" fill="#fff" stroke="'+C.line+'" stroke-width="1.5"/>';
+  s+=tx(125,26,'ON THE INGREDIENT LIST',8.6,C.oth,800,'middle');
+  s+=tx(125,41,a.nm,a.nm.length>24?11:13,C.ink,800,'middle');
+  s+='<path d="M125 52 L125 66" stroke="'+C.line+'" stroke-width="2"/><path d="M119 61 L125 68 L131 61" fill="none" stroke="'+C.line+'" stroke-width="2"/>';
+  s+=tx(125,84,'WHAT REACHES YOUR BLOODSTREAM',8.6,C.oth,800,'middle');
+  if(a.ns){
+   s+='<rect x="24" y="94" width="202" height="62" rx="10" fill="#f7f3ea" stroke="'+C.line+'" stroke-dasharray="4 3"/>';
+   s+=tx(125,120,'not a sugar',15,C.oth,800,'middle');
+   s+=tx(125,138,'no glucose or fructose delivered',9.6,C.oth,600,'middle');
+  }else{
+   var cs=[[a.gl,'glucose',C.glu,62],[a.fr,'fructose',C.fru,125],[a.ot,'galactose &amp; other',C.oth,188]];
+   for(i=0;i<3;i++){
+    if(cs[i][0]<=0)continue;
+    var r=9+21*Math.sqrt(cs[i][0]/100);
+    s+='<circle cx="'+cs[i][3]+'" cy="124" r="'+r+'" fill="'+cs[i][2]+'" opacity=".92"/>';
+    s+=tx(cs[i][3],128,cs[i][0]+'%',r>17?11.5:9,'#fff',800,'middle');
+    s+=tx(cs[i][3],160,cs[i][1],9,cs[i][2],800,'middle');
+   }
+  }
+  s+=tx(125,190,'PROPORTIONS OF THE SUGAR IT SUPPLIES',8.6,C.oth,800,'middle');
+  if(a.ns){ s+=bar(20,196,210,20,[[1,'#e8e0d0']])+tx(125,210,'&mdash;',10.4,C.oth,800,'middle'); }
+  else{
+   if(a.gl>0)parts.push([a.gl,C.glu]); if(a.fr>0)parts.push([a.fr,C.fru]); if(a.ot>0)parts.push([a.ot,C.oth]);
+   s+=bar(20,196,210,20,parts);
+  }
+  s+='<rect x="20" y="228" width="210" height="26" rx="8" fill="#faf6ee" stroke="'+C.line+'"/>';
+  s+=tx(30,245,'Energy',10.4,C.oth,700)+tx(220,245,a.kc,10.8,'#6b4710',800,'end');
+  var vc=a.ad===1?C.add:(a.ad===2?'#8a6a20':C.nat),
+      vt=a.ad===1?'YES &mdash; counted as an added sugar':(a.ad===2?'DEPENDS on the job it is doing':'NO &mdash; not an added sugar'),
+      vb=a.ad===1?'#fbf1dc':(a.ad===2?'#fdf0dd':'#e9f4ec');
+  s+='<rect x="20" y="262" width="210" height="42" rx="9" fill="'+vb+'" stroke="'+vc+'" stroke-width="1.4"/>';
+  s+=tx(125,279,'ON THE US NUTRITION FACTS PANEL',8.4,vc,800,'middle');
+  s+=tx(125,295,vt,10.4,vc,800,'middle');
+  return s;
+ }
+
+ /* ---------------- mode C: numbers ---------------- */
+ function drawMath(g,dk){
+  var s='',kc=g*4,pct=dk>0?kc/dk*100:0,tsp=g/4.2,dv=g/50*100;
+  s+=tx(125,20,'YOUR DAY&rsquo;S ENERGY, '+dk+' kcal',9.2,C.oth,800,'middle');
+  s+=bar(20,28,210,24,[[Math.min(kc,dk),C.add],[Math.max(0,dk-kc),'#e8e0d0']]);
+  var mx=20+210*0.10;
+  s+='<line x1="'+mx+'" y1="23" x2="'+mx+'" y2="57" stroke="'+C.ink+'" stroke-width="1.6" stroke-dasharray="3 2.5"/>';
+  s+=tx(mx+4,68,'10% of calories',8.8,C.ink,800);
+  s+=tx(125,90,(Math.round(pct*10)/10)+'% of the day&rsquo;s calories come from added sugars',10.2,pct>10?'#6b4710':'#3d5f80',800,'middle');
+  s+=tx(125,116,'PERCENT DAILY VALUE &mdash; 50 g reference',9.2,C.oth,800,'middle');
+  s+=bar(20,124,210,20,[[Math.min(dv,100),C.add],[Math.max(0,100-dv),'#e8e0d0']]);
+  s+=tx(125,158,Math.round(dv)+'% of the 50 g Daily Value',10.4,'#6b4710',800,'middle');
+  s+=tx(125,172,'the panel&rsquo;s %DV always assumes a 2,000 kcal day',8.8,C.oth,600,'middle');
+  s+=tx(125,196,'THAT IS THIS MANY TEASPOONS',9.2,C.oth,800,'middle');
+  s+=spoons(tsp,26,218,8,C.add);
+  s+=tx(125,300,(Math.round(tsp*10)/10)+' teaspoons &middot; '+Math.round(g*10)/10+' g &middot; '+Math.round(kc)+' kcal',12,'#6b4710',800,'middle');
+  s+=tx(125,318,'carbohydrate supplies 4 kcal per gram',9,C.oth,600,'middle');
+  return s;
+ }
+
+ /* ---------------- state + render ---------------- */
+ var mode=0,pi=0,stat={},taps=0,ai=0,gps=12,srv=2,dk=2000,lastIng='',revealed=false;
+
+ function setStage(t,sub,col){ $('stage').style.background=col; $('stage').innerHTML=t+'<small>'+sub+'</small>'; }
+ function legend(items){
+  $('legend').innerHTML=items.map(function(x){return '<span><i style="background:'+x[1]+'"></i>'+x[0]+'</span>';}).join('');
+ }
+
+ /* --- A --- */
+ function found(){ var p=PROD[pi],n=0,i; for(i=0;i<p.ing.length;i++){ if(p.ing[i].a===1&&stat[i]==='hit')n++; } return n; }
+ function target(){ var p=PROD[pi],n=0,i; for(i=0;i<p.ing.length;i++){ if(p.ing[i].a===1)n++; } return n; }
+ function allTapped(){ var p=PROD[pi],i; for(i=0;i<p.ing.length;i++){ if(!stat[i])return false; } return true; }
+
+ function paintA(){
+  var p=PROD[pi],f=found(),t=target(),done=revealed||(t>0?f>=t:allTapped());
+  $('cardTitle').innerHTML=p.nm;
+  $('viz').setAttribute('viewBox','0 0 250 316');
+  $('art').innerHTML=drawLabel(p);
+  legend([['naturally occurring',C.nat],['added sugars',C.add]]);
+  setStage(p.nm,'product '+(pi+1)+' of '+PROD.length+' &middot; '+
+   (t>0?f+' of '+t+' sweeteners found':'no added sugars on this list &mdash; check each one'),'#b07a1e');
+  $('sF').innerHTML=f+'<i>/'+t+'</i>'; $('sT').innerHTML=''+taps;
+  $('sA').innerHTML=p.add+'<i>g</i>'; $('sS').innerHTML=(Math.round(p.add/4.2*10)/10)+'<i>tsp</i>';
+  $('sF').parentNode.className=done?'hot':'';
+  $('ing').innerHTML=p.ing.map(function(g,i){
+   var st=stat[i]||'',mk=st==='hit'?' <i>&#10003;</i>':st==='miss'?' <i>&middot;</i>':st==='near'?' <i>~</i>':st==='rev'?' <i>&#10003;</i>':'';
+   return '<button class="'+st+'" data-i="'+i+'">'+g.t+mk+'</button>';
+  }).join('');
+  Array.prototype.forEach.call($('ing').querySelectorAll('button'),function(b){
+   b.onclick=function(){ tapIng(+b.getAttribute('data-i')); };
+  });
+  var body=lastIng||('<span class="n">'+p.nm+'</span>'+p.hint);
+  if(done){
+   body+='<div class="les"><b class="t">'+(revealed?'Revealed':(t>0?'All '+t+' found':'Zero added sugars'))+'</b>'+p.les+'</div>'+
+     '<div class="loc">Panel check: <b>'+p.tot+' g</b> total sugars, of which <b>'+p.add+' g</b> are added &mdash; about <b>'+
+     (Math.round(p.add/4.2*10)/10)+' teaspoons</b> and <b>'+(p.add*4)+' kcal</b>.</div>';
+  }
+  $('info').innerHTML=body;
+ }
+ function tapIng(i){
+  var g=PROD[pi].ing[i];
+  if(!stat[i]){ taps++; stat[i]=g.a===1?'hit':(g.a===2?'near':'miss'); }
+  var st=stat[i],
+      lbl=st==='hit'?'<span class="pill amb">added sugar</span>':st==='near'?'<span class="pill dep">it depends</span>':'<span class="pill non">not an added sugar</span>';
+  lastIng='<span class="n">'+g.t+' '+lbl+'</span>'+g.w;
+  paintA();
+ }
+ function modeA(){
+  $('panel').innerHTML=
+   '<div class="st3"><div><span id="lF">Found</span><span class="v" id="sF">0</span></div>'+
+   '<div><span>Taps</span><span class="v" id="sT">0</span></div>'+
+   '<div><span>Added</span><span class="v" id="sA">0</span></div>'+
+   '<div><span>Teaspoons</span><span class="v" id="sS">0</span></div></div>'+
+   '<div class="ingwrap"><div class="lb">Ingredients &mdash; <b>listed in descending order by weight</b></div><div class="ing" id="ing"></div></div>'+
+   '<div class="row"><button class="btn" id="rev">Reveal all</button><button class="btn" id="rst">Reset</button><button class="btn solid" id="nxt">Next product &rsaquo;</button></div>'+
+   '<div class="hdr">Jump to a product</div><div class="grid" id="plist"></div>'+
+   '<div id="info"></div>'+
+   '<div class="mnem"><b>The four-second scan.</b> Run your eye for <b>&ndash;ose</b> endings, the word <b>syrup</b>, the word <b>sugar</b> in any compound, and anything ending in <b>&ndash;juice</b>, <b>&ndash;nectar</b> or <b>&ndash;malt</b>. Then <b>add the hits together</b> &mdash; that is the step the ordering rule hides.</div>';
+  $('rev').onclick=function(){
+   var p=PROD[pi],i; for(i=0;i<p.ing.length;i++){ if(!stat[i]&&p.ing[i].a===1)stat[i]='rev'; }
+   revealed=true; lastIng=''; paintA();
+  };
+  $('rst').onclick=function(){ stat={}; taps=0; lastIng=''; revealed=false; paintA(); };
+  $('nxt').onclick=function(){ pick((pi+1)%PROD.length); };
+  $('plist').innerHTML=PROD.map(function(p,i){
+   return '<button class="it'+(i===pi?' on':'')+'" data-i="'+i+'">'+p.nm+'<small>'+p.serv+'</small></button>';
+  }).join('');
+  Array.prototype.forEach.call($('plist').querySelectorAll('.it'),function(b){
+   b.onclick=function(){ pick(+b.getAttribute('data-i')); };
+  });
+  paintA();
+ }
+ function pick(i){ pi=i; stat={}; taps=0; lastIng=''; revealed=false; modeA(); }
+
+ /* --- B --- */
+ function realIdx(n){ var c=-1,i; for(i=0;i<FAM.length;i++){ if(!FAM[i].h){c++; if(c===n)return i;} } return 1; }
+ function paintB(){
+  var a=FAM[ai];
+  $('cardTitle').innerHTML=a.nm;
+  $('viz').setAttribute('viewBox','0 0 250 316');
+  $('art').innerHTML=drawFam(a);
+  legend(a.ns?[['no sugar delivered',C.oth]]:[['glucose',C.glu],['fructose',C.fru],['galactose / other',C.oth]]);
+  setStage(a.nm,a.sub||'a name for added sugar','#7a5a8a');
+  Array.prototype.forEach.call($('flist').querySelectorAll('.it'),function(b){
+   b.className='it'+(+b.getAttribute('data-i')===ai?' on':'');
+  });
+  var vt=a.ad===1?'<span class="pill amb">added sugar</span>':a.ad===2?'<span class="pill dep">it depends</span>':'<span class="pill non">not an added sugar</span>';
+  $('info').innerHTML='<span class="n">'+a.nm+' '+vt+'</span>'+a.wt+'<div class="dd"><b>How to spot it &mdash;</b> '+a.sp+'</div>';
+ }
+ function modeB(){
+  var h='';
+  h+='<div id="flist">';
+  var open=false,i;
+  for(i=0;i<FAM.length;i++){
+   if(FAM[i].h){ if(open)h+='</div>'; h+='<div class="hdr">'+FAM[i].h+'</div><div class="grid">'; open=true; }
+   else{ h+='<button class="it" data-i="'+i+'">'+FAM[i].nm+(FAM[i].sub?'<small>'+FAM[i].sub+'</small>':'')+'</button>'; }
+  }
+  if(open)h+='</div>';
+  h+='</div><div id="info"></div>'+
+   '<div class="mnem"><b>The point of the bars.</b> Nearly every name on this list resolves into the same two monosaccharides. Your small intestine cannot read a label &mdash; it sees glucose and fructose, and every one of them supplies <b>4 kcal per gram</b>. The names differ in flavour, colour, cost, moisture and marketing. They do not differ in energy.</div>'+
+   '<div class="note"><b>What the label rules actually say.</b> &ldquo;Added sugars&rdquo; on a US Nutrition Facts panel means sugars added during processing or packaging, plus sugars from syrups, honey, and concentrated fruit or vegetable juices beyond what the same volume of 100% juice would contain. The WHO instead uses <b>free sugars</b>, a wider category that also counts the sugars in fruit juice. Two definitions, two different numbers for the same glass.</div>';
+  $('panel').innerHTML=h;
+  Array.prototype.forEach.call($('flist').querySelectorAll('.it'),function(b){
+   b.onclick=function(){ ai=+b.getAttribute('data-i'); paintB(); };
+  });
+  if(FAM[ai].h||ai===0)ai=realIdx(0);
+  paintB();
+ }
+
+ /* --- C --- */
+ function paintC(){
+  var g=gps*srv,kc=g*4,pct=dk>0?kc/dk*100:0,tsp=g/4.2,dv=g/50*100;
+  $('cardTitle').innerHTML='A day&rsquo;s added sugars';
+  $('viz').setAttribute('viewBox','0 0 250 330');
+  $('art').innerHTML=drawMath(g,dk);
+  legend([['added sugars',C.add],['rest of the day&rsquo;s energy','#e8e0d0']]);
+  setStage('Run the numbers',(Math.round(g*10)/10)+' g/day &middot; '+Math.round(kc)+' kcal &middot; '+(Math.round(pct*10)/10)+'% of calories','#2f6f9f');
+  $('vg').innerHTML=gps+' g'; $('vs').innerHTML=(srv%1?srv.toFixed(1):srv)+'&times;'; $('vd').innerHTML=dk.toLocaleString()+' kcal';
+  $('m1').innerHTML=(Math.round(g*10)/10)+' g';
+  $('m2').innerHTML=Math.round(kc)+' kcal';
+  $('m3').innerHTML=(Math.round(pct*10)/10)+'%';
+  $('m4').innerHTML=(Math.round(tsp*10)/10)+' tsp';
+  $('m5').innerHTML=Math.round(dv)+'% DV';
+  $('rd').innerHTML=(pct<=10
+   ? 'At these inputs the added sugars supply <b>'+(Math.round(pct*10)/10)+'%</b> of the day&rsquo;s energy, at or under the 10% figure in the Dietary Guidelines for ages 2 and older.'
+   : 'At these inputs the added sugars supply <b>'+(Math.round(pct*10)/10)+'%</b> of the day&rsquo;s energy, above the 10% figure in the Dietary Guidelines for ages 2 and older.')+
+   ' Remember the two percentages differ on purpose: the <b>'+Math.round(dv)+'% DV</b> printed on a package is always measured against a fixed 50 g reference built on a 2,000 kcal day, while the <b>'+(Math.round(pct*10)/10)+'%</b> above uses the calorie figure you set.';
+ }
+ function modeC(){
+  $('panel').innerHTML=
+   '<div class="ctl"><div class="hd"><b>Added sugars</b><small>grams per serving, from the label&rsquo;s &ldquo;Includes&hellip;&rdquo; line</small><span class="v" id="vg">12 g</span></div><input type="range" id="rg" min="0" max="60" step="1" value="12"></div>'+
+   '<div class="ctl"><div class="hd"><b>Servings</b><small>how many of that serving in a day</small><span class="v" id="vs">2&times;</span></div><input type="range" id="rs" min="0" max="6" step="0.5" value="2"></div>'+
+   '<div class="ctl"><div class="hd"><b>Daily energy</b><small>total calories for the whole day</small><span class="v" id="vd">2,000 kcal</span></div><input type="range" id="rd2" min="1200" max="3200" step="50" value="2000"></div>'+
+   '<div class="math">'+
+   '<div class="ln"><span class="lf"><b>grams</b> per serving &times; servings</span><span class="rt" id="m1"></span></div>'+
+   '<div class="ln"><span class="lf">&times; <b>4 kcal per gram</b> (carbohydrate)</span><span class="rt" id="m2"></span></div>'+
+   '<div class="ln"><span class="lf">&divide; the day&rsquo;s calories</span><span class="rt" id="m3"></span></div>'+
+   '<div class="ln"><span class="lf">&divide; <b>4.2 g</b> per level teaspoon</span><span class="rt" id="m4"></span></div>'+
+   '<div class="ln tt"><span class="lf">&divide; the <b>50 g</b> Daily Value reference</span><span class="rt" id="m5"></span></div>'+
+   '</div>'+
+   '<div id="info"><span class="n">Reading your own result</span><span id="rd"></span></div>'+
+   '<div class="hdr">The reference figures, with their units and populations</div>'+
+   '<div class="claim"><span class="ev s">strong</span><b>Dietary Guidelines for Americans 2020&ndash;2025:</b> keep added sugars to <b>less than 10% of total daily calories</b>, for <b>ages 2 and older</b>. For <b>children under 24 months</b> the guidance is to avoid foods and drinks with added sugars altogether.</div>'+
+   '<div class="claim"><span class="ev s">strong</span><b>FDA Daily Value:</b> <b>50 g of added sugars per day</b>, for <b>adults and children 4 years and older</b>, calculated on a 2,000 kcal reference diet. This is the number behind every %DV printed on a package &mdash; it does not adjust to you.</div>'+
+   '<div class="claim"><span class="ev s">strong</span><b>WHO:</b> free sugars under <b>10% of energy intake</b> is a strong recommendation for adults and children; under 5% is a conditional one. <b>Free sugars</b> is a wider category than added sugars &mdash; it also counts the sugars in honey, syrups and fruit juice.</div>'+
+   '<div class="claim"><span class="ev s">strong</span>Higher added-sugar intake is an established risk factor for <b>dental caries</b>, and because added sugars carry energy without accompanying vitamins, minerals or fibre, a high intake makes it harder to meet nutrient needs inside a given calorie total.</div>'+
+   '<div class="claim"><span class="ev n">mixed</span>When sugars are <b>swapped for the same number of calories</b> from other carbohydrate, systematic reviews find little effect on body weight. The consistent finding is that <i>added</i> calories from sugars &mdash; particularly from drinks, which do not blunt appetite the way solid food does &mdash; are associated with weight change. The mechanism is energy, not the molecule.</div>'+
+   '<div class="claim"><span class="ev p">preliminary</span>Claims that fructose specifically drives liver fat in humans at ordinary intakes rest largely on high-dose and short-term studies, and results are mixed. Treat this as an open question, not a settled one.</div>'+
+   '<div class="claim"><span class="ev n">not supported</span>The belief that sugar causes <b>hyperactivity in children</b> has been tested repeatedly in controlled trials and is <b>not supported</b>. It is a useful reminder that a widely repeated claim can simply be wrong.</div>'+
+   '<div class="note"><b>What this calculator is and isn&rsquo;t.</b> It is arithmetic on a label &mdash; grams, calories, teaspoons, percentages. It is not a verdict on a food, a person, or a body. The 10% figure is a <b>population-level guideline</b>, not a personal target, and no single ingredient causes or cures a disease. Individual carbohydrate needs vary enormously with age, growth, activity, pregnancy, medication and medical conditions; those are questions for your own clinician or dietitian, not for a slider.</div>';
+  $('rg').oninput=function(){ gps=+this.value; paintC(); };
+  $('rs').oninput=function(){ srv=+this.value; paintC(); };
+  $('rd2').oninput=function(){ dk=+this.value; paintC(); };
+  paintC();
+ }
+
+ /* ---------------- mode switch ---------------- */
+ function go(m){
+  mode=m;
+  Array.prototype.forEach.call($('modes').querySelectorAll('button'),function(b){
+   b.className=(+b.getAttribute('data-m')===m)?'on':'';
+  });
+  if(m===0)modeA(); else if(m===1)modeB(); else modeC();
+ }
+ Array.prototype.forEach.call($('modes').querySelectorAll('button'),function(b){
+  b.onclick=function(){ go(+b.getAttribute('data-m')); };
+ });
+ ai=realIdx(0);
+ go(0);
+})();
+</script>
+</body>
+</html>

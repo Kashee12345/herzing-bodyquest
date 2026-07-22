@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Expected Value: What One Play Is Worth</title>
+<meta name="description" content="Compute E(X) = &Sigma; x&middot;P(x) for a real game, change the terms with sliders and watch the answer move, then actually play it thousands of times and watch the long-run average settle onto the number you computed.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:9px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:104px;line-height:1.25;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#c9dbe4;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:13.5px;font-weight:800;color:var(--teal-dk);min-width:74px;text-align:right;font-variant-numeric:tabular-nums;}
+.sl.cost input[type=range]{background:linear-gradient(90deg,#a9c7d5,#e6b3bb);}
+.ct{width:100%;border-collapse:collapse;margin-top:2px;font-variant-numeric:tabular-nums;}
+.ct th{font-size:9px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;text-align:right;padding:0 0 5px;border-bottom:1px solid var(--line);}
+.ct th:first-child{text-align:left;}
+.ct td{font-size:11.6px;padding:5px 0;text-align:right;color:var(--soft);font-weight:600;border-bottom:1px solid #eef4f7;}
+.ct td:first-child{text-align:left;font-weight:700;color:var(--ink);font-size:11.2px;}
+.ct td i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:0;}
+.ct td.neg{color:var(--coral);}
+.ct tr.tot td{border-bottom:none;border-top:2px solid var(--teal-dk);font-weight:800;color:var(--teal-dk);font-size:13px;padding-top:7px;}
+.ct tr.tot td.neg{color:var(--coral);}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:14.5px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.bad{border-color:#f0c9d0;background:#fdf3f4;} .tiles div.bad .vv{color:var(--coral);}
+.tiles div.good{border-color:#9fd3b4;background:#f2faf5;} .tiles div.good .vv{color:#237a45;}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+#vd{font-size:12.5px;color:var(--soft);line-height:1.5;background:#eff5f8;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-top:2px;}
+#vd b{color:var(--teal-dk);}
+.mnem,.note{font-size:12.2px;line-height:1.6;}
+.grid .it .s{display:block;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 6</div>
+  <h1>Expected Value: What One Play Is Worth</h1>
+  <div class="intro">A discrete random variable has a whole distribution of possible values, but a gambler, an insurer, or anyone deciding whether to take a deal wants <b>one number</b>: what is a single play worth on average? That number is the <b>expected value</b>, <b>E(X) = &Sigma; x&middot;P(x)</b> &mdash; each value weighted by how often it happens. Pick a game below and the computation is laid out line by line. Then change the price or the prizes with the sliders and watch E(X) move. Then <b>actually play the game</b> &mdash; thousands of times, with real simulated draws &mdash; and watch the running average wander, narrow, and settle onto exactly the number the formula predicted.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="cTitle">Every outcome, weighted by how often it happens</h2>
+      <svg viewBox="0 0 340 232" aria-label="rectangles whose width is the probability of an outcome and whose height is its net payoff, so that the total signed area is the expected value"><g id="areas"></g></svg>
+      <div class="lgd" id="aLgd"></div>
+      <div class="cap" id="aCap"></div>
+    </div>
+    <div class="card"><h2>Four players, playing for real</h2>
+      <svg viewBox="0 0 340 212" aria-label="the running average net result per play for four simulated players, converging toward the expected value"><g id="trace"></g></svg>
+      <div class="lgd">
+        <span><i style="background:#1c4454"></i>one player's running average</span>
+        <span><i style="background:#b8862f"></i>E(X), the computed value</span>
+        <span><i style="background:#cfe0e9"></i>E(X) &plusmn; 2 standard errors</span>
+      </div>
+      <div class="cap" id="tCap"></div>
+    </div>
+    <div class="card"><h2>Where 300 separate players finish</h2>
+      <svg viewBox="0 0 340 202" aria-label="histogram of the net result after the chosen number of plays for three hundred independent simulated players"><g id="hist"></g></svg>
+      <div class="cap" id="hCap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">A game with a price<small>what is one play actually worth?</small></div>
+    <div class="card">
+      <div class="hd">Choose a game</div>
+      <div class="grid" id="gGrid"></div>
+      <div id="vd"></div>
+      <div class="hd">The computation: E(X) = &Sigma; x&middot;P(x)</div>
+      <table class="ct"><thead><tr><th>Outcome</th><th>x</th><th>P(x)</th><th>x &middot; P(x)</th></tr></thead><tbody id="calc"></tbody></table>
+      <div class="tiles">
+        <div id="tE"><span class="lb">E(X) per play</span><span class="vv" id="tEv">&mdash;</span></div>
+        <div id="tH"><span class="lb">House edge</span><span class="vv" id="tHv">&mdash;</span></div>
+        <div><span class="lb">Std. deviation</span><span class="vv" id="tSv">&mdash;</span></div>
+        <div id="tN"><span class="lb">Expected after <span id="tNn">200</span></span><span class="vv" id="tNv">&mdash;</span></div>
+      </div>
+      <div class="hd">Change the terms &mdash; E(X) recomputes as you drag</div>
+      <div id="slots"></div>
+      <div class="row"><button class="btn" id="reset">&#8634; Restore the real terms</button><button class="btn solid" id="fair">Set the price that makes it fair</button></div>
+      <div id="info"></div>
+    </div>
+    <div class="card">
+      <div class="hd">Play it</div>
+      <div class="sl"><label for="nSl">Plays each</label><input type="range" id="nSl" min="10" max="2000" step="10" value="200"><span class="nv" id="nVal">200</span></div>
+      <div class="row"><button class="btn solid" id="play">&#9654; Play again &mdash; new luck</button></div>
+      <div class="cap">Every play above is a real draw from this game's probabilities, made with a seeded generator, so the same button always reproduces the same run until you press it again. Nothing here is a smoothed curve or a drawn illustration: the wobble you see is genuine sampling variability.</div>
+    </div>
+    <div class="card">
+      <div class="mnem">The formula is a weighted average, and the weights are the probabilities. To compute <b>E(X) = &Sigma; x&middot;P(x)</b> you multiply each value the variable can take by the probability of taking it, and add the products. The reason this is the right definition, rather than an arbitrary one, is worth seeing concretely. Suppose you play a game 1,000 times and outcome x happens on about 1,000&middot;P(x) of them. Your total winnings are about &Sigma; x&middot;1000&middot;P(x), so your winnings <i>per play</i> are about &Sigma; x&middot;P(x). The expected value is nothing more exotic than <b>the ordinary average of a very long run</b>, computed in advance from the probabilities instead of afterwards from the data. That is why it is also written &mu; and called the <b>mean of the random variable</b>: it is the same idea as the mean of a data set, with relative frequencies replaced by probabilities. Three consequences follow immediately, and each one is examined by the simulation on the left. <b>First, E(X) need not be a value X can ever take.</b> Play the dice game and the expected value is exactly $0.00, yet every single play returns +$8, +$2, or &minus;$4 &mdash; never zero. The average family really can have 1.9 children. An expected value is a balance point, not a prediction of any one play. <b>Second, the long-run average converges to E(X) but is not obliged to arrive on schedule.</b> This is the law of large numbers, and the four traces show its actual shape: violent swings over the first few dozen plays, a visible funnel narrowing as the plays accumulate, and every player eventually pressed toward the same horizontal line. The width of that funnel is <b>&sigma;/&radic;n</b>, the standard error, which is why the shaded band tightens in proportion to the square root of the number of plays &mdash; quadrupling the plays halves the band. <b>Third, E(X) says nothing about risk.</b> Two games can share an expected value and feel nothing alike; that is what the standard deviation column is for, and why the insurance policy, with an expected value of a few hundred dollars, carries a standard deviation of several thousand. A <b>fair game</b> is defined as one with E(X) = 0, and almost no commercial game is fair. The <b>house edge</b> is simply &minus;E(X) expressed as a fraction of the stake, which is why a 5.26% edge on American roulette means that every dollar staked is worth about 94.7 cents the moment you place it &mdash; a number you can read directly off the computation table, and one that no betting system, streak, or choice of number can change.</div>
+      <div class="note">Six ways this goes wrong. <b>First, reading E(X) as a forecast of the next play.</b> "The expected value is &minus;$0.53, so I'll lose about fifty cents" is wrong on the very next spin, where you will lose $1 or win $35 and nothing in between. E(X) describes the average of many plays, not the result of one. Set the plays slider to 10 and press the play button a few times: the running averages end up scattered all over the chart, and several players finish well ahead. <b>Second, believing the average must arrive quickly, or that a losing streak makes a win "due."</b> The plays are independent; the wheel has no memory of the last thirty spins and no obligation to repay them. The running average does not approach E(X) because losses are compensated by later wins. It approaches E(X) because early results, good or bad, are progressively <i>diluted</i> by the plays that follow &mdash; divided by an ever-larger n. Watch the histogram at 2,000 plays: the whole pile has slid left of zero, not because anyone was punished, but because the small per-play deficit has been added up two thousand times. <b>Third, confusing the prize with the payoff.</b> The x in &Sigma; x&middot;P(x) must be the <b>net</b> change in your money. A raffle ticket costing $5 that wins a $300 prize is a net gain of $295, not $300, and the losing outcome is &minus;$5, not $0. Forget to subtract the stake and every expected value you compute is too high by exactly the price of playing. <b>Fourth, assuming a huge prize rescues a tiny probability.</b> Open the lottery and look at the first chart: the jackpot rectangle is a hairline, because a one-in-a-million chance is a width of one millionth. Its area &mdash; its contribution to E(X) &mdash; is 2.5 cents. Multiplying a very large number by a very small one does not reliably produce a large number, and the intuition that says otherwise is what sells tickets. <b>Fifth, concluding that a negative expected value always means "don't."</b> Buying insurance has a negative expected value by construction; if it did not, no insurer could pay its staff. You buy it anyway because the policy is not a bet you are trying to win, it is the <i>removal</i> of a loss large enough to be ruinous, and avoiding ruin is worth more than the couple hundred dollars a year it costs on average. Expected value is the correct tool for pricing a repeated, survivable gamble, and an incomplete tool for a one-shot decision where the downside is catastrophic. <b>Sixth, treating a positive result over a short run as evidence the edge is beatable.</b> The percentage of players finishing ahead in the histogram is frequently large at 50 plays and shrinks steadily as the plays increase. Being ahead is common in the short run and rare in the long run, and the long run is the only run in which the expected value describes anybody.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var COL=['#2f6f8a','#2f9e5b','#7a5a8a','#2f6f9f','#b8862f'];
+ var BAD='#d1495b',GOLD='#b8862f',DK='#1c4454';
+
+ /* All money is stored in whole CENTS as integers, so every net payoff and every
+    simulated total is exact and no floating-point drift can accumulate.
+    Probabilities are stored as an integer count p out of an integer denominator D. */
+ var G=[
+  {nm:'Roulette',ct:'$1 on one number',D:38,cost:100,
+   q:'An American wheel has <b>38 pockets</b> &mdash; 1 through 36 plus 0 and 00. You put $1 on a single number. If it hits, the house returns $36 (your dollar back plus $35); otherwise the dollar is gone.',
+   o:[{nm:'Your number hits',p:1,pay:3600},{nm:'One of the other 37',p:37,pay:0}],
+   why:'This is the most studied expected value in the subject. The payoff is 35 to 1 but the true odds are 37 to 1, and that single mismatch &mdash; two extra pockets, 0 and 00 &mdash; is the entire business model. Every dollar staked is worth about 94.7 cents.'},
+  {nm:'One die',ct:'a genuinely fair price',D:6,cost:400,
+   q:'You roll one fair die for a stake of $4. A <b>6</b> pays you $12, a <b>4 or 5</b> pays $6, and 1, 2, or 3 pay nothing.',
+   o:[{nm:'Roll a 6',p:1,pay:1200},{nm:'Roll a 4 or 5',p:2,pay:600},{nm:'Roll a 1, 2 or 3',p:3,pay:0}],
+   why:'A rare thing: a game priced exactly at its expected value, so E(X) = $0.00. Notice what that does and does not mean. It does not mean a play returns nothing &mdash; a play returns +$8, +$2, or &minus;$4, and never $0. It means the three weighted contributions cancel.'},
+  {nm:'Charity raffle',ct:'500 tickets, two prizes',D:500,cost:500,
+   q:'Exactly <b>500 tickets</b> are sold at $5 each. One drawn ticket wins $300, a second wins $100, and the rest win nothing.',
+   o:[{nm:'Wins the $300 prize',p:1,pay:30000},{nm:'Wins the $100 prize',p:1,pay:10000},{nm:'Wins nothing',p:498,pay:0}],
+   why:'The prizes total $400 and the sale raises $2,500, so $2,100 stays with the charity &mdash; and dividing that among 500 tickets gives the expected loss of $4.20 per ticket. The expected value of a raffle ticket is, almost exactly, your donation.'},
+  {nm:'Scratch ticket',ct:'$2, three prize tiers',D:10000,cost:200,
+   q:'A $2 ticket. Per <b>10,000 printed</b>: 2 tickets win $1,000, 120 win $25, 2,000 win $4, and the remaining 7,878 win nothing.',
+   o:[{nm:'Top prize',p:2,pay:100000},{nm:'Mid prize',p:120,pay:2500},{nm:'Small prize',p:2000,pay:400},{nm:'Nothing',p:7878,pay:0}],
+   why:'One ticket in five wins something, which is exactly what the design is for &mdash; frequent small returns feel like success. The weighted arithmetic is unmoved: the ticket returns $1.30 of every $2.00 staked, and the small $4 tier contributes more to that than the $1,000 tier does.'},
+  {nm:'The big lottery',ct:'one-in-a-million jackpot',D:1000000,cost:100,
+   q:'A $1 ticket with a <b>1 in 1,000,000</b> jackpot of $250,000. Matching four numbers (800 in a million) pays $150; matching three (20,000 in a million) pays $4.',
+   o:[{nm:'Jackpot',p:1,pay:25000000},{nm:'Match four',p:800,pay:15000},{nm:'Match three',p:20000,pay:400},{nm:'No prize',p:979199,pay:0}],
+   why:'The jackpot is a quarter of a million dollars and contributes <b>2.5 cents</b> to the expected value &mdash; less than the $4 tier contributes. That is the whole lesson of weighting: a value only counts in proportion to how often it occurs, and one in a million is a rectangle you can barely see.'},
+  {nm:'Insurance',ct:"the policyholder's side",D:1000,cost:52000,
+   q:'A $520 annual premium. In a given year <b>2 policyholders in 1,000</b> file a total loss and are paid $150,000; the other 998 file nothing.',
+   o:[{nm:'You file a total loss',p:2,pay:15000000},{nm:'No claim this year',p:998,pay:0}],
+   why:'The expected value is negative &mdash; it has to be, or the insurer could not pay claims, staff, and capital. Buying it is still rational, because X here is only the policy\'s cash flow and leaves out the $150,000 loss it exists to absorb. You are not trying to win this bet; you are paying about $220 a year to convert a small chance of ruin into a certain, survivable cost.'},
+  {nm:'A promotion',ct:'the rare positive game',D:2,cost:100,
+   q:'A promotional coupon: stake $1 on one coin flip and <b>heads returns $3</b> instead of the usual $2. Tails, the dollar is gone. One coupon per customer.',
+   o:[{nm:'Heads &mdash; coupon pays triple',p:1,pay:300},{nm:'Tails',p:1,pay:0}],
+   why:'Here E(X) is positive: +$0.50 a play, an edge of 50% in your favour. Games like this exist only under a strict limit &mdash; one coupon &mdash; because the arithmetic that grinds a player down at &minus;5% would grind the house down just as reliably at &minus;50%.'}
+ ];
+
+ var cur=0,edited=false,seed=7,NP=200,PLAYERS=300;
+ var D=1,cost=0,pay=[],prob=[],names=[],net=[],cum=[];
+
+ /* ---------------- formatting ---------------- */
+ function com(s){var p=String(s).split('.');p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');return p.join('.');}
+ function mny(c,dp){dp=(dp==null)?2:dp;var n=c<0;return (n?'&minus;$':'$')+com((Math.abs(c)/100).toFixed(dp));}
+ function mnyE(c){return mny(c,(Math.abs(c)<100)?4:2);}
+ function nice(v){if(!(v>0))return 1;var e=Math.pow(10,Math.floor(Math.log(v)/Math.LN10)),m=v/e;var n=(m<1.5)?1:((m<3.5)?2:((m<7.5)?5:10));return n*e;}
+ function ticks(lo,hi,n){var s=nice((hi-lo)/n),t0=Math.ceil(lo/s)*s,out=[],k;for(k=0;t0+k*s<=hi+1e-9;k++)out.push(t0+k*s);return out;}
+ function cl(v,a,b){return v<a?a:(v>b?b:v);}
+
+ /* ---------------- the model ---------------- */
+ function build(){
+  var g=G[cur],i;
+  net=[];cum=[];
+  var run=0;
+  for(i=0;i<prob.length;i++){net.push(pay[i]-cost);run+=prob[i];cum.push(run);}
+ }
+ function gross(){var s=0,i;for(i=0;i<prob.length;i++)s+=prob[i]*pay[i];return s/D;}      /* cents */
+ function EV(){return gross()-cost;}                                                       /* cents */
+ function SD(){var e=EV(),s=0,i,d;for(i=0;i<prob.length;i++){d=net[i]-e;s+=(prob[i]/D)*d*d;}return Math.sqrt(s);}
+
+ /* seeded PRNG — a given seed always reproduces the same run */
+ function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+ function pick(r){var u=Math.floor(r()*D),j=0;while(j<cum.length-1&&u>=cum[j])j++;return net[j];}
+ function runMeans(s0,n){var r=rng(s0),sum=0,m=new Array(n),i;for(i=0;i<n;i++){sum+=pick(r);m[i]=sum/(i+1)/100;}return m;}
+ function runTotal(r,n){var sum=0,i;for(i=0;i<n;i++)sum+=pick(r);return sum;}
+
+ /* ---------------- chart 1: area = x P(x) ---------------- */
+ function areas(){
+  var g=G[cur],o='',i,e=EV()/100;
+  var X0=52,X1=332,Y0=16,Y1=190;
+  /* the visible band is set by the outcomes that actually happen often, so one
+     rare enormous prize cannot flatten everything else into a single line */
+  var lo=Math.min(0,e),hi=Math.max(0,e),shown=[],k;
+  for(i=0;i<net.length;i++){var pr=prob[i]/D,v=net[i]/100;if(pr>=0.005){shown.push(i);if(v<lo)lo=v;if(v>hi)hi=v;}}
+  var span=(hi-lo)||1;lo-=span*0.14;hi+=span*0.14;
+  function y(v){return Y1-(v-lo)/(hi-lo)*(Y1-Y0);}
+  function x(p){return X0+p*(X1-X0);}
+  var tk=ticks(lo,hi,5);
+  for(k=0;k<tk.length;k++){
+   var yy=y(tk[k]),zero=(Math.abs(tk[k])<1e-9);
+   o+='<line x1="'+X0+'" y1="'+yy.toFixed(1)+'" x2="'+X1+'" y2="'+yy.toFixed(1)+'" stroke="'+(zero?'#1e2a30':'#e6eef2')+'" stroke-width="'+(zero?1.5:1)+'"/>';
+   o+='<text x="'+(X0-7)+'" y="'+(yy+3.4).toFixed(1)+'" font-size="8.6" fill="#78868d" text-anchor="end" font-weight="700">'+mny(tk[k]*100,(Math.abs(hi-lo)<4)?2:0)+'</text>';
+  }
+  var y0=y(0);
+  o+='<line x1="'+X0+'" y1="'+y0.toFixed(1)+'" x2="'+X1+'" y2="'+y0.toFixed(1)+'" stroke="#1e2a30" stroke-width="1.5"/>';
+  var run=0,clipped=[];
+  for(i=0;i<net.length;i++){
+   var pr=prob[i]/D,v=net[i]/100,xa=x(run),xb=x(run+pr),w=Math.max(0.8,xb-xa);
+   var over=(v>hi),under=(v<lo);
+   var yv=y(cl(v,lo,hi)),yt=Math.min(y0,yv),h=Math.max(0.9,Math.abs(y0-yv));
+   var neg=(v<0),col=neg?BAD:COL[i%COL.length];
+   o+='<rect x="'+xa.toFixed(2)+'" y="'+yt.toFixed(1)+'" width="'+w.toFixed(2)+'" height="'+h.toFixed(1)+'" fill="'+col+'" opacity="'+(neg?'.80':'.78')+'" stroke="#fffdf9" stroke-width="'+((w>3)?0.8:0)+'"/>';
+   if(over||under){
+    var yz=over?(Y0+3):(Y1-3);
+    o+='<path d="M'+xa.toFixed(2)+' '+yz+' l'+(w/3).toFixed(2)+' -4 l'+(w/3).toFixed(2)+' 8 l'+(w/3).toFixed(2)+' -4" fill="none" stroke="#fffdf9" stroke-width="2"/>';
+    clipped.push({i:i,x:(xa+xb)/2,v:v,up:over});
+   }
+   if(w>26)o+='<text x="'+((xa+xb)/2).toFixed(1)+'" y="'+((v>=0?yt-4:yt+h+10)).toFixed(1)+'" font-size="9.4" text-anchor="middle" font-weight="800" fill="'+(neg?BAD:DK)+'">'+mny(net[i],0)+'</text>';
+   run+=pr;
+  }
+  /* clipped payoffs are labelled above the frame, spread out and leadered back to
+     their hairline rectangle so two rare prizes never print on top of each other */
+  for(k=0;k<clipped.length;k++){
+   var c=clipped[k],tx=cl(X0+38+k*96,X0+30,X1-30),ly=c.up?(Y0-4):(Y1+12);
+   o+='<path d="M'+c.x.toFixed(1)+' '+(c.up?Y0+2:Y1-2)+' L'+tx.toFixed(1)+' '+(c.up?Y0-11:Y1+5)+'" stroke="#9aa8af" stroke-width="0.8" fill="none"/>';
+   o+='<text x="'+tx.toFixed(1)+'" y="'+ly+'" font-size="9" text-anchor="middle" font-weight="800" fill="'+DK+'">'+mny(net[c.i],0)+' '+(c.up?'&#8593;':'&#8595;')+'</text>';
+  }
+  var ye=y(cl(e,lo,hi));
+  o+='<line x1="'+X0+'" y1="'+ye.toFixed(1)+'" x2="'+X1+'" y2="'+ye.toFixed(1)+'" stroke="'+GOLD+'" stroke-width="2" stroke-dasharray="6 3"/>';
+  o+='<text x="'+(X1-2)+'" y="'+((ye>y0)?ye+11:ye-5).toFixed(1)+'" font-size="9.6" text-anchor="end" font-weight="800" fill="'+GOLD+'">E(X) = '+mnyE(EV())+'</text>';
+  var pt=[0,0.25,0.5,0.75,1];
+  for(k=0;k<pt.length;k++){
+   var xx=x(pt[k]);
+   o+='<line x1="'+xx.toFixed(1)+'" y1="'+Y1+'" x2="'+xx.toFixed(1)+'" y2="'+(Y1+5)+'" stroke="#c8d6de"/>';
+   o+='<text x="'+xx.toFixed(1)+'" y="'+(Y1+16)+'" font-size="8.6" text-anchor="middle" fill="#78868d" font-weight="700">'+pt[k].toFixed(2)+'</text>';
+  }
+  o+='<text x="'+((X0+X1)/2).toFixed(1)+'" y="'+(Y1+30)+'" font-size="8.6" text-anchor="middle" font-weight="800" fill="#78868d" letter-spacing="1">CUMULATIVE PROBABILITY &mdash; THE FULL WIDTH IS 1</text>';
+  o+='<text x="14" y="'+((Y0+Y1)/2).toFixed(1)+'" font-size="8.6" text-anchor="middle" font-weight="800" fill="#78868d" letter-spacing="1" transform="rotate(-90 14 '+((Y0+Y1)/2).toFixed(1)+')">NET PAYOFF x</text>';
+  $('areas').innerHTML=o;
+
+  var lg='',i2;
+  for(i2=0;i2<net.length;i2++){
+   lg+='<span><i style="background:'+((net[i2]<0)?BAD:COL[i2%COL.length])+'"></i>'+names[i2]+' &middot; '+mny(net[i2],2)+'</span>';
+  }
+  $('aLgd').innerHTML=lg;
+  var tiny=0;for(i2=0;i2<prob.length;i2++)if(prob[i2]/D<0.005)tiny++;
+  $('aCap').innerHTML='Each rectangle is <b>one outcome</b>: its width is P(x) and its height is the net payoff x, so its <b>signed area is x&middot;P(x)</b> &mdash; the outcome\'s contribution. Areas above the heavy zero line are money coming in, areas below it money going out, and the two sets of areas together add to <b>E(X) = '+mnyE(EV())+'</b>, drawn as the gold line. That line is the level all the rectangles would flatten to if you poured them evenly across the full width.'+(tiny?' Note the '+(tiny===1?'outcome':'outcomes')+' drawn as a hairline: a probability below one in two hundred is a width you can barely see, and area is what counts.':'')+(clipped.length?' One payoff runs off the top of the frame and is shown broken, with its true value printed above &mdash; the scale is set by the outcomes that actually happen often.':'');
+ }
+
+ /* ---------------- chart 2: running average ---------------- */
+ function trace(){
+  var o='',i,k,e=EV()/100,sd=SD()/100,n=NP;
+  var X0=52,X1=332,Y0=14,Y1=168,START=5;
+  if(n<START+2)n=START+2;
+  var runs=[],SEEDS=[seed*7919+11,seed*7919+29,seed*7919+53,seed*7919+97];
+  for(k=0;k<4;k++)runs.push(runMeans(SEEDS[k],n));
+  var idx=[],prev=0,la=Math.log(START),lb=Math.log(n);
+  for(i=0;i<170;i++){var t=Math.round(Math.exp(la+(lb-la)*i/169));if(t>prev&&t<=n){idx.push(t);prev=t;}}
+  if(idx[idx.length-1]!==n)idx.push(n);
+  var lo=e,hi=e;
+  for(k=0;k<4;k++)for(i=0;i<idx.length;i++){var v=runs[k][idx[i]-1];if(v<lo)lo=v;if(v>hi)hi=v;}
+  var bn=e-2*sd/Math.sqrt(n),bp=e+2*sd/Math.sqrt(n);
+  if(bn<lo)lo=bn;if(bp>hi)hi=bp;
+  var sp=(hi-lo)||Math.max(0.4,Math.abs(e)*0.5);lo-=sp*0.12;hi+=sp*0.12;
+  function y(v){return cl(Y1-(v-lo)/(hi-lo)*(Y1-Y0),Y0-1,Y1+1);}
+  function x(t){return X0+(Math.log(t)-la)/(lb-la)*(X1-X0);}
+  var tk=ticks(lo,hi,5);
+  for(k=0;k<tk.length;k++){
+   var yy=y(tk[k]),zero=(Math.abs(tk[k])<1e-9);
+   o+='<line x1="'+X0+'" y1="'+yy.toFixed(1)+'" x2="'+X1+'" y2="'+yy.toFixed(1)+'" stroke="'+(zero?'#9fb3bd':'#eef4f7')+'" stroke-width="1"'+(zero?' stroke-dasharray="2 3"':'')+'/>';
+   o+='<text x="'+(X0-7)+'" y="'+(yy+3.4).toFixed(1)+'" font-size="8.6" fill="#78868d" text-anchor="end" font-weight="700">'+mny(tk[k]*100,(hi-lo<4)?2:0)+'</text>';
+  }
+  /* the 2 standard-error funnel: E(X) +/- 2 sigma / sqrt(t) */
+  var up='',dn='';
+  for(i=0;i<idx.length;i++){
+   var t=idx[i],se=2*sd/Math.sqrt(t);
+   up+=(i?' L':'M')+x(t).toFixed(1)+' '+y(cl(e+se,lo,hi)).toFixed(1);
+  }
+  for(i=idx.length-1;i>=0;i--){
+   var t2=idx[i],se2=2*sd/Math.sqrt(t2);
+   dn+=' L'+x(t2).toFixed(1)+' '+y(cl(e-se2,lo,hi)).toFixed(1);
+  }
+  o+='<path d="'+up+dn+' Z" fill="#cfe0e9" opacity=".55"/>';
+  o+='<line x1="'+X0+'" y1="'+y(e).toFixed(1)+'" x2="'+X1+'" y2="'+y(e).toFixed(1)+'" stroke="'+GOLD+'" stroke-width="2"/>';
+  var PC=['#8fb3c4','#8fb3c4','#8fb3c4',DK];
+  for(k=0;k<4;k++){
+   var d='';
+   for(i=0;i<idx.length;i++)d+=(i?' L':'M')+x(idx[i]).toFixed(1)+' '+y(runs[k][idx[i]-1]).toFixed(1);
+   o+='<path d="'+d+'" fill="none" stroke="'+PC[k]+'" stroke-width="'+((k===3)?1.9:1.1)+'" opacity="'+((k===3)?1:0.75)+'" stroke-linejoin="round"/>';
+  }
+  var last=runs[3][n-1];
+  o+='<circle cx="'+x(n).toFixed(1)+'" cy="'+y(last).toFixed(1)+'" r="3.2" fill="'+DK+'"/>';
+  o+='<text x="'+(X1-2)+'" y="'+((y(e)>Y0+18)?y(e)-6:y(e)+13).toFixed(1)+'" font-size="9.4" text-anchor="end" font-weight="800" fill="'+GOLD+'">E(X) = '+mnyE(EV())+'</text>';
+  var xt=[5,10,20,50,100,200,500,1000,2000];
+  for(k=0;k<xt.length;k++){
+   if(xt[k]<START||xt[k]>n)continue;
+   var xx2=x(xt[k]);
+   o+='<line x1="'+xx2.toFixed(1)+'" y1="'+Y1+'" x2="'+xx2.toFixed(1)+'" y2="'+(Y1+5)+'" stroke="#c8d6de"/>';
+   o+='<text x="'+xx2.toFixed(1)+'" y="'+(Y1+16)+'" font-size="8.6" text-anchor="middle" fill="#78868d" font-weight="700">'+com(xt[k])+'</text>';
+  }
+  o+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#1e2a30" stroke-width="1.2"/>';
+  o+='<text x="'+((X0+X1)/2).toFixed(1)+'" y="'+(Y1+30)+'" font-size="8.6" text-anchor="middle" font-weight="800" fill="#78868d" letter-spacing="1">PLAYS SO FAR (LOG SCALE)</text>';
+  o+='<text x="14" y="91" font-size="8.6" text-anchor="middle" font-weight="800" fill="#78868d" letter-spacing="1" transform="rotate(-90 14 91)">AVERAGE PER PLAY</text>';
+  $('trace').innerHTML=o;
+  $('tCap').innerHTML='Four players each play <b>'+com(NP)+' times</b>, and the line shows the average of everything each has won or lost <i>so far</i>. All four start out flinging themselves around the frame, then get squeezed toward the gold line. The dark player finishes at <b>'+mnyE(last*100)+'</b> a play against a computed E(X) of <b>'+mnyE(EV())+'</b>. The shaded funnel is E(X) &plusmn; 2&sigma;/&radic;n, which at '+com(NP)+' plays is a half-width of <b>'+mnyE(200*sd/Math.sqrt(NP))+'</b>; for a decent number of plays the running average sits inside that band roughly 95% of the time. The funnel narrows with the <i>square root</i> of the plays &mdash; to halve it you need four times as many.';
+ }
+
+ /* ---------------- chart 3: 300 players' net results ---------------- */
+ function hist(){
+  var o='',i,k,r=rng(seed*104729+NP*13+cur*31),tot=[],mn=1e18,mx=-1e18,sum=0,ahead=0;
+  for(i=0;i<PLAYERS;i++){var t=runTotal(r,NP);tot.push(t);sum+=t;if(t<mn)mn=t;if(t>mx)mx=t;if(t>0)ahead++;}
+  var mean=sum/PLAYERS,exp=EV()*NP;
+  var X0=34,X1=332,Y0=16,Y1=150;
+  var lo=Math.min(mn,0,exp),hi=Math.max(mx,0,exp),sp=(hi-lo)||100;
+  lo-=sp*0.06;hi+=sp*0.06;
+  var NB=26,bw=(hi-lo)/NB,cnt=[],top=0;
+  for(k=0;k<NB;k++)cnt.push(0);
+  for(i=0;i<PLAYERS;i++){var b=Math.floor((tot[i]-lo)/bw);if(b<0)b=0;if(b>=NB)b=NB-1;cnt[b]++;}
+  for(k=0;k<NB;k++)if(cnt[k]>top)top=cnt[k];
+  function x(v){return X0+(v-lo)/(hi-lo)*(X1-X0);}
+  function y(c){return Y1-(c/top)*(Y1-Y0);}
+  var bwp=(X1-X0)/NB;
+  for(k=0;k<NB;k++){
+   if(!cnt[k])continue;
+   var bc=lo+(k+0.5)*bw,col=(bc<0)?BAD:'#2f6f8a';
+   o+='<rect x="'+(X0+k*bwp+0.4).toFixed(1)+'" y="'+y(cnt[k]).toFixed(1)+'" width="'+(bwp-0.8).toFixed(1)+'" height="'+(Y1-y(cnt[k])).toFixed(1)+'" rx="1.5" fill="'+col+'" opacity=".72"/>';
+  }
+  var x0=x(0);
+  o+='<line x1="'+x0.toFixed(1)+'" y1="'+(Y0-4)+'" x2="'+x0.toFixed(1)+'" y2="'+(Y1+4)+'" stroke="#1e2a30" stroke-width="1.4"/>';
+  o+='<text x="'+cl(x0,X0+26,X1-26).toFixed(1)+'" y="'+(Y0-7)+'" font-size="8.8" text-anchor="middle" font-weight="800" fill="#1e2a30">break even</text>';
+  var xe=x(exp);
+  o+='<line x1="'+xe.toFixed(1)+'" y1="'+(Y0+6)+'" x2="'+xe.toFixed(1)+'" y2="'+(Y1+9)+'" stroke="'+GOLD+'" stroke-width="2" stroke-dasharray="5 3"/>';
+  o+='<text x="'+cl(xe,X0+40,X1-40).toFixed(1)+'" y="'+(Y1+21)+'" font-size="9" text-anchor="middle" font-weight="800" fill="'+GOLD+'">n&middot;E(X) = '+mny(exp,2)+'</text>';
+  o+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#1e2a30" stroke-width="1.2"/>';
+  var tk=ticks(lo,hi,5);
+  for(k=0;k<tk.length;k++){
+   var xx=x(tk[k]);if(xx<X0-1||xx>X1+1)continue;
+   o+='<line x1="'+xx.toFixed(1)+'" y1="'+Y1+'" x2="'+xx.toFixed(1)+'" y2="'+(Y1+4)+'" stroke="#c8d6de"/>';
+   o+='<text x="'+xx.toFixed(1)+'" y="'+(Y1+14)+'" font-size="8.4" text-anchor="middle" fill="#78868d" font-weight="700">'+mny(tk[k],(Math.abs(hi-lo)<800)?2:0)+'</text>';
+  }
+  o+='<text x="'+((X0+X1)/2).toFixed(1)+'" y="'+(Y1+37)+'" font-size="8.6" text-anchor="middle" font-weight="800" fill="#78868d" letter-spacing="1">NET RESULT AFTER '+com(NP)+' PLAYS</text>';
+  $('hist').innerHTML=o;
+  var pc=(ahead/PLAYERS*100);
+  $('hCap').innerHTML='<b>300 players</b>, each playing '+com(NP)+' times, each with independent luck. <b>'+pc.toFixed(1)+'%</b> of them finished ahead of where they started. The pile averages <b>'+mny(mean,2)+'</b>, against the predicted n&middot;E(X) = '+com(NP)+' &times; '+mnyE(EV())+' = <b>'+mny(exp,2)+'</b>. Expected values add: playing n times multiplies the per-play expectation by n, which is why raising the plays slides the entire distribution '+((EV()<0)?'further to the left of break-even &mdash; and shrinks the share of players who escape it.':((EV()>0)?'further to the right of break-even.':'nowhere: with E(X) = 0 the pile stays centred on break-even however long you play, it merely spreads out.'));
+ }
+
+ /* ---------------- panels ---------------- */
+ function calc(){
+  var o='',i,e=EV();
+  for(i=0;i<net.length;i++){
+   var pr=prob[i]/D,xp=net[i]*pr/100;
+   o+='<tr><td><i style="background:'+((net[i]<0)?BAD:COL[i%COL.length])+'"></i>'+names[i]+'</td>'+
+      '<td'+((net[i]<0)?' class="neg"':'')+'>'+mny(net[i],2)+'</td>'+
+      '<td>'+((D<=1000)?(prob[i]+'/'+com(D)):com(prob[i])+'/'+com(D))+'<br><span style="color:#9aa8af">'+pr.toFixed(6)+'</span></td>'+
+      '<td'+((xp<0)?' class="neg"':'')+'>'+(xp<0?'&minus;':'')+'$'+com(Math.abs(xp).toFixed(4))+'</td></tr>';
+  }
+  o+='<tr class="tot"><td>E(X) = &Sigma; x&middot;P(x)</td><td></td><td></td><td'+((e<0)?' class="neg"':'')+'>'+mnyE(e)+'</td></tr>';
+  $('calc').innerHTML=o;
+ }
+
+ function panels(){
+  var g=G[cur],e=EV(),sd=SD(),i;
+  calc();
+  $('tEv').innerHTML=mnyE(e);
+  $('tE').className=(Math.abs(e)<0.5)?'good':((e<0)?'bad':'good');
+  if(cost>0){var ed=-e/cost*100;$('tHv').innerHTML=(ed<0?'&minus;':'')+Math.abs(ed).toFixed(2)+'%';$('tH').className=(Math.abs(ed)<0.005)?'good':((ed>0)?'bad':'good');}
+  else{$('tHv').innerHTML='&mdash;';$('tH').className='';}
+  $('tSv').innerHTML=mny(sd,(sd<100)?2:0);
+  $('tNn').innerHTML=com(NP)+' plays';
+  $('tNv').innerHTML=mny(e*NP,2);
+  $('tN').className=(Math.abs(e*NP)<0.5)?'good':((e<0)?'bad':'good');
+  $('cTitle').innerHTML=edited?'The game as you have rewritten it':g.nm+' &mdash; every outcome, weighted';
+
+  var fairish=Math.abs(e)<0.5;
+  $('stage').style.background=fairish?'#2f6f8a':((e<0)?BAD:'#2f9e5b');
+  $('stage').innerHTML=(fairish?'A fair game &mdash; E(X) = $0.00':((e<0)?'A losing game &mdash; E(X) = '+mnyE(e):'A winning game &mdash; E(X) = '+mnyE(e)))+
+    '<small>'+(edited?'your own terms':g.nm)+' &middot; stake '+mny(cost,2)+' &middot; '+net.length+' outcomes</small>';
+  $('vd').innerHTML='<b>'+g.nm+'.</b> '+g.q;
+
+  var body,ex=[];
+  for(i=0;i<net.length;i++)ex.push(mny(net[i],2));
+  if(fairish){
+   body='<span class="n">A fair game &mdash; and note what that does not mean</span>The weighted contributions cancel: <b>E(X) = '+mnyE(e)+'</b>. Over a long run of plays the average result per play approaches zero, so neither side has an advantage. It does <b>not</b> mean a play returns nothing. A play here returns '+ex.join(' or ')+' &mdash; and $0.00 is '+(function(){for(i=0;i<net.length;i++)if(net[i]===0)return 'one of them only by coincidence';return '<b>not among them at all</b>';})()+'. The expected value is a balance point of the distribution, not a value the variable has to be able to take.';
+  }else if(e<0){
+   body='<span class="n">A losing game, by exactly '+mnyE(-e)+' a play</span>Adding the weighted contributions gives <b>E(X) = '+mnyE(e)+'</b>: on average, every play costs you that much.'+(cost>0?' As a share of the '+mny(cost,2)+' you stake, that is a <b>house edge of '+(-e/cost*100).toFixed(2)+'%</b> &mdash; each dollar you put down is worth '+(100*(1+e/cost)).toFixed(1)+' cents the instant you put it down.':'')+' One play still returns '+ex.join(' or ')+', and a short session can easily finish ahead. What no session can do is change the arithmetic: play long enough and the running average is pressed onto that number.';
+  }else{
+   body='<span class="n">A winning game &mdash; '+mnyE(e)+' a play in your favour</span>The weighted contributions add to a positive <b>E(X) = '+mnyE(e)+'</b>, so the long-run advantage is yours'+(cost>0?', an edge of <b>'+(-e/cost*100).toFixed(2)+'%</b> against the house':'')+'. This is why such offers come with a hard limit on how many times you may take them: the same grinding certainty that guarantees the house its 5% would hand you yours just as reliably.';
+  }
+  if(!edited)body+='<div class="loc">'+g.why+'</div>';
+  if(edited)body+='<div class="dd">You have changed the terms, so this is no longer the published game. The computation table above always reflects the numbers currently on the sliders, and the simulation always plays the game you have actually built.</div>';
+  $('info').innerHTML=body;
+
+  var gr=gross();
+  $('fair').disabled=(Math.abs(e)<0.5&&Math.abs(cost-gr)<0.5)||gr<=0;
+ }
+
+ function slots(){
+  var g=G[cur],o='',i;
+  var cmax=Math.max(nice(Math.max(gross(),cost)*2.5),100);
+  o+='<div class="sl cost"><label for="sc">Price to play</label><input type="range" id="sc" min="0" max="'+Math.round(cmax)+'" step="1" value="'+cost+'"><span class="nv" id="nvc">'+mny(cost,2)+'</span></div>';
+  for(i=0;i<pay.length;i++){
+   if(G[cur].o[i].pay<=0)continue;
+   var pmax=Math.max(nice(G[cur].o[i].pay*2.5),100),stp=Math.max(1,Math.round(nice(pmax/200)));
+   o+='<div class="sl"><label for="sp'+i+'">'+names[i]+' pays</label><input type="range" id="sp'+i+'" min="0" max="'+Math.round(pmax)+'" step="'+stp+'" value="'+pay[i]+'"><span class="nv" id="nvp'+i+'">'+mny(pay[i],2)+'</span></div>';
+  }
+  $('slots').innerHTML=o;
+  $('sc').oninput=function(){cost=parseInt(this.value,10);edited=true;$('nvc').innerHTML=mny(cost,2);build();render();};
+  for(i=0;i<pay.length;i++){
+   (function(j){var el=$('sp'+j);if(!el)return;
+    el.oninput=function(){pay[j]=parseInt(this.value,10);edited=true;$('nvp'+j).innerHTML=mny(pay[j],2);build();render();};
+   })(i);
+  }
+ }
+
+ function grid(){
+  var o='',i;
+  for(i=0;i<G.length;i++)o+='<button class="it'+((i===cur&&!edited)?' on':'')+'" data-i="'+i+'"><span class="nm">'+G[i].nm+'</span><span class="s">'+G[i].ct+'</span></button>';
+  $('gGrid').innerHTML=o;
+  var b=document.querySelectorAll('#gGrid .it');
+  for(i=0;i<b.length;i++)b[i].onclick=function(){load(parseInt(this.getAttribute('data-i'),10));};
+ }
+
+ function render(){grid();areas();trace();hist();panels();}
+
+ function load(i){
+  cur=i;edited=false;
+  var g=G[i],k;
+  D=g.D;cost=g.cost;pay=[];prob=[];names=[];
+  for(k=0;k<g.o.length;k++){pay.push(g.o[k].pay);prob.push(g.o[k].p);names.push(g.o[k].nm);}
+  build();slots();render();
+ }
+
+ $('reset').onclick=function(){load(cur);};
+ $('fair').onclick=function(){
+  var gr=gross(),old=cost;
+  cost=Math.max(0,Math.round(gr));edited=true;
+  build();slots();render();
+  var e=EV();
+  $('info').innerHTML='<span class="n">Priced at its own expected value</span>A game is <b>fair</b> when E(X) = 0, and that happens exactly when the price equals the average prize. The prizes here average <b>'+mnyE(gr)+'</b> a play, so the price was moved from '+mny(old,2)+' to <b>'+mny(cost,2)+'</b>'+
+   ((Math.abs(gr-cost)>0.005)?', which is as near as a whole cent allows &mdash; the exact fair price is '+mnyE(gr)+', leaving a residue of E(X) = '+mnyE(e)+'.':', and E(X) is now exactly $0.0000.')+
+   ' Play it now and the four traces settle onto zero rather than onto a loss. This is also the cleanest way to see what a house edge <i>is</i>: the gap between what a game charges and what its prizes are worth.';
+ };
+ $('nSl').oninput=function(){NP=parseInt(this.value,10);$('nVal').innerHTML=com(NP);render();};
+ $('play').onclick=function(){seed++;render();};
+
+ $('nVal').innerHTML=com(NP);
+ load(0);
+})();
+</script>
+</body>
+</html>

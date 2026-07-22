@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>The Empirical Rule</title>
+<meta name="description" content="Shade any slice of a normal curve and the area is integrated live. Drag the boundary to 1, 2 and 3 standard deviations to find 68, 95 and 99.7 percent, then draw a real sample and count how many values actually land inside.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:96px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.arv .vv{color:var(--teal);}
+.cmp{width:100%;border-collapse:collapse;margin-top:12px;font-size:12.5px;}
+.cmp th,.cmp td{padding:6px 5px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;}
+.cmp th{font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.cmp td:first-child,.cmp th:first-child{text-align:left;font-weight:700;color:var(--teal-dk);}
+.cmp td{font-weight:700;color:var(--soft);}
+.cmp td.ex{color:var(--teal-dk);}
+.cmp td.sm{color:var(--blue);} .cmp td.sm.off{color:var(--coral);}
+.cmp td .d{display:block;font-size:9.2px;font-weight:700;color:var(--muted);margin-top:1px;}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.45;}
+.hd{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;margin-bottom:6px;}
+.grid.g4{grid-template-columns:repeat(4,1fr);}
+.grid .it .s{display:block;margin-top:2px;font-weight:600;}
+.grid.g4 .it{text-align:center;font-size:12.5px;}
+#info .eq{font-size:12.5px;color:var(--teal-dk);background:#e2eff5;border-radius:8px;padding:9px 11px;margin-top:9px;line-height:1.7;font-variant-numeric:tabular-nums;}
+#info .eq .r{display:flex;justify-content:space-between;gap:10px;}
+#info .eq .r b{white-space:nowrap;}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,1fr);}.sl label{font-size:10px;}.sl .nv{min-width:82px;font-size:13px;}.row .btn{font-size:12px;padding:10px 4px;}.cmp{font-size:11.5px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 4</div>
+  <h1>The Empirical Rule</h1>
+  <div class="intro">A bell curve is not only a shape &mdash; it is a promise about <b>where the values will be</b>. If a set of measurements is roughly bell-shaped, then about <b>68%</b> of them sit within one standard deviation of the mean, about <b>95%</b> within two, and about <b>99.7%</b> within three. Two numbers, a mean and an SD, and you can map an entire dataset. Drag the boundary below and the area under the curve is <b>integrated live</b>; then draw a real sample and count how many values actually landed inside the shading.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="curveTitle">The model, and the slice you have shaded</h2>
+      <div class="modeseg" id="vseg">
+        <button data-v="0" class="on">Shade &plusmn;k SD</button>
+        <button data-v="1">The eight slices</button>
+      </div>
+      <svg viewBox="0 0 340 236" aria-label="a normal curve with the region within k standard deviations of the mean shaded"><g id="curve"></g></svg>
+      <div class="cap" id="curveCap"></div>
+    </div>
+    <div class="card"><h2 id="histTitle">The data, against the shading</h2>
+      <svg viewBox="0 0 340 206" aria-label="histogram of the drawn sample with the shaded region overlaid"><g id="hist"></g></svg>
+      <div class="lgd">
+        <span><i style="background:#2f6f8a"></i>landed inside the shading</span>
+        <span><i style="background:#c3ced4"></i>landed outside</span>
+        <span><i style="background:#b8862f"></i>the normal model</span>
+      </div>
+      <div class="cap" id="histCap"></div>
+    </div>
+    <div class="card"><h2>How the coverage grows with k</h2>
+      <svg viewBox="0 0 340 202" aria-label="percentage of values covered plotted against the number of standard deviations"><g id="cov"></g></svg>
+      <div class="lgd">
+        <span><i style="background:#1c4454"></i>bell curve (exact)</span>
+        <span><i style="background:#2f6f9f"></i>this sample</span>
+        <span><i style="background:#7a5a8a"></i>guaranteed for <i>any</i> shape</span>
+      </div>
+      <div class="cap" id="covCap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">The empirical rule<small>drag the boundary outward</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="0" class="on">Adult height<small>centimetres</small></button>
+        <button data-v="1">Birth weight<small>grams</small></button>
+        <button data-v="2">Bottle fill<small>millilitres</small></button>
+      </div>
+      <div class="sl"><label for="kSl">Boundary</label><input type="range" id="kSl" min="0" max="400" step="1" value="100"><span class="nv" id="kVal">&plusmn;1.00 SD</span></div>
+      <div class="sl"><label for="nSl">Sample size n</label><input type="range" id="nSl" min="0" max="4" step="1" value="3"><span class="nv" id="nVal">300</span></div>
+      <div class="row"><button class="btn" id="reset">&#8634; Back to &plusmn;1 SD</button><button class="btn solid" id="samp">&#8635; Draw another sample</button></div>
+      <div class="hd">Send the boundary to</div>
+      <div class="grid g4" id="jump"></div>
+      <div class="hd">Shape the sample is drawn from</div>
+      <div class="grid g4" id="shape"></div>
+      <div class="tiles">
+        <div><span class="lb">Boundary k</span><span class="vv" id="tK">1.00</span></div>
+        <div><span class="lb">Lower edge</span><span class="vv" id="tLo">&mdash;</span></div>
+        <div><span class="lb">Upper edge</span><span class="vv" id="tHi">&mdash;</span></div>
+        <div class="arv"><span class="lb">Area shaded</span><span class="vv" id="tA">&mdash;</span></div>
+      </div>
+      <table class="cmp">
+        <tr><th>Within</th><th>Rule of thumb</th><th>Exact bell</th><th>This sample</th></tr>
+        <tr><td>1 SD</td><td>68%</td><td class="ex" id="e1">&mdash;</td><td class="sm" id="s1">&mdash;</td></tr>
+        <tr><td>2 SD</td><td>95%</td><td class="ex" id="e2">&mdash;</td><td class="sm" id="s2">&mdash;</td></tr>
+        <tr><td>3 SD</td><td>99.7%</td><td class="ex" id="e3">&mdash;</td><td class="sm" id="s3">&mdash;</td></tr>
+      </table>
+      <div class="cap">The small figure under each sample percentage is its gap from the exact bell value. A gap turns <b style="color:#d1495b">red</b> only when it is too large to pass as ordinary sampling noise at this <i>n</i> &mdash; so shrink the sample far enough and even a badly non-bell shape stops looking guilty, which is itself worth noticing.</div>
+      <div id="info"></div>
+      <div class="mnem">The rule is worth learning in <b>both directions</b>. Forwards, it turns two numbers into a map: give me a mean and a standard deviation for bell-shaped data and I can tell you roughly where any fraction of the values lie, without ever seeing them. Backwards &mdash; and this is the direction that gets used far more in practice &mdash; it turns a single measurement into a <b>judgement about how ordinary it is</b>. A value one SD from the mean is thoroughly unremarkable; roughly a third of all values are further out than that. A value two SDs out is uncommon, about one in twenty-two. A value three SDs out is genuinely striking, about one in 370, which is precisely why manufacturing lines and laboratory quality controls draw their alarm limits at three. Notice what makes this possible: <b>the standard deviation has become a ruler</b>. Once you count distance in SDs rather than centimetres or grams, height and birth weight and bottle volume all collapse onto the same curve, and one table of percentages serves every one of them.</div>
+      <div class="note">Five things that are easy to get wrong. <b>First, this is a rule about bell-shaped data, not about all data.</b> Switch the shape below to <b>Right-skewed</b> or <b>Two clumps</b> and watch the sample column of the table walk away from 68&ndash;95&ndash;99.7 while the mean and the SD stay perfectly valid. What holds for <i>any</i> shape whatsoever is much weaker &mdash; at least 75% within 2 SDs and at least 88.9% within 3, and <i>nothing at all</i> guaranteed within 1. <b>Second, 68&ndash;95&ndash;99.7 are rounded.</b> The exact areas are 68.27%, 95.45% and 99.73%, computed in the table beside you, and it is 1.96 SDs rather than 2 that cuts off exactly 95%. <b>Third, the percentages are two-tailed.</b> &ldquo;95% within 2 SD&rdquo; leaves 5% outside, but that 5% is split between the two ends: only about 2.3% lie <i>above</i> 2 SDs, not 5%. <b>Fourth, unusual is not the same as wrong.</b> A value beyond 3 SDs is rare under the model, not impossible and not evidence of a mistake &mdash; in a bell-shaped sample of 1,000 you should <i>expect</i> about three of them, and finding none would itself be a little odd. <b>Fifth, the rule describes a distribution, not a person.</b> That a measurement sits inside the middle 95% says it is common; it does not say it is healthy, correct, or acceptable, and those are separate questions the arithmetic cannot answer.</div>
+      <div class="fn" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- seeded PRNG, so the page opens with the same sample every time ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function nrm(r){var u=1-r(),v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+
+ /* ---- the standard normal, integrated numerically rather than looked up ----
+    Simpson's rule on the density. With 400 panels the answers agree with the
+    error function to more decimal places than anything here ever displays. */
+ var K0=0.3989422804014327;
+ function pdf(z){return K0*Math.exp(-0.5*z*z);}
+ function simp(a,b){
+  if(b<=a)return 0;
+  var n=400,h=(b-a)/n,s=pdf(a)+pdf(b),i;
+  for(i=1;i<n;i++)s+=pdf(a+i*h)*(i%2?4:2);
+  return s*h/3;
+ }
+ function Pin(k){return k<=0?0:2*simp(0,k);}                 /* P(|Z| <= k) */
+ function Phi(z){return z>=0?0.5+simp(0,z):0.5-simp(0,-z);}  /* P(Z <= z)   */
+
+ /* ================= three settings that really are near-normal ================= */
+ var SC=[
+  {nm:'adult height',ax:'height (centimetres)',un:' cm',dec:1,gran:0.1,mu:175.5,sg:7.4,one:'man',many:'men',
+   story:'Height is the textbook bell curve, and it is why this rule feels obvious once you have seen it. Across a large group of adult men the mean is near <b>175.5 cm</b> with a standard deviation near <b>7.4 cm</b>. The rule immediately says that about two-thirds of them stand between roughly 168 and 183 cm, and that a man taller than 197.7 cm &mdash; three SDs up &mdash; is genuinely rare, about one man in 740 on that side alone. Two numbers described a whole population.'},
+  {nm:'birth weight',ax:'birth weight (grams)',un:' g',dec:0,gran:10,mu:3400,sg:500,one:'newborn',many:'newborns',
+   story:'Birth weight at term clusters near <b>3400 g</b> with a standard deviation around <b>500 g</b>, and here the rule earns its keep in the other direction &mdash; turning a threshold into a percentage. The clinical cut-off for low birth weight, 2500 g, sits 1.8 SDs below the mean, and the curve says that catches about <b>3.6%</b> of newborns. Move the cut-off and the percentage moves with it. That is a policy question answered with two numbers and an area.'},
+  {nm:'fill volume',ax:'volume in the bottle (millilitres)',un:' mL',dec:1,gran:0.1,mu:500,sg:2.5,one:'bottle',many:'bottles',
+   story:'A filling line is set for <b>500 mL</b> and delivers with a standard deviation of about <b>2.5 mL</b>. Nobody expects a bottle to be exactly 500; what matters is the tail. If a bottle below 495 mL is a short measure, that limit sits exactly 2 SDs down, so about <b>2.3%</b> of bottles fall short &mdash; one in every forty-four, which at scale is an expensive number. This is also why quality limits are drawn at 3 SDs: past there, roughly one bottle in 740 on each side, an alarm means something.'}
+ ];
+
+ /* ================= four shapes, all rescaled to the same mean and SD ================= */
+ var SH=[
+  {k:'bell',nm:'Bell',s:'symmetric',gen:function(r){var z;do{z=nrm(r);}while(Math.abs(z)>3.9);return z;}},
+  {k:'skew',nm:'Skewed',s:'long right tail',gen:function(r){return -Math.log(1-r())-1;}},
+  {k:'two',nm:'Two clumps',s:'hole in the middle',gen:function(r){return (r()<0.5?-1:1)+0.20*nrm(r);}},
+  {k:'flat',nm:'Flat',s:'all equally likely',gen:function(r){return (r()*2-1)*1.7320508;}}
+ ];
+
+ var NS=[30,60,120,300,1000],POOL=1000;
+ var JUMPS=[{v:100,t:'1 SD',s:'&asymp;68%'},{v:200,t:'2 SD',s:'&asymp;95%'},{v:300,t:'3 SD',s:'&asymp;99.7%'},{v:196,t:'1.96',s:'exactly 95%'}];
+
+ var sc=0,sh=0,ni=3,kv=100,seed=0,vw=0;
+ var poolZ=[],vals=[],absM=[],absS=[],xbar=0,sdS=0;
+
+ function K(){return kv/100;}
+
+ /* ================= the sample =================
+    one pool of 1,000 base values is generated and standardised once; the n
+    slider takes a prefix, so raising n extends the sample rather than replacing it */
+ function gen(){
+  var r=mulberry32(20260718+seed*7919+sh*104729),i,z=[],m=0,q=0;
+  for(i=0;i<POOL;i++)z.push(SH[sh].gen(r));
+  for(i=0;i<POOL;i++)m+=z[i];
+  m/=POOL;
+  for(i=0;i<POOL;i++)q+=(z[i]-m)*(z[i]-m);
+  var s0=Math.sqrt(q/POOL)||1;
+  poolZ=[];
+  for(i=0;i<POOL;i++)poolZ.push((z[i]-m)/s0);
+  calc();
+ }
+
+ function calc(){
+  var S=SC[sc],n=NS[ni],i,v,t=0,q=0;
+  vals=[];
+  for(i=0;i<n;i++){
+    v=S.mu+S.sg*poolZ[i];
+    v=Math.round(v/S.gran)*S.gran;
+    vals.push(Math.round(v*1e9)/1e9);
+  }
+  for(i=0;i<n;i++)t+=vals[i];
+  xbar=t/n;
+  for(i=0;i<n;i++)q+=(vals[i]-xbar)*(vals[i]-xbar);
+  sdS=Math.sqrt(q/(n-1));
+  /* distance from the mean, measured in SDs, two ways: against the model's
+     mu and sigma, and against the sample's own x-bar and s */
+  absM=[];absS=[];
+  for(i=0;i<n;i++){
+    absM.push(Math.abs(vals[i]-S.mu)/S.sg);
+    absS.push(Math.abs(vals[i]-xbar)/(sdS||1));
+  }
+  absM.sort(function(a,b){return a-b;});
+  absS.sort(function(a,b){return a-b;});
+ }
+ function countLE(a,k){
+  var lo=0,hi=a.length,m;
+  while(lo<hi){m=(lo+hi)>>1;if(a[m]<=k+1e-12)lo=m+1;else hi=m;}
+  return lo;
+ }
+
+ /* ================= formatting ================= */
+ function fmt(x,d){
+  var v=x.toFixed(d),p=v.split('.');
+  p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return p.join('.');
+ }
+ function fv(x){return fmt(x,SC[sc].dec)+SC[sc].un;}
+ function fvn(x){return fmt(x,SC[sc].dec);}
+ function pc(p,d){return (p*100).toFixed(d===undefined?2:d)+'%';}
+ function oneIn(p){
+  var q=1-p;
+  if(q<=0)return '&mdash;';
+  var N=1/q;
+  return N<10?N.toFixed(1):fmt(Math.round(N),0);
+ }
+ function chip(x,y,txt,col,lo,hi){
+  var w=11+txt.length*5.0,cx=x;
+  if(lo===undefined){lo=2;hi=338;}
+  if(cx-w/2<lo)cx=lo+w/2;
+  if(cx+w/2>hi)cx=hi-w/2;
+  return '<rect x="'+(cx-w/2).toFixed(1)+'" y="'+y+'" width="'+w.toFixed(1)+'" height="14" rx="7" fill="'+col+'"/>'+
+         '<text x="'+cx.toFixed(1)+'" y="'+(y+10.1)+'" font-size="9.1" font-weight="800" fill="#fff" text-anchor="middle">'+txt+'</text>';
+ }
+
+ /* ================= card 1: the curve ================= */
+ var CX0=26,CX1=332,CTOP=22,CBOT=150,ZL=4.2;
+ function CX(z){return CX0+(z+ZL)/(2*ZL)*(CX1-CX0);}
+ function CY(d){return CBOT-d/K0*(CBOT-CTOP)*0.95;}
+ function areaPath(a,b){
+  var st='M'+CX(a).toFixed(1)+' '+CBOT.toFixed(1),i,N=110,z;
+  for(i=0;i<=N;i++){z=a+(b-a)*i/N;st+=' L'+CX(z).toFixed(1)+' '+CY(pdf(z)).toFixed(1);}
+  return st+' L'+CX(b).toFixed(1)+' '+CBOT.toFixed(1)+' Z';
+ }
+ function curveLine(){
+  var st='M'+CX(-ZL).toFixed(1)+' '+CY(pdf(-ZL)).toFixed(1),i,z;
+  for(i=1;i<=200;i++){z=-ZL+2*ZL*i/200;st+=' L'+CX(z).toFixed(1)+' '+CY(pdf(z)).toFixed(1);}
+  return st;
+ }
+ function axisBits(){
+  var S=SC[sc],s='',i,z;
+  s+='<line x1="'+CX0+'" y1="'+CBOT+'" x2="'+CX1+'" y2="'+CBOT+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  for(i=-3;i<=3;i++){
+    z=CX(i);
+    s+='<line x1="'+z.toFixed(1)+'" y1="'+CBOT+'" x2="'+z.toFixed(1)+'" y2="'+(CBOT+5)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+    s+='<text x="'+z.toFixed(1)+'" y="'+(CBOT+16)+'" font-size="8.4" font-weight="700" fill="#78868d" text-anchor="middle">'+fvn(S.mu+i*S.sg)+'</text>';
+    s+='<text x="'+z.toFixed(1)+'" y="'+(CBOT+27)+'" font-size="8.2" font-weight="700" fill="#a3b0b7" text-anchor="middle">'+(i===0?'mean':(i>0?'+'+i:i)+' SD')+'</text>';
+  }
+  return s;
+ }
+ function drawCurve(){
+  var S=SC[sc],k=K(),s='',i,area=Pin(k);
+
+  if(vw===0){
+    s+='<path d="'+areaPath(-ZL,ZL)+'" fill="#eef4f7"/>';
+    if(k>0.001)s+='<path d="'+areaPath(-k,k)+'" fill="#8fbccf"/>';
+    s+='<path d="'+curveLine()+'" fill="none" stroke="#1c4454" stroke-width="2"/>';
+    if(k>0.001){
+      s+='<line x1="'+CX(-k).toFixed(1)+'" y1="'+CY(pdf(k)).toFixed(1)+'" x2="'+CX(-k).toFixed(1)+'" y2="'+CBOT+'" stroke="#1c4454" stroke-width="1.4" stroke-dasharray="3 3"/>';
+      s+='<line x1="'+CX(k).toFixed(1)+'" y1="'+CY(pdf(k)).toFixed(1)+'" x2="'+CX(k).toFixed(1)+'" y2="'+CBOT+'" stroke="#1c4454" stroke-width="1.4" stroke-dasharray="3 3"/>';
+      s+=chip(CX(-k),2,fvn(S.mu-k*S.sg),'#1c4454');
+      s+=chip(CX(k),2,fvn(S.mu+k*S.sg),'#1c4454');
+      s+='<text x="'+CX(0).toFixed(1)+'" y="'+(CY(pdf(0))+34).toFixed(1)+'" font-size="15" font-weight="800" fill="#12333f" text-anchor="middle">'+pc(area)+'</text>';
+      s+='<text x="'+CX(0).toFixed(1)+'" y="'+(CY(pdf(0))+47).toFixed(1)+'" font-size="8.8" font-weight="700" fill="#2c5567" text-anchor="middle">of the area</text>';
+    }
+    s+=axisBits();
+
+    /* the three headline bands, drawn as dimension lines */
+    var rows=[{j:1,p:Pin(1),c:'#2f6f8a'},{j:2,p:Pin(2),c:'#2f6f9f'},{j:3,p:Pin(3),c:'#7a5a8a'}];
+    for(i=0;i<3;i++){
+      var R=rows[i],y=194+i*16,a=CX(-R.j),b=CX(R.j),near=Math.abs(k-R.j)<0.04;
+      var wdt=near?2.4:1.3,op=near?'1':'.6';
+      s+='<line x1="'+a.toFixed(1)+'" y1="'+y+'" x2="'+b.toFixed(1)+'" y2="'+y+'" stroke="'+R.c+'" stroke-width="'+wdt+'" opacity="'+op+'"/>';
+      s+='<line x1="'+a.toFixed(1)+'" y1="'+(y-4)+'" x2="'+a.toFixed(1)+'" y2="'+(y+4)+'" stroke="'+R.c+'" stroke-width="'+wdt+'" opacity="'+op+'"/>';
+      s+='<line x1="'+b.toFixed(1)+'" y1="'+(y-4)+'" x2="'+b.toFixed(1)+'" y2="'+(y+4)+'" stroke="'+R.c+'" stroke-width="'+wdt+'" opacity="'+op+'"/>';
+      s+=chip(CX(0),y-7,pc(R.p),R.c);
+      s+='<text x="'+(b+6).toFixed(1)+'" y="'+(y+3.4)+'" font-size="9" font-weight="800" fill="'+R.c+'" text-anchor="start" opacity="'+op+'">&plusmn;'+R.j+' SD</text>';
+    }
+    $("curveCap").innerHTML=(k<0.005
+      ? 'The boundary is sitting on the mean, so nothing is shaded and the area is <b>0%</b>. Drag it outward and the shaded region grows &mdash; slowly at first through the crowded middle, then hardly at all once you pass 3 SDs, because there is almost nothing left out there to collect.'
+      : 'The shaded region runs from <b>'+fv(S.mu-k*S.sg)+'</b> to <b>'+fv(S.mu+k*S.sg)+'</b>, which is the mean give or take <b>'+K().toFixed(2)+'</b> standard deviations. Its area, <b>'+pc(area)+'</b>, <i>is</i> the fraction of '+S.many+' the model expects to find in that range &mdash; area under a density curve and proportion of the data are the same thing. The three dimension lines below the axis are the rule itself.');
+  } else {
+    /* eight slices: the rule taken apart */
+    var bd=[-ZL,-3,-2,-1,0,1,2,3,ZL],col=['#e8eff3','#c9dde8','#93bacd','#4d87a3','#4d87a3','#93bacd','#c9dde8','#e8eff3'];
+    for(i=0;i<8;i++)s+='<path d="'+areaPath(bd[i],bd[i+1])+'" fill="'+col[i]+'"/>';
+    for(i=1;i<8;i++)s+='<line x1="'+CX(bd[i]).toFixed(1)+'" y1="'+CY(pdf(bd[i])).toFixed(1)+'" x2="'+CX(bd[i]).toFixed(1)+'" y2="'+CBOT+'" stroke="#fff" stroke-width="1.2"/>';
+    s+='<path d="'+curveLine()+'" fill="none" stroke="#1c4454" stroke-width="2"/>';
+
+    var q1=Pin(1)/2,q2=(Pin(2)-Pin(1))/2,q3=(Pin(3)-Pin(2))/2,q4=(1-Pin(3))/2;
+    s+='<text x="'+CX(-0.5).toFixed(1)+'" y="120" font-size="11.5" font-weight="800" fill="#fff" text-anchor="middle">'+pc(q1)+'</text>';
+    s+='<text x="'+CX(0.5).toFixed(1)+'" y="120" font-size="11.5" font-weight="800" fill="#fff" text-anchor="middle">'+pc(q1)+'</text>';
+    s+='<text x="'+CX(-1.5).toFixed(1)+'" y="138" font-size="10" font-weight="800" fill="#1c4454" text-anchor="middle">'+pc(q2)+'</text>';
+    s+='<text x="'+CX(1.5).toFixed(1)+'" y="138" font-size="10" font-weight="800" fill="#1c4454" text-anchor="middle">'+pc(q2)+'</text>';
+    var lead=[{z:-2.5,v:q3,y:186},{z:2.5,v:q3,y:186},{z:-3.55,v:q4,y:204},{z:3.55,v:q4,y:204}];
+    for(i=0;i<4;i++){
+      var L=lead[i],lx=CX(L.z);
+      s+='<line x1="'+lx.toFixed(1)+'" y1="'+(CBOT-2)+'" x2="'+lx.toFixed(1)+'" y2="'+L.y+'" stroke="#a3b0b7" stroke-width="1" stroke-dasharray="2 2"/>';
+      s+='<text x="'+lx.toFixed(1)+'" y="'+(L.y+9)+'" font-size="9.4" font-weight="800" fill="#4a585f" text-anchor="middle">'+pc(L.v)+'</text>';
+    }
+    s+=axisBits();
+    s+='<text x="179" y="230" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">every slice one standard deviation wide, plus the two tails</text>';
+
+    $("curveCap").innerHTML='Now the whole curve is cut into slices one SD wide, and the rule is just these numbers added up. The two middle slices give <b>'+pc(q1)+' &times; 2 = '+pc(Pin(1))+'</b> &mdash; that is the 68. Add the next pair, '+pc(q2)+' each, and you reach <b>'+pc(Pin(2))+'</b> &mdash; the 95. Add the pair after that, '+pc(q3)+' each, and you reach <b>'+pc(Pin(3))+'</b> &mdash; the 99.7. What is left over is <b>'+pc(q4)+'</b> in each tail. Notice how fast the slices shrink: each step out from the mean costs you roughly a quarter of the previous slice, then a sixth, and that collapse is the whole reason extreme values are rare.';
+  }
+  $("curve").innerHTML=s;
+ }
+
+ /* ================= card 2: the sample against the shading ================= */
+ var HTOP=22,HBOT=152,NB=42,BW=2*ZL/NB;
+ function drawHist(){
+  var S=SC[sc],n=NS[ni],k=K(),s='',i,j,b=[],mx=0,z;
+  for(i=0;i<NB;i++)b.push(0);
+  for(i=0;i<n;i++){
+    z=(vals[i]-S.mu)/S.sg;
+    j=Math.floor((z+ZL)/BW);
+    if(j<0)j=0; if(j>NB-1)j=NB-1;
+    b[j]++;
+  }
+  for(i=0;i<NB;i++)if(b[i]>mx)mx=b[i];
+  var pk=n*BW*K0;
+  if(pk>mx)mx=pk;
+  if(mx<=0)mx=1;
+  function HY(c){return HBOT-c/mx*(HBOT-HTOP);}
+
+  if(k>0.001)s+='<rect x="'+CX(-k).toFixed(1)+'" y="'+HTOP+'" width="'+(CX(k)-CX(-k)).toFixed(1)+'" height="'+(HBOT-HTOP)+'" fill="#e2eff5"/>';
+  for(i=0;i<NB;i++){
+    if(!b[i])continue;
+    var z0=-ZL+i*BW,zc=z0+BW/2,x=CX(z0),w=CX(z0+BW)-x;
+    var inside=Math.abs(zc)<=k;
+    s+='<rect x="'+(x+0.35).toFixed(1)+'" y="'+HY(b[i]).toFixed(1)+'" width="'+(w-0.7).toFixed(1)+'" height="'+(HBOT-HY(b[i])).toFixed(1)+'" fill="'+(inside?'#2f6f8a':'#c3ced4')+'"/>';
+  }
+  /* the model, drawn as the count each bin would hold on average */
+  var mp='';
+  for(i=0;i<=160;i++){z=-ZL+2*ZL*i/160;mp+=(i?' L':'M')+CX(z).toFixed(1)+' '+HY(n*BW*pdf(z)).toFixed(1);}
+  s+='<path d="'+mp+'" fill="none" stroke="#b8862f" stroke-width="2"/>';
+  if(k>0.001){
+    s+='<line x1="'+CX(-k).toFixed(1)+'" y1="'+HTOP+'" x2="'+CX(-k).toFixed(1)+'" y2="'+HBOT+'" stroke="#1c4454" stroke-width="1.4" stroke-dasharray="3 3"/>';
+    s+='<line x1="'+CX(k).toFixed(1)+'" y1="'+HTOP+'" x2="'+CX(k).toFixed(1)+'" y2="'+HBOT+'" stroke="#1c4454" stroke-width="1.4" stroke-dasharray="3 3"/>';
+  }
+  s+='<line x1="'+CX0+'" y1="'+HBOT+'" x2="'+CX1+'" y2="'+HBOT+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  for(i=-3;i<=3;i++){
+    var tx=CX(i);
+    s+='<line x1="'+tx.toFixed(1)+'" y1="'+HBOT+'" x2="'+tx.toFixed(1)+'" y2="'+(HBOT+5)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+    s+='<text x="'+tx.toFixed(1)+'" y="'+(HBOT+16)+'" font-size="8.4" font-weight="700" fill="#78868d" text-anchor="middle">'+fvn(S.mu+i*S.sg)+'</text>';
+  }
+  s+='<text x="179" y="'+(HBOT+34)+'" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">'+S.ax+'</text>';
+  s+='<text x="'+CX0+'" y="16" font-size="9" font-weight="700" fill="#a3b0b7" text-anchor="start">'+n+' '+S.many+' drawn</text>';
+  $("hist").innerHTML=s;
+
+  var ci=countLE(absM,k),fr=ci/n,cs=countLE(absS,k),ex=Pin(k);
+  $("histCap").innerHTML=(k<0.005
+   ? 'Nothing is shaded yet, so nothing is counted. Drag the boundary outward and the bars turn dark as they fall inside it.'
+   : '<b>'+fmt(ci,0)+'</b> of the '+n+' '+S.many+' landed inside the shading &mdash; <b>'+pc(fr,1)+'</b>, against the <b>'+pc(ex,1)+'</b> the curve predicts. The gold line is that prediction drawn as counts, so you can see where this particular sample runs heavy or light. Using the sample&rsquo;s own centre and spread instead (x&#772; = '+fv(xbar)+', s = '+fmt(sdS,SC[sc].dec+1)+SC[sc].un+') the boundaries shift a little and the count inside becomes <b>'+fmt(cs,0)+'</b>. Press <b>Draw another sample</b> a few times: the percentage wanders, and it wanders much less at large n.');
+ }
+
+ /* ================= card 3: coverage against k ================= */
+ var PX0=38,PX1=326,PY0=20,PY1=158;
+ function drawCov(){
+  var n=NS[ni],s='',i,k=K();
+  function PX(t){return PX0+t/4*(PX1-PX0);}
+  function PY(p){return PY1-p*(PY1-PY0);}
+
+  for(i=0;i<=4;i++){
+    var gx=PX(i);
+    s+='<line x1="'+gx.toFixed(1)+'" y1="'+PY0+'" x2="'+gx.toFixed(1)+'" y2="'+PY1+'" stroke="#eff4f7" stroke-width="1"/>';
+    s+='<text x="'+gx.toFixed(1)+'" y="'+(PY1+14)+'" font-size="8.4" font-weight="700" fill="#78868d" text-anchor="middle">'+i+'</text>';
+  }
+  var refs=[{p:0.68,t:'68%'},{p:0.95,t:'95%'},{p:0.997,t:'99.7%'}];
+  for(i=0;i<3;i++){
+    var gy=PY(refs[i].p);
+    s+='<line x1="'+PX0+'" y1="'+gy.toFixed(1)+'" x2="'+PX1+'" y2="'+gy.toFixed(1)+'" stroke="#dfe8ed" stroke-width="1" stroke-dasharray="4 3"/>';
+    s+='<text x="'+(PX0-4)+'" y="'+(gy+3).toFixed(1)+'" font-size="8.2" font-weight="700" fill="#a3b0b7" text-anchor="end">'+refs[i].t+'</text>';
+  }
+
+  /* what any distribution at all is guaranteed: at least 1 - 1/k^2 */
+  var cp='';
+  for(i=0;i<=120;i++){
+    var t=i/30,y=t<=1?0:1-1/(t*t);
+    cp+=(i?' L':'M')+PX(t).toFixed(1)+' '+PY(y).toFixed(1);
+  }
+  s+='<path d="'+cp+'" fill="none" stroke="#7a5a8a" stroke-width="1.8" stroke-dasharray="5 3"/>';
+
+  /* this sample, walked once through the sorted distances */
+  var sp='',ptr=0;
+  for(i=0;i<=144;i++){
+    var t2=i*4/144;
+    while(ptr<n&&absM[ptr]<=t2)ptr++;
+    sp+=(i?' L':'M')+PX(t2).toFixed(1)+' '+PY(ptr/n).toFixed(1);
+  }
+  s+='<path d="'+sp+'" fill="none" stroke="#2f6f9f" stroke-width="1.8"/>';
+
+  /* the bell curve, exact */
+  var ep='';
+  for(i=0;i<=144;i++){var t3=i*4/144;ep+=(i?' L':'M')+PX(t3).toFixed(1)+' '+PY(Pin(t3)).toFixed(1);}
+  s+='<path d="'+ep+'" fill="none" stroke="#1c4454" stroke-width="2.4"/>';
+
+  for(i=1;i<=3;i++)s+='<circle cx="'+PX(i).toFixed(1)+'" cy="'+PY(Pin(i)).toFixed(1)+'" r="3" fill="#1c4454"/>';
+  s+='<line x1="'+PX(k).toFixed(1)+'" y1="'+PY0+'" x2="'+PX(k).toFixed(1)+'" y2="'+PY1+'" stroke="#1c4454" stroke-width="1.2" stroke-dasharray="3 3"/>';
+  s+='<circle cx="'+PX(k).toFixed(1)+'" cy="'+PY(Pin(k)).toFixed(1)+'" r="4.6" fill="#1c4454" stroke="#fff" stroke-width="1.8"/>';
+  s+='<circle cx="'+PX(k).toFixed(1)+'" cy="'+PY(countLE(absM,k)/n).toFixed(1)+'" r="4.2" fill="#2f6f9f" stroke="#fff" stroke-width="1.8"/>';
+
+  s+='<line x1="'+PX0+'" y1="'+PY1+'" x2="'+PX1+'" y2="'+PY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<line x1="'+PX0+'" y1="'+PY0+'" x2="'+PX0+'" y2="'+PY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<text x="182" y="192" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">k &mdash; how many standard deviations from the mean</text>';
+  $("cov").innerHTML=s;
+
+  var lo=1-1/(k*k);
+  $("covCap").innerHTML='The dark line is the bell curve&rsquo;s exact coverage; the three dots on it are the 68, 95 and 99.7 everyone memorises. The blue line is what <i>this</i> sample actually does, and it is a staircase &mdash; it can only step up as each value is swept inside. The dashed purple line is the floor that holds for <b>any</b> distribution whatsoever, bell-shaped or not: at least <b>1 &minus; 1/k&sup2;</b> of the values. '+(k>1
+   ? 'At k = '+k.toFixed(2)+' that floor is only <b>'+pc(lo,1)+'</b>, while the bell curve delivers <b>'+pc(Pin(k),1)+'</b>. The gap between those two lines is exactly what assuming a bell shape buys you &mdash; and exactly what you lose if the assumption is wrong.'
+   : 'Below k = 1 the floor is <b>zero</b>: without a bell shape, nothing at all is guaranteed within one standard deviation of the mean.');
+ }
+
+ /* ================= the reading panel ================= */
+ function drawInfo(){
+  var S=SC[sc],n=NS[ni],k=K(),area=Pin(k),t='',lo=S.mu-k*S.sg,hi=S.mu+k*S.sg;
+  var hdr=k<0.005?'Nothing shaded yet':(Math.abs(k-1)<0.005?'One standard deviation':(Math.abs(k-2)<0.005?'Two standard deviations':(Math.abs(k-3)<0.005?'Three standard deviations':(Math.abs(k-1.96)<0.005?'1.96 standard deviations':'&plusmn;'+k.toFixed(2)+' standard deviations'))));
+  t+='<span class="n">'+hdr+'</span>';
+
+  if(k<0.005){
+    t+='The boundary is on the mean, so the shaded region has no width and no area. Push it out and watch the area climb fastest right at the start &mdash; the curve is tallest at the mean, so the first fraction of a standard deviation you shade sweeps up more '+S.many+' than any later stretch of the same width.';
+  } else {
+    t+='Shading everything within <b>'+k.toFixed(2)+' SD</b> of the mean covers <b>'+fv(lo)+'</b> to <b>'+fv(hi)+'</b>, and that region holds <b>'+pc(area)+'</b> of the area. Read that as a sentence about '+S.many+': about '+pc(area,1)+' of them are expected to measure between those two numbers. ';
+    t+='The other <b>'+pc(1-area)+'</b> lies outside, split evenly &mdash; <b>'+pc((1-area)/2)+'</b> below '+fv(lo)+' and the same above '+fv(hi)+'. That is roughly <b>1 in '+oneIn(area)+'</b> '+S.many+' falling outside the band, and about <b>1 in '+oneIn(1-(1-area)/2)+'</b> on either single side.';
+    if(Math.abs(k-1)<0.005)t+=' This is the first of the three headline numbers, and the one people find most surprising: a full third of the data sits <i>outside</i> one standard deviation. Being an SD from the mean is ordinary, not exceptional.';
+    if(Math.abs(k-2)<0.005)t+=' This is the number that quietly runs most of statistics. &ldquo;Within two standard deviations&rdquo; is the working definition of <i>typical</i>, and anything beyond it gets a second look &mdash; while remembering that about one value in twenty-two is out there in perfectly ordinary data.';
+    if(Math.abs(k-3)<0.005)t+=' This is where the tails have all but run out. Only about 1 in 370 values lies beyond, which is why three SDs is the classic alarm limit on a control chart. Note the arithmetic, though: in a bell-shaped batch of 1,000 you should <i>expect</i> about three such values, so one of them alone is not evidence that anything has gone wrong.';
+    if(Math.abs(k-1.96)<0.005)t+=' Here is what the rounding hides. It is <b>1.96</b> standard deviations, not 2, that cuts off exactly 95% &mdash; leaving precisely 2.5% in each tail. The rule says 2 because 2 is memorable; the machinery of confidence intervals uses 1.96 because it is right.';
+  }
+
+  t+='<div class="eq">'+
+     '<div class="r"><span>mean &plusmn; '+k.toFixed(2)+' &times; SD</span><b>'+fv(lo)+' to '+fv(hi)+'</b></div>'+
+     '<div class="r"><span>area under the curve there</span><b>'+pc(area)+'</b></div>'+
+     '<div class="r"><span>of '+n+' '+S.many+', landed inside</span><b>'+fmt(countLE(absM,k),0)+' &mdash; '+pc(countLE(absM,k)/n,1)+'</b></div>'+
+     '</div>';
+
+  if(sh!==0){
+    t+='<div class="dd">You are drawing from a <b>'+SH[sh].nm.toLowerCase()+'</b> population, not a bell. Its mean and standard deviation are still exactly '+fv(S.mu)+' and '+fmt(S.sg,S.dec)+S.un+' &mdash; every formula from the previous section still works perfectly. What has broken is the <i>rule</i>, because the rule was never about the mean and the SD. It was about the shape.</div>';
+  }
+  t+='<div class="loc">'+S.story+'</div>';
+  $("info").innerHTML=t;
+ }
+
+ /* ================= chrome ================= */
+ function render(){
+  var S=SC[sc],n=NS[ni],k=K(),area=Pin(k);
+  calc();
+  drawCurve();drawHist();drawCov();drawInfo();
+
+  $("kVal").innerHTML='&plusmn;'+k.toFixed(2)+' SD';
+  $("nVal").innerHTML=fmt(n,0);
+  $("tK").innerHTML=k.toFixed(2);
+  $("tLo").innerHTML=fvn(S.mu-k*S.sg);
+  $("tHi").innerHTML=fvn(S.mu+k*S.sg);
+  $("tA").innerHTML=pc(area,1);
+
+  for(var j=1;j<=3;j++){
+    /* flag a gap only when it is too large to be ordinary sampling noise.
+       the standard error of a proportion shrinks as n grows, so the same
+       gap that is unremarkable at n=30 is damning at n=1000 */
+    var ex=Pin(j),sm=countLE(absM,j)/n,gap=(sm-ex)*100;
+    var se=Math.sqrt(ex*(1-ex)/n),off=Math.abs(sm-ex)>2.5*se+0.003;
+    $("e"+j).innerHTML=pc(ex);
+    $("s"+j).innerHTML=pc(sm,1)+'<span class="d">'+(gap>=0?'+':'&minus;')+Math.abs(gap).toFixed(1)+'</span>';
+    $("s"+j).className='sm'+(off?' off':'');
+  }
+
+  var col=k<0.005?'#4a585f':(k<1?'#2f9e5b':(k<2?'#2f6f8a':(k<3?'#2f6f9f':'#7a5a8a')));
+  $("stage").style.background=col;
+  $("stage").innerHTML=(k<0.005?'Nothing shaded':pc(area,1)+' of the '+S.many)+
+    '<small>'+(k<0.005?'drag the boundary outward':'within &plusmn;'+k.toFixed(2)+' SD &nbsp;·&nbsp; '+fv(S.mu-k*S.sg)+' to '+fv(S.mu+k*S.sg))+'</small>';
+
+  $("curveTitle").innerHTML=vw===0?'The model, and the slice you have shaded':'The rule, taken apart into slices';
+  $("histTitle").innerHTML=fmt(n,0)+' '+S.many+', and how many landed inside';
+
+  $("jump").innerHTML=JUMPS.map(function(x){return '<button class="it'+(x.v===kv?' on':'')+'" data-v="'+x.v+'"><span class="nm">'+x.t+'</span><span class="s">'+x.s+'</span></button>';}).join('');
+  document.querySelectorAll('#jump .it').forEach(function(b){b.onclick=function(){kv=+b.dataset.v;$("kSl").value=kv;render();};});
+
+  $("shape").innerHTML=SH.map(function(x,i){return '<button class="it'+(i===sh?' on':'')+'" data-v="'+i+'"><span class="nm">'+x.nm+'</span><span class="s">'+x.s+'</span></button>';}).join('');
+  document.querySelectorAll('#shape .it').forEach(function(b){b.onclick=function(){sh=+b.dataset.v;gen();render();};});
+
+  $("fnote").innerHTML='The '+fmt(n,0)+' '+S.many+' are drawn from a fixed, seeded pseudo-random pool and then rescaled so the population they come from has a mean of exactly '+fv(S.mu)+' and a standard deviation of exactly '+fmt(S.sg,S.dec)+S.un+' &mdash; so the page opens the same way every time and &ldquo;Draw another sample&rdquo; genuinely draws a new one. Areas are not read from a table: the normal density is integrated by Simpson&rsquo;s rule each time you move the slider, which is why the figures carry two decimal places. Counts use the model&rsquo;s mean and SD so that the shading and the tally refer to the same boundaries; in real work you would only have the sample&rsquo;s own x&#772; and s, and the caption under the histogram shows what changes if you use them.';
+ }
+
+ /* ================= wiring ================= */
+ $("kSl").oninput=function(){kv=+this.value;render();};
+ $("nSl").oninput=function(){ni=+this.value;render();};
+ $("reset").onclick=function(){kv=100;$("kSl").value=100;render();};
+ $("samp").onclick=function(){seed++;gen();render();};
+ document.querySelectorAll('#seg button').forEach(function(b){
+  b.onclick=function(){
+    sc=+b.dataset.v;
+    document.querySelectorAll('#seg button').forEach(function(x){x.className='';});
+    b.className='on';
+    render();
+  };
+ });
+ document.querySelectorAll('#vseg button').forEach(function(b){
+  b.onclick=function(){
+    vw=+b.dataset.v;
+    document.querySelectorAll('#vseg button').forEach(function(x){x.className='';});
+    b.className='on';
+    render();
+  };
+ });
+
+ gen();render();
+})();
+</script>
+</body>
+</html>

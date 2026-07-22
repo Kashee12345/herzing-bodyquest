@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Types of Long-Term Memory</title>
+<meta name="description" content="Explore the explicit vs implicit map of long-term memory — episodic, semantic, and procedural — then sort real examples into the right store. Guided by Tulving, Squire, and patient H.M. For psychology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:0.95fr 1.05fr;}
+#art text{pointer-events:none;}
+.chk{display:flex;gap:7px;margin:13px 0 2px;}
+.chk div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 4px;font-size:9.5px;font-weight:700;color:var(--muted);background:#fff;transition:.2s;}
+.chk div .v{display:block;font-size:11px;margin-top:3px;font-weight:800;color:var(--teal-dk);line-height:1.2;}
+.chk div.on{border-color:var(--teal);background:#f8e2ec;}
+.it.sub{margin-left:18px;}
+.prompt{border:1px dashed var(--teal);background:#fbf2f6;border-radius:11px;padding:13px 15px;font-size:15px;font-weight:600;color:var(--teal-dk);line-height:1.4;margin-bottom:11px;}
+.prompt .q{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:5px;}
+.seg button.ok{background:var(--green);color:#fff;} .seg button.ok small{color:rgba(255,255,255,.9);}
+.seg button.bad{background:var(--coral);color:#fff;} .seg button.bad small{color:rgba(255,255,255,.9);}
+.scoreline{font-size:12px;font-weight:700;color:var(--soft);text-align:center;margin-top:11px;}
+.scoreline b{color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 7</div>
+  <h1>Types of Long-Term Memory</h1>
+  <div class="intro">Long-term memory is not a single vault. It divides first into <b>explicit</b> memory &mdash; the facts and events you can consciously <i>declare</i> &mdash; and <b>implicit</b> memory, the skills and reflexes your body performs without words. Explicit splits again into <b>episodic</b> (events you lived) and <b>semantic</b> (facts you know), while <b>procedural</b> memory anchors the implicit side. Explore the map, then sort real examples into the right store.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The long-term memory map</h2>
+    <svg viewBox="0 0 240 200" aria-label="Taxonomy of long-term memory: explicit (episodic, semantic) and implicit (procedural)"><g id="art"></g></svg>
+    <div class="chk">
+      <div id="c1">Access<span class="v" id="v1">&mdash;</span></div>
+      <div id="c2">Retrieval<span class="v" id="v2">&mdash;</span></div>
+      <div id="c3">Brain<span class="v" id="v3">&mdash;</span></div>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">The long-term memory map<small>tap a branch to explore it</small></div>
+    <div class="card">
+      <div class="modeseg"><button id="mExp" class="on">Explore the map</button><button id="mSort">Sort examples</button></div>
+      <div id="exWrap"><div class="list" id="list"></div></div>
+      <div id="sortWrap" style="display:none">
+        <div class="prompt" id="prompt"></div>
+        <div class="seg" id="answers"></div>
+        <div class="scoreline" id="scoreline"></div>
+      </div>
+      <div id="info"></div>
+      <div class="row" id="sortNav" style="display:none"><button class="btn" id="restart">↺ Restart</button><button class="btn solid" id="nextEx">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var TEALDK='#5e2846',BLUE='#2f6f9f',TEAL='#a1466b',PURPLE='#7a5a8a',GREEN='#2f9e5b',GOLD='#b8862f',MUTE='#b7a4ad',LINE='#e6d6de';
+
+ // ---- taxonomy nodes -----------------------------------------------------
+ var NODES={
+  root:      {x:44,y:6,w:152,h:26,l1:'LONG-TERM MEMORY',l2:'',col:TEALDK,tint:'#f8e2ec'},
+  explicit:  {x:6,y:58,w:104,h:40,l1:'EXPLICIT',l2:'declarative',col:BLUE,tint:'#eaf1f7'},
+  implicit:  {x:130,y:58,w:104,h:40,l1:'IMPLICIT',l2:'non-declarative',col:GREEN,tint:'#eef7f0'},
+  episodic:  {x:4,y:148,w:54,h:46,l1:'Episodic',l2:'events',col:TEAL,tint:'#f8e2ec'},
+  semantic:  {x:62,y:148,w:54,h:46,l1:'Semantic',l2:'facts',col:PURPLE,tint:'#f1ecf5'},
+  procedural:{x:138,y:148,w:88,h:46,l1:'Procedural',l2:'skills',col:GOLD,tint:'#fbf3e2'}
+ };
+ var PROP={
+  explicit:  {ac:'Conscious',rt:'Knowing THAT',br:'Hippocampus'},
+  episodic:  {ac:'Conscious',rt:'Remembering',br:'Hippocampus + PFC'},
+  semantic:  {ac:'Conscious',rt:'Knowing (facts)',br:'Temporal neocortex'},
+  implicit:  {ac:'Unconscious',rt:'Performing',br:'Basal ganglia'},
+  procedural:{ac:'Unconscious',rt:'Knowing HOW',br:'Cerebellum'}
+ };
+ var INFO={
+  explicit:'<span class="n">Explicit (declarative) memory</span>Memories you can <b>consciously bring to mind and put into words</b> &mdash; you can &ldquo;declare&rdquo; them. This is the branch we usually <i>mean</i> by &ldquo;memory&rdquo;: it holds the <b>events</b> you have lived (episodic) and the <b>facts</b> you know (semantic). Explicit memory depends on the <b>hippocampus</b> and medial temporal lobe, and damage there causes declarative amnesia. In <b>Larry Squire&rsquo;s</b> taxonomy this is the <b>declarative</b> half of long-term memory.'+
+   '<div class="loc">Quick test: can you state it out loud? If yes, it is explicit.</div>',
+  episodic:'<span class="n">Episodic memory</span>Your record of <b>personally experienced events</b>, each tied to a particular <b>time and place</b> &mdash; your first day of school, last night&rsquo;s dinner, where you were during a memorable moment. <b>Endel Tulving</b> (1972) named this system and described its retrieval as <b>&ldquo;mental time travel&rdquo;</b>: you re-live the episode. Tulving&rsquo;s shorthand &mdash; episodic memory is <b>remembering</b>.'+
+   '<div class="ex"><span>first day of school</span><span>last night&rsquo;s dinner</span><span>a wedding</span></div>'+
+   '<div class="mnem"><b>Episodic = Events.</b> First-person, autobiographical, and dated to a moment.</div>',
+  semantic:'<span class="n">Semantic memory</span>Your store of <b>general knowledge and facts</b>, stripped of any personal event &mdash; that Paris is the capital of France, that a dog is a mammal, the meanings of words, that 7&times;8=56. You simply <b>know</b> these things without recalling <i>when</i> you learned them. <b>Tulving</b> set it against episodic: semantic is <b>knowing</b>, episodic is <b>remembering</b>.'+
+   '<div class="ex"><span>capital cities</span><span>word meanings</span><span>math facts</span></div>'+
+   '<div class="mnem"><b>Semantic = meaning &amp; facts.</b> Impersonal, timeless world knowledge.</div>',
+  implicit:'<span class="n">Implicit (non-declarative) memory</span>Memories expressed <b>through behavior, without conscious awareness</b> &mdash; you cannot easily put them into words. This branch includes <b>procedural</b> skills, <b>priming</b>, and <b>classical conditioning</b> (the reflexes <b>Pavlov</b> trained). <b>Squire</b> calls it <b>non-declarative</b>. Its independence from explicit memory is dramatic: patient <b>H.M.</b>, unable to form new conscious memories after his hippocampus was removed, could still <b>learn brand-new skills</b>.'+
+   '<div class="note"><b>Patient H.M.</b> (studied by <b>Brenda Milner</b>) improved at a mirror-drawing task day after day &mdash; yet each session swore he had never tried it. The skill was kept; the memory of practicing was lost.</div>',
+  procedural:'<span class="n">Procedural memory</span>Your memory for <b>skills and habits</b> &mdash; how to ride a bike, tie your shoes, touch-type, or drive. Built slowly through <b>practice</b>, it runs <b>automatically</b> and resists being described in words: it is <b>&ldquo;knowing how&rdquo;</b>, not &ldquo;knowing that&rdquo; (<b>Cohen &amp; Squire</b>, 1980). It leans on the <b>basal ganglia and cerebellum</b> rather than the hippocampus &mdash; which is exactly why H.M. could still form it.'+
+   '<div class="ex"><span>riding a bike</span><span>touch-typing</span><span>tying shoes</span></div>'+
+   '<div class="mnem"><b>Procedural = Performance.</b> Skills your body remembers even when your words cannot.</div>'
+ };
+
+ // ---- explore list -------------------------------------------------------
+ var LISTITEMS=[
+  {k:'explicit',  ic:'&#128483;&#65039;',nm:'Explicit',ct:'Declarative &middot; conscious',sub:false},
+  {k:'episodic',  ic:'&#127874;',nm:'Episodic',ct:'Events you lived',sub:true},
+  {k:'semantic',  ic:'&#128218;',nm:'Semantic',ct:'Facts you know',sub:true},
+  {k:'implicit',  ic:'&#9881;&#65039;',nm:'Implicit',ct:'Non-declarative &middot; unconscious',sub:false},
+  {k:'procedural',ic:'&#128690;',nm:'Procedural',ct:'Skills you perform',sub:true}
+ ];
+
+ // ---- sort examples ------------------------------------------------------
+ var CATS=[{k:'episodic',nm:'Episodic',s:'events'},{k:'semantic',nm:'Semantic',s:'facts'},{k:'procedural',nm:'Procedural',s:'skills'}];
+ var EX=[
+  {t:'&ldquo;The capital of Japan is Tokyo.&rdquo;',a:'semantic',why:'A piece of general world knowledge with no personal event attached &mdash; you know it without recalling when you learned it.'},
+  {t:'Riding your bicycle to the store without thinking about balance.',a:'procedural',why:'A practiced motor skill that runs automatically &mdash; &ldquo;knowing how,&rdquo; hard to put into words.'},
+  {t:'Your memory of your very first day at a new school.',a:'episodic',why:'A specific personal event fixed to a time and place &mdash; classic episodic &ldquo;mental time travel.&rdquo;'},
+  {t:'Knowing that a spider has eight legs.',a:'semantic',why:'A stored fact / concept about the world, not a memory of any single experience.'},
+  {t:'Touch-typing a message without looking at the keys.',a:'procedural',why:'An over-learned skill performed by the body &mdash; procedural, run by the basal ganglia and cerebellum.'},
+  {t:'What you ate for breakfast this morning.',a:'episodic',why:'A recent, personally experienced event tied to today &mdash; autobiographical, so episodic.'},
+  {t:'The meaning of the word &ldquo;gravity.&rdquo;',a:'semantic',why:'Vocabulary and concept knowledge &mdash; part of your semantic store of facts and meanings.'},
+  {t:'Tying your shoelaces on autopilot.',a:'procedural',why:'An over-learned habit your hands perform without conscious steps &mdash; procedural memory.'},
+  {t:'The vacation you took last summer.',a:'episodic',why:'A dated, first-person life event you can re-experience &mdash; episodic memory.'}
+ ];
+
+ var mode='explore';
+ var cur='';            // selected node key in explore mode / correct key after a sort answer
+ var qi=0, score=0, done=0, answered=false;
+
+ // ---- drawing ------------------------------------------------------------
+ function conn(x1,y1,x2,y2,on){
+   return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(on?TEAL:LINE)+'" stroke-width="'+(on?2.4:1.3)+'" opacity="'+(on?0.85:0.6)+'"/>';
+ }
+ function boxN(key,m){            // m: 2 hot, 1 related-outline, 0 dim
+   var b=NODES[key], cx=b.x+b.w/2;
+   var stroke=m?b.col:LINE, sw=m===2?2.4:(m===1?1.8:1.3);
+   var fill=m===2?b.tint:'#fff', tcol=m?b.col:MUTE;
+   var s='<rect x="'+b.x+'" y="'+b.y+'" width="'+b.w+'" height="'+b.h+'" rx="9" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'"/>';
+   if(b.l2){
+     s+='<text x="'+cx+'" y="'+(b.y+b.h/2-1)+'" font-size="9" font-weight="800" fill="'+tcol+'" text-anchor="middle" letter-spacing="0.4">'+b.l1+'</text>';
+     s+='<text x="'+cx+'" y="'+(b.y+b.h/2+12)+'" font-size="7.4" font-weight="600" fill="'+tcol+'" text-anchor="middle" opacity="0.85">'+b.l2+'</text>';
+   } else {
+     s+='<text x="'+cx+'" y="'+(b.y+b.h/2+3.4)+'" font-size="9" font-weight="800" fill="'+tcol+'" text-anchor="middle" letter-spacing="0.4">'+b.l1+'</text>';
+   }
+   return s;
+ }
+ function draw(a){
+   var ef=(a==='explicit'||a==='episodic'||a==='semantic');
+   var imf=(a==='implicit'||a==='procedural');
+   var s='';
+   s+=conn(120,32,58,58,ef);
+   s+=conn(120,32,182,58,imf);
+   s+=conn(58,98,31,148,a==='episodic'||a==='explicit');
+   s+=conn(58,98,89,148,a==='semantic'||a==='explicit');
+   s+=conn(182,98,182,148,a==='procedural'||a==='implicit');
+   s+=boxN('root',a?2:0);
+   s+=boxN('explicit',ef?2:0);
+   s+=boxN('implicit',imf?2:0);
+   s+=boxN('episodic',a==='episodic'?2:(a==='explicit'?1:0));
+   s+=boxN('semantic',a==='semantic'?2:(a==='explicit'?1:0));
+   s+=boxN('procedural',a==='procedural'?2:(a==='implicit'?1:0));
+   return s;
+ }
+
+ // ---- property row -------------------------------------------------------
+ function setChk(key){
+   var p=PROP[key];
+   if(!p){ $("v1").innerHTML='&mdash;'; $("v2").innerHTML='&mdash;'; $("v3").innerHTML='&mdash;';
+     $("c1").className=''; $("c2").className=''; $("c3").className=''; return; }
+   $("v1").innerHTML=p.ac; $("v2").innerHTML=p.rt; $("v3").innerHTML=p.br;
+   $("c1").className='on'; $("c2").className='on'; $("c3").className='on';
+ }
+
+ // ---- explore mode -------------------------------------------------------
+ function renderList(){
+   $("list").innerHTML=LISTITEMS.map(function(m){
+     return '<button class="it'+(m.sub?' sub':'')+(m.k===cur?' on':'')+'" data-k="'+m.k+'"><span class="ic">'+m.ic+'</span><span><span class="nm">'+m.nm+'</span><br><span class="ct">'+m.ct+'</span></span></button>';
+   }).join('');
+   var bs=document.querySelectorAll('#list .it');
+   for(var i=0;i<bs.length;i++){ bs[i].onclick=function(){ selectNode(this.getAttribute('data-k')); }; }
+ }
+ function selectNode(k){
+   cur=k; var b=NODES[k];
+   $("art").innerHTML=draw(k);
+   $("cardTitle").innerHTML=NODES[k].l2?(k.charAt(0).toUpperCase()+k.slice(1)+' memory'):NODES[k].l1;
+   $("stage").style.background=b.col;
+   var fam=(k==='episodic'||k==='semantic')?'branch of explicit':(k==='procedural'?'branch of implicit':(k==='explicit'?'the declarative branch':'the non-declarative branch'));
+   $("stage").innerHTML=(NODES[k].l2?(k.charAt(0).toUpperCase()+k.slice(1)):NODES[k].l1)+'<small>'+fam+'</small>';
+   setChk(k);
+   $("info").innerHTML=INFO[k];
+   renderList();
+ }
+
+ // ---- sort mode ----------------------------------------------------------
+ function showEx(){
+   answered=false;
+   var e=EX[qi];
+   $("prompt").innerHTML='<span class="q">Which kind of memory?</span>'+e.t;
+   $("answers").innerHTML=CATS.map(function(c){
+     return '<button data-k="'+c.k+'">'+c.nm+'<small>'+c.s+'</small></button>';
+   }).join('');
+   var bs=$("answers").querySelectorAll('button');
+   for(var i=0;i<bs.length;i++){ bs[i].onclick=function(){ answer(this.getAttribute('data-k')); }; }
+   $("scoreline").innerHTML='Item <b>'+(qi+1)+'</b> of '+EX.length+' &middot; Score <b>'+score+'</b>';
+   $("info").innerHTML='<span class="n">Read it, then choose</span>Decide whether this memory is a personal <b>event</b> (episodic), a <b>fact</b> (semantic), or a <b>skill</b> (procedural).';
+   cur=''; $("art").innerHTML=draw(''); setChk('');
+   $("cardTitle").innerHTML='Sort this memory';
+   $("stage").style.background=GOLD;
+   $("stage").innerHTML='Sort the examples<small>item '+(qi+1)+' of '+EX.length+'</small>';
+   $("nextEx").disabled=true;
+ }
+ function answer(chosen){
+   if(answered) return;
+   answered=true; done++;
+   var e=EX[qi], correct=(chosen===e.a);
+   if(correct) score++;
+   var bs=$("answers").querySelectorAll('button');
+   for(var i=0;i<bs.length;i++){
+     var k=bs[i].getAttribute('data-k');
+     if(k===chosen) bs[i].className=correct?'ok':'bad';
+     else if(k===e.a && !correct) bs[i].className='ok';
+     bs[i].style.pointerEvents='none';
+   }
+   cur=e.a; $("art").innerHTML=draw(e.a); setChk(e.a);
+   var nm=e.a.charAt(0).toUpperCase()+e.a.slice(1);
+   $("stage").style.background=NODES[e.a].col;
+   $("stage").innerHTML=(correct?'Correct!':'Not quite')+'<small>this one is '+e.a+' memory</small>';
+   $("info").innerHTML='<span class="n">'+(correct?'Correct &mdash; '+nm:'It&rsquo;s '+nm+', not '+chosen.charAt(0).toUpperCase()+chosen.slice(1))+'</span>'+e.why;
+   $("scoreline").innerHTML='Item <b>'+(qi+1)+'</b> of '+EX.length+' &middot; Score <b>'+score+'</b>';
+   if(qi>=EX.length-1){
+     $("nextEx").disabled=true;
+     $("stage").innerHTML='Sorted! <small>'+score+' of '+EX.length+' correct &middot; press Restart to try again</small>';
+     var extra=(score===EX.length)?' A clean sweep &mdash; you have the taxonomy down.':(score>=Math.ceil(EX.length*0.7)?' Strong work.':' Switch to <b>Explore the map</b> to review the branches, then try again.');
+     $("info").innerHTML='<span class="n">Round complete: '+score+' / '+EX.length+'</span>You classified every memory as an <b>event</b> (episodic), a <b>fact</b> (semantic), or a <b>skill</b> (procedural).'+extra;
+   } else {
+     $("nextEx").disabled=false;
+   }
+ }
+
+ // ---- mode switching -----------------------------------------------------
+ function setMode(m){
+   mode=m;
+   $("mExp").className=(m==='explore')?'on':'';
+   $("mSort").className=(m==='sort')?'on':'';
+   $("exWrap").style.display=(m==='explore')?'block':'none';
+   $("sortWrap").style.display=(m==='sort')?'block':'none';
+   $("sortNav").style.display=(m==='sort')?'flex':'none';
+   if(m==='explore'){
+     $("cardTitle").innerHTML='The long-term memory map';
+     $("stage").style.background=TEAL;
+     $("stage").innerHTML='The long-term memory map<small>tap a branch to explore it</small>';
+     if(cur){ selectNode(cur); }
+     else { $("art").innerHTML=draw(''); setChk('');
+       $("info").innerHTML='<span class="n">Two branches, three leaves</span>Tap any branch on the map &mdash; <b>Explicit</b>, <b>Episodic</b>, <b>Semantic</b>, <b>Implicit</b>, or <b>Procedural</b> &mdash; to see what it stores, how you retrieve it, and where the brain keeps it.'; }
+     renderList();
+   } else {
+     qi=0; score=0; done=0; showEx();
+   }
+ }
+
+ $("mExp").onclick=function(){ setMode('explore'); };
+ $("mSort").onclick=function(){ setMode('sort'); };
+ $("nextEx").onclick=function(){ if(qi<EX.length-1){ qi++; showEx(); } };
+ $("restart").onclick=function(){ qi=0; score=0; done=0; showEx(); };
+
+ // ---- init ---------------------------------------------------------------
+ renderList();
+ $("art").innerHTML=draw('');
+ setChk('');
+ $("info").innerHTML='<span class="n">Two branches, three leaves</span>Tap any branch on the map &mdash; <b>Explicit</b>, <b>Episodic</b>, <b>Semantic</b>, <b>Implicit</b>, or <b>Procedural</b> &mdash; to see what it stores, how you retrieve it, and where the brain keeps it. Then switch to <b>Sort examples</b> to test yourself.';
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Fill the Limiting Amino Acid</title>
+<meta name="description" content="Blend two plant foods and watch the limiting amino acid rise to meet the reference pattern. A live amino-acid scoring calculator for nutrition students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:0.98fr 1.02fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.pickttl{font-size:11px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--gold);margin:2px 0 6px;}
+.grid .it .s{display:block;margin-top:1px;}
+.blend{border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px 12px 9px;margin-top:12px;}
+.blend .hd{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:700;color:var(--soft);}
+.blend .hd b{font-family:var(--disp);font-size:15px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.blend input[type=range]{width:100%;margin-top:8px;height:20px;accent-color:var(--teal);cursor:pointer;display:block;}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px;}
+.presets button{border:1px solid var(--line);background:#fff;color:var(--teal-dk);font-family:var(--sans);font-weight:700;font-size:11.5px;border-radius:20px;padding:6px 11px;cursor:pointer;}
+.presets button:hover{border-color:var(--teal);}
+.scorebox{display:flex;align-items:center;gap:12px;margin-top:10px;border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px 13px;}
+.scorebox .big{font-family:var(--disp);font-weight:700;font-size:34px;line-height:1;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.scorebox .lab{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.scorebox .rt{flex:1;}
+.cap{font-size:11.4px;color:var(--muted);margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 5</div>
+  <h1>Fill the Limiting Amino Acid</h1>
+  <div class="intro">A plant food is rarely short on <b>every</b> indispensable amino acid &mdash; usually just one runs low, and that single <b>limiting amino acid</b> caps how well the whole protein can be used. Pair two plant foods whose shortfalls differ, blend the protein between them, and watch the low bar rise to the reference line.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Combined amino-acid profile</h2>
+    <svg viewBox="0 0 264 262" aria-label="amino acid bar chart"><g id="art"></g></svg>
+    <div class="scorebox">
+      <div><div class="lab">Amino-acid score</div><div class="big" id="score">&mdash;</div></div>
+      <div class="rt"><span class="pill low" id="limpill">&mdash;</span></div>
+    </div>
+    <div class="cap">Each bar is one indispensable amino acid as a <b>% of the adult reference scoring pattern</b> (FAO/WHO/UNU, mg per g protein). The shortest bar is the limiting amino acid, and it sets the amino-acid score. <b>SAA</b> = methionine + cysteine; <b>AAA</b> = phenylalanine + tyrosine.</div>
+  </div></div>
+  <div>
+    <div id="stage">Pick two foods<small>then blend the protein between them</small></div>
+    <div class="card">
+      <div class="pickttl">First food</div>
+      <div class="grid" id="listA"></div>
+      <div class="pickttl" style="margin-top:11px;">Second food</div>
+      <div class="grid" id="listB"></div>
+      <div class="blend">
+        <div class="hd"><span id="blabA">Food A</span><b><span id="pA">50</span>% · <span id="pB">50</span>%</b><span id="blabB">Food B</span></div>
+        <input type="range" id="blend" min="0" max="100" value="50" step="5">
+      </div>
+      <div class="presets" id="presets"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // Adult reference amino-acid scoring pattern, mg per g protein (FAO/WHO/UNU 2007)
+ var REF={Lys:45,SAA:22,Thr:23,Trp:6,Leu:59,Ile:30,Val:39,His:15,AAA:38};
+ // Order shown, most story-relevant first
+ var AAS=[
+  {k:'Lys',nm:'Lysine'},{k:'SAA',nm:'Methionine + cysteine'},{k:'Thr',nm:'Threonine'},
+  {k:'Trp',nm:'Tryptophan'},{k:'Leu',nm:'Leucine'},{k:'Ile',nm:'Isoleucine'},
+  {k:'Val',nm:'Valine'},{k:'His',nm:'Histidine'},{k:'AAA',nm:'Phenylalanine + tyrosine'}
+ ];
+ // Food amino-acid composition, mg per g protein (representative published values)
+ var FOODS=[
+  {k:'wheat', nm:'Wheat (bread)', ic:'🍞', grp:'grain',  aa:{Lys:24,SAA:40,Thr:29,Trp:12,Leu:71,Ile:38,Val:45,His:23,AAA:79}},
+  {k:'rice',  nm:'Rice',          ic:'🍚', grp:'grain',  aa:{Lys:36,SAA:47,Thr:37,Trp:12,Leu:84,Ile:43,Val:62,His:24,AAA:100}},
+  {k:'corn',  nm:'Corn (maize)',  ic:'🌽', grp:'grain',  aa:{Lys:28,SAA:42,Thr:36,Trp:6.5,Leu:124,Ile:36,Val:47,His:30,AAA:86}},
+  {k:'sesame',nm:'Sesame / tahini',ic:'🫘', grp:'seed',  aa:{Lys:29,SAA:51,Thr:38,Trp:18,Leu:72,Ile:40,Val:51,His:26,AAA:82}},
+  {k:'beans', nm:'Beans',         ic:'🫘', grp:'legume', aa:{Lys:70,SAA:16,Thr:42,Trp:11,Leu:82,Ile:45,Val:52,His:28,AAA:88}},
+  {k:'lentil',nm:'Lentils',       ic:'🫛', grp:'legume', aa:{Lys:70,SAA:16,Thr:37,Trp:9,Leu:72,Ile:43,Val:51,His:28,AAA:84}},
+  {k:'peanut',nm:'Peanuts',       ic:'🥜', grp:'legume', aa:{Lys:36,SAA:25,Thr:27,Trp:10,Leu:64,Ile:34,Val:42,His:25,AAA:100}},
+  {k:'soy',   nm:'Soy',           ic:'🌱', grp:'legume', aa:{Lys:63,SAA:26,Thr:39,Trp:13,Leu:82,Ile:48,Val:50,His:26,AAA:88}}
+ ];
+ var PRESETS=[
+  {a:'rice',  b:'beans',  t:'Rice + Beans'},
+  {a:'wheat', b:'lentil', t:'Bread + Lentils'},
+  {a:'sesame',b:'beans',  t:'Tahini + Beans'},
+  {a:'corn',  b:'beans',  t:'Corn + Beans'},
+  {a:'peanut',b:'wheat',  t:'Peanut + Bread'}
+ ];
+ var selA='rice', selB='beans', blend=50;
+ function byKey(k){ for(var i=0;i<FOODS.length;i++){ if(FOODS[i].k===k) return FOODS[i]; } }
+ function limitOf(aa){ var mn=99,mk=''; AAS.forEach(function(a){ var r=aa[a.k]/REF[a.k]; if(r<mn){mn=r;mk=a.k;} }); return {r:mn,k:mk}; }
+ function combined(){ var A=byKey(selA).aa,B=byKey(selB).aa,wB=blend/100,wA=1-wB,c={};
+   AAS.forEach(function(a){ c[a.k]=wA*A[a.k]+wB*B[a.k]; }); return c; }
+
+ // ---- bar chart ----
+ var X0=92, MAXR=1.6, SCALE=155/MAXR, RH=26, coral='#d1495b', gold='#b8862f', green='#2f9e5b';
+ function draw(c,lim){ var refX=X0+SCALE, s='';
+   // reference line
+   s+='<line x1="'+refX+'" y1="8" x2="'+refX+'" y2="'+(8+AAS.length*RH)+'" stroke="#2f6f9f" stroke-width="1.5" stroke-dasharray="4 3"/>';
+   s+='<text x="'+refX+'" y="'+(6+AAS.length*RH+11)+'" font-size="9" fill="#2f6f9f" text-anchor="middle" font-weight="700">100% requirement</text>';
+   AAS.forEach(function(a,i){ var r=c[a.k]/REF[a.k], y=12+i*RH, len=Math.min(r,MAXR)*SCALE,
+     col=(a.k===lim.k)?coral:(r<1?gold:green);
+     s+='<text x="'+(X0-6)+'" y="'+(y+12)+'" font-size="10" fill="#5f5340" text-anchor="end" font-weight="700">'+a.k+'</text>';
+     s+='<rect x="'+X0+'" y="'+y+'" width="155" height="16" rx="3" fill="#f0e8d8"/>';
+     s+='<rect x="'+X0+'" y="'+y+'" width="'+len.toFixed(1)+'" height="16" rx="3" fill="'+col+'"/>';
+     var pct=Math.round(r*100), tx=X0+len+4;
+     s+='<text x="'+tx.toFixed(1)+'" y="'+(y+12)+'" font-size="9.5" fill="'+(a.k===lim.k?coral:'#8d8270')+'" font-weight="'+(a.k===lim.k?'800':'600')+'">'+pct+'%</text>';
+   });
+   return s; }
+
+ function render(){ var A=byKey(selA),B=byKey(selB),c=combined(),lim=limitOf(c),raw=Math.round(lim.r*100),score=Math.min(100,raw);
+   $("art").innerHTML=draw(c,lim);
+   $("score").innerHTML=score+'%';
+   var limName=''; AAS.forEach(function(a){ if(a.k===lim.k) limName=a.nm; });
+   var complete=score>=100;
+   var pill=$("limpill");
+   pill.className='pill '+(complete?'normal':'low');
+   pill.innerHTML=complete?'meets the pattern':'limited by '+lim.k;
+   // blend labels
+   $("blabA").innerHTML=A.ic+' '+A.nm; $("blabB").innerHTML=B.nm+' '+B.ic;
+   $("pA").innerHTML=(100-blend); $("pB").innerHTML=blend;
+   // stage
+   $("stage").style.background=complete?green:'var(--teal)';
+   $("stage").innerHTML=A.nm+' + '+B.nm+'<small>amino-acid score '+score+'%'+(complete?' · pattern met':' · limited by '+limName)+'</small>';
+   // info
+   var limA=A.aa[lim.k]/REF[lim.k], limB=B.aa[lim.k]/REF[lim.k];
+   var msg;
+   if(complete){
+     msg='<span class="n">The gap is filled</span>Blended together, <b>every</b> indispensable amino acid now reaches the reference pattern. Where one food ran low in <b>'+limName+'</b>, the other supplied plenty &mdash; that is what <b>complementary</b> means: their shortfalls do not overlap.';
+   } else {
+     var both=(limA<1&&limB<1);
+     if(both){
+       msg='<span class="n">Shortfalls overlap</span>Both foods run low in the same amino acid, <b>'+limName+'</b> ('+Math.round(limA*100)+'% and '+Math.round(limB*100)+'%), so blending them cannot lift it to the line. Two foods complement each other only when their limiting amino acids <b>differ</b> &mdash; try pairing a grain or seed with beans, lentils, or soy.';
+     } else {
+       var low=(limA<limB)?A:B, high=(limA<limB)?B:A;
+       msg='<span class="n">Still short on '+lim.k+'</span>'+low.nm+' is the food running low in <b>'+limName+'</b>, and '+high.nm+' is rich in it. Slide more of the protein toward '+high.nm+' to lift the '+lim.k+' bar toward the requirement line.';
+     }
+   }
+   $("info").innerHTML=msg;
+   renderLists();
+ }
+
+ function itHTML(list,cur){ return FOODS.map(function(f){
+     var l=limitOf(f.aa), tag=(l.r>=1)?'meets pattern alone':'limiting: '+l.k;
+     return '<button class="it'+(f.k===cur?' on':'')+'" data-k="'+f.k+'"><span class="nm">'+f.ic+' '+f.nm+'</span><span class="s">'+tag+'</span></button>';
+   }).join(''); }
+ function renderLists(){
+   $("listA").innerHTML=itHTML('A',selA);
+   $("listB").innerHTML=itHTML('B',selB);
+   document.querySelectorAll('#listA .it').forEach(function(b){ b.onclick=function(){ selA=b.dataset.k; render(); }; });
+   document.querySelectorAll('#listB .it').forEach(function(b){ b.onclick=function(){ selB=b.dataset.k; render(); }; });
+ }
+
+ $("blend").oninput=function(){ blend=+this.value; render(); };
+ $("presets").innerHTML=PRESETS.map(function(p){ return '<button data-a="'+p.a+'" data-b="'+p.b+'">'+p.t+'</button>'; }).join('');
+ document.querySelectorAll('#presets button').forEach(function(b){
+   b.onclick=function(){ selA=b.dataset.a; selB=b.dataset.b; blend=50; $("blend").value=50; render(); };
+ });
+
+ render();
+})();
+</script>
+</body>
+</html>

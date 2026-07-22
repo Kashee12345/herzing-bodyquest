@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Endemic vs Epidemic vs Pandemic</title>
+<meta name="description" content="Interactive case curve comparing sporadic, endemic, epidemic, and pandemic disease patterns against an expected baseline. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:1.05fr .95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.lgd{display:flex;gap:15px;justify-content:center;align-items:center;margin-top:8px;font-size:11px;color:var(--soft);font-weight:600;flex-wrap:wrap;}
+.lgd span{display:inline-flex;align-items:center;gap:6px;}
+.lgd i{display:inline-block;height:0;vertical-align:middle;}
+.mapcap{font-size:12px;text-align:center;color:var(--teal-dk);font-weight:700;margin-top:4px;}
+.seg button{padding:11px 4px;line-height:1.15;}
+#info .loc b{color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 11</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 11</div>
+  <h1>Endemic · Epidemic · Pandemic</h1>
+  <div class="intro">Three words describe how much disease is around and where. The prefixes give it away: <b>en-</b>demic (always <b>in</b> a population), <b>epi-</b>demic (rising <b>above</b> the usual level), <b>pan-</b>demic (spread across <b>all</b> the world). Tap a level and watch the case curve.</div>
+</header>
+<div class="wrap">
+  <div><div class="card">
+    <h2 id="cardTitle">The case curve</h2>
+    <svg viewBox="0 0 300 176" aria-label="epidemic case curve over time"><g id="chart"></g></svg>
+    <div class="lgd">
+      <span><i id="csw" style="border-top:3px solid #6d3f9c;width:18px"></i> reported cases</span>
+      <span><i style="border-top:2px dashed #9a8bb5;width:18px"></i> expected baseline</span>
+    </div>
+    <svg viewBox="0 0 300 74" aria-label="geographic spread map" style="margin-top:12px"><g id="map"></g></svg>
+    <div class="mapcap" id="mapcap">Geographic spread</div>
+  </div></div>
+  <div>
+    <div id="stage">The four levels<small>tap one to compare</small></div>
+    <div class="card">
+      <div class="seg" id="seg"></div>
+      <div id="info"><span class="n">Same disease, different words</span>These labels are about <b>how many</b> cases and <b>how widespread</b> — not how severe. A disease can be endemic in one place, flare into an epidemic when cases climb <b>above the expected baseline</b>, and become a pandemic once that spread crosses many countries. Tap a level below to see its curve.</div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var ORDER=['sporadic','endemic','epidemic','pandemic'];
+ var MAP={
+  sporadic:{nm:'Sporadic',tag:'occasional',col:'#2f6f9f',
+   sub2:'occasional, irregular cases',
+   mapcap:'A few scattered places — no steady pattern',
+   def:'A disease that appears <b>only occasionally and irregularly</b>, with no predictable pattern. Cases pop up here and there and do not sustain themselves in the population.',
+   feat:'A flat curve near zero with a few isolated blips — long gaps between cases.',
+   ex:['Tetanus','Rabies','Botulism'],
+   nurse:'Because these cases are rare, even <b>one</b> can be important — a single case of measles or a foodborne illness may signal a bigger problem and is often reportable to public health.'},
+  endemic:{nm:'Endemic',tag:'always present',col:'#2f9e5b',
+   sub2:'constant, expected baseline',
+   mapcap:'One region — steadily, always present',
+   def:'A disease that is <b>constantly present at a steady, expected level</b> in a particular population or geographic area. This baseline is what public health expects week to week.',
+   feat:'Cases wobble around the dashed baseline — never surging, never disappearing.',
+   ex:['Common cold','Chickenpox (pre-vaccine)','Malaria in tropical regions'],
+   nurse:'Knowing a disease\'s endemic baseline is what lets you <b>recognize when numbers rise abnormally</b>. Endemic patterns guide routine screening and regional vaccination.'},
+  epidemic:{nm:'Epidemic',tag:'above baseline',col:'#b8862f',
+   sub2:'a surge above the baseline',
+   mapcap:'One region — a sudden surge',
+   def:'A <b>sudden rise in cases clearly above the expected baseline</b> in a community or region. When it is sharply localized it is often called an <b>outbreak</b>.',
+   feat:'A tall peak that climbs well above the baseline line, then falls back down.',
+   ex:['Seasonal flu surge','Measles outbreak','Cholera after a flood'],
+   nurse:'An epidemic triggers <b>outbreak investigation, isolation precautions, and surge staffing</b>. Catching the rise above baseline early is the key to containing it.'},
+  pandemic:{nm:'Pandemic',tag:'worldwide',col:'#d1495b',
+   sub2:'an epidemic gone global',
+   mapcap:'Across the whole world',
+   def:'An <b>epidemic that has spread across several countries or continents</b>, affecting large numbers of people. Scale and geography define it — <b>not</b> how deadly the disease is.',
+   feat:'Epidemic-sized peaks repeating in successive waves, everywhere at once.',
+   ex:['COVID-19','1918 influenza','HIV/AIDS'],
+   nurse:'Pandemics strain health systems worldwide and demand coordinated infection control, <b>PPE conservation, and mass vaccination</b>. Remember: spread makes it a pandemic, severity does not.'}
+ };
+ var SCOPE={
+  sporadic:[0,0.30,0,0.28,0.30,0],
+  endemic:[0,0,0.85,0,0,0],
+  epidemic:[0,0,0.95,0,0,0],
+  pandemic:[0.9,0.9,0.9,0.9,0.9,0.9]
+ };
+ var N=24, PL=42, PR=286, PT=16, PB=148, CMAX=64, BASE=10;
+ function xF(i){return (PL+(i/(N-1))*(PR-PL)).toFixed(1);}
+ function yF(c){c=c<0?0:(c>CMAX?CMAX:c); return (PB-(c/CMAX)*(PB-PT)).toFixed(1);}
+ function series(k){var v=[],i;
+  if(k==='sporadic'){for(i=0;i<N;i++){v.push(0);} v[3]=5;v[4]=2;v[7]=1;v[11]=6;v[12]=3;v[18]=4;v[19]=1;}
+  else if(k==='endemic'){for(i=0;i<N;i++){v.push(9+Math.round(3*Math.sin(i*0.9)));}}
+  else if(k==='epidemic'){for(i=0;i<N;i++){v.push(Math.round(8+52*Math.exp(-Math.pow((i-12)/3.4,2))));}}
+  else{for(i=0;i<N;i++){v.push(Math.round(6+48*Math.exp(-Math.pow((i-5)/2.2,2))+56*Math.exp(-Math.pow((i-13)/2.6,2))+42*Math.exp(-Math.pow((i-20)/2.4,2))));}}
+  return v;
+ }
+ function chart(k){
+  var yb=yF(BASE), midx=((PL+PR)/2), midy=((PT+PB)/2), s='';
+  s+='<line x1="'+PL+'" y1="'+PT+'" x2="'+PL+'" y2="'+PB+'" stroke="#d8cfe6" stroke-width="1.5"/>';
+  s+='<line x1="'+PL+'" y1="'+PB+'" x2="'+PR+'" y2="'+PB+'" stroke="#d8cfe6" stroke-width="1.5"/>';
+  s+='<line x1="'+PL+'" y1="'+yb+'" x2="'+PR+'" y2="'+yb+'" stroke="#9a8bb5" stroke-width="1.6" stroke-dasharray="5 4"/>';
+  s+='<text x="'+(PR-1)+'" y="'+(yb-4)+'" font-size="8" text-anchor="end" fill="#7a6f92" font-family="Inter,sans-serif" font-weight="700">expected baseline</text>';
+  s+='<text x="'+midx+'" y="170" font-size="9" text-anchor="middle" fill="#837a94" font-family="Inter,sans-serif" font-weight="700">time →</text>';
+  s+='<text x="13" y="'+midy+'" font-size="9" text-anchor="middle" fill="#837a94" font-family="Inter,sans-serif" font-weight="700" transform="rotate(-90 13 '+midy+')">cases</text>';
+  if(!k){
+   s+='<text x="'+midx+'" y="'+midy+'" font-size="11" text-anchor="middle" fill="#b9a9cf" font-family="Inter,sans-serif" font-weight="700">tap a level below</text>';
+   return s;
+  }
+  var m=MAP[k], v=series(k), i, mx=0;
+  for(i=1;i<N;i++){ if(v[i]>v[mx]){mx=i;} }
+  var pts=v.map(function(c,i){return xF(i)+','+yF(c);}).join(' ');
+  s+='<polygon points="'+xF(0)+','+PB+' '+pts+' '+xF(N-1)+','+PB+'" fill="'+m.col+'" fill-opacity="0.16"/>';
+  s+='<polyline points="'+pts+'" fill="none" stroke="'+m.col+'" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>';
+  s+='<circle cx="'+xF(mx)+'" cy="'+yF(v[mx])+'" r="3.6" fill="'+m.col+'"/>';
+  return s;
+ }
+ var TILES=[[12,8],[106,8],[200,8],[12,40],[106,40],[200,40]];
+ function regionmap(k){
+  var s='', intens=k?SCOPE[k]:null;
+  for(var t=0;t<6;t++){
+   var p=TILES[t], o=intens?intens[t]:0, col=k?MAP[k].col:'#c9bedd';
+   var hot=o>0.2;
+   s+='<rect x="'+p[0]+'" y="'+p[1]+'" width="88" height="26" rx="6" fill="'+col+'" fill-opacity="'+(o||0.06)+'" stroke="'+(hot?col:'#e6e0ee')+'" stroke-width="'+(hot?1.6:1)+'"/>';
+  }
+  return s;
+ }
+ var cur='';
+ function seg(){
+  $("seg").innerHTML=ORDER.map(function(k){var m=MAP[k];return '<button data-k="'+k+'"'+(k===cur?' class="on"':'')+'>'+m.nm+'<small>'+m.tag+'</small></button>';}).join('');
+  document.querySelectorAll('#seg button').forEach(function(b){ b.onclick=function(){ pick(b.dataset.k); }; });
+ }
+ function pick(k){
+  cur=k; var m=MAP[k];
+  $("chart").innerHTML=chart(k);
+  $("map").innerHTML=regionmap(k);
+  $("csw").style.borderTopColor=m.col;
+  $("cardTitle").innerHTML=m.nm+' — case curve';
+  $("mapcap").innerHTML=m.mapcap;
+  $("stage").style.background=m.col;
+  $("stage").innerHTML=m.nm+'<small>'+m.sub2+'</small>';
+  $("info").innerHTML='<span class="n">'+m.nm+'</span>'+m.def+
+    '<div class="ex">'+m.ex.map(function(e){return '<span>'+e+'</span>';}).join('')+'</div>'+
+    '<div class="loc"><b>On the curve:</b> '+m.feat+'</div>'+
+    '<div class="mnem"><b>Clinical relevance:</b> '+m.nurse+'</div>';
+  seg();
+ }
+ $("chart").innerHTML=chart('');
+ $("map").innerHTML=regionmap('');
+ seg();
+})();
+</script>
+</body>
+</html>

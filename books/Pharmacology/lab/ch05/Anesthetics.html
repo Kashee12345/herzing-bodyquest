@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Anesthetics: Stages &amp; Nerve Blockade</title>
+<meta name="description" content="Interactive tour of the four stages of general anesthesia and how local anesthetics block the nerve. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:1fr 1fr;}
+.slider{width:100%;-webkit-appearance:none;appearance:none;height:9px;border-radius:6px;outline:none;margin:12px 0 2px;cursor:pointer;
+  background:linear-gradient(90deg,#2f9e5b 0 25%,#b8862f 25% 45%,#2f5f9e 45% 85%,#d1495b 85% 100%);}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid var(--teal-dk);cursor:pointer;box-shadow:0 2px 7px rgba(30,45,70,.35);}
+.slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--teal-dk);cursor:pointer;}
+.slab{display:flex;justify-content:space-between;font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);}
+.vit{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:11px;}
+.vit div{border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:#fff;font-size:9.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);}
+.vit div .v{display:block;font-size:12.5px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--ink);margin-top:2px;}
+.vit div.bad{border-color:#f0c9d0;background:#fdf3f4;} .vit div.bad .v{color:#b23145;}
+.vit div.good{border-color:#c9e6d5;background:#f2faf5;} .vit div.good .v{color:#237a45;}
+.hide{display:none;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 5</div>
+  <h1>Anesthetics: Stages &amp; Nerve Blockade</h1>
+  <div class="intro">Two very different jobs. A <b>general anesthetic</b> shuts the brain down in an orderly sequence you can read at the bedside. A <b>local anesthetic</b> never reaches the brain at all &mdash; it stops the signal at the nerve, and the patient stays wide awake. Slide a patient down through the stages, then explore the block.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">General anesthesia</h2>
+    <svg viewBox="0 0 220 210" aria-label="anesthesia diagram"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">Anesthetics<small>choose a mode</small></div>
+    <div class="card">
+      <div class="modeseg">
+        <button id="mGen" class="on">General</button>
+        <button id="mLoc">Local</button>
+      </div>
+
+      <div id="panGen">
+        <div class="slab"><span>Awake</span><span id="depthTxt">Depth 10%</span><span>Overdose</span></div>
+        <input type="range" min="0" max="100" value="10" step="1" class="slider" id="depth" aria-label="anesthetic depth">
+        <div class="vit">
+          <div id="t1">Pupils<span class="v" id="v1">—</span></div>
+          <div id="t2">Breathing<span class="v" id="v2">—</span></div>
+          <div id="t3">Reflexes<span class="v" id="v3">—</span></div>
+          <div id="t4">Muscle tone<span class="v" id="v4">—</span></div>
+        </div>
+      </div>
+
+      <div id="panLoc" class="hide"><div class="list" id="list"></div></div>
+
+      <div id="info"></div>
+      <div class="mnem" id="mnem"></div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------------- GENERAL ANESTHESIA — Guedel's stages ---------------- */
+ var ST=[
+  {k:1,t:'Stage I · Analgesia',lo:0,hi:25,col:'#2f9e5b',pup:3.2,
+   pupT:'Normal, reactive',resT:'Regular',resC:'',refT:'Intact',refC:'',tonT:'Normal',tonC:'',
+   d:'From the first dose until <b>loss of consciousness</b>. The patient is drowsy and dizzy, pain sensation is blunted, and they can still answer you. <b>Hearing is exaggerated and is the last sense to go</b> &mdash; everything said in the room is heard.',
+   n:'Nurse: shut the door, kill the chatter, no report at the bedside. Stay with the patient and keep a hand on them.'},
+  {k:2,t:'Stage II · Excitement',lo:25,hi:45,col:'#b8862f',pup:6.5,
+   pupT:'Dilated',resT:'Irregular · breath-holding',resC:'bad',refT:'Exaggerated',refC:'bad',tonT:'Tense · struggling',tonC:'bad',
+   d:'From loss of consciousness to the return of <b>regular automatic breathing</b>. Breathing is irregular, the patient may shout, struggle or retch, pupils dilate, and heart rate and blood pressure climb. This is the <b>most dangerous stage</b> &mdash; laryngospasm, vomiting and aspiration live here, so the team drives through it as fast as possible.',
+   n:'Nurse: no noise, no touching, no stimulation. Suction on and in your hand, side rails up, and hands ready to protect the patient from their own movements.'},
+  {k:3,t:'Stage III · Surgical anesthesia',lo:45,hi:85,col:'#2f5f9e',pup:0,
+   pupT:'Constricted → dilating',resT:'Regular · shallow',resC:'good',refT:'Lost (lash → lid → gag)',refC:'',tonT:'Relaxed',tonC:'good',
+   d:'From the return of regular breathing to the <b>cessation of spontaneous respiration</b>, divided into <b>four planes</b>. Breathing is regular and shallow, the jaw drops, skeletal muscle relaxes, and reflexes disappear in order. Pupils are constricted in the light planes and <b>progressively dilate as the planes deepen</b> &mdash; a dilating pupil here is a warning, not a comfort. <b>Surgery is done in this stage.</b>',
+   n:'Nurse: prep and position only once this plane is reached. Reflexes are gone — tape the eyes, pad every pressure point, guard the airway, and warm the patient (anesthesia wrecks thermoregulation).'},
+  {k:4,t:'Stage IV · Medullary depression',lo:85,hi:101,col:'#d1495b',pup:7.6,
+   pupT:'Fixed · widely dilated',pupC:'bad',resT:'Absent',resC:'bad',refT:'None',refC:'bad',tonT:'Flaccid',tonC:'bad',
+   d:'The <b>vital centers of the medulla are paralyzed</b>. Respirations stop, pupils go fixed and widely dilated, blood pressure falls and the pulse turns weak and thready. Cardiac arrest and death follow without immediate rescue. This is an <b>overdose &mdash; never a goal</b>.',
+   n:'Team: stop the anesthetic agent immediately, ventilate with 100% oxygen, and support the circulation with fluids and vasopressors.'}
+ ];
+ function stageAt(p){ for(var i=0;i<ST.length;i++){ if(p>=ST[i].lo&&p<ST[i].hi) return ST[i]; } return ST[3]; }
+ function planeAt(p){ var n=Math.floor((p-45)/10)+1; return n<1?1:(n>4?4:n); }
+ function pupilAt(p,s){ if(s.k!==3) return s.pup; return [2.4,2.9,4.0,5.2][planeAt(p)-1]; }
+
+ function wave(kind){
+   var y0=182,x=58,pts='',i;
+   if(kind==='flat'){ return '<path d="M58 '+y0+' L212 '+y0+'" stroke="#d1495b" stroke-width="2.5" fill="none"/><text x="135" y="176" font-size="9" font-weight="700" fill="#d1495b" text-anchor="middle">no respiratory effort</text>'; }
+   var amp = kind==='shallow'?5:(kind==='wild'?13:9);
+   for(i=0;i<=154;i+=2){
+     var t=i/154, y;
+     if(kind==='wild'){ y = y0 - amp*Math.sin(t*30)*Math.sin(t*7) * (t>0.45&&t<0.6?0.05:1); }
+     else { y = y0 - amp*Math.sin(t*(kind==='shallow'?26:16)); }
+     pts += (i===0?'M':'L')+(x+i)+' '+y.toFixed(1)+' ';
+   }
+   var col = kind==='wild'?'#b8862f':(kind==='shallow'?'#2f5f9e':'#2f9e5b');
+   return '<path d="'+pts+'" stroke="'+col+'" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
+ }
+
+ function drawGA(p){
+   var s=$("art"), st=stageAt(p), out='';
+   var yTop=24,yBot=190,H=yBot-yTop;
+   var yOf=function(v){ return yTop + Math.min(100,v)/100*H; };
+   /* depth gauge */
+   out+='<text x="23" y="17" font-size="8" font-weight="800" fill="#78828f" text-anchor="middle" letter-spacing="1">DEPTH</text>';
+   out+='<rect x="12" y="'+yTop+'" width="22" height="'+H+'" rx="6" fill="#eef2f8" stroke="#dfe4ee"/>';
+   for(var i=0;i<ST.length;i++){
+     var a=yOf(ST[i].lo), b=yOf(Math.min(100,ST[i].hi)), on=(ST[i].k===st.k);
+     out+='<rect x="12" y="'+a.toFixed(1)+'" width="22" height="'+(b-a).toFixed(1)+'" fill="'+ST[i].col+'" opacity="'+(on?0.95:0.28)+'"/>';
+     out+='<text x="23" y="'+((a+b)/2+3.5).toFixed(1)+'" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle">'+['I','II','III','IV'][i]+'</text>';
+   }
+   out+='<rect x="12" y="'+yTop+'" width="22" height="'+H+'" rx="6" fill="none" stroke="#c9d2e0"/>';
+   /* marker */
+   var ym=yOf(p);
+   out+='<line x1="12" y1="'+ym.toFixed(1)+'" x2="212" y2="'+ym.toFixed(1)+'" stroke="'+st.col+'" stroke-width="1.4" stroke-dasharray="3 4" opacity=".65"/>';
+   out+='<polygon points="36,'+ym.toFixed(1)+' 47,'+(ym-6).toFixed(1)+' 47,'+(ym+6).toFixed(1)+'" fill="#232a36"/>';
+
+   /* table + patient */
+   out+='<rect x="62" y="128" width="150" height="9" rx="4" fill="#c9d2e0"/>';
+   out+='<rect x="104" y="103" width="108" height="27" rx="13" fill="#dbe6f2" stroke="#c3d2e4"/>';
+   out+='<circle cx="86" cy="111" r="19" fill="#f3d9c9" stroke="#e0bda6"/>';
+   /* eye + pupil */
+   var pr=pupilAt(p,st);
+   out+='<ellipse cx="92" cy="106" rx="10" ry="7" fill="#fff" stroke="#b9a08e" stroke-width="1"/>';
+   out+='<circle cx="92" cy="106" r="'+(pr+2.2).toFixed(1)+'" fill="#7fa3c4"/>';
+   out+='<circle cx="92" cy="106" r="'+pr.toFixed(1)+'" fill="#1a1f2b"/>';
+   out+='<circle cx="'+(92-pr*0.4).toFixed(1)+'" cy="'+(106-pr*0.4).toFixed(1)+'" r="1.3" fill="#fff" opacity=".8"/>';
+   out+='<text x="92" y="140" font-size="8" font-weight="700" fill="#78828f" text-anchor="middle">pupil</text>';
+
+   /* stage-specific flourishes */
+   if(st.k===1){
+     out+='<path d="M70 100 q-9 11 0 22" stroke="#2f9e5b" stroke-width="2" fill="none"/>';
+     out+='<path d="M64 96 q-13 15 0 30" stroke="#2f9e5b" stroke-width="2" fill="none" opacity=".6"/>';
+     out+='<text x="150" y="88" font-size="9" font-weight="700" fill="#2f9e5b" text-anchor="middle">still hears you</text>';
+   } else if(st.k===2){
+     out+='<text x="150" y="88" font-size="9" font-weight="700" fill="#b8862f" text-anchor="middle">struggling · retching risk</text>';
+     out+='<path d="M118 98 l6 -9 M146 96 l3 -10 M176 98 l7 -9" stroke="#b8862f" stroke-width="2.2" stroke-linecap="round"/>';
+     out+='<path d="M66 92 q-8 -8 -2 -14 M106 90 q6 -9 14 -6" stroke="#b8862f" stroke-width="2" fill="none" stroke-linecap="round"/>';
+   } else if(st.k===3){
+     out+='<text x="155" y="88" font-size="9" font-weight="700" fill="#2f5f9e" text-anchor="middle">surgical plane '+planeAt(p)+' of 4</text>';
+     for(var q=0;q<4;q++){
+       var on2=(q<planeAt(p));
+       out+='<rect x="'+(120+q*22)+'" y="94" width="17" height="6" rx="3" fill="'+(on2?'#2f5f9e':'#dfe4ee')+'"/>';
+     }
+   } else {
+     out+='<text x="150" y="88" font-size="9.5" font-weight="800" fill="#d1495b" text-anchor="middle">✕ MEDULLA PARALYZED</text>';
+     out+='<path d="M116 96 l14 14 M130 96 l-14 14" stroke="#d1495b" stroke-width="2.5" stroke-linecap="round"/>';
+   }
+
+   /* respiration trace */
+   out+='<text x="58" y="160" font-size="8" font-weight="800" fill="#78828f" letter-spacing="1">RESPIRATION</text>';
+   out+=wave(st.k===1?'reg':(st.k===2?'wild':(st.k===3?'shallow':'flat')));
+   s.innerHTML=out;
+ }
+
+ function tile(id,vid,txt,cls){ $(id).className=cls||''; $(vid).innerHTML=txt; }
+
+ function renderGA(){
+   var p=+$("depth").value, st=stageAt(p);
+   drawGA(p);
+   $("depthTxt").innerHTML='Depth '+p+'%';
+   $("cardTitle").innerHTML=st.t;
+   $("stage").style.background=st.col;
+   $("stage").innerHTML=st.t+'<small>'+(st.k===3?('plane '+planeAt(p)+' of 4 · where surgery happens'):(st.k===1?'induction · consciousness fading':(st.k===2?'the dangerous stage — pass through fast':'overdose · rescue now')))+'</small>';
+   tile('t1','v1',st.k===3?(planeAt(p)<3?'Constricted':'Dilating — deepening'):st.pupT, st.pupC||(st.k===3&&planeAt(p)>=3?'bad':''));
+   tile('t2','v2',st.resT,st.resC);
+   tile('t3','v3',st.refT,st.refC);
+   tile('t4','v4',st.tonT,st.tonC);
+   $("info").innerHTML='<span class="n">'+st.t+'</span>'+st.d+'<div class="loc">'+st.n+'</div>';
+   $("mnem").innerHTML='<b>Guedel\'s four stages: A-E-S-M</b> — <b>A</b>nalgesia, <b>E</b>xcitement, <b>S</b>urgical, <b>M</b>edullary. Modern <b>balanced anesthesia</b> (an IV induction agent such as propofol + an inhaled agent + an opioid + a neuromuscular blocker) blurs the stages and races through Stage II — but the signs still tell you where the patient is. <b>Emergence runs the stages in reverse</b>, so the patient climbs back up through Stage II on the way out: that is why the PACU is kept quiet.';
+   $("note").innerHTML='<b>Stage IV is an overdose, not a destination.</b> Also watch for <b>malignant hyperthermia</b> — triggered by inhaled volatile agents and succinylcholine. The <b>earliest sign is a rising end-tidal CO₂</b>, along with masseter (jaw) rigidity and unexplained tachycardia; <b>fever is a late sign</b>. Antidote: <b>dantrolene</b>, plus stop the trigger, 100% oxygen, and active cooling. <b>Neuromuscular blockers paralyze but do not anesthetize</b> — given without an adequate anesthetic, the patient is awake, aware, and unable to signal.';
+ }
+
+ /* ---------------- LOCAL ANESTHETICS ---------------- */
+ var L=[
+  {k:'na',ic:'⚡',nm:'Sodium channel blockade',ct:'the actual mechanism',col:'#2f5f9e',
+   d:'Local anesthetics cross the axon membrane and bind <b>voltage-gated sodium channels from the inside</b>. Sodium can\'t rush in, the membrane never reaches threshold, and <b>no action potential fires</b> — the impulse simply dies where the drug was injected. They bind most avidly to channels that are firing, so <b>busy nerves block fastest</b>.',
+   n:'Nothing is "asleep." The brain is untouched — the message never leaves the nerve. Your patient is fully awake and listening to every word in the room.'},
+  {k:'order',ic:'🧦',nm:'Order of blockade',ct:'autonomic → pain → touch → motor',col:'#7a5a8a',
+   d:'Small, thinly myelinated fibers are blocked before big ones, so function is lost in a predictable order: <b>autonomic → pain → temperature → touch → deep pressure → motor</b>. <b>Recovery runs in reverse</b>: motor returns first, deep pressure, touch, temperature, cold, and <b>pain sensation returns last</b>.',
+   n:'Two nursing consequences. (1) <b>Deep pressure is felt after pain is gone</b> — warn the patient that pushing and tugging are normal and do <i>not</i> mean the block failed. (2) On the way out, <b>they can move before they can feel</b> — protect the numb part from burns, pressure and injury until sensation is fully back.'},
+  {k:'ph',ic:'🔥',nm:'Why it fails in an abscess',ct:'acidic tissue traps the drug',col:'#d1495b',
+   d:'Local anesthetics are <b>weak bases</b> that must be <b>un-ionized</b> to slip through the nerve membrane. Infected, inflamed tissue is <b>acidic</b>, which pushes the drug into its ionized form. Ionized drug can\'t cross — so <b>the block is weak or fails outright</b> over an abscess.',
+   n:'When a patient says "I can still feel that" over infected tissue, believe them — this is chemistry, not drama. Expect the prescriber to block <b>proximal to</b> the infected area instead of injecting into it.'},
+  {k:'class',ic:'🔤',nm:'Esters vs amides',ct:'count the i\'s before -caine',col:'#b8862f',
+   d:'<b>Esters</b> — proca<b>i</b>ne, chloroproca<b>i</b>ne, tetraca<b>i</b>ne, benzoca<b>i</b>ne — have <b>one "i"</b>. They are broken down in plasma by <b>pseudocholinesterase</b> into <b>PABA</b>, so <b>allergy is more common</b>. <b>Amides</b> — l<b>i</b>doca<b>i</b>ne, bupivacaine, ropivacaine, mepivacaine, prilocaine — have <b>two "i"s</b>. They are metabolized by the <b>liver</b>, so true allergy is rare but <b>doses must be reduced in hepatic impairment</b>.',
+   n:'A reported "-caine allergy" usually means an <b>ester</b>. Get the exact drug name and the exact reaction before anything is given — and remember benzocaine throat sprays and sunscreens are esters too.'},
+  {k:'epi',ic:'💉',nm:'Adding epinephrine',ct:'keeps the drug where you put it',col:'#2f9e5b',
+   d:'Epinephrine mixed into the solution <b>constricts local vessels</b>. The drug stays at the site instead of washing into the bloodstream, which gives a <b>longer block</b>, a <b>drier field</b>, <b>less systemic toxicity</b>, and permits a <b>larger safe dose</b>.',
+   n:'Watch for tachycardia, palpitations and a rise in blood pressure — it is absorbed too. Use cautiously in cardiac disease and uncontrolled hypertension. Classic teaching cautions against epinephrine-containing solutions in <b>end-artery areas</b> (fingers, toes, ears, nose), and it must <b>never</b> be used for IV regional anesthesia.'},
+  {k:'last',ic:'🚨',nm:'Systemic toxicity (LAST)',ct:'CNS first, then the heart',col:'#8a2a3a',
+   d:'If enough drug reaches the blood — usually an accidental <b>intravascular injection</b> or too large a dose — toxicity climbs a ladder. <b>CNS first</b>: circumoral numbness and tingling, <b>metallic taste</b>, <b>tinnitus</b>, lightheadedness, blurred vision → muscle twitching → <b>seizures</b> → CNS depression and coma. <b>Cardiovascular next</b>: hypotension, dysrhythmias, <b>cardiac arrest</b>. <b>Bupivacaine is the most cardiotoxic.</b>',
+   n:'Aspirate before injecting, use the lowest effective dose, and <b>stay and talk to the patient</b> — the earliest signs are things only they can report. Treatment: stop the injection, 100% oxygen and airway support, a <b>benzodiazepine</b> for seizures, and <b>20% lipid emulsion</b> rescue.'},
+  {k:'met',ic:'🩸',nm:'Methemoglobinemia',ct:'benzocaine · prilocaine',col:'#4a3f8a',
+   d:'<b>Benzocaine</b> (topical sprays, teething and throat products) and <b>prilocaine</b> can oxidize hemoglobin into <b>methemoglobin</b>, which cannot carry oxygen. The tell-tale sign is <b>cyanosis that does not improve with oxygen</b>, a low SpO₂ that won\'t budge on high-flow O₂, and <b>chocolate-brown blood</b>.',
+   n:'Stop the drug, give oxygen, and get help — the antidote is <b>methylene blue IV</b>. Highest risk in <b>infants</b> and in anyone with an existing anemia or G6PD-type problem. Benzocaine teething gels are not for infants.'}
+ ];
+
+ function drawL(m){
+   var o='';
+   if(m.k==='na'){
+     o+='<text x="110" y="16" font-size="9" font-weight="800" fill="#78828f" text-anchor="middle" letter-spacing="1">AXON MEMBRANE</text>';
+     o+='<rect x="14" y="60" width="192" height="26" fill="#f6e7d2" stroke="#e0c9a6"/>';
+     o+='<text x="110" y="52" font-size="9" font-weight="700" fill="#78828f" text-anchor="middle">outside the nerve</text>';
+     o+='<text x="110" y="103" font-size="9" font-weight="700" fill="#78828f" text-anchor="middle">inside the axon</text>';
+     var cx=[48,110,172];
+     for(var i=0;i<3;i++){
+       var blocked=(i!==0);
+       o+='<rect x="'+(cx[i]-13)+'" y="58" width="10" height="30" rx="4" fill="#9fb6cf"/><rect x="'+(cx[i]+3)+'" y="58" width="10" height="30" rx="4" fill="#9fb6cf"/>';
+       if(blocked){
+         o+='<circle cx="'+cx[i]+'" cy="86" r="7.5" fill="#2f5f9e"/>';
+         o+='<text x="'+cx[i]+'" y="89.5" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">LA</text>';
+         o+='<text x="'+cx[i]+'" y="47" font-size="12" text-anchor="middle" fill="#d1495b" font-weight="800">✕</text>';
+         o+='<circle cx="'+(cx[i]-2)+'" cy="34" r="6.5" fill="#b8862f"/><text x="'+(cx[i]-2)+'" y="37" font-size="6.5" font-weight="800" fill="#fff" text-anchor="middle">Na⁺</text>';
+       } else {
+         o+='<path d="M'+cx[i]+' 34 L'+cx[i]+' 92" stroke="#b8862f" stroke-width="2" stroke-dasharray="3 3"/>';
+         o+='<polygon points="'+cx[i]+',96 '+(cx[i]-4)+',88 '+(cx[i]+4)+',88" fill="#b8862f"/>';
+         o+='<circle cx="'+cx[i]+'" cy="28" r="6.5" fill="#b8862f"/><text x="'+cx[i]+'" y="31" font-size="6.5" font-weight="800" fill="#fff" text-anchor="middle">Na⁺</text>';
+         o+='<text x="'+cx[i]+'" y="112" font-size="7.5" font-weight="700" fill="#237a45" text-anchor="middle">open</text>';
+       }
+     }
+     o+='<text x="110" y="132" font-size="9" font-weight="800" fill="#78828f" text-anchor="middle" letter-spacing="1">ACTION POTENTIAL</text>';
+     o+='<path d="M14 176 L58 176 L70 146 L82 176 L206 176" stroke="#dfe4ee" stroke-width="2.5" fill="none"/>';
+     o+='<path d="M14 176 L206 176" stroke="#2f5f9e" stroke-width="3" fill="none"/>';
+     o+='<text x="130" y="168" font-size="9.5" font-weight="800" fill="#2f5f9e">nothing fires · signal stops here</text>';
+     o+='<text x="52" y="196" font-size="8" font-weight="700" fill="#a8b0bd">(unblocked spike)</text>';
+   }
+   else if(m.k==='order'){
+     o+='<text x="110" y="16" font-size="9" font-weight="800" fill="#78828f" text-anchor="middle" letter-spacing="1">NERVE BUNDLE · CROSS-SECTION</text>';
+     o+='<rect x="10" y="52" width="200" height="86" rx="20" fill="#f3eef7" stroke="#ddd0e6"/>';
+     var F=[{x:38,r:6,n:'B',l:'autonomic',s:'1st'},{x:80,r:8.5,n:'Aδ / C',l:'pain · temp',s:'2nd'},{x:130,r:12,n:'Aβ',l:'touch · pressure',s:'3rd'},{x:180,r:17,n:'Aα',l:'motor',s:'last'}];
+     for(var j=0;j<F.length;j++){
+       o+='<circle cx="'+F[j].x+'" cy="95" r="'+(F[j].r+4)+'" fill="#fff" stroke="#c9b8d6" stroke-width="2"/>';
+       o+='<circle cx="'+F[j].x+'" cy="95" r="'+F[j].r+'" fill="#7a5a8a"/>';
+       o+='<text x="'+F[j].x+'" y="'+(98)+'" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">'+F[j].n+'</text>';
+       o+='<text x="'+F[j].x+'" y="127" font-size="7.5" font-weight="700" fill="#5b4468" text-anchor="middle">'+F[j].l+'</text>';
+       o+='<text x="'+F[j].x+'" y="46" font-size="8.5" font-weight="800" fill="#7a5a8a" text-anchor="middle">'+F[j].s+'</text>';
+     }
+     o+='<text x="110" y="32" font-size="9" font-weight="800" fill="#7a5a8a" text-anchor="middle">BLOCKED IN THIS ORDER →</text>';
+     o+='<path d="M196 158 L28 158" stroke="#2f9e5b" stroke-width="2.5" fill="none"/>';
+     o+='<polygon points="22,158 32,153 32,163" fill="#2f9e5b"/>';
+     o+='<text x="110" y="180" font-size="9" font-weight="800" fill="#237a45" text-anchor="middle">← RECOVERS IN REVERSE</text>';
+     o+='<text x="110" y="196" font-size="8.5" font-weight="700" fill="#78828f" text-anchor="middle">motor comes back first · pain comes back last</text>';
+   }
+   else if(m.k==='ph'){
+     var panel=function(x,label,ph,ok){
+       var c = ok?'#2f9e5b':'#d1495b';
+       var s2='<rect x="'+x+'" y="30" width="96" height="160" rx="12" fill="'+(ok?'#f2faf5':'#fdf1f2')+'" stroke="'+(ok?'#c9e6d5':'#f0c9d0')+'"/>';
+       s2+='<text x="'+(x+48)+'" y="48" font-size="9" font-weight="800" fill="'+c+'" text-anchor="middle">'+label+'</text>';
+       s2+='<text x="'+(x+48)+'" y="63" font-size="11" font-weight="800" fill="'+c+'" text-anchor="middle">pH '+ph+'</text>';
+       if(!ok){ s2+='<text x="'+(x+16)+'" y="52" font-size="13">🔥</text><text x="'+(x+74)+'" y="52" font-size="13">🔥</text>'; }
+       /* nerve membrane */
+       s2+='<rect x="'+(x+8)+'" y="126" width="80" height="16" fill="#f6e7d2" stroke="#e0c9a6"/>';
+       s2+='<text x="'+(x+48)+'" y="156" font-size="7.5" font-weight="700" fill="#78828f" text-anchor="middle">nerve membrane</text>';
+       if(ok){
+         s2+='<circle cx="'+(x+48)+'" cy="86" r="9" fill="#2f5f9e"/><text x="'+(x+48)+'" y="89.5" font-size="6.5" font-weight="800" fill="#fff" text-anchor="middle">LA</text>';
+         s2+='<path d="M'+(x+48)+' 98 L'+(x+48)+' 168" stroke="#2f9e5b" stroke-width="2.2" stroke-dasharray="3 3"/><polygon points="'+(x+48)+',174 '+(x+43)+',165 '+(x+53)+',165" fill="#2f9e5b"/>';
+         s2+='<text x="'+(x+48)+'" y="118" font-size="7.5" font-weight="800" fill="#237a45" text-anchor="middle">un-ionized</text>';
+         s2+='<text x="'+(x+48)+'" y="186" font-size="8" font-weight="800" fill="#237a45" text-anchor="middle">block works</text>';
+       } else {
+         s2+='<circle cx="'+(x+34)+'" cy="92" r="9" fill="#2f5f9e"/><text x="'+(x+34)+'" y="95.5" font-size="6.5" font-weight="800" fill="#fff" text-anchor="middle">LA</text><text x="'+(x+45)+'" y="86" font-size="9" font-weight="800" fill="#d1495b">+</text>';
+         s2+='<circle cx="'+(x+64)+'" cy="106" r="9" fill="#2f5f9e"/><text x="'+(x+64)+'" y="109.5" font-size="6.5" font-weight="800" fill="#fff" text-anchor="middle">LA</text><text x="'+(x+75)+'" y="100" font-size="9" font-weight="800" fill="#d1495b">+</text>';
+         s2+='<text x="'+(x+48)+'" y="122" font-size="7.5" font-weight="800" fill="#b23145" text-anchor="middle">ionized ✕</text>';
+         s2+='<text x="'+(x+48)+'" y="186" font-size="8" font-weight="800" fill="#b23145" text-anchor="middle">block fails</text>';
+       }
+       return s2;
+     };
+     o+='<text x="110" y="16" font-size="9" font-weight="800" fill="#78828f" text-anchor="middle" letter-spacing="1">SAME DRUG · DIFFERENT TISSUE</text>';
+     o+=panel(10,'healthy tissue','7.4',true)+panel(114,'abscess','5.5',false);
+   }
+   else if(m.k==='class'){
+     o+='<text x="110" y="16" font-size="9" font-weight="800" fill="#78828f" text-anchor="middle" letter-spacing="1">COUNT THE i\'s BEFORE "-CAINE"</text>';
+     var col2=function(x,ttl,sub,names,c,bg,org,orgt){
+       var s3='<rect x="'+x+'" y="28" width="96" height="164" rx="12" fill="'+bg+'" stroke="'+c+'" stroke-opacity=".35"/>';
+       s3+='<text x="'+(x+48)+'" y="46" font-size="11" font-weight="800" fill="'+c+'" text-anchor="middle">'+ttl+'</text>';
+       s3+='<text x="'+(x+48)+'" y="59" font-size="8" font-weight="700" fill="#78828f" text-anchor="middle">'+sub+'</text>';
+       for(var n=0;n<names.length;n++){
+         s3+='<rect x="'+(x+8)+'" y="'+(68+n*17)+'" width="80" height="14" rx="7" fill="#fff" stroke="'+c+'" stroke-opacity=".4"/>';
+         s3+='<text x="'+(x+48)+'" y="'+(78+n*17)+'" font-size="7.5" font-weight="700" fill="#232a36" text-anchor="middle">'+names[n]+'</text>';
+       }
+       s3+='<text x="'+(x+48)+'" y="163" font-size="17" text-anchor="middle">'+org+'</text>';
+       s3+='<text x="'+(x+48)+'" y="180" font-size="7.5" font-weight="800" fill="'+c+'" text-anchor="middle">'+orgt+'</text>';
+       return s3;
+     };
+     o+=col2(10,'ESTER','one "i"',['procaine','chloroprocaine','tetracaine','benzocaine','allergy: MORE'],'#b8862f','#fbf6ea','🩸','plasma esterase → PABA');
+     o+=col2(114,'AMIDE','two "i"s',['lidocaine','bupivacaine','ropivacaine','mepivacaine','allergy: rare'],'#2f5f9e','#eff4fb','🫀','liver — cut dose if impaired');
+   }
+   else if(m.k==='epi'){
+     o+='<text x="110" y="16" font-size="9" font-weight="800" fill="#78828f" text-anchor="middle" letter-spacing="1">WHY EPINEPHRINE IS MIXED IN</text>';
+     /* plain */
+     o+='<text x="110" y="36" font-size="9.5" font-weight="800" fill="#78828f" text-anchor="middle">plain lidocaine</text>';
+     o+='<path d="M14 62 h192" stroke="#e8b0b8" stroke-width="20" stroke-linecap="round"/>';
+     o+='<path d="M14 62 h192" stroke="#f6d7dc" stroke-width="13" stroke-linecap="round"/>';
+     for(var e=0;e<5;e++){ o+='<circle cx="'+(38+e*36)+'" cy="62" r="5" fill="#2f5f9e"/>'; }
+     o+='<path d="M170 62 L206 62" stroke="#d1495b" stroke-width="2.5"/><polygon points="212,62 202,56 202,68" fill="#d1495b"/>';
+     o+='<text x="110" y="88" font-size="8.5" font-weight="700" fill="#b23145" text-anchor="middle">washes away fast → shorter block, more systemic drug</text>';
+     /* with epi */
+     o+='<text x="110" y="120" font-size="9.5" font-weight="800" fill="#237a45" text-anchor="middle">lidocaine + epinephrine</text>';
+     o+='<path d="M14 146 h192" stroke="#e8b0b8" stroke-width="20" stroke-linecap="round"/>';
+     o+='<path d="M14 146 h192" stroke="#f6d7dc" stroke-width="5" stroke-linecap="round"/>';
+     for(var f=0;f<8;f++){ o+='<circle cx="'+(30+f*22)+'" cy="'+(f%2?136:156)+'" r="5" fill="#2f5f9e"/>'; }
+     o+='<path d="M60 128 l0 8 M100 128 l0 8 M140 128 l0 8 M60 164 l0 -8 M100 164 l0 -8 M140 164 l0 -8" stroke="#237a45" stroke-width="2.5" stroke-linecap="round"/>';
+     o+='<text x="110" y="182" font-size="8.5" font-weight="700" fill="#237a45" text-anchor="middle">vasoconstricted → drug stays put, longer block, drier field</text>';
+     o+='<text x="110" y="196" font-size="8" font-weight="700" fill="#78828f" text-anchor="middle">blue = anesthetic molecules</text>';
+   }
+   else if(m.k==='last'){
+     o+='<text x="110" y="16" font-size="9" font-weight="800" fill="#78828f" text-anchor="middle" letter-spacing="1">LAST · THE TOXICITY LADDER</text>';
+     var R=[{t:'Circumoral numbness · metallic taste · tinnitus',c:'#b8862f',s:'first — they tell you'},
+            {t:'Lightheaded · blurred vision · twitching',c:'#d18a49',s:''},
+            {t:'SEIZURES',c:'#d1495b',s:''},
+            {t:'CNS depression · coma',c:'#a03040',s:''},
+            {t:'Hypotension · dysrhythmias · ARREST',c:'#7a1f2c',s:'bupivacaine = most cardiotoxic'}];
+     for(var r=0;r<R.length;r++){
+       var yy=30+r*31;
+       o+='<rect x="14" y="'+yy+'" width="192" height="25" rx="7" fill="'+R[r].c+'" opacity="'+(0.16+r*0.06)+'"/>';
+       o+='<rect x="14" y="'+yy+'" width="5" height="25" rx="2.5" fill="'+R[r].c+'"/>';
+       o+='<text x="26" y="'+(yy+(R[r].s?11:16))+'" font-size="8.2" font-weight="800" fill="'+R[r].c+'">'+R[r].t+'</text>';
+       if(R[r].s){ o+='<text x="26" y="'+(yy+21)+'" font-size="7.2" font-weight="700" fill="#78828f">'+R[r].s+'</text>'; }
+       if(r<R.length-1){ o+='<path d="M110 '+(yy+25)+' L110 '+(yy+30)+'" stroke="#a8b0bd" stroke-width="1.5"/>'; }
+     }
+     o+='<rect x="14" y="188" width="192" height="1" fill="#dfe4ee"/>';
+     o+='<text x="110" y="203" font-size="8.5" font-weight="800" fill="#237a45" text-anchor="middle">RESCUE: stop · 100% O₂ · benzodiazepine · 20% lipid emulsion</text>';
+   }
+   else {
+     o+='<text x="110" y="16" font-size="9" font-weight="800" fill="#78828f" text-anchor="middle" letter-spacing="1">METHEMOGLOBINEMIA</text>';
+     o+='<path d="M70 40 q26 34 26 50 a26 26 0 0 1 -52 0 q0 -16 26 -50 z" fill="#5c3327"/>';
+     o+='<text x="70" y="128" font-size="8.5" font-weight="800" fill="#5c3327" text-anchor="middle">chocolate-brown</text>';
+     o+='<text x="70" y="140" font-size="8.5" font-weight="800" fill="#5c3327" text-anchor="middle">blood</text>';
+     o+='<rect x="118" y="46" width="88" height="52" rx="9" fill="#1a1f2b"/>';
+     o+='<text x="162" y="72" font-size="20" font-weight="800" fill="#d1495b" text-anchor="middle">88%</text>';
+     o+='<text x="162" y="88" font-size="8" font-weight="700" fill="#8f98a8" text-anchor="middle">SpO₂ · on 100% O₂</text>';
+     o+='<text x="162" y="118" font-size="8.5" font-weight="800" fill="#d1495b" text-anchor="middle">cyanosis that oxygen</text>';
+     o+='<text x="162" y="130" font-size="8.5" font-weight="800" fill="#d1495b" text-anchor="middle">will not fix</text>';
+     o+='<rect x="14" y="150" width="192" height="48" rx="10" fill="#eeeafa" stroke="#cfc4ea"/>';
+     o+='<rect x="26" y="160" width="20" height="28" rx="4" fill="#4a3f8a"/>';
+     o+='<rect x="30" y="154" width="12" height="8" rx="2" fill="#8f86c4"/>';
+     o+='<text x="126" y="172" font-size="10.5" font-weight="800" fill="#4a3f8a" text-anchor="middle">ANTIDOTE</text>';
+     o+='<text x="126" y="187" font-size="11" font-weight="800" fill="#4a3f8a" text-anchor="middle">methylene blue IV</text>';
+     o+='<text x="110" y="34" font-size="8.5" font-weight="700" fill="#78828f" text-anchor="middle">benzocaine · prilocaine — highest risk in infants</text>';
+   }
+   $("art").innerHTML=o;
+ }
+
+ var curL='na';
+ function renderList(){
+   $("list").innerHTML=L.map(function(m){
+     return '<button class="it'+(m.k===curL?' on':'')+'" data-k="'+m.k+'"><span class="ic">'+m.ic+'</span><span><span class="nm">'+m.nm+'</span><br><span class="ct">'+m.ct+'</span></span></button>';
+   }).join('');
+   var b=document.querySelectorAll('#list .it');
+   for(var i=0;i<b.length;i++){ (function(el){ el.onclick=function(){ curL=el.getAttribute('data-k'); renderLoc(); }; })(b[i]); }
+ }
+ function renderLoc(){
+   var m=null,i;
+   for(i=0;i<L.length;i++){ if(L[i].k===curL) m=L[i]; }
+   drawL(m);
+   $("cardTitle").innerHTML=m.nm;
+   $("stage").style.background=m.col;
+   $("stage").innerHTML=m.nm+'<small>'+m.ct+'</small>';
+   $("info").innerHTML='<span class="n">'+m.nm+'</span>'+m.d+'<div class="loc">'+m.n+'</div>';
+   $("mnem").innerHTML='<b>Local ≠ general.</b> A local anesthetic blocks <b>conduction</b> in a nerve; it never produces unconsciousness or amnesia. Routes climb in scale: <b>topical</b> (lidocaine gel, EMLA cream — apply ~60 min ahead under an occlusive dressing) → <b>infiltration</b> → <b>nerve block</b> → <b>epidural</b> → <b>spinal</b>. The bigger the field, the more drug reaches the blood and the closer you watch.';
+   $("note").innerHTML='<b>Spinal and epidural anesthesia block sympathetic fibers first</b> — that is why <b>hypotension and bradycardia</b> are the classic complications: check blood pressure frequently, keep IV fluids and a vasopressor available, and watch for a block creeping too high (dyspnea, tingling hands, difficulty speaking). Also expect <b>urinary retention</b> until the block wears off, and assess for a <b>post-dural puncture headache</b> that is worse upright and better lying flat.';
+   renderList();
+ }
+
+ /* ---------------- mode switching ---------------- */
+ function setMode(g){
+   $("mGen").className = g?'on':'';
+   $("mLoc").className = g?'':'on';
+   $("panGen").className = g?'':'hide';
+   $("panLoc").className = g?'hide':'';
+   if(g){ renderGA(); } else { renderLoc(); }
+ }
+ $("mGen").onclick=function(){ setMode(true); };
+ $("mLoc").onclick=function(){ setMode(false); };
+ $("depth").oninput=renderGA;
+
+ setMode(true);
+})();
+</script>
+</body>
+</html>

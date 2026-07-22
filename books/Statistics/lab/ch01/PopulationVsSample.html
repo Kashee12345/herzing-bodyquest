@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Population vs Sample</title>
+<meta name="description" content="Draw real random samples from a visible population of 400 and watch the sample mean miss the population mean. An interactive introduction to parameters, statistics, and sampling variability.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15.5px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.hit{border-color:var(--green);background:#f2faf5;} .tiles div.hit .vv{color:#237a45;}
+.tiles div.far{border-color:var(--coral);background:#fdf3f4;} .tiles div.far .vv{color:#b23145;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:16px;font-weight:800;color:var(--teal-dk);min-width:38px;text-align:right;font-variant-numeric:tabular-nums;}
+.lgd{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:11px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+@media (max-width:520px){.row{align-items:stretch;}.row .btn{font-size:12.5px;padding:10px 4px;}.tiles .lb{font-size:8.8px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 1</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 1</div>
+  <h1>Population vs Sample</h1>
+  <div class="intro">Here is something you almost never get in real life: a <b>whole population</b> you can see. All 400 commuters, every value known. Now take a random sample from it and watch what the sample mean does &mdash; it <b>misses</b>. Every single time.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="popTitle">The population &mdash; 400 commuters</h2>
+      <svg viewBox="0 0 340 226" aria-label="population of 400 individuals"><g id="grid"></g></svg>
+      <div class="lgd"><span><i style="background:#cfe0e9"></i>short commute</span><span><i style="background:#1c4454"></i>long commute</span><span><i style="background:#b8862f"></i>in your sample</span></div>
+    </div>
+    <div class="card"><h2>Sample means pile up here</h2>
+      <svg viewBox="0 0 340 196" aria-label="sampling distribution of the sample mean"><g id="hist"></g></svg>
+      <div class="lgd"><span><i style="background:#c3d3db"></i>the 400 individual values</span><span><i style="background:#2f6f8a"></i>your sample means</span></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Draw your first sample<small>press the button below</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="1" class="on">Population visible<small>the textbook view</small></button>
+        <button data-v="0">Population hidden<small>real research</small></button>
+      </div>
+      <div class="sl"><label for="nSl">Sample size n</label><input type="range" id="nSl" min="5" max="100" step="1" value="20"><span class="nv" id="nVal">20</span></div>
+      <div class="row"><button class="btn solid" id="one">Draw one</button><button class="btn" id="many">+25 more</button><button class="btn" id="rst">Reset</button></div>
+      <div class="tiles">
+        <div><span class="lb">Samples drawn</span><span class="vv" id="tK">0</span></div>
+        <div><span class="lb">Latest x&#772;</span><span class="vv" id="tX">&mdash;</span></div>
+        <div id="tMissBox"><span class="lb">Latest miss</span><span class="vv" id="tMiss">&mdash;</span></div>
+        <div><span class="lb">Biggest miss</span><span class="vv" id="tBig">&mdash;</span></div>
+        <div><span class="lb" id="tSeLb">Typical miss</span><span class="vv" id="tSe">&mdash;</span></div>
+        <div><span class="lb">Within 1 typical miss</span><span class="vv" id="tPct">&mdash;</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>P</b>arameter goes with <b>P</b>opulation (&mu;, &sigma;). <b>S</b>tatistic goes with <b>S</b>ample (x&#772;, s). The parameter is one fixed number; the statistic is a number that reshuffles every time you sample.</div>
+      <div class="note" id="note"><b>Switch to "Population hidden."</b> That is the honest picture of research: the grid goes dark, &mu; becomes a question mark, and you are left holding a single x&#772; and an estimate of how far it probably strayed.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- tiny seeded PRNG so the population and the draws are reproducible ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function normal(r){var u=0,v=0;while(u===0)u=r();while(v===0)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+
+ /* ---- build the population once: 400 one-way commute times, in minutes ---- */
+ var N=400,POP=[],rp=mulberry32(20260718),i,x;
+ for(i=0;i<N;i++){x=26+7*normal(rp);if(x<4)x=4;if(x>60)x=60;POP.push(Math.round(x*10)/10);}
+ var mu=0;for(i=0;i<N;i++)mu+=POP[i];mu/=N;
+ var vr=0;for(i=0;i<N;i++)vr+=(POP[i]-mu)*(POP[i]-mu);vr/=N;
+ var sig=Math.sqrt(vr);                       /* population SD, divisor N */
+ var pmin=Math.min.apply(null,POP),pmax=Math.max.apply(null,POP);
+ var R=3.2*sig,LO=mu-R,HI=mu+R,B=45,BW=(HI-LO)/B;
+
+ /* population histogram (fixed) */
+ var pCnt=[],b;for(b=0;b<B;b++)pCnt.push(0);
+ for(i=0;i<N;i++){b=Math.floor((POP[i]-LO)/BW);if(b<0)b=0;if(b>B-1)b=B-1;pCnt[b]++;}
+ var pMax=Math.max.apply(null,pCnt);
+
+ /* ---- state ---- */
+ var n=20,means=[],cur=[],curMean=null,reveal=true;
+ var rs,idx;
+ function reseed(){rs=mulberry32(90210);idx=[];for(var j=0;j<N;j++)idx.push(j);}
+ reseed();
+
+ /* simple random sample without replacement (partial Fisher-Yates) */
+ function sample(k){for(var j=0;j<k;j++){var m=j+Math.floor(rs()*(N-j)),t=idx[j];idx[j]=idx[m];idx[m]=t;}return idx.slice(0,k);}
+
+ /* standard error of the mean, finite-population corrected: (sd/sqrt(n))*sqrt((N-n)/(N-1)) */
+ function se(sd,k){return sd/Math.sqrt(k)*Math.sqrt((N-k)/(N-1));}
+ function f2(v){return(v<0?'-':'')+Math.abs(v).toFixed(2);}
+
+ /* ---- the visible population grid ---- */
+ function drawGrid(){
+   var s='',inS={},c,r,v,t,col,cx,cy;
+   for(var j=0;j<cur.length;j++)inS[cur[j]]=1;
+   for(i=0;i<N;i++){
+     c=i%25;r=Math.floor(i/25);cx=13+c*13.2;cy=13+r*13.2;v=POP[i];
+     if(inS[i]){s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="5.8" fill="#b8862f" stroke="#fffdf9" stroke-width="1.6"/>';}
+     else if(!reveal){s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="4.3" fill="#dfe8ed"/>';}
+     else{t=(v-pmin)/(pmax-pmin);
+       col='rgb('+Math.round(207-179*t)+','+Math.round(224-156*t)+','+Math.round(233-149*t)+')';
+       s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="4.6" fill="'+col+'"/>';}
+   }
+   $("grid").innerHTML=s;
+   $("popTitle").innerHTML=reveal?'The population &mdash; 400 commuters':'The population &mdash; hidden, as it always is';
+ }
+
+ /* ---- the sampling distribution chart ---- */
+ var X0=22,X1=330,BASE=152,TOP=40;
+ function px(v){return X0+(v-LO)/(HI-LO)*(X1-X0);}
+ function drawHist(){
+   var s='',j,h,xl,xr,d;
+   /* population shape, faint, scaled to its own peak */
+   if(reveal){
+     d='M'+px(LO).toFixed(1)+' '+BASE;
+     for(j=0;j<B;j++){h=pCnt[j]/pMax*(BASE-TOP);xl=px(LO+j*BW);xr=px(LO+(j+1)*BW);
+       d+=' L'+xl.toFixed(1)+' '+(BASE-h).toFixed(1)+' L'+xr.toFixed(1)+' '+(BASE-h).toFixed(1);}
+     d+=' L'+px(HI).toFixed(1)+' '+BASE+' Z';
+     s+='<path d="'+d+'" fill="#c3d3db" opacity=".45"/>';
+   }
+   /* +/- 1 SE band around mu */
+   var e=se(sig,n);
+   if(reveal){s+='<rect x="'+px(mu-e).toFixed(1)+'" y="'+TOP+'" width="'+(px(mu+e)-px(mu-e)).toFixed(1)+'" height="'+(BASE-TOP)+'" fill="#2f6f8a" opacity=".09"/>';}
+   /* sample means */
+   if(means.length){
+     var mc=[],mx=0;for(j=0;j<B;j++)mc.push(0);
+     for(j=0;j<means.length;j++){b=Math.floor((means[j]-LO)/BW);if(b<0)b=0;if(b>B-1)b=B-1;mc[b]++;}
+     for(j=0;j<B;j++)if(mc[j]>mx)mx=mc[j];
+     for(j=0;j<B;j++){if(!mc[j])continue;h=mc[j]/mx*(BASE-TOP);xl=px(LO+j*BW);xr=px(LO+(j+1)*BW);
+       s+='<rect x="'+(xl+.5).toFixed(1)+'" y="'+(BASE-h).toFixed(1)+'" width="'+Math.max(1.6,xr-xl-1).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="#2f6f8a" rx="1"/>';}
+   }
+   /* axis */
+   s+='<line x1="'+X0+'" y1="'+BASE+'" x2="'+X1+'" y2="'+BASE+'" stroke="#b7c7d0" stroke-width="1.4"/>';
+   /* the current sample's raw values as ticks under the axis */
+   for(j=0;j<cur.length;j++){var vx=px(Math.max(LO,Math.min(HI,POP[cur[j]])));
+     s+='<line x1="'+vx.toFixed(1)+'" y1="'+(BASE+2)+'" x2="'+vx.toFixed(1)+'" y2="'+(BASE+11)+'" stroke="#b8862f" stroke-width="1.4" opacity=".55"/>';}
+   /* mu */
+   if(reveal){
+     s+='<line x1="'+px(mu).toFixed(1)+'" y1="'+(TOP-8)+'" x2="'+px(mu).toFixed(1)+'" y2="'+(BASE+13)+'" stroke="#1c4454" stroke-width="2" stroke-dasharray="5 4"/>';
+     s+='<text x="'+px(mu).toFixed(1)+'" y="'+(TOP-13)+'" font-size="12" font-weight="800" fill="#1c4454" text-anchor="middle">&#956; = '+mu.toFixed(2)+'</text>';
+   }else{
+     s+='<text x="'+px(mu).toFixed(1)+'" y="'+(TOP-13)+'" font-size="12" font-weight="800" fill="#a9b8c0" text-anchor="middle">&#956; = ?</text>';
+   }
+   /* the latest x-bar */
+   if(curMean!==null){
+     var bx=px(Math.max(LO,Math.min(HI,curMean)));
+     s+='<polygon points="'+bx.toFixed(1)+','+(BASE+13)+' '+(bx-6).toFixed(1)+','+(BASE+25)+' '+(bx+6).toFixed(1)+','+(BASE+25)+'" fill="#b8862f"/>';
+     s+='<text x="'+bx.toFixed(1)+'" y="'+(BASE+37)+'" font-size="11.5" font-weight="800" fill="#8a6a20" text-anchor="middle">x&#772; = '+curMean.toFixed(2)+'</text>';
+   }
+   s+='<text x="'+X0+'" y="'+(BASE+37)+'" font-size="10" fill="#78868d" font-weight="600">'+LO.toFixed(0)+' min</text>';
+   s+='<text x="'+X1+'" y="'+(BASE+37)+'" font-size="10" fill="#78868d" font-weight="600" text-anchor="end">'+HI.toFixed(0)+' min</text>';
+   $("hist").innerHTML=s;
+ }
+
+ /* ---- readouts ---- */
+ function render(){
+   var e=se(sig,n),k=means.length,miss=curMean===null?null:curMean-mu;
+   $("tK").innerHTML=k;
+   $("tX").innerHTML=curMean===null?'&mdash;':curMean.toFixed(2);
+
+   /* the SE tile: known sigma when the population is visible, s from the sample when it is not */
+   var eShown=e,est=false;
+   if(!reveal&&cur.length>1){
+     var sm=0,j;for(j=0;j<cur.length;j++)sm+=POP[cur[j]];sm/=cur.length;
+     var ss=0;for(j=0;j<cur.length;j++)ss+=(POP[cur[j]]-sm)*(POP[cur[j]]-sm);
+     eShown=se(Math.sqrt(ss/(cur.length-1)),cur.length);est=true;
+   }
+   $("tSeLb").innerHTML=est?'SE, estimated from s':'Typical miss (SE)';
+   $("tSe").innerHTML=(!reveal&&!est)?'&mdash;':eShown.toFixed(2);
+
+   var box=$("tMissBox");box.className='';
+   if(!reveal){
+     $("tMiss").innerHTML='?';$("tBig").innerHTML='?';$("tPct").innerHTML='?';
+   }else if(miss===null){
+     $("tMiss").innerHTML='&mdash;';$("tBig").innerHTML='&mdash;';$("tPct").innerHTML='&mdash;';
+   }else{
+     $("tMiss").innerHTML=f2(miss);
+     box.className=Math.abs(miss)<=e?'hit':(Math.abs(miss)>2*e?'far':'');
+     var big=0,inb=0,j;
+     for(j=0;j<k;j++){var d=Math.abs(means[j]-mu);if(d>big)big=d;if(d<=e)inb++;}
+     $("tBig").innerHTML=big.toFixed(2);
+     $("tPct").innerHTML=Math.round(inb/k*100)+'%';
+   }
+
+   /* stage */
+   var st=$("stage");
+   if(curMean===null){st.style.background='var(--teal)';st.innerHTML='Draw your first sample<small>sample size is set to n = '+n+'</small>';}
+   else if(!reveal){st.style.background='var(--teal)';
+     st.innerHTML='x&#772; = '+curMean.toFixed(2)+' min<small>n = '+n+' &middot; &mu; = ? &middot; miss = ? &mdash; and this is all you would ever have</small>';}
+   else{var a=Math.abs(miss);
+     st.style.background=a<=e?'var(--green)':(a<=2*e?'var(--gold)':'var(--coral)');
+     st.innerHTML='x&#772; = '+curMean.toFixed(2)+' min<small>n = '+n+' &middot; &mu; = '+mu.toFixed(2)+' &middot; missed by '+f2(miss)+' min ('+(a/e).toFixed(1)+' SE)</small>';}
+
+   /* info */
+   var h;
+   if(curMean===null){
+     h='<span class="n">One fixed number, one moving one</span>The mean commute of all 400 people is <b>&mu; = '+mu.toFixed(2)+' minutes</b>. That is a <b>parameter</b>: it belongs to the population and it does not budge. The mean of the people you happen to sample is <b>x&#772;</b>, a <b>statistic</b>: it belongs to the sample, and it lands somewhere new every time you draw. Draw a sample and watch.';
+   }else{
+     var a2=Math.abs(miss),k2=means.length;
+     h='<span class="n">'+(reveal?(a2<0.005?'A dead-on hit &mdash; by luck':'Off by '+a2.toFixed(2)+' minutes'):'One sample, no answer key')+'</span>';
+     if(reveal){
+       h+='Your '+n+' commuters averaged <b>'+curMean.toFixed(2)+'</b>; the town averages <b>'+mu.toFixed(2)+'</b>. Nothing went wrong &mdash; the sample was genuinely random. This gap is <b>sampling variability</b>, and it is the reason statistics exists.';
+       if(k2>=12){h+='<div class="dd">Across your '+k2+' samples at n = '+n+', the means pile up <b>centred on &mu;</b> and spread about <b>&plusmn;'+se(sig,n).toFixed(2)+' minutes</b>. Compare the narrow blue pile to the wide grey population behind it: individual people vary a lot, averages of '+n+' of them vary far less.</div>';}
+       else{h+='<div class="dd">Press <b>+25 samples</b> to see where the misses land as a group.</div>';}
+     }else{
+       h+='You drew '+n+' commuters and got <b>x&#772; = '+curMean.toFixed(2)+' minutes</b>. There is no &mu; to check it against &mdash; that is the whole problem. What you <i>can</i> do is use the sample’s own spread <b>s</b> to estimate how far x&#772; typically strays: about <b>&plusmn;'+eShown.toFixed(2)+' minutes</b>. Estimating that stray distance from one sample is what the rest of this book is about.';
+     }
+   }
+   h+='<div class="loc">Bigger n never removes the miss &mdash; it shrinks its <b>typical size</b>, and only in proportion to &radic;n. To halve the typical miss you need <b>four times</b> the sample.</div>';
+   $("info").innerHTML=h;
+
+   $("note").style.display=reveal?'block':'none';
+   drawGrid();drawHist();
+ }
+
+ function draw(times){
+   for(var t=0;t<times;t++){
+     cur=sample(n);
+     var s=0;for(var j=0;j<n;j++)s+=POP[cur[j]];
+     curMean=s/n;means.push(curMean);
+   }
+   render();
+ }
+ function reset(){means=[];cur=[];curMean=null;reseed();render();}
+
+ $("one").onclick=function(){draw(1);};
+ $("many").onclick=function(){draw(25);};
+ $("rst").onclick=reset;
+ $("nSl").oninput=function(){n=+this.value;$("nVal").innerHTML=n;reset();};
+ var segs=$("seg").getElementsByTagName('button');
+ for(i=0;i<segs.length;i++){segs[i].onclick=function(){
+   for(var j=0;j<segs.length;j++)segs[j].className='';
+   this.className='on';reveal=this.getAttribute('data-v')==='1';render();};}
+
+ render();
+})();
+</script>
+</body>
+</html>

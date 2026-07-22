@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Growth &amp; Decay: Solve for the Unknown</title>
+<meta name="description" content="A live growth-and-decay curve you can drag to solve for the time, plus a worked-step machine organized by which quantity is unknown — the amount, the time, or the doubling time.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* math typography — pure HTML, no renderer */
+.fr{display:inline-flex;flex-direction:column;vertical-align:-0.55em;text-align:center;font-size:.86em;line-height:1.12;margin:0 3px;}
+.fr .nu{border-bottom:1.5px solid currentColor;padding:0 5px 1px;}
+.fr .de{padding:1px 5px 0;}
+.hl{background:#fbf0cf;border-radius:4px;padding:1px 5px;box-shadow:inset 0 -2px 0 #e8cf8a;}
+sup .hl{padding:0 3px;box-shadow:inset 0 -1.5px 0 #e8cf8a;}
+/* step machine */
+.ln{border-radius:10px;padding:8px 11px;margin-bottom:5px;border:1px solid transparent;}
+.ln.done{opacity:.48;}
+.ln.cur{background:#f3f4fb;border-color:#dfe2f2;}
+.ln .eqx{font-size:15.5px;font-weight:700;color:var(--teal-dk);line-height:2.05;}
+.ln .sub{font-size:12.3px;font-weight:600;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums;line-height:1.5;}
+.ln .rl{display:block;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.75px;margin-top:5px;}
+.pend{border-radius:10px;padding:5px 11px;margin-bottom:5px;font-size:12px;font-weight:800;color:#c9ccdc;letter-spacing:3px;}
+#prob{font-size:13.2px;line-height:1.62;color:var(--soft);background:#eef0f9;border:1px solid #dfe2f2;border-radius:10px;padding:10px 12px;margin:11px 0 12px;}
+#prob b{color:var(--teal-dk);}
+.ansbox{margin-top:10px;border-radius:9px;padding:10px 12px;font-size:13px;line-height:1.6;background:#e5f3ea;border:1px solid #bfe3cd;color:#237a45;font-weight:600;}
+.ansbox b{color:#186036;}
+/* picker */
+.grid{grid-template-columns:repeat(3,1fr);}
+.grid .it{padding:9px 8px;}
+.grid .it .nm,.grid .it .s{display:block;}
+.grid .it .nm{font-size:11.5px;}
+.grid .it .s{margin-top:2px;font-size:10px;line-height:1.25;font-weight:600;}
+/* graph extras */
+.legend{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+.legend span{font-size:10.8px;font-weight:700;color:var(--soft);background:#eef0f9;border:1px solid #dfe2f2;border-radius:20px;padding:4px 9px;display:inline-flex;align-items:center;gap:6px;}
+.legend i{width:15px;height:0;border-top:3px solid;border-radius:2px;display:inline-block;}
+.legend i.dash{border-top-style:dashed;}
+.legend i.dot{width:9px;height:9px;border:none;border-radius:50%;}
+#gout{font-size:12.6px;color:var(--teal-dk);background:#e6e8f5;border-radius:8px;padding:9px 11px;margin-top:11px;line-height:1.95;font-variant-numeric:tabular-nums;}
+#gout b{color:#1b1e46;}
+#gcap{font-size:12.6px;line-height:1.62;color:var(--soft);margin-top:10px;}
+#gcap b{color:var(--ink);}
+/* sliders */
+.nsl{margin-top:11px;}
+.sld{width:100%;-webkit-appearance:none;appearance:none;height:20px;background:transparent;cursor:pointer;}
+.sld::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-moz-range-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);margin-top:-7px;}
+.sld::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);}
+.sldlab{display:flex;justify-content:space-between;align-items:baseline;font-size:11.6px;color:var(--muted);font-weight:600;gap:8px;}
+.sldlab b{font-size:15px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 13</div>
+  <h1>Solve for the Unknown</h1>
+  <div class="intro">Every growth-and-decay problem is the same equation &mdash; <b>an unknown trapped in an exponent</b> &mdash; asked from a different angle. Drag the curve to <b>solve for the time</b> and watch the logarithm do the work live, then step through the three questions the model can answer: <b>how much, how long,</b> and <b>how fast.</b></div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="gTitle">Drag until the curve hits your target</h2>
+      <div class="modeseg" id="mode">
+        <button data-m="g" class="on">Growth · reach a multiple</button>
+        <button data-m="d">Decay · fall to a fraction</button>
+      </div>
+      <svg viewBox="0 0 330 232" aria-label="growth or decay curve with a horizontal target line and a solved time marker"><g id="art"></g></svg>
+      <div class="legend" id="leg"></div>
+      <div class="nsl">
+        <div class="sldlab"><span>Starting amount &nbsp;<i>A</i><sub>0</sub></span><b id="vA">100</b></div>
+        <input class="sld" type="range" id="sA" min="20" max="500" step="10" value="100">
+      </div>
+      <div class="nsl">
+        <div class="sldlab"><span id="lT">Doubling time &nbsp;<i>T</i> (hours)</span><b id="vT">8</b></div>
+        <input class="sld" type="range" id="sT" min="1" max="24" step="0.5" value="8">
+      </div>
+      <div class="nsl">
+        <div class="sldlab"><span id="lF">Target &nbsp;(&times; the start)</span><b id="vF">3.00&times;</b></div>
+        <input class="sld" type="range" id="sF" min="1.25" max="8" step="0.25" value="3">
+      </div>
+      <div id="gout"></div>
+      <div id="gcap"></div>
+      <div class="mnem"><b>Why a logarithm is the tool.</b> The unknown <i>t</i> lives <i>upstairs</i>, in the exponent, so adding and dividing can never reach it. A logarithm is the one operation that <b>pulls an exponent down to the ground</b>: log(<i>b</i><sup><i>x</i></sup>) = <i>x</i>&middot;log <i>b</i>. Once <i>t</i> is a plain coefficient the equation is linear, and linear equations we already know how to finish.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Three questions, one model<small>pick a question below</small></div>
+    <div class="card">
+      <h2>What are we solving for?</h2>
+      <div class="grid" id="picker"></div>
+      <div id="prob"></div>
+      <div id="steps"></div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div class="note"><b>Read the question before you reach for the log.</b> If the ratio of new to old is a tidy power &mdash; 2, 4, 8, &frac12;, &frac14; &mdash; both sides share a base and matching exponents finishes it with <b>no calculator</b>. Only when the ratio is untidy (0.30, 0.62, 1.07&hellip;) does the logarithm earn its keep.</div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var A0='<i>A</i><sub>0</sub>';
+ var HF='<span class="fr"><span class="nu">1</span><span class="de">2</span></span>';
+ var LN2=0.6931472;
+
+ /* ---------- number formatting ---------- */
+ function fnum(v){
+   var a=Math.abs(v);
+   if(a>=10000) return Math.round(v).toLocaleString('en-US');
+   if(a>=1000)  return (Math.round(v*10)/10).toLocaleString('en-US');
+   if(a>=100)   return v.toFixed(1);
+   if(a>=10)    return v.toFixed(2);
+   if(a>=1)     return v.toFixed(2);
+   return v.toFixed(3);
+ }
+
+ /* ================= LIVE GRAPH — solve for t ================= */
+ var G={mode:'g',A0:100,T:8,f:3};
+ var PL=46,PR=318,PT=16,PB=185;
+
+ function draw(){
+   var grow=(G.mode==='g'), col=grow?'#43458f':'#d1495b', A=G.A0, T=G.T, f=G.f;
+   var b=grow?2:0.5;                              /* base of the model            */
+   var nSolve=Math.log(f)/Math.log(b);            /* periods until target is met  */
+   var tSolve=nSolve*T;                           /* time until target is met     */
+   var target=f*A;                                /* the amount we aim for        */
+
+   /* domain: show the crossing at roughly 3/4 width, at least ~1.4 periods */
+   var ND=Math.min(6, Math.max(1.4, nSolve*1.32+0.35));
+   var tmax=ND*T;
+   var vmax=grow?A*Math.pow(2,ND):A;              /* decay peaks at the start     */
+
+   function X(t){return PL+(t/tmax)*(PR-PL);}
+   function V(t){return A*Math.pow(b,t/T);}
+   function Y(v){return PB-(v/vmax)*(PB-PT);}
+   var s='',k,x,y,v;
+
+   s+='<rect x="'+PL+'" y="'+PT+'" width="'+(PR-PL)+'" height="'+(PB-PT)+'" fill="#fbfaff" stroke="#e8eaf5" stroke-width="1"/>';
+
+   /* gridlines + labels at each whole period */
+   var kmax=Math.floor(ND+1e-9);
+   for(k=0;k<=kmax;k++){
+     var tk=k*T; v=V(tk); x=X(tk); y=Y(v);
+     s+='<line x1="'+PL+'" y1="'+y.toFixed(1)+'" x2="'+PR+'" y2="'+y.toFixed(1)+'" stroke="#e2e4f1" stroke-width="1" stroke-dasharray="3 3"/>';
+     s+='<text x="'+(PL-5)+'" y="'+(y+3.3).toFixed(1)+'" font-size="9" font-weight="600" fill="#7d7f94" text-anchor="end">'+fnum(v)+'</text>';
+     s+='<line x1="'+x.toFixed(1)+'" y1="'+PB+'" x2="'+x.toFixed(1)+'" y2="'+(PB+4)+'" stroke="#b9bcd4" stroke-width="1.2"/>';
+     s+='<text x="'+x.toFixed(1)+'" y="'+(PB+15)+'" font-size="9" font-weight="600" fill="#7d7f94" text-anchor="middle">'+(k===0?'0':fnum(tk))+'</text>';
+   }
+   s+='<text x="'+((PL+PR)/2)+'" y="'+(PB+28)+'" font-size="9.5" font-weight="700" fill="#7d7f94" text-anchor="middle">time <i>t</i> (hours)</text>';
+
+   /* axes */
+   s+='<line x1="'+PL+'" y1="'+PT+'" x2="'+PL+'" y2="'+PB+'" stroke="#b9bcd4" stroke-width="1.4"/>';
+   s+='<line x1="'+PL+'" y1="'+PB+'" x2="'+PR+'" y2="'+PB+'" stroke="#b9bcd4" stroke-width="1.4"/>';
+
+   /* the curve, sampled point by point */
+   var pts=[];
+   for(var i=0;i<=170;i++){var tt=tmax*i/170; pts.push(X(tt).toFixed(1)+','+Y(V(tt)).toFixed(1));}
+   s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+col+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+
+   /* the horizontal TARGET line */
+   var ty=Y(target);
+   s+='<line x1="'+PL+'" y1="'+ty.toFixed(1)+'" x2="'+PR+'" y2="'+ty.toFixed(1)+'" stroke="#b8862f" stroke-width="1.6" stroke-dasharray="5 3"/>';
+   s+='<rect x="'+(PL+2)+'" y="'+(ty-8).toFixed(1)+'" width="58" height="14" rx="4" fill="#fffdf9" stroke="#b8862f" stroke-width="1"/>';
+   s+='<text x="'+(PL+6)+'" y="'+(ty+2.2).toFixed(1)+'" font-size="9" font-weight="800" fill="#8a6a20">target '+fnum(target)+'</text>';
+
+   /* the vertical drop at the SOLVED time */
+   var sx=X(tSolve);
+   s+='<line x1="'+sx.toFixed(1)+'" y1="'+ty.toFixed(1)+'" x2="'+sx.toFixed(1)+'" y2="'+PB+'" stroke="#b8862f" stroke-width="1.6" stroke-dasharray="5 3"/>';
+   s+='<circle cx="'+sx.toFixed(1)+'" cy="'+ty.toFixed(1)+'" r="5.4" fill="#b8862f" stroke="#fff" stroke-width="2"/>';
+   /* solved-time chip on the axis */
+   var lbl='t = '+tSolve.toFixed(2)+' h', lw=lbl.length*5.4+12;
+   var lx=Math.max(PL+lw/2, Math.min(PR-lw/2, sx));
+   s+='<rect x="'+(lx-lw/2).toFixed(1)+'" y="'+(PB-16)+'" width="'+lw.toFixed(1)+'" height="14" rx="4" fill="#8a6a20"/>';
+   s+='<text x="'+lx.toFixed(1)+'" y="'+(PB-6)+'" font-size="9" font-weight="800" fill="#fff" text-anchor="middle">'+lbl+'</text>';
+
+   /* start dot */
+   s+='<circle cx="'+X(0).toFixed(1)+'" cy="'+Y(A).toFixed(1)+'" r="3.4" fill="'+col+'" stroke="#fff" stroke-width="1.6"/>';
+
+   $('art').innerHTML=s;
+
+   /* legend */
+   $('leg').innerHTML='<span><i style="border-color:'+col+'"></i>'+(grow?'<i>A</i> = <i>A</i><sub>0</sub>&middot;2<sup><i>t</i>/<i>T</i></sup>':'<i>A</i> = <i>A</i><sub>0</sub>&middot;(&frac12;)<sup><i>t</i>/<i>h</i></sup>')+'</span>'+
+     '<span><i class="dash" style="border-color:#b8862f"></i>target amount</span>'+
+     '<span><i class="dot" style="background:#b8862f"></i>solved time</span>';
+
+   /* live worked readout — the logarithm, computed as you drag */
+   var per=grow?'T':'h', bTxt=grow?'2':'&frac12;', lnf=Math.log(f), lnb=Math.log(b);
+   var whole=Math.abs(nSolve-Math.round(nSolve))<0.012;
+   var o='';
+   o+='target = <b>'+fnum(f)+'</b> &middot; '+A0+' &nbsp;&rarr;&nbsp; <b>'+fnum(f)+'</b> = '+bTxt+'<sup><i>t</i>/'+per+'</sup><br>';
+   o+='take ln: &nbsp; ln '+fnum(f)+' = (<i>t</i>/'+per+') &middot; ln '+bTxt+'<br>';
+   o+='<i>t</i> = '+per+' &middot; '+
+      '<span class="fr"><span class="nu">ln '+fnum(f)+'</span><span class="de">ln '+bTxt+'</span></span> = '+
+      T+' &middot; <span class="fr"><span class="nu">'+lnf.toFixed(4)+'</span><span class="de">'+lnb.toFixed(4)+'</span></span> = '+
+      T+' &middot; '+nSolve.toFixed(4)+' = <b>'+tSolve.toFixed(2)+' h</b><br>';
+   o+='that is <b>'+nSolve.toFixed(3)+'</b> '+(grow?'doubling times':'half-lives')+
+      (whole?' &mdash; <b>a whole number, so no logarithm was even needed</b> (both sides are powers of '+bTxt+').':' &mdash; not a whole number, so the logarithm is doing real work.');
+   $('gout').innerHTML=o;
+
+   $('gcap').innerHTML = grow
+     ? 'The gold line is the amount you want to <b>reach</b>; drop straight down from where the curve crosses it to read the time. Drag <b>Target</b> to a whole power &mdash; <b>2&times;, 4&times;, 8&times;</b> &mdash; and the answer becomes an exact count of doubling times with no logarithm. Slide it to 3&times; or 5&times; and the crossing lands <i>between</i> the gridlines, where only the logarithm can pin it down.'
+     : 'The gold line is the fraction you want the amount to <b>fall to</b>; the crossing tells you when. Drag <b>Target</b> to <b>0.50, 0.25, 0.125</b> and it is an exact count of half-lives (1, 2, 3). Any value in between &mdash; 0.30, 0.62 &mdash; needs the logarithm. Notice the curve never reaches 0: <b>a fraction of something is still something.</b>';
+
+   $('gTitle').innerHTML = grow ? 'Drag until the curve reaches your target' : 'Drag until the curve drops to your target';
+   $('lT').innerHTML = grow ? 'Doubling time &nbsp;<i>T</i> (hours)' : 'Half-life &nbsp;<i>h</i> (hours)';
+   $('lF').innerHTML = grow ? 'Target &nbsp;(&times; the start)' : 'Target &nbsp;(fraction of the start)';
+   $('vA').innerHTML=G.A0; $('vT').innerHTML=G.T;
+   $('vF').innerHTML=f.toFixed(2)+'&times;';
+ }
+
+ $('sA').oninput=function(){G.A0=+this.value;draw();};
+ $('sT').oninput=function(){G.T=+this.value;draw();};
+ $('sF').oninput=function(){G.f=+this.value;draw();};
+ Array.prototype.forEach.call(document.querySelectorAll('#mode button'),function(bt){
+   bt.onclick=function(){
+     G.mode=bt.dataset.m;
+     Array.prototype.forEach.call(document.querySelectorAll('#mode button'),function(x){x.className=(x===bt?'on':'');});
+     var sf=$('sF');
+     if(G.mode==='g'){ sf.min=1.25; sf.max=8; sf.step=0.25; G.f=3; sf.value=3; }
+     else{ sf.min=0.05; sf.max=0.95; sf.step=0.05; G.f=0.30; sf.value=0.30; }
+     draw();
+   };
+ });
+
+ /* ================= WORKED-STEP MACHINE — by unknown ================= */
+ var SC=[
+ {k:'amt',nm:'How much?',sub:'find the amount &middot; caffeine',col:'#2f9e5b',
+  prob:'Caffeine has a half-life of about <b>5.5 hours</b>. A mug delivers <b>80 mg</b>. How much is still in the body <b>12 hours</b> later?',
+  ans:'<b>&asymp; 17.6 mg</b> remain &mdash; just over one eighth of the dose.',
+  steps:[
+   {eq:'<i>A</i> = '+A0+' &middot; ('+HF+')<sup><i>t</i>/<i>h</i></sup>', rl:'START FROM THE MODEL',
+    why:'When the <b>time is known and the amount is unknown</b>, there is nothing trapped in the exponent &mdash; the exponent is a number we can compute. So this question needs <b>no logarithm at all</b>; it is pure substitution and arithmetic. Recognising that up front saves a lot of unnecessary work.'},
+   {eq:'<i>A</i> = <span class="hl">80</span> &middot; ('+HF+')<sup><span class="hl">12</span>/<span class="hl">5.5</span></sup>', rl:'SUBSTITUTE WHAT YOU KNOW', sub:'<i>A</i><sub>0</sub> = 80 mg, &nbsp; <i>h</i> = 5.5 h, &nbsp; <i>t</i> = 12 h',
+    why:'Drop in every known value. The only thing left to do is evaluate the right-hand side &mdash; the unknown <i>A</i> is already alone on the left.'},
+   {eq:'<i>t</i>/<i>h</i> = <span class="hl">12 / 5.5 = 2.1818</span>', rl:'COUNT THE HALF-LIVES FIRST',
+    why:'Always simplify the <b>exponent</b> before the base. In 12 hours the drug passes through <b>2.18 half-lives</b> &mdash; two full halvings and a bit more. That single number tells you the answer must sit a little below 80 &divide; 4 = 20 mg, a check you can make before touching a calculator.'},
+   {eq:'('+HF+')<sup>2.1818</sup> = <span class="hl">0.2204</span>', rl:'EVALUATE THE POWER', sub:'(&frac12;)<sup>2.1818</sup> = 2<sup>&minus;2.1818</sup> = 0.2204',
+    why:'Raising &frac12; to 2.18 gives the <b>fraction that survives</b>: about 22% of whatever you started with. This factor does not depend on the dose &mdash; it is the same 22% for an 80 mg mug or an 8 mg sip.'},
+   {eq:'<i>A</i> = 80 &middot; 0.2204 = <span class="hl">17.6 mg</span>', rl:'MULTIPLY BY THE DOSE',
+    why:'Now the surviving fraction meets the actual dose. Because a half-life problem asks "what fraction is left, times how much there was," the two pieces multiply.'},
+   {eq:'80 &rarr; 40 &rarr; 20 &rarr; (a bit more decay)', rl:'CHECK IT BY HAND', sub:'0 h &nbsp;&nbsp; 5.5 h &nbsp; 11 h &nbsp;&rarr;&nbsp; 12 h',
+    why:'By 11 hours (two half-lives) exactly 20 mg remain; one more hour of decay carries it down to <b>17.6 mg</b> &mdash; below 20, as the two-and-a-fraction half-lives promised. The estimate and the exact answer agree.'}
+  ]},
+
+ {k:'time',nm:'How long?',sub:'find the time &middot; decay',col:'#d1495b',
+  prob:'A radioactive tracer has a half-life of <b>8 days</b>. Safety rules allow release once only <b>30%</b> of the activity is left. How long is that?',
+  ans:'<b><i>t</i> &asymp; 13.9 days</b> &mdash; a little under two half-lives.',
+  steps:[
+   {eq:'<i>A</i> = '+A0+' &middot; ('+HF+')<sup><i>t</i>/<i>h</i></sup>', rl:'START FROM THE MODEL',
+    why:'This time the <b>amount is known and the time is unknown</b>, so <i>t</i> is trapped in the exponent. That single fact tells you a <b>logarithm is coming</b> &mdash; unless the fraction turns out to be a tidy power of &frac12;.'},
+   {eq:'<span class="hl">0.30 '+A0+'</span> = '+A0+' &middot; ('+HF+')<sup><i>t</i>/<span class="hl">8</span></sup>', rl:'TRANSLATE &ldquo;30% IS LEFT&rdquo;',
+    why:'&ldquo;30% of the original&rdquo; is <b>0.30&middot;<i>A</i><sub>0</sub></b> &mdash; a percentage of an <i>unknown</i> starting amount, not a fixed number of grams. We are never told the starting activity, and we are about to see we do not need it.'},
+   {eq:'<span class="hl">0.30</span> = ('+HF+')<sup><i>t</i>/8</sup>', rl:'DIVIDE BOTH SIDES BY A&#8320;',
+    why:'Legal because <i>A</i><sub>0</sub> &ne; 0 &mdash; there was certainly <i>some</i> tracer to begin with. <b>The unknown starting amount cancels outright.</b> That cancellation is exactly why the problem is solvable without ever knowing the initial dose.'},
+   {eq:'ln 0.30 = <span class="hl">(<i>t</i>/8)</span> &middot; ln '+HF+'', rl:'TAKE ln; USE THE POWER RULE',
+    why:'0.30 is <b>not</b> a tidy power of &frac12; (those are 0.5, 0.25, 0.125&hellip;), so the same-base shortcut is unavailable. The power rule ln(<i>m</i><sup><i>p</i></sup>) = <i>p</i>&middot;ln <i>m</i> <b>pulls the exponent down</b> to where algebra can reach it.'},
+   {eq:'<i>t</i>/8 = <span class="fr"><span class="nu">ln 0.30</span><span class="de">ln 0.5</span></span> = <span class="fr"><span class="nu">&minus;1.203973</span><span class="de">&minus;0.693147</span></span> = <span class="hl">1.73697</span>', rl:'DIVIDE BY ln (1/2)',
+    why:'Both logs are <b>negative</b> (both inputs are below 1), and negative &divide; negative is <b>positive</b> &mdash; good, because elapsed time must be positive. Read the result plainly: <b>1.737 half-lives</b> have gone by.'},
+   {eq:'<i>t</i> = 8 &times; 1.73697 = <span class="hl">13.9 days</span>', rl:'MULTIPLY BY THE HALF-LIFE',
+    why:'Convert the count of half-lives into days by multiplying by the length of one. The answer arrived as a <b>count first</b> (1.737), then as days &mdash; the fastest way to picture any decay problem.'},
+   {eq:'('+HF+')<sup>1.73697</sup> = 0.300 &nbsp;&#10003;', rl:'CHECK, WITH A FREE SANITY TEST', sub:'30% &lt; 50%, so more than one half-life &mdash; and 1.74 &gt; 1 &#10003;',
+    why:'Substituting back returns 0.30, so the arithmetic holds. The <b>sanity test costs nothing</b>: less than half is left, so <i>more</i> than one half-life must have passed &mdash; and 1.74 is indeed above 1.'}
+  ]},
+
+ {k:'rate',nm:'How fast?',sub:'find the doubling time',col:'#43458f',
+  prob:'A bacterial culture climbs from <b>1,200</b> to <b>9,600</b> cells in <b>9 hours</b>. What is its doubling time?',
+  ans:'<b><i>T</i> = 3 hours</b> &mdash; and no calculator required.',
+  steps:[
+   {eq:'<i>A</i> = '+A0+' &middot; 2<sup><i>t</i>/<i>T</i></sup>', rl:'START FROM THE MODEL',
+    why:'Now the <b>amounts and time are known and the rate</b> &mdash; the doubling time <i>T</i> &mdash; <b>is unknown</b>. It too sits in the exponent, so watch for a logarithm; but first check whether the growth ratio is a tidy power of 2.'},
+   {eq:'<span class="hl">9,600</span> = <span class="hl">1,200</span> &middot; 2<sup><span class="hl">9</span>/<i>T</i></sup>', rl:'SUBSTITUTE WHAT YOU KNOW', sub:'<i>A</i><sub>0</sub> = 1,200, &nbsp; <i>A</i> = 9,600, &nbsp; <i>t</i> = 9 h',
+    why:'Only <i>T</i> is left unknown, and it sits inside the exponent &mdash; the mark of an exponential equation.'},
+   {eq:'<span class="hl">8</span> = 2<sup>9/<i>T</i></sup>', rl:'DIVIDE BOTH SIDES BY 1,200', sub:'9,600 &divide; 1,200 = 8',
+    why:'The starting count <b>vanishes</b>; only the <b>ratio</b> survives &mdash; the culture grew <b>8&times;</b>. A flask of 1,200 and a flask of a billion with the same doubling time both grow 8&times; over the same 9 hours.'},
+   {eq:'<span class="hl">2<sup>3</sup></span> = 2<sup>9/<i>T</i></sup>', rl:'WRITE 8 AS A POWER OF 2', sub:'8 = 2 &middot; 2 &middot; 2 = 2<sup>3</sup>',
+    why:'The ratio <i>is</i> a tidy power of 2, so <b>both sides now share the base 2</b> &mdash; no logarithm needed after all. This is the payoff for checking the ratio before reaching for a calculator.'},
+   {eq:'<span class="hl">3</span> = <span class="hl">9/<i>T</i></span>', rl:'SAME BASE &rArr; SAME EXPONENT',
+    why:'Legal because 2<sup><i>x</i></sup> is <b>strictly increasing</b> &mdash; it never repeats a value, so each output comes from exactly one input. Equal powers force equal exponents.'},
+   {eq:'<i>T</i> = <span class="hl">3 hours</span>', rl:'SOLVE FOR T', sub:'3 = 9/<i>T</i> &nbsp;&rarr;&nbsp; 3<i>T</i> = 9 &nbsp;&rarr;&nbsp; <i>T</i> = 3',
+    why:'Multiply both sides by <i>T</i> (safe: <i>T</i> &ne; 0), then divide by 3. The doubling time is a clean 3 hours.'},
+   {eq:'1,200 &rarr; 2,400 &rarr; 4,800 &rarr; 9,600', rl:'CHECK IT BY HAND', sub:'0 h &nbsp;&nbsp;&nbsp; 3 h &nbsp;&nbsp;&nbsp;&nbsp; 6 h &nbsp;&nbsp;&nbsp;&nbsp; 9 h',
+    why:'Three doublings in 9 hours &mdash; the answer needs no trust, only counting. For a continuous rate, <i>k</i> = ln 2 &divide; <i>T</i> = 0.693147 &divide; 3 = <b>0.2310 per hour</b>, the same growth wearing its <i>e</i><sup><i>kt</i></sup> clothes.'}
+  ]}
+ ];
+
+ var ci=-1, si=0;
+
+ function pickerHTML(){
+   return SC.map(function(s,i){
+     var on=(i===ci);
+     return '<button class="it'+(on?' on':'')+'" data-i="'+i+'"'+(on?' style="background:'+s.col+';border-color:'+s.col+'"':'')+
+       '><span class="nm">'+s.nm+'</span><span class="s">'+s.sub+'</span></button>';
+   }).join('');
+ }
+
+ function renderPicker(){
+   $('picker').innerHTML=pickerHTML();
+   Array.prototype.forEach.call(document.querySelectorAll('#picker .it'),function(b){
+     b.onclick=function(){ ci=+b.dataset.i; si=0; renderPicker(); renderSteps(); };
+   });
+ }
+
+ function renderSteps(){
+   if(ci<0){
+     $('stage').style.background='var(--teal)';
+     $('stage').innerHTML='Three questions, one model<small>pick a question above to begin</small>';
+     $('prob').innerHTML='The exact same equation &mdash; <i>A</i> = <i>A</i><sub>0</sub>&middot;<i>b</i><sup><i>t</i>/<i>T</i></sup> &mdash; answers all three. Which quantity you are missing decides <b>whether you even need a logarithm.</b> Each problem below is solved one line at a time, with the changed part <span class="hl">highlighted</span> and the reason underneath.';
+     $('steps').innerHTML='';
+     $('info').innerHTML='<span class="n">One equation, three questions</span>Miss the <b>amount</b> and you just plug in &mdash; no logarithm. Miss the <b>time</b> or the <b>rate</b> and the unknown is stuck in the exponent, so you finish with matching bases if the ratio is tidy, or a logarithm if it is not. Naming the unknown first is half the battle.';
+     $('prev').disabled=true; $('next').disabled=true;
+     return;
+   }
+   var sc=SC[ci], n=sc.steps.length, out='';
+   for(var i=0;i<n;i++){
+     if(i>si){ out+='<div class="pend">&middot; &middot; &middot; &middot; &middot;</div>'; continue; }
+     var st=sc.steps[i];
+     out+='<div class="ln '+(i===si?'cur':'done')+'">'+
+       '<div class="eqx">'+st.eq+'</div>'+
+       (st.sub?'<div class="sub">'+st.sub+'</div>':'')+
+       '<span class="rl" style="color:'+sc.col+'">'+st.rl+'</span></div>';
+   }
+   if(si===n-1) out+='<div class="ansbox">Answer &nbsp;&middot;&nbsp; '+sc.ans+'</div>';
+   $('steps').innerHTML=out;
+   $('prob').innerHTML=sc.prob;
+   $('info').innerHTML='<span class="n">'+sc.steps[si].rl+'</span>'+sc.steps[si].why;
+   $('stage').style.background=sc.col;
+   $('stage').innerHTML=sc.nm+'<small>step '+(si+1)+' of '+n+'</small>';
+   $('prev').disabled=(si===0);
+   $('next').disabled=(si===n-1);
+ }
+
+ $('prev').onclick=function(){ if(si>0){ si--; renderSteps(); } };
+ $('next').onclick=function(){ if(ci>=0 && si<SC[ci].steps.length-1){ si++; renderSteps(); } };
+
+ renderPicker();
+ renderSteps();
+ draw();
+})();
+</script>
+</body>
+</html>

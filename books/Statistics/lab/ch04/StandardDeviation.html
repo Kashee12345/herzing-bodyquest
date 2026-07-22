@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Standard Deviation</title>
+<meta name="description" content="Turn a spread dial and watch every deviation stretch, the standard deviation follow it exactly, and the variance grow with the square. Live deviation fan, squared-deviation bars, and the full arithmetic behind s.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:92px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.sdv .vv{color:var(--teal);} .tiles div.vrv .vv{color:var(--purple);}
+.cov{display:flex;gap:6px;margin-top:8px;}
+.cov div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:6px 3px;background:#fff;font-size:9.3px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.cov div .v{display:block;font-size:14px;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;letter-spacing:0;}
+.cov div .r{display:block;font-size:9px;color:var(--muted);font-weight:600;letter-spacing:0;text-transform:none;margin-top:1px;}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.45;}
+.hd{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;margin-bottom:6px;}
+.grid.g3{grid-template-columns:repeat(3,1fr);} .grid.g4{grid-template-columns:repeat(4,1fr);}
+.grid .it .s{display:block;margin-top:2px;font-weight:600;}
+.grid.g4 .it{text-align:center;font-size:12.5px;}
+#info .eq{font-size:12.5px;color:var(--teal-dk);background:#e2eff5;border-radius:8px;padding:9px 11px;margin-top:9px;line-height:1.7;font-variant-numeric:tabular-nums;}
+#info .eq .r{display:flex;justify-content:space-between;gap:10px;}
+#info .eq .r b{white-space:nowrap;}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,1fr);}.sl label{font-size:10px;}.sl .nv{min-width:80px;font-size:13px;}.row .btn{font-size:12px;padding:10px 4px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 4</div>
+  <h1>Standard Deviation</h1>
+  <div class="intro">A mean tells you where a dataset sits. It says nothing about how tightly the values crowd around that spot &mdash; and two groups with the identical mean can be nothing alike. The <b>standard deviation</b> is the number that measures that crowding. Turn the spread dial below and every deviation from the mean stretches or shrinks in front of you, with <b>s</b> tracking the dial exactly and the <b>variance</b> tracking its square. Every dot, bar, curve and number is computed live from the values currently on screen.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="fanTitle">The data and its deviations</h2>
+      <svg viewBox="0 0 340 200" aria-label="each value plotted on the measurement axis with a line drawn back to the mean"><g id="fan"></g></svg>
+      <div class="lgd">
+        <span><i style="background:#1c4454"></i>the mean</span>
+        <span><i style="background:#cfe3ee"></i>within 1 SD</span>
+        <span><i style="background:#e8f1f6"></i>within 2 SD</span>
+        <span><i style="background:#2f6f9f"></i>above the mean</span>
+        <span><i style="background:#d1495b"></i>below the mean</span>
+      </div>
+      <div class="cap" id="fanCap"></div>
+    </div>
+    <div class="card"><h2>Why the deviations get squared</h2>
+      <div class="modeseg" id="bseg">
+        <button data-v="0" class="on">Distance | x &minus; mean |</button>
+        <button data-v="1">Squared (x &minus; mean)&sup2;</button>
+      </div>
+      <svg viewBox="0 0 340 190" aria-label="one bar per value, ordered from the largest deviation down"><g id="bars"></g></svg>
+      <div class="cap" id="barCap"></div>
+    </div>
+    <div class="card"><h2>What the dial does to each number</h2>
+      <svg viewBox="0 0 340 186" aria-label="the standard deviation and the variance plotted against the spread dial"><g id="dial"></g></svg>
+      <div class="cap" id="dialCap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Standard deviation<small>turn the spread dial</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="0" class="on">Resting pulse<small>beats per minute</small></button>
+        <button data-v="1">Box fill weight<small>grams</small></button>
+        <button data-v="2">Bolt diameter<small>millimeters</small></button>
+      </div>
+      <div class="sl"><label for="cSl">Spread</label><input type="range" id="cSl" min="0" max="200" step="5" value="100"><span class="nv" id="cVal">&times;1.00</span></div>
+      <div class="sl"><label for="dSl">Shift all</label><input type="range" id="dSl" min="-15" max="15" step="1" value="0"><span class="nv" id="dVal">&mdash;</span></div>
+      <div class="sl"><label for="nSl">Sample size n</label><input type="range" id="nSl" min="0" max="4" step="1" value="3"><span class="nv" id="nVal">34</span></div>
+      <div class="row"><button class="btn" id="reset">&#8634; Reset dials</button><button class="btn" id="samp">&#8635; New sample</button></div>
+      <div class="hd">Send the dial to</div>
+      <div class="grid g4" id="jump"></div>
+      <div class="hd">Shape of the data</div>
+      <div class="grid g3" id="shape"></div>
+      <div class="hd">Which divisor</div>
+      <div class="modeseg" id="dseg">
+        <button data-v="1" class="on">Sample s &divide; (n &minus; 1)</button>
+        <button data-v="0">Population &sigma; &divide; n</button>
+      </div>
+      <div class="tiles">
+        <div><span class="lb">Values n</span><span class="vv" id="tN">34</span></div>
+        <div><span class="lb">Mean</span><span class="vv" id="tMean">&mdash;</span></div>
+        <div class="sdv"><span class="lb" id="lbSD">SD s</span><span class="vv" id="tSD">&mdash;</span></div>
+        <div class="vrv"><span class="lb" id="lbVar">Variance s&sup2;</span><span class="vv" id="tVar">&mdash;</span></div>
+      </div>
+      <div class="cov">
+        <div>within 1 SD<span class="v" id="k1">&mdash;</span><span class="r">bell: ~68%</span></div>
+        <div>within 2 SD<span class="v" id="k2">&mdash;</span><span class="r">bell: ~95%</span></div>
+        <div>within 3 SD<span class="v" id="k3">&mdash;</span><span class="r">bell: ~99.7%</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem">Read the formula as a set of instructions and it stops being frightening. <b>Take each value's distance from the mean</b> &mdash; that is a deviation. <b>Square them</b>, so that distances below the mean stop cancelling distances above it, and so that far-away values count for much more than near ones. <b>Add the squares up and divide</b>, which gives an average squared distance: the <b>variance</b>. Then <b>take the square root</b> to get back out of squared units and into the units you started in. That last step is the whole reason <b>s</b> is the number we report: a variance of 52 &ldquo;squared beats per minute&rdquo; means nothing to anybody, but an <b>s</b> of 7.2 beats per minute is a distance you can picture on the axis above. As for <b>divide by what</b> &mdash; use <b>n</b> when the values in front of you are the entire group you care about, and <b>n &minus; 1</b> when they are a sample standing in for a larger population. Dividing by n would make the variance come out slightly too small on average, and n &minus; 1 corrects that exactly &mdash; exactly for the <i>variance</i>, at least. The square root of a perfectly corrected variance is not itself perfectly corrected, a subtlety worth knowing about and almost never worth acting on. Flip the toggle and watch: the two answers differ by a whisker here, and by less and less as n grows.</div>
+      <div class="note">Four things that are easy to get wrong. <b>First, s is not the average distance from the mean.</b> That number exists and has its own name &mdash; the mean absolute deviation &mdash; and it is always the smaller of the two, because squaring gives the far points extra weight. <b>Second, 68&ndash;95&ndash;99.7 is not a property of the standard deviation.</b> It is a property of the bell curve. Switch the shape to <b>Flat</b> or <b>Two clumps</b> and watch those percentages break while every formula on this page keeps working. What holds for <i>any</i> dataset is much weaker: at least 75% of the values lie within 2 SDs of the mean and at least 89% within 3. <b>Third, a bigger s is not automatically worse.</b> On the lathe it is a warning; in a group of patients it is real biological variation, not error. <b>Fourth, s can never be negative</b> &mdash; it is a square root of a sum of squares &mdash; and it equals zero only when every single value is identical.</div>
+      <div class="fn" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- seeded PRNG, so the page opens with the same sample every time ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function nrm(r){var u=1-r(),v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+
+ /* ================= three settings where spread is the whole story ================= */
+ var DS=[
+  {nm:'resting pulse',ax:'resting pulse (beats per minute)',un:' bpm',u2:' bpm&sup2;',
+   dec:0,tdec:0,gran:1,C0:72,SB:6,one:'reading',many:'readings',
+   story:'Two clinics both report a mean resting pulse of about 72. In the first, almost every reading falls between 66 and 78; in the second they run from the low 50s to the high 90s. The means match to the decimal and the two groups are nothing alike. The <b>standard deviation</b> is the single number that tells them apart, and it is the reason a mean is almost never reported on its own.'},
+  {nm:'box fill weight',ax:'weight delivered into the box (grams)',un:' g',u2:' g&sup2;',
+   dec:1,tdec:0,gran:0.1,C0:500,SB:4,one:'box',many:'boxes',
+   story:'A filling machine is set for 500 g. Nobody expects any single box to be exactly 500 &mdash; they expect the <b>spread</b> to be small. Here the standard deviation <i>is</i> the specification: shrink it and far fewer boxes fall outside tolerance, without the mean shifting by a gram. Re-centering the machine and tightening the machine are two entirely different repairs, and the shift dial versus the spread dial is exactly that distinction.'},
+  {nm:'bolt diameter',ax:'finished diameter (millimeters)',un:' mm',u2:' mm&sup2;',
+   dec:3,tdec:2,gran:0.001,C0:10,SB:0.05,one:'bolt',many:'bolts',
+   story:'A lathe is cutting 10 mm bolts, and a tool wears down a little more with every hour of the shift. The average bolt stays near 10 mm the whole time, so a chart of the mean shows nothing at all; what changes is the standard deviation, climbing quietly until parts start failing the gauge. Watching spread rather than center is what turns a pile of measurements into an early warning.'}
+ ];
+
+ /* ================= three shapes, each built to a comparable SD ================= */
+ var SH=[
+  {k:'bell',nm:'Bell',s:'crowded in the middle',gen:function(r){var z;do{z=nrm(r);}while(Math.abs(z)>2.6);return z;}},
+  {k:'flat',nm:'Flat',s:'every value as likely',gen:function(r){return (r()*2-1)*1.7320508;}},
+  {k:'two',nm:'Two clumps',s:'a hole in the middle',gen:function(r){return (r()<0.5?-1:1)+0.20*nrm(r);}}
+ ];
+
+ var NS=[10,16,24,34,48],POOL=48;
+ var JUMPS=[{v:0,t:'&times;0'},{v:50,t:'&times;0.5'},{v:100,t:'&times;1'},{v:200,t:'&times;2'}];
+
+ var ds=0,sh=0,ni=3,cv=100,shk=0,seed=0,samp=1,bm=0;
+ var pool=[],base=[],bMean=0,SSb=0,MADb=0,rngB=0,s1=0,H=0;
+ var mn=0,sd=0,vr=0,mad=0,SS=0,dev=[],vals=[];
+
+ function C(){return cv/100;}
+ function SHIFT(){return shk*DS[ds].SB/10;}
+ function DV(){var n=NS[ni];return samp?(n-1):n;}
+
+ /* ================= the sample ================= */
+ /* one pool of 48 base values is generated and standardized once; the n slider
+    takes a prefix of it, so raising n extends the sample rather than replacing it */
+ function gen(){
+  var D=DS[ds],r=mulberry32(20260718+seed*7919+ds*104729+sh*1299709),i,z=[],m=0,q=0,v;
+  for(i=0;i<POOL;i++)z.push(SH[sh].gen(r));
+  for(i=0;i<POOL;i++)m+=z[i];
+  m/=POOL;
+  for(i=0;i<POOL;i++)q+=(z[i]-m)*(z[i]-m);
+  var sz=Math.sqrt(q/(POOL-1))||1;
+  pool=[];
+  for(i=0;i<POOL;i++){
+    v=D.C0+D.SB*(z[i]-m)/sz;
+    v=Math.round(v/D.gran)*D.gran;
+    pool.push(Math.round(v*1e9)/1e9);
+  }
+  calc();
+ }
+
+ /* the dial multiplies every deviation from the mean by c; the shift adds a
+    constant to every value. both are exact transformations of the base sample,
+    so s = c x s1 and the mean = base mean + shift, with no rounding in between */
+ function calc(){
+  var D=DS[ds],n=NS[ni],i,t=0,d,lo=1e18,hi=-1e18,c=C();
+  base=pool.slice(0,n);
+  for(i=0;i<n;i++)t+=base[i];
+  bMean=t/n;
+  SSb=0;MADb=0;
+  for(i=0;i<n;i++){
+    d=base[i]-bMean;
+    SSb+=d*d; MADb+=Math.abs(d);
+    if(base[i]<lo)lo=base[i];
+    if(base[i]>hi)hi=base[i];
+  }
+  MADb/=n; rngB=hi-lo;
+  s1=Math.sqrt(SSb/DV());
+  H=8.5*D.SB;
+  mn=bMean+SHIFT();
+  sd=c*s1; vr=sd*sd; SS=c*c*SSb; mad=c*MADb;
+  dev=[];vals=[];
+  for(i=0;i<n;i++){d=c*(base[i]-bMean);dev.push(d);vals.push(mn+d);}
+  dev.sort(function(a,b){return a-b;});
+ }
+ /* how many values sit within k standard deviations. because the data and the
+    ruler stretch together, this count does not depend on the dial at all */
+ function cover(k){
+  var n=NS[ni],i,ct=0;
+  if(C()===0)return n;
+  for(i=0;i<n;i++)if(Math.abs(base[i]-bMean)<=k*s1+1e-12)ct++;
+  return ct;
+ }
+
+ /* ================= formatting ================= */
+ function fv(x){return x.toFixed(DS[ds].dec)+DS[ds].un;}
+ function fs(x){return x.toFixed(DS[ds].dec+1)+DS[ds].un;}
+ function fsn(x){return x.toFixed(DS[ds].dec+1);}
+ function sig(x){
+  if(!isFinite(x))return '&mdash;';
+  if(x===0)return '0';
+  var v=Number(x.toPrecision(4));
+  if(Math.abs(v)>=10000)return Math.round(v).toLocaleString('en-US');
+  return String(v);
+ }
+ function niceStep(span){
+  var raw=span/6,mag=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10)),u=raw/mag,st;
+  if(u<1.5)st=1;else if(u<3)st=2;else if(u<7)st=5;else st=10;
+  return st*mag;
+ }
+ function chip(x,y,txt,col){
+  var w=11+txt.length*5.0,cx=x;
+  if(cx-w/2<2)cx=2+w/2;
+  if(cx+w/2>338)cx=338-w/2;
+  return '<rect x="'+(cx-w/2).toFixed(1)+'" y="'+y+'" width="'+w.toFixed(1)+'" height="14" rx="7" fill="'+col+'"/>'+
+         '<text x="'+cx.toFixed(1)+'" y="'+(y+10.1)+'" font-size="9.1" font-weight="800" fill="#fff" text-anchor="middle">'+txt+'</text>';
+ }
+
+ /* ================= card 1: the deviation fan ================= */
+ var FX0=26,FX1=332,FTOP=18,FBOT=156,FAX=164;
+ function drawFan(){
+  var D=DS[ds],n=NS[ni],s='',i,A0=bMean-H,A1=bMean+H;
+  function X(v){var t=FX0+(v-A0)/(A1-A0)*(FX1-FX0);return t<FX0?FX0:(t>FX1?FX1:t);}
+  var rowH=Math.min(5.4,(FBOT-FTOP)/n),y0=FTOP+((FBOT-FTOP)-rowH*n)/2,r=Math.min(2.4,rowH*0.42);
+  var mx=X(mn);
+
+  if(sd>0){
+    s+='<rect x="'+X(mn-2*sd).toFixed(1)+'" y="14" width="'+(X(mn+2*sd)-X(mn-2*sd)).toFixed(1)+'" height="150" fill="#e8f1f6"/>';
+    s+='<rect x="'+X(mn-sd).toFixed(1)+'" y="14" width="'+(X(mn+sd)-X(mn-sd)).toFixed(1)+'" height="150" fill="#cfe3ee"/>';
+    s+='<line x1="'+X(mn-sd).toFixed(1)+'" y1="14" x2="'+X(mn-sd).toFixed(1)+'" y2="164" stroke="#2f6f8a" stroke-width="1" stroke-dasharray="3 3"/>';
+    s+='<line x1="'+X(mn+sd).toFixed(1)+'" y1="14" x2="'+X(mn+sd).toFixed(1)+'" y2="164" stroke="#2f6f8a" stroke-width="1" stroke-dasharray="3 3"/>';
+  }
+
+  /* one row per value: a line back to the mean, then the value itself */
+  for(i=0;i<n;i++){
+    var y=(y0+rowH*(i+0.5)).toFixed(1),x=X(mn+dev[i]),col=dev[i]>=0?'#2f6f9f':'#d1495b';
+    if(Math.abs(x-mx)>0.4)s+='<line x1="'+mx.toFixed(1)+'" y1="'+y+'" x2="'+x.toFixed(1)+'" y2="'+y+'" stroke="'+col+'" stroke-width="1.1" opacity=".55"/>';
+    s+='<circle cx="'+x.toFixed(1)+'" cy="'+y+'" r="'+r.toFixed(2)+'" fill="'+col+'"/>';
+  }
+
+  s+='<line x1="'+mx.toFixed(1)+'" y1="14" x2="'+mx.toFixed(1)+'" y2="164" stroke="#1c4454" stroke-width="1.8"/>';
+  s+=chip(mx,0,'mean '+fsn(mn),'#1c4454');
+
+  /* the measurement axis */
+  s+='<line x1="'+FX0+'" y1="'+FAX+'" x2="'+FX1+'" y2="'+FAX+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  var st=niceStep(A1-A0),t0=Math.ceil(A0/st)*st,v;
+  for(v=t0;v<=A1+st*1e-6;v+=st){
+    var tx=X(v);
+    s+='<line x1="'+tx.toFixed(1)+'" y1="'+FAX+'" x2="'+tx.toFixed(1)+'" y2="'+(FAX+5)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+    s+='<text x="'+tx.toFixed(1)+'" y="'+(FAX+16)+'" font-size="8.4" font-weight="700" fill="#78868d" text-anchor="middle">'+v.toFixed(D.tdec)+'</text>';
+  }
+  s+='<text x="179" y="196" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">'+D.ax+'</text>';
+  $("fan").innerHTML=s;
+
+  var c=C();
+  $("fanCap").innerHTML=(c===0
+    ? 'Every line has collapsed to nothing: all <b>'+n+'</b> values sit exactly on the mean, so there is no shaded band to draw.'
+    : 'Each horizontal line is one value&rsquo;s <b>deviation</b> &mdash; how far it sits from the mean, and on which side. The shaded core is <b>mean &plusmn; '+fs(sd)+'</b>, one standard deviation each way; the pale band is two. The longest line here reaches <b>'+fs(Math.max(Math.abs(dev[0]),Math.abs(dev[n-1])))+'</b> from the mean.');
+ }
+
+ /* ================= card 2: distances, then squares ================= */
+ var BX0=32,BX1=318,BTOP=26,BBOT=158,BAX=162;
+ function drawBars(){
+  var D=DS[ds],n=NS[ni],s='',i,a=[],mx=0,c=C();
+  for(i=0;i<n;i++)a.push(bm?dev[i]*dev[i]:Math.abs(dev[i]));
+  var sgn=dev.slice();
+  var idx=[];for(i=0;i<n;i++)idx.push(i);
+  idx.sort(function(p,q){return a[q]-a[p];});
+  for(i=0;i<n;i++)if(a[i]>mx)mx=a[i];
+
+  if(mx<=0){
+    s+='<text x="170" y="92" font-size="11" font-weight="700" fill="#78868d" text-anchor="middle">Every deviation is zero, so there is nothing to draw.</text>';
+    s+='<text x="170" y="110" font-size="10" font-weight="600" fill="#a0adb4" text-anchor="middle">Turn the spread dial up.</text>';
+    $("bars").innerHTML=s;
+    $("barCap").innerHTML='With the dial at <b>&times;0</b> every value equals the mean, every bar has length zero, and the sum of squares is <b>0</b>.';
+    return;
+  }
+  var rowH=Math.min(5.4,(BBOT-BTOP)/n),y0=BTOP+((BBOT-BTOP)-rowH*n)/2,W=BX1-BX0;
+  function L(v){var t=v/mx*W;return t<0?0:(t>W?W:t);}
+
+  for(i=0;i<n;i++){
+    var k=idx[i],y=y0+rowH*i,h=Math.max(1.4,rowH*0.72);
+    var col=bm?'#7a5a8a':(sgn[k]>=0?'#2f6f9f':'#d1495b');
+    s+='<rect x="'+BX0+'" y="'+(y+(rowH-h)/2).toFixed(1)+'" width="'+L(a[k]).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="'+col+'" opacity=".82"/>';
+  }
+
+  /* the two reference lines: the plain average, and the statistic itself */
+  var gv=bm?SS/n:mad, gl=bm?'mean square '+sig(SS/n):'mean distance '+fsn(mad);
+  var bv=bm?vr:sd,    bb=bm?'variance '+sig(vr):'s = '+fsn(sd);
+  var gx=BX0+L(gv), bx=BX0+L(bv);
+  s+='<line x1="'+gx.toFixed(1)+'" y1="20" x2="'+gx.toFixed(1)+'" y2="'+BAX+'" stroke="#8a98a0" stroke-width="1.2" stroke-dasharray="4 3"/>';
+  s+='<line x1="'+bx.toFixed(1)+'" y1="20" x2="'+bx.toFixed(1)+'" y2="'+BAX+'" stroke="#b8862f" stroke-width="1.8"/>';
+  s+=chip(gx,2,gl,'#8a98a0');
+  s+=chip(bx,bx>gx?2:16,bb,'#b8862f');
+
+  s+='<line x1="'+BX0+'" y1="18" x2="'+BX0+'" y2="'+BAX+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<line x1="'+BX0+'" y1="'+BAX+'" x2="'+BX1+'" y2="'+BAX+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<text x="'+BX0+'" y="'+(BAX+14)+'" font-size="8.4" font-weight="700" fill="#78868d" text-anchor="start">0</text>';
+  s+='<text x="'+BX1+'" y="'+(BAX+14)+'" font-size="8.4" font-weight="700" fill="#78868d" text-anchor="end">'+(bm?sig(mx):fsn(mx))+'</text>';
+  s+='<text x="175" y="184" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">'+(bm?'squared deviation'+D.u2:'distance from the mean'+D.un)+' &mdash; one bar per '+D.one+', longest first</text>';
+  $("bars").innerHTML=s;
+
+  $("barCap").innerHTML=bm
+    ? 'Now every bar is the <b>square</b> of the distance. The handful of values that were merely a bit farther out are suddenly enormous, and they, not the crowd near the mean, decide the answer. The gold line is the <b>variance</b>, '+sig(vr)+D.u2+' &mdash; every bar added together and then divided by '+(samp?('n &minus; 1 = '+DV()):('n = '+DV()))+'. Its square root is <b>'+(samp?'s':'&sigma;')+' = '+fs(sd)+'</b>.'+(samp?' The grey line marks the plain average of the bars, which divides by n instead; the small gap between the two lines is all that Bessel&rsquo;s correction amounts to.':' With this divisor the two lines coincide exactly: the variance simply <i>is</i> the average of these bars.')
+    : 'Each bar is one value&rsquo;s distance from the mean, ignoring direction. The grey line is their plain average, <b>'+fs(mad)+'</b>; the gold line is <b>s = '+fs(sd)+'</b>. The gold line sits to the right of the grey one, and it always will &mdash; that gap is the price of squaring. Now switch to the squared view.';
+ }
+
+ /* ================= card 3: the dial against both numbers ================= */
+ var PX0=36,PX1=326,PY0=18,PY1=148;
+ function drawDial(){
+  var s='',i,c=C();
+  function X(t){return PX0+t/2*(PX1-PX0);}
+  function YS(t){return PY1-(t/2)*(PY1-PY0);}
+  function YV(t){return PY1-(t*t/4)*(PY1-PY0);}
+
+  for(i=0;i<=4;i++){
+    var gx=X(i*0.5);
+    s+='<line x1="'+gx.toFixed(1)+'" y1="'+PY0+'" x2="'+gx.toFixed(1)+'" y2="'+PY1+'" stroke="#e7eef2" stroke-width="1"/>';
+    s+='<text x="'+gx.toFixed(1)+'" y="'+(PY1+14)+'" font-size="8.4" font-weight="700" fill="#78868d" text-anchor="middle">&times;'+(i*0.5).toFixed(1)+'</text>';
+  }
+  for(i=1;i<=4;i++){
+    var gy=PY1-i/4*(PY1-PY0);
+    s+='<line x1="'+PX0+'" y1="'+gy.toFixed(1)+'" x2="'+PX1+'" y2="'+gy.toFixed(1)+'" stroke="#eff4f7" stroke-width="1"/>';
+  }
+
+  var pv='M'+X(0).toFixed(1)+' '+YV(0).toFixed(1);
+  for(i=1;i<=40;i++){var t=i/20;pv+=' L'+X(t).toFixed(1)+' '+YV(t).toFixed(1);}
+  s+='<path d="'+pv+'" fill="none" stroke="#7a5a8a" stroke-width="2.4"/>';
+  s+='<line x1="'+X(0).toFixed(1)+'" y1="'+YS(0).toFixed(1)+'" x2="'+X(2).toFixed(1)+'" y2="'+YS(2).toFixed(1)+'" stroke="#2f6f8a" stroke-width="2.4"/>';
+
+  s+='<text x="'+(X(2)-4).toFixed(1)+'" y="'+(YS(2)-6).toFixed(1)+'" font-size="10" font-weight="800" fill="#2f6f8a" text-anchor="end">s &mdash; a straight line</text>';
+  s+='<text x="'+(X(1.42)).toFixed(1)+'" y="'+(YV(1.42)+13).toFixed(1)+'" font-size="10" font-weight="800" fill="#7a5a8a" text-anchor="middle">s&sup2; &mdash; a curve</text>';
+
+  s+='<line x1="'+X(c).toFixed(1)+'" y1="'+PY0+'" x2="'+X(c).toFixed(1)+'" y2="'+PY1+'" stroke="#1c4454" stroke-width="1.2" stroke-dasharray="3 3"/>';
+  s+='<circle cx="'+X(c).toFixed(1)+'" cy="'+YV(c).toFixed(1)+'" r="4.4" fill="#7a5a8a" stroke="#fff" stroke-width="1.6"/>';
+  s+='<circle cx="'+X(c).toFixed(1)+'" cy="'+YS(c).toFixed(1)+'" r="4.4" fill="#2f6f8a" stroke="#fff" stroke-width="1.6"/>';
+
+  s+='<line x1="'+PX0+'" y1="'+PY1+'" x2="'+PX1+'" y2="'+PY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<text x="181" y="180" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">the spread dial &mdash; each curve drawn as a fraction of its own value at &times;2</text>';
+  $("dial").innerHTML=s;
+
+  $("dialCap").innerHTML='Both curves are scaled to end at the same height, so the shapes can be compared directly. <b>s rises in a straight line through the origin</b>: multiply every deviation by '+c.toFixed(2)+' and s is multiplied by '+c.toFixed(2)+'. <b>The variance bows upward</b>, because it is multiplied by '+c.toFixed(2)+'&sup2; = '+(c*c).toFixed(2)+'. Double the spread and s doubles while s&sup2; quadruples &mdash; the same fact in two languages.';
+ }
+
+ /* ================= the reading panel ================= */
+ function drawInfo(){
+  var D=DS[ds],n=NS[ni],c=C(),d=SHIFT(),t='';
+  var hdr=c===0?'No spread at all':(c===1?'The sample as drawn':('Spread &times;'+c.toFixed(2)));
+  t+='<span class="n">'+hdr+'</span>';
+
+  if(c===0){
+    t+='The dial has pulled every deviation to zero, so all <b>'+n+'</b> '+D.many+' now read exactly <b>'+fs(mn)+'</b>. The sum of squared deviations is <b>0</b>, the variance is <b>0</b>, and <b>s = 0</b>. This is the floor: a standard deviation cannot go lower, because it is the square root of a sum of squares, and it reaches zero only in this one situation &mdash; every value identical.';
+  } else if(c===1){
+    t+='The dial is at rest, so these are the '+n+' '+D.many+' exactly as they were drawn. Their mean is <b>'+fs(mn)+'</b> and their standard deviation is <b>'+fs(sd)+'</b> &mdash; read that as the typical distance between a '+D.one+' and the mean, in the same units as the '+D.many+' themselves. The variance, <b>'+sig(vr)+D.u2+'</b>, is the same information in squared units. Now move the spread dial and watch which of the two follows it.';
+  } else {
+    t+='The dial multiplies every deviation from the mean by <b>'+c.toFixed(2)+'</b>. The mean itself is untouched at <b>'+fs(mn)+'</b>, because stretching the values around their own center cannot move that center. ';
+    t+='At <b>&times;1</b> this sample had '+(samp?'s':'&sigma;')+' = <b>'+fs(s1)+'</b>; the dial has taken it to <b>'+fs(sd)+'</b>, exactly '+c.toFixed(2)+' times as large. The variance went from <b>'+sig(s1*s1)+D.u2+'</b> to <b>'+sig(vr)+D.u2+'</b>, a factor of '+c.toFixed(2)+'&sup2; = <b>'+(c*c).toFixed(2)+'</b>.';
+    if(c>1)t+=' The '+D.many+' are now visibly more scattered, and the shaded band on the plot has widened to match.';
+    else t+=' The '+D.many+' have closed in on the mean, and the band has narrowed with them.';
+  }
+  if(shk!==0){
+    t+=' <b>You have also shifted every value by '+(d>0?'+':'&minus;')+fsn(Math.abs(d))+D.un+'.</b> The whole picture slid sideways and the mean followed it exactly, but not one deviation changed length &mdash; so s did not move a hair. Adding a constant relocates a dataset; it never stretches one.';
+  }
+
+  t+='<div class="eq">'+
+     '<div class="r"><span>sum of (x &minus; mean)&sup2;</span><b>'+sig(SS)+D.u2+'</b></div>'+
+     '<div class="r"><span>&divide; '+(samp?('(n &minus; 1) = '+DV()):('n = '+DV()))+'&nbsp; &rarr; variance</span><b>'+sig(vr)+D.u2+'</b></div>'+
+     '<div class="r"><span>square root &rarr; '+(samp?'s':'&sigma;')+'</span><b>'+fs(sd)+'</b></div>'+
+     '</div>';
+
+  if(c>0){
+    t+='<div class="dd">Mean distance from the mean is <b>'+fs(mad)+'</b> &mdash; smaller than '+(samp?'s':'&sigma;')+' at '+fs(sd)+', as it must be. Squaring hands the far-out '+D.many+' extra weight, and the square root never fully gives it back.</div>';
+  }
+  t+='<div class="loc">'+D.story+'</div>';
+  $("info").innerHTML=t;
+ }
+
+ /* ================= chrome ================= */
+ function render(){
+  var D=DS[ds],n=NS[ni],c=C();
+  calc();
+  drawFan();drawBars();drawDial();drawInfo();
+
+  $("cVal").innerHTML='&times;'+c.toFixed(2);
+  $("dVal").innerHTML=shk===0?'none':((shk>0?'+':'&minus;')+fsn(Math.abs(SHIFT()))+D.un);
+  $("nVal").innerHTML=String(n);
+  $("tN").innerHTML=String(n);
+  $("tMean").innerHTML=fsn(mn);
+  $("tSD").innerHTML=fsn(sd);
+  $("tVar").innerHTML=sig(vr);
+  $("lbSD").innerHTML=samp?'SD s':'SD &sigma;';
+  $("lbVar").innerHTML=samp?'Variance s&sup2;':'Variance &sigma;&sup2;';
+
+  var k1=cover(1),k2=cover(2),k3=cover(3);
+  $("k1").innerHTML=k1+' / '+n;
+  $("k2").innerHTML=k2+' / '+n;
+  $("k3").innerHTML=k3+' / '+n;
+
+  $("fanTitle").innerHTML=n+' '+D.many+', and how far each one sits from the mean';
+  var col=c===0?'#4a585f':(c<0.8?'#2f9e5b':(c<=1.3?'#2f6f8a':(c<=1.7?'#b8862f':'#d1495b')));
+  $("stage").style.background=col;
+  $("stage").innerHTML=(samp?'s':'&sigma;')+' = '+fs(sd)+'<small>spread &times;'+c.toFixed(2)+' &nbsp;·&nbsp; variance '+sig(vr)+D.u2+' &nbsp;·&nbsp; mean '+fs(mn)+'</small>';
+
+  $("jump").innerHTML=JUMPS.map(function(j){return '<button class="it'+(j.v===cv?' on':'')+'" data-v="'+j.v+'">'+j.t+'</button>';}).join('');
+  document.querySelectorAll('#jump .it').forEach(function(b){b.onclick=function(){cv=+b.dataset.v;$("cSl").value=cv;render();};});
+
+  $("shape").innerHTML=SH.map(function(x,i){return '<button class="it'+(i===sh?' on':'')+'" data-v="'+i+'"><span class="nm">'+x.nm+'</span><span class="s">'+x.s+'</span></button>';}).join('');
+  document.querySelectorAll('#shape .it').forEach(function(b){b.onclick=function(){sh=+b.dataset.v;gen();render();};});
+
+  $("fnote").innerHTML='The '+n+' '+D.many+' are drawn from a fixed, seeded pseudo-random pool, so the page opens the same way every time and &ldquo;New sample&rdquo; draws a fresh one. The spread dial multiplies each deviation from the mean by its factor and the shift dial adds a constant &mdash; both are exact, so every figure above is computed from the values currently plotted rather than looked up.';
+ }
+
+ /* ================= wiring ================= */
+ $("cSl").oninput=function(){cv=+this.value;render();};
+ $("dSl").oninput=function(){shk=+this.value;render();};
+ $("nSl").oninput=function(){ni=+this.value;render();};
+ $("reset").onclick=function(){cv=100;shk=0;$("cSl").value=100;$("dSl").value=0;render();};
+ $("samp").onclick=function(){seed++;gen();render();};
+ document.querySelectorAll('#seg button').forEach(function(b){
+  b.onclick=function(){
+    ds=+b.dataset.v;
+    document.querySelectorAll('#seg button').forEach(function(x){x.className='';});
+    b.className='on';
+    gen();render();
+  };
+ });
+ document.querySelectorAll('#bseg button').forEach(function(b){
+  b.onclick=function(){
+    bm=+b.dataset.v;
+    document.querySelectorAll('#bseg button').forEach(function(x){x.className='';});
+    b.className='on';
+    render();
+  };
+ });
+ document.querySelectorAll('#dseg button').forEach(function(b){
+  b.onclick=function(){
+    samp=+b.dataset.v;
+    document.querySelectorAll('#dseg button').forEach(function(x){x.className='';});
+    b.className='on';
+    render();
+  };
+ });
+
+ gen();render();
+})();
+</script>
+</body>
+</html>

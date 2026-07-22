@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Match the Sleep Disorder</title>
+<meta name="description" content="Match each clinical clue to the right sleep disorder — insomnia, sleep apnea, narcolepsy, and night terrors — with an illustrated bedside scene for each. For psychology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:0.96fr 1.04fr;}
+#art text{pointer-events:none;}
+.hint{font-size:12px;color:var(--muted);margin:-2px 0 9px;font-weight:600;}
+.mlbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:2px 0 7px;}
+.list .it .tick{margin-left:auto;font-size:16px;color:var(--muted);font-weight:800;flex:none;}
+.it.done{background:#eef7f0;border-color:#bfe3c9;cursor:default;}
+.it.done .nm{color:#237a45;} .it.done .s{color:#5a9a70;} .it.done .tick{color:#2f9e5b;}
+.it.dis{opacity:.55;cursor:default;}
+.grid{margin-top:8px;}
+.grid .it .s{margin-top:2px;display:block;}
+.prog{height:10px;border-radius:6px;background:#f0e2ea;overflow:hidden;margin:12px 0 3px;}
+.prog i{display:block;height:100%;width:0;background:var(--teal);transition:width .45s;}
+.scoretxt{font-size:11.5px;font-weight:800;color:var(--muted);text-align:center;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 4</div>
+  <h1>Match the Sleep Disorder</h1>
+  <div class="intro">Four sleep disorders, four very different bedside stories. <b>Insomnia</b> and <b>sleep apnea</b> and <b>narcolepsy</b> are <b>dyssomnias</b> (they wreck the amount or quality of sleep); <b>night terrors</b> are a <b>parasomnia</b> (an odd event during sleep). Tap a clue, then tap the disorder it points to.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The sleep clinic</h2>
+    <svg viewBox="0 0 220 200" aria-label="bedside scene"><g id="art"></g></svg>
+    <div id="info"></div>
+  </div></div>
+  <div>
+    <div id="stage">Match all four<small>tap a clue to begin</small></div>
+    <div class="card">
+      <div class="prog"><i id="bar"></i></div>
+      <div class="scoretxt" id="score">0 of 4 matched</div>
+      <div class="mlbl" style="margin-top:12px;">The clues</div>
+      <div class="list" id="clues"></div>
+      <div class="mlbl" style="margin-top:13px;">Which disorder?</div>
+      <div class="grid" id="dz"></div>
+      <div class="row"><button class="btn" id="reset">↺ Shuffle &amp; retry</button></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var D={
+  insomnia:{nm:'Insomnia',type:'Dyssomnia',pill:'low',ic:'🕒',
+   clue:'Lies awake over an hour every night, then wakes at 4 a.m. unable to fall back asleep.',
+   key:'Can’t fall or stay asleep',
+   teach:'The most common sleep disorder: ongoing trouble <b>falling asleep, staying asleep, or waking too early</b> even when there is a full chance to sleep. It leaves a person fatigued and irritable by day. First-line treatment is <b>CBT for insomnia (CBT-I)</b> — stimulus control and better sleep hygiene — rather than long-term sleeping pills.'},
+  apnea:{nm:'Sleep apnea',type:'Dyssomnia',pill:'low',ic:'💨',
+   clue:'Snores loudly, then gasps and chokes awake again and again; breathing keeps pausing.',
+   key:'Breathing keeps stopping',
+   teach:'In <b>obstructive sleep apnea</b> the airway repeatedly collapses, so breathing <b>pauses for seconds at a time</b>, over and over. The sleeper snores, jolts awake gasping dozens of times a night, and wakes unrefreshed. The standard treatment is a <b>CPAP</b> machine that splints the airway open.'},
+  narcolepsy:{nm:'Narcolepsy',type:'Dyssomnia',pill:'low',ic:'⚡',
+   clue:'Drops into sudden sleep “attacks” in the middle of the day; knees buckle when laughing.',
+   key:'Sudden daytime sleep attacks',
+   teach:'Uncontrollable daytime <b>sleep attacks</b> in which the person slips almost instantly into <b>REM sleep</b>, even mid-activity. It often comes with <b>cataplexy</b> — a sudden loss of muscle tone triggered by strong emotion like laughter — and is caused by the loss of <b>hypocretin (orexin)</b> signaling in the brain.'},
+  terrors:{nm:'Night terrors',type:'Parasomnia',pill:'high',ic:'😱',
+   clue:'A child bolts upright screaming and sweating in the early night, but recalls nothing by morning.',
+   key:'Wakes screaming, no memory',
+   teach:'A parasomnia of <b>deep NREM (slow-wave) sleep</b>, usually in the <b>first third of the night</b> and most common in children. The sleeper suddenly sits up screaming, sweating, and terrified — yet is <b>not truly awake and remembers nothing</b>. Contrast with <b>nightmares</b>, which occur during REM sleep later on and <i>are</i> recalled.'}
+ };
+ var ORDER=['insomnia','apnea','narcolepsy','terrors']; // fixed disorder buttons
+ var keys=['insomnia','apnea','narcolepsy','terrors'];
+ var clueOrder=keys.slice();
+ var sel=null, matched={}, count=0;
+
+ function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
+
+ function bed(){
+   return '<rect x="16" y="132" width="188" height="50" rx="10" fill="#caa8bd"/>'
+     +'<rect x="16" y="113" width="188" height="24" rx="10" fill="#ecd9e6"/>'
+     +'<rect x="24" y="99" width="56" height="28" rx="12" fill="#fff8fc" stroke="#eadcea" stroke-width="1.5"/>';
+ }
+ function moon(){ return '<text x="176" y="42" font-size="26" text-anchor="middle">🌙</text><circle cx="150" cy="28" r="1.6" fill="#d7b7cd"/><circle cx="196" cy="60" r="1.6" fill="#d7b7cd"/>'; }
+
+ function draw(k){
+   var s='';
+   if(k==='insomnia'){
+     s+=bed()+moon();
+     // late clock, top-left
+     s+='<circle cx="44" cy="42" r="18" fill="#fff" stroke="#b58fb0" stroke-width="2.5"/>';
+     s+='<line x1="44" y1="42" x2="44" y2="30" stroke="#5e2846" stroke-width="2.5" stroke-linecap="round"/>';
+     s+='<line x1="44" y1="42" x2="53" y2="45" stroke="#5e2846" stroke-width="2.5" stroke-linecap="round"/>';
+     s+='<text x="44" y="72" font-size="11" fill="#5e2846" text-anchor="middle" font-weight="800">3:14</text>';
+     s+='<text x="42" y="122" font-size="30" text-anchor="middle">😳</text>';
+     s+='<text x="96" y="104" font-size="20">💭</text>';
+   } else if(k==='apnea'){
+     s+=bed()+moon();
+     s+='<text x="42" y="122" font-size="30" text-anchor="middle">😮</text>';
+     // airflow trace: breaths -> flat pause -> gasp spike
+     s+='<path d="M92 66 q6 -14 12 0 q6 14 12 0 q6 -14 12 0" fill="none" stroke="#7a5a8a" stroke-width="3" stroke-linecap="round"/>';
+     s+='<line x1="128" y1="66" x2="164" y2="66" stroke="#d1495b" stroke-width="3" stroke-dasharray="4 3"/>';
+     s+='<path d="M164 66 L172 44 L180 66" fill="none" stroke="#d1495b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+     s+='<text x="146" y="84" font-size="9.5" fill="#b23145" text-anchor="middle" font-weight="800">breathing pauses</text>';
+   } else if(k==='narcolepsy'){
+     s+='<text x="176" y="46" font-size="27" text-anchor="middle">☀️</text>';
+     s+='<circle cx="150" cy="30" r="1.6" fill="#e8cf9a"/>';
+     // desk + slumped worker (daytime)
+     s+='<rect x="30" y="150" width="160" height="11" rx="3" fill="#caa8bd"/>';
+     s+='<rect x="42" y="161" width="9" height="26" fill="#b294a8"/><rect x="169" y="161" width="9" height="26" fill="#b294a8"/>';
+     s+='<text x="88" y="152" font-size="40" text-anchor="middle">😴</text>';
+     s+='<text x="152" y="147" font-size="20" text-anchor="middle">☕</text>';
+     s+='<text x="60" y="112" font-size="24" text-anchor="middle">⚡</text>';
+     s+='<text x="118" y="120" font-size="15" fill="#b8862f" font-weight="800">Zzz</text>';
+   } else if(k==='terrors'){
+     s+=bed()+moon();
+     s+='<text x="34" y="112" font-size="34" text-anchor="middle">😱</text>';
+     s+='<text x="72" y="98" font-size="18">💦</text>';
+     s+='<text x="150" y="106" font-size="20" text-anchor="middle">❤️</text>';
+     s+='<line x1="166" y1="92" x2="174" y2="86" stroke="#d1495b" stroke-width="2.5" stroke-linecap="round"/>';
+     s+='<line x1="168" y1="100" x2="177" y2="99" stroke="#d1495b" stroke-width="2.5" stroke-linecap="round"/>';
+     s+='<text x="112" y="126" font-size="13" fill="#b23145" text-anchor="middle" font-weight="800">deep NREM sleep</text>';
+   } else {
+     s+=bed()+moon();
+     s+='<text x="42" y="122" font-size="30" text-anchor="middle">😴</text>';
+     s+='<text x="118" y="118" font-size="22" text-anchor="middle">❓</text>';
+   }
+   return s;
+ }
+
+ function renderClues(){
+   $("clues").innerHTML=clueOrder.map(function(k){
+     var m=D[k], done=matched[k];
+     return '<button class="it'+(k===sel?' on':'')+(done?' done dis':'')+'" data-k="'+k+'">'
+       +'<span class="ic">'+m.ic+'</span>'
+       +'<span><span class="nm">'+m.clue+'</span></span>'
+       +'<span class="tick">'+(done?'✓':'○')+'</span></button>';
+   }).join('');
+   document.querySelectorAll('#clues .it').forEach(function(b){
+     b.onclick=function(){ selectClue(b.dataset.k); };
+   });
+ }
+ function renderDz(){
+   $("dz").innerHTML=ORDER.map(function(k){
+     var m=D[k], done=matched[k];
+     return '<button class="it'+(done?' done dis':'')+'" data-k="'+k+'">'
+       +'<span class="nm">'+m.nm+(done?' ✓':'')+'</span>'
+       +'<span class="s">'+m.type+'</span></button>';
+   }).join('');
+   document.querySelectorAll('#dz .it').forEach(function(b){
+     b.onclick=function(){ tryDz(b.dataset.k); };
+   });
+ }
+ function updateScore(){
+   $("bar").style.width=(count/4*100)+'%';
+   $("score").innerHTML=count+' of 4 matched';
+ }
+
+ function selectClue(k){
+   if(matched[k]) return;
+   sel=k; renderClues();
+   var m=D[k];
+   $("art").innerHTML=draw(k);
+   $("cardTitle").innerHTML=m.key;
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='Clue selected<small>now tap the matching disorder</small>';
+   $("info").innerHTML='<span class="n">Read the clue</span>Which sleep disorder does this bedside story point to? Tap one of the four buttons.';
+ }
+
+ function tryDz(k){
+   if(sel===null){
+     $("info").innerHTML='<span class="n">Pick a clue first</span>Tap one of the four clues above, then choose the disorder it matches.';
+     return;
+   }
+   if(matched[k]) return;
+   if(k===sel){
+     matched[k]=1; count++;
+     var m=D[k];
+     $("art").innerHTML=draw(k);
+     $("cardTitle").innerHTML=m.nm;
+     $("stage").style.background='var(--green)';
+     $("stage").innerHTML='✓ '+m.nm+' &mdash; matched!<small>'+(count<4?'keep going':'that’s the last one')+'</small>';
+     $("info").innerHTML='<span class="n">'+m.nm+' <span class="pill '+m.pill+'">'+m.type+'</span></span>'+m.teach;
+     sel=null;
+     renderClues(); renderDz(); updateScore();
+     if(count===4) complete();
+   } else {
+     $("stage").style.background='var(--coral)';
+     $("stage").innerHTML='Not quite<small>look at the key symptom and try again</small>';
+     $("info").innerHTML='<div class="note"><b>'+D[k].nm+'</b> doesn’t fit that clue. '+D[k].nm+' is defined by <b>'+D[k].key.toLowerCase()+'</b> — which isn’t what this story describes. Tap a different disorder.</div>';
+   }
+ }
+
+ function complete(){
+   $("cardTitle").innerHTML='All four matched';
+   $("stage").style.background='var(--green)';
+   $("stage").innerHTML='🎉 Sleep clinic solved!<small>all four disorders matched</small>';
+   $("info").innerHTML='<span class="n">Two families of sleep disorder</span>'
+     +'<b>Dyssomnias</b> disrupt the <b>amount, quality, or timing</b> of sleep &mdash; insomnia, sleep apnea, and narcolepsy. A <b>parasomnia</b> is an <b>abnormal event during sleep</b> &mdash; night terrors.'
+     +'<div class="mnem"><b>Night terror ≠ nightmare.</b> Night terrors erupt from deep <b>NREM</b> sleep early in the night and are <b>not remembered</b>; nightmares are vivid dreams during <b>REM</b> sleep later on, and <b>are</b> remembered.</div>';
+ }
+
+ function reset(){
+   sel=null; matched={}; count=0;
+   clueOrder=shuffle(keys.slice());
+   $("art").innerHTML=draw('');
+   $("cardTitle").innerHTML='The sleep clinic';
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='Match all four<small>tap a clue to begin</small>';
+   $("info").innerHTML='<span class="n">Four sleepers, four disorders</span>Each clue below describes one patient. Tap a clue to see it at the bedside, then tap the disorder it matches. Get all four to reveal how the disorders sort into two families.';
+   renderClues(); renderDz(); updateScore();
+ }
+ $("reset").onclick=reset;
+ reset();
+})();
+</script>
+</body>
+</html>

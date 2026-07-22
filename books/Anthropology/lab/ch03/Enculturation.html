@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f8f2ea">
+<title>Enculturation</title>
+<meta name="description" content="Drag a child from birth to adulthood and watch the four channels of cultural transmission &mdash; family, peers, elders, and mass institutions &mdash; rise and fall around them.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_anthro.css">
+<style>svg text{font-family:'Inter',system-ui,sans-serif;}
+.cap{font-size:12px;color:var(--muted);line-height:1.5;margin-top:9px;border-top:1px dashed var(--line);padding-top:9px;}
+.cap b{color:var(--teal-dk);}
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chips span{font-size:11.5px;font-weight:700;background:#f5e9d8;color:var(--teal-dk);border-radius:20px;padding:4px 11px;}
+.how{font-size:12.5px;color:var(--soft);line-height:1.5;margin-top:10px;border-top:1px dashed var(--line);padding-top:9px;}
+.how b{color:var(--teal-dk);}
+.agerow{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);}
+.agerow b{font-family:var(--disp);font-size:18px;letter-spacing:0;text-transform:none;color:var(--teal-dk);}
+.sld{width:100%;-webkit-appearance:none;appearance:none;height:9px;border-radius:6px;background:linear-gradient(90deg,#eaddca,#cdb69a);outline:none;margin-top:11px;cursor:pointer;}
+.sld::-webkit-slider-thumb{-webkit-appearance:none;width:25px;height:25px;border-radius:50%;background:var(--teal);border:3px solid #fffdf9;box-shadow:0 2px 7px rgba(70,50,25,.35);cursor:pointer;}
+.sld::-moz-range-thumb{width:21px;height:21px;border-radius:50%;background:var(--teal);border:3px solid #fffdf9;box-shadow:0 2px 7px rgba(70,50,25,.35);cursor:pointer;}
+.sld:focus-visible{box-shadow:0 0 0 3px rgba(154,88,52,.3);}
+.dots{display:flex;gap:4px;margin-top:13px;}
+.dots b{flex:1;height:8px;border-radius:4px;background:#eadfd1;cursor:pointer;transition:.15s;}
+.dots b.seen{background:#cfbca6;} .dots b.cur{background:var(--teal);}
+.it .bar{display:block;height:6px;border-radius:4px;background:#f0e5d7;overflow:hidden;margin-top:5px;}
+.it .bar i{display:block;height:100%;border-radius:4px;transition:width .28s;}
+.it.on .bar{background:rgba(255,255,255,.28);}
+.it.on .bar i{background:#fff !important;}
+.hint{font-size:10.5px;color:var(--muted);margin-top:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;text-align:center;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">Anthropology · Chapter 3</div>
+  <h1>Enculturation: How a Child Absorbs Culture</h1>
+  <div class="intro">No one is born with a culture, and no one chooses one. Children absorb the culture around them &mdash; its sounds, its kin terms, its manners, its idea of what a person is &mdash; through a lifelong process anthropologists call <b>enculturation</b>. Clifford Geertz described human beings as unfinished animals who complete themselves through culture; this is that completion, happening. Drag the age slider from birth onward, and tap the rings to see which channel is doing the teaching.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="cardTitle">Infancy · the channels around a child</h2>
+      <svg viewBox="0 0 240 236" aria-label="A child at the centre of four rings representing family, peers, elders and teachers, and media and institutions; ring thickness shows how strongly each channel is transmitting culture at the selected age."><g id="art"></g></svg>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card"><h2 id="absTitle">What is being absorbed now</h2>
+      <div class="chips" id="chips"></div>
+      <div class="how" id="how"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Infancy<small>birth &ndash; 12 months</small></div>
+    <div class="card">
+      <div class="agerow"><span>Age of the child</span><b id="ageOut">newborn</b></div>
+      <input class="sld" id="sld" type="range" min="0" max="264" step="3" value="0" aria-label="Age of the child in months">
+      <div class="dots" id="dots"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev stage</button><button class="btn solid" id="next">Next stage ›</button></div>
+    </div>
+    <div class="card">
+      <div class="list" id="list"></div>
+      <div id="info"></div>
+      <div class="hint" id="hint">Drag the slider &mdash; or tap a ring in the diagram</div>
+    </div>
+  </div>
+</div>
+<footer>Anthropology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var CX=120, CY=122;
+ var amp=function(t){ return t.replace(/&/g,'&amp;'); };
+
+ /* ---- the four channels of cultural transmission ---- */
+ var A=[
+  {k:'fam', lbl:'FAMILY & HOUSEHOLD', nm:'Family &amp; household', md:'vertical &middot; parent to child',
+   c:'#9a5834', r:40, n:3,
+   d:'The first and densest channel. Luigi Luca Cavalli-Sforza and Marcus Feldman called parent-to-child transmission <b>vertical</b>: it starts earliest, it is hard to escape, and it carries the things nobody ever says out loud &mdash; how close you stand to another person, when you look away, what counts as food, what a family is. Across most of the world the household is not two parents but a wider group, and grandparents and older siblings do a great deal of the teaching.',
+   at:['Nearly the whole world. Holding, feeding, sleeping, voice &mdash; the infant absorbs culture as a set of bodily rhythms.',
+       'Names the world for the child: words, kin terms, what is dirty, what is dangerous, what is funny.',
+       'Hands over the first real tasks, and the first expectations attached to being a girl or a boy.',
+       'Still primary, but now sharing the child with peers, teachers, and work outside the house.',
+       'Often the thing being pushed against &mdash; which is itself a culturally patterned way of becoming an adult.',
+       'Roles reverse: the grown child now cares for the elders who enculturated them, and holds the next infant.']},
+  {k:'peer', lbl:'PEERS', nm:'Peers', md:'horizontal &middot; child to child',
+   c:'#2f9e5b', r:62, n:6,
+   d:'Transmission sideways, between people of the same generation &mdash; <b>horizontal</b> in Cavalli-Sforza and Feldman&rsquo;s scheme. Peer groups carry games, slang, language change, and the unstated rules of belonging. In many societies a mixed-age group of children, rather than any adult, does most of the day-to-day teaching: older children mind, correct, and instruct the younger ones while the adults work.',
+   at:['Barely present. An infant&rsquo;s world is made almost entirely of caregivers.',
+       'Other children appear as fascinating objects. Imitation begins well before cooperation does.',
+       'Play becomes shared and rule-bound, and children start correcting one another.',
+       'A powerful teacher. Loyalty, fairness, teasing, and reputation are learned here rather than at home.',
+       'Often the strongest channel of all &mdash; the peer cohort now defines speech, taste, and belonging.',
+       'It never stops: colleagues, neighbours, and congregations keep teaching adults sideways.']},
+  {k:'eld', lbl:'ELDERS & TEACHERS', nm:'Elders, teachers &amp; specialists', md:'oblique &middot; other adults',
+   c:'#2f6f9f', r:84, n:5,
+   d:'Adults who are not the child&rsquo;s parents &mdash; grandparents outside the household, ritual specialists, master craftworkers, initiators, schoolteachers. Cavalli-Sforza and Feldman called this <b>oblique</b> transmission, and it is how specialised knowledge moves: a technique, a liturgy, an oral history, a curriculum. Oblique transmission is what lets a society hold knowledge that no single family could carry.',
+   at:['Extra hands and extra voices. In many societies grandmothers are constant, daily caregivers.',
+       'Stories, songs and lullabies &mdash; the earliest deliberate teaching most children receive.',
+       'Apprenticeship begins quietly: the child stands beside skilled work and is given a small real part in it.',
+       'Where schooling exists this channel is formalised &mdash; knowledge taught away from the place it is used.',
+       'Initiators and ritual elders take charge at the threshold, handing over knowledge often reserved for adults.',
+       'The adult becomes the specialist, and begins transmitting obliquely to other people&rsquo;s children.']},
+  {k:'soc', lbl:'MEDIA & INSTITUTIONS', nm:'Media &amp; institutions', md:'oblique &middot; mass channels',
+   c:'#7a5a8a', r:104, n:8,
+   d:'A mass oblique channel that is historically very recent and now extremely powerful: broadcast and networked media, states, markets, schools, religious institutions. Its distinguishing feature is reach &mdash; it can arrive inside the home, addressed to a child directly, without passing through any adult the family knows. That is precisely why families so often try to filter it.',
+   at:['Reaches the infant only through caregivers who are themselves immersed in it.',
+       'Sound and image arrive early: songs, screens, packaging, the shape of a shop.',
+       'Characters, brands and stories start supplying models of who a child could become.',
+       'Institutions formally define the child &mdash; a pupil, a grade, a name on a register.',
+       'At its strongest. Media and market address adolescents directly, sometimes against the family.',
+       'Adults keep absorbing it &mdash; and adults are the ones who build and run it.']}
+ ];
+
+ /* strength of each channel at each life stage, 0-1 */
+ var W=[
+  [0.97,0.06,0.22,0.05],
+  [0.92,0.22,0.34,0.16],
+  [0.78,0.50,0.52,0.30],
+  [0.60,0.72,0.76,0.50],
+  [0.46,0.95,0.62,0.82],
+  [0.42,0.62,0.50,0.72]
+ ];
+ var CEN=[6,24,54,108,180,240];
+
+ /* ---- the life stages ---- */
+ var S=[
+  {t:'Infancy', sub:'birth &ndash; 12 months', hi:12, col:'#9a5834', hd:'The body learns first',
+   d:'Enculturation begins on the day a child is born &mdash; before language, and through the body. A newborn can hear the difference between every consonant used in every human language; by roughly ten to twelve months that ability has narrowed to the sounds their own community actually speaks. Nobody teaches this. The child&rsquo;s perception is simply tuned by what surrounds it.<br><br>The same is true of handling. How long a baby is carried, who besides the mother holds it, where it sleeps: all of it is cultural, and all of it is absorbed before a child could possibly object. Comparing Highland Maya families in Guatemala with middle-class families in the United States, anthropologists found that the Maya mothers regarded an infant sleeping alone in a separate room as unthinkable, while the U.S. parents regarded an infant in the parents&rsquo; bed as a habit to be corrected. Each set of parents experienced their own arrangement not as a custom but as simply what a good parent does.',
+   ch:['the sounds of the language','how to be held','where a baby sleeps','feeding rhythm','faces and voices'],
+   how:'<b>Bodily and perceptual.</b> No instruction of any kind is involved &mdash; the infant is tuned by exposure.',
+   m:'That last point is the heart of it: enculturation works best when it is invisible. What you absorbed earliest is what feels least like culture and most like nature.'},
+
+  {t:'Toddlerhood', sub:'1 &ndash; 3 years', hi:36, col:'#b8862f', hd:'Language, and the map of kin',
+   d:'Between roughly one and three, language arrives at astonishing speed and with no formal instruction at all. And categories arrive with the words. When a child learns which relatives to call by which term, they are absorbing the society&rsquo;s descent system without ever studying it. English collapses the father&rsquo;s brother and the mother&rsquo;s brother into one word, <i>uncle</i>; a great many languages refuse that, because in a matrilineal society the mother&rsquo;s brother is a structurally crucial person and the father&rsquo;s brother is not. The child is only learning to talk. The structure comes free.<br><br>This is also the stage where food becomes edible or inedible, where bodies become clean or dirty, and where a child first meets shame &mdash; the emotion that does more enculturating work than any lecture.',
+   ch:['grammar','kin terms','food and non-food','clean and dirty','shame and &ldquo;no&rdquo;'],
+   how:'<b>Immersion in talk.</b> Structure arrives hidden inside ordinary vocabulary.',
+   m:'Speakers of <b>Guugu Yimithirr</b>, in far north Queensland, locate things by fixed compass direction rather than by &ldquo;left&rdquo; and &ldquo;right&rdquo; &mdash; and children raised in the language keep a running sense of north. How far a language shapes habitual thought is the <b>Sapir&ndash;Whorf</b>, or linguistic relativity, question, and it is still argued. The child absorbs the habit either way.'},
+
+  {t:'Early childhood', sub:'3 &ndash; 6 years', hi:72, col:'#2f9e5b', hd:'Play, work, and watching',
+   d:'Children rehearse adult life in play, and what they rehearse is the adult life in front of them. But play is not the only engine. In many communities children learn far less by being instructed and far more by watching closely and joining in: they stand at the edge of real work, are given a small real part in it, and are corrected by the task rather than by a lecture. Barbara Rogoff describes this pattern &mdash; learning by observing and pitching in &mdash; among Indigenous families across the Americas.<br><br>Where formal schooling dominates, adults do something quite different: they remove children from real work and teach them in a special place, at a special time, mostly with words. Both are enculturation. They simply run on different engines, and each produces children who are competent at different things.',
+   ch:['gender expectations','play as rehearsal','first real tasks','manners','sharing and turn-taking'],
+   how:'<b>Watching, imitating, joining in</b> &mdash; with a growing amount of correction from adults and other children.',
+   m:'This is Franz Boas&rsquo;s central claim in action, carried forward by his students Margaret Mead and Ruth Benedict: the differences between peoples are <b>learned, not inherited</b>. Enculturation is the mechanism that claim depends on.'},
+
+  {t:'Middle childhood', sub:'6 &ndash; 12 years', hi:144, col:'#2f6f9f', hd:'Responsibility, peers, and feeling rules',
+   d:'Now the child is given weight to carry. The Six Cultures Study, directed by Beatrice and John Whiting, compared children&rsquo;s ordinary daily behaviour in six communities &mdash; in Kenya, Mexico, the Philippines, Okinawa, India, and the United States. Where children were routinely handed real work &mdash; herding, fetching water, minding a younger sibling &mdash; they behaved more nurturantly and more responsibly toward others. Where a child&rsquo;s main job was school, they were more oriented toward seeking attention and approval from adults. The chores were not a side effect of the culture; they were one of its teaching methods.<br><br>Children are also learning what might be called feeling rules: which emotions may be shown, to whom, and how loudly. And the peer group becomes a teaching force in its own right, carrying the parts of a culture that adults never state.',
+   ch:['responsibility','peer loyalty','which feelings to show','gendered work','literacy or craft'],
+   how:'<b>Real responsibility</b>, peer pressure, and &mdash; in some societies &mdash; formal schooling.',
+   m:'Whiting &amp; Whiting, <i>Children of Six Cultures</i> (1975): what a society asks children to <b>do</b> predicts what those children <b>become</b>, more sharply than what it tells them.'},
+
+  {t:'Adolescence', sub:'12 &ndash; 18 years', hi:216, col:'#7a5a8a', hd:'The threshold',
+   d:'Many societies mark the passage into adulthood with ritual, and Arnold van Gennep showed that these rites share a three-part shape wherever they occur. First <b>separation</b>, in which the initiate is cut away from the old status. Then a <b>liminal</b> phase, betwixt and between, in which they are neither child nor adult. Then <b>incorporation</b>, in which the new status is conferred and the whole community recognises it. The change is social, not biological: puberty happens to a body, but adulthood is granted by other people.<br><br>Victor Turner developed the middle phase. During liminality ordinary rank dissolves and initiates experience <b>communitas</b> &mdash; an intense, levelling solidarity that can bind a cohort for the rest of their lives. The Apache Sunrise Ceremony (Na&rsquo;ii&rsquo;ees) held for girls, a bar or bat mitzvah, a quincea&ntilde;era, and confirmation are all legible in this shape.',
+   ch:['adult status','ritual knowledge','courtship','autonomy','group identity'],
+   how:'<b>Ritual and initiation</b>, plus the intense, constant teaching of the peer cohort.',
+   m:'van Gennep&rsquo;s rite of passage: <b>separation &rarr; liminality &rarr; incorporation</b>. Turner: the liminal phase generates <b>communitas</b>, which often outlasts the ritual itself.',
+   nt:'<b>Mead, in context.</b> In <i>Coming of Age in Samoa</i> (1928) Margaret Mead argued that the turmoil Western writers treated as a biological fact of adolescence was instead the product of one particular culture. Derek Freeman later contested her Samoan findings, and that exchange is still debated. The question she put to the field &mdash; how much of growing up is culture rather than nature &mdash; remains one of its organising questions.'},
+
+  {t:'Adulthood and after', sub:'18 years onward', hi:9999, col:'#5e3418', hd:'Enculturation does not end',
+   d:'Adults go on being enculturated: into a trade, a rank, a marriage, parenthood, a ritual office, eventually elderhood. Each of these has its own instruction, its own thresholds, and its own competence to acquire, and each is entered by someone who is already fluent in the culture and still has to learn.<br><br>Meanwhile the person who was enculturated becomes an agent of enculturation. They hold the infants, speak the language, assign the chores, run the rituals. But transmission is never a clean copy. Every generation edits &mdash; keeping some things, dropping others, borrowing from the cultures it meets. Culture persists because it is taught, and it changes because it is taught by people, to people, none of whom are merely passive.',
+   ch:['a trade or office','parenthood','elderhood','how to teach it onward','what to change'],
+   how:'<b>Apprenticeship into roles</b> &mdash; and the passing on of everything already absorbed.',
+   nt:'<b>Keep these apart.</b> <b>Enculturation</b> is learning the culture you are raised in. <b>Socialization</b> is the parallel term in sociology, weighted toward learning social roles. <b>Acculturation</b> is the change that follows sustained contact between cultures. <b>Assimilation</b> is the far end of acculturation, where a group&rsquo;s distinctiveness is absorbed into another.'}
+ ];
+
+ var m=0, sel=-1, seen=[1,0,0,0,0,0];
+
+ function stageOf(mm){ for(var i=0;i<S.length;i++){ if(mm<S[i].hi) return i; } return S.length-1; }
+
+ function fmtAge(mm){
+   if(mm===0) return 'newborn';
+   if(mm<24) return mm+(mm===1?' month':' months');
+   var y=Math.floor(mm/12), r=mm%12;
+   return r ? y+' yr '+r+' mo' : y+' years';
+ }
+
+ /* "For a newborn" reads better than "At newborn" */
+ function atAge(mm){ return mm===0 ? 'For a <b>newborn</b>' : 'At <b>'+fmtAge(mm)+'</b>'; }
+ function atAgeShort(mm){ return mm===0 ? 'At birth' : 'At '+fmtAge(mm); }
+
+ function wts(mm){
+   if(mm<=CEN[0]) return W[0].slice();
+   if(mm>=CEN[CEN.length-1]) return W[W.length-1].slice();
+   for(var i=0;i<CEN.length-1;i++){
+     if(mm<=CEN[i+1]){
+       var t=(mm-CEN[i])/(CEN[i+1]-CEN[i]), o=[];
+       for(var k=0;k<4;k++){ o.push(W[i][k]+(W[i+1][k]-W[i][k])*t); }
+       return o;
+     }
+   }
+   return W[W.length-1].slice();
+ }
+
+ /* ---- diagram ---- */
+ function draw(){
+   var w=wts(m), s='', i, k, a, ang, x, y, op;
+
+   /* rings, outermost first */
+   for(i=A.length-1;i>=0;i--){
+     a=A[i];
+     op=(0.16+0.5*w[i]).toFixed(2);
+     var sw=(1.4+5.4*w[i]);
+     var on=(sel===i);
+     s+='<circle cx="'+CX+'" cy="'+CY+'" r="'+a.r+'" fill="none" stroke="'+a.c+'" stroke-width="'+(on?(sw+2.4).toFixed(1):sw.toFixed(1))+'" opacity="'+(on?'0.95':op)+'"/>';
+   }
+
+   /* little people standing on each ring, along the lower arc */
+   for(i=0;i<A.length;i++){
+     a=A[i];
+     op=(0.2+0.8*w[i]).toFixed(2);
+     for(k=0;k<a.n;k++){
+       ang=Math.PI*(0.08+0.84*(a.n===1?0.5:k/(a.n-1)));
+       x=CX+a.r*Math.cos(ang); y=CY+a.r*Math.sin(ang);
+       s+='<circle cx="'+x.toFixed(1)+'" cy="'+(y-3.7).toFixed(1)+'" r="3" fill="'+a.c+'" opacity="'+op+'"/>';
+       s+='<path d="M'+(x-3.4).toFixed(1)+' '+(y+5.2).toFixed(1)+' q0 -5.4 3.4 -5.4 q3.4 0 3.4 5.4 z" fill="'+a.c+'" opacity="'+op+'"/>';
+     }
+   }
+
+   /* the child, growing */
+   var sc=0.62+0.68*Math.sqrt(m/264);
+   var w2=9.6*sc, top=CY-1*sc, bot=CY+16*sc;
+   s+='<circle cx="'+CX+'" cy="'+CY+'" r="30" fill="#f9f2e6" opacity=".95"/>';
+   s+='<path d="M'+(CX-w2).toFixed(1)+' '+bot.toFixed(1)+' Q'+(CX-w2).toFixed(1)+' '+top.toFixed(1)+' '+CX+' '+top.toFixed(1)+' Q'+(CX+w2).toFixed(1)+' '+top.toFixed(1)+' '+(CX+w2).toFixed(1)+' '+bot.toFixed(1)+' Z" fill="#b8862f"/>';
+   s+='<circle cx="'+CX+'" cy="'+(CY-8*sc).toFixed(1)+'" r="'+(6.9*sc).toFixed(1)+'" fill="#b8862f"/>';
+   s+='<text x="'+CX+'" y="'+(CY-26)+'" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5e3418" letter-spacing=".4">'+fmtAge(m).toUpperCase()+'</text>';
+
+   /* ring labels, stacked up the top, each just outside its own ring */
+   for(i=0;i<A.length;i++){
+     a=A[i];
+     var ly=CY-a.r-3, tw=a.lbl.length*5.05+13, on2=(sel===i);
+     s+='<rect x="'+(CX-tw/2).toFixed(1)+'" y="'+(ly-9.5)+'" width="'+tw.toFixed(1)+'" height="13.5" rx="6.7" fill="#fffdf9" stroke="'+a.c+'" stroke-width="'+(on2?1.6:1)+'" stroke-opacity="'+(on2?0.95:0.32+0.3*w[i]).toFixed(2)+'"/>';
+     s+='<text x="'+CX+'" y="'+(ly+0.7)+'" text-anchor="middle" font-size="8.5" font-weight="800" fill="'+a.c+'" opacity="'+(on2?1:(0.55+0.4*w[i])).toFixed(2)+'" letter-spacing=".3">'+amp(a.lbl)+'</text>';
+   }
+
+   /* invisible hit rings, drawn last so they sit on top of everything */
+   for(i=0;i<A.length;i++){
+     s+='<circle class="rgn" data-a="'+i+'" cx="'+CX+'" cy="'+CY+'" r="'+A[i].r+'" fill="none" stroke="#000" stroke-opacity="0" stroke-width="17" pointer-events="stroke"><title>'+amp(A[i].lbl)+'</title></circle>';
+   }
+   return s;
+ }
+
+ /* ---- panels ---- */
+ function renderList(){
+   var w=wts(m), st=S[stageOf(m)], h='';
+   h+='<button class="it'+(sel===-1?' on':'')+'" data-a="-1">'+
+      '<span class="sw" style="background:'+st.col+'"></span>'+
+      '<span style="flex:1"><span class="nm">'+st.t+'</span><br><span class="ct">overview &middot; '+st.hd.toLowerCase()+'</span></span></button>';
+   for(var i=0;i<A.length;i++){
+     var a=A[i], pct=Math.round(w[i]*100);
+     h+='<button class="it'+(sel===i?' on':'')+'" data-a="'+i+'">'+
+        '<span class="sw" style="background:'+a.c+'"></span>'+
+        '<span style="flex:1"><span class="nm">'+a.nm+'</span><br><span class="ct">'+a.md+' &middot; '+pct+'%</span>'+
+        '<span class="bar"><i style="width:'+pct+'%;background:'+a.c+'"></i></span></span></button>';
+   }
+   $('list').innerHTML=h;
+   var bs=document.querySelectorAll('#list .it');
+   for(var j=0;j<bs.length;j++){
+     bs[j].onclick=(function(v){ return function(){ sel=(sel===v?-1:v); render(); }; })(parseInt(bs[j].getAttribute('data-a'),10));
+   }
+ }
+
+ function renderInfo(){
+   var si=stageOf(m), st=S[si];
+   if(sel===-1){
+     var h='<span class="n">'+st.t+' &middot; '+st.hd+'</span>'+st.d;
+     if(st.m) h+='<div class="mnem">'+st.m+'</div>';
+     if(st.nt) h+='<div class="note">'+st.nt+'</div>';
+     $('info').innerHTML=h;
+     $('info').style.borderLeftColor=st.col;
+     $('hint').innerHTML='Tap a channel above &mdash; or a ring in the diagram';
+   } else {
+     var a=A[sel], w=wts(m);
+     $('info').innerHTML='<span class="n">'+a.nm+'</span>'+a.d+
+       '<div class="loc"><b>'+atAgeShort(m)+':</b> '+a.at[si]+'</div>'+
+       '<div class="ex"><span>'+a.md+'</span><span>strength '+Math.round(w[sel]*100)+'%</span></div>';
+     $('info').style.borderLeftColor=a.c;
+     $('hint').innerHTML='Tap it again to return to the stage overview';
+   }
+ }
+
+ function render(){
+   var si=stageOf(m), st=S[si], w=wts(m);
+   seen[si]=1;
+
+   $('art').innerHTML=draw();
+   var rg=document.querySelectorAll('#art .rgn');
+   for(var i=0;i<rg.length;i++){
+     rg[i].onclick=(function(v){ return function(){ sel=(sel===v?-1:v); render(); }; })(parseInt(rg[i].getAttribute('data-a'),10));
+   }
+
+   $('cardTitle').innerHTML=st.t+' &middot; the channels around a child';
+   $('stage').style.background=st.col;
+   $('stage').innerHTML=st.t+'<small>'+st.sub+' &middot; '+st.hd.toLowerCase()+'</small>';
+   $('ageOut').innerHTML=fmtAge(m);
+   if($('sld').value!==String(m)) $('sld').value=m;
+
+   /* dominant channel caption */
+   var best=0; for(var k=1;k<4;k++){ if(w[k]>w[best]) best=k; }
+   $('cap').innerHTML=atAge(m)+' the strongest channel is <b>'+A[best].nm+'</b> &mdash; '+A[best].md.replace('&middot;','transmission,')+'. Ring thickness shows how much of the culture is arriving through each channel; tap a ring to open it.';
+
+   $('absTitle').innerHTML='What is being absorbed '+(m===0?'at birth':'at '+fmtAge(m));
+   var ch='';
+   for(var c=0;c<st.ch.length;c++){ ch+='<span>'+st.ch[c]+'</span>'; }
+   $('chips').innerHTML=ch;
+   $('how').innerHTML='<b>How:</b> '+st.how;
+
+   var dh='';
+   for(var d=0;d<S.length;d++){ dh+='<b class="'+(d===si?'cur':(seen[d]?'seen':''))+'" data-s="'+d+'" title="'+S[d].t+'"></b>'; }
+   $('dots').innerHTML=dh;
+   var db=document.querySelectorAll('#dots b');
+   for(var e=0;e<db.length;e++){
+     db[e].onclick=(function(v){ return function(){ m=CEN[v]; render(); }; })(parseInt(db[e].getAttribute('data-s'),10));
+   }
+
+   $('prev').disabled=(si===0);
+   $('next').disabled=(si===S.length-1);
+
+   renderList();
+   renderInfo();
+ }
+
+ $('sld').oninput=function(){ m=parseInt(this.value,10); render(); };
+ $('prev').onclick=function(){ var si=stageOf(m); if(si>0){ m=CEN[si-1]; render(); } };
+ $('next').onclick=function(){ var si=stageOf(m); if(si<S.length-1){ m=CEN[si+1]; render(); } };
+
+ render();
+})();
+</script>
+</body>
+</html>

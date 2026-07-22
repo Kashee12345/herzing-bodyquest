@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Three Unknowns, One Point</title>
+<meta name="description" content="Walk a 3 by 3 system to its solution one move at a time: knock the same variable out twice, solve the 2 by 2 that is left, then climb back up. Includes the no-solution and infinitely-many cases, with the three-plane picture behind each.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;--ok:#237a45;--bad:#b23145;}
+.wrap{grid-template-columns:0.86fr 1.14fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+#stage .big{font-family:var(--math);font-size:19px;font-weight:700;letter-spacing:.3px;}
+/* ---------- example picker ---------- */
+#pick{display:grid;grid-template-columns:repeat(4,1fr);margin-bottom:12px;}
+#pick button{font-size:11.5px;padding:9px 3px;line-height:1.2;}
+#pick button small{display:block;font-weight:500;font-size:9.2px;color:var(--muted);margin-top:2px;line-height:1.15;}
+#pick button.on small{color:rgba(255,255,255,.9);}
+@media (max-width:520px){#pick{grid-template-columns:repeat(2,1fr);}}
+/* ---------- aligned equation work ---------- */
+.eqblk{font-family:var(--math);margin-top:2px;}
+.eqr{display:grid;grid-template-columns:62px 1fr 1fr 1fr 14px 0.78fr;align-items:center;gap:0 2px;font-size:16px;padding:1px 0;}
+.eqr .lb{font-family:var(--sans);font-size:9.2px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);text-align:right;line-height:1.2;padding-right:6px;}
+.eqr .c{text-align:right;white-space:nowrap;padding:4px 5px;border-radius:6px;}
+.eqr .eqs{text-align:center;color:var(--muted);}
+.eqr i{font-style:italic;}
+.eqr.orig{color:var(--muted);font-size:14.4px;}
+.eqr.orig .lb{color:#a6a8bb;}
+.eqr.sc{color:var(--ink);font-weight:600;}
+.eqr.sc .lb{color:var(--teal);}
+.eqr.sum{color:var(--teal-dk);font-weight:700;}
+.eqr.sum .lb{color:var(--teal-dk);}
+.eqr .c.hi{background:#fbf1d3;box-shadow:inset 0 0 0 1.5px #e8cf90;}
+.eqr.sum .c.hi{background:#dff0e4;box-shadow:inset 0 0 0 1.5px #a9d6ba;}
+.eqr .c.zc{color:var(--ok);}
+.eqr.orig .c.zc{color:#a6a8bb;}
+.rl{height:2px;background:var(--teal-dk);opacity:.5;margin:5px 0 5px 62px;border-radius:2px;}
+/* ---------- free-form work lines ---------- */
+.wl{font-family:var(--math);font-size:16px;color:var(--soft);padding:4px 0 4px 62px;line-height:1.6;}
+.wl i{font-style:italic;} .wl b{color:var(--ink);}
+.wl.big{font-size:20px;color:var(--teal-dk);font-weight:700;}
+.wl .ar{color:var(--muted);font-family:var(--sans);font-size:11px;font-weight:700;padding:0 5px;}
+.hl{border-radius:4px;padding:1px 5px;background:#fbf1d3;box-shadow:inset 0 0 0 1.5px #e8cf90;}
+.gd{border-radius:4px;padding:1px 5px;background:#dff0e4;box-shadow:inset 0 0 0 1.5px #a9d6ba;color:var(--ok);}
+.chip{font-family:var(--sans);font-size:9.4px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:3px 9px;margin-left:8px;white-space:nowrap;vertical-align:2px;}
+.chip.t{background:#dff0e4;color:var(--ok);} .chip.f{background:#fae5e8;color:var(--bad);}
+.ckl{font-family:var(--math);font-size:14.4px;color:var(--soft);padding:5px 0 5px 8px;border-left:3px solid var(--line);margin-top:5px;line-height:1.55;}
+.ckl b{color:var(--ink);font-weight:700;} .ckl i{font-style:italic;}
+.ckl .lbl{font-family:var(--sans);font-size:9.2px;font-weight:800;text-transform:uppercase;color:var(--muted);letter-spacing:.4px;display:block;}
+/* ---------- reduction ladder ---------- */
+.nd text{font-family:var(--sans);}
+.nd rect{fill:#fff;stroke:#d8dae9;stroke-width:1.6;}
+.nd text{fill:#9a9cb0;}
+.nd .sub{fill:#b6b8c8;font-style:italic;}
+.nd.on rect{fill:var(--teal);stroke:var(--teal);}
+.nd.on text{fill:#fff;} .nd.on .sub{fill:rgba(255,255,255,.85);}
+.nd.dead rect{fill:#fdf0f2;stroke:#eec3cb;} .nd.dead text{fill:var(--bad);} .nd.dead .sub{fill:#c9808e;}
+.nd.gold rect{fill:var(--gold);stroke:var(--gold);} .nd.gold text{fill:#fff;} .nd.gold .sub{fill:rgba(255,255,255,.85);}
+.aw{stroke:#dcdeeb;stroke-width:2;fill:none;} .aw.on{stroke:var(--teal);}
+.ah{fill:#dcdeeb;} .ah.on{fill:var(--teal);}
+.aw.up{stroke:#e6d8b8;stroke-dasharray:4 3;} .aw.up.on{stroke:var(--gold);}
+.ah.up{fill:#e6d8b8;} .ah.up.on{fill:var(--gold);}
+.cap{font-size:11.6px;color:var(--muted);line-height:1.5;margin-top:8px;text-align:center;}
+.cap b{color:var(--teal-dk);}
+#cnt{font-family:var(--sans);font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);white-space:nowrap;padding:0 2px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">&larr; Chapter 5</a></div>
+<header>
+  <div class="kick">College Algebra &middot; Chapter 5</div>
+  <h1>Three Unknowns, One Point</h1>
+  <div class="intro">A third variable does not need a third method. Knock the <b>same</b> variable out <b>twice</b>, and what is left is the 2 &times; 2 system you already know how to solve &mdash; then climb back up. Step through it one move at a time.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2>The reduction ladder</h2>
+      <svg viewBox="0 0 250 272" aria-label="reduction ladder"><g id="lad"></g></svg>
+      <div class="cap" id="ladcap"></div>
+    </div>
+    <div class="card"><h2 id="geoT">What it looks like in space</h2>
+      <svg viewBox="0 0 240 172" aria-label="three planes"><g id="geo"></g></svg>
+      <div class="cap" id="geocap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Three equations, three unknowns<small>press Next to begin</small></div>
+    <div class="card">
+      <div class="seg" id="pick"></div>
+      <div class="eqblk" id="work"></div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><span id="cnt"></span><button class="btn solid" id="next">Next &rsaquo;</button></div>
+    </div>
+    <div class="card"><h2>Why you are allowed to do any of this</h2>
+      <div class="mnem"><b>Equals added to equals stay equal.</b> If a triple <i>(x, y, z)</i> makes equation 1 true and equation 3 true, it also makes <i>any</i> multiple of one added to the other true &mdash; you added the same amount to both sides. And every such move can be undone by adding the opposite multiple back. Nothing is gained, nothing is lost: the new system has <b>exactly</b> the same solution set as the old one. That is the whole license for elimination.</div>
+      <div class="note"><b>The classic slip.</b> Both eliminations must remove the <b>same</b> variable, and between them <b>all three</b> equations must get used. Pair 1 &amp; 2, then pair 1 &amp; 2 again, and you have written the same fact down twice &mdash; the third equation never got to speak, and you will never pin the point down.</div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra &middot; an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i);};
+var V=['x','y','z'];
+
+/* ============ tiny helpers ============ */
+function num(n){ return n<0 ? '&minus;'+Math.abs(n) : ''+n; }
+function it(v){ return '<i>'+v+'</i>'; }
+function tm(c,v,first){
+  var neg=c<0, a=Math.abs(c);
+  var sg = first ? (neg?'&minus;':'') : (neg?'&minus; ':'+ ');
+  var mag = (a===0)?'0':((a===1)?'':''+a);
+  return sg+mag+'<i>'+v+'</i>';
+}
+function comb(e1,m1,e2,m2){ var r=[],k; for(k=0;k<4;k++){ r.push(m1*e1[k]+m2*e2[k]); } return r; }
+function scal(e,m){ var r=[],k; for(k=0;k<4;k++){ r.push(m*e[k]); } return r; }
+function eqrow(lb,e,cls,hi){
+  var s='<div class="eqr '+(cls||'')+'"><div class="lb">'+lb+'</div>',k;
+  for(k=0;k<3;k++){
+    var h=(hi&&hi.indexOf(k)>=0)?' hi':'';
+    var z=(e[k]===0)?' zc':'';
+    s+='<div class="c'+h+z+'">'+tm(e[k],V[k],k===0)+'</div>';
+  }
+  s+='<div class="eqs">=</div><div class="c">'+num(e[3])+'</div></div>';
+  return s;
+}
+function mlab(m,i){ if(m===1) return 'E'+(i+1); if(m===-1) return '&minus;E'+(i+1); return num(m)+' &times; E'+(i+1); }
+/* signed running sum, e.g. [4,-1,9] -> "4 &minus; 1 + 9" */
+function sums(a){ var s='',k; for(k=0;k<a.length;k++){ if(k===0) s+=num(a[k]); else s+=(a[k]<0?' &minus; ':' + ')+Math.abs(a[k]); } return s; }
+/* substitution display, e.g. "2(2) &minus; 1(&minus;1) + 3(3)" */
+function subs(e,sol){ var s='',k; for(k=0;k<3;k++){ var c=e[k];
+    var sg = (k===0)?(c<0?'&minus;':''):(c<0?' &minus; ':' + ');
+    s+=sg+Math.abs(c)+'('+num(sol[k])+')'; }
+  return s;
+}
+function checkLine(e,sol,n){
+  var p=[e[0]*sol[0],e[1]*sol[1],e[2]*sol[2]];
+  var tot=p[0]+p[1]+p[2], ok=(tot===e[3]);
+  return '<div class="ckl"><span class="lbl">equation '+n+'</span>'+subs(e,sol)+' = '+sums(p)+' = <b>'+num(tot)+'</b>'+
+    '<span class="chip '+(ok?'t':'f')+'">'+(ok?'&#10003; matches '+num(e[3]):'&#10007; should be '+num(e[3]))+'</span></div>';
+}
+/* one equation with every variable except the kept one replaced by its value; zero terms dropped */
+function subLine(e,keep,vals){
+  var s='',first=true,k;
+  for(k=0;k<3;k++){
+    var c=e[k]; if(c===0) continue;
+    var sg=first?(c<0?'&minus;':''):(c<0?' &minus; ':' + ');
+    if(k===keep) s+=sg+((Math.abs(c)===1)?'':Math.abs(c))+'<i>'+V[k]+'</i>';
+    else s+=sg+Math.abs(c)+'(<span class="hl">'+num(vals[k])+'</span>)';
+    first=false;
+  }
+  if(first) s='0';
+  return s+' = '+num(e[3]);
+}
+/* coef * V[vi] = rhs  ->  V[vi] = val, with the dividing move spelled out */
+function solveLine(coef,vi,rhs,val){
+  var s='';
+  if(coef!==1){
+    s+='<div class="wl">'+tm(coef,V[vi],true)+' = '+num(rhs)+'</div>';
+    s+='<div class="wl">'+(coef===-1?'multiply both sides by &minus;1':'divide both sides by '+num(coef))+'<span class="ar">&rarr;</span></div>';
+  }
+  s+='<div class="wl big">'+it(V[vi])+' = <span class="gd">'+num(val)+'</span></div>';
+  return s;
+}
+/* "z &minus; 5 = &minus;2" — the known terms collapsed into a single constant */
+function constLine(cst,coef,vi,rhs){
+  return tm(coef,V[vi],true)+(cst<0?' &minus; ':' + ')+Math.abs(cst)+' = '+num(rhs);
+}
+/* every column that has collapsed to zero */
+function zeros(e){ var z=[],k; for(k=0;k<3;k++){ if(e[k]===0) z.push(k); } return z; }
+function describe(cb){
+  var a='equation '+(cb.i+1), b='equation '+(cb.j+1);
+  if(cb.mi===1&&cb.mj===1) return 'Add '+b+' to '+a+'.';
+  if(cb.mi===1&&cb.mj===-1) return 'Subtract '+b+' from '+a+'.';
+  if(cb.mi===1) return 'Multiply '+b+' by '+num(cb.mj)+', then add it to '+a+'.';
+  return 'Multiply '+a+' by '+num(cb.mi)+', multiply '+b+' by '+num(cb.mj)+', then add.';
+}
+function pairBlock(E,cb,ev,name){
+  var s='', a=E[cb.i], b=E[cb.j];
+  s+=eqrow('E'+(cb.i+1),a,'orig',[ev]);
+  s+=eqrow('E'+(cb.j+1),b,'orig',[ev]);
+  if(cb.mi!==1||cb.mj!==1){
+    s+='<div class="rl"></div>';
+    s+=eqrow(mlab(cb.mi,cb.i),scal(a,cb.mi),'sc',[ev]);
+    s+=eqrow(mlab(cb.mj,cb.j),scal(b,cb.mj),'sc',[ev]);
+  }
+  s+='<div class="rl"></div>';
+  s+=eqrow(name,comb(a,cb.mi,b,cb.mj),'sum',[ev]);
+  return s;
+}
+
+/* ============ examples (every intermediate value below is computed, not typed) ============ */
+var EX=[
+{k:'a',nm:'Warm-up',sb:'z cancels free',type:'unique',
+ eqs:[[1,1,1,6],[2,-1,1,3],[1,2,-1,2]],
+ ev:2, A:{i:0,j:2,mi:1,mj:1}, B:{i:1,j:2,mi:1,mj:1},
+ ev2:1, C:{mA:1,mB:-3}, use:'B', back:0,
+ pickWhy:'Look straight down each column. The <i>z</i> coefficients are 1, 1 and &minus;1 &mdash; equation 3 already carries the opposite sign, so adding it to either of the others wipes <i>z</i> out with no scaling at all. Take the cheapest move on the board.'},
+
+{k:'b',nm:'With multipliers',sb:'pivot on a bare x',type:'unique',
+ eqs:[[2,1,3,12],[1,-2,1,7],[3,1,-2,-1]],
+ ev:0, A:{i:0,j:1,mi:1,mj:-2}, B:{i:2,j:1,mi:1,mj:-3},
+ ev2:2, C:{mA:5,mB:1}, use:'A', back:1,
+ pickWhy:'Nothing cancels for free here. But equation 2 has a bare <i>x</i> &mdash; coefficient 1 &mdash; and that makes it the ideal <b>pivot</b>: scale it by whatever the other equation happens to need, then subtract. Every multiplier stays a whole number, so no fractions ever enter the page.'},
+
+{k:'c',nm:'No solution',sb:'0 = &minus;2',type:'none',
+ eqs:[[1,1,1,2],[2,3,1,5],[3,4,2,9]],
+ ev:0, A:{i:1,j:0,mi:1,mj:-2}, B:{i:2,j:0,mi:1,mj:-3},
+ ev2:1, C:{mA:1,mB:-1},
+ pickWhy:'Equation 1 has a bare <i>x</i>. Pivot on it and clear the <i>x</i> column out of the other two.',
+ verdict:'Add equation 1 and equation 2 and you get <b>3<i>x</i> + 4<i>y</i> + 2<i>z</i> = 7</b>. Equation 3 says that same left side equals <b>9</b>. One quantity cannot be 7 and 9 at once, so no triple can satisfy all three. <b>The system is inconsistent.</b>'},
+
+{k:'d',nm:'Infinitely many',sb:'0 = 0',type:'many',
+ eqs:[[1,1,1,6],[2,-1,1,3],[3,0,2,9]],
+ ev:0, A:{i:1,j:0,mi:1,mj:-2}, B:{i:2,j:0,mi:1,mj:-3},
+ ev2:1, C:{mA:1,mB:-1},
+ pickWhy:'Equation 1 has a bare <i>x</i> again. Pivot on it and clear the <i>x</i> column. (Notice equation 3 has no <i>y</i> at all &mdash; its <i>y</i> coefficient is 0. That is a hint of what is coming.)',
+ verdict:'Add equation 1 and equation 2: <b>3<i>x</i> + 0<i>y</i> + 2<i>z</i> = 9</b>. That <i>is</i> equation 3, exactly. The third equation was never a new fact &mdash; it was the first two in disguise. So you really only ever had <b>two</b> independent equations for three unknowns, and two planes meet in a <b>line</b>.',
+ param:function(t){ return [2*t-3, t, 9-3*t]; },
+ ts:[0,3]}
+];
+
+/* ============ derive everything ============ */
+function build(ex){
+  var E=ex.eqs,k;
+  var A=comb(E[ex.A.i],ex.A.mi,E[ex.A.j],ex.A.mj);
+  var B=comb(E[ex.B.i],ex.B.mi,E[ex.B.j],ex.B.mj);
+  var C=comb(A,ex.C.mA,B,ex.C.mB);
+  var d={ex:ex,E:E,A:A,B:B,C:C,ev:ex.ev,ev2:ex.ev2};
+  if(ex.type==='unique'){
+    var sv=-1; for(k=0;k<3;k++){ if(C[k]!==0) sv=k; }
+    d.sv=sv;
+    var v1=C[3]/C[sv];
+    var Q=(ex.use==='A')?A:B; d.Q=Q; d.qn=ex.use;
+    var v2=(Q[3]-Q[sv]*v1)/Q[ex.ev2];
+    var Bk=E[ex.back]; d.Bk=Bk;
+    var kn=0; for(k=0;k<3;k++){ if(k!==ex.ev){ kn+=Bk[k]*(k===sv?v1:v2); } }
+    var v3=(Bk[3]-kn)/Bk[ex.ev];
+    var sol=[0,0,0]; sol[sv]=v1; sol[ex.ev2]=v2; sol[ex.ev]=v3;
+    d.v1=v1; d.v2=v2; d.v3=v3; d.kn=kn; d.sol=sol;
+  }
+  return d;
+}
+
+/* ============ build the step list ============ */
+function steps(d){
+  var ex=d.ex, E=d.E, A=d.A, B=d.B, C=d.C, ev=d.ev, ev2=d.ev2, S=[];
+  var eV=it(V[ev]), e2V=it(V[ev2]);
+  var lit0={e:[1,1,1]};
+
+  S.push({t:'The system',s:'3 equations &middot; 3 unknowns',
+    w:eqrow('E1',E[0],'sum')+eqrow('E2',E[1],'sum')+eqrow('E3',E[2],'sum'),
+    n:'What a solution even is',
+    d:'A solution is one ordered triple <i>(x, y, z)</i> that makes <b>all three</b> equations true at the same time. On its own, a single equation like these has infinitely many solutions &mdash; a whole flat sheet of them, a <b>plane</b>. Three planes, if they are genuinely independent, cut each other down to a single point. Our job is to find its three coordinates.',
+    lit:lit0});
+
+  S.push({t:'Pick the variable to kill',s:'aim at the friendliest column',
+    w:eqrow('E1',E[0],'sum',[ev])+eqrow('E2',E[1],'sum',[ev])+eqrow('E3',E[2],'sum',[ev]),
+    n:'Choose '+V[ev]+', and commit',
+    d:ex.pickWhy+' <b>Whatever you choose, you must knock out that same variable both times.</b> Eliminating '+eV+' from one pair and '+e2V+' from another leaves you with two equations that share no common shape, and the trail goes cold.',
+    lit:lit0});
+
+  var lp1={e:[0,0,0],a:1,arA:1}; lp1.e[ex.A.i]=1; lp1.e[ex.A.j]=1;
+  S.push({t:'Eliminate '+V[ev]+' &mdash; first pair',s:'equations '+(ex.A.i+1)+' and '+(ex.A.j+1)+' &rarr; A',
+    w:pairBlock(E,ex.A,ev,'A'),
+    n:'Two equations become one',
+    d:describe(ex.A)+' Add the columns straight down: the '+eV+' column lands on <b>zero</b>, and once a variable is multiplied by 0 it is gone from that equation for good. What survives, <b>'+plain(A)+'</b>, is a genuine new equation in only two unknowns. Call it <b>A</b>.',
+    lit:lp1});
+
+  var lp2={e:[0,0,0],b:1,arB:1}; lp2.e[ex.B.i]=1; lp2.e[ex.B.j]=1;
+  S.push({t:'Eliminate '+V[ev]+' &mdash; second pair',s:'equations '+(ex.B.i+1)+' and '+(ex.B.j+1)+' &rarr; B',
+    w:pairBlock(E,ex.B,ev,'B'),
+    n:'And again &mdash; with a different pair',
+    d:describe(ex.B)+' Same target, same zero in the '+eV+' column, giving <b>'+plain(B)+'</b>. Notice which equations were used: pair '+(ex.A.i+1)+'&thinsp;&amp;&thinsp;'+(ex.A.j+1)+' the first time, pair '+(ex.B.i+1)+'&thinsp;&amp;&thinsp;'+(ex.B.j+1)+' the second. Between the two rounds <b>all three equations spoke</b>, so all three facts are still carried inside A and B.',
+    lit:lp2});
+
+  S.push({t:'Look what you have now',s:'2 equations &middot; 2 unknowns',
+    w:eqrow('A',A,'sum')+eqrow('B',B,'sum'),
+    n:'This is the old problem',
+    d:'A and B contain only '+it(V[Math.min(ev2,3-ev-ev2)])+' and '+it(V[Math.max(ev2,3-ev-ev2)])+'. This is precisely a 2 &times; 2 system &mdash; the thing you already know how to finish. <b>That is the entire trick of three variables:</b> you never learn a new method, you spend two moves shrinking the problem into one you have already solved.',
+    lit:{a:1,b:1}});
+
+  var cw='';
+  if(ex.C.mA!==1||ex.C.mB!==1){
+    cw+=eqrow('A',A,'orig',[ev2])+eqrow('B',B,'orig',[ev2])+'<div class="rl"></div>';
+    cw+=eqrow(ex.C.mA===1?'A':num(ex.C.mA)+' &times; A',scal(A,ex.C.mA),'sc',[ev2]);
+    cw+=eqrow(ex.C.mB===1?'B':num(ex.C.mB)+' &times; B',scal(B,ex.C.mB),'sc',[ev2]);
+  } else {
+    cw+=eqrow('A',A,'sc',[ev2])+eqrow('B',B,'sc',[ev2]);
+  }
+  cw+='<div class="rl"></div>'+eqrow('C',C,'sum',zeros(C));
+
+  if(ex.type==='unique'){
+    S.push({t:'Eliminate '+V[ev2],s:'A and B &rarr; one unknown',
+      w:cw, n:'Down to a single letter',
+      d:'Same move, one floor lower. The '+e2V+' column cancels and '+eV+' was already zero in both, so only <b>'+it(V[d.sv])+'</b> is left standing: <b>'+plain(C)+'</b>. One equation, one unknown &mdash; the bottom of the ladder.',
+      lit:{a:1,b:1,c:1,arC:1}});
+
+    S.push({t:'Solve for '+V[d.sv],s:'the first coordinate',
+      w:eqrow('C',C,'sum',[d.sv])+solveLine(C[d.sv],d.sv,C[3],d.v1),
+      n:'One coordinate, nailed down',
+      d:'Divide both sides by the coefficient '+num(C[d.sv])+'. That gives <b>'+it(V[d.sv])+' = '+num(d.v1)+'</b> &mdash; and it is not a guess or a candidate. Every legal move so far preserved the solution set exactly, so any triple that solved the original system <b>must</b> have this value of '+it(V[d.sv])+'.',
+      lit:{c:1,s:1}});
+
+    var qs=[0,0,0]; qs[d.sv]=d.v1;
+    var qprod=d.Q[d.sv]*d.v1, qrem=d.Q[3]-qprod;
+    S.push({t:'Back-substitute into '+d.qn,s:'the second coordinate',
+      w:eqrow(d.qn,d.Q,'orig')+
+        '<div class="wl">put '+it(V[d.sv])+' = '+num(d.v1)+' back in<span class="ar">&rarr;</span></div>'+
+        '<div class="wl">'+subLine(d.Q,ev2,qs)+'</div>'+
+        '<div class="wl">'+constLine(qprod,d.Q[ev2],ev2,d.Q[3])+'</div>'+
+        solveLine(d.Q[ev2],ev2,qrem,d.v2),
+      n:'Now climb back up',
+      d:'Equation <b>'+d.qn+'</b> still holds, and it has only two letters in it. Substituting the '+it(V[d.sv])+' you just found leaves one unknown, so it falls out immediately: <b>'+e2V+' = '+num(d.v2)+'</b>. This upward leg is called <b>back-substitution</b> &mdash; the ladder you built going down is exactly the ladder you climb going up.',
+      lit:{c:1,up1:1,q:d.qn}});
+
+    var bk=d.Bk, oth=[];
+    for(var q=0;q<3;q++){ if(q!==ev) oth.push(q); }
+    S.push({t:'Back-substitute into E'+(ex.back+1),s:'the last coordinate',
+      w:eqrow('E'+(ex.back+1),bk,'orig')+
+        '<div class="wl">put '+it(V[oth[0]])+' = '+num(d.sol[oth[0]])+' and '+it(V[oth[1]])+' = '+num(d.sol[oth[1]])+' in<span class="ar">&rarr;</span></div>'+
+        '<div class="wl">'+subLine(bk,ev,d.sol)+'</div>'+
+        '<div class="wl">'+constLine(d.kn,bk[ev],ev,bk[3])+'</div>'+
+        solveLine(bk[ev],ev,bk[3]-d.kn,d.v3),
+      n:'The variable you sacrificed first comes back last',
+      d:'For '+eV+' you must return to an <b>original</b> equation &mdash; A, B and C all had '+eV+' deliberately removed, so none of them can tell you anything about it. Any of the three originals will do; equation '+(ex.back+1)+' is the tidiest. Two known values in, one unknown out: <b>'+eV+' = '+num(d.v3)+'</b>.',
+      lit:{up2:1,eb:ex.back,q:d.qn}});
+
+    S.push({t:'Check all three',s:'(<i>x</i>, <i>y</i>, <i>z</i>) = ('+num(d.sol[0])+', '+num(d.sol[1])+', '+num(d.sol[2])+')',
+      w:checkLine(E[0],d.sol,1)+checkLine(E[1],d.sol,2)+checkLine(E[2],d.sol,3),
+      n:'Never skip this',
+      d:'Solving only ever used <b>two</b> of the three equations at any one moment, so the check is what confirms the triple satisfies all three at once &mdash; and it catches arithmetic slips instantly. All three land on their right-hand sides, so <b>(' +num(d.sol[0])+', '+num(d.sol[1])+', '+num(d.sol[2])+')</b> is the single point where the three planes meet.',
+      lit:{e:[1,1,1],a:1,b:1,c:1,s:1,done:1}});
+
+  } else {
+    var dead = (ex.type==='none');
+    S.push({t:'Eliminate '+V[ev2],s:'and then something odd happens',
+      w:cw, n:'Every variable vanished',
+      d:'You aimed at '+e2V+' &mdash; but '+eV+' was already gone, and '+it(V[3-ev-ev2])+' cancelled along with it. <b>All three columns collapsed to zero at once.</b> What is left is no longer an equation about any unknown at all; it is a bare arithmetic claim: <b>0 = '+num(C[3])+'</b>. Whether that one sentence is true or false decides the entire problem &mdash; and this is the only place a 3 &times; 3 system can surprise you.',
+      lit:{a:1,b:1,c:1,arC:1,dead:dead}});
+
+    S.push({t:dead?'0 = '+num(C[3])+' is impossible':'0 = 0 is always true',
+      s:dead?'no solution':'infinitely many solutions',
+      w:eqrow('C',C,'sum',[0,1,2])+'<div class="wl big">0 = '+num(C[3])+'<span class="chip '+(dead?'f':'t')+'">'+(dead?'never true':'always true')+'</span></div>',
+      n:dead?'The system is inconsistent':'The equations overlap',
+      d:(dead
+        ? 'A false statement fell out of moves that were all reversible and all solution-preserving. So the assumption that started it &mdash; that some triple satisfies all three equations &mdash; was itself false. <b>There is no solution.</b> '
+        : 'A statement that is true no matter what fell out, which means the last equation carried <b>no new information</b>. Nothing was contradicted, but nothing was pinned down either. <b>There are infinitely many solutions.</b> ')+ex.verdict,
+      lit:{a:1,b:1,c:1,s:1,dead:dead,done:1}});
+
+    if(ex.type==='many'){
+      var p0=ex.param(0), p3=ex.param(3);
+      S.push({t:'Describe the whole line',s:'one free variable, one parameter',
+        w:eqrow('A',A,'orig')+
+          '<div class="wl">let <b>'+it('y')+' = <i>t</i></b> &mdash; <i>t</i> is free to be any real number</div>'+
+          '<div class="wl">from A:&nbsp; &minus;3<i>t</i> &minus; <i>z</i> = &minus;9 <span class="ar">&rarr;</span> <b><i>z</i> = 9 &minus; 3<i>t</i></b></div>'+
+          '<div class="wl">from E1:&nbsp; <i>x</i> + <i>t</i> + (9 &minus; 3<i>t</i>) = 6 <span class="ar">&rarr;</span> <b><i>x</i> = 2<i>t</i> &minus; 3</b></div>'+
+          '<div class="wl big">(<i>x</i>, <i>y</i>, <i>z</i>) = <span class="gd">(2<i>t</i> &minus; 3,&nbsp; <i>t</i>,&nbsp; 9 &minus; 3<i>t</i>)</span></div>',
+        n:'Name the free one, chase the rest',
+        d:'With only two independent equations for three unknowns, one variable gets to roam. Give it a name &mdash; here <i>t</i> &mdash; and the other two are forced to follow it. Every value of <i>t</i> produces one solution, and sliding <i>t</i> traces out the <b>line</b> where the three planes all overlap. Writing the answer this way is not a dodge; it is the complete solution set.',
+        lit:{a:1,b:1,c:1,s:1,dead:0,done:1}});
+
+      S.push({t:'Spot-check two of them',s:'<i>t</i> = '+ex.ts[0]+' and <i>t</i> = '+ex.ts[1],
+        w:'<div class="wl"><i>t</i> = '+ex.ts[0]+' &rarr; ('+num(p0[0])+', '+num(p0[1])+', '+num(p0[2])+')</div>'+
+          checkLine(E[0],p0,1)+checkLine(E[1],p0,2)+checkLine(E[2],p0,3)+
+          '<div class="wl" style="margin-top:10px"><i>t</i> = '+ex.ts[1]+' &rarr; ('+num(p3[0])+', '+num(p3[1])+', '+num(p3[2])+')</div>'+
+          checkLine(E[0],p3,1)+checkLine(E[1],p3,2)+checkLine(E[2],p3,3),
+        n:'Two points, both on all three planes',
+        d:'Two different values of <i>t</i>, two genuinely different triples, and both satisfy every equation. Two distinct points that lie on all three planes is exactly what forces the intersection to be a <b>whole line</b> rather than a point &mdash; and any other <i>t</i> you try will pass too.',
+        lit:{e:[1,1,1],a:1,b:1,c:1,s:1,done:1}});
+    }
+  }
+  return S;
+}
+/* plain one-line rendering of an equation, zeros dropped */
+function plain(e){
+  var s='',first=true,k;
+  for(k=0;k<3;k++){ if(e[k]!==0){ s+=tm(e[k],V[k],first); first=false; s+=' '; } }
+  if(first) s='0 ';
+  return s+'= '+num(e[3]);
+}
+
+/* ============ the reduction ladder ============ */
+var EXX=[42,125,208], EY=30, EW=60, EH=28;
+var ABX=[84,166], ABY=116, ABW=68, ABH=30;
+var CX=125, CY=190, CW=76, CH=30;
+var SX=125, SY=250, SW=176, SH=30;
+function nd(x,y,w,h,t,sub,cls){
+  var s='<g class="nd'+(cls?' '+cls:'')+'">';
+  s+='<rect x="'+(x-w/2)+'" y="'+(y-h/2)+'" width="'+w+'" height="'+h+'" rx="8"/>';
+  s+='<text x="'+x+'" y="'+(y-1.5)+'" text-anchor="middle" font-size="11.5" font-weight="700">'+t+'</text>';
+  s+='<text x="'+x+'" y="'+(y+9.5)+'" text-anchor="middle" font-size="8.4" class="sub">'+sub+'</text>';
+  return s+'</g>';
+}
+function aw(x1,y1,x2,y2,on,up){
+  var dx=x2-x1, dy=y2-y1, L=Math.sqrt(dx*dx+dy*dy);
+  if(L<1) return '';
+  var ux=dx/L, uy=dy/L, tx=x2-ux*7.5, ty=y2-uy*7.5, px=-uy, py=ux;
+  var c=(on?' on':'')+(up?' up':'');
+  var s='<line class="aw'+c+'" x1="'+x1+'" y1="'+y1+'" x2="'+tx.toFixed(1)+'" y2="'+ty.toFixed(1)+'"/>';
+  s+='<polygon class="ah'+c+'" points="'+x2+','+y2+' '+(tx+px*4.3).toFixed(1)+','+(ty+py*4.3).toFixed(1)+' '+(tx-px*4.3).toFixed(1)+','+(ty-py*4.3).toFixed(1)+'"/>';
+  return s;
+}
+function ladder(d,L){
+  var ex=d.ex, s='', i;
+  L=L||{};
+  var rest=[]; for(i=0;i<3;i++){ if(i!==d.ev) rest.push(V[i]); }
+  var last=V[3-d.ev-d.ev2];
+  /* arrows first so boxes sit on top */
+  for(i=0;i<2;i++){
+    var src=(i===0)?ex.A.i:ex.A.j;
+    s+=aw(EXX[src],EY+EH/2,ABX[0]-8+i*16,ABY-ABH/2,L.arA);
+  }
+  for(i=0;i<2;i++){
+    var s2=(i===0)?ex.B.i:ex.B.j;
+    s+=aw(EXX[s2],EY+EH/2,ABX[1]-8+i*16,ABY-ABH/2,L.arB);
+  }
+  s+=aw(ABX[0],ABY+ABH/2,CX-14,CY-CH/2,L.arC);
+  s+=aw(ABX[1],ABY+ABH/2,CX+14,CY-CH/2,L.arC);
+  s+=aw(CX,CY+CH/2,SX,SY-SH/2,L.s);
+  /* upward back-substitution arrows */
+  if(ex.type==='unique'){
+    var qx=(d.qn==='A')?ABX[0]:ABX[1];
+    s+=aw(CX+11,CY-CH/2,qx+11,ABY+ABH/2,L.up1||L.up2,1);
+    s+=aw(qx+11,ABY-ABH/2,EXX[ex.back]+11,EY+EH/2,L.up2,1);
+  }
+  /* nodes */
+  var eOn=L.e||[0,0,0];
+  for(i=0;i<3;i++){ s+=nd(EXX[i],EY,EW,EH,'E'+(i+1),'x y z',eOn[i]?'on':''); }
+  var aOn=L.a||(L.q==='A'&&(L.up1||L.up2)), bOn=L.b||(L.q==='B'&&(L.up1||L.up2));
+  s+=nd(ABX[0],ABY,ABW,ABH,'A',rest.join(' '),aOn?'on':'');
+  s+=nd(ABX[1],ABY,ABW,ABH,'B',rest.join(' '),bOn?'on':'');
+  var csub = (ex.type==='unique') ? last : '0 = '+num(d.C[3]);
+  s+=nd(CX,CY,CW,CH,'C',csub,L.c?(L.dead?'dead':'on'):'');
+  var st, ss;
+  if(ex.type==='unique'){ st=L.done?'SOLUTION':'one point'; ss=L.done?'('+num(d.sol[0])+', '+num(d.sol[1])+', '+num(d.sol[2])+')':'x, y, z'; }
+  else if(ex.type==='none'){ st='NO SOLUTION'; ss='the planes share no point'; }
+  else { st='A LINE OF SOLUTIONS'; ss='infinitely many triples'; }
+  s+=nd(SX,SY,SW,SH,st,ss,L.s?(ex.type==='none'?'dead':(ex.type==='many'?'gold':'on')):'');
+  return s;
+}
+
+/* ============ the three-plane picture ============ */
+var GEO={
+ unique:{p:['152,117 228,89 88,53 12,81','202,48 90,12 38,122 150,158','154,15 38,43 86,155 202,127'],
+   dot:[120,85]},
+ many:{p:['164,129 232,77 76,41 8,93','200,143 196,63 40,27 44,107','236,129 160,77 4,41 80,93'],
+   line:[42,67,198,103]},
+ none:{p:['50,36 190,68 168,128 28,96','28,96 168,128 222,120 82,88','50,36 190,68 222,120 82,88'],
+   lines:[[50,36,190,68],[28,96,168,128],[82,88,222,120]]}
+};
+var GCOL=['#43458f','#d1495b','#2f6f9f'];
+function geo(type,d){
+  var g=GEO[type], s='', i;
+  for(i=0;i<3;i++){
+    s+='<polygon points="'+g.p[i]+'" fill="'+GCOL[i]+'" fill-opacity=".22" stroke="'+GCOL[i]+'" stroke-width="1.6" stroke-opacity=".8" stroke-linejoin="round"/>';
+  }
+  if(g.line){ s+='<line x1="'+g.line[0]+'" y1="'+g.line[1]+'" x2="'+g.line[2]+'" y2="'+g.line[3]+'" stroke="'+'#b8862f'+'" stroke-width="5" stroke-linecap="round"/>'; }
+  if(g.lines){ for(i=0;i<3;i++){ var L=g.lines[i];
+    s+='<line x1="'+L[0]+'" y1="'+L[1]+'" x2="'+L[2]+'" y2="'+L[3]+'" stroke="#b23145" stroke-width="3" stroke-dasharray="5 4" stroke-linecap="round"/>'; } }
+  if(g.dot){ s+='<circle cx="'+g.dot[0]+'" cy="'+g.dot[1]+'" r="7" fill="#fffdf9"/><circle cx="'+g.dot[0]+'" cy="'+g.dot[1]+'" r="4.6" fill="#262a5c"/>';
+    if(d&&d.sol){ s+='<text x="'+(g.dot[0]+11)+'" y="'+(g.dot[1]-8)+'" font-family="Georgia,serif" font-size="12.5" font-weight="700" fill="#262a5c">('+num(d.sol[0])+', '+num(d.sol[1])+', '+num(d.sol[2])+')</text>'; } }
+  return s;
+}
+var GCAP={
+ unique:'Each equation is a <b>plane</b>. Three planes that lean in three genuinely different directions puncture each other at exactly <b>one point</b> &mdash; and its coordinates are the triple you just computed.',
+ none:'These three planes lean like the three sides of a <b>triangular tube</b>. Each pair does meet, in the three dashed lines &mdash; but those lines are parallel and never touch, so <b>no point lies on all three</b> planes at once. That is what 0 = &minus;2 was telling you.',
+ many:'All three planes contain the <b>same line</b>. Every point on that gold line satisfies all three equations, so the solution set is infinite &mdash; and 0 = 0 was the algebra reporting exactly that.'
+};
+
+/* ============ wiring ============ */
+var ci=0, si=0, D=null, S=null;
+function pickUI(){
+  $('pick').innerHTML=EX.map(function(e,i){
+    return '<button data-i="'+i+'" class="'+(i===ci?'on':'')+'">'+e.nm+'<small>'+e.sb+'</small></button>';
+  }).join('');
+  var bs=$('pick').getElementsByTagName('button'),i;
+  for(i=0;i<bs.length;i++){ bs[i].onclick=function(){ ci=+this.getAttribute('data-i'); si=0; load(); }; }
+}
+function load(){ D=build(EX[ci]); S=steps(D); pickUI(); render(); }
+function render(){
+  var st=S[si], ex=EX[ci];
+  var col = (ex.type==='none')?'var(--coral)':((ex.type==='many')?'var(--gold)':'var(--teal)');
+  $('stage').style.background=col;
+  $('stage').innerHTML='<span class="big">'+st.t+'</span><small>'+st.s+'</small>';
+  $('work').innerHTML=st.w;
+  $('info').innerHTML='<span class="n">'+st.n+'</span>'+st.d;
+  $('lad').innerHTML=ladder(D,st.lit);
+  $('ladcap').innerHTML='Three unknowns become two, two become one &mdash; then the gold arrows carry the answers back up.';
+  $('geo').innerHTML=geo(ex.type,st.lit&&st.lit.done?D:null);
+  $('geocap').innerHTML=GCAP[ex.type];
+  $('geoT').innerHTML=(ex.type==='unique')?'Three planes, one point':(ex.type==='none'?'Three planes, no shared point':'Three planes, one shared line');
+  $('cnt').innerHTML='Step '+(si+1)+' / '+S.length;
+  $('prev').disabled=(si===0); $('next').disabled=(si===S.length-1);
+}
+$('prev').onclick=function(){ if(si>0){ si--; render(); } };
+$('next').onclick=function(){ if(si<S.length-1){ si++; render(); } };
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowLeft'&&si>0){ si--; render(); }
+  if(e.key==='ArrowRight'&&si<S.length-1){ si++; render(); }
+});
+load();
+})();
+</script>
+</body>
+</html>

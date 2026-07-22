@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Koch's Postulates</title>
+<meta name="description" content="Interactive walk-through of Koch's four postulates — how to prove a specific microbe causes a specific disease. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:1fr 1fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.steps{display:flex;gap:6px;margin-bottom:12px;}
+.steps button{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 4px;font-weight:800;font-size:15px;color:var(--muted);cursor:pointer;font-family:var(--disp);}
+.steps button.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+.steps button.done{color:var(--teal-dk);border-color:var(--teal);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 1</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 1</div>
+  <h1>Koch's Postulates</h1>
+  <div class="intro">How do you <b>prove</b> that one particular microbe causes one particular disease? Robert Koch's four-step logic is still the gold standard. Step through it.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The four-step proof</h2>
+    <svg viewBox="0 0 240 200" aria-label="koch"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">Postulate 1 of 4<small>tap a number or press Next</small></div>
+    <div class="steps" id="steps"></div>
+    <div class="card">
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var P=[
+  {t:'Found in every case',d:'The suspect microbe must be present in <b>every</b> case of the disease &mdash; and absent from healthy individuals. If it isn\'t always there, it isn\'t the cause.'},
+  {t:'Isolate & grow it',d:'The microbe is <b>isolated from a sick host and grown in pure culture</b> &mdash; a population of that one organism and nothing else.'},
+  {t:'It causes the disease',d:'The <b>cultured microbe is introduced into a healthy host</b>, and it must produce the <b>same disease</b>. This is the decisive step.'},
+  {t:'Re-isolate the same microbe',d:'The <b>same microbe is recovered</b> from the newly diseased host &mdash; closing the loop and confirming it, not something else, did the damage.'}
+ ];
+ var i=0;
+ function person(x,sick){ var f=sick?'#d1495b':'#2f9e5b';
+   return '<circle cx="'+x+'" cy="40" r="13" fill="#e8c9a8"/><rect x="'+(x-13)+'" y="55" width="26" height="34" rx="9" fill="'+f+'"/>'+(sick?'<text x="'+x+'" y="22" font-size="14" text-anchor="middle">🤒</text>':'');
+ }
+ function dish(x,pure){ return '<ellipse cx="'+x+'" cy="150" rx="34" ry="12" fill="#efe6f6" stroke="#c9b6e0"/>'+
+   (function(){var s='';var n=pure?9:16;for(var k=0;k<n;k++){s+='<circle cx="'+(x-26+((k*17)%52))+'" cy="'+(144+((k*11)%14))+'" r="3" fill="'+(pure?'#6d3f9c':(k%3?'#6d3f9c':'#b8862f'))+'"/>';}return s;})(); }
+ function draw(){ var s='';
+   if(i===0){ s+=person(60,1)+person(180,0); s+='<text x="60" y="110" font-size="10" text-anchor="middle" fill="#b23145" font-weight="700">sick — microbe present</text><text x="180" y="110" font-size="10" text-anchor="middle" fill="#237a45" font-weight="700">healthy — absent</text>'; }
+   else if(i===1){ s+=person(55,1)+'<path d="M85 60 l40 0 m-10 -7 l10 7 l-10 7" stroke="#6d3f9c" stroke-width="3" fill="none"/>'+dish(175,1)+'<text x="175" y="185" font-size="10" text-anchor="middle" fill="#3d2a5c" font-weight="700">pure culture</text>'; }
+   else if(i===2){ s+=dish(55,1)+'<path d="M95 150 l40 -60 m-2 12 l2 -12 l11 5" stroke="#6d3f9c" stroke-width="3" fill="none"/>'+person(180,1)+'<text x="180" y="110" font-size="10" text-anchor="middle" fill="#b23145" font-weight="700">now sick too</text>'; }
+   else { s+=person(55,1)+'<path d="M85 60 l40 40 m-11 -3 l11 3 l-3 -11" stroke="#6d3f9c" stroke-width="3" fill="none"/>'+dish(175,1)+'<text x="175" y="185" font-size="10" text-anchor="middle" fill="#3d2a5c" font-weight="700">same microbe again</text>'; }
+   return s; }
+ function render(){ var p=P[i];
+   $("art").innerHTML=draw(); $("cardTitle").innerHTML='Postulate '+(i+1)+': '+p.t;
+   $("stage").innerHTML='Postulate '+(i+1)+' of 4<small>'+p.t+'</small>';
+   $("steps").innerHTML=P.map(function(x,k){return '<button data-k="'+k+'" class="'+(k===i?'on':(k<i?'done':''))+'">'+(k+1)+'</button>';}).join('');
+   document.querySelectorAll('#steps button').forEach(function(b){b.onclick=function(){i=+b.dataset.k;render();};});
+   $("info").innerHTML='<span class="n">'+p.t+'</span>'+p.d+(i===3?'<div class="mnem"><b>Why it still matters:</b> Koch\'s logic underlies how we identify new pathogens today &mdash; and it\'s why a positive culture alone doesn\'t prove a microbe caused the illness.</div>':'');
+   $("prev").disabled=(i===0); $("next").disabled=(i===3);
+ }
+ $("prev").onclick=function(){if(i>0){i--;render();}};
+ $("next").onclick=function(){if(i<3){i++;render();}};
+ render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Clearing the Radical from the Bottom</title>
+<meta name="description" content="A worked-step machine for rationalizing denominators — why multiplying by a disguised 1 is legal, why the conjugate kills the cross terms, and why cube roots need a different multiplier. Every value computed, every restriction stated.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* ---- radical drawn with HTML only: glyph + vinculum ---- */
+.rad{display:inline-block;white-space:nowrap;}
+.rad>.rv{border-top:1.2px solid currentColor;padding:1px 3px 0 2px;margin-left:-1px;}
+.rad>.ix{font-size:.55em;vertical-align:.66em;margin-right:-4px;font-family:var(--sans);font-weight:700;}
+/* ---- stacked fraction, HTML only ---- */
+.fr{display:inline-block;vertical-align:middle;text-align:center;line-height:1.3;}
+.fr>.nu{display:block;padding:0 7px 2px;border-bottom:1.4px solid currentColor;}
+.fr>.de{display:block;padding:2px 7px 0;}
+/* ---- example picker ---- */
+#pick{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px;}
+#pick button{display:block;text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;font-family:var(--sans);transition:.12s;}
+#pick button:hover{border-color:var(--teal);}
+#pick button .nm{display:block;font-weight:700;font-size:11.2px;color:var(--ink);line-height:1.15;}
+#pick button .ct{display:block;font-family:var(--math);font-size:14px;color:var(--muted);margin-top:5px;line-height:1.3;}
+#pick button.on{background:var(--teal);border-color:var(--teal);}
+#pick button.on .nm{color:#fff;} #pick button.on .ct{color:rgba(255,255,255,.94);}
+/* ---- the worked-step column ---- */
+.work{margin-top:2px;}
+.wr{display:flex;gap:10px;align-items:baseline;padding:7px 8px;border-radius:9px;border-left:4px solid transparent;transition:.18s;}
+.wr + .wr{margin-top:2px;}
+.wr .pl{flex:none;width:88px;font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.wr .mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:2.05;flex:1;min-width:0;}
+.wr.on{background:#eef0fa;border-left-color:var(--teal);}
+.wr.on .mx{font-size:17.5px;color:var(--ink);font-weight:600;}
+.wr.on .pl{color:var(--teal);}
+.wr.done .mx{color:var(--soft);}
+.wr .ex{font-family:var(--math);font-size:13px;color:var(--soft);line-height:1.75;margin-top:8px;display:block;font-weight:400;}
+.wr:not(.on) .ex{display:none;}
+.wr .ex u{font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;display:block;margin-bottom:2px;}
+.wr .ex b{color:var(--ink);}
+.mx sub{font-size:.62em;} .mx sup{font-size:.66em;} .ex sup{font-size:.66em;} .ex sub{font-size:.62em;}
+/* ---- highlight the part that just changed ---- */
+.hl{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.wr:not(.on) .hl{background:transparent;box-shadow:none;padding:0;}
+.strike{background-image:linear-gradient(to top right,transparent 44%,#d1495b 44%,#d1495b 56%,transparent 56%);color:var(--muted);}
+.bad{color:#b23145;} .gd{color:#237a45;}
+/* ---- plan chips ---- */
+.plan{display:flex;flex-wrap:wrap;gap:4px;margin-top:11px;}
+.plan span{font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:#eceefa;color:var(--muted);border-radius:20px;padding:4px 9px;}
+.plan span.on{background:var(--teal);color:#fff;}
+.plan span.done{background:#dfe2f4;color:var(--teal-dk);}
+/* ---- left column extras ---- */
+.dom{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;border:1px solid var(--line);background:#f7f6fc;border-radius:9px;padding:7px 11px;}
+.dom b{font-size:9.4px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;flex:none;}
+.dom span{font-family:var(--math);font-size:15.5px;color:var(--teal-dk);font-weight:700;text-align:right;}
+.cap{font-size:12px;color:var(--soft);line-height:1.62;margin-top:11px;border-top:1px solid var(--line);padding-top:10px;min-height:74px;}
+.cap b{color:var(--ink);} .cap i{font-family:var(--math);font-style:normal;}
+/* ---- live tester ---- */
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#dfe2f4;outline:none;margin:9px 0 2px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:21px;height:21px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.4);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.4);cursor:pointer;}
+.slrow{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:700;}
+.slrow b{color:var(--teal-dk);font-family:var(--math);font-size:13px;}
+.tw{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.tw .lb{flex:none;width:76px;font-size:9.2px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.tw .fm{flex:1;font-family:var(--math);font-size:17px;color:var(--teal-dk);font-weight:700;}
+.tw .vl{flex:none;font-family:var(--math);font-size:13px;color:var(--soft);}
+.vd{text-align:center;margin-top:10px;}
+.sub2{font-family:var(--math);font-size:13px;color:var(--soft);text-align:center;margin-top:9px;line-height:1.7;}
+.sub2 b{color:var(--ink);}
+#info .n{margin-bottom:4px;}
+#info i,.mnem i,.note i,.sub2 i,.cap i{font-family:var(--math);}
+#info sup,.mnem sup,.note sup{font-size:.66em;}
+#info .rad>.rv,.mnem .rad>.rv,.note .rad>.rv,.cap .rad>.rv,.sub2 .rad>.rv{border-top-width:1px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 8</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 8</div>
+  <h1>Clearing the Radical from the Bottom</h1>
+  <div class="intro">Rationalizing a denominator sounds like a rule invented to torment you. It is not. It rests on <b>one honest idea</b>: any nonzero thing divided by itself equals <b>1</b>, and multiplying by 1 changes how a number <b>looks</b> but never what it <b>is</b>. Watch the value on the left as you step &mdash; it lands on the same point every single line. All you are choosing is <b>which disguised 1</b> to multiply by, and the answer depends on what kind of denominator you are facing.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Why the multiplier works</h2>
+      <svg id="pic" viewBox="0 0 250 186" aria-label="model of why the chosen multiplier clears the radical"><g id="art"></g></svg>
+      <div class="dom"><b id="domlb">Every line equals</b><span id="domv">&mdash;</span></div>
+      <svg viewBox="0 0 250 78" aria-label="number line showing the value never moves"><g id="nl"></g></svg>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>Same value, friendlier shape</h2>
+      <input type="range" id="rn" min="2" max="60" step="1" value="2" aria-label="the number under the square root">
+      <div class="slrow"><span>DENOMINATOR &radic;<i>n</i></span><b id="nv"></b><span>2 &ndash; 60</span></div>
+      <div class="tw"><span class="lb">Radical below</span><span class="fm" id="fmA"></span><span class="vl" id="vlA"></span></div>
+      <div class="tw"><span class="lb">Radical above</span><span class="fm" id="fmB"></span><span class="vl" id="vlB"></span></div>
+      <svg viewBox="0 0 250 76" aria-label="two bars of identical length"><g id="tArt"></g></svg>
+      <div class="vd"><span class="pill" id="tP"></span></div>
+      <div class="sub2" id="tB"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Rationalizing, one line at a time<small>pick a denominator type, then an example</small></div>
+    <div class="card">
+      <div class="modeseg" id="mode">
+        <button data-m="one" class="on">One radical below</button><button data-m="two">Two terms below</button>
+      </div>
+      <div id="pick"></div>
+      <div class="work" id="work"></div>
+      <div class="plan" id="plan"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"></div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ============ HTML math helpers — no LaTeX, no renderer ============ */
+ function R(s){ return '<span class="rad">&radic;<span class="rv">'+s+'</span></span>'; }
+ function C(s){ return '<span class="rad"><sup class="ix">3</sup>&radic;<span class="rv">'+s+'</span></span>'; }
+ function F(n,d){ return '<span class="fr"><span class="nu">'+n+'</span><span class="de">'+d+'</span></span>'; }
+ function HL(s){ return '<span class="hl">'+s+'</span>'; }
+ function SK(s){ return '<span class="strike">'+s+'</span>'; }
+ function BD(s){ return '<span class="bad">'+s+'</span>'; }
+ function GD(s){ return '<span class="gd">'+s+'</span>'; }
+ var MN='&minus;', DOT='&nbsp;&middot;&nbsp;', AP='&nbsp;&asymp;&nbsp;', EQ='&nbsp;=&nbsp;',
+     NE='&ne;', GE='&ge;', ARR='&nbsp;&rarr;&nbsp;';
+ var r2=R('2'), r3=R('3'), r5=R('5'), r7=R('7'), rx=R('<i>x</i>'),
+     c5=C('5'), c25=C('25'), c125=C('125');
+
+ function fx(v){ return v.toFixed(7); }
+ var SQ=Math.sqrt;
+ function cbrt(v){ return Math.pow(v,1/3); }
+
+ /* ============ every value COMPUTED, never typed ============ */
+ var V1=1/SQ(2), V2=6/SQ(3), V3=5/(2*SQ(7)), V4=1/cbrt(5),
+     W1=1/(3+SQ(2)), W2=4/(SQ(5)-1), W3=(2+SQ(3))/(2-SQ(3)), W4=1/(SQ(9)-2);
+
+ /* ============ SVG helpers (literal Unicode glyphs, not entities) ============ */
+ var MF="Georgia,'Times New Roman',serif", SF="Inter,system-ui,sans-serif";
+ function T(x,y,t,sz,col,an,w,fam){
+   return '<text x="'+x+'" y="'+y+'" font-size="'+sz+'" fill="'+col+'" text-anchor="'+(an||'start')+
+          '" font-weight="'+(w||400)+'" font-family="'+(fam||SF)+'">'+t+'</text>';
+ }
+ /* base with a fractional exponent, e.g. 5 to the 1/3 */
+ function PW(x,y,base,num,den,sz,col,an,w){
+   return '<text x="'+x+'" y="'+y+'" font-size="'+sz+'" fill="'+col+'" text-anchor="'+(an||'start')+
+          '" font-weight="'+(w||700)+'" font-family="'+MF+'">'+base+
+          '<tspan dy="'+(-sz*0.40).toFixed(1)+'" font-size="'+(sz*0.64).toFixed(1)+'" font-family="'+SF+'">'+num+'/'+den+'</tspan></text>';
+ }
+ var TEAL='#43458f', DKT='#262a5c', GOLD='#b8862f', GRN='#2f9e5b',
+     RED='#d1495b', PUR='#7a5a8a', MUT='#7d7f94', LINE='#e0e2ef';
+
+ /* =====================================================================
+    PICTURE A — the exponent ladder (single-radical denominators)
+    A radical is a fractional exponent. The denominator is rational only
+    when that exponent reaches a WHOLE number. So the question is never
+    "how many radicals" but "how much exponent am I still short?"
+    ===================================================================== */
+ function ladder(L, ph){
+   var n=L.n, base=L.b, s='', i;
+   var x0=22, W=206, y=88, h=30, seg=W/n;
+   s+=T(125,15,'How much exponent do you have?',11,DKT,'middle',700);
+   s+=T(125,30,'a radical is a fractional power — clear it by reaching 1',9.6,MUT,'middle',500);
+   /* empty track + ticks */
+   s+='<rect x="'+x0+'" y="'+y+'" width="'+W+'" height="'+h+'" rx="5" fill="#fff" stroke="'+LINE+'" stroke-width="1.4"/>';
+   for(i=0;i<=n;i++){
+     var tx=x0+i*seg;
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+(y-6)+'" x2="'+tx.toFixed(1)+'" y2="'+(y+h+6)+'" stroke="'+LINE+'" stroke-width="1.2"/>';
+     s+=T(tx,y+h+19,(i===0?'0':(i===n?'1':i+'/'+n)),9.4,MUT,'middle',700);
+   }
+   /* the goal line at exponent 1 */
+   s+='<line x1="'+(x0+W)+'" y1="'+(y-20)+'" x2="'+(x0+W)+'" y2="'+(y+h+6)+'" stroke="'+GOLD+'" stroke-width="2" stroke-dasharray="3 3"/>';
+   s+=T(x0+W,y-25,'whole power = no radical',9.4,GOLD,'end',800);
+   /* the piece you already have: one copy of the radical, exponent 1/n */
+   s+='<rect x="'+(x0+1)+'" y="'+(y+1)+'" width="'+(seg-2).toFixed(1)+'" height="'+(h-2)+'" rx="4" fill="'+(ph>=3?GOLD:TEAL)+'"/>';
+   s+=T(x0+seg/2,y+19,'1/'+n,12,'#fff','middle',800,MF);
+   s+=T(x0,y-9,'you have',9.2,TEAL,'start',800);
+   if(ph===1){
+     /* the tempting move: another single copy. For a cube root it falls short. */
+     s+='<rect x="'+(x0+seg+1).toFixed(1)+'" y="'+(y+1)+'" width="'+(seg-2).toFixed(1)+'" height="'+(h-2)+'" rx="4" fill="'+RED+'" opacity=".9"/>';
+     s+=T(x0+seg*1.5,y+19,'1/'+n,12,'#fff','middle',800,MF);
+     s+=T(x0+seg*2+6,y+19,'✕ lands on 2/'+n+', not 1',10,RED,'start',800);
+     s+=T(125,152,'Two copies of a cube root give '+String.fromCharCode(8731)+'25 — still irrational.',10.2,RED,'middle',700);
+     s+=T(125,167,'For square roots two copies were exactly enough. Not here.',9.8,MUT,'middle',500);
+   } else if(ph>=2){
+     var fw=W-seg;
+     s+='<rect x="'+(x0+seg+1).toFixed(1)+'" y="'+(y+1)+'" width="'+(fw-2).toFixed(1)+'" height="'+(h-2)+'" rx="4" fill="'+(ph>=3?GOLD:GRN)+'"/>';
+     s+=T(x0+seg+fw/2,y+19,(n-1)+'/'+n,12,'#fff','middle',800,MF);
+     s+=T(x0+W,y-9,'you multiply by this',9.2,(ph>=3?GOLD:GRN),'end',800);
+     /* the exponent sentence itself is drawn by ladderEq() at y = 152 */
+     s+=T(125,170,'one whole power of '+base+' — the radical is gone',9.8,(ph>=3?GOLD:MUT),'middle',600);
+   } else {
+     s+=T(125,152,'One copy of the radical is only 1/'+n+' of a power.',10.2,MUT,'middle',600);
+     s+=T(125,167,'A denominator is rational only at a whole power.',9.8,MUT,'middle',500);
+   }
+   return s;
+ }
+ /* the exponent sentence is drawn separately so it can be composed cleanly */
+ function ladderEq(L, ph){
+   if(ph<2) return '';
+   var n=L.n, b=L.b, s='';
+   var y=152, sz=14.5;
+   /* measure-free layout: place three chunks around the centre */
+   s+=PW(52,y,b,1,n,sz,DKT,'middle',700);
+   s+=T(80,y,'·',sz,MUT,'middle',700,MF);
+   s+=PW(112,y,b,(n-1),n,sz,GRN,'middle',700);
+   s+=T(140,y,'=',sz,MUT,'middle',700,MF);
+   s+=PW(168,y,b,n,n,sz,DKT,'middle',700);
+   s+=T(196,y,'=',sz,MUT,'middle',700,MF);
+   s+=T(214,y,b,sz,GOLD,'middle',800,MF);
+   return s;
+ }
+
+ /* =====================================================================
+    PICTURE B — the 2x2 product grid (two-term denominators)
+    (a + b)(a − b): the two cross products are equal and opposite, so they
+    cancel. What survives is a² − b² — and squaring is exactly what kills
+    a square root.
+    ===================================================================== */
+ function foil(G, ph){
+   var s='';
+   var gx=66, gy=56, cw=80, ch=42;
+   var cxs=[gx+cw/2, gx+cw+cw/2], cys=[gy+ch/2, gy+ch+ch/2];
+   s+=T(125,15,'All four products of ( a + b )( a − b )',11,DKT,'middle',700);
+   if(ph===0){
+     s+=T(125,30,'the conjugate pair, side by side',9.6,MUT,'middle',500);
+     s+=T(125,100,'( '+G.a+' + '+G.b+' )( '+G.a+' − '+G.b+' )',17,DKT,'middle',700,MF);
+     s+=T(125,128,'same two terms — one sign flipped',10,GOLD,'middle',700);
+     s+=T(125,152,'Multiply them out and watch the middle.',9.8,MUT,'middle',500);
+     return s;
+   }
+   s+=T(125,30,'each cell is one product',9.6,MUT,'middle',500);
+   /* headers */
+   s+=T(cxs[0],gy-8,G.a,12,TEAL,'middle',800,MF);
+   s+=T(cxs[1],gy-8,'+ '+G.b,12,GOLD,'middle',800,MF);
+   s+=T(gx-8,cys[0]+4,G.a,12,TEAL,'end',800,MF);
+   s+=T(gx-8,cys[1]+4,'− '+G.b,12,RED,'end',800,MF);
+   var fade = (ph>=2) ? '.20' : '1';
+   /* cell 0,0 : a squared */
+   s+='<rect x="'+gx+'" y="'+gy+'" width="'+cw+'" height="'+ch+'" fill="#e6e8f5" stroke="'+LINE+'"/>';
+   s+=T(cxs[0],cys[0]+4,G.a2,10.6,DKT,'middle',700,MF);
+   /* cell 0,1 : + ab  (cross term) */
+   s+='<rect x="'+(gx+cw)+'" y="'+gy+'" width="'+cw+'" height="'+ch+'" fill="#fbf3e2" stroke="'+LINE+'" opacity="'+fade+'"/>';
+   s+=T(cxs[1],cys[0]+4,'+ '+G.ab,10.6,GOLD,'middle',700,MF);
+   /* cell 1,0 : − ab  (cross term) */
+   s+='<rect x="'+gx+'" y="'+(gy+ch)+'" width="'+cw+'" height="'+ch+'" fill="#fae5e8" stroke="'+LINE+'" opacity="'+fade+'"/>';
+   s+=T(cxs[0],cys[1]+4,'− '+G.ab,10.6,RED,'middle',700,MF);
+   /* cell 1,1 : − b squared */
+   s+='<rect x="'+(gx+cw)+'" y="'+(gy+ch)+'" width="'+cw+'" height="'+ch+'" fill="#f0eaf4" stroke="'+LINE+'"/>';
+   s+=T(cxs[1],cys[1]+4,'− '+G.b2,10.6,PUR,'middle',700,MF);
+   if(ph>=2){
+     /* strike the two cross terms and say why */
+     s+='<line x1="'+(gx+cw+10)+'" y1="'+(gy+ch-10)+'" x2="'+(gx+2*cw-10)+'" y2="'+(gy+10)+'" stroke="'+RED+'" stroke-width="2"/>';
+     s+='<line x1="'+(gx+10)+'" y1="'+(gy+2*ch-10)+'" x2="'+(gx+cw-10)+'" y2="'+(gy+ch+10)+'" stroke="'+RED+'" stroke-width="2"/>';
+     s+=T(125,gy+ch+2,'equal and opposite — they cancel',9.6,RED,'middle',800);
+     s+=T(125,158,'what survives:  '+G.res,12.6,(ph>=3?GOLD:DKT),'middle',800,MF);
+     s+=T(125,174,G.why,9.6,MUT,'middle',600);
+   } else {
+     s+=T(125,158,'Look at the two off-diagonal cells.',10.2,DKT,'middle',700);
+     s+=T(125,174,'Same product, opposite signs.',9.8,MUT,'middle',500);
+   }
+   return s;
+ }
+
+ /* =====================================================================
+    PICTURE C — the number line the value never leaves
+    ===================================================================== */
+ function niceMax(v){
+   var c=[0.5,1,2,4,5,10,20,50,100], i;
+   for(i=0;i<c.length;i++){ if(v<=c[i]*0.98) return c[i]; }
+   return Math.ceil(v);
+ }
+ function numline(val, done, total){
+   var mx=niceMax(Math.abs(val)), x0=20, W=212, y=56, s='', i;
+   s+='<line x1="'+x0+'" y1="'+y+'" x2="'+(x0+W)+'" y2="'+y+'" stroke="'+LINE+'" stroke-width="2"/>';
+   for(i=0;i<=4;i++){
+     var tx=x0+i*W/4, tv=mx*i/4;
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+(y-4)+'" x2="'+tx.toFixed(1)+'" y2="'+(y+4)+'" stroke="'+LINE+'" stroke-width="1.5"/>';
+     s+=T(tx,y+16,(tv%1===0?tv.toFixed(0):tv.toFixed(2)),9,MUT,'middle',600);
+   }
+   var px=x0+(val/mx)*W;
+   s+='<line x1="'+px.toFixed(1)+'" y1="14" x2="'+px.toFixed(1)+'" y2="'+y+'" stroke="'+GOLD+'" stroke-width="1.6" stroke-dasharray="2 3"/>';
+   /* one dot per line of work completed — all at the SAME x */
+   for(i=0;i<=done;i++){
+     s+='<circle cx="'+px.toFixed(1)+'" cy="'+(47-i*5.2).toFixed(1)+'" r="3.1" fill="'+(i===done?GOLD:'#cfd3e8')+'"/>';
+   }
+   s+=T(x0,11,'every line lands here',9.2,GOLD,'start',800);
+   s+=T(x0+W,11,(done+1)+' of '+total,9.2,MUT,'end',700);
+   return s;
+ }
+
+ /* =====================================================================
+    THE EXAMPLES.  Every decimal quoted below was computed and checked.
+    ===================================================================== */
+ var EX={
+ one:[
+  { nm:'A lone square root', ct:F('1',r2), val:V1, ttl:'Multiply by a disguised 1',
+    lad:{n:2,b:'2'},
+    st:[
+     {pl:'The problem', tg:'read it', ph:0, mx:F('1',r2),
+      cp:'The denominator is <i>'+r2+'</i>, whose exponent form is 2<sup>1/2</sup> &mdash; only <b>half</b> of a whole power of 2. The bar shows how far short that is.',
+      ex:'<u>read it before you touch it</u>The bottom is '+r2+AP+'1.4142136&hellip; &mdash; a decimal that never ends and never repeats. The fraction is worth about <b>'+fx(V1)+'</b>. Nothing here is <i>wrong</i>; we simply want the radical upstairs, where it is easier to work with.'},
+     {pl:'Multiply by 1', tg:'&times; 1', ph:2, mx:F('1',r2)+DOT+HL(F(r2,r2)),
+      cp:'One more copy of 2<sup>1/2</sup> completes the power: 1/2 + 1/2 = 1. At a whole power the radical disappears.',
+      ex:'<u>why this is allowed</u>'+F(r2,r2)+' is a nonzero number over itself, so it equals <b>1</b>. Multiplying by 1 changes how a number <b>looks</b>, never what it <b>is</b>. That is the entire method &mdash; the only real question is <i>which</i> disguised 1 to pick.'},
+     {pl:'Multiply across', tg:'across', ph:2, mx:F('1'+DOT+r2, r2+DOT+r2),
+      cp:'Nothing clever yet &mdash; just numerator times numerator, denominator times denominator.',
+      ex:'<u>ordinary fraction multiplication</u>Tops multiply with tops, bottoms with bottoms. No new rule is being used here.'},
+     {pl:'The bottom collapses', tg:'collapse', ph:3, mx:F(r2, HL('2')),
+      cp:'The bar is full: 2<sup>1/2</sup> &middot; 2<sup>1/2</sup> = 2<sup>1</sup> = 2. The denominator is a whole number now.',
+      ex:'<u>the key move</u>'+r2+DOT+r2+' = ('+r2+')<sup>2</sup> = <b>2</b>. That is exactly what a square root <i>means</i>: the number whose square is 2. Squaring undoes the root, so the radical is gone from the bottom.'},
+     {pl:'Answer', tg:'answer', ph:3, mx:F(r2,'2')+AP+fx(V1),
+      cp:'Same point on the line as line 1 &mdash; the dots stacked up without moving.',
+      ex:'<u>check it by hand</u>1 &divide; 1.4142136 = <b>0.7071068</b>, and 1.4142136 &divide; 2 = <b>0.7071068</b>. Identical value, and the second division is one you could actually do on paper.'}
+    ]},
+  { nm:'It still has to reduce', ct:F('6',r3), val:V2, ttl:'Do not stop one line early',
+    lad:{n:2,b:'3'},
+    st:[
+     {pl:'The problem', tg:'read it', ph:0, mx:F('6',r3),
+      cp:'A square root again, so the ladder is in halves: one copy is 3<sup>1/2</sup>, half a power.',
+      ex:'<u>read it first</u>'+r3+AP+'1.7320508&hellip;, so this fraction is about <b>'+fx(V2)+'</b>. Same plan as before &mdash; but this one has a sting in the tail.'},
+     {pl:'Multiply by 1', tg:'&times; 1', ph:2, mx:F('6',r3)+DOT+HL(F(r3,r3)),
+      cp:'One more 3<sup>1/2</sup> fills the bar to a whole power of 3.',
+      ex:'<u>same disguised 1</u>'+F(r3,r3)+' = 1. Note we multiply by '+r3+', not by 6 or by anything involving the numerator &mdash; only the denominator needs fixing.'},
+     {pl:'Multiply across', tg:'across', ph:2, mx:F('6'+DOT+r3, r3+DOT+r3),
+      cp:'Tops with tops, bottoms with bottoms.',
+      ex:'<u>ordinary fraction multiplication</u>The 6 simply comes along for the ride on top.'},
+     {pl:'The bottom collapses', tg:'collapse', ph:3, mx:F('6'+r3, HL('3')),
+      cp:'Bar full: 3<sup>1/2</sup> &middot; 3<sup>1/2</sup> = 3. Denominator rational.',
+      ex:'<u>the radical is gone</u>('+r3+')<sup>2</sup> = 3. The denominator is rational &mdash; but this is <b>not</b> the final answer, and here is where most of the marks get lost.'},
+     {pl:'Reduce, then answer', tg:'reduce', ph:3, mx:F('6'+r3,'3')+EQ+HL('2'+r3)+AP+fx(V2),
+      cp:'The value has still not moved &mdash; reducing 6/3 to 2 is another way of multiplying by 1.',
+      ex:'<u>finish the job</u>6 and 3 share a factor of 3, so '+F('6','3')+' = 2 and the answer is <b>2'+r3+'</b>. Check: 6 &divide; 1.7320508 = 3.4641016 and 2 &times; 1.7320508 = 3.4641016. Rationalizing is step one; <b>simplifying is step two</b>, and it is not optional.'}
+    ]},
+  { nm:'A coefficient in the way', ct:F('5','2'+r7), val:V3, ttl:'Fix only what is broken',
+    lad:{n:2,b:'7'},
+    st:[
+     {pl:'The problem', tg:'read it', ph:0, mx:F('5','2'+r7),
+      cp:'Only the 7<sup>1/2</sup> part is fractional. The 2 in front is already a whole number and needs nothing done to it.',
+      ex:'<u>look at what is actually irrational</u>The denominator is 2'+r7+AP+'5.2915026, so the fraction is about <b>'+fx(V3)+'</b>. The <b>2</b> is already rational. Only the '+r7+' is causing trouble.'},
+     {pl:'Multiply by 1', tg:'&times; 1', ph:2, mx:F('5','2'+r7)+DOT+HL(F(r7,r7)),
+      cp:'One more 7<sup>1/2</sup> completes the power of 7. The coefficient 2 is untouched.',
+      ex:'<u>pick the smallest 1 that works</u>Use '+F(r7,r7)+', <b>not</b> '+F('2'+r7,'2'+r7)+'. Both are equal to 1 and both would work, but the second one drags an extra factor of 4 through the whole problem for nothing. Repair only what is broken.'},
+     {pl:'Multiply across', tg:'across', ph:2, mx:F('5'+DOT+r7,'2'+DOT+r7+DOT+r7),
+      cp:'Tops with tops, bottoms with bottoms.',
+      ex:'<u>ordinary fraction multiplication</u>The 2 stays put as a factor of the denominator.'},
+     {pl:'The bottom collapses', tg:'collapse', ph:3, mx:F('5'+r7,'2'+DOT+HL('7')),
+      cp:'Bar full for the 7. The denominator is now 2 &middot; 7, both whole numbers.',
+      ex:'<u>the radical is gone</u>('+r7+')<sup>2</sup> = 7, so the bottom is 2 &middot; 7.'},
+     {pl:'Answer', tg:'answer', ph:3, mx:F('5'+r7,HL('14'))+AP+fx(V3),
+      cp:'Same point on the line as every previous step.',
+      ex:'<u>can it reduce?</u>2 &middot; 7 = 14. The numerator carries a factor of 5, and 5 shares no factor with 14, so <b>this is finished</b>. Check: 5 &times; 2.6457513 = 13.2287566, and 13.2287566 &divide; 14 = <b>0.9449112</b>.'}
+    ]},
+  { nm:'A cube root breaks the habit', ct:F('1',c5), val:V4, ttl:'Count exponents, not radicals',
+    lad:{n:3,b:'5'},
+    st:[
+     {pl:'The problem', tg:'read it', ph:0, mx:F('1',c5),
+      cp:'A cube root is 5<sup>1/3</sup> &mdash; only a <b>third</b> of a power. The bar is cut into thirds now, not halves.',
+      ex:'<u>read the index</u>'+c5+' is the number whose <b>cube</b> is 5, about 1.7099759. The fraction is about <b>'+fx(V4)+'</b>. Everything you learned above was really about square roots. Watch what changes.'},
+     {pl:'The tempting move', tg:'the trap', ph:1, mx:F('1'+DOT+c5, c5+DOT+c5)+EQ+F(c5, BD(c25)),
+      cp:'Two thirds is not a whole power. The bar stops short, and a radical survives in the denominator.',
+      ex:'<u>this does not work</u>Copying the square-root habit gives '+c5+DOT+c5+' = '+c25+AP+'2.9240177 &mdash; <b>still irrational</b>. Nothing was fixed. With square roots, two copies happened to be exactly enough; that was a coincidence of the index, not a law.'},
+     {pl:'Count exponents', tg:'why', ph:2, mx:'5<sup>1/3</sup>'+DOT+'5<sup>1/3</sup>'+EQ+BD('5<sup>2/3</sup>')+'&nbsp;&nbsp;but&nbsp;&nbsp;5<sup>1/3</sup>'+DOT+HL('5<sup>2/3</sup>')+EQ+GD('5<sup>1</sup> = 5'),
+      cp:'Now the bar fills exactly: 1/3 already there, 2/3 supplied by the multiplier, total 1.',
+      ex:'<u>the real rule</u>Stop counting radicals and start adding exponents. You hold 5<sup>1/3</sup> and you need to reach a whole 5<sup>1</sup>. The gap is <b>2/3</b>, so the multiplier must be 5<sup>2/3</sup> = '+c25+'. In general '+C('<i>a</i>')+' needs '+C('<i>a</i><sup>2</sup>')+', and an <i>n</i>-th root of <i>a</i><sup><i>m</i></sup> needs the <i>n</i>-th root of <i>a</i><sup><i>n</i>&minus;<i>m</i></sup>.'},
+     {pl:'Multiply by 1', tg:'&times; 1', ph:2, mx:F('1',c5)+DOT+HL(F(c25,c25)),
+      cp:'The multiplier is the missing 2/3 of a power, written as a cube root.',
+      ex:'<u>the right disguised 1</u>'+F(c25,c25)+' = 1, so the value is safe. This is the same idea as before &mdash; only the choice of 1 has changed to match the index.'},
+     {pl:'Multiply across', tg:'across', ph:2, mx:F('1'+DOT+c25, c5+DOT+c25),
+      cp:'Cube roots multiply straight through: the product of the roots is the root of the product.',
+      ex:'<u>ordinary fraction multiplication</u>And on the bottom, '+c5+DOT+c25+' = '+C('5 &middot; 25')+' = '+c125+'.'},
+     {pl:'The bottom collapses', tg:'collapse', ph:3, mx:F(c25, HL('5')),
+      cp:'Bar full at a whole power of 5. Denominator rational.',
+      ex:'<u>the radical is gone</u>'+c125+' = <b>5</b>, because 5<sup>3</sup> = 125. This is the payoff for using the right multiplier.'},
+     {pl:'Answer', tg:'answer', ph:3, mx:F(c25,'5')+AP+fx(V4),
+      cp:'Same point on the line as line 1, six lines later.',
+      ex:'<u>check it</u>'+c25+AP+'2.9240177, and 2.9240177 &divide; 5 = <b>0.5848035</b>. The original was 1 &divide; 1.7099759 = <b>0.5848035</b>. Identical.'}
+    ]}
+ ],
+ two:[
+  { nm:'A number plus a root', ct:F('1','3 + '+r2), val:W1, ttl:'Meet the conjugate',
+    fo:{a:'3', b:'√2', a2:'3² = 9', ab:'3·√2', b2:'(√2)² = 2', res:'9 − 2 = 7', why:'both survivors are squared — no root left'},
+    st:[
+     {pl:'The problem', tg:'read it', ph:0, mx:F('1','3 + '+r2),
+      cp:'Two terms downstairs. The old repair does not reach this.',
+      ex:'<u>read it first</u>The denominator 3 + '+r2+AP+'4.4142136, so the fraction is about <b>'+fx(W1)+'</b>. There are now <b>two</b> terms below, and that changes the tool completely.'},
+     {pl:'The old trick fails', tg:'the trap', ph:0, mx:F('1'+DOT+r2,'(3 + '+r2+')'+DOT+r2)+EQ+F(r2, BD('3'+r2+' + 2')),
+      cp:'Multiplying by '+r2+' distributes over both terms, and the 3 keeps its radical.',
+      ex:'<u>why multiplying by '+r2+' does not help</u>(3 + '+r2+')'+DOT+r2+' = 3'+r2+' + 2 &asymp; 6.2426407 &mdash; <b>still irrational</b>. Squaring is no better: (3 + '+r2+')<sup>2</sup> = 11 + 6'+r2+AP+'19.4852814. The radical keeps surviving because it has a partner term to hide behind.'},
+     {pl:'The conjugate', tg:'conjugate', ph:0, mx:'3 + '+r2+ARR+HL('3 '+MN+' '+r2),
+      cp:'Same two terms, one sign flipped. That is all a conjugate is.',
+      ex:'<u>flip the sign in the middle</u>The <b>conjugate</b> of 3 + '+r2+' is 3 &minus; '+r2+'. Same two pieces, opposite sign between them. Multiply a pair of conjugates and something very useful happens.'},
+     {pl:'Multiply by 1', tg:'&times; 1', ph:1, mx:F('1','3 + '+r2)+DOT+HL(F('3 '+MN+' '+r2,'3 '+MN+' '+r2)),
+      cp:'The grid holds all four products of (3 + '+r2+')(3 &minus; '+r2+'). Look at the two off-diagonal cells.',
+      ex:'<u>still just a disguised 1</u>'+F('3 '+MN+' '+r2,'3 '+MN+' '+r2)+' = 1, so nothing about the value is at risk. Since 3 &minus; '+r2+AP+'1.5857864 is not zero, this is a legal multiplier.'},
+     {pl:'Expand the bottom', tg:'cancel', ph:2, mx:F('3 '+MN+' '+r2,'9 '+SK(MN+' 3'+r2)+' '+SK('+ 3'+r2)+' '+MN+' 2'),
+      cp:'The cross products are +3'+r2+' and &minus;3'+r2+' &mdash; equal in size, opposite in sign. They cancel each other exactly.',
+      ex:'<u>watch the middle two terms</u>(3 + '+r2+')(3 &minus; '+r2+') = 9 &minus; 3'+r2+' + 3'+r2+' &minus; 2. The two middle terms are the <b>same product with opposite signs</b>, so they add to zero. This is the whole reason the conjugate is the right tool: it is the only multiplier that makes the cross terms cancel.'},
+     {pl:'What survives', tg:'collapse', ph:3, mx:F('3 '+MN+' '+r2, HL('7')),
+      cp:'Only the squared pieces are left: 3<sup>2</sup> &minus; ('+r2+')<sup>2</sup> = 9 &minus; 2 = 7.',
+      ex:'<u>a difference of squares</u>9 &minus; 2 = <b>7</b>. In general (<i>a</i> + <i>b</i>)(<i>a</i> &minus; <i>b</i>) = <i>a</i><sup>2</sup> &minus; <i>b</i><sup>2</sup>, and <b>both</b> survivors are squared. Squaring is exactly what destroys a square root, which is why this always works.'},
+     {pl:'Answer', tg:'answer', ph:3, mx:F('3 '+MN+' '+r2,'7')+AP+fx(W1),
+      cp:'Seven lines, one unmoved point.',
+      ex:'<u>check it</u>(3 &minus; 1.4142136) &divide; 7 = 1.5857864 &divide; 7 = <b>0.2265409</b>, and 1 &divide; 4.4142136 = <b>0.2265409</b>. The numerator is left as 3 &minus; '+r2+' &mdash; it does <b>not</b> get "simplified" further, because 3 and '+r2+' are unlike terms and cannot be combined.'}
+    ]},
+  { nm:'When everything cancels', ct:F('4',r5+' '+MN+' 1'), val:W2, ttl:'A surprisingly clean finish',
+    fo:{a:'√5', b:'1', a2:'(√5)² = 5', ab:'√5·1', b2:'1² = 1', res:'5 − 1 = 4', why:'the root got squared away'},
+    st:[
+     {pl:'The problem', tg:'read it', ph:0, mx:F('4',r5+' '+MN+' 1'),
+      cp:'Two terms below again &mdash; this time the root comes first.',
+      ex:'<u>read it first</u>'+r5+AP+'2.2360680, so the denominator is about 1.2360680 and the fraction is about <b>'+fx(W2)+'</b>. Order does not matter: two terms means conjugate.'},
+     {pl:'The conjugate', tg:'conjugate', ph:0, mx:r5+' '+MN+' 1'+ARR+HL(r5+' + 1'),
+      cp:'Flip the sign between the terms &mdash; nothing else moves.',
+      ex:'<u>flip the middle sign</u>The conjugate of '+r5+' &minus; 1 is '+r5+' + 1. Do not flip the sign of the whole expression, and do not touch the terms themselves &mdash; only the sign <b>between</b> them.'},
+     {pl:'Multiply by 1', tg:'&times; 1', ph:1, mx:F('4',r5+' '+MN+' 1')+DOT+HL(F(r5+' + 1',r5+' + 1')),
+      cp:'The four products of ('+r5+' &minus; 1)('+r5+' + 1) laid out in the grid.',
+      ex:'<u>still a disguised 1</u>'+r5+' + 1 &asymp; 3.2360680, comfortably nonzero, so this fraction is legitimately equal to 1.'},
+     {pl:'Expand the bottom', tg:'cancel', ph:2, mx:F('4('+r5+' + 1)','5 '+SK('+ '+r5)+' '+SK(MN+' '+r5)+' '+MN+' 1'),
+      cp:'Cross terms +'+r5+' and &minus;'+r5+' cancel exactly, as they always do for a conjugate pair.',
+      ex:'<u>the middle dies again</u>('+r5+' &minus; 1)('+r5+' + 1) = 5 + '+r5+' &minus; '+r5+' &minus; 1. Same story: equal and opposite. Meanwhile the numerator becomes 4('+r5+' + 1) &mdash; keep it factored, you will see why in a moment.'},
+     {pl:'What survives', tg:'collapse', ph:3, mx:F('4('+r5+' + 1)', HL('4')),
+      cp:'('+r5+')<sup>2</sup> &minus; 1<sup>2</sup> = 5 &minus; 1 = 4.',
+      ex:'<u>difference of squares</u>5 &minus; 1 = <b>4</b>. And look &mdash; the numerator also carries a factor of 4. That is why leaving it factored paid off.'},
+     {pl:'Answer', tg:'answer', ph:3, mx:F(SK('4')+'('+r5+' + 1)',SK('4'))+EQ+HL(r5+' + 1')+AP+fx(W2),
+      cp:'The value has not moved once, even through a full cancellation.',
+      ex:'<u>check it</u>The 4s cancel, leaving simply <b>'+r5+' + 1</b> &asymp; 2.2360680 + 1 = <b>3.2360680</b>. The original was 4 &divide; 1.2360680 = <b>3.2360680</b>. A denominator vanished entirely &mdash; always look for that final reduction before you write the answer down.'}
+    ]},
+  { nm:'Roots on both floors', ct:F('2 + '+r3,'2 '+MN+' '+r3), val:W3, ttl:'Only the bottom must be fixed',
+    fo:{a:'2', b:'√3', a2:'2² = 4', ab:'2·√3', b2:'(√3)² = 3', res:'4 − 3 = 1', why:'a denominator of exactly 1 disappears'},
+    st:[
+     {pl:'The problem', tg:'read it', ph:0, mx:F('2 + '+r3,'2 '+MN+' '+r3),
+      cp:'Radicals above and below. Only the bottom one is a problem.',
+      ex:'<u>read it first</u>'+r3+AP+'1.7320508, so this is about 3.7320508 &divide; 0.2679492 &asymp; <b>'+fx(W3)+'</b>. There is a radical on top too &mdash; that is <b>allowed</b>. Rationalizing only ever refers to the denominator.'},
+     {pl:'The conjugate', tg:'conjugate', ph:0, mx:'2 '+MN+' '+r3+ARR+HL('2 + '+r3),
+      cp:'Take the conjugate of the <b>denominator</b>. The numerator does not get a vote.',
+      ex:'<u>conjugate of the bottom only</u>The denominator is 2 &minus; '+r3+', so its conjugate is 2 + '+r3+'. It happens to look like the numerator here, which is a coincidence of this example, not a rule.'},
+     {pl:'Multiply by 1', tg:'&times; 1', ph:1, mx:F('2 + '+r3,'2 '+MN+' '+r3)+DOT+HL(F('2 + '+r3,'2 + '+r3)),
+      cp:'The grid shows (2 &minus; '+r3+')(2 + '+r3+') &mdash; the denominator product.',
+      ex:'<u>top and bottom, always both</u>2 + '+r3+AP+'3.7320508, nonzero, so this is 1. Remember: the numerator must be multiplied by the same thing, or the value changes and everything after is wrong.'},
+     {pl:'Expand the bottom', tg:'cancel', ph:2, mx:F('(2 + '+r3+')(2 + '+r3+')','4 '+SK('+ 2'+r3)+' '+SK(MN+' 2'+r3)+' '+MN+' 3'),
+      cp:'Cross terms +2'+r3+' and &minus;2'+r3+' cancel. The denominator is heading for something remarkable.',
+      ex:'<u>conjugates cancel, twins do not</u>(2 &minus; '+r3+')(2 + '+r3+') = 4 + 2'+r3+' &minus; 2'+r3+' &minus; 3 &mdash; middle gone. The <b>numerator</b> is a different story: (2 + '+r3+')(2 + '+r3+') has <b>both</b> signs positive, so its cross terms <b>add</b> instead of cancelling. Only a conjugate pair cancels.'},
+     {pl:'Expand the top', tg:'the top', ph:3, mx:F(HL('7 + 4'+r3),'4 '+MN+' 3'),
+      cp:'Denominator: 4 &minus; 3 = <b>1</b>. Numerator: 4 + 2'+r3+' + 2'+r3+' + 3 = 7 + 4'+r3+'.',
+      ex:'<u>expand it honestly</u>(2 + '+r3+')(2 + '+r3+') = 4 + 2'+r3+' + 2'+r3+' + 3 = <b>7 + 4'+r3+'</b>. Notice the middle terms doubled rather than vanished &mdash; this is the difference between a conjugate pair and a square, and it is the single most common slip in this section.'},
+     {pl:'Answer', tg:'answer', ph:3, mx:F('7 + 4'+r3,'1')+EQ+HL('7 + 4'+r3)+AP+fx(W3),
+      cp:'Same point on the line as line 1, despite the expression looking nothing like it did.',
+      ex:'<u>check it</u>4 &times; 1.7320508 = 6.9282032, plus 7 = <b>13.9282032</b>. The original was 3.7320508 &divide; 0.2679492 = <b>13.9282032</b>. The denominator became exactly 1, so it can simply be dropped &mdash; the answer is not even a fraction any more.'}
+    ]},
+  { nm:'With a variable', ct:F('1',rx+' '+MN+' 2'), val:W4, probe:'at <i>x</i> = 9', ttl:'Track the restrictions',
+    fo:{a:'√x', b:'2', a2:'(√x)² = x', ab:'√x·2', b2:'2² = 4', res:'x − 4', why:'valid for x ≥ 0 and x ≠ 4'},
+    st:[
+     {pl:'The problem', tg:'read it', ph:0, mx:F('1',rx+' '+MN+' 2'),
+      cp:'A letter under the root means the expression is only defined for some <i>x</i>. Pin that down before doing any algebra.',
+      ex:'<u>state the restrictions first</u>Two separate conditions. The radicand must not be negative, so <b><i>x</i> '+GE+' 0</b>. And the denominator must not be zero, so '+rx+' '+NE+' 2, which means <b><i>x</i> '+NE+' 4</b>. Both must be carried through to the final answer. We will track the value at <i>x</i> = 9, where the fraction equals 1 &divide; (3 &minus; 2) = <b>1</b>.'},
+     {pl:'The conjugate', tg:'conjugate', ph:0, mx:rx+' '+MN+' 2'+ARR+HL(rx+' + 2'),
+      cp:'Letters change nothing about the method. Flip the middle sign.',
+      ex:'<u>same move, letters and all</u>The conjugate of '+rx+' &minus; 2 is '+rx+' + 2. Since <i>x</i> '+GE+' 0, we know '+rx+' '+GE+' 0, so '+rx+' + 2 '+GE+' 2 &mdash; it can never be zero, so it is always a safe multiplier.'},
+     {pl:'Multiply by 1', tg:'&times; 1', ph:1, mx:F('1',rx+' '+MN+' 2')+DOT+HL(F(rx+' + 2',rx+' + 2')),
+      cp:'The four products of ('+rx+' &minus; 2)('+rx+' + 2).',
+      ex:'<u>a disguised 1 again</u>Nothing new. The grid on the left is the same grid as every other conjugate problem &mdash; only the labels changed.'},
+     {pl:'Expand the bottom', tg:'cancel', ph:2, mx:F(rx+' + 2','<i>x</i> '+SK('+ 2'+rx)+' '+SK(MN+' 2'+rx)+' '+MN+' 4'),
+      cp:'Cross terms +2'+rx+' and &minus;2'+rx+' cancel, exactly as with numbers.',
+      ex:'<u>the middle dies</u>('+rx+' &minus; 2)('+rx+' + 2) = <i>x</i> + 2'+rx+' &minus; 2'+rx+' &minus; 4. And ('+rx+')<sup>2</sup> = <i>x</i> &mdash; which is true precisely because <i>x</i> '+GE+' 0. That restriction is doing real work here, not just bookkeeping.'},
+     {pl:'What survives', tg:'collapse', ph:3, mx:F(rx+' + 2', HL('<i>x</i> '+MN+' 4')),
+      cp:'('+rx+')<sup>2</sup> &minus; 2<sup>2</sup> = <i>x</i> &minus; 4. No radical below.',
+      ex:'<u>difference of squares, with a letter</u><i>x</i> &minus; 4. Notice what just happened to the restriction: what was hidden inside "'+rx+' '+NE+' 2" is now sitting in plain sight as "<i>x</i> &minus; 4 '+NE+' 0". Rationalizing made the excluded value <b>visible</b>.'},
+     {pl:'Answer', tg:'answer', ph:3, mx:F(rx+' + 2','<i>x</i> '+MN+' 4')+',&nbsp; <i>x</i> '+GE+' 0,&nbsp; <i>x</i> '+NE+' 4',
+      cp:'Checked at <i>x</i> = 9: both forms give exactly 1.',
+      ex:'<u>check it, and keep both conditions</u>At <i>x</i> = 9: the original is 1 &divide; (3 &minus; 2) = <b>1</b>; the answer is (3 + 2) &divide; (9 &minus; 4) = 5 &divide; 5 = <b>1</b>. Both restrictions still apply. <i>x</i> '+NE+' 4 is visible in the denominator, but <b><i>x</i> '+GE+' 0 is not</b> &mdash; you can only see it in the '+rx+' still standing on top. Write it down anyway; the two expressions are equal <b>only</b> where both are defined.'}
+    ]}
+ ]};
+
+ var MODE_INFO={
+  one:{n:'One radical in the denominator',
+    d:'When the bottom is a single radical term, multiply top and bottom by <b>whatever completes the power</b>. For a square root that is one more copy; for an <i>n</i>-th root of <i>a</i><sup><i>m</i></sup> it is the <i>n</i>-th root of <i>a</i><sup><i>n</i>&minus;<i>m</i></sup>, because <i>m</i>/<i>n</i> + (<i>n</i>&minus;<i>m</i>)/<i>n</i> = 1.',
+    m:'<b>Count exponents, not radicals.</b> A radical is a fractional power, and a denominator is rational exactly when that power is a whole number. Ask "how much exponent am I short?" and multiply by that.',
+    t:'<b>Two traps.</b> Multiplying the bottom by something without multiplying the top by the same thing changes the value &mdash; that is not rationalizing, that is a different number. And rationalizing is not the last step: always check whether the finished fraction still reduces.'},
+  two:{n:'Two terms in the denominator',
+    d:'When the bottom is a sum or difference involving a radical, a single radical will not clear it &mdash; it just distributes and leaves a mess. Multiply top and bottom by the <b>conjugate</b>: the same two terms with the sign between them flipped.',
+    m:'<b>(<i>a</i> + <i>b</i>)(<i>a</i> &minus; <i>b</i>) = <i>a</i><sup>2</sup> &minus; <i>b</i><sup>2</sup>.</b> The two cross products are equal and opposite, so they cancel; everything that survives is squared, and squaring is what destroys a square root.',
+    t:'<b>A conjugate pair is not a square.</b> (3 + '+r2+')(3 &minus; '+r2+') = 7, but (3 + '+r2+')<sup>2</sup> = 11 + 6'+r2+' &mdash; the cross terms double instead of cancelling. Flip <b>only</b> the sign between the terms, and multiply the numerator by the conjugate too.'}
+ };
+
+ /* ============ state ============ */
+ var mode='one', pi=0, si=0;
+
+ /* ============ render ============ */
+ function pickRender(){
+   var L=EX[mode];
+   $('pick').innerHTML=L.map(function(e,j){
+     return '<button data-j="'+j+'"'+(j===pi?' class="on"':'')+'><span class="nm">'+e.nm+'</span><span class="ct">'+e.ct+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call($('pick').querySelectorAll('button'),function(b){
+     b.onclick=function(){ pi=+b.dataset.j; si=0; render(); };
+   });
+ }
+
+ function render(){
+   var e=EX[mode][pi], st=e.st[si], n=e.st.length;
+
+   /* --- stage --- */
+   $('stage').innerHTML=e.ttl+'<small>'+e.nm+' &middot; line '+(si+1)+' of '+n+'</small>';
+
+   /* --- the worked lines --- */
+   $('work').innerHTML=e.st.map(function(s,j){
+     var cl=(j===si?' on':(j<si?' done':''));
+     return '<div class="wr'+cl+'"><span class="pl">'+s.pl+'</span><span class="mx">'+s.mx+
+            (j===si?'<span class="ex">'+s.ex+'</span>':'')+'</span></div>';
+   }).join('');
+
+   /* --- plan chips --- */
+   $('plan').innerHTML=e.st.map(function(s,j){
+     return '<span class="'+(j===si?'on':(j<si?'done':''))+'">'+s.tg+'</span>';
+   }).join('');
+
+   /* --- left picture --- */
+   var art = (mode==='one') ? (ladder(e.lad,st.ph)+ladderEq(e.lad,st.ph)) : foil(e.fo,st.ph);
+   $('art').innerHTML=art;
+   $('cardTitle').innerHTML = (mode==='one') ? 'Why that multiplier works' : 'Why the conjugate works';
+
+   /* --- the value that never moves --- */
+   $('domlb').innerHTML = e.probe ? ('Every line equals '+e.probe) : 'Every line equals';
+   $('domv').innerHTML = fx(e.val);
+   $('nl').innerHTML = numline(e.val, si, n);
+   $('cap').innerHTML = st.cp;
+
+   /* --- prose --- */
+   var mi=MODE_INFO[mode];
+   $('info').innerHTML='<span class="n">'+mi.n+'</span>'+mi.d;
+   $('mnem').innerHTML=mi.m;
+   $('note').innerHTML=mi.t;
+
+   $('prev').disabled=(si===0);
+   $('next').disabled=(si===n-1);
+   pickRender();
+ }
+
+ /* ============ controls ============ */
+ $('prev').onclick=function(){ if(si>0){ si--; render(); } };
+ $('next').onclick=function(){ if(si<EX[mode][pi].st.length-1){ si++; render(); } };
+ Array.prototype.forEach.call($('mode').querySelectorAll('button'),function(b){
+   b.onclick=function(){
+     mode=b.dataset.m; pi=0; si=0;
+     Array.prototype.forEach.call($('mode').querySelectorAll('button'),function(o){ o.className=(o===b?'on':''); });
+     render();
+   };
+ });
+ document.addEventListener('keydown',function(ev){
+   if(ev.key==='ArrowRight'){ if(si<EX[mode][pi].st.length-1){ si++; render(); } }
+   else if(ev.key==='ArrowLeft'){ if(si>0){ si--; render(); } }
+ });
+
+ /* =====================================================================
+    THE LIVE TESTER — same value, friendlier shape
+    Largest a with a*a dividing n, so n = a*a*b and √n = a√b.
+    Then 1/√n = √n/n = a√b/(a²b) = √b/(ab).  Verified for every n in 2..60.
+    ===================================================================== */
+ function simp(n){ var a=1,i; for(i=1;i*i<=n;i++){ if(n%(i*i)===0) a=i; } return [a, n/(a*a)]; }
+
+ function tester(){
+   var n=+$('rn').value, sp=simp(n), a=sp[0], b=sp[1], ab=a*b;
+   var v=1/SQ(n);
+   $('nv').innerHTML='<i>n</i> = '+n;
+   $('fmA').innerHTML=F('1',R(n));
+   $('vlA').innerHTML=fx(v);
+   var formB, note;
+   if(b===1){
+     /* n is a perfect square — there was never a radical to clear */
+     formB=F('1',String(a));
+     note='<b>'+R(n)+' = '+a+'</b> exactly, so there is no radical here to clear. '+
+          'A perfect square under the root is already rational &mdash; check for that before you start multiplying.';
+   } else {
+     formB=F(R(b), String(ab));
+     var mid = (a>1) ? ('First '+F(R(n),String(n))+', which simplifies to '+F(R(b),String(ab))+' because '+R(n)+' = '+a+R(b)+'. ') : '';
+     note=mid+'By hand, '+F('1',R(n))+' asks you to divide 1 by '+fx(SQ(n))+'&hellip; &mdash; a decimal with no end. '+
+          'The rationalized form asks you to divide '+fx(SQ(b))+'&hellip; by the whole number <b>'+ab+'</b>. '+
+          'Dividing <i>by</i> a whole number is far easier than dividing by an endless one, and before calculators that was the entire point of this rule.';
+   }
+   $('fmB').innerHTML=formB;
+   $('vlB').innerHTML=fx(v);
+   $('tP').className='pill '+(b===1?'low':'normal');
+   $('tP').innerHTML=(b===1?'already rational':'identical to the last digit');
+
+   /* two bars of exactly equal length — the value is the same number */
+   var x0=14, W=200, sc=W/(1/SQ(2)), w=v*sc, s='';
+   s+=T(x0,11,'radical below',9,MUT,'start',700);
+   s+='<rect x="'+x0+'" y="16" width="'+w.toFixed(1)+'" height="18" rx="4" fill="'+TEAL+'"/>';
+   s+=T(x0,52,'radical above',9,MUT,'start',700);
+   s+='<rect x="'+x0+'" y="42" width="'+w.toFixed(1)+'" height="18" rx="4" fill="'+GOLD+'"/>';
+   s+='<line x1="'+(x0+w).toFixed(1)+'" y1="12" x2="'+(x0+w).toFixed(1)+'" y2="68" stroke="'+DKT+'" stroke-width="1.4" stroke-dasharray="3 3"/>';
+   s+=T(Math.min(x0+w+5,232),70,fx(v),9.6,DKT,(x0+w>190?'end':'start'),700,MF);
+   $('tArt').innerHTML=s;
+   $('tB').innerHTML=note;
+ }
+ $('rn').oninput=tester;
+
+ render();
+ tester();
+})();
+</script>
+</body>
+</html>

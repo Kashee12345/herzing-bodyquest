@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Decoding Drug-Name Stems</title>
+<meta name="description" content="Interactive decoder for the drug-name stems -olol, -pril, -statin, -azole and -cillin — the ending of a generic name reveals its class, its mechanism, and what the nurse watches for.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:0.95fr 1.05fr;}
+.exrow{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:10px;}
+.exrow button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 3px;font-family:var(--sans);font-weight:700;font-size:11px;color:var(--soft);cursor:pointer;transition:.12s;}
+.exrow button:hover{border-color:var(--teal);}
+.exrow button.on{background:var(--teal);border-color:var(--teal);color:#fff;}
+.hint{font-size:11.5px;color:var(--muted);margin-top:9px;text-align:center;}
+.qname{text-align:center;font-family:ui-monospace,Consolas,monospace;font-weight:700;font-size:18px;letter-spacing:1px;color:var(--teal-dk);background:#eff4fb;border:1px dashed #c3d0e2;border-radius:10px;padding:11px;margin-bottom:9px;}
+.grid .it.ok{background:var(--green);border-color:var(--green);color:#fff;}
+.grid .it.bad{background:var(--coral);border-color:var(--coral);color:#fff;}
+.grid .it:disabled{cursor:default;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 1</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 1</div>
+  <h1>Decoding Drug-Name Stems</h1>
+  <div class="intro">Generic drug names are not random. Drug makers must end a name with an agreed-upon <b>stem</b> that announces the drug's class &mdash; so the last few letters tell you the mechanism, the monitoring, and the teaching before you ever open the drug book. Tap a stem to decode it.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Pick a stem</h2>
+    <svg viewBox="0 0 220 205" aria-label="drug name decoder"><g id="art"></g></svg>
+    <div class="exrow" id="exrow"></div>
+    <div class="hint" id="hint">The stem sits at the <b>end</b> of the generic name.</div>
+  </div></div>
+  <div>
+    <div id="stage">Five stems worth memorizing<small>tap one to decode it</small></div>
+    <div class="card">
+      <div class="modeseg"><button id="mDec" class="on">Decode</button><button id="mMat">Match</button></div>
+      <div id="decPane"><div class="list" id="list"></div></div>
+      <div id="matPane" style="display:none">
+        <div class="qname" id="qname">&mdash;</div>
+        <div class="grid" id="opts"></div>
+      </div>
+      <div id="info"><span class="n">Why the ending matters</span>Brand names are invented by marketing departments and follow no rules. <b>Generic names do.</b> A shared ending &mdash; a <b>stem</b> &mdash; means a shared class, and a shared class means shared mechanisms, adverse effects, and nursing priorities. Learn five stems and you can reason about hundreds of drugs. Then switch to <b>Match</b> and test yourself.</div>
+      <div class="row" id="mrow" style="display:none"><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var CW=10.2;
+ var S=[
+  {k:'olol',stem:'olol',ic:'💓',col:'#d1495b',short:'Beta blocker',
+   cls:'Beta blockers',ct:'β-adrenergic blockers · heart',
+   tgt:'β₁ receptors · the heart',
+   ex:['metoprolol','atenolol','propranolol'],
+   mech:'Block <b>β₁-adrenergic receptors</b> on the heart so circulating catecholamines cannot speed it up. Heart rate, contractility, and blood pressure all fall. Used for hypertension, angina, rate control in atrial fibrillation, and (carefully titrated) heart failure.',
+   nurse:'Take an <b>apical pulse for a full minute before every dose</b>. Hold the dose and notify the prescriber if the pulse is <b>under 60 bpm</b> or the systolic BP is below the ordered parameter (commonly 90–100 mmHg).',
+   mnem:'<b>"-olol keeps it low and slow"</b> — low blood pressure, slow pulse.',
+   note:'<b>Never stop abruptly.</b> Rebound tachycardia, severe hypertension, angina, or MI can follow — taper over 1–2 weeks. Non-selective agents such as propranolol may trigger bronchospasm in asthma and <b>mask the tachycardia that warns of hypoglycemia</b> in a patient with diabetes.',
+   one:'Blocks β₁ receptors — heart rate and BP fall. Check the apical pulse and hold if it is under 60.'},
+
+  {k:'pril',stem:'pril',ic:'🩸',col:'#2f6f9f',short:'ACE inhibitor',
+   cls:'ACE inhibitors',ct:'Angiotensin-converting enzyme',
+   tgt:'ACE · vessels dilate',
+   ex:['lisinopril','enalapril','captopril'],
+   mech:'Block <b>angiotensin-converting enzyme</b>, so angiotensin I is never converted to angiotensin II. Vessels stay dilated, aldosterone falls, and the kidney is protected. Used for hypertension, heart failure, and diabetic kidney disease.',
+   nurse:'Monitor <b>potassium</b> (normal 3.5–5.0 mEq/L) — these drugs cause <b>hyperkalemia</b> — along with BUN and creatinine. Expect <b>first-dose hypotension</b>: give the first dose when the patient can lie down and rise slowly.',
+   mnem:'<b>"-pril → the ACE cough"</b> — Cough, K⁺ up, Angioedema.',
+   note:'<b>Angioedema</b> — swelling of the lips, tongue, or throat — is an airway emergency: stop the drug and call for help. A dry, persistent cough is common and is the usual reason patients quit. <b>Contraindicated in pregnancy.</b>',
+   one:'Blocks ACE — vessels dilate. Watch for dry cough, hyperkalemia, and angioedema.'},
+
+  {k:'statin',stem:'statin',ic:'🧈',col:'#b8862f',short:'Statin',
+   cls:'Statins',ct:'HMG-CoA reductase inhibitors',
+   tgt:'HMG-CoA reductase · liver',
+   ex:['atorvastatin','simvastatin','rosuvastatin'],
+   mech:'Block <b>HMG-CoA reductase</b>, the rate-limiting enzyme the liver uses to manufacture cholesterol. LDL falls and existing plaque stabilizes. Used to prevent myocardial infarction and stroke.',
+   nurse:'Teach the patient to report <b>muscle pain, tenderness, weakness, or dark tea-colored urine</b> — the warning signs of myopathy and rhabdomyolysis. The provider will check a <b>creatine kinase (CK)</b> level; liver enzymes are checked at baseline.',
+   mnem:'<b>Two labs, two letters: CK</b> (muscle) and <b>LFTs</b> (liver).',
+   note:'Short-acting <b>simvastatin is given in the evening</b>, when the liver makes most of its cholesterol; long-acting atorvastatin and rosuvastatin may be given at any hour. Avoid <b>grapefruit juice</b> with simvastatin and atorvastatin. <b>Contraindicated in pregnancy.</b>',
+   one:'Blocks HMG-CoA reductase in the liver — LDL falls. Report muscle pain and dark urine.'},
+
+  {k:'azole',stem:'azole',ic:'🍄',col:'#2f9e5b',short:'Azole antifungal',
+   cls:'Azole antifungals',ct:'Ergosterol synthesis blockers',
+   tgt:'ergosterol · fungal membrane',
+   ex:['fluconazole','itraconazole','voriconazole'],
+   mech:'Block the enzyme that builds <b>ergosterol</b>, the sterol that holds a fungal cell membrane together. The membrane leaks and the fungus dies. Human membranes use cholesterol instead, which is why the drug spares our cells. Used for candidiasis, oral thrush, and systemic fungal infection.',
+   nurse:'Monitor <b>liver enzymes</b> — azoles are hepatotoxic; report anorexia, nausea, dark urine, or jaundice. Then read the whole medication list: azoles inhibit CYP450 and raise levels of <b>warfarin</b> (rising INR and bleeding), phenytoin, and some statins.',
+   mnem:'<b>"-azole ends the mold"</b> — but read the whole name first.',
+   note:'<b>A stem is a clue, not a guarantee.</b> Not every -azole is an antifungal: <b>metronidazole</b> is an antibacterial/antiprotozoal and <b>omeprazole</b> is a proton pump inhibitor. When the stem surprises you, confirm the class before you give the drug.',
+   one:'Blocks ergosterol synthesis — the fungal membrane leaks. Monitor liver enzymes and check for interactions.'},
+
+  {k:'cillin',stem:'cillin',ic:'🦠',col:'#7a5a8a',short:'Penicillin',
+   cls:'Penicillins',ct:'Cell-wall inhibitors · bactericidal',
+   tgt:'cell wall · bacteria',
+   ex:['amoxicillin','ampicillin','piperacillin'],
+   mech:'Bind penicillin-binding proteins so the bacterium cannot cross-link its <b>cell wall</b>. The wall fails, the cell takes on water and bursts — these drugs are <b>bactericidal</b>. Human cells have no cell wall, which is why penicillins are so well tolerated.',
+   nurse:'<b>Ask about penicillin allergy before the first dose</b> — this class is the most common cause of drug anaphylaxis. After a parenteral dose keep the patient in view for <b>30 minutes</b>, with epinephrine and resuscitation equipment available.',
+   mnem:'<b>"-cillin kills the wall"</b> — no wall, no bacterium.',
+   note:'Ask <b>what the allergy actually was</b>: a childhood rash is not anaphylaxis, and true cross-reactivity with cephalosporins is low (about 1%). Teach the patient to <b>finish the entire course</b> even once they feel well, so resistant organisms are not left behind.',
+   one:'Breaks the bacterial cell wall. Always ask about penicillin allergy before the first dose.'}
+ ];
+
+ function nameArt(name,stemLen,col,rev){
+   var root=name.slice(0,name.length-stemLen), st=name.slice(name.length-stemLen);
+   var total=name.length*CW, x0=110-total/2, sx=x0+root.length*CW, ex=x0+total;
+   var s='';
+   s+='<rect x="'+(x0-11).toFixed(1)+'" y="30" width="'+(total+22).toFixed(1)+'" height="34" rx="9" fill="#fff" stroke="'+(rev?col:'#cfd8e6')+'" stroke-width="2"/>';
+   if(rev){s+='<rect x="'+(sx-3).toFixed(1)+'" y="33" width="'+(ex-sx+6).toFixed(1)+'" height="28" rx="6" fill="'+col+'" opacity=".13"/>';}
+   s+='<text x="'+x0.toFixed(1)+'" y="53" font-family="ui-monospace,Consolas,monospace" font-size="17" font-weight="700" fill="#78828f">'+root+'</text>';
+   s+='<text x="'+sx.toFixed(1)+'" y="53" font-family="ui-monospace,Consolas,monospace" font-size="17" font-weight="700" fill="'+(rev?col:'#78828f')+'">'+st+'</text>';
+   if(rev){
+     s+='<path d="M'+sx.toFixed(1)+' 68 v5 a3 3 0 0 0 3 3 h'+((ex-sx)/2-6).toFixed(1)+' l3 4 l3 -4 h'+((ex-sx)/2-6).toFixed(1)+' a3 3 0 0 0 3 -3 v-5" fill="none" stroke="'+col+'" stroke-width="2"/>';
+     s+='<text x="'+((sx+ex)/2).toFixed(1)+'" y="94" text-anchor="middle" font-family="Inter,sans-serif" font-size="9.5" font-weight="800" fill="'+col+'" letter-spacing="1.4">STEM</text>';
+     s+='<path d="M110 100 v10" stroke="#b9c2d0" stroke-width="2"/><path d="M104 108 l6 8 l6 -8" fill="none" stroke="#b9c2d0" stroke-width="2" stroke-linecap="round"/>';
+   }
+   return s;
+ }
+
+ function icon(k,col){
+   var s='';
+   if(k==='olol'){
+     s+='<path d="M110 182 C 74 158 78 128 96 128 C 105 128 110 135 110 140 C 110 135 115 128 124 128 C 142 128 146 158 110 182 Z" fill="'+col+'" opacity=".9"/>';
+     s+='<circle cx="110" cy="148" r="13" fill="#fff" opacity=".92"/>';
+     s+='<text x="110" y="153" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="800" fill="'+col+'">β₁</text>';
+     s+='<line x1="99" y1="158" x2="121" y2="137" stroke="'+col+'" stroke-width="3" stroke-linecap="round"/>';
+   } else if(k==='pril'){
+     s+='<polygon points="52,136 168,126 168,178 52,168" fill="'+col+'" opacity=".18"/>';
+     s+='<path d="M52 136 q58 -12 116 -10" fill="none" stroke="'+col+'" stroke-width="3" stroke-linecap="round"/>';
+     s+='<path d="M52 168 q58 12 116 10" fill="none" stroke="'+col+'" stroke-width="3" stroke-linecap="round"/>';
+     s+='<circle cx="82" cy="152" r="5" fill="'+col+'"/><circle cx="110" cy="150" r="5" fill="'+col+'"/><circle cx="138" cy="151" r="5" fill="'+col+'"/>';
+     s+='<path d="M158 146 l10 6 l-10 6" fill="none" stroke="'+col+'" stroke-width="2.5" stroke-linecap="round"/>';
+   } else if(k==='statin'){
+     s+='<path d="M56 132 q54 -13 108 0 q7 27 -18 44 q-36 21 -70 2 q-25 -17 -20 -46 Z" fill="'+col+'" opacity=".85"/>';
+     s+='<path d="M112 132 q-6 22 -30 30" fill="none" stroke="#fff" stroke-width="2" opacity=".55"/>';
+     s+='<circle cx="132" cy="152" r="10" fill="#fff" opacity=".92"/>';
+     s+='<text x="132" y="156" text-anchor="middle" font-family="Inter,sans-serif" font-size="8.5" font-weight="800" fill="'+col+'">LDL</text>';
+     s+='<path d="M132 166 v9 M128 171 l4 5 l4 -5" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>';
+   } else if(k==='azole'){
+     s+='<circle cx="106" cy="152" r="28" fill="'+col+'" opacity=".16"/>';
+     s+='<circle cx="106" cy="152" r="28" fill="none" stroke="'+col+'" stroke-width="3" stroke-dasharray="7 5"/>';
+     s+='<circle cx="106" cy="152" r="10" fill="'+col+'" opacity=".7"/>';
+     s+='<circle cx="140" cy="130" r="11" fill="'+col+'" opacity=".16" stroke="'+col+'" stroke-width="2.5" stroke-dasharray="5 4"/>';
+     s+='<circle cx="80" cy="176" r="3" fill="'+col+'"/><circle cx="132" cy="176" r="3" fill="'+col+'"/><circle cx="74" cy="140" r="3" fill="'+col+'"/>';
+   } else {
+     s+='<rect x="70" y="134" width="80" height="34" rx="17" fill="'+col+'" opacity=".85"/>';
+     s+='<path d="M104 134 l-7 13 l10 5 l-8 16" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>';
+     s+='<circle cx="62" cy="130" r="3.5" fill="'+col+'"/><circle cx="160" cy="176" r="3.5" fill="'+col+'"/><circle cx="156" cy="126" r="2.5" fill="'+col+'"/><circle cx="64" cy="176" r="2.5" fill="'+col+'"/>';
+   }
+   return s;
+ }
+
+ function placeholder(){
+   return '<rect x="46" y="30" width="128" height="34" rx="9" fill="#fff" stroke="#cfd8e6" stroke-width="2" stroke-dasharray="6 4"/>'+
+     '<text x="110" y="53" text-anchor="middle" font-family="ui-monospace,Consolas,monospace" font-size="17" font-weight="700" fill="#b9c2d0">- - - - - -</text>'+
+     '<rect x="80" y="122" width="60" height="60" rx="13" fill="#eff4fb" stroke="#cfd8e6" stroke-width="2" stroke-dasharray="5 4"/>'+
+     '<text x="110" y="163" text-anchor="middle" font-family="Inter,sans-serif" font-size="26" font-weight="800" fill="#b9c2d0">?</text>';
+ }
+
+ function paint(s,name,rev){
+   if(!s){$("art").innerHTML=placeholder();return;}
+   var out=nameArt(name,s.stem.length,s.col,rev);
+   if(rev){
+     out+=icon(s.k,s.col);
+     out+='<text x="110" y="199" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#78828f">'+s.tgt+'</text>';
+   } else {
+     out+='<rect x="80" y="122" width="60" height="60" rx="13" fill="#eff4fb" stroke="#cfd8e6" stroke-width="2" stroke-dasharray="5 4"/>'+
+       '<text x="110" y="163" text-anchor="middle" font-family="Inter,sans-serif" font-size="26" font-weight="800" fill="#b9c2d0">?</text>';
+   }
+   $("art").innerHTML=out;
+ }
+
+ /* ---------- decode mode ---------- */
+ var cur='', exi=0;
+
+ function renderList(){
+   $("list").innerHTML=S.map(function(s){
+     return '<button class="it'+(s.k===cur?' on':'')+'" data-k="'+s.k+'"><span class="ic">'+s.ic+'</span><span><span class="nm">-'+s.stem+'</span><br><span class="ct">'+s.ct+'</span></span></button>';
+   }).join('');
+   var b=document.querySelectorAll('#list .it');
+   for(var i=0;i<b.length;i++){(function(el){el.onclick=function(){sel(el.getAttribute('data-k'),0);};})(b[i]);}
+ }
+
+ function renderEx(s){
+   if(!s){$("exrow").innerHTML='';return;}
+   $("exrow").innerHTML=s.ex.map(function(n,i){
+     return '<button data-i="'+i+'"'+(i===exi?' class="on"':'')+'>'+n+'</button>';
+   }).join('');
+   var b=$("exrow").querySelectorAll('button');
+   for(var i=0;i<b.length;i++){(function(el){el.onclick=function(){exi=parseInt(el.getAttribute('data-i'),10);sel(cur,exi);};})(b[i]);}
+ }
+
+ function sel(k,i){
+   cur=k;exi=i||0;
+   var s=byK(k);
+   paint(s,s.ex[exi],1);
+   $("cardTitle").innerHTML=s.cls;
+   $("stage").style.background=s.col;
+   $("stage").innerHTML='-'+s.stem+'<small>'+s.cls+'</small>';
+   $("info").innerHTML='<span class="n">'+s.cls+'</span>'+s.mech+
+     '<div class="ex">'+s.ex.map(function(n){return '<span>'+n+'</span>';}).join('')+'</div>'+
+     '<div class="loc"><b>Nurse:</b> '+s.nurse+'</div>'+
+     '<div class="mnem">'+s.mnem+'</div>'+
+     '<div class="note">'+s.note+'</div>';
+   $("hint").innerHTML='Tap another example above to see the same stem in a different name.';
+   renderList();renderEx(s);
+ }
+
+ function byK(k){for(var i=0;i<S.length;i++){if(S[i].k===k)return S[i];}return null;}
+
+ /* ---------- match mode ---------- */
+ var pool=[],qi=0,score=0,answered=false;
+
+ function build(){
+   var all=[];
+   for(var i=0;i<S.length;i++){for(var j=0;j<S[i].ex.length;j++){all.push({k:S[i].k,n:S[i].ex[j]});}}
+   for(var a=all.length-1;a>0;a--){var r=Math.floor(Math.random()*(a+1));var t=all[a];all[a]=all[r];all[r]=t;}
+   pool=all.slice(0,10);qi=0;score=0;
+ }
+
+ function ask(){
+   answered=false;
+   var q=pool[qi];
+   $("qname").innerHTML=q.n;
+   $("cardTitle").innerHTML='Which class?';
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='Match the stem<small>question '+(qi+1)+' of '+pool.length+' · score '+score+'</small>';
+   paint(byK(q.k),q.n,0);
+   $("hint").innerHTML='Read the <b>last few letters</b>, then choose the class.';
+   $("opts").innerHTML=S.map(function(s){return '<button class="it" data-k="'+s.k+'">'+s.short+'</button>';}).join('');
+   var b=$("opts").querySelectorAll('.it');
+   for(var i=0;i<b.length;i++){(function(el){el.onclick=function(){answer(el.getAttribute('data-k'));};})(b[i]);}
+   $("info").innerHTML='<span class="n">'+q.n+'</span>Which class does this generic name belong to? The ending is the only clue you need.';
+   $("mrow").style.display='none';
+ }
+
+ function answer(k){
+   if(answered)return;
+   answered=true;
+   var q=pool[qi],s=byK(q.k),ok=(k===q.k);
+   if(ok)score++;
+   var b=$("opts").querySelectorAll('.it');
+   for(var i=0;i<b.length;i++){
+     var bk=b[i].getAttribute('data-k');
+     b[i].disabled=true;
+     if(bk===q.k)b[i].className='it ok';
+     else if(bk===k)b[i].className='it bad';
+   }
+   paint(s,q.n,1);
+   $("cardTitle").innerHTML=s.cls;
+   $("stage").style.background=s.col;
+   $("stage").innerHTML='Match the stem<small>question '+(qi+1)+' of '+pool.length+' · score '+score+'</small>';
+   $("info").innerHTML='<span class="n">'+(ok?'✓ Correct':'✕ Not quite')+'</span><b>'+q.n+'</b> ends in <b>-'+s.stem+'</b> → <b>'+s.cls+'</b>. '+s.one+
+     '<div class="mnem">'+s.mnem+'</div>';
+   $("hint").innerHTML='The stem is highlighted above.';
+   $("mrow").style.display='flex';
+   $("next").innerHTML=(qi===pool.length-1)?'See score ›':'Next ›';
+ }
+
+ function done(){
+   $("qname").innerHTML='&mdash;';
+   $("opts").innerHTML='';
+   paint(null,'',0);
+   $("cardTitle").innerHTML='Round complete';
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='Round complete<small>'+score+' of '+pool.length+' correct</small>';
+   $("info").innerHTML='<span class="n">'+score+' / '+pool.length+'</span>'+
+     (score===pool.length?'Every one. You are reading the ending before the rest of the name — that is exactly the habit to keep.'
+      :'Re-read the stems you missed in <b>Decode</b>, then run the round again. The goal is not memorizing names; it is seeing the ending and knowing what to monitor.')+
+     '<div class="mnem"><b>-olol</b> low &amp; slow · <b>-pril</b> cough, K⁺, angioedema · <b>-statin</b> muscle &amp; liver · <b>-azole</b> fungal membrane · <b>-cillin</b> cell wall &amp; allergy</div>';
+   $("hint").innerHTML='Press Again to reshuffle.';
+   $("mrow").style.display='flex';
+   $("next").innerHTML='Again ↻';
+ }
+
+ $("next").onclick=function(){
+   if($("next").innerHTML.indexOf('Again')===0){build();ask();return;}
+   if(qi===pool.length-1){done();return;}
+   qi++;ask();
+ };
+
+ /* ---------- mode switch ---------- */
+ function mode(m){
+   $("mDec").className=(m==='d')?'on':'';
+   $("mMat").className=(m==='m')?'on':'';
+   $("decPane").style.display=(m==='d')?'block':'none';
+   $("matPane").style.display=(m==='m')?'block':'none';
+   $("mrow").style.display='none';
+   if(m==='d'){
+     $("exrow").style.display='grid';
+     if(cur){sel(cur,exi);}else{reset();}
+   } else {
+     $("exrow").style.display='none';
+     build();ask();
+   }
+ }
+
+ function reset(){
+   paint(null,'',0);
+   $("cardTitle").innerHTML='Pick a stem';
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='Five stems worth memorizing<small>tap one to decode it</small>';
+   $("hint").innerHTML='The stem sits at the <b>end</b> of the generic name.';
+   $("info").innerHTML='<span class="n">Why the ending matters</span>Brand names are invented by marketing departments and follow no rules. <b>Generic names do.</b> A shared ending &mdash; a <b>stem</b> &mdash; means a shared class, and a shared class means shared mechanisms, adverse effects, and nursing priorities. Learn five stems and you can reason about hundreds of drugs. Then switch to <b>Match</b> and test yourself.';
+   renderEx(null);
+ }
+
+ $("mDec").onclick=function(){mode('d');};
+ $("mMat").onclick=function(){mode('m');};
+
+ renderList();reset();
+})();
+</script>
+</body>
+</html>

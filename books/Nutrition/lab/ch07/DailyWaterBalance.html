@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>The Daily Water Ledger</title>
+<meta name="description" content="A live 24-hour fluid-balance calculator: add up water in (beverages, food moisture, metabolic water from the macros you burn) against water out (urine, breath, skin, sweat, stool) and watch the kidney adjust urine to keep the ledger even.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:0.98fr 1.02fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.lb{font-size:10.4px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:14px 0 5px;}
+.lb:first-child{margin-top:0;}
+.pre{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px;}
+.pre button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 11px;font-family:var(--sans);font-size:11.2px;font-weight:700;color:var(--soft);cursor:pointer;}
+.pre button:hover{border-color:var(--teal);color:var(--teal-dk);}
+.pre button.on{background:var(--teal);border-color:var(--teal);color:#fff;}
+.sl{margin-top:9px;}
+.sl .hd{display:flex;align-items:baseline;gap:8px;font-size:12px;font-weight:700;color:var(--ink);}
+.sl .hd i{display:block;font-style:normal;font-weight:600;font-size:10.3px;color:var(--muted);margin-top:1px;line-height:1.3;}
+.sl .hd .vv{margin-left:auto;font-weight:800;font-size:12.5px;color:var(--teal-dk);flex:none;font-variant-numeric:tabular-nums;}
+.sl input[type=range]{width:100%;margin-top:4px;height:20px;accent-color:var(--teal);cursor:pointer;}
+.ledger{margin-top:2px;}
+.lr{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--soft);padding:5px 0;border-bottom:1px dashed var(--line);line-height:1.3;}
+.lr i.d{width:11px;height:11px;border-radius:3px;flex:none;}
+.lr span i{font-size:10px;color:var(--muted);font-style:italic;font-weight:600;}
+.lr b{margin-left:auto;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;flex:none;}
+.tot{display:flex;justify-content:space-between;font-size:12.5px;font-weight:800;color:var(--teal-dk);padding:7px 0 2px;}
+.tot b{font-variant-numeric:tabular-nums;}
+.mono{font-variant-numeric:tabular-nums;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 7</div>
+  <h1>The Daily Water Ledger</h1>
+  <div class="intro">Across a day, the water you take in has to match the water you lose &mdash; and the <b>kidney</b> is the accountant that balances the books by dialing urine up or down. Set your day and watch the ledger settle.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">24-hour balance</h2>
+    <svg viewBox="0 0 240 232" aria-label="water in versus water out"><g id="art"></g></svg>
+    <div id="info"></div>
+  </div></div>
+  <div>
+    <div id="stage">Build your day<small>adjust intake and losses below</small></div>
+    <div class="card">
+      <div class="lb">Try a day</div>
+      <div class="pre" id="pre"></div>
+
+      <div class="lb">Water in — beverages &amp; food</div>
+      <div class="sl"><div class="hd">Beverages<i>water, coffee, tea, milk, all drinks</i><span class="vv" id="vBev"></span></div>
+        <input type="range" id="bev" min="0" max="4000" step="100" value="1500"></div>
+      <div class="sl"><div class="hd">Water in food<i>fruit, vegetables, soup, cooked grains</i><span class="vv" id="vFood"></span></div>
+        <input type="range" id="food" min="0" max="1500" step="50" value="750"></div>
+
+      <div class="lb">Water in — metabolic (from the macros you burn)</div>
+      <div class="sl"><div class="hd">Carbohydrate<i>4 kcal/g · yields ~0.60 mL water/g burned</i><span class="vv" id="vCarb"></span></div>
+        <input type="range" id="carb" min="0" max="500" step="10" value="250"></div>
+      <div class="sl"><div class="hd">Protein<i>4 kcal/g · ~0.41 mL water/g burned</i><span class="vv" id="vPro"></span></div>
+        <input type="range" id="pro" min="0" max="250" step="5" value="90"></div>
+      <div class="sl"><div class="hd">Fat<i>9 kcal/g · ~1.07 mL water/g burned</i><span class="vv" id="vFat"></span></div>
+        <input type="range" id="fat" min="0" max="200" step="5" value="70"></div>
+
+      <div class="lb">Water out — conditions</div>
+      <div class="seg" id="actSeg"></div>
+      <div class="sl"><div class="hd">Air temperature<i>hotter air ⇒ more sweat &amp; skin loss</i><span class="vv" id="vTemp"></span></div>
+        <input type="range" id="temp" min="12" max="42" step="1" value="22"></div>
+    </div>
+    <div class="card">
+      <h2 id="cardTitle2">The ledger</h2>
+      <div class="ledger" id="ledger"></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // colors
+ var C={bev:'#2f6f9f',food:'#2f9e5b',meta:'#b8862f',urine:'#b07a1e',breath:'#5aa7cf',skin:'#c98b3a',sweat:'#d1495b',stool:'#7a5a8a'};
+ // metabolic water yield, mL per gram substrate oxidized (approximate)
+ var MW={carb:0.60,pro:0.41,fat:1.07};
+ // energy yields, kcal per gram
+ var EN={carb:4,pro:4,fat:9};
+ // activity presets -> baseline sweat (mL/day) and heat sensitivity (extra mL per deg C above 24)
+ var ACT=[
+   {k:'rest',nm:'Resting',s:'indoors, still',sweat:100,heat:35},
+   {k:'light',nm:'Light',s:'walking, chores',sweat:450,heat:70},
+   {k:'mod',nm:'Moderate',s:'brisk exercise',sweat:1200,heat:120},
+   {k:'hard',nm:'Hard',s:'heavy training',sweat:2400,heat:200}
+ ];
+ var act=1;
+ // physiologic urine bounds (mL/day): obligatory minimum to clear the solute load at max
+ // concentration, and a generous ceiling for maximal water diuresis.
+ var URINE_MIN=500, URINE_MAX=15000;
+
+ var PRE=[
+   {nm:'Cool desk day',bev:1500,food:750,carb:250,pro:90,fat:70,act:0,temp:21},
+   {nm:'Hot workout',bev:2400,food:700,carb:320,pro:110,fat:70,act:3,temp:34},
+   {nm:'Low intake',bev:500,food:350,carb:150,pro:60,fat:45,act:1,temp:24},
+   {nm:'Big fluid load',bev:3800,food:900,carb:250,pro:90,fat:70,act:0,temp:22}
+ ];
+
+ function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+ function fmt(n){return Math.round(n).toLocaleString();}
+
+ function compute(){
+   var bev=+$("bev").value, food=+$("food").value;
+   var carb=+$("carb").value, pro=+$("pro").value, fat=+$("fat").value;
+   var temp=+$("temp").value, a=ACT[act];
+   // metabolic water
+   var meta=carb*MW.carb+pro*MW.pro+fat*MW.fat;
+   var kcal=carb*EN.carb+pro*EN.pro+fat*EN.fat;
+   var intake=bev+food+meta;
+   // obligatory / condition-driven losses (everything except urine)
+   var breath=350;                                   // water vapor in exhaled air
+   var skin=450+Math.max(0,temp-24)*22;              // insensible diffusion through skin
+   var stool=150;                                    // water in feces
+   var heat=Math.max(0,temp-24);
+   var sweat=a.sweat+heat*a.heat;                    // visible sweat, activity + heat driven
+   var nonUrine=breath+skin+stool+sweat;
+   // the kidney balances the books with urine, within physiologic limits
+   var urineWant=intake-nonUrine;
+   var urine=clamp(urineWant,URINE_MIN,URINE_MAX);
+   var out=nonUrine+urine;
+   var bal=intake-out;                               // + = net gain, - = net loss
+   return {bev:bev,food:food,meta:meta,kcal:kcal,intake:intake,
+           breath:breath,skin:skin,stool:stool,sweat:sweat,
+           urine:urine,urineWant:urineWant,out:out,bal:bal};
+ }
+
+ function bar(x,base,segs,pxPerML){
+   var y=base, s='';
+   for(var i=0;i<segs.length;i++){
+     var h=segs[i].v*pxPerML;
+     if(h>0.5){ s+='<rect x="'+x+'" y="'+(y-h)+'" width="46" height="'+h+'" fill="'+segs[i].c+'"/>'; }
+     y-=h;
+   }
+   s+='<rect x="'+x+'" y="'+(base-(base-y))+'" width="46" height="'+(base-y)+'" fill="none" stroke="#fff" stroke-width="0.6" opacity="0"/>';
+   return s;
+ }
+
+ function draw(d){
+   var base=196, top=30, maxPx=base-top;
+   var mx=Math.max(d.intake,d.out,2500);
+   var px=maxPx/mx;
+   var inSegs=[{v:d.bev,c:C.bev},{v:d.food,c:C.food},{v:d.meta,c:C.meta}];
+   var outSegs=[{v:d.stool,c:C.stool},{v:d.skin,c:C.skin},{v:d.breath,c:C.breath},{v:d.sweat,c:C.sweat},{v:d.urine,c:C.urine}];
+   var s='';
+   // baseline
+   s+='<line x1="24" y1="'+base+'" x2="216" y2="'+base+'" stroke="var(--line)" stroke-width="2"/>';
+   // bars
+   s+=bar(38,base,inSegs,px);
+   s+=bar(156,base,outSegs,px);
+   // column labels
+   s+='<text x="61" y="'+(base+15)+'" font-size="11" text-anchor="middle" font-weight="800" fill="var(--soft)">WATER IN</text>';
+   s+='<text x="179" y="'+(base+15)+'" font-size="11" text-anchor="middle" font-weight="800" fill="var(--soft)">WATER OUT</text>';
+   s+='<text x="61" y="'+(base+27)+'" font-size="10" text-anchor="middle" font-weight="700" fill="var(--teal-dk)">'+fmt(d.intake)+' mL</text>';
+   s+='<text x="179" y="'+(base+27)+'" font-size="10" text-anchor="middle" font-weight="700" fill="var(--teal-dk)">'+fmt(d.out)+' mL</text>';
+   // balance beam pivot between columns
+   var tilt = clamp(d.bal/1200,-1,1)*7; // degrees, capped
+   s+='<g transform="translate(120,20)">';
+   s+='<line x1="-30" y1="'+(-tilt)+'" x2="30" y2="'+(tilt)+'" stroke="var(--teal-dk)" stroke-width="3" stroke-linecap="round"/>';
+   s+='<circle cx="-30" cy="'+(-tilt)+'" r="3.5" fill="'+C.bev+'"/>';
+   s+='<circle cx="30" cy="'+(tilt)+'" r="3.5" fill="'+C.urine+'"/>';
+   s+='<polygon points="0,4 -5,14 5,14" fill="var(--muted)"/>';
+   s+='</g>';
+   return s;
+ }
+
+ function state(d){
+   // classify by whether the kidney could balance within its limits
+   if(d.urineWant<URINE_MIN){
+     var deficit=URINE_MIN-d.urineWant;
+     return {cls:'low',pill:'NET LOSS',title:'Intake below obligatory losses',
+       stage:'#a8442f',
+       txt:'Even at its most <b>concentrated</b> setting, the kidney must pass about <b>'+fmt(URINE_MIN)+' mL</b> of urine a day to clear the solutes your body makes. Today intake falls short of that floor plus your other losses, so the ledger runs about <b>'+fmt(deficit)+' mL short</b>. The body covers the gap from its own water for now, and <b>thirst</b> rises to prompt drinking. This describes fluid physiology, not a diagnosis.'};
+   }
+   if(d.urineWant>URINE_MAX){
+     return {cls:'high',pill:'NET GAIN',title:'Intake above the kidney\'s dilution ceiling',
+       stage:'#255f8a',
+       txt:'The kidney can dilute urine only so fast. Above roughly <b>'+fmt(URINE_MAX)+' mL/day</b> of free water, intake outruns that ceiling and water is retained &mdash; which can dilute blood sodium. Reaching this in a single day takes an extreme, sustained fluid load. This describes physiology, not advice.'};
+   }
+   return {cls:'normal',pill:'BALANCED',title:'The kidney matched the books',
+     stage:'#237a45',
+     txt:'Intake and losses meet in the middle. The kidney set urine to about <b>'+fmt(d.urine)+' mL</b> &mdash; between its concentrating floor ('+fmt(URINE_MIN)+' mL) and its diluting ceiling &mdash; so total out equals total in. This is the everyday state your thirst and kidneys keep you in without you counting a thing.'};
+ }
+
+ function ledger(d){
+   function row(c,nm,sub,v){
+     return '<div class="lr"><i class="d" style="background:'+c+'"></i><span>'+nm+(sub?' <i>'+sub+'</i>':'')+'</span><b>'+fmt(v)+' mL</b></div>';
+   }
+   var h='';
+   h+='<div class="lb" style="margin-top:0">In</div>';
+   h+=row(C.bev,'Beverages','',d.bev);
+   h+=row(C.food,'Water in food','',d.food);
+   h+=row(C.meta,'Metabolic water','from '+fmt(d.kcal)+' kcal of macros',d.meta);
+   h+='<div class="tot"><span>Total in</span><b class="mono">'+fmt(d.intake)+' mL</b></div>';
+   h+='<div class="lb">Out</div>';
+   h+=row(C.urine,'Urine','kidney-adjusted',d.urine);
+   h+=row(C.breath,'Breath','water vapor exhaled',d.breath);
+   h+=row(C.skin,'Skin','insensible diffusion',d.skin);
+   h+=row(C.sweat,'Sweat','activity + heat',d.sweat);
+   h+=row(C.stool,'Stool','',d.stool);
+   h+='<div class="tot"><span>Total out</span><b class="mono">'+fmt(d.out)+' mL</b></div>';
+   return h;
+ }
+
+ function render(){
+   var d=compute();
+   $("vBev").textContent=fmt(d.bev)+' mL';
+   $("vFood").textContent=fmt(d.food)+' mL';
+   $("vCarb").textContent=$("carb").value+' g';
+   $("vPro").textContent=$("pro").value+' g';
+   $("vFat").textContent=$("fat").value+' g';
+   $("vTemp").textContent=$("temp").value+' °C';
+   $("art").innerHTML=draw(d);
+   var st=state(d);
+   $("stage").style.background=st.stage;
+   $("stage").innerHTML=st.title+'<small>net '+(d.bal>=0?'+':'')+fmt(d.bal)+' mL over the day</small>';
+   $("cardTitle").innerHTML='24-hour balance <span class="pill '+st.cls+'" style="float:right">'+st.pill+'</span>';
+   $("info").innerHTML='<span class="n">'+st.title+'</span>'+st.txt+
+     '<div class="loc">Metabolic water = 0.60·carb + 0.41·protein + 1.07·fat grams, using standard oxidation yields. Energy uses 4 · 4 · 9 kcal/g (alcohol, not shown, is 7).</div>';
+   $("ledger").innerHTML=ledger(d);
+ }
+
+ // build activity segmented control
+ $("actSeg").innerHTML=ACT.map(function(a,i){
+   return '<button data-i="'+i+'"'+(i===act?' class="on"':'')+'>'+a.nm+'<small>'+a.s+'</small></button>';
+ }).join('');
+ Array.prototype.forEach.call($("actSeg").children,function(b){
+   b.onclick=function(){act=+b.dataset.i;
+     Array.prototype.forEach.call($("actSeg").children,function(x){x.classList.remove('on');});
+     b.classList.add('on'); clearPre(); render();};
+ });
+
+ // presets
+ $("pre").innerHTML=PRE.map(function(p,i){return '<button data-i="'+i+'">'+p.nm+'</button>';}).join('');
+ function clearPre(){Array.prototype.forEach.call($("pre").children,function(x){x.classList.remove('on');});}
+ Array.prototype.forEach.call($("pre").children,function(b){
+   b.onclick=function(){var p=PRE[+b.dataset.i];
+     $("bev").value=p.bev;$("food").value=p.food;$("carb").value=p.carb;$("pro").value=p.pro;$("fat").value=p.fat;$("temp").value=p.temp;
+     act=p.act;
+     Array.prototype.forEach.call($("actSeg").children,function(x,i){x.classList.toggle('on',i===act);});
+     clearPre(); b.classList.add('on'); render();};
+ });
+
+ ['bev','food','carb','pro','fat','temp'].forEach(function(id){
+   $(id).addEventListener('input',function(){clearPre();render();});
+ });
+
+ render();
+})();
+</script>
+</body>
+</html>

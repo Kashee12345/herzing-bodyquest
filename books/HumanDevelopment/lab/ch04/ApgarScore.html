@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f7f2">
+<title>The Apgar Score</title>
+<meta name="description" content="Score a newborn on the five Apgar signs — Appearance, Pulse, Grimace, Activity, and Respiration — set each 0, 1, or 2 and watch the total and the baby respond.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_humdev.css">
+<style>.wrap{grid-template-columns:0.92fr 1.08fr;}
+.scorebox{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:12px;}
+.tot{font-family:var(--disp);font-weight:700;font-size:48px;color:var(--teal-dk);line-height:1;}
+.tot small{font-family:var(--sans);font-size:15px;font-weight:700;color:var(--muted);margin-left:4px;}
+.cap{font-size:12px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.45;}
+.sublab{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:0 0 8px;}
+.sublab.two{margin-top:14px;}
+#presets button small{display:block;font-weight:500;font-size:10px;opacity:.82;margin-top:2px;}
+.sign{margin-bottom:11px;}
+.sign:last-child{margin-bottom:0;}
+.sh{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.badge{width:22px;height:22px;border-radius:6px;color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;}
+.snm{font-weight:700;font-size:13px;color:var(--ink);flex:1;}
+.snm small{font-weight:500;color:var(--muted);font-size:11px;}
+.sv{font-family:var(--disp);font-weight:700;font-size:19px;min-width:16px;text-align:center;}
+.tag{display:inline-block;font-size:11px;font-weight:800;background:#e2f2e9;color:var(--teal-dk);border-radius:20px;padding:2px 9px;vertical-align:middle;margin-left:5px;}
+.pill.warn{background:#fbf3e2;color:#8a6a20;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">Human Development · Chapter 4</div>
+  <h1>The Apgar Score</h1>
+  <div class="intro">Devised by anesthesiologist <b>Dr. Virginia Apgar</b> in 1952, this is the quick check done at <b>1 and 5 minutes</b> after birth. Five signs are each scored <b>0, 1, or 2</b> and added for a total from <b>0 to 10</b> &mdash; the higher the number, the better the newborn is doing. Score each sign below and watch the baby change.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">A newborn at one minute</h2>
+    <svg viewBox="0 0 220 200" aria-label="illustration of a newborn responding to each Apgar sign"><g id="art"></g></svg>
+    <div class="scorebox">
+      <div class="tot"><span id="tot">9</span><small>/ 10</small></div>
+      <span class="pill" id="pill">Reassuring</span>
+    </div>
+    <div class="cap" id="cap">Adjust the five signs on the right &mdash; the newborn and the total update live.</div>
+  </div></div>
+  <div>
+    <div id="stage">APGAR score&nbsp; 9 / 10<small>Routine newborn care</small></div>
+    <div class="card">
+      <div class="sublab">Try a scenario</div>
+      <div class="modeseg" id="presets"></div>
+      <div class="sublab two">Or score each sign yourself</div>
+      <div id="signs"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Human Development · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var S=[
+  {k:'appearance',L:'A',nm:'Appearance',sub:'skin color',col:'#2f6f9f',
+   opt:['Blue or pale all over','Body pink, hands &amp; feet blue','Pink all over'],
+   tip:'Bluish hands and feet on their own (<b>acrocyanosis</b>) is normal in the first minutes of life, so many perfectly healthy newborns score 1 here even when every other sign is a 2.'},
+  {k:'pulse',L:'P',nm:'Pulse',sub:'heart rate',col:'#d1495b',
+   opt:['Absent','Below 100 beats/min','100 beats/min or more'],
+   tip:'Heart rate is the single most important sign. It is counted by listening at the chest or feeling the base of the umbilical cord for six seconds.'},
+  {k:'grimace',L:'G',nm:'Grimace',sub:'reflex irritability',col:'#7a5a8a',
+   opt:['No response to stimulation','Grimace or weak cry','Cries, coughs, or pulls away'],
+   tip:'Tested by flicking the sole of the foot or suctioning the nose &mdash; a vigorous newborn objects loudly and pulls away.'},
+  {k:'activity',L:'A',nm:'Activity',sub:'muscle tone',col:'#b8862f',
+   opt:['Limp / floppy','Some flexion of the limbs','Active motion, well flexed'],
+   tip:'A healthy newborn holds the arms and legs <b>flexed</b> and resists having them straightened; a floppy, limp baby scores low.'},
+  {k:'respiration',L:'R',nm:'Respiration',sub:'breathing effort',col:'#2e7d52',
+   opt:['Absent','Slow or irregular, weak cry','Good effort, strong cry'],
+   tip:'A strong, lusty cry is the best sign of good breathing. Absent respirations score 0 and demand immediate help.'}
+ ];
+ var byK={}; S.forEach(function(s){byK[s.k]=s;});
+
+ var P=[
+  {k:'vig',nm:'Vigorous',sc:9,v:{appearance:1,pulse:2,grimace:2,activity:2,respiration:2}},
+  {k:'mod',nm:'Some distress',sc:6,v:{appearance:1,pulse:2,grimace:1,activity:1,respiration:1}},
+  {k:'sev',nm:'Needs help',sc:2,v:{appearance:0,pulse:1,grimace:0,activity:0,respiration:1}}
+ ];
+
+ var V={appearance:1,pulse:2,grimace:2,activity:2,respiration:2};
+ var last=null;
+
+ function total(){return V.appearance+V.pulse+V.grimace+V.activity+V.respiration;}
+ function svcol(n){return n===0?'#c0344a':(n===1?'#b8862f':'#237a45');}
+ function band(t){
+   if(t>=7)return {cls:'normal',bg:'#2e7d52',lab:'Reassuring',sub:'Routine newborn care',title:'A vigorous newborn'};
+   if(t>=4)return {cls:'warn',bg:'#b8862f',lab:'Moderately depressed',sub:'May need stimulation or oxygen',title:'A newborn needing support'};
+   return {cls:'high',bg:'#d1495b',lab:'Severely depressed',sub:'Needs immediate resuscitation',title:'A newborn in distress'};
+ }
+
+ // ---------- SVG baby ----------
+ function limb(x1,y1,cx,cy,x2,y2,c){
+   return '<path d="M'+x1+' '+y1+' Q'+cx+' '+cy+' '+x2+' '+y2+'" fill="none" stroke="'+c+'" stroke-width="11" stroke-linecap="round"/>';
+ }
+ function knob(x,y,f,s){
+   return '<circle cx="'+x+'" cy="'+y+'" r="8" fill="'+f+'" stroke="'+s+'" stroke-width="1.5"/>';
+ }
+ function draw(v){
+   var bodyF=v.appearance>=1?'#f2c9a0':'#9fbdd3';
+   var bodyS=v.appearance>=1?'#d6a878':'#7796ad';
+   var extF =v.appearance>=2?'#f2c9a0':'#9fbdd3';
+   var extS =v.appearance>=2?'#d6a878':'#7796ad';
+   var o='';
+   o+='<ellipse cx="110" cy="192" rx="66" ry="9" fill="#dfeee6"/>';
+
+   // limbs by muscle tone (Activity)
+   var A=v.activity;
+   if(A===0){
+     o+=limb(84,110,72,138,54,158,bodyF)+limb(136,110,148,138,166,158,bodyF);
+     o+=limb(98,162,96,182,90,196,bodyF)+limb(122,162,124,182,130,196,bodyF);
+     o+=knob(54,158,extF,extS)+knob(166,158,extF,extS)+knob(90,196,extF,extS)+knob(130,196,extF,extS);
+   } else if(A===1){
+     o+=limb(84,110,66,126,62,142,bodyF)+limb(136,110,154,126,158,142,bodyF);
+     o+=limb(98,162,86,180,80,192,bodyF)+limb(122,162,134,180,140,192,bodyF);
+     o+=knob(62,142,extF,extS)+knob(158,142,extF,extS)+knob(80,192,extF,extS)+knob(140,192,extF,extS);
+   } else {
+     o+=limb(84,110,70,96,90,88,bodyF)+limb(136,110,150,96,130,88,bodyF);
+     o+=limb(98,164,82,150,96,140,bodyF)+limb(122,164,138,150,124,140,bodyF);
+     o+=knob(90,88,extF,extS)+knob(130,88,extF,extS)+knob(96,140,extF,extS)+knob(124,140,extF,extS);
+   }
+
+   // torso + head
+   o+='<rect x="82" y="98" width="56" height="70" rx="24" fill="'+bodyF+'" stroke="'+bodyS+'" stroke-width="2.5"/>';
+   o+='<circle cx="110" cy="66" r="30" fill="'+bodyF+'" stroke="'+bodyS+'" stroke-width="2.5"/>';
+
+   // eyes (Grimace)
+   var g=v.grimace;
+   if(g===0){
+     o+='<line x1="98" y1="62" x2="106" y2="62" stroke="#7a5a44" stroke-width="2.2" stroke-linecap="round"/>';
+     o+='<line x1="114" y1="62" x2="122" y2="62" stroke="#7a5a44" stroke-width="2.2" stroke-linecap="round"/>';
+   } else if(g===1){
+     o+='<circle cx="102" cy="62" r="2.2" fill="#5a4433"/><circle cx="118" cy="62" r="2.2" fill="#5a4433"/>';
+   } else {
+     o+='<path d="M97 63 q5 -5 10 0" fill="none" stroke="#5a4433" stroke-width="2.2" stroke-linecap="round"/>';
+     o+='<path d="M113 63 q5 -5 10 0" fill="none" stroke="#5a4433" stroke-width="2.2" stroke-linecap="round"/>';
+   }
+   o+='<path d="M108 70 q3 3 4 0" fill="none" stroke="'+bodyS+'" stroke-width="1.6" stroke-linecap="round"/>';
+
+   // mouth (Grimace + Respiration)
+   var crying=(v.grimace>=2||v.respiration>=2);
+   if(crying){
+     o+='<ellipse cx="110" cy="79" rx="7" ry="8" fill="#b5566a"/>';
+     o+='<path d="M105 76 q5 -3 10 0" fill="none" stroke="#e6a7b1" stroke-width="2" stroke-linecap="round"/>';
+   } else if(v.respiration===1||v.grimace===1){
+     o+='<ellipse cx="110" cy="79" rx="5" ry="3.4" fill="#b5566a"/>';
+   } else {
+     o+='<line x1="103" y1="80" x2="117" y2="80" stroke="#a06a58" stroke-width="2.2" stroke-linecap="round"/>';
+   }
+
+   // breathing marks (Respiration)
+   if(v.respiration>=2){
+     o+='<path d="M146 70 q9 9 0 18" fill="none" stroke="#d1495b" stroke-width="2" stroke-linecap="round"/>';
+     o+='<path d="M153 66 q13 13 0 26" fill="none" stroke="#d1495b" stroke-width="2" stroke-linecap="round" opacity=".55"/>';
+   } else if(v.respiration===1){
+     o+='<path d="M145 74 q6 6 0 11" fill="none" stroke="#7796ad" stroke-width="1.8" stroke-linecap="round" opacity=".85"/>';
+   }
+
+   // heart + rate label (Pulse)
+   var hcol=v.pulse===0?'#b6bec4':(v.pulse===1?'#d98a95':'#d1495b');
+   o+='<text x="110" y="132" text-anchor="middle" font-size="21" fill="'+hcol+'">&#9829;</text>';
+   var hr=['no pulse','&lt; 100/min','&#8805; 100/min'][v.pulse];
+   o+='<text x="110" y="150" text-anchor="middle" font-size="9" font-weight="800" fill="'+hcol+'">'+hr+'</text>';
+   return o;
+ }
+
+ // ---------- panels ----------
+ function mnem(){
+   return '<div class="mnem"><b>APGAR</b> &mdash; Appearance &middot; Pulse &middot; Grimace &middot; Activity &middot; Respiration. Each sign scores 0&ndash;2, summed to 0&ndash;10, at <b>1 and 5 minutes</b> after birth.</div>';
+ }
+ function paintInfo(){
+   if(last===null){
+     $("info").innerHTML='<span class="n">The five Apgar signs</span>Score each sign <b>0, 1, or 2</b>, then add them up for a total from <b>0 to 10</b>. Tap any option to see exactly what it means.'+mnem();
+     return;
+   }
+   var s=byK[last], val=V[last];
+   $("info").innerHTML='<span class="n">'+s.L+' &mdash; '+s.nm+' <span class="tag">'+val+' pt'+(val===1?'':'s')+'</span></span>'+
+     '<b>'+s.opt[val]+'</b>'+
+     '<div class="dd">'+s.tip+'</div>'+mnem();
+ }
+ function paintPresets(){
+   var t=total();
+   $("presets").innerHTML=P.map(function(p){
+     var on=S.every(function(s){return V[s.k]===p.v[s.k];});
+     return '<button data-p="'+p.k+'"'+(on?' class="on"':'')+'>'+p.nm+'<small>scores '+p.sc+'</small></button>';
+   }).join('');
+   document.querySelectorAll('#presets button').forEach(function(b){
+     b.onclick=function(){ var p=P.filter(function(x){return x.k===b.dataset.p;})[0];
+       S.forEach(function(s){V[s.k]=p.v[s.k];}); last=null; update(); };
+   });
+ }
+ function paintSigns(){
+   $("signs").innerHTML=S.map(function(s){
+     var val=V[s.k];
+     var segs=[0,1,2].map(function(n){
+       return '<button data-v="'+n+'"'+(val===n?' class="on"':'')+'><b>'+n+'</b><small>'+s.opt[n]+'</small></button>';
+     }).join('');
+     return '<div class="sign">'+
+       '<div class="sh"><span class="badge" style="background:'+s.col+'">'+s.L+'</span>'+
+       '<span class="snm">'+s.nm+' <small>'+s.sub+'</small></span>'+
+       '<span class="sv" style="color:'+svcol(val)+'">'+val+'</span></div>'+
+       '<div class="seg" data-sign="'+s.k+'">'+segs+'</div></div>';
+   }).join('');
+   document.querySelectorAll('#signs .seg button').forEach(function(b){
+     b.onclick=function(){ var sk=b.parentNode.getAttribute('data-sign');
+       V[sk]=+b.getAttribute('data-v'); last=sk; update(); };
+   });
+ }
+
+ function update(){
+   var t=total(), b=band(t);
+   $("art").innerHTML=draw(V);
+   $("tot").innerHTML=t;
+   $("cardTitle").innerHTML=b.title;
+   $("pill").className='pill '+b.cls;
+   $("pill").innerHTML=b.lab;
+   $("stage").style.background=b.bg;
+   $("stage").innerHTML='APGAR score&nbsp; '+t+' / 10<small>'+b.sub+'</small>';
+   var color=['blue or pale','pink with dusky hands &amp; feet','pink all over'][V.appearance];
+   var tone=['limp','partly flexed','well flexed'][V.activity];
+   var beat=['no heartbeat','heart rate under 100/min','heart rate &#8805; 100/min'][V.pulse];
+   $("cap").innerHTML='Skin '+color+' &middot; '+tone+' &middot; '+beat+'.';
+   paintPresets();
+   paintSigns();
+   paintInfo();
+ }
+
+ update();
+})();
+</script>
+</body>
+</html>

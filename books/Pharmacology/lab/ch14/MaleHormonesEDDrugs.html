@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Male Hormones &amp; ED Drugs</title>
+<meta name="description" content="Interactive drug-safety board for testosterone and the PDE-5 inhibitors. Build a patient's medication list and watch the blood-pressure gauge — the PDE-5 inhibitor + nitrate combination is an absolute contraindication. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.st{display:flex;gap:6px;margin-top:11px;}
+.st div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 5px;background:#fff;}
+.st .k{font-size:8.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+.st .v{display:block;font-size:11.6px;font-weight:800;color:var(--ink);margin-top:3px;line-height:1.2;}
+.st div.hot{border-color:#e7a3b0;background:#fdeef1;} .st div.hot .v{color:#b23145;}
+.st div.ok{border-color:#b6ddc6;background:#eef7f1;} .st div.ok .v{color:#237a45;}
+.st div.warn{border-color:#ecd9ac;background:#fbf3e2;} .st div.warn .v{color:#8a6a20;}
+.medbar{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px;min-height:22px;align-items:center;}
+.medbar .none{font-size:11.5px;color:var(--muted);}
+.medbar span.m{font-size:11px;font-weight:800;color:#fff;border-radius:20px;padding:3px 10px;}
+.hint{font-size:11.3px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.45;}
+.it.foc{outline:2px solid var(--gold);outline-offset:1px;}
+.it .ic{font-size:20px;line-height:1;}
+.ex span{font-size:11px;font-weight:700;background:#e4eefa;color:var(--teal-dk);border-radius:20px;padding:3px 10px;}
+.verdict{border-radius:10px;padding:10px 13px;margin-top:12px;font-size:12.6px;line-height:1.5;border:1px solid;}
+.verdict .vh{display:block;font-size:10.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;}
+.verdict.good{background:#e5f3ea;border-color:#b6ddc6;color:#236b41;} .verdict.good b{color:#17532e;}
+.verdict.caution{background:#fbf3e2;border-color:#ecd9ac;color:#8a6a20;} .verdict.caution b{color:#5a4212;}
+.verdict.harm{background:#fae5e8;border-color:#f0c9d0;color:#8a2a3a;} .verdict.harm b{color:#7a1f2c;}
+.verdict.none{background:#eef1f6;border-color:var(--line);color:var(--muted);}
+.dl{list-style:none;margin-top:8px;}
+.dl li{font-size:12.3px;color:var(--soft);line-height:1.46;padding-left:14px;position:relative;margin-top:7px;}
+.dl li:before{content:'\25B8';position:absolute;left:0;color:var(--teal);font-weight:800;}
+.dl li b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 14</div>
+  <h1>Male Hormones &amp; ED Drugs</h1>
+  <div class="intro">Two drug stories meet in one older male patient: <b>testosterone</b> for low androgen, and the <b>PDE-5 inhibitors</b> (sildenafil, tadalafil) for erectile dysfunction. The PDE-5 drugs raise <b>cGMP</b> to relax vessels &mdash; and so do <b>nitrates</b>. Stack the two and blood pressure can collapse. Tap drug cards to build a patient's medication list, then watch the pressure gauge and read what the nurse must check.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Patient's blood pressure</h2>
+    <svg id="gauge" viewBox="0 0 300 226" aria-label="Blood-pressure gauge and a blood-vessel cross-section that respond to the medication list"><g id="art"></g></svg>
+    <div class="medbar" id="medbar"></div>
+    <div class="st">
+      <div id="sBP"><span class="k">Systolic BP</span><span class="v" id="vBP">&mdash;</span></div>
+      <div id="sEf"><span class="k">Vessel effect</span><span class="v" id="vEf">&mdash;</span></div>
+      <div id="sIx"><span class="k">Interaction</span><span class="v" id="vIx">&mdash;</span></div>
+    </div>
+    <div class="hint">Try it: with the <b>PDE-5 inhibitor</b> already on the list, add a <b>nitrate</b> and watch the pressure crash.</div>
+  </div></div>
+  <div>
+    <div id="stage">Build the medication list<small>tap a drug card to begin</small></div>
+    <div class="card">
+      <div class="list" id="shelf"></div>
+      <div class="row"><button class="btn" id="clear">Clear the list</button></div>
+      <div id="info"></div>
+      <div class="verdict none" id="verdict"></div>
+    </div>
+    <div class="card"><h2 id="nurseTitle">What the nurse does</h2>
+      <ul class="dl" id="nurse"></ul>
+      <div class="ex" id="chips" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;"></div>
+      <div id="alert"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- drug data ---------- */
+ var DRUGS={
+  testo:{ic:'💪',nm:'Testosterone',cls:'Androgen replacement',col:'#b8862f',drop:0,
+   n:'Testosterone — androgen replacement',
+   bo:'Replaces the body’s own androgen when the testes or pituitary underproduce it (<b>hypogonadism</b>). It restores libido, muscle and bone mass, energy, and secondary sex characteristics. It is a hormone, <b>not</b> an erection drug — it treats low testosterone, not ED itself.',
+   lo:'Given as <b>transdermal gel or patch</b>, <b>IM depot injection</b> (cypionate, enanthate), buccal, or nasal — not as an ordinary oral tablet because of liver effects. A <b>Schedule III controlled substance</b>.',
+   nurse:['Monitor <b>hematocrit and hemoglobin</b> — testosterone can cause <b>polycythemia (erythrocytosis)</b>; hold the drug and notify the prescriber if the hematocrit climbs (about &ge;54%) because of the hyperviscosity and clot risk.',
+    'Monitor <b>PSA</b> and support a <b>prostate exam</b>: androgens can worsen BPH urinary symptoms and accelerate an existing prostate cancer. It is <b>contraindicated in prostate cancer and male breast cancer</b>.',
+    '<b>Transdermal gel:</b> apply to clean, dry, intact skin, let it dry, <b>wash your hands</b>, and cover the site — avoid skin-to-skin transfer to <b>women and children</b> (virilization). Testosterone is <b>pregnancy category X</b>.',
+    '<b>IM injection:</b> rotate sites and check a <b>trough testosterone level</b> to guide dosing. Also monitor lipids and (for oral forms) liver function.',
+    'Watch for <b>edema, worsening sleep apnea, gynecomastia, acne, and mood changes</b>. It suppresses sperm production — counsel about <b>reduced fertility</b> and testicular shrinkage.'],
+   chips:['hypogonadism','↑ hematocrit','PSA / prostate','gel transfer risk','Schedule III'],
+   alert:'<div class="mnem">Two checks own testosterone therapy: the <b>CBC</b> (hematocrit for polycythemia) and the <b>PSA / prostate exam</b>. A rise in either one means stop and reassess.</div>'},
+
+  pde5:{ic:'💊',nm:'PDE-5 inhibitor',cls:'sildenafil · tadalafil',col:'#2f5f9e',drop:8,
+   n:'PDE-5 inhibitor — how the erection happens',
+   bo:'Sexual stimulation releases <b>nitric oxide</b> in the penis, which raises <b>cGMP</b> and relaxes the smooth muscle of the corpus cavernosum so blood fills it. <b>PDE-5</b> is the enzyme that breaks cGMP down; blocking it lets cGMP — and the erection — last. Generic names end in <b>“-afil”</b> (sildenafil, tadalafil, vardenafil, avanafil).',
+   lo:'The same drugs also treat <b>pulmonary arterial hypertension</b> (sildenafil, tadalafil) and <b>BPH</b> (tadalafil). They cause mild systemic vasodilation, so they lower blood pressure a little on their own.',
+   nurse:['<b>Screen for nitrate use first</b> — combining a PDE-5 inhibitor with any nitrate is an <b>absolute contraindication</b> (see the interaction panel).',
+    '<b>Sildenafil:</b> take about <b>30–60 minutes before</b> activity on an <b>empty stomach</b> — a fatty meal delays it. <b>Tadalafil</b> works up to <b>~36 hours</b> and is <b>not</b> affected by food.',
+    'Teach that an erection lasting <b>longer than 4 hours (priapism)</b> is an emergency — go to the ER to prevent permanent damage.',
+    '<b>Sudden vision loss</b> (NAION) or <b>sudden hearing loss</b> → stop the drug and seek care. Sildenafil can also cause transient <b>blue-tinged vision</b>.',
+    'Assess whether the heart can tolerate <b>sexual activity</b>, and use cautiously with <b>alpha-blockers</b> and other antihypertensives (additive BP drop).'],
+   chips:['↑ cGMP → vasodilation','ED · PAH · BPH','nitrate = contraindicated','priapism >4h = ER','headache · flushing'],
+   alert:'<div class="note">The rule to never forget: a PDE-5 inhibitor and <b>any nitrate</b> must never be combined — the drop in blood pressure can be fatal.</div>'},
+
+  nitrate:{ic:'❤️',nm:'Nitrate',cls:'nitroglycerin · isosorbide',col:'#d1495b',drop:18,
+   n:'Nitrate — antianginal vasodilator',
+   bo:'Donates <b>nitric oxide</b>, which drives guanylate cyclase to make more <b>cGMP</b>, relaxing vascular smooth muscle. Veins dilate most, dropping <b>preload</b> and the heart’s oxygen demand — that relieves <b>angina</b>. This is the classic drug a man with coronary disease is already taking.',
+   lo:'Nitroglycerin (sublingual, spray, patch, IV) and isosorbide dinitrate / mononitrate. Because it <b>raises cGMP</b>, it shares a pathway with PDE-5 inhibitors — the exact reason the two must never be combined.',
+   nurse:['<b>Ask about ED drugs before giving any nitrate.</b> Withhold nitroglycerin if the patient took <b>sildenafil or vardenafil within 24 hours</b>, or <b>tadalafil within 48 hours</b>.',
+    'Keep a daily <b>nitrate-free interval</b> (usually overnight) to prevent tolerance.',
+    'Expect <b>headache</b> and <b>orthostatic hypotension</b> — have the patient sit for sublingual dosing and rise slowly.',
+    '<b>Sublingual nitroglycerin for chest pain:</b> one tablet, may repeat every 5 minutes for up to 3 doses — <b>call 911 if pain is unrelieved after the first dose</b>.',
+    'Store sublingual tablets in the original <b>dark glass bottle</b>; a slight tingling under the tongue suggests the drug is still potent.'],
+   chips:['NO → ↑ cGMP','antianginal','lowers preload','tolerance → drug-free interval','no PDE-5 within 24–48h'],
+   alert:'<div class="note">Before giving nitroglycerin to any man, ask about ED drugs. Sildenafil/vardenafil within 24 h or tadalafil within 48 h means <b>WITHHOLD the nitrate</b>.</div>'},
+
+  alpha:{ic:'🔻',nm:'Alpha-1 blocker',cls:'tamsulosin · doxazosin',col:'#2f9e5b',drop:10,
+   n:'Alpha-1 blocker — BPH and blood pressure',
+   bo:'Blocks <b>alpha-1 receptors</b> on smooth muscle. In the <b>prostate and bladder neck</b> that relaxes the muscle and improves urine flow in <b>BPH</b>; in blood vessels it causes vasodilation and <b>lowers BP</b>. Names often end in <b>“-osin”</b>.',
+   lo:'<b>Tamsulosin</b> and alfuzosin are prostate-selective; <b>doxazosin, terazosin, and prazosin</b> also lower blood pressure and are used in hypertension. It does <b>not shrink</b> the prostate — that is finasteride, a 5-alpha-reductase inhibitor.',
+   nurse:['<b>First-dose orthostatic hypotension and syncope</b> — give the first dose at <b>bedtime</b> and have the patient rise slowly.',
+    '<b>Additive hypotension with PDE-5 inhibitors</b> — start the lowest dose, separate the timing, and rise slowly.',
+    'Tamsulosin can cause <b>intraoperative floppy iris syndrome</b> — tell the ophthalmologist about it before cataract surgery.',
+    'For BPH, it relieves symptoms quickly by relaxing muscle; counsel that it improves flow but <b>does not shrink</b> the gland.'],
+   chips:['relaxes prostate / bladder neck','BPH · HTN','first-dose orthostasis','additive ↓ BP with PDE-5','floppy iris (tamsulosin)'],
+   alert:'<div class="mnem">Alpha-blockers relax the plumbing (better urine flow) but also relax vessels — stacked with a PDE-5 inhibitor the blood pressure can bottom out.</div>'}
+ };
+ var ORDERK=['testo','pde5','nitrate','alpha'];
+
+ /* ---------- state ---------- */
+ var active={testo:false,pde5:true,nitrate:false,alpha:false};
+ var order=['pde5'];
+ function focusK(){ return order.length?order[order.length-1]:null; }
+
+ /* ---------- evaluation ---------- */
+ function evalCombo(){
+  var sys=120, k;
+  for(k in active){ if(active[k]) sys-=DRUGS[k].drop; }
+  var harm=active.pde5&&active.nitrate;
+  if(harm) sys=62;
+  else if(sys<88) sys=88;
+  var zone = harm?'danger':(sys>=110?'normal':(sys>=95?'mild':'marked'));
+  var inter='none';
+  if(harm) inter='harm';
+  else if(active.pde5&&active.alpha) inter='caution';
+  else if(active.nitrate&&active.alpha) inter='caution';
+  var n=order.length + (order.length===1?' drug':' drugs');
+  var v;
+  if(order.length===0){
+   v={cls:'none',h:'No drugs on the list',b:'Tap a drug card to add it to this patient’s medications, then watch the pressure gauge and the interaction check.'};
+  } else if(inter==='harm'){
+   v={cls:'harm',h:'⛔ Contraindicated — do not combine',
+      b:'A <b>PDE-5 inhibitor plus any nitrate</b> causes profound, prolonged vasodilation and <b>life-threatening hypotension</b>. They hit the same pathway from two directions: the nitrate donates <b>nitric oxide</b> so guanylate cyclase makes more <b>cGMP</b>, while the PDE-5 inhibitor <b>blocks the enzyme that breaks cGMP down</b>. cGMP piles up, vessels stay wide open, and blood pressure can collapse — risking reflex tachycardia, MI, and stroke. <b>Never give these together.</b>'};
+  } else if(active.pde5&&active.alpha){
+   v={cls:'caution',h:'⚠ Additive hypotension — use with care',
+      b:'A <b>PDE-5 inhibitor and an alpha-blocker</b> both dilate vessels, so blood pressure can drop more than either alone (orthostatic dizziness or syncope). Not forbidden, but use the <b>lowest dose</b>, <b>separate the timing</b>, and teach the patient to rise slowly.'};
+  } else if(active.nitrate&&active.alpha){
+   v={cls:'caution',h:'⚠ Additive hypotension — watch orthostasis',
+      b:'A <b>nitrate and an alpha-blocker</b> together deepen the drop in blood pressure and the risk of orthostatic hypotension. Monitor BP, and coach slow position changes.'};
+  } else {
+   v={cls:'good',h:'No dangerous interaction on this list',
+      b:'The current combination has <b>no absolute contraindication</b>. '+(active.testo?'<b>Testosterone</b> does not share the nitrate’s cGMP pathway, so it carries no nitrate-type interaction — but it needs its own monitoring (see below). ':'')+'Keep screening any new drug against what the patient already takes.'};
+  }
+  return {sys:sys,zone:zone,inter:inter,v:v,ndrug:n};
+ }
+
+ /* ---------- gauge geometry ---------- */
+ var cx=150, cy=138, R=104;
+ function pol(ang,rad){ var r=ang*Math.PI/180; return [cx+rad*Math.cos(r), cy-rad*Math.sin(r)]; }
+ function arc(a1,a2,col,w){ var p1=pol(a1,R),p2=pol(a2,R);
+   return '<path d="M'+p1[0].toFixed(1)+' '+p1[1].toFixed(1)+' A'+R+' '+R+' 0 0 1 '+p2[0].toFixed(1)+' '+p2[1].toFixed(1)+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="butt"/>'; }
+ function angOf(sys){ var s=Math.max(58,Math.min(122,sys)); return 180-(s-50)/80*180; }
+
+ var ZWORD={normal:'Normal',mild:'Mild ↓',marked:'Marked ↓',danger:'DANGEROUS ↓'};
+ var ZCOL={normal:'#2f9e5b',mild:'#b8862f',marked:'#c07020',danger:'#c0364f'};
+
+ function draw(r){
+  var sys=r.sys, zone=r.zone, s='';
+  /* colored zones: left = low/danger, right = normal */
+  s+=arc(180,101.25,'#e2b3bd',16);            /* danger band */
+  s+=arc(101.25,78.75,'#eccb9a',16);          /* marked */
+  s+=arc(78.75,45,'#e6d79a',16);              /* mild */
+  s+=arc(45,0,'#a9d9bd',16);                  /* normal */
+  /* light active-zone highlight overlay */
+  var hi={danger:[180,101.25,'#c0364f'],marked:[101.25,78.75,'#c07020'],mild:[78.75,45,'#b8862f'],normal:[45,0,'#2f9e5b']}[zone];
+  s+=arc(hi[0],hi[1],hi[2],16);
+  /* end ticks */
+  s+='<text x="'+(pol(180,R+13)[0]).toFixed(0)+'" y="'+(pol(180,R+13)[1]+3).toFixed(0)+'" font-size="7.5" font-weight="800" text-anchor="middle" fill="#b23145">LOW</text>';
+  s+='<text x="'+(pol(0,R+13)[0]).toFixed(0)+'" y="'+(pol(0,R+13)[1]+3).toFixed(0)+'" font-size="7.5" font-weight="800" text-anchor="middle" fill="#237a45">NORMAL</text>';
+  /* needle */
+  var na=angOf(sys), tip=pol(na,R-22);
+  s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+tip[0].toFixed(1)+'" y2="'+tip[1].toFixed(1)+'" stroke="'+ZCOL[zone]+'" stroke-width="3.4" stroke-linecap="round"/>';
+  s+='<circle cx="'+cx+'" cy="'+cy+'" r="7" fill="'+ZCOL[zone]+'"/><circle cx="'+cx+'" cy="'+cy+'" r="3" fill="#fff"/>';
+  /* readouts (inside arc) */
+  var dia=Math.round(sys*0.62);
+  s+='<text x="'+cx+'" y="'+(cy-40)+'" font-size="30" font-family="Fraunces,serif" font-weight="700" text-anchor="middle" fill="'+ZCOL[zone]+'">'+sys+'</text>';
+  s+='<text x="'+cx+'" y="'+(cy-24)+'" font-size="9" font-weight="700" text-anchor="middle" fill="#78828f">≈ '+sys+'/'+dia+' mmHg</text>';
+  /* status word below diameter */
+  s+='<text x="'+cx+'" y="'+(cy+22)+'" font-size="11" font-weight="800" letter-spacing=".5" text-anchor="middle" fill="'+ZCOL[zone]+'">'+ZWORD[zone]+'</text>';
+  /* ---- vessel cross-section (dilation tracks the BP drop) ---- */
+  var vy=190, dilate=Math.max(0,Math.min(1,(120-sys)/58));
+  var lum=6+dilate*15, wall=lum+8-dilate*3;
+  s+='<text x="'+cx+'" y="'+(vy-30)+'" font-size="7.5" font-weight="800" letter-spacing=".5" text-anchor="middle" fill="#78828f">BLOOD VESSEL</text>';
+  s+='<circle cx="'+cx+'" cy="'+vy+'" r="'+wall.toFixed(1)+'" fill="#f6dbe4" stroke="#c98aa0" stroke-width="2"/>';
+  s+='<circle cx="'+cx+'" cy="'+vy+'" r="'+lum.toFixed(1)+'" fill="#d1495b"/>';
+  var toneW=dilate<0.15?'normal tone':(dilate<0.45?'dilating':(dilate<0.8?'wide open':'maximally dilated'));
+  s+='<text x="'+cx+'" y="'+(vy+wall+12).toFixed(1)+'" font-size="8" font-weight="700" text-anchor="middle" fill="#9a5f72">'+toneW+'</text>';
+  return s;
+ }
+
+ /* ---------- shelf ---------- */
+ function renderShelf(){
+  var f=focusK();
+  $("shelf").innerHTML=ORDERK.map(function(k){ var d=DRUGS[k];
+    return '<button class="it'+(active[k]?' on':'')+(active[k]&&k===f?' foc':'')+'" data-k="'+k+'">'+
+      '<span class="ic">'+d.ic+'</span><span><span class="nm">'+d.nm+'</span><br><span class="ct">'+d.cls+'</span></span></button>';
+  }).join('');
+  Array.prototype.forEach.call(document.querySelectorAll('#shelf .it'),function(b){
+    b.onclick=function(){ toggle(b.dataset.k); };
+  });
+ }
+
+ function toggle(k){
+  active[k]=!active[k];
+  if(active[k]){ order.push(k); }
+  else { var i=order.indexOf(k); if(i>-1) order.splice(i,1); }
+  render();
+ }
+ $("clear").onclick=function(){ for(var k in active) active[k]=false; order=[]; render(); };
+
+ /* ---------- render ---------- */
+ function render(){
+  var r=evalCombo(), f=focusK();
+  $("art").innerHTML=draw(r);
+  renderShelf();
+
+  /* med bar */
+  if(order.length===0){ $("medbar").innerHTML='<span class="none">List is empty.</span>'; }
+  else { $("medbar").innerHTML='<span class="none" style="margin-right:2px;">On the list:</span>'+order.map(function(k){
+    return '<span class="m" style="background:'+DRUGS[k].col+'">'+DRUGS[k].nm+'</span>'; }).join(''); }
+
+  /* status chips */
+  $("vBP").innerHTML=(order.length?r.sys+' mmHg':'—');
+  $("sBP").className=(r.zone==='danger'?'hot':(r.zone==='marked'?'warn':(order.length?'ok':'')));
+  $("vEf").innerHTML=(order.length?ZWORD[r.zone]:'—');
+  $("sEf").className=(r.zone==='danger'?'hot':(r.zone==='marked'?'warn':''));
+  $("vIx").innerHTML=(r.inter==='harm'?'CONTRAINDICATED':(r.inter==='caution'?'Caution':(order.length?'None':'—')));
+  $("sIx").className=(r.inter==='harm'?'hot':(r.inter==='caution'?'warn':(order.length?'ok':'')));
+
+  /* stage */
+  var sc,sh,ss;
+  if(order.length===0){ sc='#78828f'; sh='Build the medication list'; ss='tap a drug card to begin'; }
+  else if(r.inter==='harm'){ sc='#d1495b'; sh='⛔ Dangerous combination'; ss='PDE-5 inhibitor + nitrate'; }
+  else if(r.inter==='caution'){ sc='#b8862f'; sh='⚠ Use with caution'; ss='additive hypotension'; }
+  else { sc='#2f5f9e'; sh='No dangerous interaction'; ss=r.ndrug+' on the list'; }
+  $("stage").style.background=sc;
+  $("stage").innerHTML=sh+'<small>'+ss+'</small>';
+
+  /* focused drug detail */
+  if(f){ var d=DRUGS[f];
+   $("cardTitle").innerHTML='Patient’s blood pressure';
+   $("info").innerHTML='<span class="n">'+d.n+'</span>'+d.bo+'<div class="loc">'+d.lo+'</div>';
+   $("nurseTitle").innerHTML='What the nurse does — '+d.nm;
+   $("nurse").innerHTML=d.nurse.map(function(x){return '<li>'+x+'</li>';}).join('');
+   $("chips").innerHTML=d.chips.map(function(x){return '<span>'+x+'</span>';}).join('');
+   $("alert").innerHTML=d.alert;
+  } else {
+   $("info").innerHTML='<span class="n">Pick a drug to explore it</span>Tap any card above to add it to the list. The blue panel shows how that drug works; the box below checks the whole list for a dangerous interaction.';
+   $("nurseTitle").innerHTML='What the nurse does';
+   $("nurse").innerHTML='<li>Add a drug to see its nursing priorities here.</li>';
+   $("chips").innerHTML=''; $("alert").innerHTML='';
+  }
+
+  /* verdict */
+  $("verdict").className='verdict '+r.v.cls;
+  $("verdict").innerHTML='<span class="vh">'+r.v.h+'</span>'+r.v.b;
+ }
+
+ render();
+})();
+</script>
+</body>
+</html>

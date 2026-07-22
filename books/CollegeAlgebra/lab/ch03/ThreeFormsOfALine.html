@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Three Forms of a Line</title>
+<meta name="description" content="Drive one line with sliders and watch slope-intercept, point-slope, and standard form update together — then step through the algebra that converts any one into any other.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+
+/* ---- stacked fractions, built from spans (no math renderer on this page) ---- */
+.fr{display:inline-block;vertical-align:middle;text-align:center;font-size:.6em;line-height:1.1;margin:0 .15em;position:relative;top:-.06em;}
+.fr .n,.fr .d{display:block;padding:0 .25em;}
+.fr .d{border-top:1.4px solid currentColor;}
+
+/* ---- highlight tokens ---- */
+.tg{border-radius:4px;padding:1px 4px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;font-weight:inherit;}
+.tg2{border-bottom:2px dashed #b3b6d6;font-weight:inherit;}
+
+#stage .big{font-family:var(--math);font-size:24px;font-weight:700;letter-spacing:.3px;display:block;}
+#stage .big .fr .d{border-top-color:#fff;}
+
+.why{font-family:var(--math);font-size:14px;color:var(--teal-dk);text-align:center;background:#f1f2f9;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-top:9px;line-height:1.6;}
+.why em{font-family:var(--sans);font-style:normal;font-size:10.5px;font-weight:800;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+
+/* ---- the three-form panel ---- */
+#forms{display:flex;flex-direction:column;gap:7px;}
+#forms .it{display:block;padding:9px 12px;}
+#forms .it .pl{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);display:block;}
+#forms .it.on .pl{color:rgba(255,255,255,.82);}
+#forms .it .mx{font-family:var(--math);font-size:19px;color:var(--ink);display:block;margin-top:3px;line-height:1.5;}
+#forms .it.on .mx{color:#fff;}
+#forms .it.on .tg{background:#ffe07a;color:#3a2c00;box-shadow:inset 0 0 0 1.5px #ffd24d;}
+#forms .it.on .tg2{border-bottom-color:rgba(255,255,255,.7);}
+#forms .it .sub{font-size:11px;color:var(--muted);display:block;margin-top:3px;line-height:1.45;}
+#forms .it.on .sub{color:rgba(255,255,255,.85);}
+#forms .it.off{opacity:.62;}
+.hicap{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:10px;text-align:center;}
+.hicap b{color:var(--teal-dk);}
+
+/* ---- sliders ---- */
+.sld{margin-top:12px;}
+.sld .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.sld .lab b{font-family:var(--math);font-size:19px;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+.sld .ends{display:flex;justify-content:space-between;font-family:var(--math);font-size:10.5px;color:var(--muted);margin-top:-2px;}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;display:block;}
+input[type=range]:focus{outline:none;}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);margin-top:-8px;}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);}
+.pset{margin-top:14px;}
+.pset .cap,.pk .cap{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.seg button{font-size:11.5px;padding:9px 4px;}
+.seg button small{font-size:9.6px;}
+.modeseg button{font-size:12.5px;padding:10px 5px;line-height:1.25;}
+.modeseg button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:2px;}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+@media (max-width:600px){
+  #presets,#conv{display:grid;grid-template-columns:1fr 1fr;}
+  #presets button:last-child:nth-child(odd),#conv button:last-child:nth-child(odd){grid-column:1/-1;}
+  .seg button{font-size:12px;padding:10px 6px;}
+}
+
+/* ---- the derivation list ---- */
+#steps{margin-top:13px;min-height:150px;}
+.dl{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:7px 2px;border-bottom:1px dashed var(--line);}
+.dl:last-child{border-bottom:none;}
+.mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.55;}
+.dl.cur .mx{font-size:20px;color:var(--ink);font-weight:600;}
+.dl .pl{flex:none;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);white-space:nowrap;max-width:38%;text-align:right;}
+.dl.cur .pl{color:var(--gold);}
+.dl:not(.cur) .tg{background:transparent;box-shadow:none;padding:0;}
+.dl:not(.cur) .tg2{border-bottom:none;}
+.exlab{font-size:12.5px;color:var(--soft);line-height:1.55;margin-top:11px;background:#f1f2f9;border:1px solid var(--line);border-radius:9px;padding:9px 12px;}
+.exlab b{color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 3</div>
+  <h1>Three Forms of a Line</h1>
+  <div class="intro">A line does not care how you write it. <b>Slope-intercept</b>, <b>point-slope</b>, and <b>standard</b> form are three sentences describing the same set of points &mdash; each one putting a different fact in plain sight. Move the sliders and watch all three rewrite themselves at once, then step through the algebra that turns any one of them into another.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="artTitle">One line</h2>
+      <svg viewBox="0 0 250 250" aria-label="a line on the coordinate plane, with its slope triangle and intercepts marked"><g id="art"></g></svg>
+      <div class="why" id="why"></div>
+    </div>
+    <div class="card"><h2>The same line, three ways</h2>
+      <div id="forms"></div>
+      <div class="hicap" id="hicap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage"><span class="big">&nbsp;</span><small>&nbsp;</small></div>
+    <div class="card">
+      <div class="modeseg" id="modes">
+        <button data-m="0" class="on">Drive the line<small>sliders, all three live</small></button>
+        <button data-m="1">Convert it<small>one algebra step at a time</small></button>
+      </div>
+
+      <div id="p0">
+        <div class="sld">
+          <div class="lab"><span>Rise &mdash; vertical change</span><b id="riseOut">3</b></div>
+          <input type="range" id="riseR" min="-6" max="6" step="1" value="3" aria-label="rise">
+          <div class="ends"><span>&minus;6 falling</span><span>0 flat</span><span>6 climbing</span></div>
+        </div>
+        <div class="sld">
+          <div class="lab"><span>Run &mdash; horizontal change</span><b id="runOut">2</b></div>
+          <input type="range" id="runR" min="0" max="6" step="1" value="2" aria-label="run">
+          <div class="ends"><span>0 vertical</span><span></span><span>6</span></div>
+        </div>
+        <div class="sld">
+          <div class="lab"><span>A point it passes through &mdash; <i>x</i><sub>1</sub></span><b id="x1Out">4</b></div>
+          <input type="range" id="x1R" min="-6" max="6" step="1" value="4" aria-label="x sub 1">
+          <div class="ends"><span>&minus;6</span><span>0</span><span>6</span></div>
+        </div>
+        <div class="sld">
+          <div class="lab"><span>&hellip; and <i>y</i><sub>1</sub></span><b id="y1Out">&minus;3</b></div>
+          <input type="range" id="y1R" min="-6" max="6" step="1" value="-3" aria-label="y sub 1">
+          <div class="ends"><span>&minus;6</span><span>0</span><span>6</span></div>
+        </div>
+        <div class="pset">
+          <div class="cap">Or jump to a line worth seeing</div>
+          <div class="seg" id="presets"></div>
+        </div>
+      </div>
+
+      <div id="p1" style="display:none">
+        <div class="pk"><div class="cap">Which conversion?</div>
+          <div class="seg" id="conv"></div>
+        </div>
+        <div id="steps"></div>
+        <div class="exlab" id="exlab"></div>
+        <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      </div>
+
+      <div id="info"></div>
+      <div class="mnem"><b>Why rewriting is allowed at all.</b> Adding the same number to both sides, or multiplying both sides by the same <b>nonzero</b> number, never changes which pairs (<i>x</i>, <i>y</i>) make the sentence true. The solution set is untouched &mdash; and the solution set <i>is</i> the graph. So the picture cannot move, no matter how the writing is rearranged. Notice that the line above never budges while the three forms rewrite themselves.</div>
+      <div class="note"><b>The three traps.</b> <b>One:</b> in point-slope, the sign of the point gets subtracted, so the point (4, &minus;3) gives <i>y</i> &minus; (&minus;3), which tidies to <i>y</i> <b>+</b> 3 &mdash; the sign you see is the opposite of the coordinate. <b>Two:</b> an equation is only in slope-intercept form once it is solved for <i>y</i> alone; 2<i>y</i> = 6<i>x</i> + 4 has not got there yet, and reading its slope as 6 is wrong. <b>Three:</b> from standard form the slope is <b>&minus;<i>A</i>/<i>B</i></b>, not <i>A</i>/<i>B</i>.</div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var TEAL='#43458f',TDK='#262a5c',GOLD='#b8862f',CORAL='#d1495b',INK='#22243a',
+     MUT='#7d7f94',GRID='#e8eaf5',PALE='#c6c9de',CARD='#fffdf9';
+ var MIN='−';
+
+ /* ================= integers and fractions ================= */
+ function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=a%b; a=b; b=t; } return a; }
+ function fr(n,d){ if(d<0){ n=-n; d=-d; } var g=gcd(n,d)||1; return {n:n/g,d:d/g}; }
+ function val(f){ return f.n/f.d; }
+ function h(n){ return n<0 ? '&minus;'+(-n) : ''+n; }            /* HTML minus sign */
+ function sv(n){ return n<0 ? MIN+(-n) : ''+n; }                 /* SVG  minus sign */
+ function frH(f){ if(f.d===1) return h(f.n);
+   return (f.n<0?'&minus;':'')+'<span class="fr"><span class="n">'+Math.abs(f.n)+'</span><span class="d">'+f.d+'</span></span>'; }
+ function frT(f){ return f.d===1 ? sv(f.n) : (f.n<0?MIN:'')+Math.abs(f.n)+'/'+f.d; }
+ function tg(s,k){ if(!k) return s; return '<b class="'+(k===2?'tg2':'tg')+'">'+s+'</b>'; }
+ function abs(f){ return {n:Math.abs(f.n),d:f.d}; }
+
+ /* ================= equation writers ================= */
+ /* "m x + c" with fractional m and c.  o = {hm, hc} highlight keys */
+ function lin(m,c,o){ o=o||{};
+   if(m.n===0) return tg(frH(c),o.hc);
+   var s;
+   if(m.d===1&&m.n===1) s=tg('<i>x</i>',o.hm);
+   else if(m.d===1&&m.n===-1) s=tg('&minus;<i>x</i>',o.hm);
+   else s=tg(frH(m),o.hm)+'<i>x</i>';
+   if(c.n!==0) s+=' '+(c.n>0?'+':'&minus;')+' '+tg(frH(abs(c)),o.hc);
+   return s; }
+
+ /* "m x + c1 + c2", the un-combined moment, c2 an integer */
+ function lin2(m,c1,c2){
+   var s=lin(m,c1,{});
+   s+=' '+(c2>0?'+':'&minus;')+' '+tg(''+Math.abs(c2),1);
+   return s; }
+
+ /* "a x + c" with integer a and c */
+ function intLin(a,c,o){ o=o||{};
+   if(a===0) return tg(h(c),o.ha);
+   var s=tg((a===1?'':(a===-1?'&minus;':h(a)))+'<i>x</i>',o.ha);
+   if(c!==0) s+=' '+(c>0?'+':'&minus;')+' '+tg(''+Math.abs(c),o.hc);
+   return s; }
+
+ /* "A x + B y = C" with integers.  o = {hab, hc} */
+ function std(A,B,C,o){ o=o||{};
+   var s='';
+   if(A!==0) s+=tg((A===1?'':(A===-1?'&minus;':h(A)))+'<i>x</i>',o.hab);
+   if(B!==0){
+     if(s==='') s+=tg((B===1?'':(B===-1?'&minus;':h(B)))+'<i>y</i>',o.hab);
+     else s+=' '+(B>0?'+':'&minus;')+' '+tg((Math.abs(B)===1?'':''+Math.abs(B))+'<i>y</i>',o.hab);
+   }
+   if(s==='') s='0';
+   return s+' = '+tg(h(C),o.hc); }
+
+ function coefY(B){ return (B===1?'':(B===-1?'&minus;':h(B)))+'<i>y</i>'; }
+
+ /* point-slope pieces.  k1 highlights the slope, k2 the point */
+ function psL(y1,k2){ return y1===0 ? '<i>y</i>'
+   : '<i>y</i> '+(y1>0?'&minus;':'+')+' '+tg(''+Math.abs(y1),k2); }
+ function psX(x1,k2){ return x1===0 ? '<i>x</i>'
+   : '(<i>x</i> '+(x1>0?'&minus;':'+')+' '+tg(''+Math.abs(x1),k2)+')'; }
+ function mCoef(m,k1){ if(m.d===1&&m.n===1) return ''; if(m.d===1&&m.n===-1) return '&minus;';
+   return tg(frH(m),k1); }
+ function psH(o,k1,k2){ return psL(o.y1,k2)+' = '+mCoef(o.m,k1)+psX(o.x1,k2); }
+
+ /* ================= the line itself ================= */
+ var x1=4, y1=-3, rise=3, run=2;
+
+ function comp(){
+   var o={x1:x1,y1:y1,rise:rise,run:run};
+   if(run===0){ o.vert=true; o.A=1; o.B=0; o.C=x1; return o; }
+   o.vert=false;
+   var g=gcd(rise,run)||1, p=rise/g, q=run/g;      /* gcd(0,run)=run, so flat gives 0/1 */
+   o.p=p; o.q=q;
+   o.m=fr(p,q);
+   o.b=fr(q*y1-p*x1,q);                            /* b = y1 - m*x1, over a common q   */
+   if(p>0){ o.A=p;  o.B=-q; o.C=p*x1-q*y1; }       /* pick the sign that leaves A >= 0  */
+   else   { o.A=-p; o.B=q;  o.C=q*y1-p*x1; }
+   o.qb=Math.round(o.q*o.b.n/o.b.d);               /* q*b is always a whole number      */
+   return o; }
+
+ /* ================= the plane ================= */
+ var R=8, U=13.5, X0=125, Y0=125;
+ function sx(x){ return X0+U*x; }
+ function sy(y){ return Y0-U*y; }
+ function inR(v){ return v>=-R-1e-9 && v<=R+1e-9; }
+
+ function linePath(m,b){
+   var d='', pen=false, i, x, y, N=480;
+   for(i=0;i<=N;i++){
+     x=-R+i*(2*R/N); y=m*x+b;
+     if(y>=-R-1e-9 && y<=R+1e-9){ d+=(pen?'L':'M')+sx(x).toFixed(2)+' '+sy(y).toFixed(2)+' '; pen=true; }
+     else pen=false;
+   }
+   return d; }
+
+ function halo(x,y,anch,size,col,txt){
+   return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+anch+'" font-family="Georgia,serif" font-size="'+size+'" font-weight="700" fill="'+col+'" stroke="'+CARD+'" stroke-width="3.2" paint-order="stroke" stroke-linejoin="round">'+txt+'</text>'; }
+
+ function plane(o){
+   var s='', i;
+   s+='<rect x="17" y="17" width="216" height="216" fill="#fbfbfe"/>';
+   for(i=-R;i<=R;i++){
+     s+='<line x1="'+sx(i)+'" y1="17" x2="'+sx(i)+'" y2="233" stroke="'+GRID+'" stroke-width="0.8"/>';
+     s+='<line x1="17" y1="'+sy(i)+'" x2="233" y2="'+sy(i)+'" stroke="'+GRID+'" stroke-width="0.8"/>';
+   }
+   s+='<line x1="14" y1="'+Y0+'" x2="236" y2="'+Y0+'" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<line x1="'+X0+'" y1="14" x2="'+X0+'" y2="236" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<polygon points="241,125 233,121 233,129" fill="'+INK+'"/><polygon points="9,125 17,121 17,129" fill="'+INK+'"/>';
+   s+='<polygon points="125,9 121,17 129,17" fill="'+INK+'"/><polygon points="125,241 121,233 129,233" fill="'+INK+'"/>';
+   s+='<text x="238" y="116" text-anchor="end" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">x</text>';
+   s+='<text x="133" y="18" text-anchor="start" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">y</text>';
+   for(i=-R;i<=R;i++){ if(i===0) continue;
+     s+='<line x1="'+sx(i)+'" y1="'+(Y0-3)+'" x2="'+sx(i)+'" y2="'+(Y0+3)+'" stroke="'+INK+'" stroke-width="1"/>';
+     s+='<line x1="'+(X0-3)+'" y1="'+sy(i)+'" x2="'+(X0+3)+'" y2="'+sy(i)+'" stroke="'+INK+'" stroke-width="1"/>';
+   }
+   for(i=-R;i<=R;i+=2){ if(i===0) continue;
+     s+='<text x="'+sx(i)+'" y="'+(Y0+13)+'" text-anchor="middle" font-size="8" fill="'+MUT+'">'+sv(i)+'</text>';
+     s+='<text x="'+(X0-6)+'" y="'+(sy(i)+3)+'" text-anchor="end" font-size="8" fill="'+MUT+'">'+sv(i)+'</text>';
+   }
+   s+='<text x="'+(X0-6)+'" y="'+(Y0+13)+'" text-anchor="end" font-size="8" fill="'+MUT+'">O</text>';
+
+   /* --- the line --- */
+   if(o.vert){
+     s+='<line x1="'+sx(o.x1)+'" y1="'+sy(R)+'" x2="'+sx(o.x1)+'" y2="'+sy(-R)+'" stroke="'+TEAL+'" stroke-width="2.6" stroke-linecap="round"/>';
+   } else {
+     s+='<path d="'+linePath(val(o.m),val(o.b))+'" fill="none" stroke="'+TEAL+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+   }
+
+   /* --- the slope staircase: run across, then rise up --- */
+   if(!o.vert){
+     var q=o.q, p=o.p, dir=0;
+     if(o.x1+q<=R-0.4 && inR(o.y1+p)) dir=1;
+     else if(o.x1-q>=-R+0.4 && inR(o.y1-p)) dir=-1;
+     if(dir!==0){
+       var ex=o.x1+dir*q, ey=o.y1+dir*p;
+       s+='<line x1="'+sx(o.x1)+'" y1="'+sy(o.y1)+'" x2="'+sx(ex)+'" y2="'+sy(o.y1)+'" stroke="'+GOLD+'" stroke-width="2" stroke-dasharray="4 3"/>';
+       if(p!==0) s+='<line x1="'+sx(ex)+'" y1="'+sy(o.y1)+'" x2="'+sx(ex)+'" y2="'+sy(ey)+'" stroke="'+GOLD+'" stroke-width="2" stroke-dasharray="4 3"/>';
+       s+='<circle cx="'+sx(ex)+'" cy="'+sy(ey)+'" r="3.6" fill="'+CARD+'" stroke="'+GOLD+'" stroke-width="2"/>';
+       if(q!==0) s+=halo((sx(o.x1)+sx(ex))/2, sy(o.y1)+(p>=0?13:-7), 'middle', 10, GOLD, 'run '+q);
+       if(p!==0) s+=halo(sx(ex)+(dir>0?6:-6), (sy(o.y1)+sy(ey))/2+3, dir>0?'start':'end', 10, GOLD, 'rise '+sv(p));
+     }
+   }
+
+   /* --- intercepts --- */
+   var lab=[];
+   if(o.vert){
+     if(o.y1!==0) lab.push({x:o.x1,y:0,col:GOLD,t:'('+sv(o.x1)+', 0)'});
+   } else {
+     if(inR(val(o.b)) && o.x1!==0) lab.push({x:0,y:val(o.b),col:GOLD,t:'(0, '+frT(o.b)+')'});
+     if(o.p!==0){
+       var xi=fr(-o.b.n*o.q, o.b.d*o.p);
+       if(inR(val(xi)) && o.y1!==0) lab.push({x:val(xi),y:0,col:GOLD,t:'('+frT(xi)+', 0)'});
+     }
+   }
+   lab.forEach(function(d){
+     s+='<circle cx="'+sx(d.x)+'" cy="'+sy(d.y)+'" r="4.4" fill="'+CARD+'" stroke="'+d.col+'" stroke-width="2.4"/>';
+     s+=halo(sx(d.x)+(d.x>2?-8:8), sy(d.y)+(d.y>5?15:-9), d.x>2?'end':'start', 10.5, d.col, d.t);
+   });
+
+   /* --- the point you chose --- */
+   s+='<circle cx="'+sx(o.x1)+'" cy="'+sy(o.y1)+'" r="5.6" fill="'+CORAL+'" stroke="'+CARD+'" stroke-width="1.6"/>';
+   s+=halo(sx(o.x1)+(o.x1>=3?-9:9), sy(o.y1)+(o.y1>=6?16:-10), o.x1>=3?'end':'start', 11.5, CORAL,
+           '('+sv(o.x1)+', '+sv(o.y1)+')');
+   return s; }
+
+ /* ================= the derivations ================= */
+ /* Every step below rewrites one equation into an equivalent one.  Each row
+    carries the label of the move, the equation after it, and the reason. */
+
+ function stepsA(o){                       /* point-slope  ->  slope-intercept */
+   var r=[];
+   if(o.vert){ return [{pl:'No such form',eq:'&mdash;',
+     why:'A vertical line has <b>no slope</b>, and point-slope form is built out of the slope. There is nothing to write down here, and nothing to convert. Switch to the third conversion to see what standard form does instead.'}]; }
+   r.push({pl:'Point-slope',eq:psH(o,0,0),
+     why:'Start where the slope formula leaves you. Writing <i>m</i> = (<i>y</i> &minus; <i>y</i><sub>1</sub>) &divide; (<i>x</i> &minus; <i>x</i><sub>1</sub>) and multiplying both sides by (<i>x</i> &minus; <i>x</i><sub>1</sub>) gives exactly this. Point-slope is not a new idea &mdash; it is the slope formula with the denominator cleared.'});
+   var c1=fr(-o.p*o.x1,o.q);               /* the constant that distributing produces */
+   if(o.x1!==0){
+     r.push({pl:'Distribute',eq:psL(o.y1,0)+' = '+lin(o.m,c1,{hc:1}),
+       why:'Multiply the slope across the parentheses: it hits the <i>x</i> and it hits the '+h(-o.x1)+'. The right side is no longer a product, so the constants can start moving.'});
+   }
+   if(o.y1!==0){
+     r.push({pl:(o.y1>0?'Add ':'Subtract ')+Math.abs(o.y1)+' both sides',
+       eq:'<i>y</i> = '+lin2(o.m,c1,o.y1),
+       why:'The left side reads <i>y</i> '+(o.y1>0?'&minus;':'+')+' '+Math.abs(o.y1)+', so '+(o.y1>0?'adding':'subtracting')+' '+Math.abs(o.y1)+' clears it and leaves <i>y</i> by itself. Whatever is done to one side must be done to the other &mdash; that is the only rule in play.'});
+   }
+   if(o.x1!==0&&o.y1!==0){
+     r.push({pl:'Combine constants',eq:'<i>y</i> = '+lin(o.m,o.b,{hc:1}),
+       why:'Two loose numbers on the right become one. Nothing about the line changed; the arithmetic was simply finished.'});
+   }
+   var L=r[r.length-1];
+   if(r.length===1){                      /* only possible when the point is the origin */
+     L.pl='Already there';
+     L.why='This point is the origin, so <i>x</i><sub>1</sub> and <i>y</i><sub>1</sub> are both 0 &mdash; there is nothing to distribute and nothing to move. The point-slope equation is <i>already</i> in slope-intercept form, with slope '+frH(o.m)+' and <i>y</i>-intercept 0. Any line through the origin has <i>b</i> = 0.';
+   } else {
+     L.why+=' <b>This is slope-intercept form.</b> The slope sits in front of <i>x</i> as '+frH(o.m)+
+       ', and the constant '+frH(o.b)+' is the <i>y</i>-intercept: the line crosses the <i>y</i>-axis at (0, '+frH(o.b)+').';
+   }
+   return r; }
+
+ function stepsB(o){                       /* slope-intercept  ->  standard */
+   var r=[];
+   if(o.vert){ return [{pl:'No such form',eq:'&mdash;',
+     why:'There is no slope-intercept form to start from: this line is vertical. Every line can be written in standard form, but not every line can be solved for <i>y</i>.'}]; }
+   r.push({pl:'Slope-intercept',eq:'<i>y</i> = '+lin(o.m,o.b,{}),
+     why:'Standard form wants <b>whole-number coefficients</b> with <i>x</i> and <i>y</i> together on the left. Two obstacles: a fraction, and the <i>x</i>-term sitting on the wrong side.'});
+   if(o.q>1){
+     r.push({pl:'&times; '+o.q+' &mdash; clear the fraction',eq:o.q+'<i>y</i> = '+intLin(o.p,o.qb,{ha:1,hc:1}),
+       why:'Multiply <b>every</b> term on both sides by '+o.q+', the denominator of the slope. Multiplying both sides by the same nonzero number leaves the solution set alone, so the line is unmoved &mdash; but the fractions are gone.'});
+   }
+   if(o.p!==0){
+     r.push({pl:(o.p>0?'Subtract ':'Add ')+(Math.abs(o.p)===1?'':Math.abs(o.p))+'<i>x</i> both sides',
+       eq:std(-o.p,o.q,o.qb,{hab:1}),
+       why:(o.p>0?'Subtract':'Add')+' '+(Math.abs(o.p)===1?'':Math.abs(o.p))+'<i>x</i> so the <i>x</i>-term crosses to the left and joins the <i>y</i>-term, leaving the constant alone on the right. That arrangement &mdash; variables left, number right &mdash; is what &ldquo;standard&rdquo; means.'});
+   }
+   if(o.p>0){
+     r.push({pl:'&times; (&minus;1) &mdash; make <i>A</i> positive',eq:std(o.A,o.B,o.C,{hab:1,hc:1}),
+       why:'Both sides times &minus;1. '+std(-o.p,o.q,o.qb,{})+' and '+std(o.A,o.B,o.C,{})+' have identical solutions &mdash; they are the same line &mdash; but by convention standard form is written with <i>A</i> not negative, so that everyone hands in the same answer.'});
+   }
+   var L=r[r.length-1];
+   if(r.length===1){
+     L.pl='Already standard';
+     L.why='This line is horizontal, so it has no <i>x</i>-term to move and no fraction to clear. Standard form permits <i>A</i> = 0, and '+std(o.A,o.B,o.C,{})+' is already exactly <i>Ax</i> + <i>By</i> = <i>C</i> with <i>A</i> = 0, <i>B</i> = '+h(o.B)+', <i>C</i> = '+h(o.C)+'.';
+   } else {
+     L.pl='Standard form';
+     L.why+=' <b>Done:</b> <i>A</i> = '+h(o.A)+', <i>B</i> = '+h(o.B)+', <i>C</i> = '+h(o.C)+' &mdash; whole numbers, <i>A</i> not negative, and no factor common to all three.';
+   }
+   return r; }
+
+ function stepsC(o){                       /* standard  ->  slope-intercept */
+   var r=[];
+   if(o.vert){
+     r.push({pl:'Standard',eq:std(1,0,o.x1,{}),
+       why:'Standard form handles this line without complaint: <i>A</i> = 1, <i>B</i> = 0, <i>C</i> = '+h(o.x1)+'. Every point with <i>x</i> = '+h(o.x1)+' satisfies it, whatever <i>y</i> is.'});
+     r.push({pl:'Divide by <i>B</i>?',eq:'<i>B</i> = 0',
+       why:'To reach slope-intercept form the next move would be to divide every term by <i>B</i> &mdash; and here <b><i>B</i> = 0</b>. Division by zero is undefined, so the step is not available. This is the algebra behind a fact you already knew from the picture: a <b>vertical line has no slope</b>, so it has neither a slope-intercept nor a point-slope form. Standard form is the only one of the three that can write every line.'});
+     return r; }
+   r.push({pl:'Standard',eq:std(o.A,o.B,o.C,{}),
+     why:'Standard form hides the slope. To see it, the equation has to be solved for <i>y</i> &mdash; one variable, alone, on the left.'});
+   if(o.A!==0){
+     r.push({pl:'Move the <i>x</i>-term right',eq:coefY(o.B)+' = '+intLin(-o.A,o.C,{ha:1}),
+       why:'Subtract '+(o.A===1?'':h(o.A))+'<i>x</i> from both sides. The <i>y</i>-term is now alone on the left, though still wearing a coefficient.'});
+   }
+   if(o.B!==1){
+     r.push({pl:'&divide; '+h(o.B),eq:'<i>y</i> = '+lin(o.m,o.b,{hm:1,hc:1}),
+       why:'Divide <b>every</b> term by <i>B</i> = '+h(o.B)+'. This step is legal precisely because <i>B</i> &ne; 0 &mdash; and it is where the famous result comes from: the slope of <i>Ax</i> + <i>By</i> = <i>C</i> is <b>&minus;<i>A</i>/<i>B</i></b>, here &minus;('+h(o.A)+') &divide; ('+h(o.B)+') = '+frH(o.m)+
+        (o.B<0?'. Dividing by a negative flips the sign of every term, which is where most of the lost marks live.':'.')});
+   }
+   var L=r[r.length-1];
+   if(r.length===1){
+     L.pl='Already there';
+     L.why='Here <i>A</i> = 0 and <i>B</i> = 1, so there is no <i>x</i>-term to move and nothing to divide by. The equation is already solved for <i>y</i>: a horizontal line with slope 0 and <i>y</i>-intercept '+frH(o.b)+'.';
+   } else {
+     L.pl='Slope-intercept';
+     L.why+=' So <i>m</i> = &minus;<i>A</i>/<i>B</i> = '+frH(o.m)+' and <i>b</i> = <i>C</i>/<i>B</i> = '+frH(o.b)+'.';
+   }
+   return r; }
+
+ /* ================= state and rendering ================= */
+ var mode=0, conv=0, si=0, hi='', sel='si';
+
+ var PRE=[
+  {t:'Fraction slope',s:'3/2',v:[4,-3,3,2]},
+  {t:'Negative slope',s:'&minus;4/3',v:[-2,5,-4,3]},
+  {t:'Through O',s:'b = 0',v:[0,0,2,1]},
+  {t:'Horizontal',s:'m = 0',v:[-3,4,0,3]},
+  {t:'Vertical',s:'no slope',v:[-4,2,3,0]}
+ ];
+ var CONV=[{t:'Point-slope',s:'&rarr; slope-intercept'},
+           {t:'Slope-intercept',s:'&rarr; standard'},
+           {t:'Standard',s:'&rarr; slope-intercept'}];
+
+ var INFO={
+  si:function(o){ return '<span class="n">Slope-intercept form</span>'+
+    'Written <b><i>y</i> = <i>mx</i> + <i>b</i></b>. It is the form that answers &ldquo;<b>where does it start, and how fast does it climb?</b>&rdquo; &mdash; <i>b</i> is the height at <i>x</i> = 0, and <i>m</i> is the climb per step right. That makes it the fastest form to <b>graph by hand</b>: mark (0, <i>b</i>), then walk the rise over the run.'+
+    (o.vert?'<div class="loc">This line is vertical, so <b>no slope-intercept form exists</b> for it. Solving for <i>y</i> is impossible &mdash; there is no <i>y</i> in <i>x</i> = '+h(o.x1)+' to solve for.</div>'
+           :'<div class="loc">Here <i>m</i> = '+frH(o.m)+' and <i>b</i> = '+frH(o.b)+', so the line crosses the <i>y</i>-axis at (0, '+frH(o.b)+').</div>')+
+    '<div class="dd">It is also the form that turns a line into a <b>function</b>: <i>f</i>(<i>x</i>) = <i>mx</i> + <i>b</i>. Feed in <i>x</i>, get out <i>y</i>. Vertical lines are excluded from this form for the same reason they are not functions &mdash; one <i>x</i> would have to give infinitely many <i>y</i>.</div>'; },
+
+  ps:function(o){ if(o.vert) return '<span class="n">Point-slope form</span>Written <b><i>y</i> &minus; <i>y</i><sub>1</sub> = <i>m</i>(<i>x</i> &minus; <i>x</i><sub>1</sub>)</b>. It is built from the slope, so a <b>vertical line has none</b> &mdash; there is no number <i>m</i> to put in.<div class="loc">Run = 0 means you climb without moving across, and rise &divide; 0 is undefined. Nudge the run slider off 0 to bring this form back.</div>';
+    var ax=o.x1+o.q, ay=o.y1+o.p, alt={x1:ax,y1:ay,m:o.m};
+    return '<span class="n">Point-slope form</span>'+
+    'Written <b><i>y</i> &minus; <i>y</i><sub>1</sub> = <i>m</i>(<i>x</i> &minus; <i>x</i><sub>1</sub>)</b>. This is the <b>working</b> form: the one to reach for the moment a problem hands you <b>a point and a slope</b>, because you can write the answer down without solving anything. It is the slope formula with the denominator multiplied away.'+
+    '<div class="loc">Unlike the other two, this form is <b>not unique</b>. Any point on the line may be used. Taking ('+h(ax)+', '+h(ay)+') &mdash; the far end of the gold staircase &mdash; gives '+psH(alt,0,0)+', which is <b>the same line</b>. Two students can hand in different-looking point-slope answers and both be right.</div>'+
+    '<div class="dd">Because of that, teachers usually ask for the answer simplified into slope-intercept or standard form, where there is only one correct way to write it.</div>'; },
+
+  st:function(o){ return '<span class="n">Standard form</span>'+
+    'Written <b><i>Ax</i> + <i>By</i> = <i>C</i></b> with <i>A</i>, <i>B</i>, <i>C</i> whole numbers, <i>A</i> not negative, and no factor shared by all three. Its quiet advantage: it is the <b>only one of the three that can write every line</b>, vertical ones included.'+
+    (o.vert?'<div class="loc">This vertical line is <i>A</i> = 1, <i>B</i> = 0, <i>C</i> = '+h(o.x1)+' &mdash; a perfectly ordinary standard-form equation, where the other two forms simply do not exist.</div>'
+      :'<div class="loc">Here <i>A</i> = '+h(o.A)+', <i>B</i> = '+h(o.B)+', <i>C</i> = '+h(o.C)+'. The intercepts fall out by covering up a variable: set <i>y</i> = 0 to get <i>x</i> = <i>C</i>/<i>A</i>'+(o.A!==0?' = '+frH(fr(o.C,o.A)):' (undefined here, since <i>A</i> = 0)')+', and set <i>x</i> = 0 to get <i>y</i> = <i>C</i>/<i>B</i> = '+frH(fr(o.C,o.B))+'.</div>')+
+    '<div class="dd">Watch the trap: the slope is <b>&minus;<i>A</i>/<i>B</i></b>, not <i>A</i>/<i>B</i>. The minus sign is not decoration &mdash; it appears because the <i>x</i>-term has to cross the equals sign before you can divide.</div>'; }
+ };
+
+ function render(){
+   var o=comp();
+
+   /* --- graph --- */
+   $('art').innerHTML=plane(o);
+   $('artTitle').innerHTML=o.vert?'One line &mdash; vertical':'One line';
+   $('why').innerHTML=o.vert
+     ? '<em>what the picture says</em>Every point on this line has <i>x</i> = '+h(o.x1)+', whatever <i>y</i> is. The run is 0, so there is no rise-over-run to compute: <b>the slope is undefined</b>.'
+     : '<em>what the picture says</em>Slope '+frH(o.m)+' &mdash; '+(o.p===0?'flat: no climb at all'
+        :(o.p>0?'up ':'down ')+Math.abs(o.p)+' for every '+o.q+' across')+' &mdash; through the red point ('+h(o.x1)+', '+h(o.y1)+'). <b>The line below never moves</b> as the three forms rewrite themselves.';
+
+   /* --- stage --- */
+   $('stage').style.background=o.vert?GOLD:TEAL;
+   $('stage').innerHTML=o.vert
+     ? '<span class="big"><i>x</i> = '+h(o.x1)+'</span><small>slope undefined &middot; vertical line through ('+h(o.x1)+', '+h(o.y1)+')</small>'
+     : '<span class="big"><i>y</i> = '+lin(o.m,o.b,{})+'</span><small>slope '+frT(o.m)+' &middot; through ('+h(o.x1)+', '+h(o.y1)+') &middot; crosses the <i>y</i>-axis at '+frT(o.b)+'</small>';
+
+   /* --- the three forms, with the highlight showing where each control lives --- */
+   var k1=(hi==='m')?1:0, k2=(hi==='pt')?1:0, kd=(hi?2:0);
+   var rows=[
+     {k:'si',pl:'Slope-intercept',sub:'<i>y</i> = <i>mx</i> + <i>b</i>',
+      eq:o.vert?'&mdash; does not exist':'<i>y</i> = '+lin(o.m,o.b,{hm:k1,hc:(hi==='pt'||hi==='m')?2:0}),off:o.vert},
+     {k:'ps',pl:'Point-slope',sub:'<i>y</i> &minus; <i>y</i><sub>1</sub> = <i>m</i>(<i>x</i> &minus; <i>x</i><sub>1</sub>)',
+      eq:o.vert?'&mdash; does not exist':psH(o,k1,k2),off:o.vert},
+     {k:'st',pl:'Standard',sub:'<i>Ax</i> + <i>By</i> = <i>C</i>',
+      eq:std(o.A,o.B,o.C,{hab:k1,hc:kd}),off:false}
+   ];
+   $('forms').innerHTML=rows.map(function(r){
+     return '<button class="it'+(sel===r.k?' on':'')+(r.off?' off':'')+'" data-k="'+r.k+'">'+
+       '<span class="pl">'+r.pl+'</span><span class="mx">'+r.eq+'</span><span class="sub">'+r.sub+'</span></button>'; }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#forms .it'),function(b){
+     b.onclick=function(){ sel=b.getAttribute('data-k'); render(); }; });
+
+   $('hicap').innerHTML = hi==='m'
+     ? 'Gold: the <b>slope</b>, verbatim. It is <i>m</i> in two forms, and it is carried by <b><i>A</i> and <i>B</i></b> in standard form, where the slope equals &minus;<i>A</i>/<i>B</i>. Dashed: changed too, indirectly.'
+     : (hi==='pt'
+       ? 'Gold: <b>the point</b>, verbatim &mdash; and notice it appears <b>only in point-slope form</b>. The other two absorbed it into <i>b</i> and <i>C</i> (dashed), which is exactly why point-slope is the form you write first.'
+       : 'Move any slider: the highlighted pieces show which part of each form that control owns.');
+
+   /* --- info --- */
+   $('info').innerHTML=INFO[sel](o);
+
+   /* --- steps --- */
+   if(mode===1){
+     var st=[stepsA,stepsB,stepsC][conv](o);
+     if(si>=st.length) si=st.length-1;
+     if(si<0) si=0;
+     $('steps').innerHTML=st.slice(0,si+1).map(function(s,j){
+       return '<div class="dl'+(j===si?' cur':'')+'"><span class="mx">'+s.eq+'</span><span class="pl">'+s.pl+'</span></div>'; }).join('');
+     $('exlab').innerHTML=st[si].why;
+     $('prev').disabled=(si===0);
+     $('next').disabled=(si===st.length-1);
+   }
+ }
+
+ /* ================= wiring ================= */
+ function setLine(v){ x1=v[0]; y1=v[1]; rise=v[2]; run=v[3];
+   $('x1R').value=x1; $('y1R').value=y1; $('riseR').value=rise; $('runR').value=run;
+   outs(); si=0; render(); }
+ function outs(){ $('x1Out').innerHTML=h(x1); $('y1Out').innerHTML=h(y1);
+   $('riseOut').innerHTML=h(rise); $('runOut').innerHTML=h(run); }
+
+ function bind(id,set,group){
+   $(id).addEventListener('input',function(){ set(parseInt(this.value,10)); hi=group; si=0; outs(); render(); }); }
+ bind('riseR',function(v){rise=v;},'m');
+ bind('runR', function(v){run=v;}, 'm');
+ bind('x1R',  function(v){x1=v;},  'pt');
+ bind('y1R',  function(v){y1=v;},  'pt');
+
+ $('presets').innerHTML=PRE.map(function(p,j){
+   return '<button data-j="'+j+'">'+p.t+'<small>'+p.s+'</small></button>'; }).join('');
+ Array.prototype.forEach.call(document.querySelectorAll('#presets button'),function(b){
+   b.onclick=function(){ setLine(PRE[+b.getAttribute('data-j')].v); }; });
+
+ $('conv').innerHTML=CONV.map(function(c,j){
+   return '<button data-j="'+j+'"'+(j===0?' class="on"':'')+'>'+c.t+'<small>'+c.s+'</small></button>'; }).join('');
+ Array.prototype.forEach.call(document.querySelectorAll('#conv button'),function(b){
+   b.onclick=function(){ conv=+b.getAttribute('data-j'); si=0;
+     Array.prototype.forEach.call(document.querySelectorAll('#conv button'),function(z){ z.className=''; });
+     b.className='on'; render(); }; });
+
+ Array.prototype.forEach.call(document.querySelectorAll('#modes button'),function(b){
+   b.onclick=function(){
+     mode=+b.getAttribute('data-m'); si=0;
+     Array.prototype.forEach.call(document.querySelectorAll('#modes button'),function(z){ z.className=''; });
+     b.className='on';
+     $('p0').style.display=(mode===0)?'':'none';
+     $('p1').style.display=(mode===1)?'':'none';
+     render(); }; });
+
+ $('prev').onclick=function(){ if(si>0){ si--; render(); } };
+ $('next').onclick=function(){ si++; render(); };
+
+ outs(); render();
+})();
+</script>
+</body>
+</html>

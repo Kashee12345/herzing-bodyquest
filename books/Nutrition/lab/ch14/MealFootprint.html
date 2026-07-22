@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>The Footprint of a Meal</title>
+<meta name="description" content="Build a meal serving by serving and watch its environmental footprint — land, freshwater, and greenhouse-gas emissions — recompute live from farm-gate data. For nutrition students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.frow{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:11px;padding:7px 10px;background:#fff;}
+.frow + .frow{margin-top:6px;}
+.frow.act{border-color:var(--teal);background:#fdf7ea;}
+.frow .fic{font-size:20px;line-height:1;flex:none;}
+.frow .fnm{flex:1;font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.15;}
+.frow .fnm small{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-top:1px;}
+.frow .fsw{width:11px;height:11px;border-radius:3px;flex:none;}
+.stp{display:flex;align-items:center;gap:0;flex:none;border:1px solid var(--line);border-radius:9px;overflow:hidden;}
+.stp button{width:30px;height:30px;border:none;background:#f4ead8;color:var(--teal-dk);font-size:17px;font-weight:800;cursor:pointer;font-family:var(--sans);line-height:1;}
+.stp button:hover{background:#ecd9ac;} .stp button:disabled{opacity:.35;cursor:default;}
+.stp b{min-width:26px;text-align:center;font-size:14px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;background:#fff;height:30px;line-height:30px;}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:2px;}
+.tile{border:1px solid var(--line);border-radius:11px;padding:9px 10px;background:#faf6ee;text-align:center;}
+.tile .tl{font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);line-height:1.2;}
+.tile .tv{font-family:var(--disp);font-weight:700;font-size:20px;color:var(--teal-dk);font-variant-numeric:tabular-nums;margin-top:3px;}
+.tile .tv i{font-style:normal;font-size:10px;color:var(--muted);margin-left:1px;font-family:var(--sans);}
+.ev{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:3px 9px;vertical-align:middle;}
+.ev.s{background:#e5f3ea;color:#237a45;} .ev.p{background:#fdf0dd;color:#8a6a20;}
+.rst{margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 14</div>
+  <h1>The Footprint of a Meal</h1>
+  <div class="intro">Every food carries the <b>land, freshwater, and greenhouse gas</b> it took to produce it. Build a plate one serving at a time and watch its footprint recompute &mdash; and notice how one ingredient can dominate the whole meal. This is a picture of the food <b>system</b>, not a verdict on any food or on anyone&rsquo;s eating.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Your plate &amp; its footprint</h2>
+      <svg viewBox="0 0 320 300" aria-label="A plate showing the servings you have added, above three horizontal bars for land, freshwater, and greenhouse-gas emissions, each segmented by how much every food contributes"><g id="art"></g></svg>
+      <div class="tiles" style="margin-top:6px;">
+        <div class="tile"><div class="tl">Land use</div><div class="tv"><span id="tLand">0</span><i>m&sup2;&middot;yr</i></div></div>
+        <div class="tile"><div class="tl">Freshwater</div><div class="tv"><span id="tWater">0</span><i>L</i></div></div>
+        <div class="tile"><div class="tl">Emissions</div><div class="tv"><span id="tGhg">0</span><i>kg CO&#8322;e</i></div></div>
+      </div>
+      <div class="mnem" id="dom"><b>Add a serving to begin.</b> Each bar fills toward a reference plate roughly the size of one meat-centred main dish, so you can see a footprint grow.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">An empty plate<small>add servings and watch the footprint change</small></div>
+    <div class="card">
+      <div class="seg" id="presets" style="margin-bottom:11px;">
+        <button data-p="clear">Empty<small>start over</small></button>
+        <button data-p="bean">Bean bowl<small>rice · beans · veg</small></button>
+        <button data-p="chicken">Chicken plate<small>chicken · rice · veg</small></button>
+        <button data-p="beef">Beef dinner<small>beef · rice · veg</small></button>
+      </div>
+      <div id="list"></div>
+      <div class="row rst"><button class="btn" id="reset">Clear the plate</button></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // Per-kilogram footprints are farm-to-retail global medians from Poore & Nemecek (2018,
+ // Science) as compiled by Our World in Data: GHG in kg CO2-equivalent per kg of food,
+ // land in m2-year per kg, freshwater WITHDRAWAL in litres per kg. Serving mass (grams)
+ // is an illustrative typical portion. Per-serving values are derived = per-kg x grams/1000.
+ // Emissions and land rest on large multi-farm datasets (strong); water withdrawal varies
+ // enormously by region and method, so treat those figures as representative, not exact.
+ var F=[
+  {k:'beef', ic:'🥩', nm:'Beef',       g:100, col:'#c0473a', ghg:99.5, land:326,  water:1451},
+  {k:'cheese',ic:'🧀',nm:'Cheese',     g:40,  col:'#d19a2f', ghg:23.9, land:88,   water:3178},
+  {k:'pork', ic:'🥓', nm:'Pork',       g:100, col:'#c56a3a', ghg:12.3, land:17.4, water:1796},
+  {k:'chicken',ic:'🍗',nm:'Chicken',   g:100, col:'#b8862f', ghg:9.9,  land:12.2, water:660},
+  {k:'egg',  ic:'🥚', nm:'Eggs',       g:50,  col:'#c9a24a', ghg:4.7,  land:6.3,  water:578},
+  {k:'rice', ic:'🍚', nm:'Rice',       g:120, col:'#7a5a8a', ghg:4.5,  land:2.8,  water:2248},
+  {k:'milk', ic:'🥛', nm:'Milk',       g:200, col:'#2f6f9f', ghg:3.2,  land:9,    water:628},
+  {k:'tofu', ic:'🧈', nm:'Tofu',       g:100, col:'#8a9a4a', ghg:3.2,  land:2.2,  water:149},
+  {k:'bread',ic:'🍞', nm:'Bread',      g:60,  col:'#b0803a', ghg:1.6,  land:3.9,  water:648},
+  {k:'beans',ic:'🫘', nm:'Beans',      g:100, col:'#7a4a2a', ghg:0.8,  land:3.4,  water:320},
+  {k:'veg',  ic:'🥦', nm:'Vegetables', g:100, col:'#2f9e5b', ghg:0.5,  land:0.3,  water:322},
+  {k:'fruit',ic:'🍎', nm:'Fruit',      g:100, col:'#d1495b', ghg:0.4,  land:0.6,  water:180}
+ ];
+ // per-serving footprints
+ for(var z=0;z<F.length;z++){ F[z].sGhg=F[z].ghg*F[z].g/1000; F[z].sLand=F[z].land*F[z].g/1000; F[z].sWater=F[z].water*F[z].g/1000; }
+ var MAX=6; // max servings per food
+ // reference full-bar values (roughly one meat-centred main), for the visual scale only
+ var REF={land:35, water:400, ghg:11};
+ var UNIT={land:'m²·yr', water:'L', ghg:'kg CO₂e'};
+ var count={}; F.forEach(function(f){count[f.k]=0;});
+
+ var PRESETS={clear:{}, bean:{rice:1,beans:1,veg:2}, chicken:{chicken:1,rice:1,veg:2}, beef:{beef:1,rice:1,veg:2}};
+
+ function fmt(n){ var d = n>=100?0:(n>=10?1:2); var s=n.toFixed(d); if(d>0) s=s.replace(/\.?0+$/,''); return s.replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+ function totals(){ var t={land:0,water:0,ghg:0,serv:0}; F.forEach(function(f){var n=count[f.k]; t.land+=n*f.sLand; t.water+=n*f.sWater; t.ghg+=n*f.sGhg; t.serv+=n;}); return t; }
+
+ function bar(metric,y0,label,total){
+   var tx=14, tw=292, th=15, ty=y0+13;
+   var out='<text x="14" y="'+y0+'" font-size="9" font-weight="800" fill="#8d8270" letter-spacing=".5">'+label.toUpperCase()+'</text>';
+   out+='<text x="306" y="'+y0+'" font-size="10.5" font-weight="800" fill="#6b4710" text-anchor="end" font-variant-numeric="tabular-nums">'+fmt(total)+' '+UNIT[metric]+'</text>';
+   out+='<rect x="'+tx+'" y="'+ty+'" width="'+tw+'" height="'+th+'" rx="7.5" fill="#f0e7d6"/>';
+   var ref=REF[metric], cum=0;
+   for(var i=0;i<F.length;i++){ var f=F[i], n=count[f.k]; if(!n) continue;
+     var val=n*(metric==='land'?f.sLand:metric==='water'?f.sWater:f.sGhg);
+     var wpx=val/ref*tw; if(cum+wpx>tw) wpx=tw-cum; if(wpx<=0.4) continue;
+     var rx=(cum<0.5?7.5:0);
+     out+='<rect x="'+(tx+cum).toFixed(1)+'" y="'+ty+'" width="'+wpx.toFixed(1)+'" height="'+th+'" fill="'+f.col+'" opacity=".92"/>';
+     cum+=wpx; if(cum>=tw) break;
+   }
+   // rounded left cap mask (redraw a rounded outline)
+   out+='<rect x="'+tx+'" y="'+ty+'" width="'+tw+'" height="'+th+'" rx="7.5" fill="none" stroke="#e3d8c4" stroke-width="1"/>';
+   if(total>ref){ out+='<text x="'+(tx+tw-3)+'" y="'+(ty+th-3.5)+'" font-size="10" font-weight="800" fill="#fff" text-anchor="end">&#9656;</text>';
+     out+='<text x="'+(tx+tw)+'" y="'+(y0+34)+'" font-size="7.4" font-weight="700" fill="#8a6a20" text-anchor="end">beyond the reference plate</text>'; }
+   return out;
+ }
+
+ function plate(t){
+   var out='';
+   // plate
+   out+='<ellipse cx="160" cy="66" rx="86" ry="30" fill="#efe7d7"/>';
+   out+='<circle cx="160" cy="60" r="52" fill="#fffdf9" stroke="#e3d8c4" stroke-width="2"/>';
+   out+='<circle cx="160" cy="60" r="40" fill="none" stroke="#f0e7d6" stroke-width="1.5"/>';
+   var picked=F.filter(function(f){return count[f.k]>0;});
+   if(!picked.length){ out+='<text x="160" y="64" font-size="11" text-anchor="middle" fill="#b7ab95" font-weight="700">empty plate</text>'; return out; }
+   // arrange serving tokens on the plate (grouped per food)
+   var tokens=[]; picked.forEach(function(f){ for(var c=0;c<count[f.k];c++) tokens.push(f); });
+   var N=tokens.length, R=(N<=4?18:N<=9?24:30);
+   for(var i=0;i<N;i++){ var an=(i/N)*6.2832 - 1.5708, r=(N===1?0:R);
+     var x=160+r*Math.cos(an), y=60+r*Math.sin(an)*0.9;
+     out+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="9" fill="'+tokens[i].col+'" opacity=".16"/>';
+     out+='<text x="'+x.toFixed(1)+'" y="'+(y+5).toFixed(1)+'" font-size="14" text-anchor="middle">'+tokens[i].ic+'</text>';
+   }
+   out+='<text x="160" y="118" font-size="8.5" text-anchor="middle" fill="#8d8270" font-weight="700">'+t.serv+' serving'+(t.serv===1?'':'s')+' on the plate</text>';
+   return out;
+ }
+
+ function draw(){
+   var t=totals(), out=plate(t);
+   out+=bar('land',150,'Land use',t.land);
+   out+=bar('water',204,'Freshwater',t.water);
+   out+=bar('ghg',258,'Emissions',t.ghg);
+   $('art').innerHTML=out;
+ }
+
+ function tiles(t){ $('tLand').innerHTML=fmt(t.land); $('tWater').innerHTML=fmt(t.water); $('tGhg').innerHTML=fmt(t.ghg); }
+
+ function stageBanner(t){
+   if(!t.serv){ $('stage').style.background='var(--teal)'; $('stage').innerHTML='An empty plate<small>add servings and watch the footprint change</small>'; return; }
+   // find emissions leader
+   var lead=null,best=-1; F.forEach(function(f){var v=count[f.k]*f.sGhg; if(v>best){best=v;lead=f;}});
+   var pct=t.ghg>0?Math.round(best/t.ghg*100):0;
+   $('stage').style.background=lead.col;
+   $('stage').innerHTML='This plate: '+fmt(t.ghg)+' kg CO&#8322;e<small>'+t.serv+' servings &middot; '+lead.nm.toLowerCase()+' drives '+pct+'% of the emissions</small>';
+ }
+
+ function dom(t){
+   if(!t.serv){ $('dom').innerHTML='<b>Add a serving to begin.</b> Each bar fills toward a reference plate roughly the size of one meat-centred main dish, so you can see a footprint grow.'; return; }
+   var lead=null,best=-1; F.forEach(function(f){var v=count[f.k]*f.sGhg; if(v>best){best=v;lead=f;}});
+   var pct=t.ghg>0?Math.round(best/t.ghg*100):0;
+   $('dom').innerHTML='<b>'+lead.nm+'</b> is the largest single source of this plate&rsquo;s emissions &mdash; about <b>'+pct+'%</b> of '+fmt(t.ghg)+' kg CO&#8322;e. Footprints per serving span a wide range: the highest-footprint food here emits roughly <b>250&times;</b> as much per serving as the lowest. This describes production impact only &mdash; not nutrition, and not a judgment of any food or eater.';
+ }
+
+ function list(){
+   var out='';
+   for(var i=0;i<F.length;i++){ var f=F[i], n=count[f.k];
+     out+='<div class="frow'+(n>0?' act':'')+'" data-k="'+f.k+'">'+
+       '<span class="fsw" style="background:'+f.col+'"></span>'+
+       '<span class="fic">'+f.ic+'</span>'+
+       '<span class="fnm">'+f.nm+'<small>'+f.g+' g serving &middot; '+fmt(f.sGhg)+' kg CO&#8322;e</small></span>'+
+       '<span class="stp"><button class="mn" data-k="'+f.k+'" data-d="-1"'+(n<=0?' disabled':'')+' aria-label="Remove a serving of '+f.nm+'">&minus;</button>'+
+       '<b id="n_'+f.k+'">'+n+'</b>'+
+       '<button class="pl" data-k="'+f.k+'" data-d="1"'+(n>=MAX?' disabled':'')+' aria-label="Add a serving of '+f.nm+'">+</button></span>'+
+       '</div>';
+   }
+   $('list').innerHTML=out;
+   var bs=$('list').querySelectorAll('.stp button');
+   for(i=0;i<bs.length;i++){ bs[i].onclick=(function(k,d){return function(){
+     count[k]=Math.max(0,Math.min(MAX,count[k]+d)); render();
+   };})(bs[i].getAttribute('data-k'), +bs[i].getAttribute('data-d')); }
+ }
+
+ function presetsUI(active){
+   var bs=$('presets').querySelectorAll('button');
+   for(var i=0;i<bs.length;i++) bs[i].className=(bs[i].getAttribute('data-p')===active?'on':'');
+ }
+ function matchPreset(){
+   var keys=Object.keys(PRESETS);
+   for(var p=0;p<keys.length;p++){ var pk=keys[p], set=PRESETS[pk], ok=true;
+     for(var j=0;j<F.length;j++){ var k=F[j].k; if((set[k]||0)!==count[k]){ok=false;break;} }
+     if(ok) return pk;
+   }
+   return '';
+ }
+
+ function render(){ var t=totals(); list(); draw(); tiles(t); stageBanner(t); dom(t); presetsUI(matchPreset()); }
+
+ $('presets').querySelectorAll('button').forEach(function(b){ b.onclick=function(){
+   var set=PRESETS[b.getAttribute('data-p')]||{};
+   F.forEach(function(f){ count[f.k]=set[f.k]||0; }); render();
+ };});
+ $('reset').onclick=function(){ F.forEach(function(f){count[f.k]=0;}); render(); };
+
+ render();
+ $('info').innerHTML='<span class="n">How to read this</span>Use <b>+</b> and <b>&minus;</b> to add or remove servings, or start from a preset plate. The three bars share a common reference length &mdash; a plate about the size of one meat-centred main dish &mdash; so you can watch each footprint fill, and each colour shows how much a single food contributes. When a bar overflows, the meal exceeds that reference.'+
+   '<div class="dd">Figures are farm-to-retail global medians (Poore &amp; Nemecek, 2018). Emissions and land use rest on large multi-farm datasets <span class="ev s">strong evidence</span>; freshwater withdrawal varies widely by region and irrigation method, so the water numbers are representative rather than precise <span class="ev p">context-dependent</span>. Environmental footprint is one of many things that matter about food &mdash; alongside nutrition, cost, culture, and access &mdash; and none of this is a measure of a food&rsquo;s worth or a person&rsquo;s choices.</div>';
+})();
+</script>
+</body>
+</html>

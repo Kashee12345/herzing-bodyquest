@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Poisson and Geometric</title>
+<meta name="description" content="Two distributions with no fixed n: Poisson counts events in a window, geometric counts trials until the first success. Drag the parameter, read exact probabilities, and run a real simulation.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.06fr 0.94fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:112px;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:54px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles.t3{grid-template-columns:repeat(3,1fr);}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .vv.sm{font-size:12.5px;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.lgd i.dash{width:14px;height:0;border-top:2px dashed #1c4454;border-radius:0;vertical-align:3px;}
+#info .loc{font-variant-numeric:tabular-nums;font-size:12px;line-height:1.65;}
+#info sup{font-size:9.5px;}
+.grid .it .nm{display:block;} .grid .it .s{display:block;margin-top:2px;font-weight:600;}
+.fact{border:1px solid #ecd9ac;border-left:5px solid var(--gold);background:#fbf7ee;border-radius:10px;padding:11px 13px;margin-top:11px;font-size:12.2px;color:#7a6230;line-height:1.55;}
+.fact .ft{display:block;font-family:var(--disp);font-weight:600;font-size:14px;color:#6a4d12;margin-bottom:3px;}
+.fact b{color:#4a3608;}
+.fact .eq{display:block;font-variant-numeric:tabular-nums;background:#fff;border:1px solid #ecd9ac;border-radius:7px;padding:7px 10px;margin-top:7px;font-size:11.7px;color:#5a4212;line-height:1.7;}
+.fact sup{font-size:9.5px;}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px;}
+.cmp .c{border:1px solid var(--line);border-radius:11px;padding:10px 11px;background:#fff;transition:.15s;}
+.cmp .c.on{border-color:var(--teal);background:#f0f7fa;}
+.cmp .c h3{font-family:var(--disp);font-weight:600;font-size:13.5px;color:var(--teal-dk);margin-bottom:2px;}
+.cmp .c .qq{display:block;font-size:10.6px;font-weight:700;color:var(--gold);margin-bottom:6px;letter-spacing:.2px;}
+.cmp .c ul{list-style:none;font-size:11.4px;color:var(--soft);line-height:1.45;}
+.cmp .c li{padding-left:12px;position:relative;margin-top:5px;}
+.cmp .c li:before{content:"";position:absolute;left:0;top:6px;width:5px;height:5px;border-radius:50%;background:var(--teal);opacity:.45;}
+.cmp .c.on li:before{opacity:.9;}
+.cmp .c b{color:var(--teal-dk);}
+.third{border:1px solid var(--line);border-radius:10px;background:#f7fafc;padding:9px 11px;margin-top:8px;font-size:11.5px;color:var(--soft);line-height:1.5;}
+.third b{color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 6</div>
+  <h1>Poisson and Geometric</h1>
+  <div class="intro">The binomial needed a fixed number of trials. These two do not. A <b>Poisson</b> variable counts how many events land in a window of time or space; a <b>geometric</b> variable counts how many trials you run <b>until the first success</b>. Same toolkit, two very different questions &mdash; drag the parameter and watch each one answer its own.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Poisson (&lambda; = 4.0)</h2>
+      <svg viewBox="0 0 480 330" id="chart" aria-label="probability histogram"></svg>
+      <div class="lgd">
+        <span><i style="background:#9dc0d0"></i>P(X = k)</span>
+        <span><i style="background:#2f6f8a"></i>in the highlighted region</span>
+        <span><i style="background:#d1495b"></i>k itself</span>
+        <span><i style="background:#b8862f"></i>simulated</span>
+        <span><i class="dash"></i>the mean &mu;</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>Which one is it?</h2>
+      <div class="cap" style="margin-top:2px;">Before any formula, decide what is being counted. That single question picks the distribution.</div>
+      <div class="cmp">
+        <div class="c" id="cmpP">
+          <h3>Poisson</h3><span class="qq">&ldquo;How many, in this window?&rdquo;</span>
+          <ul>
+            <li>Counts <b>events</b>, not trials &mdash; there are no trials to count.</li>
+            <li>Needs a fixed <b>interval</b>: an hour, a page, a square metre.</li>
+            <li>Events arrive one at a time, independently, at a <b>constant average rate</b>.</li>
+            <li>X can be <b>0</b>, and has <b>no upper limit</b>.</li>
+            <li>One parameter: <b>&lambda;</b>, the mean count per interval.</li>
+          </ul>
+        </div>
+        <div class="c" id="cmpG">
+          <h3>Geometric</h3><span class="qq">&ldquo;How long until the first one?&rdquo;</span>
+          <ul>
+            <li>Counts <b>trials</b>, and you stop at the first success.</li>
+            <li>Trials are <b>independent</b>, each with the same success chance <b>p</b>.</li>
+            <li>X is <b>at least 1</b> &mdash; the successful trial is counted &mdash; and has <b>no upper limit</b>.</li>
+            <li>The number of trials is <b>not decided in advance</b>; that is what makes it not binomial.</li>
+            <li>One parameter: <b>p</b>.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="third">And for contrast, the <b>binomial</b> from the previous section answers a third question &mdash; &ldquo;in a <b>fixed</b> number of trials <b>n</b>, how many succeeded?&rdquo; If n is pinned down in advance, it is binomial; if you are counting events in a window it is Poisson; if you are counting trials until the first success it is geometric.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Poisson (&lambda; = 4.0)<small>drag the slider below</small></div>
+    <div class="card">
+      <div class="modeseg" id="dseg">
+        <button data-d="pois" class="on">Poisson</button>
+        <button data-d="geom">Geometric</button>
+      </div>
+      <div class="hd" id="parHd">The one parameter</div>
+      <div class="sl"><label id="parLab">&lambda; &mdash; mean count</label><input type="range" id="pSl" min="1" max="200" step="1" value="40"><span class="nv" id="pVal">4.0</span></div>
+      <div class="tiles">
+        <div><span class="lb">Mean &mu;</span><span class="vv" id="tMu">4.00</span><span class="sub" id="tMuF">= &lambda;</span></div>
+        <div><span class="lb">SD &sigma;</span><span class="vv" id="tSd">2.00</span><span class="sub" id="tSdF">= &radic;&lambda;</span></div>
+        <div><span class="lb">Most likely value</span><span class="vv" id="tMode">4</span><span class="sub" id="tModeF">&nbsp;</span></div>
+        <div><span class="lb">Skew</span><span class="vv" id="tSkew">0.50</span><span class="sub" id="tSkewF">&nbsp;</span></div>
+      </div>
+      <div class="hd">Try a real situation</div>
+      <div class="grid" id="presets"></div>
+      <div class="hd">Read a probability off the chart</div>
+      <div class="seg" id="mseg">
+        <button data-m="eq" class="on">P(X = k)<small>exactly</small></button>
+        <button data-m="le">P(X &le; k)<small>at most</small></button>
+        <button data-m="ge">P(X &ge; k)<small>at least</small></button>
+      </div>
+      <div class="sl"><label id="kLab">k &mdash; events</label><input type="range" id="kSl" min="0" max="14" step="1" value="4"><span class="nv" id="kVal">4</span></div>
+      <div id="info"></div>
+      <div class="fact" id="fact"></div>
+      <div class="mnem" id="mnem"></div>
+    </div>
+    <div class="card">
+      <h2>Does it actually happen that way?</h2>
+      <div class="cap" style="margin-top:2px;" id="simIntro"></div>
+      <div class="tiles t3">
+        <div><span class="lb">Repetitions</span><span class="vv" id="sCount">0</span><span class="sub">&nbsp;</span></div>
+        <div><span class="lb">Observed mean</span><span class="vv" id="sMean">&mdash;</span><span class="sub" id="sMeanT">theory 4.00</span></div>
+        <div><span class="lb">Observed SD</span><span class="vv" id="sSd">&mdash;</span><span class="sub" id="sSdT">theory 2.00</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="draw">Run 300 repetitions</button><button class="btn" id="reset">Clear</button></div>
+      <div class="cap" id="scap"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- state ---------- */
+ var DIST='pois', LAM=4.0, P=0.25, K=4, qmode='eq';
+ var obs=null, obsN=0, obsOver=0, obsSum=0, obsSq=0, seed=20260718;
+
+ /* ---------- seeded PRNG (mulberry32) ---------- */
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+
+ /* ---------- the two models ---------- */
+ function model(){
+   var pm=[],k,hi,lo,i;
+   if(DIST==='pois'){
+     lo=0;
+     hi=Math.ceil(LAM+4*Math.sqrt(LAM))+2;
+     if(hi<8)hi=8; if(hi>44)hi=44;
+     pm[0]=Math.exp(-LAM);
+     for(k=1;k<=hi;k++){pm[k]=pm[k-1]*LAM/k;}
+     /* Mode of a Poisson is floor(lambda) -- except when lambda is a whole
+        number, where P(lambda-1) and P(lambda) are exactly equal and the
+        distribution is genuinely bimodal. Never trust a float argmax here. */
+     var f=Math.floor(LAM+1e-9), tie=(LAM>=1&&Math.abs(LAM-Math.round(LAM))<1e-9);
+     var mt = tie ? (Math.round(LAM)-1)+' &amp; '+Math.round(LAM) : String(f);
+     return {lo:lo,hi:hi,pm:pm,mu:LAM,sd:Math.sqrt(LAM),skew:1/Math.sqrt(LAM),mo:f,moTxt:mt,tie:tie};
+   }
+   var q=1-P;
+   lo=1;
+   hi=Math.ceil(Math.log(0.01)/Math.log(q));
+   if(hi<10)hi=10; if(hi>40)hi=40;
+   pm[0]=0;
+   for(k=1;k<=hi;k++){pm[k]=Math.pow(q,k-1)*P;}
+   return {lo:lo,hi:hi,pm:pm,mu:1/P,sd:Math.sqrt(q)/P,skew:(2-P)/Math.sqrt(q),mo:1,moTxt:'1',tie:false};
+ }
+ function peakPhrase(M){
+   return M.tie
+     ? 'a <b>tied</b> peak at k = '+(Math.round(LAM)-1)+' and k = '+Math.round(LAM)
+     : 'a peak at k = '+M.mo;
+ }
+ /* P(X <= k) */
+ function cdf(M,k){
+   if(DIST==='geom')return 1-Math.pow(1-P,k);
+   var s=0;
+   for(var j=0;j<=k;j++)s+=M.pm[j];
+   if(s>1)s=1;
+   return s;
+ }
+ /* P(X >= k) */
+ function sf(M,k){
+   if(DIST==='geom')return Math.pow(1-P,k-1);
+   var v=1-cdf(M,k-1);
+   return v<0?0:v;
+ }
+
+ /* ---------- formatting ---------- */
+ function com(x){return String(x).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+ function fmtP(v){
+   if(v>=0.0001)return v.toFixed(4);
+   if(v>0)return v.toExponential(2);
+   return '0';
+ }
+ function pct(v){
+   if(v>=0.001)return (v*100).toFixed(1)+'%';
+   if(v>0)return 'under 0.1%';
+   return '0%';
+ }
+ function sci(v){
+   if(v===0)return '0';
+   var a=Math.abs(v);
+   if(a>=1e5||a<1e-4){
+     var e=v.toExponential(2).split('e');
+     return e[0]+' &times; 10<sup>'+parseInt(e[1],10)+'</sup>';
+   }
+   if(a>=100)return v.toFixed(1);
+   if(a>=1)return v.toFixed(3);
+   return v.toFixed(4);
+ }
+ function fact(n){var r=1;for(var i=2;i<=n;i++)r*=i;return r;}
+ function lamTxt(){return LAM.toFixed(1);}
+ function pTxt(){return P.toFixed(2);}
+ function qTxt(){return (1-P).toFixed(2);}
+ function unit(n){return n===1?'':'s';}
+
+ /* ---------- chart geometry ---------- */
+ var VW=480, VH=330, ML=50, MR=14, MT=20, MB=48;
+ var PW=VW-ML-MR, PH=VH-MT-MB, Y1=MT+PH;
+ function niceMax(v){
+   var c=[0.02,0.04,0.06,0.08,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.50,0.60,0.80,1.00];
+   for(var j=0;j<c.length;j++){if(c[j]>=v)return c[j];}
+   return 1;
+ }
+
+ function drawChart(M){
+   var lo=M.lo, hi=M.hi, n=hi-lo+1, k;
+   var slot=PW/n, barW=Math.max(2,Math.min(slot*0.78,54)), obsW=barW*0.52;
+   var maxv=0;
+   for(k=lo;k<=hi;k++){if(M.pm[k]>maxv)maxv=M.pm[k];}
+   if(obs&&obsN>0){for(k=lo;k<=hi;k++){if(obs[k]/obsN>maxv)maxv=obs[k]/obsN;}}
+   var ymax=niceMax(maxv*1.08);
+   var xOf=function(v){return ML+(v-lo+0.5)*slot;};
+   var yOf=function(v){return Y1-(v/ymax)*PH;};
+   var s='';
+
+   /* mu +/- sigma band behind everything */
+   var bl=Math.max(lo-0.5,M.mu-M.sd), bh=Math.min(hi+0.5,M.mu+M.sd);
+   if(bh>bl){
+     s+='<rect x="'+xOf(bl).toFixed(1)+'" y="'+MT+'" width="'+(xOf(bh)-xOf(bl)).toFixed(1)+'" height="'+PH+'" fill="#dcebf2" opacity=".75"/>';
+   }
+
+   /* gridlines + y labels */
+   for(var g=0;g<=4;g++){
+     var yv=ymax*g/4, y=yOf(yv);
+     s+='<line x1="'+ML+'" y1="'+y.toFixed(1)+'" x2="'+(ML+PW)+'" y2="'+y.toFixed(1)+'" stroke="'+(g===0?'#8fa6b0':'#e6eef2')+'" stroke-width="1"/>';
+     s+='<text x="'+(ML-7)+'" y="'+(y+3.5).toFixed(1)+'" font-size="10" fill="#78868d" text-anchor="end" font-weight="600">'+(ymax<=0.1?yv.toFixed(3):yv.toFixed(2))+'</text>';
+   }
+
+   /* theoretical bars */
+   for(k=lo;k<=hi;k++){
+     var h=(M.pm[k]/ymax)*PH, cx=xOf(k), col='#9dc0d0';
+     if(qmode==='eq'){ if(k===K)col='#d1495b'; }
+     else if(qmode==='le'){ col = k<K?'#2f6f8a':(k===K?'#d1495b':'#9dc0d0'); }
+     else { col = k>K?'#2f6f8a':(k===K?'#d1495b':'#9dc0d0'); }
+     if(h>0.4){
+       s+='<rect x="'+(cx-barW/2).toFixed(1)+'" y="'+(Y1-h).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="'+Math.min(2.5,barW/4).toFixed(1)+'" fill="'+col+'"/>';
+     }
+   }
+
+   /* simulated bars on top */
+   if(obs&&obsN>0){
+     for(k=lo;k<=hi;k++){
+       if(!obs[k])continue;
+       var oh=(obs[k]/obsN/ymax)*PH;
+       s+='<rect x="'+(xOf(k)-obsW/2).toFixed(1)+'" y="'+(Y1-oh).toFixed(1)+'" width="'+obsW.toFixed(1)+'" height="'+oh.toFixed(1)+'" rx="1" fill="#b8862f" opacity=".92"/>';
+     }
+   }
+
+   /* mean line */
+   if(M.mu>=lo-0.5&&M.mu<=hi+0.5){
+     s+='<line x1="'+xOf(M.mu).toFixed(1)+'" y1="'+MT+'" x2="'+xOf(M.mu).toFixed(1)+'" y2="'+Y1+'" stroke="#1c4454" stroke-width="1.6" stroke-dasharray="5 4"/>';
+     s+='<text x="'+xOf(M.mu).toFixed(1)+'" y="'+(MT-6)+'" font-size="10.5" fill="#1c4454" text-anchor="middle" font-weight="800">&#956; = '+M.mu.toFixed(2)+'</text>';
+   }
+
+   /* tail-truncation marker */
+   var shown=0;
+   for(k=lo;k<=hi;k++)shown+=M.pm[k];
+   if(shown<0.995){
+     s+='<text x="'+(ML+PW-2)+'" y="'+(MT+13)+'" font-size="9.6" fill="#a08040" text-anchor="end" font-weight="700">&hellip; tail continues past '+hi+' ('+pct(1-shown)+')</text>';
+   }
+
+   /* x axis */
+   var step = n<=13?1:(n<=26?2:5);
+   for(k=lo;k<=hi;k++){
+     var isK=(k===K), isEnd=(k===lo||k===hi);
+     if(!(isK||isEnd||k%step===0))continue;
+     /* drop routine ticks that would collide with the end labels or with k */
+     if(!isK&&!isEnd&&(hi-k<step*0.6||Math.abs(k-K)<step*0.6))continue;
+     /* two 2-digit labels touch if k sits right beside the right-hand end;
+        k's own label already marks that spot, so drop the end one */
+     if(k===hi&&!isK&&Math.abs(k-K)<=1)continue;
+     s+='<text x="'+xOf(k).toFixed(1)+'" y="'+(Y1+16)+'" font-size="10" fill="'+(k===K?'#d1495b':'#78868d')+'" text-anchor="middle" font-weight="'+(k===K?'800':'600')+'">'+k+'</text>';
+   }
+   var xlab = DIST==='pois'
+     ? 'k = number of events in one interval'
+     : 'k = number of trials up to and including the first success';
+   s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="'+(Y1+36)+'" font-size="10.5" fill="#4a585f" text-anchor="middle" font-weight="700">'+xlab+'</text>';
+   s+='<text x="14" y="'+(MT+PH/2).toFixed(1)+'" font-size="10.5" fill="#4a585f" text-anchor="middle" font-weight="700" transform="rotate(-90 14 '+(MT+PH/2).toFixed(1)+')">probability</text>';
+
+   /* click targets on top */
+   for(k=lo;k<=hi;k++){
+     s+='<rect class="hit" data-k="'+k+'" x="'+(xOf(k)-slot/2).toFixed(1)+'" y="'+MT+'" width="'+slot.toFixed(1)+'" height="'+PH+'" fill="transparent" style="cursor:pointer"/>';
+   }
+   $('chart').innerHTML=s;
+   var hits=document.querySelectorAll('#chart .hit');
+   for(var z=0;z<hits.length;z++){
+     hits[z].onclick=function(){K=parseInt(this.getAttribute('data-k'),10);$('kSl').value=K;render();};
+   }
+ }
+
+ /* ---------- narrative under the chart ---------- */
+ function capText(M){
+   var t='';
+   if(DIST==='pois'){
+     if(LAM<1){
+       t+='<b>Piled up at zero.</b> With &lambda; = '+lamTxt()+', fewer than one event is expected per interval, so the tallest bar is at k = 0 &mdash; <b>'+pct(M.pm[0])+'</b> of intervals are completely empty. The shape is sharply right-skewed.';
+     }else if(LAM<5){
+       t+='<b>Right-skewed.</b> The bars climb to '+peakPhrase(M)+' and then fall away, with a thin tail stretching right. Empty intervals are still common: P(X = 0) = '+fmtP(M.pm[0])+'.';
+     }else if(LAM<10){
+       t+='<b>Softening.</b> As &lambda; grows the pile-up at zero disappears and the histogram starts to look symmetric, though the right tail is still the longer one.';
+     }else{
+       t+='<b>Nearly symmetric.</b> With &lambda; this large the skew has shrunk to '+M.skew.toFixed(2)+' and a Poisson histogram becomes hard to tell from a bell curve &mdash; that is what the skew formula 1/&radic;&lambda; is telling you as &lambda; climbs.';
+     }
+     if(M.tie){
+       t+=' <b>Two tallest bars.</b> Whenever &lambda; is a whole number the bars at '+(Math.round(LAM)-1)+' and '+Math.round(LAM)+' come out <b>exactly</b> equal &mdash; stepping from one to the next multiplies by &lambda;/k = '+Math.round(LAM)+'/'+Math.round(LAM)+' = 1 &mdash; so the distribution has two modes, not one.';
+     }
+     t+='<br>Notice the tiles: <b>&sigma;&sup2; = &lambda; = &mu;</b>. Variance equal to the mean is the Poisson fingerprint &mdash; quadruple &lambda; and the spread only doubles, which is why large-&lambda; histograms look relatively tighter around their mean.';
+   }else{
+     t+='<b>Always falling, always peaked at 1.</b> Each bar is exactly q = '+qTxt()+' times the height of the one before it &mdash; a constant decay, which is where the name <i>geometric</i> comes from. ';
+     t+='So the single most likely outcome is <b>k = 1</b> no matter how small p gets, even though the average wait is &mu; = 1/p = '+M.mu.toFixed(2)+'. ';
+     t+='That gulf between the <b>most likely</b> value and the <b>average</b> value is exactly what a strong right skew looks like, and it is why the mean of a geometric variable is a poor guess for any single run.';
+   }
+   return t;
+ }
+ function stageCol(M){
+   if(DIST==='geom')return '#7a5a8a';
+   return LAM<2?'#b8862f':(LAM<9?'#2f6f8a':'#1c4454');
+ }
+
+ /* ---------- the probability panel ---------- */
+ function infoText(M){
+   var pe=M.pm[K], le=cdf(M,K), ge=sf(M,K), s='';
+   var thing = DIST==='pois' ? 'event' : 'trial';
+   if(qmode==='eq'){
+     s+='<span class="n">P(X = '+K+') = '+fmtP(pe)+'</span>';
+     if(DIST==='pois'){
+       s+='The Poisson formula is three pieces multiplied together, and none of them counts a trial &mdash; there are no trials here, only a window and a rate.';
+       s+='<div class="loc">P(X = '+K+') = e<sup>&minus;'+lamTxt()+'</sup> &middot; '+lamTxt()+'<sup>'+K+'</sup> &divide; '+K+'!<br>'+
+          '= '+sci(Math.exp(-LAM))+' &times; '+sci(Math.pow(LAM,K))+' &divide; '+sci(fact(K))+' = <b>'+fmtP(pe)+'</b></div>';
+       s+='Read it as a long-run frequency: watch many separate intervals of the same length, and about <b>'+pct(pe)+'</b> of them will contain exactly '+K+' '+thing+unit(K)+'.';
+     }else{
+       s+='For the first success to land on trial '+K+', the first '+(K-1)+' trial'+unit(K-1)+' must <b>all fail</b> and trial '+K+' must <b>succeed</b>. Independence lets you multiply those '+K+' probabilities.';
+       s+='<div class="loc">P(X = '+K+') = '+qTxt()+'<sup>'+(K-1)+'</sup> &middot; '+pTxt()+'<br>'+
+          '= '+sci(Math.pow(1-P,K-1))+' &times; '+pTxt()+' = <b>'+fmtP(pe)+'</b></div>';
+       s+='Repeat the whole hunt many times and about <b>'+pct(pe)+'</b> of those hunts end on exactly the '+K+ordSuffix(K)+' trial.';
+     }
+   }else if(qmode==='le'){
+     s+='<span class="n">P(X &le; '+K+') = '+fmtP(le)+'</span>';
+     if(DIST==='pois'){
+       s+='A <b>cumulative</b> probability &mdash; the heights of bars 0 through '+K+' added up. X only lands on whole numbers, so summing bars <i>is</i> the calculation; there is nothing to integrate.';
+       s+='<div class="loc">P(X &le; '+K+') = P(0) + P(1) + &hellip; + P('+K+') = <b>'+fmtP(le)+'</b></div>';
+     }else{
+       s+='Here the sum collapses to a single closed form. "The first success arrives by trial '+K+'" is the exact opposite of "the first '+K+' trials all failed," so subtract that one event from 1.';
+       s+='<div class="loc">P(X &le; '+K+') = 1 &minus; '+qTxt()+'<sup>'+K+'</sup> = 1 &minus; '+sci(Math.pow(1-P,K))+' = <b>'+fmtP(le)+'</b></div>';
+     }
+     s+='About <b>'+pct(le)+'</b> of repetitions come in at <b>'+K+' or fewer</b>. The phrases "no more than," "up to," and "within '+K+'" all mean this same sum.';
+   }else if(K<=M.lo){
+     s+='<span class="n">P(X &ge; '+M.lo+') = 1</span>';
+     if(DIST==='pois'){
+       s+='Every outcome clears this bar. X counts events, so it can never be negative &mdash; "at least 0" is guaranteed, and the bars from 0 upward are the entire distribution.';
+     }else{
+       s+='Every outcome clears this bar. A geometric count starts at 1, because the successful trial is itself a trial &mdash; there is no way to reach the first success in fewer than one attempt. That is why the histogram has no bar at 0.';
+     }
+     s+='<div class="loc">P(X &ge; '+M.lo+') = 1 = <b>1.0000</b></div>';
+     s+='Slide k up to ask a question that can actually fail.';
+   }else{
+     s+='<span class="n">P(X &ge; '+K+') = '+fmtP(ge)+'</span>';
+     s+='"At least '+K+'" means '+K+' <b>counts too</b>, so it is the bar at '+K+' plus every bar above it.';
+     if(DIST==='pois'){
+       s+='<div class="loc">P(X &ge; '+K+') = 1 &minus; P(X &le; '+(K-1)+') = 1 &minus; '+fmtP(cdf(M,K-1))+' = <b>'+fmtP(ge)+'</b></div>';
+     }else{
+       s+='<div class="loc">P(X &ge; '+K+') = '+qTxt()+'<sup>'+(K-1)+'</sup> = <b>'+fmtP(ge)+'</b><br>'+
+          '<span style="color:#78868d">reaching trial '+K+' at all just means the first '+(K-1)+' failed &mdash; nothing else is required</span></div>';
+     }
+     s+='About <b>'+pct(ge)+'</b> of repetitions give '+K+' or more.';
+     s+='<div class="note"><b>The off-by-one trap.</b> P(X &ge; '+K+') is <b>not</b> 1 &minus; P(X &le; '+K+'), because that would throw away the bar at exactly '+K+' &mdash; here worth '+fmtP(pe)+'. For a discrete variable the boundary must step down a whole unit: subtract P(X &le; '+(K-1)+').</div>';
+   }
+   return s;
+ }
+ function ordSuffix(n){
+   var t=n%10, h=n%100;
+   if(h>=11&&h<=13)return 'th';
+   if(t===1)return 'st'; if(t===2)return 'nd'; if(t===3)return 'rd';
+   return 'th';
+ }
+
+ /* ---------- the signature-property panel ---------- */
+ function factText(M){
+   var s='';
+   if(DIST==='pois'){
+     var none=Math.exp(-LAM), atleast=1-none;
+     var lam2=LAM*2, lamH=LAM/2;
+     s+='<span class="ft">The rate scales with the window</span>';
+     s+='&lambda; is not a property of the events &mdash; it is the mean count <b>for the interval you chose</b>. Widen or narrow the window and &lambda; moves with it, in direct proportion. That is the step most people skip when applying a Poisson model.';
+     s+='<div class="eq">this window &nbsp;&rarr;&nbsp; &lambda; = '+lamTxt()+', &nbsp;mean '+LAM.toFixed(2)+', &nbsp;&sigma; = '+Math.sqrt(LAM).toFixed(2)+'<br>'+
+        'twice as wide &rarr;&nbsp; &lambda; = '+lam2.toFixed(1)+', &nbsp;mean '+lam2.toFixed(2)+', &nbsp;&sigma; = '+Math.sqrt(lam2).toFixed(2)+'<br>'+
+        'half as wide &nbsp;&rarr;&nbsp; &lambda; = '+lamH.toFixed(2)+', &nbsp;mean '+lamH.toFixed(2)+', &nbsp;&sigma; = '+Math.sqrt(lamH).toFixed(2)+'</div>';
+     s+='<div style="margin-top:8px">One line worth memorising: the chance the window is <b>not</b> empty is 1 &minus; e<sup>&minus;&lambda;</sup> = <b>'+atleast.toFixed(4)+'</b>, so <b>'+pct(none)+'</b> of these intervals contain nothing at all. Note that the mean doubles but &sigma; only grows by a factor of &radic;2.</div>';
+   }else{
+     var q=1-P, m=K, nn=3;
+     var cond=Math.pow(q,m+nn)/Math.pow(q,m), fresh=Math.pow(q,nn);
+     s+='<span class="ft">Memoryless: the trials do not owe you anything</span>';
+     s+='Suppose you have already run <b>'+m+'</b> trial'+unit(m)+' with no success. Does that make a success "due"? Compute it. Both lines below are the probability of needing more than 3 further trials &mdash; one for someone '+m+' trials in, one for someone just starting.';
+     s+='<div class="eq">already '+m+' failure'+unit(m)+': &nbsp;P(X &gt; '+(m+nn)+' | X &gt; '+m+') = '+qTxt()+'<sup>'+(m+nn)+'</sup> &divide; '+qTxt()+'<sup>'+m+'</sup> = <b>'+cond.toFixed(4)+'</b><br>'+
+        'starting fresh: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;P(X &gt; '+nn+') = '+qTxt()+'<sup>'+nn+'</sup> = <b>'+fresh.toFixed(4)+'</b></div>';
+     s+='<div style="margin-top:8px">Identical, and they stay identical for every m you slide to. A run of failures changes nothing about what comes next &mdash; the geometric distribution has <b>no memory</b>. Believing otherwise is the gambler’s fallacy, and this is the arithmetic that refutes it.</div>';
+   }
+   return s;
+ }
+
+ function mnemText(){
+   if(DIST==='pois'){
+     return '<b>Use a Poisson only when all of these hold:</b> events occur <b>one at a time</b> &middot; they occur <b>independently</b> of each other &middot; the <b>average rate is constant</b> across the interval &middot; and counts in <b>non-overlapping intervals</b> are independent. If events arrive in clumps &mdash; or the rate surges at rush hour &mdash; the model does not fit.';
+   }
+   return '<b>Use a geometric only when all of these hold:</b> each trial has exactly <b>two</b> outcomes &middot; the trials are <b>independent</b> &middot; <b>p</b> is the same on every trial &middot; and you <b>stop at the first success</b>. Because you stop, the number of trials is a random outcome, not a fixed n &mdash; that is the whole difference from the binomial.';
+ }
+
+ /* ---------- simulation ---------- */
+ function sampleOne(){
+   if(DIST==='pois'){
+     var L=Math.exp(-LAM), k=0, prod=1;
+     do{ k++; prod*=rnd(); }while(prod>L);
+     return k-1;
+   }
+   var t=1;
+   while(rnd()>=P){ t++; if(t>200000)break; }
+   return t;
+ }
+ function runBatch(M,count){
+   var k;
+   if(!obs){ obs=[]; for(k=0;k<=M.hi;k++)obs[k]=0; obsN=0; obsOver=0; obsSum=0; obsSq=0; }
+   for(var e=0;e<count;e++){
+     var v=sampleOne();
+     if(v<=M.hi)obs[v]++; else obsOver++;
+     obsSum+=v; obsSq+=v*v;
+   }
+   obsN+=count;
+ }
+ function simStats(M){
+   $('simIntro').innerHTML = DIST==='pois'
+     ? 'Each repetition watches <b>one interval</b> and records how many events landed in it, using a seeded random generator. The gold bars are what actually happened; the blue bars are what the formula predicted.'
+     : 'Each repetition runs trials at p = <b>'+pTxt()+'</b> until the first success, then records how many trials that took. The gold bars are what actually happened; the blue bars are what the formula predicted.';
+   $('sMeanT').innerHTML='theory '+M.mu.toFixed(2);
+   $('sSdT').innerHTML='theory '+M.sd.toFixed(2);
+   if(!obs||!obsN){
+     $('sCount').innerHTML='0'; $('sMean').innerHTML='&mdash;'; $('sSd').innerHTML='&mdash;';
+     $('scap').innerHTML='Run a batch and the gold bars will wobble around the blue ones. Keep running and the wobble shrinks &mdash; that long-run frequency is what the probabilities were describing all along.';
+     return;
+   }
+   var m=obsSum/obsN;
+   var vr=obsSq/obsN-m*m; if(vr<0)vr=0;
+   var sdObs=Math.sqrt(vr);
+   $('sCount').innerHTML=com(obsN);
+   $('sMean').innerHTML=m.toFixed(2);
+   $('sSd').innerHTML=sdObs.toFixed(2);
+   var t='Across <b>'+com(obsN)+'</b> repetitions the average came out <b>'+m.toFixed(2)+'</b>, off the theoretical &mu; = '+M.mu.toFixed(2)+' by '+Math.abs(m-M.mu).toFixed(2)+'. ';
+   if(DIST==='pois'){
+     t+='The observed SD landed at '+sdObs.toFixed(2)+' against a theoretical &radic;&lambda; = '+M.sd.toFixed(2)+' &mdash; you are watching variance-equals-mean happen in real data. ';
+   }else{
+     t+='The observed SD landed at '+sdObs.toFixed(2)+' against a theoretical '+M.sd.toFixed(2)+'; geometric samples are so skewed that a few very long waits drag the average around, which is why this one settles more slowly than the Poisson does. ';
+   }
+   if(obsOver>0){
+     t+='<b>'+com(obsOver)+'</b> repetition'+unit(obsOver)+' ran past '+M.hi+' and fall off the right edge of the chart, but they are still counted in the mean and SD above. ';
+   }
+   t+='The gold bars are <i>estimates</i> of the blue ones and tighten onto them as the count grows &mdash; the formula never predicted any single repetition, only the long-run pattern of many.';
+   $('scap').innerHTML=t;
+ }
+
+ /* ---------- render ---------- */
+ function render(){
+   var M=model();
+   if(K<M.lo)K=M.lo;
+   if(K>M.hi)K=M.hi;
+   $('kSl').min=M.lo; $('kSl').max=M.hi; $('kSl').value=K;
+
+   $('pVal').innerHTML = DIST==='pois' ? lamTxt() : pTxt();
+   $('kVal').innerHTML = K;
+   $('tMu').innerHTML=M.mu.toFixed(2);
+   $('tSd').innerHTML=M.sd.toFixed(2);
+   $('tMode').innerHTML=M.moTxt;
+   $('tMode').className = M.tie ? 'vv sm' : 'vv';
+   $('tSkew').innerHTML='+'+M.skew.toFixed(2);
+   $('tMuF').innerHTML = DIST==='pois' ? '= &lambda;' : '= 1/p';
+   $('tSdF').innerHTML = DIST==='pois' ? '= &radic;&lambda;' : '= &radic;q &divide; p';
+   $('tModeF').innerHTML = DIST==='pois' ? (M.tie?'tied &mdash; bimodal':'= &lfloor;&lambda;&rfloor;') : 'always 1';
+   $('tSkewF').innerHTML = DIST==='pois' ? '= 1/&radic;&lambda;' : 'never 0';
+
+   var lbl = DIST==='pois' ? 'Poisson (&lambda; = '+lamTxt()+')' : 'Geometric (p = '+pTxt()+')';
+   var sub = DIST==='pois'
+     ? 'events per interval &middot; &mu; = '+M.mu.toFixed(2)+' &middot; &sigma; = '+M.sd.toFixed(2)
+     : 'trials until the first success &middot; &mu; = '+M.mu.toFixed(2)+' &middot; &sigma; = '+M.sd.toFixed(2);
+   $('cardTitle').innerHTML=lbl;
+   $('stage').style.background=stageCol(M);
+   $('stage').innerHTML=lbl+'<small>'+sub+'</small>';
+
+   $('cmpP').className = DIST==='pois' ? 'c on' : 'c';
+   $('cmpG').className = DIST==='geom' ? 'c on' : 'c';
+
+   drawChart(M);
+   $('cap').innerHTML=capText(M);
+   $('info').innerHTML=infoText(M);
+   $('fact').innerHTML=factText(M);
+   $('mnem').innerHTML=mnemText();
+   simStats(M);
+ }
+
+ /* ---------- switching distribution ---------- */
+ function setDist(d){
+   if(d===DIST)return;
+   DIST=d;
+   obs=null; obsN=0; obsOver=0; obsSum=0; obsSq=0;
+   var db=document.querySelectorAll('#dseg button');
+   for(var z=0;z<db.length;z++){ db[z].className = db[z].getAttribute('data-d')===d?'on':''; }
+   if(d==='pois'){
+     $('parLab').innerHTML='&lambda; &mdash; mean count';
+     $('kLab').innerHTML='k &mdash; events';
+     $('pSl').min=1; $('pSl').max=200; $('pSl').value=Math.round(LAM*10);
+     K=Math.round(LAM);
+   }else{
+     $('parLab').innerHTML='p &mdash; success chance';
+     $('kLab').innerHTML='k &mdash; trials';
+     $('pSl').min=5; $('pSl').max=95; $('pSl').value=Math.round(P*100);
+     K=Math.max(1,Math.round(1/P));
+   }
+   render();
+ }
+
+ /* ---------- real-world presets ---------- */
+ var SC=[
+  {t:'Calls to a help line',s:'6 per hour &middot; Poisson',d:'pois',v:60,k:6},
+  {t:'Typos on a page',s:'1.5 per page &middot; Poisson',d:'pois',v:15,k:0},
+  {t:'Cars past a sensor',s:'4 per minute &middot; Poisson',d:'pois',v:40,k:4},
+  {t:'Flaws in a roll of fabric',s:'0.8 per m&sup2; &middot; Poisson',d:'pois',v:8,k:0},
+  {t:'Free throws to first make',s:'p = 0.75 &middot; Geometric',d:'geom',v:75,k:1},
+  {t:'Flips to the first head',s:'p = 0.50 &middot; Geometric',d:'geom',v:50,k:2},
+  {t:'Applications to first offer',s:'p = 0.10 &middot; Geometric',d:'geom',v:10,k:10},
+  {t:'Parts checked to first defect',s:'p = 0.05 &middot; Geometric',d:'geom',v:5,k:20}
+ ];
+ $('presets').innerHTML=SC.map(function(x,ix){
+   return '<button class="it" data-i="'+ix+'"><span class="nm">'+x.t+'</span><span class="s">'+x.s+'</span></button>';
+ }).join('');
+ var pb=document.querySelectorAll('#presets .it');
+ for(var b=0;b<pb.length;b++){
+   pb[b].onclick=function(){
+     var x=SC[parseInt(this.getAttribute('data-i'),10)];
+     obs=null; obsN=0; obsOver=0; obsSum=0; obsSq=0;
+     DIST=x.d;
+     var db=document.querySelectorAll('#dseg button');
+     for(var z=0;z<db.length;z++){ db[z].className = db[z].getAttribute('data-d')===x.d?'on':''; }
+     if(x.d==='pois'){
+       LAM=x.v/10;
+       $('parLab').innerHTML='&lambda; &mdash; mean count'; $('kLab').innerHTML='k &mdash; events';
+       $('pSl').min=1; $('pSl').max=200;
+     }else{
+       P=x.v/100;
+       $('parLab').innerHTML='p &mdash; success chance'; $('kLab').innerHTML='k &mdash; trials';
+       $('pSl').min=5; $('pSl').max=95;
+     }
+     $('pSl').value=x.v;
+     K=x.k;
+     render();
+   };
+ }
+
+ /* ---------- wiring ---------- */
+ var dseg=document.querySelectorAll('#dseg button');
+ for(var d2=0;d2<dseg.length;d2++){
+   dseg[d2].onclick=function(){ setDist(this.getAttribute('data-d')); };
+ }
+ $('pSl').oninput=function(){
+   var v=parseInt(this.value,10);
+   if(DIST==='pois'){ LAM=v/10; } else { P=v/100; }
+   obs=null; obsN=0; obsOver=0; obsSum=0; obsSq=0;
+   render();
+ };
+ $('kSl').oninput=function(){ K=parseInt(this.value,10); render(); };
+ var mb=document.querySelectorAll('#mseg button');
+ for(var m2=0;m2<mb.length;m2++){
+   mb[m2].onclick=function(){
+     qmode=this.getAttribute('data-m');
+     for(var z=0;z<mb.length;z++){ mb[z].className=(mb[z]===this?'on':''); }
+     render();
+   };
+ }
+ $('draw').onclick=function(){ runBatch(model(),300); render(); };
+ $('reset').onclick=function(){ obs=null; obsN=0; obsOver=0; obsSum=0; obsSq=0; render(); };
+
+ render();
+})();
+</script>
+</body>
+</html>

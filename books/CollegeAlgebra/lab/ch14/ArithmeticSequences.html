@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Arithmetic Sequences</title>
+<meta name="description" content="Drag the common difference and first term and watch an arithmetic sequence's terms, its straight-line graph, and its sum respond in real time. Interactive College Algebra lesson.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.ctrl{margin:12px 0;}
+.ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:700;color:var(--soft);margin-bottom:5px;}
+.ctrl label b{color:var(--teal-dk);font-size:15px;font-family:var(--disp);}
+.ctrl input[type=range]{width:100%;accent-color:var(--teal);height:22px;cursor:pointer;}
+.terms{display:flex;flex-wrap:wrap;gap:3px;align-items:center;margin:2px 0 4px;}
+.term{background:var(--teal);color:#fff;font-weight:700;font-size:13px;border-radius:8px;padding:6px 9px;min-width:30px;text-align:center;line-height:1;}
+.term.first{background:var(--gold);}
+.term.last{background:var(--coral);}
+.plus{font-size:10.5px;color:var(--gold);font-weight:800;padding:0 1px;}
+.eq{font-family:var(--disp);font-size:14.5px;color:var(--teal-dk);line-height:1.85;}
+.eq b{color:var(--coral);}
+.radd{background:#eef0f9;border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-top:11px;font-size:12.5px;color:var(--soft);line-height:1.55;}
+.radd .rrow{display:flex;flex-wrap:wrap;gap:3px;align-items:center;margin:5px 0;font-family:var(--disp);font-size:13px;color:var(--teal-dk);font-weight:600;}
+.radd .col{background:#dfe2f3;border-radius:6px;padding:4px 7px;min-width:26px;text-align:center;}
+.radd .sumtag{color:var(--coral);font-weight:800;}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);font-weight:600;margin-top:8px;}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:middle;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 14</div>
+  <h1>Arithmetic Sequences</h1>
+  <div class="intro">An <b>arithmetic sequence</b> adds the same number &mdash; the <b>common difference</b> <i>d</i> &mdash; to get from each term to the next. Drag the sliders and watch the terms, the straight-line graph, and the running <b>sum</b> all respond together.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Every arithmetic sequence graphs as a straight line</h2>
+    <svg viewBox="0 0 320 248" aria-label="Graph of the sequence terms"><g id="art"></g></svg>
+    <div class="legend">
+      <span><i style="background:var(--gold)"></i>first term <i>a</i><sub>1</sub></span>
+      <span><i style="background:var(--teal)"></i>middle terms</span>
+      <span><i style="background:var(--coral)"></i>last term <i>a<sub>n</sub></i></span>
+    </div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:9px;">The points never bend. The <b style="color:var(--teal-dk)">slope</b> of the line <i>is</i> the common difference <i>d</i>: each step to the right rises by exactly <i>d</i>.</div>
+  </div></div>
+  <div>
+    <div id="stage">Arithmetic sequence<small>set the first term and the common difference</small></div>
+    <div class="card">
+      <div class="ctrl"><label>First term &nbsp;<i>a</i><sub>1</sub><b id="va1">3</b></label>
+        <input type="range" id="a1" min="-8" max="12" step="1" value="3"></div>
+      <div class="ctrl"><label>Common difference &nbsp;<i>d</i><b id="vd">2</b></label>
+        <input type="range" id="d" min="-6" max="6" step="1" value="2"></div>
+      <div class="ctrl"><label>How many terms &nbsp;<i>n</i><b id="vn">5</b></label>
+        <input type="range" id="n" min="2" max="10" step="1" value="5"></div>
+      <div class="terms" id="strip"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // ---- number formatting with real minus glyphs (no LaTeX anywhere) ----
+ function n2(x){ return x<0 ? ('&minus;'+Math.abs(x)) : (''+x); }            // -5 -> &minus;5
+ function par(x){ return x<0 ? ('('+n2(x)+')') : (''+x); }                    // wrap negatives
+ function addT(x){ return x<0 ? (' &minus; '+Math.abs(x)) : (' + '+x); }      // " - 8" or " + 8"
+
+ var TOP=14, BOT=214, ML=34, MR=308;
+ var plotW=MR-ML, padY=16;
+
+ function draw(a1,d,n){
+   var terms=[]; for(var j=1;j<=n;j++) terms.push(a1+(j-1)*d);
+   var lo=Math.min(0, Math.min.apply(null,terms));
+   var hi=Math.max(0, Math.max.apply(null,terms));
+   if(hi===lo) hi=lo+1;
+   var innerH=(BOT-TOP)-2*padY;
+   function X(j){ return n===1 ? (ML+MR)/2 : ML + (j-1)/(n-1)*plotW; }
+   function Y(v){ return TOP+padY + (hi-v)/(hi-lo)*innerH; }
+   var s='';
+   // frame + axes
+   s+='<rect x="'+ML+'" y="'+TOP+'" width="'+plotW+'" height="'+(BOT-TOP)+'" fill="#fbfaff" stroke="#e6e8f5"/>';
+   // zero baseline if in range
+   if(lo<=0 && hi>=0){ var yz=Y(0); s+='<line x1="'+ML+'" y1="'+yz+'" x2="'+MR+'" y2="'+yz+'" stroke="#c7cae0" stroke-width="1.4" stroke-dasharray="4 3"/>';
+     s+='<text x="'+(ML-4)+'" y="'+(yz+3.5)+'" font-size="9" fill="#9a9cb2" text-anchor="end">0</text>'; }
+   // y labels for extremes
+   s+='<text x="'+(ML-4)+'" y="'+(Y(hi)+3.5)+'" font-size="9" fill="#9a9cb2" text-anchor="end">'+n2(hi)+'</text>';
+   s+='<text x="'+(ML-4)+'" y="'+(Y(lo)+3.5)+'" font-size="9" fill="#9a9cb2" text-anchor="end">'+n2(lo)+'</text>';
+   // slope step wedge between term 1 and term 2 (illustrates d) when n>=2
+   if(n>=2){
+     var x1=X(1),y1=Y(terms[0]),x2=X(2),y2=Y(terms[1]);
+     s+='<polyline points="'+x1+','+y1+' '+x2+','+y1+' '+x2+','+y2+'" fill="none" stroke="#d9b24a" stroke-width="1.3" stroke-dasharray="3 2"/>';
+     s+='<text x="'+((x1+x2)/2)+'" y="'+(y1-4)+'" font-size="9" fill="#b8862f" text-anchor="middle" font-weight="700">+1</text>';
+     s+='<text x="'+(x2+4)+'" y="'+((y1+y2)/2+3)+'" font-size="9.5" fill="#b8862f" font-weight="700">'+(d<0?'&minus;':'+')+Math.abs(d)+'</text>';
+   }
+   // connecting line
+   var pts=''; for(var k=0;k<n;k++){ pts+=X(k+1)+','+Y(terms[k])+' '; }
+   s+='<polyline points="'+pts+'" fill="none" stroke="#43458f" stroke-width="2.2" stroke-linejoin="round"/>';
+   // points
+   for(var p=0;p<n;p++){
+     var cx=X(p+1), cy=Y(terms[p]);
+     var col = p===0 ? '#b8862f' : (p===n-1 ? '#d1495b' : '#43458f');
+     s+='<circle cx="'+cx+'" cy="'+cy+'" r="4.6" fill="'+col+'" stroke="#fff" stroke-width="1.5"/>';
+     // value label, flipped below the point if near top
+     var above = cy < TOP+26;
+     s+='<text x="'+cx+'" y="'+(above?cy+15:cy-9)+'" font-size="9.5" fill="'+col+'" text-anchor="middle" font-weight="700">'+n2(terms[p])+'</text>';
+     // x-axis index label
+     s+='<text x="'+cx+'" y="'+(BOT+13)+'" font-size="9" fill="#9a9cb2" text-anchor="middle">'+(p+1)+'</text>';
+   }
+   s+='<text x="'+((ML+MR)/2)+'" y="'+(BOT+30)+'" font-size="10" fill="#7d7f94" text-anchor="middle" font-weight="600">term number  n</text>';
+   return s;
+ }
+
+ function render(){
+   var a1=+$("a1").value, d=+$("d").value, n=+$("n").value;
+   $("va1").innerHTML=n2(a1); $("vd").innerHTML=n2(d); $("vn").innerHTML=n;
+
+   var terms=[]; for(var j=1;j<=n;j++) terms.push(a1+(j-1)*d);
+   var an=terms[n-1];
+   var step=(n-1)*d;
+   var sum=n*(a1+an)/2;
+   var twoS=n*(a1+an);
+
+   $("art").innerHTML=draw(a1,d,n);
+
+   // stage summary
+   $("stage").innerHTML='Rule:&nbsp; a<sub>n</sub> = '+n2(a1)+' + (n&minus;1)&middot;'+par(d)+
+     '<small>first term '+n2(a1)+' &nbsp;·&nbsp; common difference d = '+n2(d)+'</small>';
+
+   // term strip with +d connectors
+   var strip='';
+   for(var t=0;t<n;t++){
+     var cls = t===0 ? ' first' : (t===n-1 ? ' last' : '');
+     strip+='<span class="term'+cls+'">'+n2(terms[t])+'</span>';
+     if(t<n-1) strip+='<span class="plus">'+(d<0?'&minus;':'+')+Math.abs(d)+'</span>';
+   }
+   $("strip").innerHTML=strip;
+
+   // reverse-and-add reasoning rows (Gauss pairing) using the real terms
+   var fwd='', bwd='', colr='';
+   for(var r=0;r<n;r++){
+     fwd+='<span class="col">'+n2(terms[r])+'</span>';
+     bwd+='<span class="col">'+n2(terms[n-1-r])+'</span>';
+     colr+='<span class="col sumtag">'+n2(a1+an)+'</span>';
+   }
+
+   var info=''+
+     '<span class="n">Find any term</span>'+
+     '<div class="eq">a<sub>n</sub> = a<sub>1</sub> + (n&minus;1)d<br>'+
+       'a<sub>'+n+'</sub> = '+n2(a1)+' + ('+n+'&minus;1)&middot;'+par(d)+' = '+n2(a1)+addT(step)+' = <b>'+n2(an)+'</b></div>'+
+     '<div class="dd">Start at a<sub>1</sub> = '+n2(a1)+', then add the common difference '+par(d)+' a total of '+(n-1)+' time'+(n-1===1?'':'s')+' to land on the '+n+'th term.</div>'+
+
+     '<span class="n" style="margin-top:12px;">Add them all up</span>'+
+     '<div class="eq">S<sub>n</sub> = <sup>n</sup>&frasl;<sub>2</sub> &middot; (a<sub>1</sub> + a<sub>n</sub>)<br>'+
+       'S<sub>'+n+'</sub> = <sup>'+n+'</sup>&frasl;<sub>2</sub> &middot; ('+n2(a1)+' + '+par(an)+') = <sup>'+n+'</sup>&frasl;<sub>2</sub> &middot; '+par(a1+an)+' = <b>'+n2(sum)+'</b></div>'+
+
+     '<div class="radd"><b style="color:var(--teal-dk)">Why that formula works &mdash; the reverse-and-add trick:</b>'+
+       'Write the sum forwards, then backwards underneath. Every column adds to the <b>same total</b>, a<sub>1</sub>+a<sub>n</sub> = '+par(a1+an)+'.'+
+       '<div class="rrow">'+fwd+'</div>'+
+       '<div class="rrow">'+bwd+'</div>'+
+       '<div class="rrow" style="border-top:1px dashed #c7cae0;padding-top:6px;">'+colr+'</div>'+
+       'That is '+n+' columns each worth '+par(a1+an)+', so <b>2&middot;S = '+n+'&middot;'+par(a1+an)+' = '+n2(twoS)+'</b>. Halve it: S = '+n2(twoS)+' &divide; 2 = <b class="sumtag">'+n2(sum)+'</b>.</div>'+
+
+     (d===0
+       ? '<div class="mnem"><b>d = 0:</b> every term is the same, '+n2(a1)+'. The graph is flat and the sum is simply n&middot;a<sub>1</sub> = '+n+'&middot;'+par(a1)+' = '+n2(sum)+'.</div>'
+       : (d>0
+         ? '<div class="mnem"><b>d &gt; 0:</b> the terms <b>increase</b> and the line slopes up.</div>'
+         : '<div class="note"><b>d &lt; 0:</b> the terms <b>decrease</b> and the line slopes down &mdash; the sum can even go negative.</div>'));
+
+   $("info").innerHTML=info;
+ }
+
+ $("a1").oninput=render; $("d").oninput=render; $("n").oninput=render;
+ render();
+})();
+</script>
+</body>
+</html>

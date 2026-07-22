@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f8f2ea">
+<title>Reading a Kinship Chart</title>
+<meta name="description" content="Tap the standard kinship symbols &mdash; triangle, circle, diamond, marriage line, descent line, sibling bar &mdash; then trace any relative on a four-generation genealogy and read the kin-type notation, before testing yourself on cross and parallel cousins.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_anthro.css">
+<style>svg text{font-family:'Inter',system-ui,sans-serif;}
+.rgn{cursor:pointer;}
+.cap{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:9px;border-top:1px dashed var(--line);padding-top:8px;}
+.cap b{color:var(--teal-dk);}
+.lbl{font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);margin:12px 0 7px;}
+.lbl.first{margin-top:0;}
+.chain{font-size:12.5px;color:var(--soft);background:#f5e9d8;border-radius:9px;padding:9px 12px;margin-top:9px;line-height:1.6;}
+.chain b{color:var(--teal-dk);}
+.chain .k{font-family:var(--disp);font-weight:700;font-size:17px;color:var(--teal-dk);letter-spacing:1px;display:block;margin-bottom:3px;}
+.chip{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-radius:20px;padding:3px 10px;margin-left:6px;vertical-align:2px;}
+.chip.con{background:#f0e2d2;color:#7d4522;} .chip.aff{background:#e2ecf5;color:#255f8a;} .chip.ego{background:#f5e2b8;color:#7a5c14;}
+.clue{font-family:var(--disp);font-weight:600;font-size:15px;line-height:1.45;color:var(--teal-dk);background:#f5e9d8;border-radius:10px;padding:11px 13px;margin-top:2px;}
+.clue .w{display:block;font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.clue .h{display:block;font-family:var(--sans);font-weight:500;font-size:12.5px;color:var(--soft);line-height:1.5;margin-top:6px;}
+.stat{display:flex;align-items:center;gap:8px;margin-top:11px;border-top:1px dashed var(--line);padding-top:9px;font-size:11.5px;font-weight:700;color:var(--teal-dk);}
+.stat .bar{flex:1;height:8px;border-radius:4px;background:#eadfd1;overflow:hidden;}
+.stat .bar i{display:block;height:100%;background:var(--teal);border-radius:4px;transition:width .3s;}
+.grid .it{display:block;text-align:left;padding:7px 9px;line-height:1.3;}
+.grid .it .kn{font-family:var(--disp);font-weight:700;font-size:13px;color:var(--teal-dk);letter-spacing:.5px;}
+.grid .it .ct{display:block;font-size:10.5px;}
+.grid .it.on .kn{color:#fff;}
+.grid .it.aff{border-left:4px solid var(--blue);}
+.grid .it.con{border-left:4px solid var(--teal);}
+#info i,.clue i{font-style:italic;} #info i{color:var(--teal-dk);}
+.seg button.sm{font-size:12px;padding:10px 4px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Anthropology · Chapter 6</div>
+  <h1>Reading a Kinship Chart</h1>
+  <div class="intro">A kinship chart is not a family photograph &mdash; it is a piece of <b>notation</b>, invented so that societies organised in wildly different ways could be laid side by side and compared. W. H. R. Rivers worked out the <b>genealogical method</b> on the Torres Strait expedition of 1898 and set it out in <i>Kinship and Social Organisation</i> (1914): ask everyone the same short list of questions about their relatives, write the answers in the same handful of shapes, and suddenly two communities on opposite sides of the world can be read against each other. The shapes are few and the rules are strict. Learn them here, then trace your way around a four-generation genealogy and watch how a single chart holds <b>positions</b> that different societies name in completely different ways.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The standard symbols</h2>
+      <svg id="svg" viewBox="0 0 300 262" aria-label="interactive kinship diagram"><g id="art"></g></svg>
+      <div class="cap" id="cap"></div>
+    </div>
+  </div>
+  <div>
+    <div class="modeseg" id="mode">
+      <button class="on" data-m="sym">The symbols</button>
+      <button data-m="trace">Trace a relative</button>
+      <button data-m="quiz">Find the relative</button>
+    </div>
+    <div id="stage">The notation<small>tap a symbol to begin</small></div>
+    <div class="card">
+      <div id="ctl"></div>
+      <div id="info"></div>
+      <div id="extra"></div>
+      <div class="row" id="row" style="display:none"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Anthropology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var SVG=$('svg'), ART=$('art');
+ var mode='sym';
+
+ var SIE='#9a5834', DK='#5e3418', BLU='#2f6f9f', GOLD='#b8862f', GRN='#2f9e5b', CRL='#d1495b',
+     MUT='#a2968a', LINE='#c9b79b', PAPER='#fffdf9', BG='#f4ecdd';
+
+ /* ============================== TINY GLYPHS ============================== */
+
+ function mini(kind,x,y,r,col,fill){
+  var f=fill||PAPER, w=1.7;
+  if(kind==='m') return '<polygon points="'+x+','+(y-r*1.15)+' '+(x-r*1.2)+','+(y+r*0.9)+' '+(x+r*1.2)+','+(y+r*0.9)+'" fill="'+f+'" stroke="'+col+'" stroke-width="'+w+'" stroke-linejoin="round"/>';
+  if(kind==='f') return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+f+'" stroke="'+col+'" stroke-width="'+w+'"/>';
+  return '<polygon points="'+x+','+(y-r*1.25)+' '+(x+r*1.15)+','+y+' '+x+','+(y+r*1.25)+' '+(x-r*1.15)+','+y+'" fill="'+f+'" stroke="'+col+'" stroke-width="'+w+'" stroke-linejoin="round"/>';
+ }
+ function dbl(x1,x2,y,col){
+  return '<line x1="'+x1+'" y1="'+(y-2)+'" x2="'+x2+'" y2="'+(y-2)+'" stroke="'+col+'" stroke-width="1.7"/>'+
+         '<line x1="'+x1+'" y1="'+(y+2)+'" x2="'+x2+'" y2="'+(y+2)+'" stroke="'+col+'" stroke-width="1.7"/>';
+ }
+ function strike(x,y,col){
+  return '<line x1="'+(x-4)+'" y1="'+(y+6)+'" x2="'+(x+1)+'" y2="'+(y-6)+'" stroke="'+col+'" stroke-width="2"/>'+
+         '<line x1="'+(x+2)+'" y1="'+(y+6)+'" x2="'+(x+7)+'" y2="'+(y-6)+'" stroke="'+col+'" stroke-width="2"/>';
+ }
+
+ /* ============================ MODE 1 · SYMBOLS =========================== */
+
+ var SYM=[
+  {id:'tri',nm:'Triangle',ct:'a male',
+   d:'The oldest and least informative shape on the chart. A triangle means only that the person was <b>recorded as male</b> &mdash; nothing about their role, rank, work or standing, all of which the chart deliberately leaves out so that societies can be compared on structure alone.<div class="dd">That austerity is the whole trick. Strip away everything except sex, generation and link, and a Trobriand village, a Nuer cattle camp and a suburban household can be drawn with the same six marks and set beside one another. What the notation gains in comparability it pays for in texture &mdash; which is why a genealogy is only ever the skeleton of an ethnography, never a substitute for one.</div>'},
+
+  {id:'cir',nm:'Circle',ct:'a female',
+   d:'A circle marks a person recorded as female. Triangles and circles are the same size and sit on the same line for a reason: the notation itself makes no claim about which matters more.<div class="dd">Whether a society does is a separate, empirical question, and the answers are not what students expect. In Tonga a sister outranks her brother, and the father&#39;s sister &mdash; the <i>mehekitanga</i> &mdash; holds ceremonial authority over his children for life. In a matrilineal system a woman is the channel through which group membership itself passes. The chart will not tell you any of this; it just gives you the frame on which to hang it.</div>'},
+
+  {id:'dia',nm:'Diamond',ct:'sex not recorded, or not described that way',
+   d:'A diamond (some charts use a square) marks a person whose sex is <b>unknown or not recorded</b> &mdash; a common situation when a genealogy is reconstructed from memory three or four generations back.<div class="dd">It is increasingly used for a second purpose as well: a person whose gender the two-way split does not describe. Many societies recognise categories beyond a binary and always have &mdash; <i>hijra</i> communities in South Asia, <i>muxes</i> in Juchit&aacute;n in Oaxaca, <i>fa&#39;afafine</i> in Samoa. &ldquo;Two-Spirit&rdquo; is an English umbrella term adopted by Indigenous delegates at a gathering in Winnipeg in 1990; it covers many distinct, nation-specific roles rather than naming a single one. The diamond is a reminder that the notation is a tool, and tools get revised when they stop fitting.</div>'},
+
+  {id:'ego',nm:'Shaded symbol',ct:'EGO — the point of view',
+   d:'One symbol is shaded, and it is the most important mark on the page. <b>EGO</b> is the person from whom every relationship is reckoned &mdash; not a name, not a status, a <b>vantage point</b>.<div class="dd">Move the shading and every label changes while not a single line moves. The man labelled <b>F</b> on the next tab is <b>MB</b> to his sister&#39;s child, <b>FZH</b> to somebody else again, and <b>nothing at all</b> to a person outside the chart. Kin terms name <b>relationships, never people</b> &mdash; the first thing this diagram teaches and the easiest thing to forget.</div>'},
+
+  {id:'marr',nm:'Double line  =',ct:'marriage or recognised union',
+   d:'A horizontal <b>=</b> joins two people in a socially recognised union. Note the wording: <b>recognised</b>, not licensed, celebrated or consummated.<div class="dd">Anthropologists have tried repeatedly to define marriage in a way that covers every society, and the attempts keep breaking. The old <i>Notes and Queries</i> formula &mdash; a union between a man and a woman such that children born to the woman count as the legitimate offspring of both &mdash; was dismantled by Kathleen Gough in 1959 using the Nayar of Kerala and Nuer woman-to-woman marriage. What survives is thinner and more useful: marriage is whatever transfer of rights a society treats as creating <b>affinal</b> kin, and you have to ask each society what that is.</div>'},
+
+  {id:'div',nm:'Double line, struck through',ct:'divorce or separation',
+   d:'Two short strokes across the marriage line record a union that has been dissolved. The line is <b>not erased</b>, and that is deliberate.<div class="dd">A divorce ends a marriage; it does not usually end the kinship it created. Children still descend from both parents, in-laws are often still owed obligations, and in societies with substantial <b>bridewealth</b> the cattle or valuables transferred at the wedding may have to be returned &mdash; a negotiation that can involve dozens of people and take years. Among the Nuer, E. E. Evans-Pritchard observed that once a woman had borne children the marriage was in practice very hard to undo, because the cattle had been dispersed into other marriages long since.</div>'},
+
+  {id:'desc',nm:'Vertical line',ct:'descent — parent to child',
+   d:'A vertical line drops from a couple to their children. It records <b>socially recognised parenthood</b>, which anthropology carefully separates from biology.<div class="dd">The vocabulary exists precisely because the two come apart: the <b>pater</b> is the recognised father, the <b>genitor</b> the man understood to have begotten the child; <b>mater</b> and <b>genetrix</b> run in parallel. Usually they coincide. Where they do not, the chart follows the <b>social</b> fact, because that is what carries rights, names, land and obligation. Evans-Pritchard described Nuer <b>ghost marriage</b>, in which a man who dies without heirs has a kinsman marry in his name so that children are born to the dead man&#39;s line, and Nuer <b>woman-to-woman marriage</b>, in which a woman marries another woman and stands as the legal father of the children her wife bears. The vertical line handles both without alteration.</div>'},
+
+  {id:'sib',nm:'Horizontal bar',ct:'siblings',
+   d:'A horizontal bar gathers a set of siblings, who are conventionally drawn <b>eldest on the left</b>. It is a piece of formatting that turns out to matter.<div class="dd">Many terminologies split siblings by <b>relative age</b> rather than by sex: Malay and Indonesian <i>kakak</i> and <i>adik</i> mark elder and younger and say nothing about whether the person is a brother or a sister &mdash; the exact opposite of English, which marks sex and ignores age. Where inheritance runs by <b>primogeniture</b> or <b>ultimogeniture</b>, position along this bar decides who gets the land.</div>'},
+
+  {id:'dead',nm:'Diagonal slash',ct:'deceased',
+   d:'A stroke through a symbol marks a person who has died. They stay on the chart, because in a great many societies they stay in the kinship.<div class="dd">A <b>lineage</b> is defined by descent from a named ancestor, so the dead are the very thing that makes the living group a group. They are fed, consulted, and sometimes handled: among the Merina and Betsileo of highland Madagascar, <i>famadihana</i> brings ancestors out of the family tomb to be rewrapped and danced with before being returned. Ancestor veneration is not nostalgia &mdash; it is an active relationship with people whose position on this chart still generates claims.</div>'},
+
+  {id:'adopt',nm:'Dashed descent line',ct:'adoption or fostering',
+   d:'A dashed vertical line records a child brought into a household by <b>adoption or fostering</b> rather than by birth to that couple.<div class="dd">This is not an edge case. Adoption is common and unremarkable across much of Oceania, where children circulate between close kin as a routine way of balancing households and keeping ties warm; child fostering is equally ordinary across much of West Africa. David Schneider&#39;s <i>A Critique of the Study of Kinship</i> (1984) argued that anthropologists had been quietly treating biological reproduction as the real thing kinship was <i>about</i>, and reading every other arrangement as a substitute for it. Janet Carsten&#39;s work in Langkawi pushed the point further, describing <b>relatedness</b> made over time by feeding people, housing them and growing up alongside them. The dashed line is the notation conceding that shared substance is not the only way to become kin.</div>'}
+ ];
+ var sy=-1;
+
+ function drawSym(){
+  SVG.setAttribute('viewBox','0 0 300 262');
+  var s='<rect x="0" y="0" width="300" height="262" rx="10" fill="'+BG+'"/>';
+  s+='<text x="10" y="15" font-size="8.6" font-weight="800" letter-spacing="1.3" fill="'+MUT+'">TAP A SYMBOL &#183; TEN MARKS DO ALL THE WORK</text>';
+  for(var i=0;i<SYM.length;i++){
+   var cx0=(i<5?6:154), cy0=24+(i%5)*46, on=(sy===i);
+   s+='<rect class="rgn" data-y="'+i+'" x="'+cx0+'" y="'+cy0+'" width="140" height="42" rx="9" fill="'+(on?'#f5e2b8':PAPER)+'" stroke="'+(on?GOLD:'#e6d8c4')+'" stroke-width="'+(on?2:1)+'"/>';
+   var gx=cx0+25, gy=cy0+21, col=on?DK:SIE;
+   s+=glyph(SYM[i].id,gx,gy,col);
+   s+='<text x="'+(cx0+48)+'" y="'+(cy0+19)+'" font-size="9.2" font-weight="800" fill="'+(on?DK:'#6b5c4c')+'">'+SYM[i].nm+'</text>';
+   s+='<text x="'+(cx0+48)+'" y="'+(cy0+31)+'" font-size="7.8" font-weight="600" fill="'+MUT+'">'+SYM[i].ct+'</text>';
+  }
+  ART.innerHTML=s; wire();
+ }
+
+ function glyph(k,x,y,c){
+  if(k==='tri')  return mini('m',x,y,6.4,c);
+  if(k==='cir')  return mini('f',x,y,6.4,c);
+  if(k==='dia')  return mini('d',x,y,6.4,c);
+  if(k==='ego')  return mini('m',x,y,6.6,c,'#e9d7bb')+'<text x="'+x+'" y="'+(y+16)+'" text-anchor="middle" font-size="6.4" font-weight="800" fill="'+c+'">EGO</text>';
+  if(k==='marr') return mini('m',x-11,y,4.8,c)+mini('f',x+11,y,4.8,c)+dbl(x-6,x+6,y,c);
+  if(k==='div')  return mini('f',x-11,y,4.8,c)+mini('m',x+11,y,4.8,c)+dbl(x-6,x+6,y,c)+strike(x-2,y,CRL);
+  if(k==='desc') return mini('m',x-9,y-8,4.4,c)+mini('f',x+9,y-8,4.4,c)+dbl(x-4,x+4,y-8,c)+
+                        '<line x1="'+x+'" y1="'+(y-6)+'" x2="'+x+'" y2="'+(y+5)+'" stroke="'+c+'" stroke-width="1.7"/>'+mini('m',x,y+9,4.4,c);
+  if(k==='sib')  return '<line x1="'+(x-11)+'" y1="'+(y-6)+'" x2="'+(x+11)+'" y2="'+(y-6)+'" stroke="'+c+'" stroke-width="1.7"/>'+
+                        '<line x1="'+(x-11)+'" y1="'+(y-6)+'" x2="'+(x-11)+'" y2="'+(y+1)+'" stroke="'+c+'" stroke-width="1.7"/>'+
+                        '<line x1="'+(x+11)+'" y1="'+(y-6)+'" x2="'+(x+11)+'" y2="'+(y+1)+'" stroke="'+c+'" stroke-width="1.7"/>'+
+                        '<line x1="'+x+'" y1="'+(y-11)+'" x2="'+x+'" y2="'+(y-6)+'" stroke="'+c+'" stroke-width="1.7"/>'+
+                        mini('m',x-11,y+6,4.4,c)+mini('f',x+11,y+6,4.4,c);
+  if(k==='dead') return mini('m',x,y,6.4,c)+'<line x1="'+(x-9)+'" y1="'+(y+9)+'" x2="'+(x+9)+'" y2="'+(y-9)+'" stroke="'+DK+'" stroke-width="2"/>';
+  return '<line x1="'+x+'" y1="'+(y-13)+'" x2="'+x+'" y2="'+(y-1)+'" stroke="'+c+'" stroke-width="1.9" stroke-dasharray="3 3"/>'+mini('f',x,y+6,4.8,c);
+ }
+
+ function ctlSym(){
+  var h='<div class="lbl first">Ten standard marks</div><div class="grid">';
+  for(var i=0;i<SYM.length;i++){
+   h+='<button class="it'+(i===sy?' on':'')+'" data-y="'+i+'"><span class="kn">'+SYM[i].nm+'</span><span class="ct">'+SYM[i].ct+'</span></button>';
+  }
+  $('ctl').innerHTML=h+'</div>';
+  Array.prototype.forEach.call($('ctl').querySelectorAll('.it'),function(b){
+   b.onclick=function(){ sy=parseInt(b.getAttribute('data-y'),10); renderSym(); };
+  });
+ }
+
+ function symInfo(){
+  if(sy<0){
+   $('info').innerHTML='<span class="n">Six marks, one grammar</span>Two shapes for people, one line for marriage, one for descent, one bar for siblings, and shading for the person doing the reckoning. Everything else on a kinship chart is these marks combined.<div class="dd">The economy is the point. Because the notation is so poor in detail, it is <b>portable</b>: the same diagram works for a matrilineal Trobriand village, a Nuer cattle camp and a household in a city, and the differences between them show up as differences in <b>shape</b> rather than as untranslatable description. That is an <b>etic</b> instrument &mdash; an outsider&#39;s comparative framework &mdash; and it only earns its keep when it is checked back against the <b>emic</b> account people give of their own relationships.</div>';
+   $('extra')
+    .innerHTML='<div class="mnem"><b>Where it came from.</b> W. H. R. Rivers, a physician and psychologist on the 1898 Cambridge expedition to the Torres Strait, found he could get further by asking every informant the same plain questions &mdash; who was your mother, who were her brothers and sisters, whom did they marry &mdash; than by asking abstract questions about custom. Written up as the <b>genealogical method</b>, it gave the discipline its first reproducible field technique and made kinship the central problem of anthropology for the next sixty years.</div>';
+   $('stage').style.background=SIE;
+   $('stage').innerHTML='The notation<small>tap a symbol to begin</small>';
+   $('cardTitle').innerHTML='The standard symbols';
+   $('cap').innerHTML='The complete alphabet. Learn these ten and you can read a genealogy from anywhere in the world &mdash; and, just as usefully, you can <b>draw</b> one from an interview.';
+   return;
+  }
+  var S=SYM[sy];
+  $('info').innerHTML='<span class="n">'+S.nm+'</span>'+S.d;
+  $('extra').innerHTML='';
+  $('stage').style.background=(sy===3?GOLD:(sy===4||sy===5?BLU:SIE));
+  $('stage').innerHTML=S.nm+'<small>'+S.ct+'</small>';
+  $('cardTitle').innerHTML=S.nm;
+  $('cap').innerHTML=[
+   'Sex is one of only three things the notation records. The other two are <b>generation</b> and <b>type of link</b>.',
+   'Same size, same line. Any claim about rank has to come from the ethnography, not from the shape.',
+   'The notation being revised in front of us &mdash; because a two-way split was never adequate to the range of things people are.',
+   'Shading marks the vantage point. <b>Every other label on a chart is relative to it.</b>',
+   'The <b>=</b> is doing a lot of work, and what it covers differs enormously from one society to the next.',
+   'Struck through, not rubbed out &mdash; because the kinship a marriage created usually outlives the marriage.',
+   'The line of <b>descent</b>: who is recognised as whose child. That is a social fact before it is a biological one.',
+   'Eldest on the left. In systems that inherit by birth order, this bar is the inheritance.',
+   'The dead stay drawn, because lineages are defined by them.',
+   'Dashed, not absent. Kinship is made in more ways than one.'
+  ][sy];
+ }
+
+ function renderSym(){ drawSym(); ctlSym(); symInfo(); }
+
+ /* ============================ THE GENEALOGY ============================== */
+
+ var PEOPLE=[
+  {id:'pgf',x:99,y:48,s:'m',kin:'FF',nm:'father&#39;s father',cat:'con',dead:1,gen:'two above EGO',
+   chain:'EGO &rarr; <b>father</b> &rarr; his <b>father</b>',
+   d:'EGO&#39;s paternal grandfather, and the one person here marked with the slash for <b>deceased</b>. In a patrilineal society this is often the apical ancestor from whom the whole descent group takes its name and its claim to land.'},
+
+  {id:'pgm',x:125,y:48,s:'f',kin:'FM',nm:'father&#39;s mother',cat:'con',gen:'two above EGO',
+   chain:'EGO &rarr; <b>father</b> &rarr; his <b>mother</b>',
+   d:'EGO&#39;s paternal grandmother. English collapses all four people in this generation into <b>grandparents</b> and distinguishes them no further; that is a choice, not a necessity, and plenty of terminologies separate them sharply.'},
+
+  {id:'mgf',x:271,y:48,s:'m',kin:'MF',nm:'mother&#39;s father',cat:'con',gen:'two above EGO',
+   chain:'EGO &rarr; <b>mother</b> &rarr; her <b>father</b>',
+   d:'EGO&#39;s maternal grandfather. Note the symmetry of the chart and distrust it: very few societies treat the two sides as equivalent. One side usually supplies the group you belong to, and the other the people you owe.'},
+
+  {id:'mgm',x:297,y:48,s:'f',kin:'MM',nm:'mother&#39;s mother',cat:'con',gen:'two above EGO',
+   chain:'EGO &rarr; <b>mother</b> &rarr; her <b>mother</b>',
+   d:'EGO&#39;s maternal grandmother &mdash; and in a <b>matrilineal</b> system, the apex of EGO&#39;s own descent group. Membership passes mother to child, so this woman, her daughters and her daughters&#39; children form one corporate body while EGO&#39;s father belongs to another.<div class="dd">The Minangkabau of West Sumatra, the Akan of Ghana, the Trobriand Islanders and the Din&eacute; (Navajo) all reckon descent this way. Matrilineal is not the mirror image of patrilineal: authority in these societies frequently sits with a woman&#39;s <b>brother</b> rather than with her husband, which is why the position labelled MB on this chart matters so much.</div>'},
+
+  {id:'fbw',x:34,y:120,s:'f',kin:'FBW',nm:'father&#39;s brother&#39;s wife',cat:'aff',gen:'one above EGO',
+   chain:'EGO &rarr; <b>father</b> &rarr; his <b>brother</b> &rarr; that man&#39;s <b>wife</b>',
+   d:'Three steps out, and an <b>affine</b> &mdash; connected to EGO by a marriage rather than by descent. Trace the blue links on this chart and you are tracing the alliances the family has made; trace the sienna ones and you are tracing the group it belongs to.'},
+
+  {id:'fb',x:60,y:120,s:'m',kin:'FB',nm:'father&#39;s brother',cat:'con',gen:'one above EGO',
+   chain:'EGO &rarr; <b>father</b> &rarr; his <b>brother</b>',
+   d:'English calls this man <b>uncle</b> &mdash; and calls MB, FZH and MZH uncle as well, flattening four structurally different positions into one word.<div class="dd">Most of the world does not. In <b>Iroquois</b> and <b>Dravidian</b> terminologies the father&#39;s brother is called by the same term as the father, because he stands in the same descent group and can be expected to act as a father would. In a <b>Sudanese</b> system all four positions get separate terms. The chart holds the positions steady so that these differences in <b>naming</b> become visible instead of invisible.</div>'},
+
+  {id:'fz',x:112,y:120,s:'f',kin:'FZ',nm:'father&#39;s sister',cat:'con',gen:'one above EGO',
+   chain:'EGO &rarr; <b>father</b> &rarr; his <b>sister</b>',
+   d:'The father&#39;s sister &mdash; a position with real weight in a good many societies rather than a merely affectionate one.<div class="dd">In Tonga she is the <i>mehekitanga</i>, ranked above her brother and holding ceremonial authority over his children throughout their lives, with a formal say in their marriages and funerals. In patrilineal southern Africa, ethnographers repeatedly describe the father&#39;s sister as an indulgent figure and the mother&#39;s brother as an authoritative one &mdash; or exactly the reverse, depending on which way descent runs. The pattern is not random, and working out what governs it was one of the classic problems of the discipline.</div>'},
+
+  {id:'fzh',x:138,y:120,s:'m',kin:'FZH',nm:'father&#39;s sister&#39;s former husband',cat:'aff',gen:'one above EGO',
+   chain:'EGO &rarr; <b>father</b> &rarr; his <b>sister</b> &rarr; her <b>husband</b>',
+   d:'An affine, and the one whose marriage line is <b>struck through</b>: this union has been dissolved.<div class="dd">The line stays because the relationship does. His daughter is still EGO&#39;s cross cousin, the two families may still owe each other, and where the marriage involved <b>bridewealth</b> the dissolution opens a long negotiation about what has to be returned and by whom. A divorce edits a chart; it does not shred it.</div>'},
+
+  {id:'f',x:176,y:120,s:'m',kin:'F',nm:'father',cat:'con',gen:'one above EGO',
+   chain:'EGO &rarr; <b>father</b>',
+   d:'One step, one letter. Every longer expression on this chart is built by stringing steps together and reading them <b>left to right, outward from EGO</b>: MB is mother-then-her-brother, FZD is father-then-his-sister-then-her-daughter. The order is fixed and never reversed.<div class="dd">The eight primitive steps are all you need: <b>F</b> father, <b>M</b> mother, <b>B</b> brother, <b>Z</b> sister, <b>S</b> son, <b>D</b> daughter, <b>H</b> husband, <b>W</b> wife. Sister is Z because S was already taken.</div>'},
+
+  {id:'m',x:232,y:120,s:'f',kin:'M',nm:'mother',cat:'con',gen:'one above EGO',
+   chain:'EGO &rarr; <b>mother</b>',
+   d:'The other primary step. <b>F</b> and <b>M</b> are the two doors out of EGO&#39;s own generation, and which one a society sends its inheritance, its group membership and its authority through is the single biggest structural question in this chapter.<div class="dd">Trace membership through M and you have <b>matrilineal</b> descent; through F, <b>patrilineal</b>; through both at once, <b>bilateral</b> or cognatic, which is what most Euro-American families do and which produces no bounded descent group at all &mdash; only a personal kindred, different for every individual.</div>'},
+
+  {id:'mz',x:284,y:120,s:'f',kin:'MZ',nm:'mother&#39;s sister',cat:'con',gen:'one above EGO',
+   chain:'EGO &rarr; <b>mother</b> &rarr; her <b>sister</b>',
+   d:'In English, an aunt. In an <b>Iroquois</b> terminology, a <b>mother</b> &mdash; called by the same term as M, and expected to behave accordingly.<div class="dd">The logic is consistent once you see it: same-sex siblings of a parent get merged with that parent, opposite-sex siblings get their own term. So MZ is &ldquo;mother&rdquo; and FB is &ldquo;father,&rdquo; while MB and FZ stand apart. Lewis Henry Morgan called systems that merge like this <b>classificatory</b>, and set them against <b>descriptive</b> systems in <i>Systems of Consanguinity and Affinity of the Human Family</i> (1871) &mdash; the book that started comparative kinship studies.</div>'},
+
+  {id:'mzh',x:310,y:120,s:'m',kin:'MZH',nm:'mother&#39;s sister&#39;s husband',cat:'aff',gen:'one above EGO',
+   chain:'EGO &rarr; <b>mother</b> &rarr; her <b>sister</b> &rarr; that woman&#39;s <b>husband</b>',
+   d:'An affine three steps out. He is a fourth kind of &ldquo;uncle&rdquo; in English, and in most systems that bother to distinguish them, not an uncle at all &mdash; simply a man married into the family.'},
+
+  {id:'mb',x:358,y:120,s:'m',kin:'MB',nm:'mother&#39;s brother',cat:'con',gen:'one above EGO',
+   chain:'EGO &rarr; <b>mother</b> &rarr; her <b>brother</b>',
+   d:'The most consequential single position on this chart, and the reason kinship charts were worth inventing.<div class="dd">In a <b>matrilineal</b> society EGO belongs to the mother&#39;s group, which means EGO&#39;s father belongs to a different one. Authority, land and succession therefore reach EGO not from the father but from this man &mdash; the mother&#39;s brother. Anthropologists call the pattern the <b>avunculate</b>. Among the Trobriand Islanders, Bronis&#322;aw Malinowski described boys leaving their parents&#39; village in adolescence to live with their mother&#39;s brother, inherit from him, and take over his gardens, while a man&#39;s own yams went to his <b>sister&#39;s</b> household. A father in that system is an affectionate figure with little formal authority &mdash; which struck Malinowski as so significant that he built an argument against Freud&#39;s universal Oedipus complex on it.</div>'},
+
+  {id:'mbw',x:384,y:120,s:'f',kin:'MBW',nm:'mother&#39;s brother&#39;s wife',cat:'aff',gen:'one above EGO',
+   chain:'EGO &rarr; <b>mother</b> &rarr; her <b>brother</b> &rarr; that man&#39;s <b>wife</b>',
+   d:'An affine &mdash; and, in a matrilineal system, a woman who is <b>not</b> in her own children&#39;s descent group with her husband, but in theirs with her brother. Draw that out and you have the standing tension of matrilineal societies: a man&#39;s loyalties are split between the household he lives in and the lineage he belongs to.'},
+
+  {id:'fbs',x:47,y:192,s:'m',kin:'FBS',nm:'father&#39;s brother&#39;s son',cat:'con',cous:'parallel',gen:'EGO&#39;s generation',
+   chain:'EGO &rarr; <b>father</b> &rarr; his <b>brother</b> &rarr; that man&#39;s <b>son</b>',
+   d:'A <b>parallel cousin</b>: the linking siblings &mdash; EGO&#39;s father and his brother &mdash; are of the <b>same sex</b>.<div class="dd">In Iroquois and Dravidian systems parallel cousins are called by <b>sibling</b> terms and marrying one is incest. But this particular position is also the most famous counter-example in the literature: across much of the Arab world and among many Muslim communities, marriage to the father&#39;s brother&#39;s daughter &mdash; <i>bint &#39;amm</i> marriage &mdash; is the classic preferred match, keeping property and people inside the patrilineage. Patrilateral parallel-cousin marriage is exactly what the cross-cousin systems forbid. Two societies, the same chart, opposite rules.</div>'},
+
+  {id:'fzd',x:125,y:192,s:'f',kin:'FZD',nm:'father&#39;s sister&#39;s daughter',cat:'con',cous:'cross',gen:'EGO&#39;s generation',
+   chain:'EGO &rarr; <b>father</b> &rarr; his <b>sister</b> &rarr; her <b>daughter</b>',
+   d:'A <b>cross cousin</b> on the father&#39;s side &mdash; patrilateral, because the linking siblings are of <b>opposite</b> sexes.<div class="dd">Claude L&eacute;vi-Strauss made the difference between this position and MBD the centrepiece of <i>Les structures &eacute;l&eacute;mentaires de la parent&eacute;</i> (1949). A rule that men should marry FZD makes each pair of groups swap wives back and forth in alternating generations &mdash; direct exchange, closed and symmetrical. A rule of MBD instead makes wives travel in one direction around a circle of groups, so that A gives to B, B to C, C back to A. He called the second <b>generalised exchange</b> and argued it binds far more groups into a single system, which is why it is much the commoner rule.</div>'},
+
+  {id:'b',x:170,y:192,s:'m',kin:'B',nm:'brother',cat:'con',gen:'EGO&#39;s generation',
+   chain:'EGO &rarr; <b>brother</b>',
+   d:'EGO&#39;s brother, hanging with EGO from the sibling bar. Siblings are drawn eldest first, and where inheritance runs by birth order that placement is the whole story.<div class="dd">Watch what happens to this term as you move around the world. Iroquois and Dravidian systems extend it to parallel cousins, so FBS on this chart would be called &ldquo;brother&rdquo; too. Malay marks him by <b>relative age</b> and not by sex at all &mdash; <i>kakak</i> if older, <i>adik</i> if younger.</div>'},
+
+  {id:'z',x:198,y:192,s:'f',kin:'Z',nm:'sister',cat:'con',gen:'EGO&#39;s generation',
+   chain:'EGO &rarr; <b>sister</b>',
+   d:'Sister is abbreviated <b>Z</b> because <b>S</b> already means son &mdash; a small piece of housekeeping that trips up every student once.<div class="dd">Structurally this is a heavier position than English suggests. In a matrilineal system a man&#39;s heirs are his <b>sister&#39;s</b> children rather than his own, so the brother&#45;sister bond carries property and succession, not just affection. That is the same relationship, read from the other end, that makes MB such a powerful figure on this chart.</div>'},
+
+  {id:'ego',x:226,y:192,s:'m',kin:'EGO',nm:'EGO — the reference point',cat:'ego',gen:'the centre',
+   chain:'the vantage point &mdash; every label on this chart is measured from here',
+   d:'Shaded, and placed by convention in the middle of the middle generation. <b>EGO</b> is a position, not a person: swap the shading to any other symbol and all twenty-three labels change while not one line moves.<div class="dd">It follows that a kinship chart has no God&#39;s-eye view. The chart is always somebody&#39;s. That is not a defect &mdash; it is a faithful record of how kinship actually works, since nobody stands outside their own web of relatives, and the anthropologist collecting the genealogy is being told twenty-three different things by twenty-three different people about the same lines.</div>'},
+
+  {id:'egow',x:254,y:192,s:'f',kin:'W',nm:'wife',cat:'aff',gen:'EGO&#39;s generation',
+   chain:'EGO &rarr; <b>wife</b>',
+   d:'EGO&#39;s spouse, joined by the <b>=</b> and coloured blue because she is an <b>affine</b>: kin by marriage rather than by descent.<div class="dd">The consanguine/affine split is the chart&#39;s deepest division. Marriage creates a relationship not just between two people but between two <b>groups</b> &mdash; which is why so many societies forbid you to marry inside your own. L&eacute;vi-Strauss argued the incest taboo is best understood not as a prohibition on sex but as an <b>injunction to exchange</b>: give your sisters and daughters away, and you oblige other groups to give theirs to you. Marriage inside the group is <b>endogamy</b>; outside it, <b>exogamy</b>.</div>'},
+
+  {id:'mzs',x:297,y:192,s:'m',kin:'MZS',nm:'mother&#39;s sister&#39;s son',cat:'con',cous:'parallel',gen:'EGO&#39;s generation',
+   chain:'EGO &rarr; <b>mother</b> &rarr; her <b>sister</b> &rarr; that woman&#39;s <b>son</b>',
+   d:'The other <b>parallel cousin</b> &mdash; linked through two sisters, so again through <b>same-sex</b> siblings.<div class="dd">Run the logic through: if MZ is called &ldquo;mother,&rdquo; her son must be called &ldquo;brother,&rdquo; and marrying him is unthinkable. The terminology is not a quaint labelling scheme; it is a marriage rule written into the vocabulary, so that a speaker knows from the word alone who is available and who is not.</div>'},
+
+  {id:'mbd',x:371,y:192,s:'f',kin:'MBD',nm:'mother&#39;s brother&#39;s daughter',cat:'con',cous:'cross',gen:'EGO&#39;s generation',
+   chain:'EGO &rarr; <b>mother</b> &rarr; her <b>brother</b> &rarr; his <b>daughter</b>',
+   d:'The single most discussed position in the whole of kinship studies. A <b>matrilateral cross cousin</b> &mdash; linked through a brother and sister, so through <b>opposite-sex</b> siblings.<div class="dd">A prescription to marry MBD sets up <b>generalised exchange</b>: wives move in one direction around a ring of groups, so every group is simultaneously wife-giver to one and wife-taker from another, and the whole society is laced together by marriages that never simply pay each other back. Edmund Leach found the system running among the Kachin of highland Burma, who name the two sides explicitly &mdash; <i>mayu</i>, those who give you wives, and <i>dama</i>, those you give wives to &mdash; and showed in <i>Political Systems of Highland Burma</i> (1954) that the ranking between them was the engine of Kachin politics, not a quiet piece of etiquette.</div>'},
+
+  {id:'s',x:226,y:254,s:'m',kin:'S',nm:'son',cat:'con',gen:'one below EGO',
+   chain:'EGO &rarr; <b>son</b>',
+   d:'One step down. Everything below EGO on a chart is where questions of <b>inheritance</b> and <b>succession</b> get settled &mdash; who takes the land, the herd, the name, the office.<div class="dd">In a patrilineal system this boy is in EGO&#39;s descent group and the obvious heir. In a matrilineal one he is in his <b>mother&#39;s</b>, and what EGO has to pass on goes instead to a sister&#39;s son. Same line on the chart, opposite consequence.</div>'},
+
+  {id:'d',x:254,y:254,s:'f',kin:'D',nm:'daughter (adopted)',cat:'con',gen:'one below EGO',
+   chain:'EGO &rarr; <b>daughter</b> &mdash; by a <b>dashed</b> line',
+   d:'The dashed descent line marks <b>adoption or fostering</b>. She is a full daughter on this chart, because the chart records recognised parenthood and not conception.<div class="dd">Adoption is common and unremarkable across much of Oceania, and child fostering is ordinary across much of West Africa; treating either as a substitute for &ldquo;real&rdquo; kinship would misdescribe the households completely. This is precisely the assumption David Schneider attacked in <i>A Critique of the Study of Kinship</i> (1984) &mdash; that biological reproduction is the thing kinship is fundamentally about &mdash; and it is why many anthropologists now prefer to speak of <b>relatedness</b>, made and maintained through feeding, housing and long shared living, rather than of kinship as a diagram of who begat whom.</div>'}
+ ];
+
+ var IX={}; for(var pi=0;pi<PEOPLE.length;pi++){ IX[PEOPLE[pi].id]=PEOPLE[pi]; }
+ function G(id){ return IX[id]; }
+
+ var PATHS={
+  f:['ego','f'], m:['ego','m'], b:['ego','b'], z:['ego','z'], egow:['ego','egow'],
+  s:['ego','s'], d:['ego','d'], ego:['ego'],
+  pgf:['ego','f','pgf'], pgm:['ego','f','pgm'], mgf:['ego','m','mgf'], mgm:['ego','m','mgm'],
+  fb:['ego','f','fb'], fbw:['ego','f','fb','fbw'], fz:['ego','f','fz'], fzh:['ego','f','fz','fzh'],
+  mz:['ego','m','mz'], mzh:['ego','m','mz','mzh'], mb:['ego','m','mb'], mbw:['ego','m','mb','mbw'],
+  fbs:['ego','f','fb','fbs'], fzd:['ego','f','fz','fzd'], mzs:['ego','m','mz','mzs'], mbd:['ego','m','mb','mbd']
+ };
+
+ var MARR=[['pgf','pgm',0],['mgf','mgm',0],['fbw','fb',0],['fz','fzh',1],['f','m',0],['mz','mzh',0],['mb','mbw',0],['ego','egow',0]];
+ var SETS=[
+  {p:['pgf','pgm'],k:['fb','fz','f']},
+  {p:['mgf','mgm'],k:['m','mz','mb']},
+  {p:['fbw','fb'],k:['fbs']},
+  {p:['fz','fzh'],k:['fzd']},
+  {p:['f','m'],k:['b','z','ego']},
+  {p:['mz','mzh'],k:['mzs']},
+  {p:['mb','mbw'],k:['mbd']},
+  {p:['ego','egow'],k:['s','d'],dash:['d']}
+ ];
+
+ function drawChart(cfg){
+  SVG.setAttribute('viewBox','0 0 402 296');
+  var s='<rect x="0" y="0" width="402" height="296" rx="10" fill="'+BG+'"/>', i, j;
+  var path=cfg.path||[];
+
+  /* generation rail */
+  var ROWS=[[48,'+2'],[120,'+1'],[192,'0'],[254,'&#8722;1']];
+  for(i=0;i<ROWS.length;i++){
+   s+='<text x="8" y="'+(ROWS[i][0]+3)+'" font-size="8.4" font-weight="800" fill="#d0bfa6">'+ROWS[i][1]+'</text>';
+  }
+
+  /* descent structure */
+  for(i=0;i<SETS.length;i++){
+   var st=SETS[i], a=G(st.p[0]), b2=G(st.p[1]), mid=(a.x+b2.x)/2, my=a.y;
+   var ky=G(st.k[0]).y, by=ky-24, dash=st.dash||[], k;
+   if(st.k.length===1 && G(st.k[0]).x===mid){
+    k=st.k[0];
+    s+=vline(mid,my,ky,dash.indexOf(k)>=0);
+   } else {
+    var xs=[]; for(j=0;j<st.k.length;j++){ xs.push(G(st.k[j]).x); }
+    var lo=Math.min.apply(null,xs), hi2=Math.max.apply(null,xs);
+    s+=vline(mid,my,by,0);
+    s+='<line x1="'+lo+'" y1="'+by+'" x2="'+hi2+'" y2="'+by+'" stroke="'+LINE+'" stroke-width="2"/>';
+    for(j=0;j<st.k.length;j++){ k=st.k[j]; s+=vline(G(k).x,by,ky,dash.indexOf(k)>=0); }
+   }
+  }
+
+  /* marriage links */
+  for(i=0;i<MARR.length;i++){
+   var A=G(MARR[i][0]), B=G(MARR[i][1]);
+   s+=dbl(A.x+10,B.x-10,A.y,LINE);
+   if(MARR[i][2]) s+=strike((A.x+B.x)/2-2,A.y,CRL);
+  }
+
+  /* trace route */
+  if(path.length>1){
+   var pts=[]; for(i=0;i<path.length;i++){ pts.push(G(path[i]).x+','+G(path[i]).y); }
+   s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+GOLD+'" stroke-width="3.4" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>';
+  }
+
+  /* people */
+  for(i=0;i<PEOPLE.length;i++){
+   var p=PEOPLE[i], col=(p.cat==='aff')?BLU:SIE, fill=PAPER, sw=2, lab=DK;
+   if(p.cat==='ego'){ col=DK; fill='#e9d7bb'; }
+   if(path.indexOf(p.id)>=0){ col=GOLD; fill='#fbf0d6'; sw=2.8; }
+   if(cfg.sel===p.id){ col=DK; fill='#f2ddb0'; sw=3.2; }
+   if(cfg.ok===p.id){ col=GRN; fill='#dff0e5'; sw=3.2; lab='#1f6c3f'; }
+   if(cfg.bad===p.id){ col=CRL; fill='#fbe0e4'; sw=3.2; lab='#a8293c'; }
+   s+=shape(p,col,fill,sw);
+   if(p.dead) s+='<line x1="'+(p.x-11)+'" y1="'+(p.y+11)+'" x2="'+(p.x+11)+'" y2="'+(p.y-11)+'" stroke="'+DK+'" stroke-width="2.2"/>';
+   var show=cfg.labels||p.cat==='ego'||cfg.ok===p.id||cfg.bad===p.id||path.indexOf(p.id)>=0;
+   if(show) s+='<text x="'+p.x+'" y="'+(p.y+21)+'" text-anchor="middle" font-size="9.4" font-weight="800" fill="'+lab+'">'+p.kin+'</text>';
+   s+='<rect class="rgn" data-p="'+p.id+'" x="'+(p.x-12)+'" y="'+(p.y-14)+'" width="24" height="38" fill="transparent"/>';
+  }
+
+  /* key */
+  s+='<text x="10" y="16" font-size="8.4" font-weight="800" letter-spacing="1.2" fill="'+MUT+'">'+(cfg.title||'TAP ANY PERSON')+'</text>';
+  s+=mini('m',236,13,4.6,SIE)+'<text x="245" y="16" font-size="7.8" font-weight="700" fill="#8a6a4c">by descent</text>';
+  s+=mini('f',307,13,4.6,BLU)+'<text x="316" y="16" font-size="7.8" font-weight="700" fill="#3d6f96">by marriage</text>';
+  s+='<text x="201" y="290" text-anchor="middle" font-size="7.8" font-weight="700" fill="'+MUT+'">generations are numbered from EGO &#183; siblings run eldest to the left</text>';
+
+  ART.innerHTML=s; wire();
+ }
+
+ function vline(x,y1,y2,dash){
+  return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="'+LINE+'" stroke-width="2"'+(dash?' stroke-dasharray="5 4"':'')+'/>';
+ }
+ function shape(p,col,fill,sw){
+  if(p.s==='m') return '<polygon points="'+p.x+','+(p.y-9.4)+' '+(p.x-9.8)+','+(p.y+7.6)+' '+(p.x+9.8)+','+(p.y+7.6)+'" fill="'+fill+'" stroke="'+col+'" stroke-width="'+sw+'" stroke-linejoin="round"/>';
+  return '<circle cx="'+p.x+'" cy="'+p.y+'" r="8.4" fill="'+fill+'" stroke="'+col+'" stroke-width="'+sw+'"/>';
+ }
+
+ /* ============================= MODE 2 · TRACE ============================ */
+
+ var sel=null;
+
+ function ctlTrace(){
+  var groups=[['Two generations up',['pgf','pgm','mgf','mgm']],
+              ['One generation up',['fbw','fb','fz','fzh','f','m','mz','mzh','mb','mbw']],
+              ['EGO&#39;s own generation',['fbs','fzd','b','z','ego','egow','mzs','mbd']],
+              ['One generation down',['s','d']]];
+  var h='', i, j;
+  for(i=0;i<groups.length;i++){
+   h+='<div class="lbl'+(i===0?' first':'')+'">'+groups[i][0]+'</div><div class="grid">';
+   for(j=0;j<groups[i][1].length;j++){
+    var p=G(groups[i][1][j]);
+    h+='<button class="it '+(p.cat==='aff'?'aff':'con')+(sel===p.id?' on':'')+'" data-p="'+p.id+'"><span class="kn">'+p.kin+'</span><span class="ct">'+p.nm+'</span></button>';
+   }
+   h+='</div>';
+  }
+  $('ctl').innerHTML=h;
+  Array.prototype.forEach.call($('ctl').querySelectorAll('.it'),function(b){
+   b.onclick=function(){ pick(b.getAttribute('data-p')); };
+  });
+ }
+
+ function traceInfo(){
+  if(!sel){
+   $('info').innerHTML='<span class="n">Twenty-four positions, eight letters</span>Every label on this chart is spelled out of the same eight steps &mdash; <b>F</b> father, <b>M</b> mother, <b>B</b> brother, <b>Z</b> sister, <b>S</b> son, <b>D</b> daughter, <b>H</b> husband, <b>W</b> wife &mdash; strung together and read <b>left to right outward from EGO</b>.<div class="dd">So <b>MB</b> is the mother, then her brother. <b>FZD</b> is the father, then his sister, then her daughter. The order never reverses, which means you can read a position you have never seen before straight off the letters, and write one down for a relative a society has a term for and English does not.</div><div class="dd">Tap anybody and the route from EGO lights up.</div>';
+   $('extra').innerHTML='<div class="mnem"><b>Sienna or blue?</b> Sienna symbols are <b>consanguines</b>, reached by links of descent. Blue ones are <b>affines</b>, reached by at least one marriage. Almost every rule a society has about who may marry whom, who inherits, and who owes what at a funeral turns on this division &mdash; and the chart makes it visible at a glance.</div>';
+   $('stage').style.background=SIE;
+   $('stage').innerHTML='A four-generation genealogy<small>tap any person to trace the route from EGO</small>';
+   $('cardTitle').innerHTML='One genealogy, twenty-four positions';
+   $('cap').innerHTML='Four generations, both sides. Two marriages tell you something extra: the struck line on the left is a <b>divorce</b>, the dashed line at the bottom an <b>adoption</b>, and the slashed triangle at the top a person who has <b>died</b>.';
+   drawChart({labels:1,path:[],title:'TAP ANY PERSON'});
+   return;
+  }
+  var p=G(sel), chip=(p.cat==='aff')?'<span class="chip aff">affine &#183; by marriage</span>':(p.cat==='ego'?'<span class="chip ego">the reference point</span>':'<span class="chip con">consanguine &#183; by descent</span>');
+  $('info').innerHTML='<span class="n">'+p.nm+chip+'</span>'+
+   '<div class="chain"><span class="k">'+p.kin+'</span>'+p.chain+'</div>'+p.d;
+  var ex='';
+  if(p.cous){
+   ex='<div class="mnem"><b>'+(p.cous==='cross'?'A cross cousin.':'A parallel cousin.')+'</b> The test is the pair of siblings in the middle of the chain. If they are of the <b>same</b> sex &mdash; two brothers, or two sisters &mdash; their children are <b>parallel</b> cousins. If they are of <b>opposite</b> sexes &mdash; a brother and a sister &mdash; their children are <b>cross</b> cousins. Nothing else matters: not the sex of the cousin, not the sex of EGO.<div class="dd">This is the distinction English throws away entirely, calling all four &ldquo;cousin,&rdquo; and it is the one an enormous number of societies build their marriage rules on. Where cross-cousin marriage is preferred or prescribed, parallel cousins are usually called by <b>sibling</b> terms and are strictly off limits &mdash; so the same word tells you both what to call someone and whether you may marry them.</div></div>';
+  }
+  if(p.cat==='aff'){
+   ex+='<div class="note"><b>Affine, not consanguine.</b> This link runs through at least one <b>=</b>. In systems with strong descent groups the difference is not a nicety: consanguines are the people you <b>are</b>, affines the people you have an <b>alliance</b> with &mdash; and alliances have to be renewed, paid for and maintained.</div>';
+  }
+  if(p.id==='ego'){
+   ex+='<div class="note"><b>Try it.</b> Pick any other symbol and ask what the chart would look like drawn from there. EGO&#39;s father becomes somebody&#39;s MB; EGO&#39;s wife becomes somebody&#39;s FZ. The lines are fixed; the <b>names</b> are entirely a matter of where you stand.</div>';
+  }
+  $('extra').innerHTML=ex;
+  $('stage').style.background=(p.cat==='aff')?BLU:(p.cat==='ego'?GOLD:SIE);
+  $('stage').innerHTML=p.kin+'<small>'+p.nm+' &#183; '+p.gen+'</small>';
+  $('cardTitle').innerHTML=p.kin+' &mdash; '+p.nm;
+  $('cap').innerHTML='The gold route is the chain of steps from EGO, one link per letter. Count the dashes and you have counted the notation.';
+  drawChart({labels:1,path:PATHS[sel],sel:sel,title:'TRACING &#183; '+p.kin});
+ }
+
+ function renderTrace(){ traceInfo(); ctlTrace(); }
+
+ /* ============================== MODE 3 · QUIZ =========================== */
+
+ var QZ=[
+  {a:'mb',q:'Find <b>MB</b>',h:'Read it left to right from EGO: mother, then <i>her</i> brother.',
+   d:'<b>MB &mdash; the mother&#39;s brother.</b> Two steps, and the position that matters most in matrilineal societies, where authority and inheritance reach a child through this man rather than through the father. Anthropologists call it the <b>avunculate</b>.'},
+  {a:'fz',q:'Find <b>FZ</b>',h:'Father, then <i>his</i> sister. Remember Z is sister &mdash; S was already taken by son.',
+   d:'<b>FZ &mdash; the father&#39;s sister.</b> English calls her &ldquo;aunt&rdquo; and stops there. In Tonga she is the <i>mehekitanga</i>, ranked above her brother, with formal authority over his children&#39;s marriages and funerals for as long as she lives.'},
+  {a:'mgm',q:'Find <b>MM</b>',h:'Two steps up the mother&#39;s side.',
+   d:'<b>MM &mdash; the mother&#39;s mother.</b> In a <b>matrilineal</b> system this woman is the apex of EGO&#39;s own descent group: membership passes from her to her daughters and on to their children, while EGO&#39;s father belongs to a different group altogether.'},
+  {a:'fbs',q:'Find <b>FBS</b> &mdash; then decide whether it is a cross or a parallel cousin',h:'Father, his brother, that man&#39;s son. Look at the two siblings in the middle of the chain.',
+   d:'<b>FBS &mdash; a parallel cousin,</b> because the linking siblings (EGO&#39;s father and his brother) are of the <b>same sex</b>. Most cross-cousin systems call this man &ldquo;brother&rdquo; and forbid marriage to his sister &mdash; but across much of the Arab world the mirror position, FBD, is the <b>preferred</b> spouse.'},
+  {a:'mbd',q:'Find the <b>matrilateral cross cousin</b> &mdash; MBD',h:'Mother, her brother, his daughter. Matrilateral means the route leaves EGO through M.',
+   d:'<b>MBD &mdash; the mother&#39;s brother&#39;s daughter,</b> and the single most analysed position in kinship studies. A rule prescribing this marriage produces <b>generalised exchange</b>: wives circulate in one direction around a ring of groups, binding far more of them together than a straight swap ever could.'},
+  {a:'fzd',q:'Find <b>FZD</b>',h:'Father, his sister, her daughter &mdash; and note that her parents&#39; marriage line is struck through.',
+   d:'<b>FZD &mdash; a patrilateral cross cousin.</b> L&eacute;vi-Strauss contrasted a rule of FZD marriage, which makes two groups exchange wives back and forth in alternating generations, with a rule of MBD, which sends them one way round a circle. Her parents are divorced; she is EGO&#39;s cross cousin regardless.'},
+  {a:'mzs',q:'Find EGO&#39;s <b>parallel cousin on the mother&#39;s side</b>',h:'Which of EGO&#39;s mother&#39;s siblings is the same sex as she is?',
+   d:'<b>MZS &mdash; the mother&#39;s sister&#39;s son.</b> Two sisters link the chain, so their children are <b>parallel</b> cousins. Where MZ is called &ldquo;mother,&rdquo; this man is called &ldquo;brother&rdquo; &mdash; and the terminology has quietly settled the marriage question before anyone asks it.'},
+  {a:'fzh',q:'Find <b>FZH</b> &mdash; an affine three steps out on the father&#39;s side',h:'The person linked to EGO&#39;s father&#39;s sister by a marriage line, not a descent line.',
+   d:'<b>FZH &mdash; the father&#39;s sister&#39;s husband,</b> an <b>affine</b>: every route to him passes through an <b>=</b>. English calls him &ldquo;uncle,&rdquo; the same word it uses for FB and MB, who are consanguines and structurally nothing like him.'},
+  {a:'d',q:'One descent line on this chart is <b>dashed</b>. Find the person at the end of it.',h:'Look one generation below EGO.',
+   d:'<b>D &mdash; EGO&#39;s daughter, by adoption.</b> The dashed line records that she joined the household rather than being born into it, and the chart counts her as a full daughter, because it records <b>recognised parenthood</b>, not conception. Adoption and fostering are routine across much of Oceania and West Africa &mdash; which is exactly why David Schneider objected to treating biological reproduction as the thing kinship is really about.'}
+ ];
+ var qi=0, qa=[], qscore=0, qdone=0;
+ for(var qz=0;qz<QZ.length;qz++){ qa.push(null); }
+
+ function ctlQuiz(){
+  var Q=QZ[qi], h='';
+  h+='<div class="clue"><span class="w">Question '+(qi+1)+' of '+QZ.length+'</span>'+Q.q+
+     (qa[qi]?'':'<span class="h">'+Q.h+'</span>')+'</div>';
+  h+='<div class="stat">Found first time<div class="bar"><i style="width:'+(qdone?Math.round(qscore/qdone*100):0)+'%"></i></div>'+qscore+' / '+qdone+'</div>';
+  $('ctl').innerHTML=h;
+ }
+
+ function quizInfo(){
+  var Q=QZ[qi], picked=qa[qi];
+  if(!picked){
+   $('info').innerHTML='<span class="n">Tap the person on the chart</span>The labels are hidden, so you have to <b>read the lines</b> rather than recognise a caption. Start at EGO, take one step per letter, and check the sex of every symbol you land on as you go.';
+   $('extra').innerHTML='';
+   $('stage').style.background='#8a7f72';
+   $('stage').innerHTML='Find the relative<small>question '+(qi+1)+' of '+QZ.length+' &#183; labels hidden</small>';
+   $('cardTitle').innerHTML='Where is it?';
+   $('cap').innerHTML='Only EGO is labelled. <b>Trace, don&#39;t guess</b> &mdash; the sex of each symbol along the route is half the answer.';
+   drawChart({labels:0,path:[],title:'FIND IT &#183; LABELS HIDDEN'});
+   return;
+  }
+  var right=(picked===Q.a), tgt=G(Q.a);
+  $('info').innerHTML='<span class="n">'+(right?'Yes &mdash; ':'Not quite &mdash; ')+tgt.kin+'</span>'+Q.d;
+  var ex='';
+  if(!right){
+   var w=G(picked);
+   ex='<div class="note"><b>You tapped '+w.kin+'</b> &mdash; '+w.nm+'. Follow the chain again one letter at a time: '+tgt.chain+'.</div>';
+  }
+  if(qi===QZ.length-1){
+   ex+='<div class="mnem"><b>What the notation is and is not.</b> You have just read <b>positions</b>, not <b>terms</b>. This chart holds the same twenty-four positions for every society on earth; what changes from one to the next is which of them get lumped under a single word and which get pulled apart. English merges FB, MB, FZH and MZH into &ldquo;uncle&rdquo; and all four cousins into &ldquo;cousin&rdquo;; Iroquois systems merge FB with F and split cross from parallel; Sudanese systems give nearly everyone a separate term.<div class="dd">That is the whole payoff of the notation, and the reason it is an <b>etic</b> instrument. It gives you a fixed grid on which to lay a society&#39;s own words, so that the merges and the splits &mdash; which are never arbitrary, and usually track descent and marriage rules exactly &mdash; become visible. It does not tell you what any of it <b>means</b> to the people living it. For that you have to put the chart down and ask them.</div></div>';
+  }
+  $('extra').innerHTML=ex;
+  $('stage').style.background=right?GRN:CRL;
+  $('stage').innerHTML=tgt.kin+'<small>'+(right?'correct &#183; ':'the answer is &#183; ')+tgt.nm+'</small>';
+  $('cardTitle').innerHTML=tgt.kin+' &mdash; '+tgt.nm;
+  $('cap').innerHTML='Green is the position asked for; the gold route is the chain of steps that reaches it from EGO.';
+  drawChart({labels:1,path:PATHS[Q.a],ok:Q.a,bad:right?null:picked,title:'ANSWER &#183; '+tgt.kin});
+ }
+
+ function renderQuiz(){ quizInfo(); ctlQuiz(); $('prev').disabled=(qi===0); $('next').disabled=(qi===QZ.length-1); }
+
+ /* ================================= SHELL ================================ */
+
+ function pick(id){
+  if(mode==='trace'){ sel=(sel===id)?null:id; renderTrace(); }
+  else if(mode==='quiz'){
+   if(qa[qi]) return;
+   qa[qi]=id; qdone++; if(id===QZ[qi].a) qscore++;
+   renderQuiz();
+  }
+ }
+
+ function wire(){
+  Array.prototype.forEach.call(ART.querySelectorAll('[data-p]'),function(e){
+   e.onclick=function(){ pick(e.getAttribute('data-p')); };
+  });
+  Array.prototype.forEach.call(ART.querySelectorAll('[data-y]'),function(e){
+   e.onclick=function(){ sy=parseInt(e.getAttribute('data-y'),10); renderSym(); };
+  });
+ }
+
+ $('prev').onclick=function(){ if(mode==='quiz'&&qi>0){ qi--; renderQuiz(); } };
+ $('next').onclick=function(){ if(mode==='quiz'&&qi<QZ.length-1){ qi++; renderQuiz(); } };
+
+ function render(){
+  $('row').style.display=(mode==='quiz')?'flex':'none';
+  if(mode==='sym') renderSym();
+  else if(mode==='trace') renderTrace();
+  else renderQuiz();
+ }
+
+ Array.prototype.forEach.call($('mode').querySelectorAll('button'),function(b){
+  b.onclick=function(){
+   mode=b.getAttribute('data-m');
+   Array.prototype.forEach.call($('mode').querySelectorAll('button'),function(x){ x.className=''; });
+   b.className='on';
+   render();
+  };
+ });
+
+ render();
+})();
+</script>
+</body>
+</html>

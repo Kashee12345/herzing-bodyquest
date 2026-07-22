@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Goodness of Fit</title>
+<meta name="description" content="Open real bags of candy, compare the observed counts against the counts a claimed mix predicts, and watch the chi-square statistic assemble itself one cell at a time.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:9px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:132px;line-height:1.3;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.r input[type=range]::-webkit-slider-thumb{background:#d1495b;} .sl.r input[type=range]::-moz-range-thumb{background:#d1495b;}
+.sl .nv{font-size:15px;font-weight:800;color:var(--teal-dk);min-width:70px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;line-height:1.3;}
+.tiles div.warn{border-color:#e2adb7;background:#fdf1f3;} .tiles div.warn .vv{color:#b23145;}
+.tiles div.good{border-color:#b6d8c4;background:#f0f8f3;} .tiles div.good .vv{color:#237a45;}
+.cap{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.55;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.sent{border:1px solid #bcd6e2;border-left:5px solid var(--teal);background:#eef6f9;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:13.2px;line-height:1.6;color:var(--soft);}
+.sent b{color:var(--teal-dk);}
+.sent .big{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.sent.warn{border-color:#e2adb7;border-left-color:#d1495b;background:#fdf1f3;} .sent.warn .big{color:#b23145;}
+.sent.good{border-color:#b6d8c4;border-left-color:#2f9e5b;background:#f0f8f3;} .sent.good .big{color:#237a45;}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.strip div{border:1px solid var(--line);border-radius:10px;padding:7px 8px;background:#fff;text-align:center;}
+.strip .lb{display:block;font-size:9.1px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.strip .vv{display:block;font-size:14.5px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.strip div.warn{border-color:#e2adb7;background:#fdf1f3;} .strip div.warn .vv{color:#b23145;}
+.strip div.good{border-color:#b6d8c4;background:#f0f8f3;} .strip div.good .vv{color:#237a45;}
+table.tv{width:100%;border-collapse:collapse;margin-top:9px;font-variant-numeric:tabular-nums;}
+table.tv th,table.tv td{padding:5px 4px;font-size:11.7px;text-align:right;border-bottom:1px solid var(--line);color:var(--soft);font-weight:600;}
+table.tv th{font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.3;}
+table.tv td:first-child,table.tv th:first-child{text-align:left;font-weight:800;color:var(--teal-dk);}
+table.tv tbody tr{cursor:pointer;}
+table.tv tbody tr:hover td{background:#f2f8fb;}
+table.tv tbody tr.on td{background:#e2eff5;color:var(--teal-dk);}
+table.tv tr:last-child td{border-bottom:none;}
+table.tv .ch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;}
+.mnem,.note{font-size:12px;border-radius:8px;padding:9px 12px;margin-top:10px;line-height:1.6;}
+.mnem{color:#8a6a20;background:#fbf3e2;border:1px solid #ecd9ac;} .mnem b{color:#5a4212;}
+.note{color:#8a2a3a;background:#fae5e8;border:1px solid #f0c9d0;} .note b{color:#7a1f2c;}
+.list .it .s{display:block;margin-top:2px;line-height:1.35;}
+.list .it .nm{line-height:1.4;}
+.modeseg + .cap{margin-top:2px;}
+.wrap > div{min-width:0;}
+.tw{overflow-x:auto;}
+@media (max-width:560px){
+  .tiles,.strip{grid-template-columns:repeat(2,1fr);}
+  .sl label{min-width:0;flex:0 0 92px;white-space:normal;}
+  .sl .nv{min-width:52px;font-size:13.5px;}
+  .seg{flex-wrap:wrap;} .seg button{flex:1 0 46%;}
+  .modeseg{flex-wrap:wrap;} .modeseg button{flex:1 0 100%;}
+  table.tv th,table.tv td{padding:5px 2px;font-size:11px;}
+}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 13</div>
+  <h1>Goodness of Fit</h1>
+  <div class="intro">Somebody makes a claim about how a whole population is <b>divided up</b> &mdash; a candy maker advertises a colour mix, a die is said to be fair, a theory predicts which genotypes should appear and in what ratio. You cannot check the claim by measuring an average, because there is no average to measure; the data are <b>counts in categories</b>. So you do the only sensible thing: you take the claim seriously for a moment, work out <b>how many of each category it predicts</b> in a sample your size, and compare those expected counts with the ones you actually got. Every category will be off by something &mdash; that is guaranteed, even when the claim is perfectly true. The question is whether the collection of misses is bigger than chance alone would produce. Below you set the claim and the hidden truth, open real bags, and watch a single number, <b>&chi;&sup2;</b>, assemble itself one category at a time out of those misses.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">One bag, counted colour by colour</h2>
+      <div class="cap" style="margin-top:2px;">The <b>pale grey bars</b> are the counts the advertised mix predicts for a bag this size: <b>E = n &times; the claimed share</b>. Nothing observed goes into them. The <b>coloured bars</b> are what this particular bag actually held. Press <b>Open a new bag</b> a few times and watch every colour miss its target every single time &mdash; even when the claim on the right is set to be exactly true. Misses are not evidence of anything by themselves. Their <i>size</i> is.</div>
+      <svg viewBox="0 0 480 236" id="bars" aria-label="observed counts for each colour beside the counts the claimed mix predicts"></svg>
+      <div class="lgd">
+        <span><i style="background:#c3d2d9"></i>expected under the claim</span>
+        <span><i style="background:#d1495b"></i>observed in this bag</span>
+      </div>
+      <div class="row"><button class="btn solid" id="bnew">Open a new bag</button><button class="btn" id="bhunt">Find a misleading bag</button></div>
+      <div class="sent" id="barsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Building &chi;&sup2;, one cell at a time</h2>
+      <div class="cap" style="margin-top:2px;">A raw miss of &ldquo;7 too many&rdquo; means something very different in a colour you expected 8 of than in one you expected 200 of. So each miss is <b>squared</b>, to kill the sign and punish big misses harder, and then <b>divided by its own expected count</b>, to grade it against how many you were waiting for. That gives one number per category. Add them up and you have &chi;&sup2;. Tap any row to see its arithmetic in full.</div>
+      <svg viewBox="0 0 480 250" id="cells" aria-label="each category's contribution to the chi-square statistic, and the running total against the critical value"></svg>
+      <div class="tw"><table class="tv"><thead><tr><th>Colour</th><th>Observed<br>O</th><th>Expected<br>E</th><th>O &minus; E</th><th>(O&minus;E)&sup2; &divide; E</th></tr></thead><tbody id="tbl"></tbody></table></div>
+      <div class="sent" id="cellsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>How surprising is that total?</h2>
+      <div class="cap" style="margin-top:2px;">&chi;&sup2; can only be zero or positive, and it is zero only if every count lands exactly on its expectation. So the whole question lives in <b>one tail</b>: is this total too big to be ordinary noise? The curve below is the distribution &chi;&sup2; follows <b>when the claim is true</b>, with <b>df = k &minus; 1</b> degrees of freedom. The shaded region to the right of your total is the <b>p&#8209;value</b>. The dashed line is the point past which we would reject at &alpha; = 0.05.</div>
+      <svg viewBox="0 0 480 210" id="dist" aria-label="the chi-square distribution for the current degrees of freedom, with the observed statistic marked and the upper tail shaded"></svg>
+      <div class="lgd">
+        <span><i style="background:#cfdde4"></i>&chi;&sup2; if the claim were true</span>
+        <span><i style="background:#e6b3bd"></i>this big or bigger &mdash; the p&#8209;value</span>
+        <span><i style="background:#1c4454"></i>your total</span>
+        <span><i style="background:#b8862f"></i>reject beyond here</span>
+      </div>
+      <div class="sent" id="distsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Open a thousand bags</h2>
+      <div class="cap" style="margin-top:2px;">One bag settles nothing. So repeat the entire study: each run below fills a fresh bag from the <b>true</b> mix, scores it against the <b>claimed</b> mix, and keeps only the &chi;&sup2;. The <b>bars</b> are those simulated totals. The <b>dark curve</b> is the theoretical &chi;&sup2; distribution with df = k &minus; 1 &mdash; drawn from the formula, fitted to nothing. Set the excess on the right to zero and the bars land on the curve; nudge it up and the whole pile marches right, which is exactly what statistical power looks like.</div>
+      <svg viewBox="0 0 480 236" id="hist" aria-label="histogram of chi-square values from many simulated bags with the theoretical chi-square curve overlaid"></svg>
+      <div class="lgd">
+        <span><i style="background:#bcd9e6"></i>simulated bags</span>
+        <span><i style="background:#1c4454"></i>theory, not fitted</span>
+        <span><i style="background:#b8862f"></i>rejection cut&#8209;off</span>
+      </div>
+      <div class="strip">
+        <div><span class="lb">Bags<br>opened</span><span class="vv" id="rN">0</span></div>
+        <div><span class="lb">Mean &chi;&sup2;<br>observed</span><span class="vv" id="rM">&mdash;</span></div>
+        <div><span class="lb">Mean &chi;&sup2;<br>predicted</span><span class="vv" id="rT">&mdash;</span></div>
+        <div><span class="lb" id="rPl">Share<br>rejecting</span><span class="vv" id="rP">&mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="run1">Run 1,000 bags</button><button class="btn" id="run2">Add 4,000 more</button><button class="btn" id="rrs">Reset</button></div>
+      <div class="cap" id="histcap"></div>
+    </div>
+  </div>
+
+  <div>
+    <div id="stage">A claim about a mix<small>set it up, then start opening bags</small></div>
+
+    <div class="card">
+      <h2>The claim, and the truth behind it</h2>
+      <div class="cap" style="margin-top:2px;">In a real study you would know only the claim; the truth is what you are trying to find out. Here you set both, so you can watch the machinery succeed and fail against an answer you already have.</div>
+      <div class="hd">What is being claimed</div>
+      <div class="modeseg" id="claimSeg">
+        <button data-v="mix">The advertised mix &mdash; unequal</button>
+        <button data-v="even">Equal shares &mdash; like a fair die</button>
+      </div>
+      <div class="cap" id="claimcap"></div>
+      <div class="hd">The study</div>
+      <div class="sl"><label>colours in the bag, k</label><input type="range" id="sK" min="3" max="8" step="1" value="6" aria-label="number of colour categories"><span class="nv" id="vK">6</span></div>
+      <div class="sl"><label>candies per bag, n</label><input type="range" id="sN" min="0" max="17" step="1" value="9" aria-label="sample size, candies per bag"><span class="nv" id="vN">200</span></div>
+      <div class="hd">The hidden truth</div>
+      <div class="sl r"><label id="tiltLab">Red runs heavy by</label><input type="range" id="sT" min="0" max="25" step="1" value="8" aria-label="how far the true share of the first colour exceeds the claimed share, in percentage points"><span class="nv" id="vT">+8 pts</span></div>
+      <div class="cap" id="tiltcap"></div>
+      <div class="hd">Jump to a situation worth seeing</div>
+      <div class="seg" id="preSeg">
+        <button data-v="0">Claim is true<small>nothing to find</small></button>
+        <button data-v="1">Runs heavy<small>+8 pts, n = 200</small></button>
+        <button data-v="2">Badly off, tiny bag<small>+15 pts, n = 30</small></button>
+        <button data-v="3">Barely off, huge bag<small>+3 pts, n = 1200</small></button>
+        <button data-v="4">Eight equal shares<small>+6 pts, n = 200</small></button>
+      </div>
+      <div class="row"><button class="btn" id="brst">Reset everything</button></div>
+    </div>
+
+    <div class="card">
+      <h2>This bag, computed live</h2>
+      <div class="tiles">
+        <div><span class="lb">Candies<br>counted n</span><span class="vv" id="tN">&mdash;</span><span class="sub">counts, never %</span></div>
+        <div><span class="lb">Categories<br>k</span><span class="vv" id="tK">&mdash;</span><span class="sub">colours claimed</span></div>
+        <div><span class="lb">Degrees of<br>freedom</span><span class="vv" id="tDF">&mdash;</span><span class="sub">k &minus; 1</span></div>
+        <div><span class="lb">Smallest<br>expected E</span><span class="vv" id="tME">&mdash;</span><span class="sub" id="tMEs">&nbsp;</span></div>
+        <div><span class="lb">&chi;&sup2;<br>statistic</span><span class="vv" id="tX">&mdash;</span><span class="sub">&Sigma; (O&minus;E)&sup2;/E</span></div>
+        <div><span class="lb">Reject<br>beyond</span><span class="vv" id="tC">&mdash;</span><span class="sub">&alpha; = 0.05</span></div>
+        <div id="bxP"><span class="lb">p&#8209;value<br>upper tail</span><span class="vv" id="tP">&mdash;</span><span class="sub" id="tPs">&nbsp;</span></div>
+        <div><span class="lb">Biggest<br>contributor</span><span class="vv" id="tB">&mdash;</span><span class="sub" id="tBs">&nbsp;</span></div>
+      </div>
+      <div class="sent" id="sent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Is the curve even legal here?</h2>
+      <div class="cap" style="margin-top:2px;">The &chi;&sup2; curve is an <b>approximation</b>. The statistic itself is discrete &mdash; it can only take the values the counts allow &mdash; and the smooth curve only mimics it well once every expected count is reasonably large. The usual working rule is that <b>every expected count should be at least about 5</b>. Note carefully: the rule is about <b>E</b>, not <b>O</b>. Observing zero of a colour is perfectly fine; <i>expecting</i> half of one is not.</div>
+      <div class="strip">
+        <div id="cA"><span class="lb">Smallest<br>expected</span><span class="vv" id="cAv">&mdash;</span></div>
+        <div id="cB"><span class="lb">Cells with<br>E &lt; 5</span><span class="vv" id="cBv">&mdash;</span></div>
+        <div id="cC"><span class="lb">Smallest<br>observed</span><span class="vv" id="cCv">&mdash;</span></div>
+        <div id="cD"><span class="lb">Bag size to<br>clear the rule</span><span class="vv" id="cDv">&mdash;</span></div>
+      </div>
+      <div class="sent" id="condsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Say it right</h2>
+      <div class="cap" style="margin-top:2px;">Nine things people say after a goodness&#8209;of&#8209;fit test. Four of them are correct. Tap each one.</div>
+      <div class="list" id="claims"></div>
+      <div id="info"></div>
+    </div>
+
+    <div class="card">
+      <h2>What to carry out of this section</h2>
+      <div class="mnem"><b>Expected counts come from the claim, not from the data.</b> E = n &times; the claimed share, worked out before you look at a single candy. That is what makes the comparison honest: you are not fitting anything, you are holding the data up against a prediction that was fixed in advance. If you ever find yourself computing expected counts <i>from</i> the observed ones, you have stopped testing the claim and started describing your sample.</div>
+      <div class="mnem"><b>Square it, then divide by what you were waiting for.</b> The squaring removes the sign, so an excess and a shortfall are both just &ldquo;wrong,&rdquo; and it makes one large miss cost far more than several small ones. The division by E is the part people forget: it converts a raw miss into a miss <i>relative to the scale you expected</i>. Being 10 over on an expected 8 is enormous; being 10 over on an expected 400 is nothing. Only after that division are the categories on comparable footing and safe to add up.</div>
+      <div class="mnem"><b>df = k &minus; 1, and the missing one is not arbitrary.</b> The expected counts are forced to add up to n, the same total as the observed counts. So once you know how the first k &minus; 1 categories missed, the last miss is fully determined &mdash; it has to close the books. Only k &minus; 1 of the deviations are free to vary, and the curve you read the answer off knows it. Drag k and watch the whole curve change shape underneath the same data.</div>
+      <div class="note"><b>&chi;&sup2; scales with n, so never feed it percentages.</b> Because O = n&#183;&ocirc; and E = n&#183;q, the statistic works out to n &times; &Sigma;(&ocirc; &minus; q)&sup2;/q. Hold the percentages fixed and multiply the bag size by ten and &chi;&sup2; multiplies by ten too. This is the single most common way the test is botched: a table of percentages typed in as though they were counts, producing a number with no meaning at all. Sample size is not a nuisance here; it is half the message.</div>
+      <div class="note"><b>Only the upper tail is used &mdash; and not because the alternative is one&#8209;sided.</b> Every kind of mismatch, in any category, in either direction, makes &chi;&sup2; <i>larger</i>. Too many reds and too few reds both inflate the same statistic, because the deviation is squared. So a big &chi;&sup2; is the only signal of misfit there is, and the lower tail is not a rejection region. What the lower tail <i>is</i> good for is suspicion: counts that hug their expectations far more closely than chance allows produce an oddly small &chi;&sup2;, and that pattern has been used more than once to question whether a famous data set was really collected the way it was reported.</div>
+      <div class="note"><b>A significant &chi;&sup2; does not tell you which category is at fault.</b> This is an <b>omnibus</b> test: it answers one question, &ldquo;does the whole claimed mix fit?&rdquo;, and it answers it with one number. The per&#8209;cell contributions in the second panel are the natural place to look next, and the square root of a contribution, (O &minus; E)/&radic;E, is the standardised residual you would report. But hunting through k cells after the fact to find the guilty one is a fishing expedition, and any single cell picked that way deserves confirmation in fresh data rather than a p&#8209;value borrowed from the omnibus test.</div>
+      <div class="note"><b>Failing to reject is not a verdict of &ldquo;the claim is correct.&rdquo;</b> Load the <i>Barely off, huge bag</i> preset and then drag the bag size down to 100. The truth has not moved a millimetre &mdash; the mix is still genuinely wrong &mdash; but the test now shrugs at it, because a bag that small cannot resolve a gap that fine. A large p&#8209;value means the data were compatible with the claim, and small data are compatible with almost everything. It is a statement about your resolution as much as about the world.</div>
+      <div class="cap">One last thing worth doing. Set the excess to zero, so the claim is exactly true, and run five thousand bags. The mean &chi;&sup2; settles on df = k &minus; 1 &mdash; that is not a coincidence, it is a theorem &mdash; and about one bag in twenty crosses the rejection line anyway. Those bags contain nothing unusual. They are ordinary bags from an honest factory, and they are the advertised, agreed&#8209;upon cost of drawing a line at 5%.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ================= seeded PRNG (mulberry32) — reproducible every session ================= */
+ var SEED0=20260731, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+
+ /* ================= special functions ================= */
+ function lgam(xx){
+   var cof=[76.18009172947146,-86.50532032941677,24.01409824083091,
+            -1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+   var x=xx,y=xx,tmp=x+5.5,ser=1.000000000190015,j;
+   tmp-=(x+0.5)*Math.log(tmp);
+   for(j=0;j<6;j++){ y+=1; ser+=cof[j]/y; }
+   return -tmp+Math.log(2.5066282746310005*ser/x);
+ }
+ /* regularised lower incomplete gamma, series form */
+ function gser(a,x){
+   var ap=a, sum=1/a, del=sum, n;
+   for(n=1;n<=600;n++){
+     ap+=1; del*=x/ap; sum+=del;
+     if(Math.abs(del)<Math.abs(sum)*1e-15) break;
+   }
+   return sum*Math.exp(-x+a*Math.log(x)-lgam(a));
+ }
+ /* regularised upper incomplete gamma, continued fraction */
+ function gcf(a,x){
+   var FPMIN=1e-300, EPS=1e-15;
+   var b=x+1-a, c=1/FPMIN, d=1/b, h=d, i, an, del;
+   for(i=1;i<=600;i++){
+     an=-i*(i-a);
+     b+=2;
+     d=an*d+b; if(Math.abs(d)<FPMIN) d=FPMIN;
+     c=b+an/c; if(Math.abs(c)<FPMIN) c=FPMIN;
+     d=1/d; del=d*c; h*=del;
+     if(Math.abs(del-1)<EPS) break;
+   }
+   return Math.exp(-x+a*Math.log(x)-lgam(a))*h;
+ }
+ function gammq(a,x){                      /* P(X > x) for a gamma(a,1) */
+   if(x<=0) return 1;
+   if(x<a+1) return 1-gser(a,x);
+   return gcf(a,x);
+ }
+ function chiTail(x,v){ return gammq(v/2,x/2); }     /* P(chi-square_v > x) */
+ function chiPdf(x,v){
+   if(x<0) return 0;
+   if(x===0) return v===2?0.5:0;
+   return Math.exp((v/2-1)*Math.log(x)-x/2-(v/2)*Math.LN2-lgam(v/2));
+ }
+ function invChi(tail,v){                  /* the x with P(X > x) = tail */
+   var lo=0, hi=2000, mid, i;
+   for(i=0;i<90;i++){ mid=(lo+hi)/2; if(chiTail(mid,v)>tail) lo=mid; else hi=mid; }
+   return (lo+hi)/2;
+ }
+
+ /* ================= the setup ================= */
+ var COLS=[
+  {nm:'Red',   c:'#d1495b', w:30},
+  {nm:'Orange',c:'#d98032', w:25},
+  {nm:'Yellow',c:'#c9a227', w:20},
+  {nm:'Green', c:'#2f9e5b', w:13},
+  {nm:'Blue',  c:'#2f6f9f', w:7},
+  {nm:'Brown', c:'#8a6a4a', w:5},
+  {nm:'Purple',c:'#7a5a8a', w:4},
+  {nm:'Pink',  c:'#c96792', w:3}
+ ];
+ var NS=[20,30,40,50,60,80,100,120,150,200,250,300,400,500,600,800,1000,1200];
+ var P={k:6, ni:9, tilt:0.08};
+ var claim='mix', AL=0.05, ci=-1, cellSel=-1;
+ var O=[], hunted=0, huntOK=1;
+
+ function N(){ return NS[P.ni]; }
+ function claimP(){
+   var k=P.k, a=[], i, s=0;
+   if(claim==='even'){ for(i=0;i<k;i++) a.push(1/k); return a; }
+   for(i=0;i<k;i++) s+=COLS[i].w;
+   for(i=0;i<k;i++) a.push(COLS[i].w/s);
+   return a;
+ }
+ function trueP(){
+   var Q=claimP(), t=P.tilt, k=P.k, a=[], i;
+   if(t<=0) return Q.slice();
+   var sc=1-t/(1-Q[0]);                    /* the shortfall comes out of the rest, in proportion */
+   a.push(Q[0]+t);
+   for(i=1;i<k;i++) a.push(Q[i]*sc);
+   return a;
+ }
+ function isNull(){ return P.tilt<=0; }
+
+ /* ================= the statistic, computed one way in one place ================= */
+ function stat(obs){
+   var Q=claimP(), i, n=0, x=0, con=[], E=[], mnE=Infinity, mnO=Infinity, few=0, big=0, bi=0;
+   for(i=0;i<obs.length;i++) n+=obs[i];
+   for(i=0;i<obs.length;i++){
+     var e=n*Q[i], d=obs[i]-e, cc=e>0?d*d/e:0;
+     E.push(e); con.push(cc); x+=cc;
+     if(e<mnE) mnE=e;
+     if(obs[i]<mnO) mnO=obs[i];
+     if(e<5) few++;
+     if(cc>big){ big=cc; bi=i; }
+   }
+   var df=obs.length-1;
+   return {n:n,x:x,df:df,con:con,E:E,Q:Q,minE:mnE,minO:mnO,few:few,big:big,bi:bi,
+           p:chiTail(x,df), crit:invChi(AL,df)};
+ }
+ /* exact mean of chi-square under the truth currently set:
+    E[X2] = sum p(1-p)/q  +  n * sum (p-q)^2/q ; the first term is exactly k-1 when p = q */
+ function theory(){
+   var Q=claimP(), T=trueP(), n=N(), i, a=0, b=0;
+   for(i=0;i<P.k;i++){
+     a+=T[i]*(1-T[i])/Q[i];
+     b+=(T[i]-Q[i])*(T[i]-Q[i])/Q[i];
+   }
+   return {mean:a+n*b, ncp:n*b};
+ }
+
+ /* ================= sampling a real bag ================= */
+ function fill(){
+   var T=trueP(), n=N(), K=P.k, cum=[], s=0, c=[], i, j, u;
+   for(i=0;i<K;i++){ s+=T[i]; cum.push(s); c.push(0); }
+   for(j=0;j<n;j++){
+     u=rnd()*s;
+     for(i=0;i<K-1;i++){ if(u<cum[i]) break; }
+     c[i]++;
+   }
+   return c;
+ }
+ function newBag(){ O=fill(); hunted=0; huntOK=1; }
+ function hunt(){                            /* chase a false alarm, or a miss */
+   var want=isNull(), k=0, C;
+   do{ O=fill(); k++; C=stat(O); }while(k<900 && ((want && C.p>=AL) || (!want && C.p<AL)));
+   hunted=k; huntOK=(want?C.p<AL:C.p>=AL)?1:0;
+ }
+
+ /* ================= formatting ================= */
+ function f1(x){ return (x<0?'&minus;':'')+Math.abs(x).toFixed(1); }
+ function f2(x){ return (x<0?'&minus;':'')+Math.abs(x).toFixed(2); }
+ function sgn(x){ return (x<0?'&minus;':'+')+Math.abs(x).toFixed(1); }
+ function com(s){ s=String(s); var q=s.split('.');
+   q[0]=q[0].replace(/\B(?=(\d{3})+(?!\d))/g,','); return q.join('.'); }
+ function pv(p){ return p<0.0001?'&lt; 0.0001':p.toFixed(4); }
+ function pc(v,d){ return (v*100).toFixed(d===undefined?1:d)+'%'; }
+
+ /* ================= panel 1 — observed against expected ================= */
+ var BX0=46, BX1=470, BYB=182, BY0=22;
+ function drawBars(){
+   var C=stat(O), K=P.k, o='', i;
+   var mx=0;
+   for(i=0;i<K;i++){ if(O[i]>mx) mx=O[i]; if(C.E[i]>mx) mx=C.E[i]; }
+   mx=mx*1.16+1;
+   function by(v){ return BYB-(v/mx)*(BYB-BY0); }
+
+   /* gridlines */
+   var stp=mx>800?200:(mx>400?100:(mx>160?50:(mx>80?20:(mx>32?10:5))));
+   for(var g=stp;g<mx;g+=stp){
+     o+='<line x1="'+BX0+'" y1="'+by(g).toFixed(1)+'" x2="'+BX1+'" y2="'+by(g).toFixed(1)+'" stroke="#e6eef2" stroke-width="1"/>';
+     o+='<text x="'+(BX0-6)+'" y="'+(by(g)+3.4).toFixed(1)+'" font-size="9.2" fill="#9aa8ae" text-anchor="end" font-weight="700">'+g+'</text>';
+   }
+
+   var gw=(BX1-BX0)/K, bw=Math.min(19,gw*0.31);
+   for(i=0;i<K;i++){
+     var cx=BX0+gw*(i+0.5);
+     var xe=cx-bw-1.5, xo=cx+1.5;
+     var ye=by(C.E[i]), yo=by(O[i]);
+     o+='<rect x="'+xe.toFixed(1)+'" y="'+ye.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(BYB-ye).toFixed(1)+'" rx="2" fill="#c3d2d9"/>';
+     o+='<rect x="'+xo.toFixed(1)+'" y="'+yo.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(BYB-yo).toFixed(1)+'" rx="2" fill="'+COLS[i].c+'"'+(i===cellSel?' stroke="#1c4454" stroke-width="1.6"':'')+'/>';
+     o+='<text x="'+(xe+bw/2).toFixed(1)+'" y="'+(ye-4).toFixed(1)+'" font-size="8.8" fill="#8fa0a8" text-anchor="middle" font-weight="800">'+C.E[i].toFixed(C.E[i]<10?1:0)+'</text>';
+     o+='<text x="'+(xo+bw/2).toFixed(1)+'" y="'+(yo-4).toFixed(1)+'" font-size="9.4" fill="'+COLS[i].c+'" text-anchor="middle" font-weight="800">'+O[i]+'</text>';
+     o+='<rect x="'+(cx-5)+'" y="'+(BYB+7)+'" width="10" height="10" rx="3" fill="'+COLS[i].c+'"/>';
+     o+='<text x="'+cx.toFixed(1)+'" y="'+(BYB+29)+'" font-size="9.4" fill="#78868d" text-anchor="middle" font-weight="700">'+COLS[i].nm+'</text>';
+     o+='<text x="'+cx.toFixed(1)+'" y="'+(BYB+41)+'" font-size="8.8" fill="#9aa8ae" text-anchor="middle" font-weight="700">'+pc(C.Q[i],1)+' claimed</text>';
+   }
+   o+='<line x1="'+BX0+'" y1="'+BYB+'" x2="'+BX1+'" y2="'+BYB+'" stroke="#c3d2d9" stroke-width="1.4"/>';
+   o+='<text x="'+(BX0-6)+'" y="'+(BYB+3.4)+'" font-size="9.2" fill="#9aa8ae" text-anchor="end" font-weight="700">0</text>';
+   o+='<text x="10" y="14" font-size="9.4" fill="#9aa8ae" font-weight="700">candies counted &mdash; bag of '+com(C.n)+'</text>';
+   $("bars").innerHTML=o;
+
+   var worst=0, wi=0, ri=0;
+   for(i=0;i<K;i++){ var dd=Math.abs(O[i]-C.E[i]); if(dd>worst){ worst=dd; wi=i; } }
+   for(i=0;i<K;i++){ if(C.E[i]<C.E[ri]) ri=i; }
+   var sig=C.p<AL;
+   var cls=hunted&&!huntOK?' warn':(sig?' good':'');
+   var lead='';
+   if(hunted&&huntOK&&isNull()){
+     lead='<b>This bag is a false alarm.</b> The claim on the right is exactly true &mdash; the factory is honest &mdash; and it still took only <b>'+com(hunted)+'</b> '+(hunted===1?'bag':'bags')+' to find one that the test rejects at 5%. Nothing is broken. Roughly one bag in twenty will do this forever, by construction. ';
+     cls=' warn';
+   } else if(hunted&&huntOK&&!isNull()){
+     lead='<b>This bag is a miss.</b> The mix really is wrong, and this bag still fails to prove it &mdash; it took <b>'+com(hunted)+'</b> '+(hunted===1?'try':'tries')+' to find one. A true claim and an undetected false one look identical from inside a single sample. ';
+     cls=' warn';
+   } else if(hunted&&!huntOK){
+     lead='<b>No such bag turned up in 900 tries.</b> With these settings the verdict is essentially never in doubt &mdash; which is itself the finding. ';
+   }
+   $("barsent").className='sent'+cls;
+   $("barsent").innerHTML='<span class="big">'+COLS[wi].nm+' missed by '+sgn(O[wi]-C.E[wi])+'</span>'+lead+
+     'Every colour in this bag came out somewhere other than its expected count, and the largest gap was <b>'+COLS[wi].nm+
+     '</b>: expected <b>'+C.E[wi].toFixed(1)+'</b>, counted <b>'+O[wi]+'</b>. '+
+     'But the raw size of a miss is not the point. That gap has to be judged against <b>'+C.E[wi].toFixed(1)+
+     '</b> &mdash; the number you were waiting for. '+
+     (C.E[ri]<C.E[wi]*0.85
+       ? 'A miss of that very same size in '+COLS[ri].nm+', where the claim led you to expect only '+C.E[ri].toFixed(1)+
+         ', would be far more damning, because it would be a much bigger error relative to the scale it was measured on. '
+       : 'Here the claim spreads the candies fairly evenly across the colours, so every miss is being judged against a similar expectation &mdash; switch to the advertised mix and the rare colours start holding the raw misses to a much stricter standard. ')+
+     'Turning raw misses into comparable, addable numbers is the whole job of the next panel.';
+ }
+
+ /* ================= panel 2 — the cells ================= */
+ function drawCells(){
+   var C=stat(O), K=P.k, o='', i;
+   var H=48+K*21+74;
+   $("cells").setAttribute('viewBox','0 0 480 '+H);
+   var LX=112, RX=430, W=RX-LX;
+   var TOT=Math.max(C.x,C.crit)*1.10+0.001;
+   var sc=W/TOT;
+
+   o+='<text x="0" y="12" font-size="9.4" fill="#9aa8ae" font-weight="700">each colour&rsquo;s contribution (O &minus; E)&sup2; &divide; E, on a shared scale</text>';
+   for(i=0;i<K;i++){
+     var y=30+i*21, L=Math.max(1,C.con[i]*sc), on=(i===cellSel);
+     if(on) o+='<rect x="0" y="'+(y-4)+'" width="480" height="19" rx="5" fill="#e2eff5"/>';
+     o+='<rect x="2" y="'+(y-1)+'" width="10" height="10" rx="3" fill="'+COLS[i].c+'"/>';
+     o+='<text x="17" y="'+(y+8)+'" font-size="9.8" fill="'+(on?'#1c4454':'#78868d')+'" font-weight="'+(on?800:700)+'">'+COLS[i].nm+'</text>';
+     o+='<text x="'+(LX-6)+'" y="'+(y+8)+'" font-size="9.2" fill="#9aa8ae" text-anchor="end" font-weight="700">'+sgn(O[i]-C.E[i])+'</text>';
+     o+='<rect x="'+LX+'" y="'+(y-0.5)+'" width="'+L.toFixed(1)+'" height="11" rx="3" fill="'+COLS[i].c+'" opacity="'+(on?1:0.82)+'"/>';
+     o+='<text x="'+(LX+L+6).toFixed(1)+'" y="'+(y+8.4)+'" font-size="9.6" fill="'+COLS[i].c+'" font-weight="800">'+C.con[i].toFixed(2)+'</text>';
+   }
+
+   /* the running total, same scale, stacked in order */
+   var sy=30+K*21+22;
+   o+='<text x="0" y="'+(sy-7)+'" font-size="9.4" fill="#78868d" font-weight="800">stacked together, that is &chi;&sup2;</text>';
+   var run=0;
+   for(i=0;i<K;i++){
+     var x0=LX+run*sc, x1=LX+(run+C.con[i])*sc;
+     o+='<rect x="'+x0.toFixed(2)+'" y="'+sy+'" width="'+Math.max(0.4,x1-x0).toFixed(2)+'" height="18" fill="'+COLS[i].c+'" opacity="'+(cellSel<0||i===cellSel?0.95:0.42)+'"/>';
+     run+=C.con[i];
+   }
+   o+='<rect x="'+LX+'" y="'+sy+'" width="'+Math.max(1,C.x*sc).toFixed(2)+'" height="18" rx="3" fill="none" stroke="#1c4454" stroke-width="1.3"/>';
+   var tx=LX+C.x*sc;
+   o+='<text x="'+Math.min(tx+7,438).toFixed(1)+'" y="'+(sy+13)+'" font-size="10.4" fill="#1c4454" font-weight="800">'+C.x.toFixed(2)+'</text>';
+
+   /* the critical value on the same ruler */
+   var cx=LX+C.crit*sc;
+   o+='<line x1="'+cx.toFixed(1)+'" y1="'+(sy-8)+'" x2="'+cx.toFixed(1)+'" y2="'+(sy+26)+'" stroke="#b8862f" stroke-width="1.8" stroke-dasharray="4 3"/>';
+   o+='<text x="'+cx.toFixed(1)+'" y="'+(sy+38)+'" font-size="9.2" fill="#b8862f" text-anchor="middle" font-weight="800">reject beyond '+C.crit.toFixed(2)+'</text>';
+   o+='<line x1="'+LX+'" y1="'+(sy+22)+'" x2="'+RX+'" y2="'+(sy+22)+'" stroke="#dde7ec" stroke-width="1"/>';
+   $("cells").innerHTML=o;
+
+   /* the table */
+   var rows='';
+   for(i=0;i<K;i++){
+     rows+='<tr class="'+(i===cellSel?'on':'')+'" data-i="'+i+'">'+
+       '<td><span class="ch" style="background:'+COLS[i].c+'"></span>'+COLS[i].nm+'</td>'+
+       '<td>'+O[i]+'</td><td>'+C.E[i].toFixed(1)+'</td><td>'+sgn(O[i]-C.E[i])+'</td>'+
+       '<td><b>'+C.con[i].toFixed(2)+'</b></td></tr>';
+   }
+   rows+='<tr style="pointer-events:none"><td>Total</td><td>'+com(C.n)+'</td><td>'+com(C.n)+'</td><td>0.0</td><td><b>'+C.x.toFixed(2)+'</b></td></tr>';
+   $("tbl").innerHTML=rows;
+   var tr=document.querySelectorAll('#tbl tr[data-i]'), j;
+   for(j=0;j<tr.length;j++){
+     tr[j].onclick=function(){
+       var v=parseInt(this.getAttribute('data-i'),10);
+       cellSel=(cellSel===v)?-1:v;
+       drawBars(); drawCells();
+     };
+   }
+
+   if(cellSel>=0){
+     var s=cellSel, d=O[s]-C.E[s], sh=C.x>0?C.con[s]/C.x:0;
+     var res=C.E[s]>0?d/Math.sqrt(C.E[s]):0;
+     $("cellsent").className='sent';
+     $("cellsent").innerHTML='<span class="big">('+sgn(d)+')&sup2; &divide; '+C.E[s].toFixed(1)+' = '+C.con[s].toFixed(2)+'</span>'+
+       '<b>'+COLS[s].nm+'.</b> The claim says this colour is <b>'+pc(C.Q[s],1)+'</b> of the mix, so a bag of '+com(C.n)+
+       ' should hold about <b>'+C.E[s].toFixed(1)+'</b> of them. It held <b>'+O[s]+'</b> &mdash; a miss of '+sgn(d)+
+       '. Squaring gives '+(d*d).toFixed(1)+', and dividing by the '+C.E[s].toFixed(1)+
+       ' you were waiting for brings it down to <b>'+C.con[s].toFixed(2)+'</b>, which is <b>'+pc(sh,0)+
+       '</b> of the whole &chi;&sup2;. The square root of that, '+f2(res)+
+       ', is this cell&rsquo;s <b>standardised residual</b> &mdash; how many standard&#8209;error&#8209;sized steps this colour sits from where the claim put it, sign and all.';
+   } else {
+     var top=C.x>0?C.big/C.x:0;
+     $("cellsent").className='sent';
+     $("cellsent").innerHTML='<span class="big">&chi;&sup2; = '+C.x.toFixed(2)+' on '+C.df+' degrees of freedom</span>'+
+       'Those '+P.k+' numbers add to <b>'+C.x.toFixed(2)+'</b>, and <b>'+COLS[C.bi].nm+'</b> alone supplies <b>'+pc(top,0)+
+       '</b> of it. Notice what the scale is doing: the gold line marks <b>'+C.crit.toFixed(2)+
+       '</b>, the total this stack has to pass before we call the mix wrong, and it sits on the very same ruler as the bars. '+
+       'One more thing you can read straight off the formula &mdash; since &chi;&sup2; = n &times; &Sigma;(&ocirc; &minus; q)&sup2;/q, this bag&rsquo;s <i>percentages</i> measured on '+
+       com(C.n*10)+' candies instead of '+com(C.n)+' would give &chi;&sup2; = <b>'+(C.x*10).toFixed(2)+
+       '</b>. Same shape of error, ten times the evidence. That is why the test wants counts and refuses percentages.';
+   }
+ }
+
+ /* ================= panel 3 — the null distribution ================= */
+ var DX0=42, DX1=470, DYB=150, DY0=22;
+ function drawDist(){
+   var C=stat(O), o='', i;
+   var v=C.df;
+   var XH=Math.max(C.crit*1.65, C.x*1.14, v+4.2*Math.sqrt(2*v), 7);
+   function dx(x){ return DX0+(x/XH)*(DX1-DX0); }
+   var pk=0;
+   for(i=0;i<=400;i++){ var pp=chiPdf(XH*i/400,v); if(pp>pk) pk=pp; }
+   if(!(pk>0)) pk=1;
+   function dy(x){ var y=DYB-(chiPdf(x,v)/pk)*(DYB-DY0); return y<DY0?DY0:y; }
+   function seg(a,b,m){
+     var s='',j,t;
+     for(j=0;j<=m;j++){ t=a+(b-a)*j/m; s+=(j?'L':'M')+dx(t).toFixed(2)+' '+dy(t).toFixed(2); }
+     return s;
+   }
+   function band(a,b,m){
+     return 'M'+dx(a).toFixed(2)+' '+DYB+'L'+seg(a,b,m).slice(1)+'L'+dx(b).toFixed(2)+' '+DYB+'Z';
+   }
+
+   o+='<path d="'+band(0.0001,XH,320)+'" fill="#cfdde4"/>';
+   if(C.x<XH) o+='<path d="'+band(Math.max(C.x,0.0001),XH,180)+'" fill="#e6b3bd"/>';
+   o+='<path d="'+seg(0.0001,XH,320)+'" fill="none" stroke="#8fa7b3" stroke-width="1.8"/>';
+
+   /* axis */
+   o+='<line x1="'+DX0+'" y1="'+DYB+'" x2="'+DX1+'" y2="'+DYB+'" stroke="#c3d2d9" stroke-width="1.3"/>';
+   var stp=XH>120?25:(XH>60?10:(XH>24?5:(XH>12?2:1)));
+   for(var g=0;g<=XH+1e-9;g+=stp){
+     var X=dx(g);
+     o+='<line x1="'+X.toFixed(1)+'" y1="'+DYB+'" x2="'+X.toFixed(1)+'" y2="'+(DYB+5)+'" stroke="#c3d2d9" stroke-width="1.1"/>';
+     o+='<text x="'+X.toFixed(1)+'" y="'+(DYB+17)+'" font-size="9.6" fill="#9aa8ae" text-anchor="middle" font-weight="700">'+g+'</text>';
+   }
+   o+='<text x="'+((DX0+DX1)/2)+'" y="'+(DYB+31)+'" font-size="10.3" fill="#78868d" text-anchor="middle" font-weight="700">&chi;&sup2; from one bag &mdash; the curve for df = '+v+'</text>';
+
+   /* critical value */
+   var kx=dx(C.crit);
+   o+='<line x1="'+kx.toFixed(1)+'" y1="'+DY0+'" x2="'+kx.toFixed(1)+'" y2="'+DYB+'" stroke="#b8862f" stroke-width="1.7" stroke-dasharray="4 3"/>';
+   o+='<text x="'+Math.min(kx+5,DX1-84).toFixed(1)+'" y="'+(DY0+10)+'" font-size="9.4" fill="#b8862f" font-weight="800">'+C.crit.toFixed(2)+' at &alpha; = 0.05</text>';
+
+   /* the observed total */
+   var ox=dx(C.x);
+   if(ox<DX1+3){
+     o+='<line x1="'+ox.toFixed(1)+'" y1="'+(DY0-8)+'" x2="'+ox.toFixed(1)+'" y2="'+DYB+'" stroke="#1c4454" stroke-width="2.4"/>';
+     o+='<circle cx="'+ox.toFixed(1)+'" cy="'+DYB+'" r="4.6" fill="#1c4454"/>';
+     var w=96, bx=Math.max(2,Math.min(ox-w/2,DX1-w));
+     o+='<rect x="'+bx.toFixed(1)+'" y="'+(DY0-19)+'" width="'+w+'" height="17" rx="8" fill="#1c4454"/>';
+     o+='<text x="'+(bx+w/2).toFixed(1)+'" y="'+(DY0-6.6)+'" font-size="9.4" fill="#fff" text-anchor="middle" font-weight="800">&chi;&sup2; = '+C.x.toFixed(2)+'</text>';
+   } else {
+     o+='<text x="'+(DX1-4)+'" y="'+(DY0+2)+'" font-size="9.6" fill="#1c4454" text-anchor="end" font-weight="800">&chi;&sup2; = '+C.x.toFixed(2)+' &mdash; off the frame &#9654;</text>';
+   }
+
+   /* the mean of the curve sits at df */
+   var mxp=dx(v);
+   o+='<line x1="'+mxp.toFixed(1)+'" y1="'+(DYB-8)+'" x2="'+mxp.toFixed(1)+'" y2="'+(DYB+8)+'" stroke="#6d8894" stroke-width="1.4"/>';
+   o+='<text x="'+DX0+'" y="'+(DYB+45)+'" font-size="9.6" fill="#78868d" font-weight="700">The curve&rsquo;s own mean is exactly df = '+v+', its spread is &radic;(2 &times; df) = '+Math.sqrt(2*v).toFixed(2)+'.</text>';
+   $("dist").innerHTML=o;
+
+   var sig=C.p<AL;
+   $("distsent").className='sent'+(sig?' good':' warn');
+   $("distsent").innerHTML='<span class="big">&chi;&sup2; = '+C.x.toFixed(2)+' &nbsp;&middot;&nbsp; p = '+pv(C.p)+'</span>'+
+     'If the claimed mix were exactly right, a &chi;&sup2; of '+C.x.toFixed(2)+' or larger would turn up in <b>'+
+     (C.p<0.0001?'fewer than 1 bag in 10,000':'about '+pc(C.p,C.p<0.01?2:1)+' of bags')+'</b>. '+
+     (sig
+      ? 'That is rare enough under the claim to make the claim a poor description of this factory, so we reject it. What we have <i>not</i> learned is where the fault lies &mdash; &chi;&sup2; is one number for the whole table, and the per&#8209;cell contributions above are a lead to follow, not a second test.'
+      : 'That is not rare at all, so this bag gives no reason to doubt the advertised mix. Read that carefully: it does not say the mix is right. It says a bag of '+com(C.n)+
+        ' cannot tell this factory apart from an honest one, which is a statement about the resolution of your study as much as about the candy.');
+ }
+
+ /* ================= the E >= 5 condition ================= */
+ function drawCond(){
+   var C=stat(O), Q=C.Q, i, mq=1, mi=0;
+   for(i=0;i<P.k;i++) if(Q[i]<mq){ mq=Q[i]; mi=i; }
+   var need=Math.ceil(5/mq);
+   $("cAv").innerHTML=C.minE.toFixed(1);
+   $("cBv").innerHTML=C.few+' of '+P.k;
+   $("cCv").innerHTML=C.minO;
+   $("cDv").innerHTML=com(need);
+   var ok=C.few===0;
+   $("cA").className=ok?'good':'warn';
+   $("cB").className=ok?'good':'warn';
+   $("cC").className='';
+   $("cD").className=N()>=need?'good':'';
+   $("condsent").className='sent'+(ok?' good':' warn');
+   $("condsent").innerHTML=ok
+     ? '<span class="big">Every expected count clears 5</span>The smallest is <b>'+C.minE.toFixed(1)+
+       '</b>, for '+COLS[mi].nm+(claim==='even'?' &mdash; though with equal shares every cell expects the same':', the thinnest colour in the claim')+
+       '. So the smooth curve in the panel to the left is a fair stand&#8209;in for what the statistic really does, and the p&#8209;value can be read at face value.'
+     : '<span class="big">'+C.few+' of '+P.k+' expected counts fall below 5</span>The smallest is <b>'+C.minE.toFixed(1)+
+       '</b>. With expectations that thin, the statistic can only land on a few widely spaced values, and the smooth curve is a poor imitation of it &mdash; typically producing p&#8209;values that are too small, so the test rejects more often than its 5% promise. Two honest fixes: collect more data (a bag of <b>'+com(need)+
+       '</b> would put every expected count at 5 or more), or merge the rarest colours into a single &ldquo;other&rdquo; category before testing, remembering that merging lowers k and therefore lowers df.';
+ }
+
+ /* ================= panel 4 — a thousand bags ================= */
+ var runs=[], CAPN=20000;
+ var HX0=44, HX1=470, HY0=20, HYB=190, BINS=46;
+ function runSim(m){
+   if(runs.length>=CAPN) return;
+   if(runs.length+m>CAPN) m=CAPN-runs.length;
+   var T=trueP(), Q=claimP(), n=N(), K=P.k, cum=[], s=0, E=[], c=new Array(K), i, j, r, u, x, d;
+   for(i=0;i<K;i++){ s+=T[i]; cum.push(s); E.push(n*Q[i]); }
+   for(r=0;r<m;r++){
+     for(i=0;i<K;i++) c[i]=0;
+     for(j=0;j<n;j++){
+       u=rnd()*s;
+       for(i=0;i<K-1;i++){ if(u<cum[i]) break; }
+       c[i]++;
+     }
+     x=0;
+     for(i=0;i<K;i++){ d=c[i]-E[i]; x+=E[i]>0?d*d/E[i]:0; }
+     runs.push(x);
+   }
+ }
+ function drawHist(){
+   var C=stat(O), TH=theory(), v=C.df, o='', i, n=runs.length;
+   var sd=Math.sqrt(2*(v+2*TH.ncp));
+   var hHi=Math.max(C.crit*1.55, TH.mean+3.6*sd, v+4.2*Math.sqrt(2*v), 8);
+   var BW=hHi/BINS;
+   function hx(x){ return HX0+(x/hHi)*(HX1-HX0); }
+
+   o+='<line x1="'+HX0+'" y1="'+HYB+'" x2="'+HX1+'" y2="'+HYB+'" stroke="#c3d2d9" stroke-width="1.3"/>';
+   var stp=hHi>120?25:(hHi>60?10:(hHi>24?5:(hHi>12?2:1)));
+   for(var g=0;g<=hHi+1e-9;g+=stp){
+     var X=hx(g);
+     o+='<line x1="'+X.toFixed(1)+'" y1="'+HYB+'" x2="'+X.toFixed(1)+'" y2="'+(HYB+5)+'" stroke="#c3d2d9" stroke-width="1.1"/>';
+     o+='<text x="'+X.toFixed(1)+'" y="'+(HYB+17)+'" font-size="9.6" fill="#9aa8ae" text-anchor="middle" font-weight="700">'+g+'</text>';
+   }
+   o+='<text x="'+((HX0+HX1)/2)+'" y="'+(HYB+31)+'" font-size="10.3" fill="#78868d" text-anchor="middle" font-weight="700">&chi;&sup2; from one repeat of the whole study</text>';
+
+   var pk=0;
+   for(i=1;i<=400;i++){ var pp=chiPdf(hHi*i/400,v); if(pp>pk) pk=pp; }
+   var HMAX=pk*1.28; if(!(HMAX>0)) HMAX=1;
+   function hy(d){ var y=HYB-(d/HMAX)*(HYB-HY0); return y<HY0?HY0:y; }
+
+   var off=0;
+   if(n>0){
+     var b=new Array(BINS), k;
+     for(k=0;k<BINS;k++) b[k]=0;
+     for(i=0;i<n;i++){
+       k=Math.floor(runs[i]/BW);
+       if(k<0||k>=BINS){ off++; continue; }
+       b[k]++;
+     }
+     for(k=0;k<BINS;k++){
+       if(!b[k]) continue;
+       var dens=b[k]/(n*BW), x0=hx(k*BW), x1=hx((k+1)*BW), yy=hy(dens);
+       o+='<rect x="'+(x0+0.4).toFixed(2)+'" y="'+yy.toFixed(2)+'" width="'+(x1-x0-0.8).toFixed(2)+'" height="'+(HYB-yy).toFixed(2)+'" fill="#bcd9e6"/>';
+     }
+   }
+
+   var tp='';
+   for(i=1;i<=340;i++){
+     var xx=hHi*i/340;
+     tp+=(i>1?'L':'M')+hx(xx).toFixed(2)+' '+hy(chiPdf(xx,v)).toFixed(2);
+   }
+   o+='<path d="'+tp+'" fill="none" stroke="#1c4454" stroke-width="2.4"/>';
+
+   var kx=hx(C.crit);
+   o+='<line x1="'+kx.toFixed(1)+'" y1="'+HY0+'" x2="'+kx.toFixed(1)+'" y2="'+HYB+'" stroke="#b8862f" stroke-width="1.7" stroke-dasharray="4 3"/>';
+   o+='<text x="'+Math.min(kx+5,HX1-92).toFixed(1)+'" y="'+(HY0+11)+'" font-size="9.4" fill="#b8862f" font-weight="800">reject beyond '+C.crit.toFixed(2)+'</text>';
+   $("hist").innerHTML=o;
+
+   var sig=0, sm=0;
+   for(i=0;i<n;i++){ sm+=runs[i]; if(runs[i]>C.crit) sig++; }
+   var mean=n?sm/n:0;
+   $("rN").innerHTML=com(n);
+   $("rM").innerHTML=n?mean.toFixed(2):'&mdash;';
+   $("rT").innerHTML=TH.mean.toFixed(2);
+   $("rP").innerHTML=n?pc(sig/n):'&mdash;';
+   $("rPl").innerHTML=isNull()?'False alarm<br>rate':'Power &mdash; share<br>that detect it';
+   $("run2").disabled=(n>=CAPN);
+
+   if(!n){
+     $("histcap").innerHTML='Press <b>Run 1,000 bags</b>. Touching any dial clears this panel, because a different setup produces a different curve and the old runs no longer belong to it.';
+   } else {
+     $("histcap").innerHTML='Across <b>'+com(n)+'</b> bags the &chi;&sup2; values averaged <b>'+mean.toFixed(2)+
+       '</b> against a predicted mean of <b>'+TH.mean.toFixed(2)+'</b>. '+
+       (off?'('+com(off)+' run'+(off===1?'':'s')+' landed off the right edge and '+(off===1?'is':'are')+' not drawn.) ':'')+
+       (isNull()
+        ? 'That prediction is not a fitted number: when the claim is true the mean of &chi;&sup2; is <b>exactly k &minus; 1 = '+v+
+          '</b>, which is also why df is the only thing the curve needs to know. The share of bags crossing the line is the <b>false alarm rate</b>, sitting at '+pc(sig/n)+
+          ' against the 5% you authorised by choosing &alpha; = 0.05. Those bags came from an honest factory. They are the cost of the rule, not a flaw in it.'
+        : 'The excess you dialled in pushes the predicted mean up from '+v+' to '+TH.mean.toFixed(2)+
+          ', and the whole histogram slides right with it &mdash; that shift is what evidence looks like in bulk. The share of bags that crossed the line, <b>'+pc(sig/n)+
+          '</b>, is this design&rsquo;s <b>power</b>. It is fixed before any data arrive: raise n and it climbs, shrink the excess and it falls back toward 5%.');
+   }
+ }
+
+ /* ================= claims ================= */
+ var CLM=[
+  {ok:1, t:'&ldquo;&chi;&sup2; is built from counts, not percentages &mdash; the same percentages from ten times as much data give ten times the &chi;&sup2;.&rdquo;',
+   s:'why sample size is half the message',
+   d:'<b>Correct, and it is worth checking algebraically.</b> Write the observed count as O = n&#183;&ocirc; and the expected as E = n&#183;q. Then each term becomes n&sup2;(&ocirc;&minus;q)&sup2; &divide; (n&#183;q), so &chi;&sup2; = n &times; &Sigma;(&ocirc;&minus;q)&sup2;/q &mdash; strictly proportional to n. A 4&#8209;point discrepancy in a bag of 40 is a shrug; the identical discrepancy in a bag of 4,000 is overwhelming. This is also the most common way the test is botched in practice: percentages typed into the formula as though they were counts, silently producing a statistic computed on a sample of size 100 no matter how much data you really had.'},
+  {ok:0, t:'&ldquo;A large &chi;&sup2; means the claimed proportions are wrong in every category.&rdquo;',
+   s:'one bad cell can carry the whole statistic',
+   d:'<b>Wrong.</b> &chi;&sup2; is a sum, and a sum does not care whether it was built from many small terms or one enormous one. Open a bag with the excess dialled up and tap through the rows in the second panel: it is routine for a single colour to supply the majority of the total while the rest sit near zero. That is exactly why the per&#8209;cell contributions are worth printing. The test itself reports only the sum, and the sum cannot tell those two situations apart.'},
+  {ok:1, t:'&ldquo;Degrees of freedom is k &minus; 1 because the expected counts are forced to total n.&rdquo;',
+   s:'why one deviation is never free',
+   d:'<b>Correct.</b> Both rows of the table &mdash; observed and expected &mdash; add to the same n, so the deviations O &minus; E must add to exactly zero. Check the bottom row of the table: it is always 0.0, in every bag, by construction. That means once you know k &minus; 1 of the misses, the last one is determined; it has no choice but to close the books. The curve you read the p&#8209;value from is indexed by that count of genuinely free deviations, not by the number of categories.'},
+  {ok:0, t:'&ldquo;p = 0.02 means there is a 2% chance the advertised mix is correct.&rdquo;',
+   s:'the classic inversion',
+   d:'<b>Wrong.</b> The p&#8209;value is computed <i>assuming</i> the advertised mix is correct &mdash; that assumption is the starting point of the calculation, not something being assigned a probability. It answers one question only: if the claim were true, how often would a &chi;&sup2; at least this large appear? Turning that around into a probability about the claim is a different quantity entirely, and it needs information the p&#8209;value simply does not contain.'},
+  {ok:0, t:'&ldquo;The test uses only the right tail, so it can detect too many of a colour but not too few.&rdquo;',
+   s:'why the tail is one-sided but the test is not',
+   d:'<b>Wrong.</b> The deviation is <b>squared</b>, so a shortfall and an excess of the same size contribute identically &mdash; look at the contribution column and you will see it depends only on the size of the miss, never its direction. Any departure from the claim, in any category, in either direction, pushes &chi;&sup2; <i>up</i>. The upper tail is one&#8209;sided as a matter of arithmetic, not because the alternative hypothesis is. The alternative here is simply &ldquo;the claimed mix is wrong somewhere.&rdquo;'},
+  {ok:1, t:'&ldquo;A &chi;&sup2; that comes out surprisingly small deserves a second look.&rdquo;',
+   s:'data that fit too well',
+   d:'<b>Correct, though it is not a rejection.</b> Real sampling is noisy, and the curve says so: with df = '+'k &minus; 1'+', typical values cluster around df with a spread of &radic;(2&#183;df). Counts that land almost exactly on their expectations, bag after bag, produce a &chi;&sup2; near zero &mdash; which is itself an unlikely event. It usually points at a process problem rather than a lucky sample: rounding, quotas, a data set that was tidied, or figures that were never collected the way they were described. Famous historical data sets have been questioned on precisely this basis.'},
+  {ok:1, t:'&ldquo;It is the expected counts, not the observed ones, that need to be at least about 5.&rdquo;',
+   s:'which column the rule applies to',
+   d:'<b>Correct.</b> The condition exists because the smooth &chi;&sup2; curve is only a good imitation of a fundamentally discrete statistic once each cell has enough expected mass to behave smoothly. E is the quantity that controls that, and E is fixed by the claim and n before any data exist. Observing zero of a rare colour is a perfectly legitimate outcome and breaks nothing. <i>Expecting</i> 0.6 of it does. If a cell&rsquo;s expectation is too thin, collect more data or merge that category with a neighbouring one &mdash; and remember that merging reduces k, which reduces df.'},
+  {ok:0, t:'&ldquo;A large p&#8209;value shows the advertised mix is correct.&rdquo;',
+   s:'absence of evidence',
+   d:'<b>Wrong.</b> Load the <i>Barely off, huge bag</i> preset, then drag the bag size down to 100. The mix is genuinely wrong the entire time &mdash; you set it that way &mdash; yet the test stops objecting, because a bag that small cannot resolve a discrepancy that fine. Failing to reject means the data were <i>compatible</i> with the claim, and small data are compatible with almost every claim you could name. The power readout in the simulation panel is the honest way to ask how much that non&#8209;result was worth.'},
+  {ok:0, t:'&ldquo;A significant &chi;&sup2; identifies which category is out of line.&rdquo;',
+   s:'an omnibus test answers one question',
+   d:'<b>Wrong.</b> The test collapses the entire table into a single number and compares it to a single threshold; there is nowhere in that procedure for a category name to come out. Inspecting the contributions afterward is good practice and often obvious in its verdict, but it is a follow&#8209;up, not part of the test. Searching k cells for the largest one and then quoting the omnibus p&#8209;value for it is a fishing expedition: the more cells you scan, the more likely the winner is noise. A cell singled out that way should be confirmed on fresh data.'}
+ ];
+ var INFO0='<span class="n">The section in one line</span>Take the claim seriously, turn it into <b>expected counts E = n &times; the claimed share</b>, and measure every category&rsquo;s miss against the count it was measured from: <b>&chi;&sup2; = &Sigma;(O &minus; E)&sup2;/E</b>, read against the curve with <b>k &minus; 1</b> degrees of freedom.';
+
+ function drawClaims(){
+   $("claims").innerHTML=CLM.map(function(c,i){
+     return '<button class="it'+(i===ci?' on':'')+'" data-i="'+i+'"><span class="sw" style="background:'+(i===ci?'#fff':(c.ok?'#2f9e5b':'#d1495b'))+'"></span>'+
+            '<span><span class="nm">'+c.t+'</span><span class="s">'+c.s+'</span></span></button>';
+   }).join('');
+   var b=document.querySelectorAll('#claims .it'), i;
+   for(i=0;i<b.length;i++){
+     b[i].onclick=function(){ ci=parseInt(this.getAttribute('data-i'),10); drawClaims(); };
+   }
+   if(ci>=0){
+     var c=CLM[ci];
+     $("info").innerHTML='<span class="n">'+(c.ok?'&#10003; True':'&#10007; False')+' &mdash; '+c.s+'</span>'+c.d;
+   } else {
+     $("info").innerHTML=INFO0;
+   }
+ }
+
+ /* ================= tiles + stage ================= */
+ function drawTiles(){
+   var C=stat(O), sig=C.p<AL;
+   $("tN").innerHTML=com(C.n);
+   $("tK").innerHTML=P.k;
+   $("tDF").innerHTML=C.df;
+   $("tME").innerHTML=C.minE.toFixed(1);
+   $("tMEs").innerHTML=C.few?(C.few+' cell'+(C.few===1?'':'s')+' under 5'):'all cells clear 5';
+   $("tX").innerHTML=C.x.toFixed(2);
+   $("tC").innerHTML=C.crit.toFixed(2);
+   $("tP").innerHTML=pv(C.p);
+   $("tPs").innerHTML=sig?'below &alpha; = 0.05':'above &alpha; = 0.05';
+   $("bxP").className=sig?'good':'warn';
+   $("tB").innerHTML=COLS[C.bi].nm;
+   $("tBs").innerHTML=(C.x>0?pc(C.big/C.x,0):'&mdash;')+' of &chi;&sup2;';
+
+   $("stage").style.background=sig?'#2f6f8a':'#8a6f4f';
+   $("stage").innerHTML='&chi;&sup2; = '+C.x.toFixed(2)+' &nbsp;on&nbsp; df = '+C.df+
+     '<small>'+(sig?'the counts do not fit the claim':'the counts are compatible with the claim')+' &middot; p = '+pv(C.p)+'</small>';
+
+   $("sent").className='sent'+(sig?' good':' warn');
+   $("sent").innerHTML='<span class="big">'+C.x.toFixed(2)+' against a cut&#8209;off of '+C.crit.toFixed(2)+'</span>'+
+     'The entire test is that comparison. Your '+P.k+' colours produced misses which, once squared and scaled by their own expected counts, add to <b>'+
+     C.x.toFixed(2)+'</b>. A bag from a factory that really did follow the advertised mix would produce a total above <b>'+C.crit.toFixed(2)+
+     '</b> only 5% of the time, so that is where the line is drawn. '+
+     (sig
+      ? 'This bag is past it, so we reject the claim &mdash; while remembering that &ldquo;rejected&rdquo; is a statement about fit, not about cause. Nothing here says <i>why</i> the mix is off.'
+      : 'This bag falls short of it, so the claim survives &mdash; which is not the same as being confirmed. Push the bag size up and watch how quickly the same underlying error becomes visible.');
+ }
+
+ /* ================= wiring ================= */
+ function drawSegs(){
+   var b=document.querySelectorAll('#claimSeg button'), i;
+   for(i=0;i<b.length;i++) b[i].className=(b[i].getAttribute('data-v')===claim)?'on':'';
+   var Q=claimP(), parts=[], j;
+   for(j=0;j<P.k;j++) parts.push(COLS[j].nm+' '+pc(Q[j],1));
+   $("claimcap").innerHTML=(claim==='mix'
+     ? '<b>An unequal claim.</b> The maker publishes a specific mix, so each colour gets its own expected count. This is the general case, and the one worth practising &mdash; goodness of fit is not restricted to &ldquo;everything equally likely.&rdquo; '
+     : '<b>An equal claim.</b> Every category gets share 1/k, so all the expected counts are the same n/k. Testing a die for fairness, or checking whether births are spread evenly across the days of the week, is this case. ')+
+     'Right now the claim is: '+parts.join(' &middot; ')+'.';
+ }
+ function labels(){
+   $("vK").innerHTML=P.k;
+   $("vN").innerHTML=com(N());
+   $("vT").innerHTML=P.tilt<=0?'none':'+'+Math.round(P.tilt*100)+' pts';
+   $("tiltLab").innerHTML=COLS[0].nm+' runs heavy by';
+   var Q=claimP(), T=trueP();
+   $("tiltcap").innerHTML=P.tilt<=0
+     ? '<b>The claim is exactly true.</b> The factory really does mix the colours in the advertised proportions, so every &chi;&sup2; you see below is pure sampling noise. Anything the test rejects from here is a <b>false alarm</b> &mdash; and it will keep producing them at about the rate you set with &alpha;.'
+     : '<b>The claim is false.</b> The factory actually runs '+COLS[0].nm.toLowerCase()+' at <b>'+pc(T[0],1)+'</b> against an advertised <b>'+
+       pc(Q[0],1)+'</b>, and the shortfall is taken out of the other colours in proportion. Nothing in a single bag reveals this; only the size of &chi;&sup2;, on average, over many bags.';
+ }
+ function redrawAll(){ drawBars(); drawCells(); drawDist(); drawCond(); drawTiles(); drawHist(); }
+ function dialsChanged(){
+   if(cellSel>=P.k) cellSel=-1;
+   seed=SEED0; runs=[];
+   drawSegs(); labels(); newBag(); redrawAll();
+ }
+
+ $("sK").oninput=function(){ P.k=parseInt(this.value,10); dialsChanged(); };
+ $("sN").oninput=function(){ P.ni=parseInt(this.value,10); dialsChanged(); };
+ $("sT").oninput=function(){ P.tilt=parseInt(this.value,10)/100; dialsChanged(); };
+
+ var PRE=[{cl:'mix',k:6,ni:9, t:0},
+          {cl:'mix',k:6,ni:9, t:8},
+          {cl:'mix',k:6,ni:1, t:15},
+          {cl:'mix',k:6,ni:17,t:3},
+          {cl:'even',k:8,ni:9,t:6}];
+ function applyPre(j){
+   var q=PRE[j];
+   claim=q.cl; P.k=q.k; P.ni=q.ni; P.tilt=q.t/100;
+   $("sK").value=P.k; $("sN").value=P.ni; $("sT").value=q.t;
+   cellSel=-1;
+   dialsChanged();
+ }
+ (function(){
+   var b=document.querySelectorAll('#preSeg button'), i;
+   for(i=0;i<b.length;i++){
+     b[i].onclick=function(){ applyPre(parseInt(this.getAttribute('data-v'),10)); };
+   }
+   var m=document.querySelectorAll('#claimSeg button');
+   for(i=0;i<m.length;i++){
+     m[i].onclick=function(){ claim=this.getAttribute('data-v'); dialsChanged(); };
+   }
+ })();
+
+ $("bnew").onclick=function(){ newBag(); drawBars(); drawCells(); drawDist(); drawCond(); drawTiles(); };
+ $("bhunt").onclick=function(){ hunt(); drawBars(); drawCells(); drawDist(); drawCond(); drawTiles(); };
+ $("run1").onclick=function(){ runSim(1000); drawHist(); };
+ $("run2").onclick=function(){ runSim(4000); drawHist(); };
+ $("rrs").onclick=function(){ runs=[]; drawHist(); };
+ $("brst").onclick=function(){ ci=-1; drawClaims(); applyPre(1); };
+
+ /* ================= go ================= */
+ $("sN").max=NS.length-1;
+ $("sN").value=P.ni;
+ drawClaims();
+ drawSegs();
+ labels();
+ newBag();
+ redrawAll();
+})();
+</script>
+</body>
+</html>

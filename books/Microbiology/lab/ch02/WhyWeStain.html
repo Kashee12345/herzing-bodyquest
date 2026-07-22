@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Why We Stain</title>
+<meta name="description" content="Interactive compare of an unstained smear, a simple stain, and a differential stain — showing why contrast is needed to see bacteria. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:1fr 1fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.chk{display:flex;gap:8px;margin-top:12px;}
+.chk div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 4px;font-size:11px;font-weight:700;color:var(--muted);background:#fff;line-height:1.25;}
+.chk div .v{display:block;font-size:14px;margin-top:3px;}
+.chk div.yes{border-color:var(--teal);color:var(--teal-dk);background:#f5f1fa;}
+.chk div.no{color:#b23145;}
+.leg{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12px;font-weight:600;color:var(--soft);align-items:center;justify-content:center;}
+.leg .lg{display:inline-flex;align-items:center;gap:6px;}
+.leg .lg i{width:14px;height:14px;border-radius:4px;display:inline-block;flex:none;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 2</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 2</div>
+  <h1>Why We Stain</h1>
+  <div class="intro">Bacteria are nearly transparent, so under the microscope they vanish into a bright field. Stains add the <b>contrast</b> we need to see them &mdash; and the <i>kind</i> of stain decides how much we learn. Compare the same smear three ways.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Under the microscope</h2>
+    <svg viewBox="0 0 220 200" aria-label="microscope field of view"><g id="art"></g></svg>
+    <div class="leg" id="leg"></div>
+  </div></div>
+  <div>
+    <div id="stage">The three views<small>tap one to begin</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-m="none" class="on">No stain<small>wet mount</small></button>
+        <button data-m="simple">Simple stain<small>one dye</small></button>
+        <button data-m="diff">Differential<small>Gram stain</small></button>
+      </div>
+      <div class="chk">
+        <div id="c1">Cells visible?<span class="v" id="v1">—</span></div>
+        <div id="c2">Shape &amp; arrangement?<span class="v" id="v2">—</span></div>
+        <div id="c3">Tell species apart?<span class="v" id="v3">—</span></div>
+      </div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var SIMPLE='#3f61a8',SIMPLE_D='#2c4780',PU='#6d3f9c',PU_D='#4d2b70',PK='#d1495b',PK_D='#9c2f3d';
+ // One fixed smear: a cluster of cocci (thick-walled, Gram-positive) + scattered rods (thin-walled, Gram-negative)
+ var CELLS=[
+  {t:'cocci',x:70,y:62},{t:'cocci',x:82,y:58},{t:'cocci',x:63,y:74},
+  {t:'cocci',x:78,y:72},{t:'cocci',x:70,y:86},{t:'cocci',x:88,y:70},
+  {t:'cocci',x:60,y:64},{t:'cocci',x:84,y:84},
+  {t:'rod',x:150,y:64,a:20},{t:'rod',x:158,y:92,a:-32},
+  {t:'rod',x:138,y:112,a:58},{t:'rod',x:121,y:132,a:14},
+  {t:'rod',x:162,y:126,a:-8},{t:'rod',x:135,y:86,a:74}
+ ];
+ var M={
+  none:{nm:'No stain',sub:'wet mount',bg:'#6b6480',
+    chk:[[2,'~ barely'],[0,'✕ no'],[0,'✕ no']],
+    leg:'<span class="lg"><i style="background:#e7e1ee;border:1px solid #cdc5da"></i>cells nearly invisible</span>',
+    title:'No stain (wet mount)',
+    body:'Bacterial cytoplasm is mostly water and nearly colorless, so against a bright microscope field there is almost no <b>contrast</b>. The cells blend into the background &mdash; you might catch a flicker of motility, but you cannot read their shape or how they are arranged. <b>This is the problem staining exists to solve.</b>',
+    loc:'Live wet mounts are still used to watch motility, but not to judge a cell’s shape.'},
+  simple:{nm:'Simple stain',sub:'one dye',bg:SIMPLE,
+    chk:[[1,'✓ yes'],[1,'✓ yes'],[0,'✕ no']],
+    leg:'<span class="lg"><i style="background:'+SIMPLE+'"></i>every cell one color</span>',
+    title:'Simple stain',
+    body:'A single dye &mdash; methylene blue, crystal violet, or safranin &mdash; coats every cell the same color. Contrast jumps against the bright field, so now you can read <b>morphology</b>: shape (cocci vs. bacilli), size, and arrangement (clusters, chains, pairs). But every cell is one color, so two different organisms still look identical.',
+    mnem:'One dye, one color &mdash; it shows <b>what a cell looks like</b>, not <b>who it is</b>.'},
+  diff:{nm:'Differential stain',sub:'Gram stain',bg:PU,
+    chk:[[1,'✓ yes'],[1,'✓ yes'],[1,'✓ yes']],
+    leg:'<span class="lg"><i style="background:'+PU+'"></i>Gram-positive (thick wall)</span><span class="lg"><i style="background:'+PK+'"></i>Gram-negative (thin wall)</span>',
+    title:'Differential stain',
+    body:'Several reagents are applied in sequence, and they react <b>differently</b> with different cell walls. The Gram stain leaves thick-walled cells <b>purple</b> (Gram-positive) and thin-walled cells <b>pink</b> (Gram-negative). Now contrast reveals not just shape but a real difference <i>between</i> organisms.',
+    loc:'A Gram result plus shape &mdash; e.g. “Gram-positive cocci in clusters” &mdash; often guides the first antibiotic hours before the culture returns.'}
+ };
+ var order=['none','simple','diff'],cur='none';
+ function draw(k){
+   var s='';
+   s+='<circle cx="110" cy="95" r="88" fill="#e9e3f1"/>';
+   s+='<circle cx="110" cy="95" r="84" fill="#fcfbfe"/>';
+   CELLS.forEach(function(c){
+     var fill,stroke,sw=1.2;
+     if(k==='none'){fill='#e7e1ee';stroke='#d8d1e3';sw=1;}
+     else if(k==='simple'){fill=SIMPLE;stroke=SIMPLE_D;}
+     else{ if(c.t==='cocci'){fill=PU;stroke=PU_D;} else {fill=PK;stroke=PK_D;} }
+     if(c.t==='cocci'){
+       s+='<circle cx="'+c.x+'" cy="'+c.y+'" r="7" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'"/>';
+     } else {
+       s+='<g transform="translate('+c.x+','+c.y+') rotate('+c.a+')"><rect x="-10" y="-4.6" width="20" height="9.2" rx="4.6" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'"/></g>';
+     }
+   });
+   return s;
+ }
+ function set(el,pair){ var st=pair[0]; el.className=(st===1?'yes':(st===0?'no':'')); el.querySelector('.v').innerHTML=pair[1]; }
+ function render(){
+   var m=M[cur];
+   $("art").innerHTML=draw(cur);
+   $("cardTitle").innerHTML=m.title;
+   $("leg").innerHTML=m.leg;
+   $("stage").style.background=m.bg;
+   $("stage").innerHTML=m.nm+'<small>'+m.sub+'</small>';
+   set($("c1"),m.chk[0]); set($("c2"),m.chk[1]); set($("c3"),m.chk[2]);
+   var extra = m.mnem?('<div class="mnem">'+m.mnem+'</div>') : (m.loc?('<div class="loc">'+m.loc+'</div>') : '');
+   if(m.mnem && m.loc) extra='<div class="mnem">'+m.mnem+'</div><div class="loc">'+m.loc+'</div>';
+   $("info").innerHTML='<span class="n">'+m.title+'</span>'+m.body+extra;
+   document.querySelectorAll('#seg button').forEach(function(b){ b.classList.toggle('on', b.dataset.m===cur); });
+ }
+ document.querySelectorAll('#seg button').forEach(function(b){
+   b.onclick=function(){ cur=b.dataset.m; render(); };
+ });
+ render();
+})();
+</script>
+</body>
+</html>

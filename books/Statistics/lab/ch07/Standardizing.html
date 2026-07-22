@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Standardizing</title>
+<meta name="description" content="Convert a raw score to a z-score and watch any normal curve collapse onto the one standard normal &mdash; with live arithmetic, computed tail areas, a real simulated sample, and a side-by-side unusualness comparison.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.06fr 0.94fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:118px;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;min-width:60px;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:66px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles.t3{grid-template-columns:repeat(3,1fr);}
+.tiles.t2{grid-template-columns:repeat(2,1fr);}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.lgd i.dash{width:14px;height:0;border-top:2px dashed #1c4454;border-radius:0;vertical-align:3px;}
+.lgd i.dot{width:14px;height:0;border-top:2px dotted #9db6c2;border-radius:0;vertical-align:3px;}
+.eq{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:13px;padding:11px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:16px;font-weight:800;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.eq .fr{display:inline-block;text-align:center;}
+.eq .fr i{display:block;font-style:normal;font-size:12.5px;padding:0 7px 1px;white-space:nowrap;}
+.eq .fr b{display:block;font-size:12.5px;border-top:1.7px solid var(--teal-dk);padding:2px 7px 0;}
+.eq .res{font-size:19px;}
+.eq .op{font-weight:700;color:var(--muted);font-size:14px;}
+.vd{border:1px solid var(--line);border-left:5px solid var(--gold);background:#fbf8f1;border-radius:10px;padding:11px 13px;margin-top:11px;font-size:12.6px;color:var(--soft);line-height:1.55;}
+.vd b{color:var(--teal-dk);}
+.vd .w{display:block;font-family:var(--disp);font-weight:600;font-size:15px;color:#8a6a20;margin-bottom:3px;}
+#info .loc{font-variant-numeric:tabular-nums;font-size:12px;line-height:1.65;}
+.grid .it .nm{display:block;} .grid .it .s{display:block;margin-top:2px;font-weight:600;}
+#cuts{margin-top:2px;} #cuts .it{gap:8px;}
+#cuts .nm,#cuts .s{display:block;} #cuts .s{margin-top:2px;font-weight:600;}
+#cuts .lft{flex:1;min-width:0;}
+.cut{font-size:14.5px;font-weight:800;color:var(--teal-dk);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.it.on .cut{color:#fff;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 7</div>
+  <h1>Standardizing</h1>
+  <div class="intro">There are infinitely many normal curves &mdash; one for every pair of &mu; and &sigma; &mdash; and nobody wants a table for each. So we stop measuring in beats, millimeters, or grams and start measuring in <b>standard deviations from the mean</b>. Subtract &mu;, divide by &sigma;, and every normal curve in the world collapses onto <b>one</b>.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Resting heart rate &rarr; z</h2>
+      <svg viewBox="0 0 480 416" id="chart" aria-label="a raw normal curve above the standard normal curve, with one value marked on both"></svg>
+      <div class="lgd">
+        <span><i style="background:#7fb0c6"></i>the area you selected</span>
+        <span><i style="background:#d9b25e"></i>simulated sample</span>
+        <span><i class="dash"></i>&mu; &nbsp;(and z = 0)</span>
+        <span><i class="dot"></i>&mu; &plusmn; k&sigma; &nbsp;(and z = &plusmn;k)</span>
+        <span><i style="background:#d1495b;border-radius:50%"></i>the marked value</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>Reading the curve backwards</h2>
+      <div class="cap" style="margin-top:2px;">Standardizing runs in reverse too, and that is where its value shows. Name a percentile: the <b>standard normal on its own</b> hands you the z that cuts it off, and then <b>x = &mu; + z&sigma;</b> turns that single z into a cutoff on any scale you please. One curve, one lookup, every distribution.</div>
+      <div class="seg" id="pseg">
+        <button data-p="50">50th<small>the mean</small></button>
+        <button data-p="90" class="on">90th<small>top 10%</small></button>
+        <button data-p="95">95th<small>top 5%</small></button>
+        <button data-p="99">99th<small>top 1%</small></button>
+      </div>
+      <div class="sl"><label>percentile</label><input type="range" id="pSl" min="0.5" max="99.5" step="0.1" value="90"><span class="nv" id="pVal">90.0</span></div>
+      <div class="tiles t2">
+        <div><span class="lb">The z that cuts it off</span><span class="vv" id="pZ">&mdash;</span><span class="sub" id="pChk">&nbsp;</span></div>
+        <div><span class="lb">Area left above it</span><span class="vv" id="pA">&mdash;</span><span class="sub" id="pA2">&nbsp;</span></div>
+      </div>
+      <div class="hd">That one z, translated onto four different scales</div>
+      <div class="list" id="cuts"></div>
+      <div class="vd" id="verdict"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Pick a value<small>drag the sliders</small></div>
+    <div class="card">
+      <div class="hd">The variable</div>
+      <div class="grid" id="ctxs"></div>
+      <div class="hd">Its two parameters, and one observation</div>
+      <div class="sl"><label>&mu; &mdash; the mean</label><input type="range" id="muSl"><span class="nv" id="muVal"></span></div>
+      <div class="sl"><label>&sigma; &mdash; the SD</label><input type="range" id="sdSl"><span class="nv" id="sdVal"></span></div>
+      <div class="sl"><label>x &mdash; one value</label><input type="range" id="xSl"><span class="nv" id="xVal"></span></div>
+      <div class="eq" id="eq"></div>
+      <div class="tiles">
+        <div><span class="lb">Raw value<br>x</span><span class="vv" id="tX">&mdash;</span></div>
+        <div><span class="lb">Standardized<br>z</span><span class="vv" id="tZ">&mdash;</span></div>
+        <div><span class="lb">Percentile<br>% below x</span><span class="vv" id="tP">&mdash;</span></div>
+        <div><span class="lb">Raw gap<br>x &minus; &mu;</span><span class="vv" id="tD">&mdash;</span></div>
+      </div>
+      <div class="hd">Which area do you want?</div>
+      <div class="seg" id="tseg">
+        <button data-t="below" class="on">Below x<small>the percentile</small></button>
+        <button data-t="above">Above x<small>the upper tail</small></button>
+        <button data-t="both">Beyond &plusmn;|z|<small>either direction</small></button>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>The recipe, and its reverse.</b> Standardizing is <b>z = (x &minus; &mu;) &divide; &sigma;</b> &mdash; subtract the center, then divide by the spread. Going back the other way is <b>x = &mu; + z&sigma;</b>. Standardizing <i>any</i> set of values, normal or not, always yields a mean of exactly 0 and an SD of exactly 1. But when the values were <b>normal</b> to begin with, something stronger happens: the result is not merely centered and rescaled, it is <b>N(0,&nbsp;1)</b> itself &mdash; the standard normal. That is the curve every table, every calculator key, and every software routine is built around, and it is why one of them is enough.</div>
+      <div class="note"><b>Three things standardizing does not do.</b> It does <b>not</b> make data normal: subtracting and dividing by constants is a linear rescaling, so skew, outliers, and extra peaks all survive untouched. The percentages on this page come from the <i>normal model</i> &mdash; the z-score itself is only arithmetic and assumes nothing, but reading a percentile off it requires that the values really do follow this curve. And a z-score is <b>not a grade</b>: negative is not "bad" and positive is not "good," since which direction counts as trouble depends entirely on the variable.</div>
+    </div>
+    <div class="card">
+      <h2>Does a real sample actually standardize?</h2>
+      <div class="cap" style="margin-top:2px;">Each draw generates observations from the current normal distribution, then converts every one of them with the same formula. The gold bars appear on <b>both</b> panels &mdash; the identical pile of numbers, read off two different rulers.</div>
+      <div class="tiles t3">
+        <div><span class="lb">Observations</span><span class="vv" id="sN">0</span><span class="sub">&nbsp;</span></div>
+        <div><span class="lb">Mean of z</span><span class="vv" id="sMz">&mdash;</span><span class="sub" id="sMx">mean of x &mdash;</span></div>
+        <div><span class="lb">SD of z</span><span class="vv" id="sSz">&mdash;</span><span class="sub" id="sSx">SD of x &mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="draw">Draw 250 observations</button><button class="btn" id="clear">Clear</button></div>
+      <div class="cap" id="scap"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- the variables on offer ---------- */
+ var CTX=[
+  {k:'hr',nm:'Resting heart rate',un:'bpm',short:'heart rate',col:'#d1495b',
+   mu:72,sd:9,x:88,xmin:36,xmax:108,tick:12,d:0,ds:1,cd:1,
+   muMin:60,muMax:84,muStep:1,sdMin:4,sdMax:16,sdStep:0.5,xStep:1,
+   hi:'a fast resting rate',lo:'a slow resting rate'},
+  {k:'sbp',nm:'Systolic blood pressure',un:'mmHg',short:'systolic pressure',col:'#2f6f8a',
+   mu:120,sd:14,x:142,xmin:56,xmax:184,tick:16,d:0,ds:1,cd:1,
+   muMin:104,muMax:136,muStep:1,sdMin:6,sdMax:24,sdStep:0.5,xStep:1,
+   hi:'a high reading',lo:'a low reading'},
+  {k:'bw',nm:'Newborn birth weight',un:'g',short:'birth weight',col:'#b8862f',
+   mu:3400,sd:500,x:2600,xmin:1400,xmax:5400,tick:500,d:0,ds:0,cd:0,
+   muMin:2900,muMax:3900,muStep:25,sdMin:250,sdMax:800,sdStep:25,xStep:25,
+   hi:'a heavy newborn',lo:'a light newborn'},
+  {k:'cm',nm:'Daily commute',un:'min',short:'commute',col:'#7a5a8a',
+   mu:32,sd:8,x:45,xmin:0,xmax:64,tick:8,d:1,ds:1,cd:1,
+   muMin:24,muMax:40,muStep:0.5,sdMin:4,sdMax:14,sdStep:0.5,xStep:0.5,
+   hi:'a long trip',lo:'a short trip'}
+ ];
+
+ /* ---------- state ---------- */
+ var C=CTX[0], MU=C.mu, SD=C.sd, X=C.x, TAIL='below';
+ var raw=[], NBZ=48, BWZ=8/NBZ, CAP=4000;
+ var seed=20260719;
+
+ /* ---------- seeded PRNG (mulberry32) ---------- */
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ /* Box-Muller: two uniforms in, one standard normal out */
+ function gauss(){
+   var u1=rnd(); if(u1<1e-12)u1=1e-12;
+   var u2=rnd();
+   return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+ }
+
+ /* ---------- densities and areas ---------- */
+ var R2PI=Math.sqrt(2*Math.PI);
+ function phi(z){ return Math.exp(-0.5*z*z)/R2PI; }
+ function dens(x,mu,sd){ return phi((x-mu)/sd)/sd; }
+ /* Simpson's rule with n even */
+ function simp(f,a,b,n){
+   var h=(b-a)/n, s=f(a)+f(b), i;
+   for(i=1;i<n;i++){ s+=(i%2?4:2)*f(a+i*h); }
+   return s*h/3;
+ }
+ /* area below z under the standard normal */
+ function cdfZ(z){
+   if(z<=-8.5)return 0;
+   if(z>=8.5)return 1;
+   return simp(phi,-8.5,z,1600);
+ }
+ /* the same area computed on the raw scale, from scratch */
+ function cdfRaw(x,mu,sd){
+   var lo=mu-8.5*sd;
+   if(x<=lo)return 0;
+   if(x>=mu+8.5*sd)return 1;
+   return simp(function(t){return dens(t,mu,sd);},lo,x,1600);
+ }
+
+ /* ---------- formatting ---------- */
+ function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+ function nf(v,d){
+   if(Math.abs(v)<Math.pow(10,-d)/2)v=0;
+   var s=Math.abs(v).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+   return (v<0?'&minus;':'')+s;
+ }
+ function sz(z){ if(Math.abs(z)<0.005)return '0.00'; return (z<0?'&minus;':'+')+Math.abs(z).toFixed(2); }
+ function onMean(z){ return Math.abs(z)<0.005; }
+ function pc(v){ return (v*100).toFixed(2)+'%'; }
+ function pcs(v){
+   if(v>0&&v<0.0001)return '&lt;0.01%';
+   if(v<1&&v>0.9999)return '&gt;99.99%';
+   return pc(v);
+ }
+ function oneIn(p){
+   if(p<=0)return 'far rarer than 1 in a million';
+   var n=1/p;
+   if(n>1000000)return 'rarer than 1 in a million';
+   if(n>=1000)return 'about 1 in '+nf(Math.round(n/100)*100,0);
+   if(n>=100)return 'about 1 in '+nf(Math.round(n/10)*10,0);
+   return 'about 1 in '+nf(Math.round(n),0);
+ }
+
+ /* ---------- chart geometry ---------- */
+ var VW=480, ML=44, MR=14, PW=VW-ML-MR;
+ var MTA=30, PHA=118, Y1A=MTA+PHA;          /* raw panel   */
+ var MTB=258, PHB=118, Y1B=MTB+PHB;         /* z panel     */
+ var YMB=0.45;
+ function ymaxA(){ return 1.06/(C.sdMin*R2PI); }
+ function xA(v){ return ML+(v-C.xmin)/(C.xmax-C.xmin)*PW; }
+ function xB(z){ return ML+(z+4)/8*PW; }
+ function yA(d){ return Y1A-clamp(d/ymaxA(),0,1.3)*PHA; }
+ function yB(d){ return Y1B-clamp(d/YMB,0,1.3)*PHB; }
+
+ function pathA(a,b,close){
+   var d='',t,x,N=200;
+   for(t=0;t<=N;t++){ x=a+(b-a)*t/N; d+=(t?'L':'M')+xA(x).toFixed(1)+' '+yA(dens(x,MU,SD)).toFixed(1)+' '; }
+   if(close){ d+='L'+xA(b).toFixed(1)+' '+Y1A+' L'+xA(a).toFixed(1)+' '+Y1A+' Z'; }
+   return d;
+ }
+ function pathB(a,b,close){
+   var d='',t,z,N=200;
+   for(t=0;t<=N;t++){ z=a+(b-a)*t/N; d+=(t?'L':'M')+xB(z).toFixed(1)+' '+yB(phi(z)).toFixed(1)+' '; }
+   if(close){ d+='L'+xB(b).toFixed(1)+' '+Y1B+' L'+xB(a).toFixed(1)+' '+Y1B+' Z'; }
+   return d;
+ }
+
+ /* a label with a soft backing plate, so it stays readable over the curve */
+ function pill(txt,cx,cy,col){
+   var w=txt.replace(/&[a-z]+;/g,'M').length*6.3+11;
+   var x=clamp(cx,ML+w/2,ML+PW-w/2);
+   return '<rect x="'+(x-w/2).toFixed(1)+'" y="'+(cy-10).toFixed(1)+'" width="'+w.toFixed(1)+'" height="14" rx="7" fill="#fffdf9" opacity=".88"/>'+
+          '<text x="'+x.toFixed(1)+'" y="'+(cy+0.6).toFixed(1)+'" font-size="10.8" fill="'+col+'" text-anchor="middle" font-weight="800">'+txt+'</text>';
+ }
+
+ /* which stretches of the axis are shaded, in z units */
+ function bands(z){
+   var az=Math.abs(z);
+   if(TAIL==='below')return [[-9,z]];
+   if(TAIL==='above')return [[z,9]];
+   return [[-9,-az],[az,9]];
+ }
+ function selArea(z){
+   var az=Math.abs(z);
+   if(TAIL==='below')return cdfZ(z);
+   if(TAIL==='above')return 1-cdfZ(z);
+   return 2*(1-cdfZ(az));
+ }
+
+ /* ---------- the sample, re-standardized on every render ---------- */
+ function sample(){
+   var n=raw.length, i, z, sm=0, sq=0, ix;
+   var bz=[], j;
+   for(j=0;j<NBZ;j++)bz[j]=0;
+   for(i=0;i<n;i++){
+     z=(raw[i]-MU)/SD;
+     sm+=z; sq+=z*z;
+     ix=Math.floor((z+4)/BWZ);
+     if(ix>=0&&ix<NBZ)bz[ix]++;
+   }
+   var mz=n?sm/n:0;
+   var sdz=n>1?Math.sqrt(Math.max(0,(sq-n*mz*mz)/(n-1))):0;
+   return {n:n,bz:bz,mz:mz,sdz:sdz,mx:MU+SD*mz,sdx:SD*sdz};
+ }
+
+ /* ---------- draw ---------- */
+ function chart(){
+   var s='', i, k, g, y, z=(X-MU)/SD, S=sample(), BD=bands(z);
+   s+='<defs><clipPath id="ca"><rect x="'+ML+'" y="'+(MTA-16)+'" width="'+PW+'" height="'+(PHA+16)+'"/></clipPath>';
+   s+='<clipPath id="cb"><rect x="'+ML+'" y="'+(MTB-16)+'" width="'+PW+'" height="'+(PHB+16)+'"/></clipPath></defs>';
+
+   /* ===== panel titles ===== */
+   s+='<text x="'+ML+'" y="14" font-size="10.4" fill="#78868d" font-weight="800" letter-spacing="1.2">RAW SCALE &#183; '+C.nm.toUpperCase()+' ('+C.un+')</text>';
+   s+='<text x="'+ML+'" y="'+(MTB-14)+'" font-size="10.4" fill="#78868d" font-weight="800" letter-spacing="1.2">STANDARD SCALE &#183; z, IN STANDARD DEVIATIONS</text>';
+
+   /* ===== panel A: the raw curve ===== */
+   for(g=0;g<=3;g++){
+     y=Y1A-g/3*PHA;
+     s+='<line x1="'+ML+'" y1="'+y.toFixed(1)+'" x2="'+(ML+PW)+'" y2="'+y.toFixed(1)+'" stroke="'+(g===0?'#8fa6b0':'#e6eef2')+'" stroke-width="1"/>';
+   }
+   s+='<g clip-path="url(#ca)">';
+   s+='<path d="'+pathA(C.xmin,C.xmax,1)+'" fill="#eaf1f5"/>';
+   for(i=0;i<BD.length;i++){
+     var a0=clamp(MU+SD*BD[i][0],C.xmin,C.xmax), a1=clamp(MU+SD*BD[i][1],C.xmin,C.xmax);
+     if(a1>a0)s+='<path d="'+pathA(a0,a1,1)+'" fill="#7fb0c6" opacity=".62"/>';
+   }
+   if(S.n>0){
+     for(i=0;i<NBZ;i++){
+       if(!S.bz[i])continue;
+       var dA=S.bz[i]/(S.n*BWZ*SD);
+       var l0=xA(MU+SD*(-4+i*BWZ)), l1=xA(MU+SD*(-4+(i+1)*BWZ));
+       s+='<rect x="'+(l0+0.5).toFixed(1)+'" y="'+yA(dA).toFixed(1)+'" width="'+Math.max(0.8,l1-l0-1).toFixed(1)+'" height="'+Math.max(0,Y1A-yA(dA)).toFixed(1)+'" fill="#d9b25e" opacity=".8"/>';
+     }
+   }
+   for(k=-3;k<=3;k++){
+     var xk=MU+k*SD;
+     if(xk<C.xmin||xk>C.xmax||k===0)continue;
+     s+='<line x1="'+xA(xk).toFixed(1)+'" y1="'+Y1A+'" x2="'+xA(xk).toFixed(1)+'" y2="'+yA(dens(xk,MU,SD)).toFixed(1)+'" stroke="#9db6c2" stroke-width="1" stroke-dasharray="2 4"/>';
+   }
+   s+='<line x1="'+xA(MU).toFixed(1)+'" y1="'+Y1A+'" x2="'+xA(MU).toFixed(1)+'" y2="'+yA(dens(MU,MU,SD)).toFixed(1)+'" stroke="#1c4454" stroke-width="1.5" stroke-dasharray="5 4"/>';
+   s+='<path d="'+pathA(C.xmin,C.xmax,0)+'" fill="none" stroke="'+C.col+'" stroke-width="2.6" stroke-linejoin="round"/>';
+   s+='</g>';
+
+   /* the marked value on panel A */
+   var mxp=xA(X), mdot=Math.min(yA(dens(X,MU,SD)),Y1A-12);
+   s+='<line x1="'+mxp.toFixed(1)+'" y1="'+Y1A+'" x2="'+mxp.toFixed(1)+'" y2="'+mdot.toFixed(1)+'" stroke="#d1495b" stroke-width="2.2"/>';
+   s+='<circle cx="'+mxp.toFixed(1)+'" cy="'+mdot.toFixed(1)+'" r="4.6" fill="#d1495b" stroke="#fff" stroke-width="2"/>';
+   s+=pill('x = '+nf(X,C.d),mxp,clamp(mdot-11,MTA+11,Y1A-8),'#a4384a');
+   s+='<text x="'+clamp(xA(MU),ML+18,ML+PW-18).toFixed(1)+'" y="'+(MTA-4)+'" font-size="10.2" fill="#1c4454" text-anchor="middle" font-weight="800">&#956; = '+nf(MU,C.d)+'</text>';
+
+   /* panel A axis */
+   for(i=C.xmin;i<=C.xmax+0.0001;i+=C.tick){
+     s+='<line x1="'+xA(i).toFixed(1)+'" y1="'+Y1A+'" x2="'+xA(i).toFixed(1)+'" y2="'+(Y1A+4)+'" stroke="#8fa6b0" stroke-width="1"/>';
+     s+='<text x="'+xA(i).toFixed(1)+'" y="'+(Y1A+16)+'" font-size="9.8" fill="#78868d" text-anchor="middle" font-weight="600">'+nf(i,0)+'</text>';
+   }
+   s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="'+(Y1A+29)+'" font-size="10.2" fill="#4a585f" text-anchor="middle" font-weight="700">'+C.nm.toLowerCase()+' ('+C.un+')</text>';
+   s+='<text x="12" y="'+(MTA+PHA/2).toFixed(1)+'" font-size="10.2" fill="#4a585f" text-anchor="middle" font-weight="700" transform="rotate(-90 12 '+(MTA+PHA/2).toFixed(1)+')">density</text>';
+
+   /* ===== the conversion arrow ===== */
+   var zc=clamp(z,-4,4), bxp=xB(zc);
+   s+='<line x1="'+mxp.toFixed(1)+'" y1="'+(Y1A+34)+'" x2="'+bxp.toFixed(1)+'" y2="'+(MTB-36)+'" stroke="#7a5a8a" stroke-width="1.7" stroke-dasharray="5 4"/>';
+   s+='<polygon points="'+(bxp-4.5).toFixed(1)+','+(MTB-36)+' '+(bxp+4.5).toFixed(1)+','+(MTB-36)+' '+bxp.toFixed(1)+','+(MTB-27)+'" fill="#7a5a8a"/>';
+   var lx=(mxp+bxp)/2, ly=(Y1A+34+MTB-36)/2;
+   s+='<rect x="'+(clamp(lx,ML+46,ML+PW-46)-44).toFixed(1)+'" y="'+(ly-9).toFixed(1)+'" width="88" height="18" rx="9" fill="#f2edf6" stroke="#d6c8e0" stroke-width="1"/>';
+   s+='<text x="'+clamp(lx,ML+46,ML+PW-46).toFixed(1)+'" y="'+(ly+3.6).toFixed(1)+'" font-size="10" fill="#5f4670" text-anchor="middle" font-weight="800">&#8722; &#956;, then &#247; &#963;</text>';
+
+   /* ===== panel B: the standard normal ===== */
+   for(g=0;g<=4;g++){
+     var yv=g*0.1; y=yB(yv);
+     s+='<line x1="'+ML+'" y1="'+y.toFixed(1)+'" x2="'+(ML+PW)+'" y2="'+y.toFixed(1)+'" stroke="'+(g===0?'#8fa6b0':'#e6eef2')+'" stroke-width="1"/>';
+     s+='<text x="'+(ML-7)+'" y="'+(y+3.5).toFixed(1)+'" font-size="9.6" fill="#78868d" text-anchor="end" font-weight="600">'+(g===0?'0':'.'+g)+'</text>';
+   }
+   s+='<g clip-path="url(#cb)">';
+   s+='<path d="'+pathB(-4,4,1)+'" fill="#eaf1f5"/>';
+   for(i=0;i<BD.length;i++){
+     var b0=clamp(BD[i][0],-4,4), b1=clamp(BD[i][1],-4,4);
+     if(b1>b0)s+='<path d="'+pathB(b0,b1,1)+'" fill="#7fb0c6" opacity=".62"/>';
+   }
+   if(S.n>0){
+     for(i=0;i<NBZ;i++){
+       if(!S.bz[i])continue;
+       var dB=S.bz[i]/(S.n*BWZ);
+       var m0=xB(-4+i*BWZ), m1=xB(-4+(i+1)*BWZ);
+       s+='<rect x="'+(m0+0.5).toFixed(1)+'" y="'+yB(dB).toFixed(1)+'" width="'+Math.max(0.8,m1-m0-1).toFixed(1)+'" height="'+Math.max(0,Y1B-yB(dB)).toFixed(1)+'" fill="#d9b25e" opacity=".8"/>';
+     }
+   }
+   for(k=-3;k<=3;k++){
+     if(k===0)continue;
+     s+='<line x1="'+xB(k).toFixed(1)+'" y1="'+Y1B+'" x2="'+xB(k).toFixed(1)+'" y2="'+yB(phi(k)).toFixed(1)+'" stroke="#9db6c2" stroke-width="1" stroke-dasharray="2 4"/>';
+   }
+   s+='<line x1="'+xB(0).toFixed(1)+'" y1="'+Y1B+'" x2="'+xB(0).toFixed(1)+'" y2="'+yB(phi(0)).toFixed(1)+'" stroke="#1c4454" stroke-width="1.5" stroke-dasharray="5 4"/>';
+   s+='<path d="'+pathB(-4,4,0)+'" fill="none" stroke="#1c4454" stroke-width="2.6" stroke-linejoin="round"/>';
+   s+='</g>';
+
+   /* the marked value on panel B */
+   var bdot=Math.min(Math.abs(z)<=4?yB(phi(z)):Y1B-10,Y1B-12);
+   s+='<line x1="'+bxp.toFixed(1)+'" y1="'+Y1B+'" x2="'+bxp.toFixed(1)+'" y2="'+bdot.toFixed(1)+'" stroke="#d1495b" stroke-width="2.2"/>';
+   s+='<circle cx="'+bxp.toFixed(1)+'" cy="'+bdot.toFixed(1)+'" r="4.6" fill="#d1495b" stroke="#fff" stroke-width="2"/>';
+   s+=pill('z = '+sz(z)+(Math.abs(z)>4?' &#8594;':''),bxp,clamp(bdot-11,MTB+11,Y1B-8),'#a4384a');
+   s+='<text x="'+xB(0).toFixed(1)+'" y="'+(MTB-4)+'" font-size="10.2" fill="#1c4454" text-anchor="middle" font-weight="800">z = 0</text>';
+
+   /* panel B axis */
+   for(k=-4;k<=4;k++){
+     s+='<line x1="'+xB(k).toFixed(1)+'" y1="'+Y1B+'" x2="'+xB(k).toFixed(1)+'" y2="'+(Y1B+4)+'" stroke="#8fa6b0" stroke-width="1"/>';
+     s+='<text x="'+xB(k).toFixed(1)+'" y="'+(Y1B+16)+'" font-size="9.8" fill="'+(k===0?'#1c4454':'#78868d')+'" text-anchor="middle" font-weight="'+(k===0?'800':'600')+'">'+(k===0?'0':(k>0?'+':'&#8722;')+Math.abs(k))+'</text>';
+   }
+   s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="'+(Y1B+30)+'" font-size="10.2" fill="#4a585f" text-anchor="middle" font-weight="700">z &#8212; standard deviations from the mean</text>';
+   s+='<text x="12" y="'+(MTB+PHB/2).toFixed(1)+'" font-size="10.2" fill="#4a585f" text-anchor="middle" font-weight="700" transform="rotate(-90 12 '+(MTB+PHB/2).toFixed(1)+')">density</text>';
+
+   $('chart').innerHTML=s;
+   return S;
+ }
+
+ /* ---------- words ---------- */
+ function tailName(){
+   if(TAIL==='below')return 'below x';
+   if(TAIL==='above')return 'above x';
+   return 'at least |z| from the mean';
+ }
+ function band(az){
+   if(az<0.5)return 'sitting comfortably in the thick of the distribution';
+   if(az<1)return 'inside the middle two-thirds &mdash; entirely ordinary';
+   if(az<2)return 'noticeably off-center, but nothing rare';
+   if(az<3)return 'uncommon: fewer than 1 value in 20 lands this far out';
+   return 'genuinely extreme &mdash; out past the region where roughly 997 values in 1,000 live';
+ }
+ function capText(z){
+   var t='<b>Two panels, one observation.</b> The top curve is <i>'+C.nm.toLowerCase()+'</i> on its own scale, and it moves: slide &mu; and the bell slides, stretch &sigma; and it fattens or thins. The bottom curve is the <b>standard normal</b>, N(0,&nbsp;1) &mdash; and it never moves at all, no matter what you do above it. ';
+   t+='That is the whole trick. Every normal distribution ever measured lands on <b>that one curve</b> once you subtract its mean and divide by its SD, which is why one set of tables serves all of them.';
+   t+='<br>Right now <b>'+nf(X,C.d)+' '+C.un+'</b> is carried down the dashed arrow and arrives at <b>z = '+sz(z)+'</b>. The blue region has the same area on both panels because it <i>is</i> the same region &mdash; only the ruler underneath it changed.';
+   return t;
+ }
+ function infoText(z){
+   var az=Math.abs(z), a=selArea(z), aRaw, lbl, hdr;
+   /* the same selected area, recomputed on the raw scale from scratch */
+   if(TAIL==='below'){ aRaw=cdfRaw(X,MU,SD); }
+   else if(TAIL==='above'){ aRaw=1-cdfRaw(X,MU,SD); }
+   else { aRaw=cdfRaw(MU-az*SD,MU,SD)+(1-cdfRaw(MU+az*SD,MU,SD)); }
+
+   if(TAIL==='below'){ hdr=pcs(a)+' falls below '+nf(X,C.d)+' '+C.un; lbl='values below x'; }
+   else if(TAIL==='above'){ hdr=pcs(a)+' falls above '+nf(X,C.d)+' '+C.un; lbl='values above x'; }
+   else { hdr=pcs(a)+' sits this far out'; lbl='values at least '+az.toFixed(2)+' SDs from &mu;, either way'; }
+
+   var s='<span class="n">'+hdr+'</span>';
+   s+='A '+C.short+' of <b>'+nf(X,C.d)+' '+C.un+'</b> '+(onMean(z)?'sits essentially <b>right on the mean</b> of '+nf(MU,C.d):'stands <b>'+az.toFixed(2)+' standard deviation'+(Math.abs(az-1)<0.005?'':'s')+' '+(z<0?'below':'above')+'</b> the mean of '+nf(MU,C.d))+'. That is all a z-score claims: a signed position, measured in SDs, with the units divided away.';
+   s+='<div class="loc">z = ( '+nf(X,C.d)+' &minus; '+nf(MU,C.d)+' ) &divide; '+nf(SD,C.ds)+' = <b>'+sz(z)+'</b><br>'+
+      'area for &ldquo;'+lbl+'&rdquo;, integrated on the <b>raw</b> curve: <b>'+aRaw.toFixed(4)+'</b><br>'+
+      'the same area, integrated on the <b>standard</b> curve: <b>'+a.toFixed(4)+'</b><br>'+
+      '&rarr; '+pcs(a)+' &nbsp;&middot;&nbsp; '+oneIn(a)+'</div>';
+   s+='Those two numbers are computed separately &mdash; one by slicing up the '+C.un+' curve, one by slicing up the z curve &mdash; and they agree to every digit shown. Standardizing moved the numbers on the axis without touching a single area.';
+   s+='<div class="dd">A z of '+sz(z)+' puts this value '+band(az)+'. Read the direction with care, though: '+(z<0?C.lo:C.hi)+' is neither good nor bad on its own, and the sign only records which side of &mu; the value fell on.</div>';
+   return s;
+ }
+ function eqHTML(z){
+   var num=X-MU;
+   return '<span>z</span><span class="op">=</span>'+
+     '<span class="fr"><i>x &minus; &mu;</i><b>&sigma;</b></span><span class="op">=</span>'+
+     '<span class="fr"><i>'+nf(X,C.d)+' &minus; '+nf(MU,C.d)+'</i><b>'+nf(SD,C.ds)+'</b></span><span class="op">=</span>'+
+     '<span class="fr"><i>'+nf(num,C.d)+'</i><b>'+nf(SD,C.ds)+'</b></span><span class="op">=</span>'+
+     '<span class="res">'+sz(z)+'</span>';
+ }
+
+ /* ---------- the sample panel ---------- */
+ function simText(S){
+   if(!S.n){
+     $('sN').innerHTML='0'; $('sMz').innerHTML='&mdash;'; $('sSz').innerHTML='&mdash;';
+     $('sMx').innerHTML='mean of x &mdash;'; $('sSx').innerHTML='SD of x &mdash;';
+     $('scap').innerHTML='Press draw. Each observation is generated on the '+C.un+' scale, then run through <b>z = (x &minus; &mu;) &divide; &sigma;</b>. Watch what happens to the summary numbers: whatever the mean and SD were in '+C.un+', in z units they head for <b>0</b> and <b>1</b>.';
+     return;
+   }
+   $('sN').innerHTML=nf(S.n,0);
+   $('sMz').innerHTML=(S.mz<0?'&minus;':'')+Math.abs(S.mz).toFixed(3);
+   $('sSz').innerHTML=S.sdz.toFixed(3);
+   $('sMx').innerHTML='mean of x = '+nf(S.mx,1)+' '+C.un;
+   $('sSx').innerHTML='SD of x = '+nf(S.sdx,1)+' '+C.un;
+   var t='These <b>'+nf(S.n,0)+'</b> observations averaged <b>'+nf(S.mx,1)+' '+C.un+'</b> with an SD of <b>'+nf(S.sdx,1)+' '+C.un+'</b>. ';
+   t+='Standardized, the very same numbers average <b>'+(S.mz<0?'&minus;':'')+Math.abs(S.mz).toFixed(3)+'</b> with an SD of <b>'+S.sdz.toFixed(3)+'</b> &mdash; near 0 and 1, and closing in as the pile grows. ';
+   t+='Notice the gold bars: identical shape on both panels, because subtracting and dividing by constants cannot bend a distribution. ';
+   t+=S.n<600?'Draw more and the ragged edges settle onto the curves.':'The fit is already tight, and each further batch tightens it.';
+   $('scap').innerHTML=t;
+ }
+
+ /* ---------- render ---------- */
+ function render(){
+   var z=(X-MU)/SD;
+   $('muVal').innerHTML=nf(MU,C.d);
+   $('sdVal').innerHTML=nf(SD,C.ds);
+   $('xVal').innerHTML=nf(X,C.d);
+   $('cardTitle').innerHTML=C.nm+' &rarr; z';
+   $('stage').style.background=C.col;
+   $('stage').innerHTML='z = '+sz(z)+'<small>'+nf(X,C.d)+' '+C.un+' '+(onMean(z)?'sits right on':'is '+Math.abs(z).toFixed(2)+' SD'+(Math.abs(Math.abs(z)-1)<0.005?'':'s')+' '+(z<0?'below':'above'))+' &mu; = '+nf(MU,C.d)+'</small>';
+   $('eq').innerHTML=eqHTML(z);
+   $('tX').innerHTML=nf(X,C.d);
+   $('tZ').innerHTML=sz(z);
+   $('tP').innerHTML=(cdfZ(z)*100).toFixed(1);
+   $('tD').innerHTML=nf(X-MU,C.d);
+   var S=chart();
+   $('cap').innerHTML=capText(z);
+   $('info').innerHTML=infoText(z);
+   simText(S);
+ }
+
+ /* ---------- context switching ---------- */
+ function setSliders(){
+   var m=$('muSl'), d=$('sdSl'), x=$('xSl');
+   m.min=C.muMin; m.max=C.muMax; m.step=C.muStep; m.value=MU;
+   d.min=C.sdMin; d.max=C.sdMax; d.step=C.sdStep; d.value=SD;
+   x.min=C.xmin;  x.max=C.xmax;  x.step=C.xStep;  x.value=X;
+ }
+ function paintCtx(){
+   $('ctxs').innerHTML=CTX.map(function(c){
+     return '<button class="it'+(c.k===C.k?' on':'')+'" data-k="'+c.k+'"><span class="nm">'+c.nm+'</span><span class="s">&mu; = '+nf(c.mu,c.d)+' &middot; &sigma; = '+nf(c.sd,c.ds)+' '+c.un+'</span></button>';
+   }).join('');
+   var bs=document.querySelectorAll('#ctxs .it'), i;
+   for(i=0;i<bs.length;i++){
+     bs[i].onclick=function(){
+       var kk=this.getAttribute('data-k'), j;
+       for(j=0;j<CTX.length;j++){ if(CTX[j].k===kk)C=CTX[j]; }
+       MU=C.mu; SD=C.sd; X=C.x; raw=[]; seed=20260719;
+       setSliders(); paintCtx(); render(); backwards();
+     };
+   }
+ }
+
+ /* ---------- wiring ---------- */
+ $('muSl').oninput=function(){ MU=parseFloat(this.value); raw=[]; render(); };
+ $('sdSl').oninput=function(){ SD=parseFloat(this.value); raw=[]; render(); };
+ $('xSl').oninput =function(){ X=parseFloat(this.value); render(); };
+ var tb=document.querySelectorAll('#tseg button'), q;
+ for(q=0;q<tb.length;q++){
+   tb[q].onclick=function(){
+     TAIL=this.getAttribute('data-t');
+     for(var j=0;j<tb.length;j++){ tb[j].className=(tb[j]===this?'on':''); }
+     render();
+   };
+ }
+ $('draw').onclick=function(){
+   var i, n=Math.min(250,CAP-raw.length);
+   for(i=0;i<n;i++){ raw.push(MU+SD*gauss()); }
+   render();
+ };
+ $('clear').onclick=function(){ raw=[]; seed=20260719; render(); };
+
+ /* ---------- reading the curve backwards ---------- */
+ /* invert the standard normal by bisection on the area we already compute */
+ function invZ(p){
+   var lo=-8.5, hi=8.5, m, i;
+   for(i=0;i<34;i++){
+     m=(lo+hi)/2;
+     if(simp(phi,-8.5,m,400)<p){ lo=m; } else { hi=m; }
+   }
+   return (lo+hi)/2;
+ }
+ function backwards(){
+   var p=parseFloat($('pSl').value), zp=invZ(p/100), i, c;
+   $('pVal').innerHTML=p.toFixed(1);
+   $('pZ').innerHTML=sz(zp);
+   $('pChk').innerHTML='check: '+(cdfZ(zp)*100).toFixed(2)+'% below';
+   $('pA').innerHTML=(100-p).toFixed(1)+'%';
+   $('pA2').innerHTML=oneIn(1-p/100);
+
+   var rows='';
+   for(i=0;i<CTX.length;i++){
+     c=CTX[i];
+     rows+='<button class="it'+(c.k===C.k?' on':'')+'" data-k="'+c.k+'">'+
+       '<span class="lft"><span class="nm">'+c.nm+'</span><span class="s">&mu; = '+nf(c.mu,c.d)+' &middot; &sigma; = '+nf(c.sd,c.ds)+' '+c.un+'</span></span>'+
+       '<span class="cut">'+nf(c.mu+zp*c.sd,c.cd)+' '+c.un+'</span></button>';
+   }
+   $('cuts').innerHTML=rows;
+   var bs=document.querySelectorAll('#cuts .it');
+   for(i=0;i<bs.length;i++){
+     bs[i].onclick=function(){
+       var kk=this.getAttribute('data-k'), j;
+       for(j=0;j<CTX.length;j++){ if(CTX[j].k===kk)C=CTX[j]; }
+       MU=C.mu; SD=C.sd; X=C.x; raw=[]; seed=20260719;
+       setSliders(); paintCtx(); render(); backwards();
+     };
+   }
+
+   var t='<span class="w">One z, four different answers</span>';
+   t+='The '+p.toFixed(1)+'th percentile sits at <b>z = '+sz(zp)+'</b> &mdash; and that number came from the standard normal alone, with no mention of heart rates or grams. ';
+   t+='Feeding it through <b>x = &mu; + z&sigma;</b> lands it on each scale in turn: <b>'+nf(CTX[0].mu+zp*CTX[0].sd,CTX[0].cd)+' '+CTX[0].un+'</b>, <b>'+nf(CTX[2].mu+zp*CTX[2].sd,CTX[2].cd)+' '+CTX[2].un+'</b>, and so on. ';
+   t+='Four unrelated cutoffs, one calculation. That is what standardizing buys: nobody needs a separate curve, or a separate table, for every &mu; and &sigma; in the world.';
+   if(Math.abs(p-50)<0.05){
+     t+='<br>At the 50th percentile z is <b>0</b>, and every cutoff collapses back onto its own mean &mdash; because a normal curve is symmetric, so its mean, median, and peak are the same point.';
+   }else{
+     t+='<br>Push the slider toward either end and watch the cutoffs run away from their means. Getting to the '+(p>50?'99th':'1st')+' percentile costs about '+Math.abs(invZ(p>50?0.99:0.01)).toFixed(2)+' SDs, and reaching further out costs disproportionately more &mdash; the tails thin fast.';
+   }
+   $('verdict').innerHTML=t;
+ }
+ $('pSl').oninput=function(){
+   var pb=document.querySelectorAll('#pseg button'), j;
+   for(j=0;j<pb.length;j++){ pb[j].className=''; }
+   backwards();
+ };
+ var pbs=document.querySelectorAll('#pseg button'), r;
+ for(r=0;r<pbs.length;r++){
+   pbs[r].onclick=function(){
+     $('pSl').value=this.getAttribute('data-p');
+     for(var j=0;j<pbs.length;j++){ pbs[j].className=(pbs[j]===this?'on':''); }
+     backwards();
+   };
+ }
+
+ /* ---------- go ---------- */
+ setSliders(); paintCtx(); render(); backwards();
+})();
+</script>
+</body>
+</html>

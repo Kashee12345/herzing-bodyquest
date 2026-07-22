@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Building the Sample Space</title>
+<meta name="description" content="Lay out every possible outcome of dice and coin experiments, mark the ones an event contains, and read the probability straight off the count &mdash; then roll thousands of times and watch the observed proportion close in on it.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl.off label,.sl.off .nv{opacity:.35;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]:disabled{background:#dfe8ed;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]:disabled::-webkit-slider-thumb{background:#b7c7d0;cursor:default;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:92px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.arv .vv{color:var(--teal);}
+.cmp{width:100%;border-collapse:collapse;margin-top:12px;font-size:12.5px;}
+.cmp th,.cmp td{padding:6px 4px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;}
+.cmp th{font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.cmp td:first-child,.cmp th:first-child{text-align:left;font-weight:700;color:var(--teal-dk);}
+.cmp td{font-weight:700;color:var(--soft);}
+.cmp td.sm{color:var(--blue);} .cmp td.gp{color:var(--gold);} .cmp td.gc{color:var(--purple);}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.45;}
+.hd{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;margin-bottom:6px;}
+.grid .it .s{display:block;margin-top:2px;font-weight:600;font-size:10.4px;}
+.grid .it{font-size:12.4px;}
+#info .eq{font-size:12.5px;color:var(--teal-dk);background:#e2eff5;border-radius:8px;padding:9px 11px;margin-top:9px;line-height:1.7;font-variant-numeric:tabular-nums;}
+#info .eq .r{display:flex;justify-content:space-between;gap:10px;}
+#info .eq .r b{white-space:nowrap;}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,1fr);}.sl label{font-size:10px;}.sl .nv{min-width:78px;font-size:13px;}.row .btn{font-size:12px;padding:10px 4px;}.cmp{font-size:11.5px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 5</div>
+  <h1>Building the Sample Space</h1>
+  <div class="intro">Before you can compute a single probability you have to answer a duller question: <b>what could possibly happen?</b> Write down every outcome of the experiment and you have the <b>sample space</b>. Circle the outcomes you care about and you have an <b>event</b>. When &mdash; and only when &mdash; those outcomes are equally likely, the probability is just a count divided by a count. Everything below is enumerated and counted live, and then actually rolled a few thousand times so you can watch the arithmetic come true.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="spTitle">The sample space</h2>
+      <div class="modeseg" id="vseg">
+        <button data-v="0" class="on">Mark the event</button>
+        <button data-v="1">How often each came up</button>
+      </div>
+      <svg id="spSvg" viewBox="0 0 340 340" aria-label="every outcome of the experiment laid out in a grid, with the outcomes belonging to the event marked"><g id="space"></g></svg>
+      <div class="lgd" id="spLgd"></div>
+      <div class="cap" id="spCap"></div>
+    </div>
+    <div class="card"><h2 id="dsTitle">Grouped by the total</h2>
+      <svg viewBox="0 0 340 208" aria-label="bar chart of how many outcomes give each total, with the part belonging to the event marked"><g id="dist"></g></svg>
+      <div class="lgd">
+        <span><i style="background:#2f6f8a"></i>outcomes in the event</span>
+        <span><i style="background:#c3ced4"></i>outcomes not in it</span>
+        <span><i style="background:#b8862f"></i>observed in the rolls</span>
+      </div>
+      <div class="cap" id="dsCap"></div>
+    </div>
+    <div class="card"><h2>The long run</h2>
+      <svg viewBox="0 0 340 206" aria-label="the running proportion of trials in which the event happened, plotted against the number of trials"><g id="run"></g></svg>
+      <div class="lgd">
+        <span><i style="background:#1c4454"></i>the counted probability</span>
+        <span><i style="background:#2f6f9f"></i>running proportion</span>
+        <span><i style="background:#dbe6ee"></i>ordinary spread of chance</span>
+      </div>
+      <div class="cap" id="runCap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">The sample space<small>pick an experiment</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="0" class="on">Two dice<small>a grid of pairs</small></button>
+        <button data-v="1">Coins<small>doubling each flip</small></button>
+        <button data-v="2">Die &amp; coin<small>two kinds at once</small></button>
+      </div>
+      <div class="sl" id="szWrap"><label for="szSl" id="szLab">Sides per die</label><input type="range" id="szSl" min="4" max="12" step="1" value="6"><span class="nv" id="szVal">6</span></div>
+      <div class="hd">The event &mdash; which outcomes count as a success</div>
+      <div class="grid" id="evGrid"></div>
+      <div class="sl" id="thWrap"><label for="thSl" id="thLab">Target sum</label><input type="range" id="thSl" min="2" max="12" step="1" value="7"><span class="nv" id="thVal">7</span></div>
+      <div class="row"><button class="btn" id="fresh">&#8634; A new set of rolls</button><button class="btn solid" id="more">&#9654; Roll 250 more</button></div>
+      <div class="tiles">
+        <div><span class="lb">Outcomes in all</span><span class="vv" id="tS">&mdash;</span></div>
+        <div><span class="lb">In the event</span><span class="vv" id="tA">&mdash;</span></div>
+        <div class="arv"><span class="lb">Probability</span><span class="vv" id="tP">&mdash;</span></div>
+        <div><span class="lb">Observed so far</span><span class="vv" id="tO">&mdash;</span></div>
+      </div>
+      <table class="cmp">
+        <tr><th>After</th><th>Happened</th><th>Observed</th><th>Counted</th><th>Gap in pts</th><th>Gap in count</th></tr>
+        <tbody id="lln"></tbody>
+      </table>
+      <div class="cap">Read the last two columns against each other. As the trials pile up the <b>percentage</b> gap is squeezed toward zero, while the <b>raw count</b> gap usually drifts <i>further</i> from zero. Both of those are what the long run actually promises, and only the first of them is what people think it promises.</div>
+      <div id="info"></div>
+      <div class="mnem">The whole of this section rests on one sentence: <b>a probability is a count of the outcomes you want divided by a count of the outcomes there are</b> &mdash; and it is only true when every outcome in that list is equally likely. So the real work is never the division. It is building the list. Two habits make the list come out right. <b>First, keep the outcomes distinguishable.</b> Rolling a 2 and a 5 is not one outcome, it is two &mdash; (2,5) and (5,2) &mdash; because the dice are separate objects even when they are the same colour. Every cell in the grid beside you is one such pair, which is why there are 36 of them and not 21. <b>Second, count by multiplying.</b> Two dice give 6 &times; 6; three coins give 2 &times; 2 &times; 2; a die and a coin give 6 &times; 2. Each independent stage multiplies the size of the space rather than adding to it, which is why the coin space doubles with every extra coin and gets away from you so fast &mdash; ten coins is already 1,024 outcomes. Slide the coin count up and watch the tiles multiply. That doubling is the reason we eventually stop enumerating and start using formulas, but the formulas are only ever shortcuts for this grid.</div>
+      <div class="note">Five ways this goes wrong. <b>First, and by far the most common: counting the summaries instead of the outcomes.</b> Two dice can total anything from 2 to 12, which is eleven possibilities &mdash; so surely the probability of a total of 7 is 1/11? No. The eleven totals are <i>not</i> equally likely; the 36 pairs are. Seven happens six different ways and twelve happens exactly one way, so 7 is six times as likely as 12. The <b>Grouped by the total</b> chart stacks them up and the mistake becomes visible at a glance. <b>Second, assuming equally likely without earning it.</b> The counting formula is a statement about a <i>fair</i> die and a <i>fair</i> coin. Nothing in the arithmetic can tell you the die is fair &mdash; that is a claim about the physical object, and if it is false every number on this page is false with it. <b>Third, the gambler&rsquo;s fallacy.</b> The dice have no memory. After a run of five sixes the chance of another six is exactly what it always was; the running line settles down not because bad luck gets repaid but because early results get <i>diluted</i> by the sheer weight of later ones. <b>Fourth, expecting the count to even out.</b> It does not, and it is not supposed to &mdash; watch the last column of the table wander away from zero while the column beside it closes in. <b>Fifth, reading a long-run proportion as a promise about the next trial.</b> &ldquo;About one roll in six&rdquo; describes thousands of rolls. It says nothing whatever about the one you are holding in your hand.</div>
+      <div class="fn" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- a seeded generator, so the page opens the same way every time ---------- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+ var MAXT=4000,PER=6,pool=[];
+ function fillPool(){
+  var r=mulberry32(20260718+seed*7919),i;
+  pool=new Array(MAXT*PER);
+  for(i=0;i<MAXT*PER;i++)pool[i]=r();
+ }
+
+ /* ================================ state ================================ */
+ var ex=0,d=6,nc=3,ev=0,t=7,vw=0,seed=0,trials=250;
+ var SP=[],cols=1,rows=1,inA=0,cnt=[],cum=[],vals=[],cntV={},simV={};
+
+ /* ================================ events ================================ */
+ /* every test takes one outcome and the threshold, and returns true or false.
+    the space itself is never filtered by formula -- it is walked, one outcome
+    at a time, exactly as a student would walk it on paper. */
+ var EV=[
+  [ /* two dice */
+   {nm:'Total = t',s:'one exact total',th:1,tl:'Target total',lo:function(){return 2;},hi:function(){return 2*d;},f:function(o,k){return o.v===k;},say:function(k){return 'the two dice total exactly '+k;}},
+   {nm:'Total &ge; t',s:'that total or better',th:1,tl:'Least total',lo:function(){return 2;},hi:function(){return 2*d;},f:function(o,k){return o.v>=k;},say:function(k){return 'the two dice total '+k+' or more';}},
+   {nm:'Doubles',s:'the two match',th:0,f:function(o){return o.i===o.j;},say:function(){return 'both dice show the same face';}},
+   {nm:'At least one t',s:'either die',th:1,tl:'The face',lo:function(){return 1;},hi:function(){return d;},f:function(o,k){return o.i===k||o.j===k;},say:function(k){return 'at least one die shows a '+k;}},
+   {nm:'Neither is t',s:'the opposite event',th:1,tl:'The face',lo:function(){return 1;},hi:function(){return d;},f:function(o,k){return o.i!==k&&o.j!==k;},say:function(k){return 'neither die shows a '+k;}},
+   {nm:'Total is even',s:'odd plus odd counts',th:0,f:function(o){return o.v%2===0;},say:function(){return 'the total is an even number';}}
+  ],
+  [ /* coins */
+   {nm:'Exactly h heads',s:'no more, no fewer',th:1,tl:'Heads wanted',lo:function(){return 0;},hi:function(){return nc;},f:function(o,k){return o.v===k;},say:function(k){return 'exactly '+k+' of the '+nc+' coins land heads';}},
+   {nm:'At least h heads',s:'that many or more',th:1,tl:'Fewest heads',lo:function(){return 0;},hi:function(){return nc;},f:function(o,k){return o.v>=k;},say:function(k){return 'at least '+k+' of the '+nc+' coins land heads';}},
+   {nm:'All heads',s:'the perfect run',th:0,f:function(o){return o.v===nc;},say:function(){return 'every coin lands heads';}},
+   {nm:'At least one head',s:'not a total washout',th:0,f:function(o){return o.v>=1;},say:function(){return 'at least one coin lands heads';}},
+   {nm:'No heads at all',s:'the opposite event',th:0,f:function(o){return o.v===0;},say:function(){return 'every coin lands tails';}},
+   {nm:'More heads than tails',s:'a strict majority',th:0,f:function(o){return 2*o.v>nc;},say:function(){return 'heads outnumber tails';}}
+  ],
+  [ /* die and coin */
+   {nm:'Heads and die = t',s:'both conditions',th:1,tl:'The face',lo:function(){return 1;},hi:function(){return d;},f:function(o,k){return o.h===0&&o.i===k;},say:function(k){return 'the coin lands heads and the die shows '+k;}},
+   {nm:'Heads and die &ge; t',s:'both conditions',th:1,tl:'Least face',lo:function(){return 1;},hi:function(){return d;},f:function(o,k){return o.h===0&&o.i>=k;},say:function(k){return 'the coin lands heads and the die shows '+k+' or more';}},
+   {nm:'Heads, any die',s:'the coin alone',th:0,f:function(o){return o.h===0;},say:function(){return 'the coin lands heads, whatever the die does';}},
+   {nm:'Die = t, either coin',s:'the die alone',th:1,tl:'The face',lo:function(){return 1;},hi:function(){return d;},f:function(o,k){return o.i===k;},say:function(k){return 'the die shows '+k+', whatever the coin does';}},
+   {nm:'Heads or die = t',s:'either one, or both',th:1,tl:'The face',lo:function(){return 1;},hi:function(){return d;},f:function(o,k){return o.h===0||o.i===k;},say:function(k){return 'the coin lands heads or the die shows '+k+', or both';}},
+   {nm:'Tails and die &ge; t',s:'both conditions',th:1,tl:'Least face',lo:function(){return 1;},hi:function(){return d;},f:function(o,k){return o.h===1&&o.i>=k;},say:function(k){return 'the coin lands tails and the die shows '+k+' or more';}}
+  ]
+ ];
+
+ var EXN=[
+  {vb:'roll',vbs:'rolls',one:'roll',sum:'total on the two dice',ax:'total on the two dice'},
+  {vb:'flip',vbs:'flips',one:'flip',sum:'number of heads',ax:'number of heads that came up'},
+  {vb:'run',vbs:'trials',one:'trial',sum:'face on the die',ax:'face showing on the die'}
+ ];
+
+ /* ================================ the space ================================ */
+ function build(){
+  SP=[];
+  var i,j,k,b,h,st;
+  if(ex===0){
+   for(i=1;i<=d;i++)for(j=1;j<=d;j++)SP.push({i:i,j:j,v:i+j,lab:i+','+j});
+   cols=d;rows=d;
+  }else if(ex===1){
+   var N=1<<nc;
+   for(k=0;k<N;k++){
+    b=0;st='';
+    for(i=0;i<nc;i++){if(k>>i&1){b++;st+='H';}else{st+='T';}}
+    SP.push({k:k,v:b,lab:st});
+   }
+   cols=1<<Math.ceil(nc/2);rows=1<<Math.floor(nc/2);
+  }else{
+   for(h=0;h<2;h++)for(i=1;i<=d;i++)SP.push({h:h,i:i,v:i,lab:(h?'T':'H')+i});
+   cols=d;rows=2;
+  }
+  /* mark the event by walking the whole space, then group by the summary */
+  var E=EV[ex][ev];
+  inA=0;cntV={};vals=[];
+  for(i=0;i<SP.length;i++){
+   SP[i].on=!!E.f(SP[i],t);
+   if(SP[i].on)inA++;
+   var v=SP[i].v;
+   if(cntV[v]===undefined){cntV[v]={n:0,a:0};vals.push(v);}
+   cntV[v].n++;
+   if(SP[i].on)cntV[v].a++;
+  }
+  vals.sort(function(a,b2){return a-b2;});
+ }
+
+ /* which outcome did trial m produce?  the raw random numbers never change when
+    you change the event, so the same rolls get re-judged against a new question */
+ function idxOf(m){
+  var p=m*PER,i,q;
+  if(ex===0)return Math.floor(pool[p]*d)*d+Math.floor(pool[p+1]*d);
+  if(ex===1){q=0;for(i=0;i<nc;i++)if(pool[p+i]<0.5)q|=1<<i;return q;}
+  return (pool[p+1]<0.5?0:1)*d+Math.floor(pool[p]*d);
+ }
+ function simulate(){
+  var i,m,c=0,n=SP.length;
+  cnt=new Array(n);for(i=0;i<n;i++)cnt[i]=0;
+  simV={};for(i=0;i<vals.length;i++)simV[vals[i]]=0;
+  cum=new Array(trials+1);cum[0]=0;
+  for(m=0;m<trials;m++){
+   var ix=idxOf(m);
+   cnt[ix]++;simV[SP[ix].v]++;
+   if(SP[ix].on)c++;
+   cum[m+1]=c;
+  }
+ }
+
+ /* ================================ helpers ================================ */
+ function gcd(a,b){while(b){var q=a%b;a=b;b=q;}return a;}
+ function frac(a,n){
+  if(a===0)return '0';
+  if(a===n)return '1';
+  var g=gcd(a,n);
+  return (a/g)+'/'+(n/g);
+ }
+ function fmt(x,dc){
+  var v=x.toFixed(dc===undefined?0:dc),p=v.split('.');
+  p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return p.join('.');
+ }
+ function pc(p,dc){return (p*100).toFixed(dc===undefined?2:dc)+'%';}
+ function oneIn(p){
+  if(p<=0)return '&mdash;';
+  var N=1/p;
+  return N<10?N.toFixed(2):fmt(Math.round(N));
+ }
+ function mix(t2){
+  /* #eef4f7 to #1c4454 */
+  var r=Math.round(238+(28-238)*t2),g=Math.round(244+(68-244)*t2),b=Math.round(247+(84-247)*t2);
+  return 'rgb('+r+','+g+','+b+')';
+ }
+ function P(){return inA/SP.length;}
+
+ /* ============================ card 1: the space ============================ */
+ function drawSpace(){
+  var cell=Math.min(292/cols,46),gw=cell*cols,gh=cell*rows;
+  var x0=40+(292-gw)/2,y0=(ex===1?30:38),s='',i,r,c,o;
+  var vh=y0+gh+(ex===1?16:32);
+  $("spSvg").setAttribute('viewBox','0 0 340 '+vh.toFixed(0));
+
+  var mx=1;
+  for(i=0;i<cnt.length;i++)if(cnt[i]>mx)mx=cnt[i];
+
+  /* headings that name the two stages of the experiment */
+  if(ex===0){
+   s+='<text x="'+(x0+gw/2).toFixed(1)+'" y="13" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">second die</text>';
+   for(c=0;c<cols;c++)s+='<text x="'+(x0+c*cell+cell/2).toFixed(1)+'" y="'+(y0-6)+'" font-size="9" font-weight="800" fill="#4a585f" text-anchor="middle">'+(c+1)+'</text>';
+   for(r=0;r<rows;r++)s+='<text x="'+(x0-6).toFixed(1)+'" y="'+(y0+r*cell+cell/2+3.4).toFixed(1)+'" font-size="9" font-weight="800" fill="#4a585f" text-anchor="end">'+(r+1)+'</text>';
+   s+='<text x="12" y="'+(y0+gh/2).toFixed(1)+'" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle" transform="rotate(-90 12 '+(y0+gh/2).toFixed(1)+')">first die</text>';
+  }else if(ex===2){
+   s+='<text x="'+(x0+gw/2).toFixed(1)+'" y="13" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">the die</text>';
+   for(c=0;c<cols;c++)s+='<text x="'+(x0+c*cell+cell/2).toFixed(1)+'" y="'+(y0-6)+'" font-size="9" font-weight="800" fill="#4a585f" text-anchor="middle">'+(c+1)+'</text>';
+   for(r=0;r<rows;r++)s+='<text x="'+(x0-6).toFixed(1)+'" y="'+(y0+r*cell+cell/2+3.4).toFixed(1)+'" font-size="9" font-weight="800" fill="#4a585f" text-anchor="end">'+(r?'tails':'heads')+'</text>';
+  }else{
+   s+='<text x="'+(x0+gw/2).toFixed(1)+'" y="16" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">each tile is one outcome &mdash; a filled dot is a head</text>';
+  }
+
+  for(i=0;i<SP.length;i++){
+   o=SP[i];r=Math.floor(i/cols);c=i%cols;
+   var x=x0+c*cell,y=y0+r*cell,fill,tcol;
+   if(vw===0){
+    fill=o.on?'#2f6f8a':'#eef4f7';
+    tcol=o.on?'#ffffff':'#8b979d';
+   }else{
+    var f=cnt[i]/mx;
+    fill=mix(f);
+    tcol=f>0.55?'#ffffff':'#4a585f';
+   }
+   s+='<rect x="'+(x+0.7).toFixed(1)+'" y="'+(y+0.7).toFixed(1)+'" width="'+(cell-1.4).toFixed(1)+'" height="'+(cell-1.4).toFixed(1)+'" rx="'+Math.min(5,cell*0.16).toFixed(1)+'" fill="'+fill+'" stroke="#dfe8ed" stroke-width="0.8"/>';
+
+   if(vw===1){
+    if(cell>=19)s+='<text x="'+(x+cell/2).toFixed(1)+'" y="'+(y+cell/2+Math.min(4.2,cell*0.13)).toFixed(1)+'" font-size="'+Math.min(12,cell*0.32).toFixed(1)+'" font-weight="800" fill="'+tcol+'" text-anchor="middle">'+cnt[i]+'</text>';
+   }else if(ex===1){
+    var np=nc,gap=cell/(np+0.9),pr=Math.min(cell*0.13,gap*0.36),py=y+cell*(cell>=40?0.40:0.5);
+    for(var q=0;q<np;q++){
+     var px=x+cell/2+(q-(np-1)/2)*gap;
+     if(o.lab.charAt(q)==='H')s+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="'+pr.toFixed(1)+'" fill="'+(o.on?'#ffffff':'#7b8b93')+'"/>';
+     else s+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="'+pr.toFixed(1)+'" fill="none" stroke="'+(o.on?'#cfe2ec':'#b0bcc3')+'" stroke-width="'+Math.max(0.8,pr*0.55).toFixed(1)+'"/>';
+    }
+    if(cell>=40)s+='<text x="'+(x+cell/2).toFixed(1)+'" y="'+(y+cell*0.78).toFixed(1)+'" font-size="9.4" font-weight="800" fill="'+tcol+'" text-anchor="middle" letter-spacing="0.5">'+o.lab+'</text>';
+   }else if(cell>=19){
+    var txt=(ex===0?String(o.v):(o.h?'T':'H')+o.i);
+    s+='<text x="'+(x+cell/2).toFixed(1)+'" y="'+(y+cell/2+Math.min(4.2,cell*0.13)).toFixed(1)+'" font-size="'+Math.min(13,cell*0.34).toFixed(1)+'" font-weight="800" fill="'+tcol+'" text-anchor="middle">'+txt+'</text>';
+   }
+  }
+  if(ex===0&&vw===0&&cell>=19)s+='<text x="'+(x0+gw/2).toFixed(1)+'" y="'+(y0+gh+22)+'" font-size="9" font-weight="700" fill="#a3b0b7" text-anchor="middle">the number printed in each cell is that pair&rsquo;s total</text>';
+  $("space").innerHTML=s;
+
+  var E=EV[ex][ev],N=SP.length;
+  if(vw===0){
+   $("spLgd").innerHTML='<span><i style="background:#2f6f8a"></i>in the event ('+inA+')</span><span><i style="background:#eef4f7;border:1px solid #dfe8ed"></i>not in it ('+(N-inA)+')</span>';
+   $("spCap").innerHTML='Every tile is <b>one outcome</b>, and there are <b>'+fmt(N)+'</b> of them &mdash; that is the sample space, written out in full. The '+(inA===0?'event is empty: <b>no</b> outcome':'<b>'+inA+'</b> dark '+(inA===1?'tile is the outcome':'tiles are the outcomes'))+' for which '+E.say(t)+'. The probability is nothing more mysterious than <b>'+inA+' &divide; '+fmt(N)+'</b>. Notice that no arithmetic was needed to <i>find</i> those tiles &mdash; each one was checked, one at a time, exactly as you would on paper.';
+  }else{
+   var lo=Infinity,hi=-Infinity,i2;
+   for(i2=0;i2<cnt.length;i2++){if(cnt[i2]<lo)lo=cnt[i2];if(cnt[i2]>hi)hi=cnt[i2];}
+   var exp=trials/N;
+   $("spLgd").innerHTML='<span><i style="background:#eef4f7;border:1px solid #dfe8ed"></i>came up least ('+lo+')</span><span><i style="background:'+mix(0.5)+'"></i>about as expected</span><span><i style="background:#1c4454"></i>came up most ('+hi+')</span>';
+   $("spCap").innerHTML='Same grid, now shaded by <b>how many times each outcome actually turned up</b> in '+fmt(trials)+' '+EXN[ex].vbs+'. Every one of these '+fmt(N)+' outcomes is equally likely, so each &ldquo;should&rdquo; appear about <b>'+exp.toFixed(1)+'</b> times &mdash; yet the counts run from <b>'+lo+'</b> to <b>'+hi+'</b>. That ragged patchwork is not a flaw in the dice and not a flaw in the model. <b>It is what equally likely looks like from close up</b>, and it is the reason a handful of trials can never settle a probability question that the grid answers exactly.';
+  }
+ }
+
+ /* ========================= card 2: grouped by the summary ========================= */
+ var DX0=32,DX1=332,DTOP=22,DBOT=154;
+ function drawDist(){
+  var s='',i,n=vals.length,bw=(DX1-DX0)/n,mxc=1;
+  for(i=0;i<n;i++)if(cntV[vals[i]].n>mxc)mxc=cntV[vals[i]].n;
+  var N=SP.length,sc;
+  for(i=0;i<n;i++){sc=simV[vals[i]]/trials*N;if(sc>mxc)mxc=sc;}
+  function DY(c){return DBOT-c/mxc*(DBOT-DTOP);}
+
+  for(i=0;i<n;i++){
+   var v=vals[i],C=cntV[v],x=DX0+i*bw;
+   s+='<rect x="'+(x+bw*0.14).toFixed(1)+'" y="'+DY(C.n).toFixed(1)+'" width="'+(bw*0.72).toFixed(1)+'" height="'+(DBOT-DY(C.n)).toFixed(1)+'" fill="#c3ced4"/>';
+   if(C.a>0)s+='<rect x="'+(x+bw*0.14).toFixed(1)+'" y="'+DY(C.a).toFixed(1)+'" width="'+(bw*0.72).toFixed(1)+'" height="'+(DBOT-DY(C.a)).toFixed(1)+'" fill="#2f6f8a"/>';
+   if(bw>=15)s+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(DY(C.n)-4).toFixed(1)+'" font-size="8.6" font-weight="800" fill="#4a585f" text-anchor="middle">'+C.n+'</text>';
+  }
+  /* what the rolls actually delivered, put on the same scale as the counts */
+  var mp='';
+  for(i=0;i<n;i++){
+   var xc=DX0+i*bw+bw/2,yc=DY(simV[vals[i]]/trials*N);
+   mp+=(i?' L':'M')+xc.toFixed(1)+' '+yc.toFixed(1);
+  }
+  s+='<path d="'+mp+'" fill="none" stroke="#b8862f" stroke-width="1.9"/>';
+  for(i=0;i<n;i++)s+='<circle cx="'+(DX0+i*bw+bw/2).toFixed(1)+'" cy="'+DY(simV[vals[i]]/trials*N).toFixed(1)+'" r="2.3" fill="#b8862f"/>';
+
+  s+='<line x1="'+DX0+'" y1="'+DBOT+'" x2="'+DX1+'" y2="'+DBOT+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  var step=n>22?3:(n>13?2:1);
+  for(i=0;i<n;i++){
+   if(i%step)continue;
+   s+='<text x="'+(DX0+i*bw+bw/2).toFixed(1)+'" y="'+(DBOT+15)+'" font-size="8.8" font-weight="700" fill="#78868d" text-anchor="middle">'+vals[i]+'</text>';
+  }
+  s+='<text x="182" y="'+(DBOT+34)+'" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">'+EXN[ex].ax+'</text>';
+  s+='<text x="'+DX0+'" y="14" font-size="9" font-weight="700" fill="#a3b0b7" text-anchor="start">bar height = how many outcomes give that value</text>';
+  $("dist").innerHTML=s;
+
+  /* the headline lesson: the summaries are not equally likely, the outcomes are */
+  var best=vals[0],worst=vals[0];
+  for(i=0;i<n;i++){if(cntV[vals[i]].n>cntV[best].n)best=vals[i];if(cntV[vals[i]].n<cntV[worst].n)worst=vals[i];}
+  var rb=cntV[best].n,rw=cntV[worst].n;
+  var msg;
+  if(ex===0){
+   msg='Here is the trap that catches everyone. There are <b>'+n+'</b> possible totals, but they are <b>not equally likely</b>, so the probability of any one of them is <i>not</i> 1/'+n+'. A total of <b>'+best+'</b> can happen '+rb+' different ways; a total of <b>'+worst+'</b> can happen only '+rw+'. That makes '+best+' <b>'+(rb/rw).toFixed(0)+' times</b> as likely as '+worst+' &mdash; and it is only the '+fmt(N)+' pairs underneath, all equally likely, that you are allowed to divide by.';
+  }else if(ex===1){
+   msg='The bars are the number of head-and-tail sequences that give each count, and they pile up in the middle for a purely combinatorial reason: there is exactly <b>one</b> way to get '+nc+' heads, but <b>'+rb+'</b> ways to get '+best+' of them. Getting a middling number of heads is likely not because the coin steers toward balance but because <b>far more sequences look balanced than look extreme</b>.';
+  }else{
+   msg='Every bar is the same height, and that is the point: the die has no favourite face, and the coin splits each face into exactly two equally likely outcomes. The sample space is a clean <b>'+d+' &times; 2 = '+fmt(N)+'</b> &mdash; the fundamental counting principle drawn to scale.';
+  }
+  $("dsCap").innerHTML=msg+' The gold line shows what the '+fmt(trials)+' '+EXN[ex].vbs+' actually produced, rescaled to sit on the same axis; where it runs above or below a bar, that value came up more or less often than its share.';
+ }
+
+ /* ========================= card 3: the running proportion ========================= */
+ var RX0=40,RX1=330,RY0=20,RY1=156;
+ function drawRun(){
+  var p=P(),s='',i;
+  function RX(m){return RX0+m/trials*(RX1-RX0);}
+  function RY(q){return RY1-q*(RY1-RY0);}
+
+  for(i=0;i<=4;i++){
+   var gy=RY(i/4);
+   s+='<line x1="'+RX0+'" y1="'+gy.toFixed(1)+'" x2="'+RX1+'" y2="'+gy.toFixed(1)+'" stroke="#eff4f7" stroke-width="1"/>';
+   s+='<text x="'+(RX0-5)+'" y="'+(gy+3).toFixed(1)+'" font-size="8.2" font-weight="700" fill="#a3b0b7" text-anchor="end">'+(i*25)+'%</text>';
+  }
+
+  /* the band a fair experiment wanders inside: p +/- 2 standard errors,
+     which narrows like the square root of the number of trials */
+  if(p>0&&p<1){
+   var up='',dn='',K=150,m,se,a,b;
+   for(i=0;i<=K;i++){
+    m=Math.max(1,Math.round(trials*i/K));
+    se=Math.sqrt(p*(1-p)/m);
+    a=Math.min(1,p+2*se);b=Math.max(0,p-2*se);
+    up+=(i?' L':'M')+RX(m).toFixed(1)+' '+RY(a).toFixed(1);
+    dn=' L'+RX(m).toFixed(1)+' '+RY(b).toFixed(1)+dn;
+   }
+   s+='<path d="'+up+dn+' Z" fill="#dbe6ee" opacity=".75"/>';
+  }
+
+  s+='<line x1="'+RX0+'" y1="'+RY(p).toFixed(1)+'" x2="'+RX1+'" y2="'+RY(p).toFixed(1)+'" stroke="#1c4454" stroke-width="2"/>';
+
+  var rp='',K2=Math.min(trials,320),mm;
+  for(i=1;i<=K2;i++){
+   mm=Math.max(1,Math.round(trials*i/K2));
+   rp+=(i>1?' L':'M')+RX(mm).toFixed(1)+' '+RY(cum[mm]/mm).toFixed(1);
+  }
+  s+='<path d="'+rp+'" fill="none" stroke="#2f6f9f" stroke-width="1.8"/>';
+  s+='<circle cx="'+RX(trials).toFixed(1)+'" cy="'+RY(cum[trials]/trials).toFixed(1)+'" r="4.2" fill="#2f6f9f" stroke="#fff" stroke-width="1.8"/>';
+
+  s+='<line x1="'+RX0+'" y1="'+RY1+'" x2="'+RX1+'" y2="'+RY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<line x1="'+RX0+'" y1="'+RY0+'" x2="'+RX0+'" y2="'+RY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  for(i=0;i<=4;i++){
+   var gx=RX(trials*i/4);
+   s+='<text x="'+gx.toFixed(1)+'" y="'+(RY1+15)+'" font-size="8.4" font-weight="700" fill="#78868d" text-anchor="middle">'+fmt(Math.round(trials*i/4))+'</text>';
+  }
+  s+='<text x="185" y="'+(RY1+34)+'" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">number of '+EXN[ex].vbs+' so far</text>';
+  var ly=RY(p);
+  s+='<text x="'+RX1+'" y="'+(ly-5).toFixed(1)+'" font-size="9" font-weight="800" fill="#1c4454" text-anchor="end">counted: '+pc(p,2)+'</text>';
+  $("run").innerHTML=s;
+
+  var obs=cum[trials]/trials;
+  $("runCap").innerHTML='The flat dark line is the probability you counted off the grid &mdash; it does not move, because it was never an estimate. The blue line is the <b>running proportion</b>: after each '+EXN[ex].one+', hits so far divided by '+EXN[ex].vbs+' so far. It thrashes about early, when a single lucky '+EXN[ex].one+' can swing it by whole percentage points, and then it is slowly pinned down. After '+fmt(trials)+' '+EXN[ex].vbs+' it stands at <b>'+pc(obs,2)+'</b>, '+(Math.abs(obs-p)<1e-9?'landing exactly on':'a gap of <b>'+Math.abs((obs-p)*100).toFixed(2)+'</b> percentage points from')+' the counted value. The pale band is where ordinary chance would keep it about 95% of the time&mdash;it narrows in proportion to the square root of the '+EXN[ex].vbs+', so buying half the error costs you <b>four times</b> the '+EXN[ex].vbs+'. Press <b>A new set of rolls</b> to watch a different run of luck take a different path to the same line.';
+ }
+
+ /* ============================ the reading panel ============================ */
+ function drawInfo(){
+  var E=EV[ex][ev],N=SP.length,a=inA,p=P(),tx='';
+  tx+='<span class="n">'+E.nm.replace(/\bt\b/,String(t)).replace(/\bh\b/,String(t))+'</span>';
+  tx+='The event is the set of outcomes for which <b>'+E.say(t)+'</b>. Walking the whole space one outcome at a time, <b>'+a+'</b> of the <b>'+fmt(N)+'</b> qualify';
+  if(a===0)tx+=' &mdash; none at all, so this event is <b>impossible</b> and its probability is exactly 0. An impossible event is not a very unlikely one; there is literally no outcome that could deliver it.';
+  else if(a===N)tx+=' &mdash; all of them, so this event is <b>certain</b> and its probability is exactly 1. Certainty here means the event covers the entire sample space, leaving nothing outside it.';
+  else tx+=', which makes the probability <b>'+frac(a,N)+' = '+pc(p)+'</b>, or roughly one '+EXN[ex].one+' in '+oneIn(p)+'.';
+
+  if(a>0&&a<N){
+   tx+=' The <b>complement</b> &mdash; every outcome where this does not happen &mdash; holds the other <b>'+(N-a)+'</b> tiles, so it has probability '+frac(N-a,N)+' = '+pc(1-p)+'. The two must add to 1 because between them they account for every tile exactly once, which is often the fastest route to an answer: count the few outcomes you do <i>not</i> want and subtract.';
+  }
+
+  if(ex===0&&(ev===3||ev===4)){
+   var oth=EV[0][ev===3?4:3],cA=0,i;
+   for(i=0;i<SP.length;i++)if(oth.f(SP[i],t))cA++;
+   tx+='<div class="dd">These two events &mdash; <b>at least one '+t+'</b> and <b>neither is a '+t+'</b> &mdash; are exact opposites, and the counts prove it: '+(ev===3?a+' + '+cA:cA+' + '+a)+' = '+fmt(N)+'. &ldquo;At least one&rdquo; is almost always easier to get at backwards. There is only one way to avoid a '+t+' on each die, so the complement is a tidy '+(d-1)+' &times; '+(d-1)+' = '+((d-1)*(d-1))+' outcomes, and the answer is 1 &minus; '+((d-1)*(d-1))+'/'+fmt(N)+'.</div>';
+  }
+  if(ex===0&&ev===0){
+   tx+='<div class="dd">Compare two ways of answering this. Counting <b>totals</b>, there are '+(2*d-1)+' of them and you might guess 1/'+(2*d-1)+' = '+pc(1/(2*d-1),1)+'. Counting <b>outcomes</b>, the honest answer is '+a+'/'+fmt(N)+' = '+pc(p)+'. Those disagree because the totals are not equally likely and the pairs are. The chart below the grid shows exactly how unequal they are.</div>';
+  }
+  if(ex===1&&ev===0){
+   tx+='<div class="dd">The '+a+' comes from counting sequences, not coins: there '+(a===1?'is <b>1</b> arrangement':'are <b>'+a+'</b> different arrangements')+' of '+t+' head'+(t===1?'':'s')+' among '+nc+' flips. That count is the binomial coefficient, and every one of those arrangements is one tile in the grid. This is exactly the reasoning the binomial distribution is built from, several chapters ahead.</div>';
+  }
+  if(ex===1&&(ev===3||ev===4)){
+   tx+='<div class="dd">&ldquo;At least one head&rdquo; and &ldquo;no heads at all&rdquo; are opposites, and the second is trivially easy: exactly <b>one</b> sequence out of '+fmt(N)+' is all tails. So P(at least one head) = 1 &minus; 1/'+fmt(N)+' = '+pc(1-1/N)+'. Add another coin and the failure case halves again &mdash; which is why &ldquo;at least one&rdquo; questions are nearly always attacked through the complement.</div>';
+  }
+  if(ex===1&&ev===5&&nc%2===0){
+   var tie=cntV[nc/2]?cntV[nc/2].n:0;
+   tx+='<div class="dd">With an <b>even</b> number of coins this is not one-half, and the reason is the <b>'+tie+'</b> sequences that come out tied at '+(nc/2)+'&ndash;'+(nc/2)+'. A tie is neither more heads nor more tails, so it belongs to neither side; heads win '+a+' times, tails win '+a+' times, and '+tie+' outcomes are left over. Give the coins an odd count and ties become impossible, at which point the answer snaps to exactly one-half.</div>';
+  }
+  if(ex===2&&ev===4){
+   var cH=0,cD=0,cB=0,i2;
+   for(i2=0;i2<SP.length;i2++){
+    if(SP[i2].h===0)cH++;
+    if(SP[i2].i===t)cD++;
+    if(SP[i2].h===0&&SP[i2].i===t)cB++;
+   }
+   tx+='<div class="dd">This is where adding probabilities goes wrong if you are careless. Heads happens '+cH+' ways and &ldquo;die shows '+t+'&rdquo; happens '+cD+' ways, but '+cH+' + '+cD+' = '+(cH+cD)+' is <b>not</b> the answer &mdash; the single outcome that is both got counted twice. Subtract that overlap once: '+cH+' + '+cD+' &minus; '+cB+' = <b>'+a+'</b>. On the grid you can simply see it: a whole row plus a whole column, sharing one cell.</div>';
+  }
+  if(ex===2&&(ev===0||ev===1||ev===5)){
+   var cc=0,dd2=0,i3;
+   for(i3=0;i3<SP.length;i3++){
+    if(ev===5?SP[i3].h===1:SP[i3].h===0)cc++;
+    if(ev===0?SP[i3].i===t:SP[i3].i>=t)dd2++;
+   }
+   tx+='<div class="dd">A rectangle on the grid, and its area is a product: the coin condition alone covers '+cc+'/'+fmt(N)+' = '+pc(cc/N,1)+' of the space and the die condition alone covers '+dd2+'/'+fmt(N)+' = '+pc(dd2/N,1)+', and '+pc(cc/N,1)+' &times; '+pc(dd2/N,1)+' = '+pc(p,1)+'. Multiplying works here because the coin tells you nothing about the die &mdash; that is what <b>independent</b> means, and the next section makes it precise.</div>';
+  }
+
+  tx+='<div class="eq">'+
+      '<div class="r"><span>outcomes in the sample space</span><b>'+fmt(N)+'</b></div>'+
+      '<div class="r"><span>outcomes in the event</span><b>'+a+'</b></div>'+
+      '<div class="r"><span>P(event) = count &divide; count</span><b>'+frac(a,N)+' = '+pc(p)+'</b></div>'+
+      '<div class="r"><span>observed in '+fmt(trials)+' '+EXN[ex].vbs+'</span><b>'+fmt(cum[trials])+' &mdash; '+pc(cum[trials]/trials,2)+'</b></div>'+
+      '</div>';
+
+  var how;
+  if(ex===0)how='Two dice are rolled. The first can land '+d+' ways and, whatever it does, the second can land '+d+' ways, so the space is <b>'+d+' &times; '+d+' = '+fmt(N)+'</b> ordered pairs. Ordered is the load-bearing word: (2,5) and (5,2) are different outcomes even with identical dice, and treating them as one is the single most common way to get a dice probability wrong.';
+  else if(ex===1)how=nc+' coin'+(nc===1?' is':'s are')+' flipped. Each flip doubles the number of possible histories, so the space is <b>2<sup>'+nc+'</sup> = '+fmt(N)+'</b> sequences. Sequences, again, not tallies &mdash; HTT, THT and TTH are three separate outcomes that happen to share the same headcount.';
+  else how='A '+d+'-sided die and a coin are used together. The die has '+d+' outcomes, the coin has 2, and every die result pairs with every coin result, so the space is <b>'+d+' &times; 2 = '+fmt(N)+'</b>. This is the fundamental counting principle in its plainest form: independent stages multiply.';
+  tx+='<div class="loc">'+how+'</div>';
+  $("info").innerHTML=tx;
+ }
+
+ /* ================================ chrome ================================ */
+ function clampT(){
+  var E=EV[ex][ev];
+  if(!E.th){$("thSl").disabled=true;$("thWrap").className='sl off';$("thLab").innerHTML='(no target needed)';$("thVal").innerHTML='&mdash;';return;}
+  var lo=E.lo(),hi=E.hi();
+  if(t<lo)t=lo;
+  if(t>hi)t=hi;
+  $("thSl").disabled=false;$("thWrap").className='sl';
+  $("thSl").min=lo;$("thSl").max=hi;$("thSl").value=t;
+  $("thLab").innerHTML=E.tl;$("thVal").innerHTML=String(t);
+ }
+
+ function render(){
+  clampT();
+  build();
+  simulate();
+  drawSpace();drawDist();drawRun();drawInfo();
+
+  var N=SP.length,p=P(),obs=cum[trials]/trials;
+  $("tS").innerHTML=fmt(N);
+  $("tA").innerHTML=fmt(inA);
+  $("tP").innerHTML=pc(p,1);
+  $("tO").innerHTML=pc(obs,1);
+
+  $("szLab").innerHTML=ex===1?'How many coins':'Sides per die';
+  $("szVal").innerHTML=ex===1?String(nc):String(d);
+
+  var col=p===0?'#4a585f':(p<0.1?'#7a5a8a':(p<0.34?'#2f6f9f':(p<0.67?'#2f6f8a':'#2f9e5b')));
+  $("stage").style.background=col;
+  $("stage").innerHTML='P = '+frac(inA,N)+' &nbsp;=&nbsp; '+pc(p,1)+
+   '<small>'+fmt(inA)+' of '+fmt(N)+' outcomes &nbsp;·&nbsp; observed '+pc(obs,1)+' in '+fmt(trials)+' '+EXN[ex].vbs+'</small>';
+
+  $("spTitle").innerHTML=vw===0?'All '+fmt(N)+' outcomes, and the ones in the event':'All '+fmt(N)+' outcomes, and how often each turned up';
+  $("dsTitle").innerHTML='Grouped by the '+EXN[ex].sum;
+
+  $("evGrid").innerHTML=EV[ex].map(function(e,i){
+   var nm=e.th?e.nm.replace(/\bt\b/,String(t)).replace(/\bh\b/,String(t)):e.nm;
+   return '<button class="it'+(i===ev?' on':'')+'" data-v="'+i+'"><span class="nm">'+nm+'</span><span class="s">'+e.s+'</span></button>';
+  }).join('');
+  document.querySelectorAll('#evGrid .it').forEach(function(b){
+   b.onclick=function(){ev=+b.dataset.v;render();};
+  });
+
+  $("more").disabled=(trials>=MAXT);
+  $("more").innerHTML=trials>=MAXT?'&#9654; '+fmt(MAXT)+' is the limit':'&#9654; '+EXN[ex].vb.charAt(0).toUpperCase()+EXN[ex].vb.slice(1)+' 250 more';
+
+  /* the law-of-large-numbers table: proportion gap closes, count gap does not */
+  var marks=[50,250,1000,trials],seen={},rowsH='';
+  marks.sort(function(a,b){return a-b;});
+  for(var q=0;q<marks.length;q++){
+   var m=marks[q];
+   if(m>trials||m<1||seen[m])continue;
+   seen[m]=1;
+   var hit=cum[m],ob=hit/m,gp=(ob-p)*100,gc=hit-m*p;
+   rowsH+='<tr><td>'+fmt(m)+'</td><td>'+fmt(hit)+'</td><td class="sm">'+pc(ob,1)+'</td><td>'+pc(p,1)+'</td>'+
+     '<td class="gp">'+(gp>=0?'+':'&minus;')+Math.abs(gp).toFixed(2)+'</td>'+
+     '<td class="gc">'+(gc>=0?'+':'&minus;')+Math.abs(gc).toFixed(1)+'</td></tr>';
+  }
+  $("lln").innerHTML=rowsH;
+
+  $("fnote").innerHTML='Nothing here is looked up. The sample space is generated and then walked outcome by outcome, and the event membership of each outcome is tested individually &mdash; the count in the tiles above is a genuine count, not a formula. The '+fmt(trials)+' '+EXN[ex].vbs+' come from a seeded pseudo-random generator, so the page opens identically every time while &ldquo;a new set of rolls&rdquo; really does produce a new one. The underlying random numbers are held fixed when you change the event, which means switching between events re-judges <b>the same '+fmt(trials)+' '+EXN[ex].vbs+'</b> against a different question &mdash; the way a single evening at a table answers many questions at once. The band on the last chart is the usual two-standard-error interval for a proportion, a good approximation once a fair number of hits and misses have accumulated and a rough one in the first few dozen '+EXN[ex].vbs+'.';
+ }
+
+ /* ================================ wiring ================================ */
+ $("szSl").oninput=function(){
+  if(ex===1)nc=+this.value;else d=+this.value;
+  render();
+ };
+ $("thSl").oninput=function(){t=+this.value;render();};
+ $("fresh").onclick=function(){seed++;trials=250;fillPool();render();};
+ $("more").onclick=function(){trials=Math.min(MAXT,trials+250);render();};
+
+ document.querySelectorAll('#seg button').forEach(function(b){
+  b.onclick=function(){
+   ex=+b.dataset.v;
+   document.querySelectorAll('#seg button').forEach(function(x){x.className='';});
+   b.className='on';
+   ev=0;
+   if(ex===0){t=Math.min(7,2*d);$("szSl").min=4;$("szSl").max=12;$("szSl").value=d;}
+   else if(ex===1){t=Math.min(2,nc);$("szSl").min=1;$("szSl").max=6;$("szSl").value=nc;}
+   else{t=Math.min(4,d);$("szSl").min=4;$("szSl").max=12;$("szSl").value=d;}
+   render();
+  };
+ });
+ document.querySelectorAll('#vseg button').forEach(function(b){
+  b.onclick=function(){
+   vw=+b.dataset.v;
+   document.querySelectorAll('#vseg button').forEach(function(x){x.className='';});
+   b.className='on';
+   render();
+  };
+ });
+
+ fillPool();
+ render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Breaking the Radical Apart: Simplifying Square Roots</title>
+<meta name="description" content="Simplifying square roots as a worked-step machine — hunt the largest perfect-square factor, pair off the primes, and watch the area model prove why the radical splits.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* ---- radical drawn with HTML only: glyph + vinculum ---- */
+.rad{display:inline-block;white-space:nowrap;}
+.rad>.rv{border-top:1.2px solid currentColor;padding:1px 3px 0 2px;margin-left:-1px;}
+/* ---- example picker ---- */
+#pick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+#pick button{display:block;text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 9px;cursor:pointer;font-family:var(--sans);transition:.12s;}
+#pick button:hover{border-color:var(--teal);}
+#pick button .nm{display:block;font-weight:700;font-size:11.6px;color:var(--ink);line-height:1.15;}
+#pick button .ct{display:block;font-family:var(--math);font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.25;}
+#pick button.on{background:var(--teal);border-color:var(--teal);}
+#pick button.on .nm{color:#fff;} #pick button.on .ct{color:rgba(255,255,255,.92);}
+@media (max-width:470px){#pick{grid-template-columns:repeat(2,1fr);}}
+/* ---- the worked-step column ---- */
+.work{margin-top:2px;}
+.wr{display:flex;gap:10px;align-items:baseline;padding:7px 8px;border-radius:9px;border-left:4px solid transparent;transition:.18s;}
+.wr + .wr{margin-top:2px;}
+.wr .pl{flex:none;width:88px;font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.wr .mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.85;flex:1;min-width:0;}
+.wr.on{background:#eef0fa;border-left-color:var(--teal);}
+.wr.on .mx{font-size:17.5px;color:var(--ink);font-weight:600;}
+.wr.on .pl{color:var(--teal);}
+.wr.done .mx{color:var(--soft);}
+.wr .ex{font-family:var(--math);font-size:13px;color:var(--soft);line-height:1.7;margin-top:7px;display:block;font-weight:400;}
+.wr:not(.on) .ex{display:none;}
+.wr .ex u{font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;display:block;margin-bottom:1px;}
+.wr .ex b{color:var(--ink);}
+.mx sub{font-size:.62em;} .mx sup{font-size:.66em;} .ex sup{font-size:.66em;} .ex sub{font-size:.62em;}
+/* ---- highlight the part that just changed ---- */
+.hl{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.wr:not(.on) .hl{background:transparent;box-shadow:none;padding:0;}
+.gl{border-radius:4px;padding:1px 4px;background:#dbe9f5;box-shadow:inset 0 0 0 1.5px #9dc0dc;}
+.wr:not(.on) .gl{background:transparent;box-shadow:none;padding:0;}
+.bad{color:#b23145;} .ok{color:#237a45;}
+.strike{background-image:linear-gradient(to top right,transparent 44%,#d1495b 44%,#d1495b 56%,transparent 56%);color:var(--muted);}
+/* ---- left column extras ---- */
+.dom{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;border:1px solid var(--line);background:#f7f6fc;border-radius:9px;padding:7px 11px;}
+.dom b{font-size:9.4px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;flex:none;}
+.dom span{font-family:var(--math);font-size:15px;color:var(--teal-dk);font-weight:700;text-align:right;}
+.dom span.none{color:var(--muted);font-weight:400;font-size:13px;}
+.cap{font-size:12px;color:var(--soft);line-height:1.6;margin-top:11px;border-top:1px solid var(--line);padding-top:10px;min-height:70px;}
+.cap b{color:var(--ink);} .cap i{font-family:var(--math);} .cap sup{font-size:.66em;}
+.key{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.2px;color:var(--muted);align-items:center;}
+.key i{font-style:normal;display:inline-flex;align-items:center;gap:4px;}
+.key .g{width:12px;height:12px;border-radius:3px;background:#f7e2a8;border:1.5px solid #b8862f;display:inline-block;}
+.key .t{width:12px;height:12px;border-radius:3px;background:#e6e8f5;border:1.5px solid #9aa0c4;display:inline-block;}
+/* ---- plan chips ---- */
+.plan{display:flex;flex-wrap:wrap;gap:4px;margin-top:11px;}
+.plan span{font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:#eceefa;color:var(--muted);border-radius:20px;padding:4px 9px;}
+.plan span.on{background:var(--teal);color:#fff;}
+.plan span.done{background:#dfe2f4;color:var(--teal-dk);}
+/* ---- the live slider card ---- */
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#dfe2f4;outline:none;margin:12px 0 2px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:21px;height:21px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.4);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.4);cursor:pointer;}
+.slrow{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:700;}
+.big{font-family:var(--math);font-size:23px;color:var(--teal-dk);font-weight:700;text-align:center;margin-top:10px;line-height:1.5;}
+.sub2{font-family:var(--math);font-size:13px;color:var(--soft);text-align:center;margin-top:6px;line-height:1.6;}
+.sub2 b{color:var(--ink);}
+#info .n{margin-bottom:4px;}
+#info i,.mnem i,.note i{font-family:var(--math);}
+#info sup,.mnem sup,.note sup{font-size:.66em;}
+#info .rad>.rv,.mnem .rad>.rv,.note .rad>.rv,.cap .rad>.rv{border-top-width:1px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 8</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 8</div>
+  <h1>Breaking the Radical Apart</h1>
+  <div class="intro">&radic;72 is already a number &mdash; about 8.485. Simplifying it does not make it smaller or more exact; it rewrites it so that <b>no perfect square is left trapped inside the radical</b>. The whole method rests on one rule, &radic;(<i>ab</i>) = &radic;<i>a</i> &middot; &radic;<i>b</i>, and that rule has a picture: a square of area 72 is exactly thirty-six little squares of area 2, six of them across. Step through each example one line at a time and watch the square come apart.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The picture</h2>
+      <svg id="pic" viewBox="0 0 250 205" aria-label="visual model of the radical"><g id="art"></g></svg>
+      <div class="dom"><b>Simplified form</b><span id="domv" class="none">&mdash;</span></div>
+      <div class="key"><i><span class="g"></span> the part that escapes</i><i><span class="t"></span> the part that stays inside</i></div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>Try any radicand</h2>
+      <input type="range" id="rng" min="2" max="200" step="1" value="72" aria-label="radicand">
+      <div class="slrow"><span>2</span><span id="slv">72</span><span>200</span></div>
+      <div class="big" id="slbig"></div>
+      <svg viewBox="0 0 250 54" aria-label="length model"><g id="slart"></g></svg>
+      <div class="sub2" id="slsub"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Simplify a radical, one line at a time<small>pick an example below</small></div>
+    <div class="card">
+      <div id="pick"></div>
+      <div class="work" id="work"></div>
+      <div class="plan" id="plan"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"></div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ================= HTML math helpers — no LaTeX, no renderer ================= */
+ function R(s){ return '<span class="rad">&radic;<span class="rv">'+s+'</span></span>'; }
+ function HL(s){ return '<span class="hl">'+s+'</span>'; }
+ function GL(s){ return '<span class="gl">'+s+'</span>'; }
+ var M='&minus;', X='<i>x</i>', X2='<i>x</i><sup>2</sup>', X3='<i>x</i><sup>3</sup>',
+     NE='&ne;', GE='&ge;', DOT='&middot;', TO='&nbsp;&rarr;&nbsp;', CK='&#10003;', XX='&#10007;';
+
+ /* ================= number theory, all computed ================= */
+ function isSq(m){ var r=Math.round(Math.sqrt(m)); return r*r===m; }
+ /* largest a with a*a dividing n */
+ function bigSq(n){ var a=1,i; for(i=1;i*i<=n;i++){ if(n%(i*i)===0) a=i; } return a; }
+ function pairsOf(n){ var out=[],d; for(d=1;d*d<=n;d++){ if(n%d===0) out.push([d,n/d]); } return out; }
+ function primesOf(n){ var f=[],d=2; while(d*d<=n){ while(n%d===0){ f.push(String(d)); n=n/d; } d++; } if(n>1) f.push(String(n)); return f; }
+ /* walk a sorted token list, pairing equal neighbours */
+ function pairUp(f){ var i=0,g=[]; while(i<f.length){ if(i+1<f.length&&f[i]===f[i+1]){ g.push({v:f[i],i0:i,i1:i+1,p:1}); i+=2; } else { g.push({v:f[i],i0:i,i1:i,p:0}); i++; } } return g; }
+
+ /* ================= SVG text helpers ================= */
+ var GRAY='#c9cde4', INK='#22243a', SOFT='#4d4f66', TEAL='#43458f', TEALD='#262a5c',
+     RED='#d1495b', GOLD='#b8862f', GOLDF='#f7e2a8', MUT='#7d7f94', FILL='#e6e8f5';
+ function T(x,y,s,fs,fill,anch,bold,ital){
+   return '<text x="'+x+'" y="'+y+'" text-anchor="'+(anch||'middle')+'" font-family="Georgia,serif" font-size="'+fs+
+     '" fill="'+fill+'"'+(bold?' font-weight="bold"':'')+(ital?' font-style="italic"':'')+'>'+s+'</text>';
+ }
+ /* a radical sign with a vinculum, in SVG */
+ function SR(x,y,inner,fs,fill,anch,bold){
+   return '<text x="'+x+'" y="'+y+'" text-anchor="'+(anch||'middle')+'" font-family="Georgia,serif" font-size="'+fs+
+     '" fill="'+fill+'"'+(bold?' font-weight="bold"':'')+'>√<tspan text-decoration="overline">&#8202;'+inner+'&#8202;</tspan></text>';
+ }
+ function dim(x0,x1,y,col,w){
+   return '<line x1="'+x0+'" y1="'+y+'" x2="'+x1+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+(w||1.4)+'"/>'+
+          '<line x1="'+x0+'" y1="'+(y-4)+'" x2="'+x0+'" y2="'+(y+4)+'" stroke="'+col+'" stroke-width="'+(w||1.4)+'"/>'+
+          '<line x1="'+x1+'" y1="'+(y-4)+'" x2="'+x1+'" y2="'+(y+4)+'" stroke="'+col+'" stroke-width="'+(w||1.4)+'"/>';
+ }
+ function tokItal(v){ return !(/^[0-9]+$/.test(v)); }
+
+ /* ================= scene 0 — a square whose area is the radicand ================= */
+ function S0(p){
+   var n=p.n, s='', L=118, x0=66, y0=30, r=Math.sqrt(n), lo=Math.floor(r+1e-9);
+   s+=T(125,18,'a square with area '+n,9.5,MUT);
+   s+='<rect x="'+x0+'" y="'+y0+'" width="'+L+'" height="'+L+'" rx="3" fill="'+FILL+'" stroke="'+TEAL+'" stroke-width="1.8"/>';
+   s+=T(125,y0+58,'area = '+n,15,TEALD,'middle',1);
+   s+=T(125,y0+78,'so every side is',9,SOFT);
+   s+=SR(125,y0+96,String(n),15,TEAL,'middle',1);
+   s+=dim(x0,x0+L,162,TEAL);
+   s+=SR(125,180,String(n),13,TEAL,'middle',1);
+   if(lo*lo===n){ s+=T(125,198,n+' is a perfect square: √'+n+' = '+lo+' exactly',9,GOLD,'middle',1); }
+   else {
+     s+=T(125,198,lo+'² = '+(lo*lo)+'  <  '+n+'  <  '+((lo+1)*(lo+1))+' = '+(lo+1)+'²   →   '+
+          lo+' < √'+n+' < '+(lo+1)+'   (≈ '+r.toFixed(4)+')',8.6,MUT);
+   }
+   return s;
+ }
+
+ /* ================= scene 1 — the factor-pair ladder ================= */
+ function S1(p,sub){
+   var n=p.n, ps=pairsOf(n), s='', i, y=42, best=bigSq(n), bestSq=best*best, sqs=[];
+   s+=T(125,20,'every way to write '+n+' as a product of two whole numbers',8.6,MUT);
+   for(i=0;i<ps.length;i++){
+     var L=ps[i][0], Rr=ps[i][1], yy=y+i*23, win=(sub>=2&&(L===bestSq||Rr===bestSq));
+     if(win){ s+='<rect x="44" y="'+(yy-16)+'" width="162" height="22" rx="6" fill="#eef0fa" stroke="'+TEAL+'" stroke-width="1.5"/>'; }
+     s+=pill(L,112,yy,sub>=1&&isSq(L),'end');
+     s+=T(125,yy,'×',12,MUT);
+     s+=pill(Rr,138,yy,sub>=1&&isSq(Rr),'start');
+     if(win){ s+=T(212,yy-1,'largest',7.6,TEAL,'middle',1); }
+   }
+   if(sub>=1){
+     for(i=1;i*i<=n;i++){ if(n%(i*i)===0) sqs.push(i*i); }
+     var line=sqs.join(', ');
+     s+=T(125,y+ps.length*23+14,'perfect squares hiding in that list:  '+line,9,GOLD,'middle',1);
+     if(sub>=2){
+       s+=(bestSq>1)
+         ? T(125,y+ps.length*23+32,'take the biggest one: '+bestSq+' = '+best+'²,  and '+n+' = '+bestSq+' × '+(n/bestSq),9.6,TEALD,'middle',1)
+         : T(125,y+ps.length*23+32,'only 1 — and 1 pulls nothing out. '+n+' is already as simple as it gets.',9.6,RED,'middle',1);
+     }
+   }
+   return s;
+ }
+ function pill(v,x,y,gold,anch){
+   var w=15+String(v).length*8, bx=(anch==='end')?(x-w):x, o='';
+   if(gold) o+='<rect x="'+bx+'" y="'+(y-13)+'" width="'+w+'" height="18" rx="5" fill="'+GOLDF+'" stroke="'+GOLD+'" stroke-width="1.2"/>';
+   o+=T(bx+w/2,y,String(v),12.5,gold?'#7a5a12':INK,'middle',gold?1:0);
+   return o;
+ }
+
+ /* ================= scene 2 — prime tokens, paired off ================= */
+ function S2(p,sub){
+   var f=p.tok, g=pairUp(f), s='', i, W=25, G=8, tot=f.length*W+(f.length-1)*G, x0=125-tot/2, ty=62;
+   s+=T(125,24,'write the radicand as a product of primes',8.6,MUT);
+   s+='<text x="125" y="42" text-anchor="middle" font-family="Georgia,serif" font-size="13.5" fill="'+TEALD+'" font-weight="bold">'+p.label+' = '+
+      f.map(function(v){ return tokItal(v)?'<tspan font-style="italic">'+v+'</tspan>':v; }).join(' <tspan fill="'+MUT+'">·</tspan> ')+'</text>';
+   for(i=0;i<f.length;i++){
+     var gx=x0+i*(W+G), mine=null, j;
+     for(j=0;j<g.length;j++){ if(i>=g[j].i0&&i<=g[j].i1) mine=g[j]; }
+     var paired=(sub>=1&&mine.p===1);
+     s+='<rect x="'+gx.toFixed(1)+'" y="'+ty+'" width="'+W+'" height="28" rx="5" fill="'+(paired?GOLDF:FILL)+'" stroke="'+(paired?GOLD:'#9aa0c4')+'" stroke-width="1.4"/>';
+     s+=T(gx+W/2,ty+20,f[i],14,paired?'#7a5a12':INK,'middle',1,tokItal(f[i]));
+   }
+   if(sub>=1){
+     for(i=0;i<g.length;i++){
+       var a=x0+g[i].i0*(W+G), b=x0+g[i].i1*(W+G)+W, cx=(a+b)/2;
+       if(g[i].p===1){
+         s+='<path d="M'+a.toFixed(1)+' '+(ty+34)+' L'+a.toFixed(1)+' '+(ty+40)+' L'+b.toFixed(1)+' '+(ty+40)+' L'+b.toFixed(1)+' '+(ty+34)+'" fill="none" stroke="'+GOLD+'" stroke-width="1.6"/>';
+         s+='<circle cx="'+cx.toFixed(1)+'" cy="'+(ty+53)+'" r="10" fill="'+GOLDF+'" stroke="'+GOLD+'" stroke-width="1.4"/>';
+         s+=T(cx,ty+57,g[i].v,12,'#7a5a12','middle',1,tokItal(g[i].v));
+         s+=T(cx,ty+76,'escapes',7.4,GOLD,'middle',1);
+       } else {
+         s+='<line x1="'+cx.toFixed(1)+'" y1="'+(ty+34)+'" x2="'+cx.toFixed(1)+'" y2="'+(ty+43)+'" stroke="'+MUT+'" stroke-width="1.4" stroke-dasharray="3 2"/>';
+         s+=T(cx,ty+57,'no',8,MUT);
+         s+=T(cx,ty+68,'twin',8,MUT);
+         s+=T(cx,ty+80,'stays',7.4,MUT,'middle',1);
+       }
+     }
+   }
+   if(sub>=2){
+     s+='<line x1="30" y1="163" x2="220" y2="163" stroke="'+GRAY+'" stroke-width="1"/>';
+     s+=T(125,181,'comes out:  '+(p.out||'1')+'      stays in:  √<tspan text-decoration="overline">&#8202;'+(p.inn||'1')+'&#8202;</tspan>',11.5,TEALD,'middle',1);
+     s+='<text x="125" y="199" text-anchor="middle" font-family="Georgia,serif" font-size="13.5" fill="'+TEAL+'" font-weight="bold">√<tspan text-decoration="overline">&#8202;'+p.label+'&#8202;</tspan> = '+p.simp+'</text>';
+   }
+   return s;
+ }
+
+ /* ================= scene 3 — the area model that proves the rule ================= */
+ function S3(p,sub){
+   var n=p.n, a=p.a, b=p.b, s='', i, j, L=118, x0=66, y0=26, c=L/a, br=Math.sqrt(b), exact=isSq(b)?Math.round(br):0;
+   s+=T(125,15,'area '+n+'  ·  cut into '+(a*a)+' little squares of area '+b,8.6,MUT);
+   for(i=0;i<a;i++){ for(j=0;j<a;j++){
+     var gx=x0+j*c, gy=y0+i*c, gold=(i===0&&j===0);
+     s+='<rect x="'+gx.toFixed(2)+'" y="'+gy.toFixed(2)+'" width="'+c.toFixed(2)+'" height="'+c.toFixed(2)+
+        '" fill="'+(gold?GOLDF:FILL)+'" stroke="#ffffff" stroke-width="'+(c>14?1.2:0.7)+'"/>';
+     if(c>=17) s+=T(gx+c/2,gy+c/2+4,String(b),Math.min(11,c*0.42),gold?'#7a5a12':'#6b6f92');
+   } }
+   s+='<rect x="'+x0+'" y="'+y0+'" width="'+L+'" height="'+L+'" fill="none" stroke="'+TEAL+'" stroke-width="1.8"/>';
+   s+='<rect x="'+x0+'" y="'+y0+'" width="'+c.toFixed(2)+'" height="'+c.toFixed(2)+'" fill="none" stroke="'+GOLD+'" stroke-width="1.8"/>';
+   /* the divided dimension line: a segments, the first one gold */
+   var dy=156;
+   s+='<line x1="'+x0+'" y1="'+dy+'" x2="'+(x0+L)+'" y2="'+dy+'" stroke="'+TEAL+'" stroke-width="1.4"/>';
+   for(i=0;i<=a;i++){ var tx0=x0+i*c; s+='<line x1="'+tx0.toFixed(2)+'" y1="'+(dy-4)+'" x2="'+tx0.toFixed(2)+'" y2="'+(dy+4)+'" stroke="'+TEAL+'" stroke-width="1.2"/>'; }
+   s+='<line x1="'+x0+'" y1="'+dy+'" x2="'+(x0+c).toFixed(2)+'" y2="'+dy+'" stroke="'+GOLD+'" stroke-width="3.4"/>';
+   s+=SR(x0+c/2,dy-9,String(b),9.5,GOLD,'middle',1);
+   s+=T(125,dy+18,'that side is '+a+' little sides laid end to end',9,SOFT);
+   s+='<text x="125" y="'+(dy+40)+'" text-anchor="middle" font-family="Georgia,serif" font-size="14" fill="'+TEALD+'" font-weight="bold">√<tspan text-decoration="overline">&#8202;'+n+'&#8202;</tspan> = '+a+' × √<tspan text-decoration="overline">&#8202;'+b+'&#8202;</tspan> = '+a+'√<tspan text-decoration="overline">&#8202;'+b+'&#8202;</tspan>'+(exact?'  = '+(a*exact):'')+'</text>';
+   return s;
+ }
+
+ /* ================= scene 4 — measure the same length two ways ================= */
+ function S4(p){
+   var n=p.n, a=p.a, b=p.b, v=Math.sqrt(n), br=Math.sqrt(b), s='', i,
+       X0=28, X1=234, MX=Math.ceil(v+1e-9), sc=(X1-X0)/MX, base=150;
+   s+=T(125,20,'one length, measured two ways',9.5,MUT);
+   /* the ruler */
+   s+='<line x1="'+X0+'" y1="'+base+'" x2="'+X1+'" y2="'+base+'" stroke="'+GRAY+'" stroke-width="1.4"/>';
+   for(i=0;i<=MX;i++){ var tx0=X0+i*sc;
+     s+='<line x1="'+tx0.toFixed(1)+'" y1="'+base+'" x2="'+tx0.toFixed(1)+'" y2="'+(base+5)+'" stroke="'+GRAY+'" stroke-width="1.2"/>';
+     s+=T(tx0,base+16,String(i),8,MUT);
+   }
+   /* bar A: the radical itself */
+   s+=T(X0,44,'√'+n,11,TEAL,'start',1);
+   s+='<rect x="'+X0+'" y="50" width="'+(v*sc).toFixed(1)+'" height="20" rx="3" fill="'+TEAL+'"/>';
+   /* bar B: a copies of root b */
+   s+=T(X0,92,a+' copies of √'+b,11,GOLD,'start',1);
+   for(i=0;i<a;i++){
+     s+='<rect x="'+(X0+i*br*sc).toFixed(1)+'" y="98" width="'+(br*sc).toFixed(1)+'" height="20" rx="2" fill="'+(i%2?'#e8c76a':GOLDF)+'" stroke="'+GOLD+'" stroke-width="1"/>';
+   }
+   s+='<line x1="'+(X0+v*sc).toFixed(1)+'" y1="44" x2="'+(X0+v*sc).toFixed(1)+'" y2="'+(base+2)+'" stroke="'+RED+'" stroke-width="1.4" stroke-dasharray="4 3"/>';
+   s+=T(125,180,'√'+n+' = '+v.toFixed(6)+'…',11,TEALD,'middle',1);
+   s+=T(125,196,a+'√'+b+' = '+a+' × '+br.toFixed(6)+'… = '+(a*br).toFixed(6)+'…   ✓',11,'#237a45','middle',1);
+   return s;
+ }
+
+ /* ================= scene 5 — sides do not add ================= */
+ function S5(){
+   var s='', u=13, base=100, i;
+   s+=T(125,18,'three squares: areas 9, 16, and 25',9.5,MUT);
+   var sq=[{A:9,side:3,x:22,col:FILL},{A:16,side:4,x:74,col:FILL},{A:25,side:5,x:158,col:'#f2dfe3'}];
+   for(i=0;i<sq.length;i++){
+     var w=sq[i].side*u;
+     s+='<rect x="'+sq[i].x+'" y="'+(base-w)+'" width="'+w+'" height="'+w+'" rx="2" fill="'+sq[i].col+'" stroke="'+(i===2?RED:TEAL)+'" stroke-width="1.6"/>';
+     s+=T(sq[i].x+w/2,base-w/2+4,String(sq[i].A),11,i===2?'#8a2a3a':TEALD,'middle',1);
+     s+=T(sq[i].x+w/2,base+12,'side '+sq[i].side,8.4,MUT);
+   }
+   s+=T(140,base-30,'vs',10,MUT,'middle',1);
+   /* the two lengths */
+   s+='<line x1="24" y1="131" x2="230" y2="131" stroke="'+GRAY+'" stroke-width="1"/>';
+   s+='<rect x="26" y="136" width="'+(3*u)+'" height="15" rx="2" fill="'+FILL+'" stroke="'+TEAL+'" stroke-width="1.2"/>';
+   s+='<rect x="'+(26+3*u)+'" y="136" width="'+(4*u)+'" height="15" rx="2" fill="#d8dcef" stroke="'+TEAL+'" stroke-width="1.2"/>';
+   s+=T(26+7*u+8,148,'√9 + √16 = 3 + 4 = 7',9.6,TEAL,'start',1);
+   s+='<rect x="26" y="163" width="'+(5*u)+'" height="15" rx="2" fill="#f2dfe3" stroke="'+RED+'" stroke-width="1.2"/>';
+   s+=T(26+5*u+8,175,'√(9 + 16) = √25 = 5',9.6,RED,'start',1);
+   s+='<line x1="'+(26+5*u)+'" y1="132" x2="'+(26+5*u)+'" y2="182" stroke="'+RED+'" stroke-width="1.1" stroke-dasharray="3 3"/>';
+   s+=T(125,197,'different lengths — the radical does not split over +',9,'#8a2a3a','middle',1);
+   return s;
+ }
+
+ function draw(e,st){
+   var p={n:e.n,a:e.a,b:e.b,tok:e.tok,label:e.label,out:e.out,inn:e.inn,simp:e.simp}, k;
+   if(st.pic){ for(k in st.pic){ if(st.pic.hasOwnProperty(k)) p[k]=st.pic[k]; } }
+   var sub=(st.sub===undefined)?2:st.sub;
+   if(st.vs===0) return S0(p);
+   if(st.vs===1) return S1(p,sub);
+   if(st.vs===2) return S2(p,sub);
+   if(st.vs===3) return S3(p,sub);
+   if(st.vs===4) return S4(p);
+   return S5();
+ }
+
+ /* ================================================================
+    THE EXAMPLES.  Every number below is checked against the picture,
+    which is computed from the same integers.
+    ================================================================ */
+ var EX=[
+
+ /* ---------------- a. the basic move ---------------- */
+ {k:'a',nm:'The basic move',sub:R('72'),col:'#43458f',
+  n:72,a:6,b:2,label:'72',tok:['2','2','2','3','3'],out:'2 × 3 = 6',inn:'2',simp:'6√2',
+  ans:'6'+R('2'),
+  idea:'<span class="n">Simplified does not mean smaller</span>'+R('72')+' and 6'+R('2')+' are the <b>same number</b> &mdash; both are 8.485281&hellip; Simplifying does not change the value by a hair. It changes the <i>shape</i>: it drags every perfect square out from under the radical so that what remains inside is as small and as bare as possible. That is a matter of standard form, the same way 3/4 rather than 6/8 is standard form for a fraction.',
+  steps:[
+   {pl:'The problem',vs:0,ct:'The square',
+    mx:R('72'),
+    cap:'A square root is a <b>side length</b>. '+R('72')+' is the side of a square whose area is 72 &mdash; a perfectly definite length, about 8.485 units. Nothing about it is unfinished as a number. What is unfinished is the way it is written.',
+    ex:'<u>What the symbol means</u>'+R('72')+' is the <b>non-negative</b> number whose square is 72. It exists, it is definite, and it is irrational &mdash; no fraction and no terminating decimal equals it exactly. So &ldquo;simplify&rdquo; cannot possibly mean &ldquo;compute it.&rdquo; It means: rewrite it so no perfect square is left inside.'},
+   {pl:'The product rule',vs:0,ct:'The square',
+    mx:R('<i>a</i> '+DOT+' <i>b</i>')+' = '+R('<i>a</i>')+' '+DOT+' '+R('<i>b</i>')+' &nbsp;&nbsp;(<i>a</i> '+GE+' 0, <i>b</i> '+GE+' 0)',
+    cap:'Everything in this section is this one rule, used in reverse. It is worth ten seconds to see <b>why</b> it is true rather than filing it away as something to remember.',
+    ex:'<u>Why it is true &mdash; square both sides</u>Take the right-hand side and square it: ('+R('<i>a</i>')+' '+DOT+' '+R('<i>b</i>')+')<sup>2</sup> = '+R('<i>a</i>')+DOT+R('<i>a</i>')+DOT+R('<i>b</i>')+DOT+R('<i>b</i>')+' = <i>a</i> '+DOT+' <i>b</i>. So '+R('<i>a</i>')+DOT+R('<i>b</i>')+' is <b>a</b> number whose square is <i>ab</i> &mdash; and it is not negative, since neither factor is. There is only one non-negative number whose square is <i>ab</i>, and its name is '+R('<i>ab</i>')+'. Therefore they are equal. '+CK+' <b>Note the fine print:</b> this needs <i>a</i> and <i>b</i> to be non-negative, and it is a rule about <b>multiplication</b> only.'},
+   {pl:'Hunt for a square',vs:1,sub:0,ct:'Factor pairs of 72',
+    mx:'72 = 1'+DOT+'72 = 2'+DOT+'36 = 3'+DOT+'24 = 4'+DOT+'18 = 6'+DOT+'12 = 8'+DOT+'9',
+    cap:'Every way of writing 72 as a product of two whole numbers. To build the list, divide 72 by 1, 2, 3, &hellip; and keep the divisions that come out even. Stop when the two numbers meet in the middle &mdash; past that point the pairs just repeat backwards.',
+    ex:'<u>Why we want a factor, not just any split</u>The product rule only helps if 72 is written as a <b>product</b>. So list the products. In a moment we will look through this list for a factor that is a perfect square &mdash; 1, 4, 9, 16, 25, 36, 49, 64, &hellip; &mdash; because those are the only factors whose square roots come out as whole numbers.'},
+   {pl:'Spot the squares',vs:1,sub:1,ct:'Factor pairs of 72',
+    mx:'perfect-square factors of 72: &nbsp;'+HL('1, 4, 9, 36'),
+    cap:'Gold marks every factor that is a perfect square. There are four of them. Each one <i>would</i> work &mdash; but only the biggest finishes the job in a single move.',
+    ex:'<u>Reading the ladder</u>1 = 1<sup>2</sup>, 4 = 2<sup>2</sup>, 9 = 3<sup>2</sup>, 36 = 6<sup>2</sup>. Notice they are scattered across different rows: 36 sits opposite 2, while 9 sits opposite 8. There is no rule saying the squares cluster together, which is exactly why you scan the whole list.'},
+   {pl:'Take the largest',vs:1,sub:2,ct:'Factor pairs of 72',
+    mx:'72 = '+HL('36')+' '+DOT+' 2, &nbsp; and 36 = 6<sup>2</sup>',
+    cap:'36 is the largest perfect square that divides 72. Choosing it means one pass and you are done. Choosing 4 or 9 instead still leads to the right answer &mdash; it just takes an extra round, which the next example walks through.',
+    ex:'<u>How to find it without the whole ladder</u>Run down the perfect squares from the top: is 64 a factor of 72? 72 &divide; 64 is not a whole number. 49? No. 36? 72 &divide; 36 = 2. '+CK+' Stop &mdash; the first hit going downwards is the largest. That search is usually faster than building the full list.'},
+   {pl:'Split the radical',vs:3,ct:'The area model',
+    mx:R('72')+' = '+R(HL('36 '+DOT+' 2'))+' = '+R('36')+' '+DOT+' '+R('2'),
+    cap:'Here is the rule as a picture. A square of area 72 is exactly <b>36 little squares of area 2</b>, arranged 6 across and 6 down. Each little square has side '+R('2')+'. So the big side is 6 lots of '+R('2')+'.',
+    ex:'<u>Two moves in one line</u>First 72 was rewritten as 36 '+DOT+' 2 &mdash; a change of appearance only, since 36 '+DOT+' 2 really is 72. Then the product rule broke the single radical into two. The picture on the left is the same statement in geometry: the area splits into 6 '+DOT+' 6 congruent pieces, so the side splits into 6 equal lengths, each one '+R('2')+' long.'},
+   {pl:'Let the square out',vs:3,ct:'The area model',
+    mx:R('36')+' '+DOT+' '+R('2')+' = '+HL('6')+' '+DOT+' '+R('2')+' = 6'+R('2'),
+    cap:'The gold segment is one '+R('2')+'. Count the segments along the bottom edge: there are 6. The whole side is therefore 6'+R('2')+', and it is also '+R('72')+' &mdash; because it is the same side.',
+    ex:'<u>Only the perfect square evaluates</u>'+R('36')+' = 6 exactly, because 6<sup>2</sup> = 36. That factor leaves the radical and stands in front. '+R('2')+' cannot follow it out: 2 has no perfect-square factor except 1, so its root is irrational and stays where it is. <b>&ldquo;6'+R('2')+'&rdquo; means 6 &times; '+R('2')+'</b> &mdash; the multiplication sign is understood, exactly as in 6<i>x</i>.'},
+   {pl:'Am I finished?',vs:3,ct:'The area model',
+    mx:'inside is 2 &nbsp;'+TO+'&nbsp; factors of 2: 1, 2 &nbsp;'+TO+'&nbsp; '+HL('no square &gt; 1')+' '+CK,
+    cap:'The test for &ldquo;done&rdquo; looks only at what is <b>inside</b> the radical. If any perfect square bigger than 1 still divides it, you are not finished yet.',
+    ex:'<u>The stopping rule</u>A square root is in simplest form when the radicand has <b>no perfect-square factor other than 1</b>. Here the radicand is 2, whose only factors are 1 and 2. Nothing more can come out. Compare a half-finished attempt: 72 = 4 '+DOT+' 18 gives 2'+R('18')+', which is equal to the right answer but not simplified &mdash; 18 = 9 '+DOT+' 2, so a 9 is still trapped inside.'},
+   {pl:'Check it',vs:4,ct:'The measurement',
+    mx:R('72')+' = 8.485281&hellip; &nbsp;and&nbsp; 6'+R('2')+' = 6(1.414214&hellip;) = 8.485281&hellip; '+CK,
+    cap:'The teal bar is '+R('72')+'. The gold bar below it is six copies of '+R('2')+' laid end to end. They finish at the same place, because they were never different lengths &mdash; only differently written.',
+    ex:'<u>A decimal check is honest, not lazy</u>Two expressions that are truly equal will agree to as many decimal places as you care to compute. If they disagree in the third place, something went wrong. Here both are 8.485281&hellip;, so the factoring, the split, and the extraction all hold. <b>An exact check works too:</b> (6'+R('2')+')<sup>2</sup> = 36 '+DOT+' 2 = 72. '+CK}
+  ]},
+
+ /* ---------------- b. a smaller square still works ---------------- */
+ {k:'b',nm:'If you miss the biggest',sub:R('48'),col:'#b8862f',
+  n:48,a:4,b:3,label:'48',tok:['2','2','2','2','3'],out:'2 × 2 = 4',inn:'3',simp:'4√3',
+  ans:'4'+R('3'),
+  idea:'<span class="n">A small square costs a lap, not the answer</span>Students often panic about picking the &ldquo;wrong&rdquo; factor. You cannot get a wrong answer this way &mdash; only an unfinished one. Pull out a small square, look again at what is left, and pull again. Repeat until nothing inside has a square factor. The largest square just gets you there in one pass instead of two.',
+  steps:[
+   {pl:'The problem',vs:0,ct:'The square',
+    mx:R('48'),
+    cap:'48 is between 36 = 6<sup>2</sup> and 49 = 7<sup>2</sup>, so '+R('48')+' is a shade under 7. Knowing that in advance is a cheap sanity check on whatever you end up writing.',
+    ex:'<u>Estimate first, always</u>6<sup>2</sup> = 36 and 7<sup>2</sup> = 49, and 36 &lt; 48 &lt; 49, so 6 &lt; '+R('48')+' &lt; 7 &mdash; very close to 7. Any final answer that does not evaluate to about 6.93 is wrong, and you will know it in two seconds.'},
+   {pl:'The ladder',vs:1,sub:1,ct:'Factor pairs of 48',
+    mx:'perfect-square factors of 48: &nbsp;'+HL('1, 4, 16'),
+    cap:'Two usable squares: 4 and 16. Suppose you notice the 4 first &mdash; a very natural thing, since 48 is obviously even. Follow that road and see where it leads.',
+    ex:'<u>Both roads are legal</u>4 and 16 both divide 48 and both are perfect squares. Neither choice can produce a false statement, because each split is just 48 rewritten as a product. The only difference is how many times you go round.'},
+   {pl:'The slow road',vs:1,sub:1,ct:'Factor pairs of 48',
+    mx:R('48')+' = '+R('4 '+DOT+' 12')+' = '+R('4')+DOT+R('12')+' = 2'+R('12'),
+    cap:'Perfectly correct so far, and equal to '+R('48')+'. But look at the 12 sitting inside: 12 = 4 '+DOT+' 3, so there is still a perfect square trapped in there.',
+    ex:'<u>Correct but not simplified</u>2'+R('12')+' = 2(3.464102&hellip;) = 6.928203&hellip;, which does match '+R('48')+'. The value is right. The <b>form</b> is not, because the stopping rule has not been met: 4 divides 12, and 4 is a perfect square bigger than 1.'},
+   {pl:'Go round again',vs:1,sub:1,ct:'Factor pairs of 48',
+    mx:'2'+R('12')+' = 2'+R('4 '+DOT+' 3')+' = 2 '+DOT+' 2 '+DOT+' '+R('3')+' = '+HL('4'+R('3')),
+    cap:'The second pass pulls out the 2 that was still hiding. The coefficients <b>multiply</b>: the 2 already outside times the new 2 gives 4.',
+    ex:'<u>Where the numbers go</u>'+R('12')+' = '+R('4')+DOT+R('3')+' = 2'+R('3')+'. So 2'+R('12')+' = 2 '+DOT+' 2'+R('3')+'. The two coefficients sit side by side, multiplying, and 2 '+DOT+' 2 = 4. They do <b>not</b> add &mdash; 2 '+DOT+' 2'+R('3')+' is four copies of '+R('3')+', not two copies plus two.'},
+   {pl:'The fast road',vs:3,ct:'The area model',
+    mx:R('48')+' = '+R(HL('16')+' '+DOT+' 3')+' = '+R('16')+DOT+R('3')+' = 4'+R('3'),
+    cap:'Straight to it. A square of area 48 is <b>16 little squares of area 3</b>, four across &mdash; so its side is 4 copies of '+R('3')+'. One pass, same destination.',
+    ex:'<u>Same answer, fewer moves</u>16 is the largest perfect square dividing 48, so taking it leaves 3 inside, and 3 is prime. Nothing can follow. Whether you arrive by 4 then 4, or by 16 at once, the answer is 4'+R('3')+' &mdash; simplest form is <b>unique</b>, which is precisely why it is worth having.'},
+   {pl:'Why unique',vs:3,ct:'The area model',
+    mx:'4'+R('3')+' from the slow road &nbsp;=&nbsp; 4'+R('3')+' from the fast road '+CK,
+    cap:'Two different routes, one destination. That is not luck &mdash; it follows from the fact that a whole number has only one prime factorization, so there is only one way for the pairs to come out.',
+    ex:'<u>The deeper reason</u>48 = 2<sup>4</sup> '+DOT+' 3. However you group them, the same four 2s pair up into two escaping 2s, and the lone 3 has no partner. Whatever order you work in, the same factors leave and the same factor stays. Simplest form does not depend on your route.'},
+   {pl:'Am I finished?',vs:3,ct:'The area model',
+    mx:'inside is 3, a prime &nbsp;'+TO+'&nbsp; '+HL('no square &gt; 1')+' '+CK,
+    cap:'A prime radicand is always finished: a prime has no factors but 1 and itself, and a prime is never a perfect square.',
+    ex:'<u>A useful shortcut</u>If what is left inside is prime &mdash; 2, 3, 5, 7, 11, 13, &hellip; &mdash; you are done, no checking required. If it is composite, list its factors and look for a square. And do not touch the number <b>outside</b>: it is a plain multiplier, and it has nothing to prove.'},
+   {pl:'Check it',vs:4,ct:'The measurement',
+    mx:R('48')+' = 6.928203&hellip; &nbsp;and&nbsp; 4'+R('3')+' = 4(1.732051&hellip;) = 6.928203&hellip; '+CK,
+    cap:'Four copies of '+R('3')+' reach exactly as far as '+R('48')+'. And it lands just under 7, as the estimate at the start promised.',
+    ex:'<u>Check the unfinished form too</u>2'+R('12')+' also equals 6.928203&hellip; &mdash; because it was never wrong, only unfinished. A decimal check confirms <b>value</b>; the no-square-factor test confirms <b>form</b>. A complete answer needs to pass both.'}
+  ]},
+
+ /* ---------------- c. prime factorization ---------------- */
+ {k:'c',nm:'Primes never fail',sub:R('200'),col:'#2f6f9f',
+  n:200,a:10,b:2,label:'200',tok:['2','2','2','5','5'],out:'2 × 5 = 10',inn:'2',simp:'10√2',
+  ans:'10'+R('2'),
+  idea:'<span class="n">When the ladder gets long, split into primes</span>Hunting for the largest perfect square works beautifully for small radicands and becomes guesswork for large ones. The prime method never guesses: break the radicand all the way down to primes, pair off identical primes, and send <b>one</b> of each pair outside. Whatever cannot find a twin stays behind. It is mechanical, and it is impossible to leave a square trapped.',
+  steps:[
+   {pl:'The problem',vs:0,ct:'The square',
+    mx:R('200'),
+    cap:'196 = 14<sup>2</sup> and 225 = 15<sup>2</sup>, so '+R('200')+' sits just above 14. Now, is 200 divisible by 144? By 121? By 100? Scanning squares by hand starts to feel like work.',
+    ex:'<u>Why we want a second method</u>The factor ladder for 200 has six rows, and for a number like 1176 it has many more. The prime method has no ladder at all &mdash; you just keep dividing by the smallest prime that fits until nothing is left but primes.'},
+   {pl:'Split into primes',vs:2,sub:0,ct:'Prime factors',
+    mx:'200 = 2'+DOT+'100 = 2'+DOT+'2'+DOT+'50 = 2'+DOT+'2'+DOT+'2'+DOT+'25 = '+HL('2'+DOT+'2'+DOT+'2'+DOT+'5'+DOT+'5'),
+    cap:'Divide by 2 as long as it goes, then by 3, then 5, and so on. Each tile on the left is one prime factor of 200.',
+    ex:'<u>The fundamental theorem of arithmetic</u>Every whole number greater than 1 has <b>exactly one</b> prime factorization, apart from the order of the factors. So this list is not one option among many &mdash; it is <i>the</i> list. Check the arithmetic by multiplying back: 2 '+DOT+' 2 '+DOT+' 2 '+DOT+' 5 '+DOT+' 5 = 8 '+DOT+' 25 = 200. '+CK},
+   {pl:'Pair them off',vs:2,sub:1,ct:'Prime factors',
+    mx:'2'+DOT+'2'+DOT+'2'+DOT+'5'+DOT+'5 &nbsp;'+TO+'&nbsp; '+HL('(2'+DOT+'2)')+' '+DOT+' 2 '+DOT+' '+HL('(5'+DOT+'5)'),
+    cap:'Gold marks a matched pair; grey marks a factor with no twin. Two 2s pair up, one 2 is left over, and the two 5s pair up.',
+    ex:'<u>Why pairs matter</u>A square root undoes a square. A matched pair <i>is</i> a square: 2 '+DOT+' 2 = 2<sup>2</sup> and 5 '+DOT+' 5 = 5<sup>2</sup>. So the pairs are precisely the parts the radical can cancel. The odd 2 has nothing to pair with and therefore no way out.'},
+   {pl:'Why a pair escapes',vs:2,sub:1,ct:'Prime factors',
+    mx:R('2'+DOT+'2'+DOT+'2'+DOT+'5'+DOT+'5')+' = '+GL(R('2')+DOT+R('2'))+DOT+R('2')+DOT+GL(R('5')+DOT+R('5')),
+    cap:'Apply the product rule to <b>every</b> factor at once, then look at what pairs up. This line is the whole method, written out longhand.',
+    ex:'<u>Expand it and watch</u>The product rule extends to any number of non-negative factors, so the radical distributes across all five. Now '+R('2')+DOT+R('2')+' = 2 &mdash; that is the definition of a square root &mdash; and '+R('5')+DOT+R('5')+' = 5. What remains is 2 '+DOT+' '+R('2')+' '+DOT+' 5. Each matched pair collapses to a single copy of that prime, standing outside.'},
+   {pl:'Collect',vs:3,ct:'The area model',
+    mx:'2 '+DOT+' 5 '+DOT+' '+R('2')+' = '+HL('10')+R('2'),
+    cap:'The escapees multiply together out front: 2 &times; 5 = 10. And the picture agrees &mdash; a square of area 200 is <b>100 little squares of area 2</b>, ten across.',
+    ex:'<u>One of each pair, not both</u>The commonest slip here is writing 2 '+DOT+' 2 '+DOT+' 5 '+DOT+' 5 = 100 outside. Only <b>one</b> member of each pair escapes: '+R('2<sup>2</sup>')+' = 2, not 4. The pair had value 4 inside the radical and becomes 2 outside &mdash; that halving of the exponent is exactly what a square root does.'},
+   {pl:'Both methods agree',vs:3,ct:'The area model',
+    mx:'primes: 2'+DOT+'5 = 10 &nbsp;&nbsp;'+DOT+'&nbsp;&nbsp; ladder: 200 = '+HL('100')+DOT+'2, '+R('100')+' = 10',
+    cap:'The prime pairs multiply to 2<sup>2</sup> '+DOT+' 5<sup>2</sup> = 100 &mdash; the largest perfect-square factor. The two methods are the same method wearing different clothes.',
+    ex:'<u>Why they must agree</u>The largest perfect-square factor of any number is built by taking each prime an even number of times, as many as are available. Here 2 appears three times, so two of them can be used; 5 appears twice, so both can. That gives 2<sup>2</sup> '+DOT+' 5<sup>2</sup> = 100. Pairing off <i>is</i> finding the largest square &mdash; without having to hunt for it.'},
+   {pl:'Check it',vs:4,ct:'The measurement',
+    mx:R('200')+' = 14.142136&hellip; &nbsp;and&nbsp; 10'+R('2')+' = 10(1.414214&hellip;) = 14.142136&hellip; '+CK,
+    cap:'Ten copies of '+R('2')+' stacked end to end reach '+R('200')+' exactly. Notice the family resemblance to '+R('72')+' = 6'+R('2')+' &mdash; both radicands are twice a perfect square.',
+    ex:'<u>Exact check, no decimals</u>(10'+R('2')+')<sup>2</sup> = 10<sup>2</sup> '+DOT+' ('+R('2')+')<sup>2</sup> = 100 '+DOT+' 2 = 200. '+CK+' Squaring your answer and landing back on the original radicand is the cleanest verification there is, and it uses no calculator at all.'}
+  ]},
+
+ /* ---------------- d. nothing comes out ---------------- */
+ {k:'d',nm:'Nothing comes out',sub:R('30'),col:'#2f9e5b',
+  n:30,a:1,b:30,label:'30',tok:['2','3','5'],out:'1',inn:'30',simp:'√30 (already simplest)',
+  ans:R('30')+' &mdash; already simplest',
+  idea:'<span class="n">Some radicals are already finished</span>Simplifying is not a promise that something will come out. Plenty of radicands have no repeated prime, and for those the answer is the expression you were handed. Saying so is a <b>conclusion you prove</b>, not a shrug &mdash; and being able to prove it is what stops you inventing a fake simplification out of embarrassment.',
+  steps:[
+   {pl:'The problem',vs:0,ct:'The square',
+    mx:R('30'),
+    cap:'25 = 5<sup>2</sup> and 36 = 6<sup>2</sup>, so '+R('30')+' lies between 5 and 6, nearer the middle. It is about 5.477.',
+    ex:'<u>Run the same routine</u>There is no special sense that tells you in advance whether a radical will simplify. You run the same procedure you always run, and this time it reports that there is nothing to do.'},
+   {pl:'The ladder',vs:1,sub:2,ct:'Factor pairs of 30',
+    mx:'30 = 1'+DOT+'30 = 2'+DOT+'15 = 3'+DOT+'10 = 5'+DOT+'6 &nbsp;'+TO+'&nbsp; squares: '+HL('only 1'),
+    cap:'Four factor pairs, eight factors: 1, 2, 3, 5, 6, 10, 15, 30. Exactly one of them is a perfect square, and it is 1.',
+    ex:'<u>Why 1 is useless</u>You can certainly write 30 = 1 '+DOT+' 30 and split it: '+R('30')+' = '+R('1')+DOT+R('30')+' = 1 '+DOT+' '+R('30')+'. True, and completely pointless &mdash; multiplying by 1 changes nothing. That is why the stopping rule says <b>no perfect-square factor other than 1</b>.'},
+   {pl:'The primes',vs:2,sub:1,ct:'Prime factors',
+    mx:'30 = '+HL('2 '+DOT+' 3 '+DOT+' 5')+' &nbsp;'+TO+'&nbsp; three different primes, no twins',
+    cap:'Every tile is grey: not one of the primes has a partner. With no pairs, nothing can escape the radical.',
+    ex:'<u>The clean proof</u>A factor escapes only as half of a matched pair. 30 = 2 '+DOT+' 3 '+DOT+' 5, and each prime appears exactly <b>once</b>. So no pair exists, so nothing comes out, so '+R('30')+' is already in simplest form. That is a proof, not an opinion &mdash; and it took one line.'},
+   {pl:'Simplest, not simple',vs:2,sub:2,ct:'Prime factors',
+    mx:R('30')+' is in simplest form &nbsp;&nbsp;('+R('30')+' = 5.477226&hellip;, irrational)',
+    cap:'&ldquo;Simplest form&rdquo; is a statement about the <b>writing</b>, not about the number. '+R('30')+' is irrational and always will be; it is still the simplest way to write itself.',
+    ex:'<u>Do not confuse the two ideas</u>A radical in simplest form may still be an ugly decimal that never repeats and never ends. Simplifying is bookkeeping: it guarantees that two people who solve the same problem correctly will write down the same expression. It never promises a nicer number.'},
+   {pl:'The trap here',vs:5,ct:'Sides do not add',
+    mx:R('30')+' '+NE+' '+R('25')+' + '+R('5')+' &nbsp;&nbsp;(5 + 2.236&hellip; = 7.236&hellip; '+NE+' 5.477&hellip;)',
+    cap:'When nothing comes out, the temptation is to force something out by <b>splitting the radicand over a sum</b>. That move is not available. The picture shows why: 9 and 16 make 25, but 3 and 4 make 7, not 5.',
+    ex:'<u>The single most expensive error in the chapter</u>30 = 25 + 5, so surely '+R('30')+' = '+R('25')+' + '+R('5')+'? Test it: 5 + 2.236068&hellip; = 7.236068&hellip;, while '+R('30')+' = 5.477226&hellip;. Not equal, not close. The radical splits over <b>multiplication</b> and division, never over addition or subtraction &mdash; and 30 = 2 '+DOT+' 3 '+DOT+' 5 offers no square to work with.'},
+   {pl:'Check it',vs:0,ct:'The square',
+    mx:'(5.477226)<sup>2</sup> = 30.000&hellip; '+CK+' &nbsp;&nbsp;and 5 &lt; '+R('30')+' &lt; 6 '+CK,
+    cap:'Squaring the decimal returns 30, so the value is right; the prime factorization shows the form is right. Both boxes ticked, and the honest answer is: leave it alone.',
+    ex:'<u>Confidence to write &ldquo;already simplified&rdquo;</u>On a test, an answer of '+R('30')+' to the question &ldquo;simplify '+R('30')+'&rdquo; is <b>full marks</b>. What loses marks is inventing '+R('25')+' + '+R('5')+' rather than admitting nothing comes out. Prove it with the primes and move on.'}
+  ]},
+
+ /* ---------------- e. variables ---------------- */
+ {k:'e',nm:'Variables pair too',sub:R('50'+X3),col:'#7a5a8a',
+  n:50,a:5,b:2,label:'50<tspan font-style="italic">x</tspan>³',tok:['2','5','5','x','x','x'],
+  out:'5 × <tspan font-style="italic">x</tspan> = 5<tspan font-style="italic">x</tspan>',
+  inn:'2<tspan font-style="italic">x</tspan>',
+  simp:'5<tspan font-style="italic">x</tspan>√<tspan text-decoration="overline">&#8202;2<tspan font-style="italic">x</tspan>&#8202;</tspan>',
+  ans:'5'+X+R('2'+X),
+  idea:'<span class="n">A letter is just another factor</span>Nothing new happens when variables appear. Write '+X3+' out as '+X+DOT+X+DOT+X+', pair identical factors, and send one of each pair outside. Numbers and letters obey the same rule for the same reason: '+R(X+DOT+X)+' = '+X+' whenever '+X+' is not negative, exactly as '+R('5'+DOT+'5')+' = 5.',
+  steps:[
+   {pl:'The problem',vs:2,sub:0,ct:'Prime factors',
+    mx:R('50'+X3),
+    cap:'Six factors in all: the primes of 50, and three copies of '+X+'. Treat the letter as one more factor in the list and the procedure does not change at all.',
+    ex:'<u>First, a quiet fact about the domain</u>A square root of a negative number is not a real number, so '+R('50'+X3)+' only makes sense when 50'+X3+' '+GE+' 0 &mdash; that is, when '+X3+' '+GE+' 0, which happens exactly when <b>'+X+' '+GE+' 0</b>. The problem has restricted '+X+' for us, before we write a single line. Hold on to that; it matters at the end.'},
+   {pl:'Expand the power',vs:2,sub:0,ct:'Prime factors',
+    mx:'50'+X3+' = '+HL('2 '+DOT+' 5 '+DOT+' 5 '+DOT+' '+X+' '+DOT+' '+X+' '+DOT+' '+X),
+    cap:'50 = 2 '+DOT+' 5<sup>2</sup>, and '+X3+' means '+X+DOT+X+DOT+X+'. Writing the exponent out as repeated factors is the whole trick &mdash; you cannot pair what you cannot see.',
+    ex:'<u>Exponents are shorthand for repetition</u>'+X3+' is not &ldquo;'+X+' times 3&rdquo;; it is '+X+' used as a factor three times. Once it is written out longhand, the letters queue up alongside the primes and get treated identically. That is the entire content of this step.'},
+   {pl:'Pair them off',vs:2,sub:1,ct:'Prime factors',
+    mx:'2 '+DOT+' '+HL('(5 '+DOT+' 5)')+' '+DOT+' '+HL('('+X+' '+DOT+' '+X+')')+' '+DOT+' '+X,
+    cap:'Two matched pairs in gold: the 5s and two of the '+X+'s. Two loners in grey: the 2, and the third '+X+' &mdash; an odd power always leaves exactly one behind.',
+    ex:'<u>Odd powers leave a remainder</u>'+X3+' has three factors, so one pair forms and one '+X+' is stranded. In general '+X+'<sup>even</sup> pairs off completely and comes out whole, while '+X+'<sup>odd</sup> always leaves a single '+X+' inside. That is why '+R(X2)+' is clean and '+R(X3)+' is not.'},
+   {pl:'Let them out',vs:2,sub:2,ct:'Prime factors',
+    mx:R('50'+X3)+' = '+HL('5'+X)+R('2'+X),
+    cap:'One 5 escapes, one '+X+' escapes, and they multiply out front to give 5'+X+'. The lonely 2 and the lonely '+X+' stay inside, multiplied together as 2'+X+'.',
+    ex:'<u>Line by line</u>'+R('2 '+DOT+' 5 '+DOT+' 5 '+DOT+' '+X+DOT+X+DOT+X)+' = '+R('5'+DOT+'5')+' '+DOT+' '+R(X+DOT+X)+' '+DOT+' '+R('2'+DOT+X)+' = 5 '+DOT+' '+X+' '+DOT+' '+R('2'+X)+' = 5'+X+R('2'+X)+'. Everything left inside is a single, unpaired factor &mdash; which is exactly the finish line.'},
+   {pl:'Why no bars',vs:2,sub:2,ct:'Prime factors',
+    mx:R(X2)+' = |'+X+'| in general, &nbsp;but here '+HL(X+' '+GE+' 0')+' so '+R(X2)+' = '+X,
+    cap:'This is the step most often written on autopilot. The general identity really does need absolute-value bars &mdash; and this particular problem is one where they can be dropped, for a reason worth stating.',
+    ex:'<u>Test the general claim</u>Let '+X+' = '+M+'3. Then '+R(X2)+' = '+R('9')+' = 3, not '+M+'3 &mdash; because a square root is never negative. So '+R(X2)+' = |'+X+'|, always. <b>But</b> we established at the start that '+X+' '+GE+' 0 here, since '+X3+' had to be non-negative for the original radical to exist. When '+X+' '+GE+' 0, |'+X+'| = '+X+', and the bars are unnecessary. State the reason; do not just omit them and hope.'},
+   {pl:'Check it exactly',vs:4,pic:{n:50,a:5,b:2},ct:'The measurement',
+    mx:'at '+X+' = 2: &nbsp;'+R('50(8)')+' = '+R('400')+' = 20, &nbsp;and 5(2)'+R('4')+' = 10(2) = 20 '+CK,
+    cap:'The bars show the case '+X+' = 1, where the problem collapses to '+R('50')+' = 5'+R('2')+' &mdash; five copies of '+R('2')+'. Substituting a number turns an algebra check into arithmetic you can trust.',
+    ex:'<u>Two substitutions, no doubt left</u>At '+X+' = 2: the original is '+R('50 '+DOT+' 2<sup>3</sup>')+' = '+R('400')+' = 20; the answer is 5(2)'+R('2 '+DOT+' 2')+' = 10'+R('4')+' = 10 '+DOT+' 2 = 20. '+CK+' At '+X+' = 1: the original is '+R('50')+' = 7.071068&hellip;; the answer is 5(1)'+R('2')+' = 7.071068&hellip;. '+CK+' Agreement at two different values is strong evidence you have not slipped a factor.'}
+  ]},
+
+ /* ---------------- f. the addition trap ---------------- */
+ {k:'f',nm:'The trap',sub:R('<i>a</i> + <i>b</i>'),col:'#d1495b',
+  n:25,a:1,b:25,label:'25',tok:['5','5'],out:'5',inn:'1',simp:'5',
+  ans:'the rule holds for '+DOT+', not for +',
+  idea:'<span class="n">Why the rule stops at multiplication</span>'+R('<i>ab</i>')+' = '+R('<i>a</i>')+DOT+R('<i>b</i>')+' is true. '+R('<i>a</i> + <i>b</i>')+' = '+R('<i>a</i>')+' + '+R('<i>b</i>')+' is <b>false</b>, and not by a little. The difference is not arbitrary and it is not something to memorise &mdash; one line of algebra shows exactly where the sum version breaks, and it leaves behind a term you can point at.',
+  steps:[
+   {pl:'The tempting move',vs:5,ct:'Sides do not add',
+    mx:R('9 + 16')+' &nbsp;=?&nbsp; '+R('9')+' + '+R('16'),
+    cap:'The picture is the counterexample. A square of area 9 has side 3. A square of area 16 has side 4. A square of area 25 has side 5 &mdash; <b>not</b> 3 + 4.',
+    ex:'<u>Why it feels right</u>The product rule split a radical across a product, so surely a radical splits across a sum too? Distribution is such a familiar move that the hand writes it before the mind objects. This one deserves a test rather than a feeling.'},
+   {pl:'Test it',vs:5,ct:'Sides do not add',
+    mx:R('9 + 16')+' = '+R('25')+' = '+HL('5')+', &nbsp; but '+R('9')+' + '+R('16')+' = 3 + 4 = '+HL('7')+' &nbsp;'+XX,
+    cap:'5 and 7. Not a rounding difference, not a near miss &mdash; two plainly different numbers, from whole-number inputs anyone can check.',
+    ex:'<u>One counterexample is enough</u>A rule claimed for <b>all</b> values is destroyed by a <b>single</b> case where it fails. 9 and 16 are the cheapest such case, which is why they are worth memorising as a pair. Whenever you feel the urge to split a radical over a plus sign, run this three-second test instead.'},
+   {pl:'Where the 7 came from',vs:5,ct:'Sides do not add',
+    mx:'('+R('9')+' + '+R('16')+')<sup>2</sup> = 9 + '+GL('2'+DOT+'3'+DOT+'4')+' + 16 = 9 + '+GL('24')+' + 16 = 49',
+    cap:'Squaring the wrong answer reveals the culprit. Instead of 9 + 16 = 25 you get 49, and the difference of 24 is a single identifiable term.',
+    ex:'<u>Expand the square and look</u>('+R('<i>a</i>')+' + '+R('<i>b</i>')+')<sup>2</sup> = <i>a</i> + 2'+R('<i>a</i>')+R('<i>b</i>')+' + <i>b</i>, by the same expansion that gives (<i>p</i> + <i>q</i>)<sup>2</sup> = <i>p</i><sup>2</sup> + 2<i>pq</i> + <i>q</i><sup>2</sup>. So '+R('<i>a</i>')+' + '+R('<i>b</i>')+' is the square root of <i>a</i> + <i>b</i> + <b>2</b>'+R('<i>ab</i>')+', not of <i>a</i> + <i>b</i>. The extra middle term is the whole error, and it vanishes only when <i>a</i> or <i>b</i> is 0.'},
+   {pl:'Multiplication survives',vs:3,pic:{n:144,a:4,b:9},ct:'The area model',
+    mx:R('9 '+DOT+' 16')+' = '+R('144')+' = 12, &nbsp;and '+R('9')+DOT+R('16')+' = 3 '+DOT+' 4 = '+HL('12')+' '+CK,
+    cap:'Same two numbers, multiplied instead of added &mdash; and now it works. A square of area 144 is 16 little squares of area 9; each little side is 3, and 4 of them across gives 12.',
+    ex:'<u>Run the same expansion</u>('+R('<i>a</i>')+' '+DOT+' '+R('<i>b</i>')+')<sup>2</sup> = '+R('<i>a</i>')+DOT+R('<i>a</i>')+DOT+R('<i>b</i>')+DOT+R('<i>b</i>')+' = <i>ab</i>. <b>No middle term.</b> Multiplication lets the factors be reshuffled freely, so the two copies of '+R('<i>a</i>')+' find each other and collapse. Addition creates a cross term that has nowhere to go. That is the entire difference between the two cases.'},
+   {pl:'Division too',vs:3,pic:{n:144,a:4,b:9},ct:'The area model',
+    mx:R('<i>a</i> / <i>b</i>')+' = '+R('<i>a</i>')+' / '+R('<i>b</i>')+' &nbsp;(<i>a</i> '+GE+' 0, <i>b</i> &gt; 0) &nbsp;&nbsp;e.g. '+R('9/16')+' = 3/4 '+CK,
+    cap:'Division is repeated undoing of multiplication, so it inherits the same behaviour. Only + and '+M+' are excluded.',
+    ex:'<u>Check the example</u>'+R('9/16')+' = '+R('0.5625')+' = 0.75, and '+R('9')+' / '+R('16')+' = 3/4 = 0.75. '+CK+' Note the extra condition: <i>b</i> &gt; 0, not merely <i>b</i> '+GE+' 0, because a zero denominator is forbidden before any radical gets involved.'},
+   {pl:'In practice',vs:5,ct:'Sides do not add',
+    mx:R(X2+' + 9')+' &nbsp;'+NE+'&nbsp; '+X+' + 3 &nbsp;&nbsp;(at '+X+' = 4: &nbsp;'+R('25')+' = 5, but 4 + 3 = 7)',
+    cap:'The same trap with letters in it. '+R(X2+' + 9')+' cannot be simplified at all &mdash; the radicand is a <b>sum</b>, and a sum has no factors to pull apart.',
+    ex:'<u>What to do instead: factor first</u>You may split a radical only once the radicand is written as a <b>product</b>. '+R('4'+X2+' + 12'+X2)+' looks like a sum, but it is 16'+X2+', so it equals 4'+X+' for '+X+' '+GE+' 0. Meanwhile '+R(X2+' + 9')+' is genuinely stuck, because '+X2+' + 9 does not factor over the real numbers. <b>Ask &ldquo;is this a product?&rdquo; before you ask &ldquo;what comes out?&rdquo;</b>'}
+  ]}
+ ];
+
+ var RECIPE='<b>The routine, every time:</b> <b>1.</b> Look at the radicand and find the <i>largest</i> perfect-square factor &mdash; or split it into primes and pair off identical factors. <b>2.</b> Rewrite the radicand as that square times whatever is left. <b>3.</b> Split the radical over the product. <b>4.</b> Take the root of the perfect square; it moves out in front and multiplies anything already there. <b>5.</b> Stop only when the radicand has <b>no perfect-square factor bigger than 1</b>.';
+ var TRAP='<b>&radic;(<i>a</i> + <i>b</i>) is not &radic;<i>a</i> + &radic;<i>b</i>.</b> The radical splits over multiplication and division only &mdash; never over addition or subtraction. One line settles it: &radic;(9 + 16) = &radic;25 = <b>5</b>, while &radic;9 + &radic;16 = 3 + 4 = <b>7</b>. So &radic;(<i>x</i><sup>2</sup> + 9) is <b>not</b> <i>x</i> + 3, and at <i>x</i> = 4 the two differ by 2. Squaring shows exactly why: (&radic;<i>a</i> + &radic;<i>b</i>)<sup>2</sup> = <i>a</i> + 2&radic;(<i>ab</i>) + <i>b</i>, and that middle term has nowhere to go.';
+
+ var ei=0, si=0;
+
+ /* ================= the picker ================= */
+ function pick(){
+   $('pick').innerHTML=EX.map(function(e,n){
+     return '<button data-n="'+n+'" class="'+(n===ei?'on':'')+'"><span class="nm">'+e.nm+'</span><span class="ct">'+e.sub+'</span></button>';
+   }).join('');
+   var bs=$('pick').getElementsByTagName('button'), i;
+   for(i=0;i<bs.length;i++){ bs[i].onclick=function(){ ei=parseInt(this.getAttribute('data-n'),10); si=0; render(); }; }
+ }
+
+ function render(){
+   var e=EX[ei], st=e.steps[si], i;
+   pick();
+   $('art').innerHTML=draw(e,st);
+   $('cap').innerHTML=st.cap;
+   $('cardTitle').innerHTML=st.ct;
+   $('domv').className=(si>=e.steps.length-2)?'':'none';
+   $('domv').innerHTML=(si>=e.steps.length-2)?e.ans:'&mdash; not reached yet';
+   $('stage').style.background=e.col;
+   $('stage').innerHTML=e.nm+'<small>step '+(si+1)+' of '+e.steps.length+' &nbsp;&middot;&nbsp; simplify a radical</small>';
+   var h='';
+   for(i=0;i<e.steps.length;i++){
+     var s=e.steps[i], cl='wr'+(i===si?' on':(i<si?' done':''));
+     h+='<div class="'+cl+'"><div class="pl">'+s.pl+'</div><div class="mx">'+s.mx+(i===si?'<span class="ex">'+s.ex+'</span>':'')+'</div></div>';
+   }
+   $('work').innerHTML=h;
+   var p='';
+   for(i=0;i<e.steps.length;i++){ p+='<span class="'+(i===si?'on':(i<si?'done':''))+'">'+e.steps[i].pl+'</span>'; }
+   $('plan').innerHTML=p;
+   $('info').innerHTML=e.idea;
+   $('mnem').innerHTML=RECIPE;
+   $('note').innerHTML=TRAP;
+   $('prev').disabled=(si===0);
+   $('next').disabled=(si===e.steps.length-1);
+ }
+
+ $('prev').onclick=function(){ if(si>0){ si--; render(); } };
+ $('next').onclick=function(){ if(si<EX[ei].steps.length-1){ si++; render(); } };
+ document.addEventListener('keydown',function(ev){
+   if(ev.target&&ev.target.id==='rng') return;
+   if(ev.key==='ArrowRight'){ if(si<EX[ei].steps.length-1){ si++; render(); } }
+   if(ev.key==='ArrowLeft'){ if(si>0){ si--; render(); } }
+ });
+
+ /* ================= the live slider ================= */
+ function slDraw(n,a,b){
+   var s='', i, X0=14, X1=236, v=Math.sqrt(n), br=Math.sqrt(b), MX=Math.ceil(v+1e-9), sc=(X1-X0)/MX, base=44;
+   s+='<line x1="'+X0+'" y1="'+base+'" x2="'+X1+'" y2="'+base+'" stroke="'+GRAY+'" stroke-width="1.2"/>';
+   for(i=0;i<=MX;i++){ var tx0=X0+i*sc;
+     s+='<line x1="'+tx0.toFixed(1)+'" y1="'+base+'" x2="'+tx0.toFixed(1)+'" y2="'+(base+4)+'" stroke="'+GRAY+'" stroke-width="1"/>';
+     if(MX<=16||i%2===0) s+=T(tx0,base+13,String(i),7.5,MUT);
+   }
+   for(i=0;i<a;i++){
+     s+='<rect x="'+(X0+i*br*sc).toFixed(1)+'" y="12" width="'+(br*sc).toFixed(1)+'" height="22" rx="2" fill="'+(i%2?'#e8c76a':GOLDF)+'" stroke="'+GOLD+'" stroke-width="1"/>';
+   }
+   s+='<line x1="'+(X0+v*sc).toFixed(1)+'" y1="8" x2="'+(X0+v*sc).toFixed(1)+'" y2="'+(base+2)+'" stroke="'+TEAL+'" stroke-width="1.4" stroke-dasharray="4 3"/>';
+   s+=T(X0+v*sc+(v*sc>170?-6:6),8,'√'+n+' ≈ '+v.toFixed(3),8.2,TEAL,(v*sc>170?'end':'start'),1);
+   return s;
+ }
+ function slide(){
+   var n=parseInt($('rng').value,10), a=bigSq(n), b=n/a, v=Math.sqrt(n);
+   $('slv').innerHTML='n = '+n;
+   var big, sub;
+   if(b===1){
+     big=R(String(n))+' = '+HL(String(a));
+     sub='<b>'+n+' = '+a+'<sup>2</sup></b> is a perfect square, so the radical disappears entirely. Nothing is left inside.';
+   } else if(a===1){
+     big=R(String(n))+' = '+R(String(n));
+     sub='<b>Already simplest.</b> '+n+' = '+primesOf(n).join(' '+DOT+' ') +' &mdash; no prime repeats, so no pair can escape. '+R(String(n))+' = '+v.toFixed(6)+'&hellip;';
+   } else {
+     big=R(String(n))+' = '+R(HL(a*a+' '+DOT+' '+b))+' = '+HL(String(a))+R(String(b));
+     sub='Largest perfect-square factor: <b>'+(a*a)+' = '+a+'<sup>2</sup></b>. &nbsp;'+n+' = '+primesOf(n).join(' '+DOT+' ')+
+         '. &nbsp;Check: '+a+' &times; '+Math.sqrt(b).toFixed(6)+'&hellip; = '+(a*Math.sqrt(b)).toFixed(6)+'&hellip; = '+R(String(n))+' '+CK;
+   }
+   $('slbig').innerHTML=big;
+   $('slsub').innerHTML=sub;
+   $('slart').innerHTML=slDraw(n,a,b);
+ }
+ $('rng').oninput=slide;
+
+ render();
+ slide();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Build a Linear Model</title>
+<meta name="description" content="Fit a line to real data with sliders, watch the squared error shrink, then step through the algebra that turns two data points into a model — and read the slope as a rate in context.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+
+/* stacked fraction, built from spans (no math renderer on this page) */
+.fr{display:inline-block;vertical-align:middle;text-align:center;font-size:.62em;line-height:1.1;margin:0 .18em;position:relative;top:-.05em;}
+.fr .n,.fr .d{display:block;padding:0 .3em;}
+.fr .d{border-top:1.4px solid currentColor;}
+
+.tg{border-radius:4px;padding:1px 4px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.tg2{border-bottom:2px dashed #b3b6d6;}
+
+#stage .big{font-family:var(--math);font-size:23px;font-weight:700;letter-spacing:.3px;display:block;margin-top:3px;}
+#stage .big .fr .d{border-top-color:#fff;}
+
+.cap{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.cap.mt{margin-top:14px;}
+
+/* graph captions */
+.gcap{font-size:11px;color:var(--muted);line-height:1.5;margin-top:7px;text-align:center;}
+.gcap b{color:var(--teal-dk);}
+.key{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-top:8px;font-size:10.5px;color:var(--muted);}
+.key span{display:inline-flex;align-items:center;gap:4px;}
+.key i{width:13px;height:4px;border-radius:2px;display:inline-block;font-style:normal;}
+.key i.dot{width:8px;height:8px;border-radius:50%;}
+
+/* fit quality */
+.qbar{height:11px;border-radius:6px;background:#e6e8f5;overflow:hidden;margin-top:6px;}
+.qbar i{display:block;height:100%;background:var(--teal);transition:width .18s;}
+.qrow{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:var(--muted);margin-top:12px;}
+.qrow b{font-size:15px;color:var(--teal-dk);font-family:var(--math);}
+.enum{font-family:var(--math);font-size:12.5px;color:var(--soft);text-align:center;margin-top:6px;}
+.enum b{color:var(--teal-dk);}
+
+/* sliders */
+.sld{margin-top:13px;}
+.sld .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:1px;}
+.sld .lab b{font-family:var(--math);font-size:19px;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+.sld .ends{display:flex;justify-content:space-between;font-family:var(--math);font-size:10.5px;color:var(--muted);margin-top:-3px;}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;display:block;}
+input[type=range]:focus{outline:none;}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);margin-top:-8px;}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);}
+
+.seg button{font-size:12px;padding:9px 4px;}
+.seg button small{font-size:9.4px;}
+.modeseg{margin-top:12px;}
+.modeseg button{font-size:12.5px;padding:10px 5px;line-height:1.25;}
+.modeseg button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:2px;}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+
+/* the why panel */
+.why{font-size:12.5px;color:var(--teal-dk);background:#f1f2f9;border:1px solid var(--line);border-radius:9px;padding:9px 12px;margin-top:11px;line-height:1.62;}
+.why em{font-family:var(--sans);font-style:normal;font-size:10px;font-weight:800;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;}
+.why .mm{font-family:var(--math);font-size:14.5px;color:var(--ink);display:block;text-align:center;margin:6px 0 2px;line-height:1.7;}
+
+/* step machine */
+#mxprev{font-family:var(--math);font-size:14px;color:var(--muted);text-align:center;min-height:22px;line-height:1.6;}
+#mxprev .tg{background:transparent;box-shadow:none;padding:0;}
+#mxprev .tg2{border-bottom:none;}
+#mxcur{font-family:var(--math);font-size:21px;color:var(--ink);text-align:center;font-weight:600;line-height:1.75;margin-top:5px;min-height:40px;}
+.arrowdn{text-align:center;font-size:13px;color:var(--gold);line-height:1;margin:2px 0 1px;}
+.dots{display:flex;gap:4px;justify-content:center;margin-top:14px;}
+.dots i{width:7px;height:7px;border-radius:50%;background:#dfe1f0;display:block;}
+.dots i.on{background:var(--teal);} .dots i.done{background:#a9adda;}
+
+@media (max-width:600px){
+  .seg button{font-size:11.5px;padding:9px 3px;}
+  #mxcur{font-size:18px;}
+}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">&larr; Chapter 3</a></div>
+<header>
+  <div class="kick">College Algebra &middot; Chapter 3</div>
+  <h1>Build a Linear Model</h1>
+  <div class="intro">Real data almost never lands perfectly on a line &mdash; but when it comes <b>close</b>, a line becomes a machine that predicts. Drag a line onto the data yourself, then step through the algebra that turns two points into a model, and learn to say out loud <b>what the slope means</b>.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Fare vs. distance</h2>
+      <svg viewBox="0 0 320 252" aria-label="scatter plot of the data with the model line">
+        <defs><clipPath id="cp"><rect id="cpr" x="0" y="0" width="1" height="1"></rect></clipPath></defs>
+        <g id="art"></g>
+      </svg>
+      <div class="key" id="key"></div>
+      <div class="gcap" id="gcap"></div>
+      <div id="fitmeter" style="display:none">
+        <div class="qrow"><span id="qlab">Typical miss per data point</span><b id="qpct">&mdash;</b></div>
+        <div class="qbar"><i id="qbar" style="width:0"></i></div>
+        <div class="enum" id="enum"></div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Build a linear model<small>pick a situation below</small></div>
+    <div class="card">
+      <div class="cap">The situation</div>
+      <div class="seg" id="scen"></div>
+
+      <div class="modeseg" id="mode">
+        <button data-m="fit">Fit it yourself<small>drag a line onto the data</small></button>
+        <button data-m="build">Build it with algebra<small>two points, one step at a time</small></button>
+      </div>
+
+      <!-- FIT PANEL -->
+      <div id="fitpanel">
+        <div class="sld">
+          <div class="lab"><span>Slope &mdash; the rate</span><b id="mval">&mdash;</b></div>
+          <input type="range" id="ms">
+          <div class="ends"><span id="mlo"></span><span id="mhi"></span></div>
+        </div>
+        <div class="sld">
+          <div class="lab"><span>Intercept &mdash; the start</span><b id="bval">&mdash;</b></div>
+          <input type="range" id="bs">
+          <div class="ends"><span id="blo"></span><span id="bhi"></span></div>
+        </div>
+        <div class="cap mt">Show the misses as</div>
+        <div class="seg" id="resmode">
+          <button data-r="sq">Squares<small>area of the error</small></button>
+          <button data-r="gap">Gaps<small>plain vertical miss</small></button>
+          <button data-r="off">Hide<small>just the line</small></button>
+        </div>
+        <div class="row">
+          <button class="btn" id="reset">Reset</button>
+          <button class="btn solid" id="snap">Snap to best fit</button>
+        </div>
+        <div class="why">
+          <em>Why square the misses?</em>
+          A miss <b>above</b> the line and a miss <b>below</b> it would cancel each other if we just added them up &mdash; a terrible line could score zero. Squaring makes every miss positive, and it punishes one big blunder far more than several small ones. The <b>best-fit line</b> is the single line that makes the total of those squares as small as it can possibly be.
+          <br><br>Snap to it and you will notice it is <b>close to, but not exactly</b>, the line built from two points in the other tab. That is expected: a two-point model hears only two measurements, while the best-fit line listens to all five at once.
+        </div>
+      </div>
+
+      <!-- BUILD PANEL -->
+      <div id="buildpanel" style="display:none">
+        <div id="mxprev"></div>
+        <div class="arrowdn" id="arrowdn">&#9660;</div>
+        <div id="mxcur"></div>
+        <div id="whybox"></div>
+        <div class="dots" id="dots"></div>
+        <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+      </div>
+
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra &middot; an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i);};
+var MIN='−', DEG='°', AP='≈';
+
+/* ---------- number formatting (no math renderer: plain HTML + unicode) ---------- */
+function nf(v,d){ if(Math.abs(v)<Math.pow(10,-d)/2){v=0;} return v.toFixed(d).replace('-',MIN); }
+function sf(v,d){ if(Math.abs(v)<Math.pow(10,-d)/2){v=0;} return (v<0?' '+MIN+' ':' + ')+Math.abs(v).toFixed(d); }
+function r6(v){ return Math.round(v*1e6)/1e6; }
+
+/* ---------- the three situations ---------- */
+var SC=[
+{k:'ride',nm:'Rideshare',sb:'miles → dollars',
+ ct:'Fare vs. distance',
+ blurb:'Five rides were logged: how far the car traveled, and what the app charged.',
+ pts:[[2,8.00],[4,12.40],[6,17.30],[9,23.60],[12,30.50]],
+ i1:0,i2:4,
+ win:{x0:0,x1:14,y0:0,y1:36,xt:2,yt:6},
+ xl:'distance ',xv:'d',xu:' (miles)',
+ yl:'fare ',yv:'C',yu:' (dollars)',
+ dy:2,dm:2,sd:3,rd:2,yunit:'dollars',
+ unit1:'mile',unitY:'dollars',
+ rate:'dollars per mile',
+ sl:{m0:0,m1:4,ms:0.01,md:2,b0:-4,b1:12,bs:0.01,bd:2},
+ st:{m:1.50,b:8.00},
+ px:7,
+ slopeSay:'Every extra <b>mile</b> the car drives adds <b>$2.25</b> to the fare. That is what a slope of 2.25 <i>means</i> here &mdash; not a steepness, a <b>price per mile</b>.',
+ intSay:'Setting <i>d</i> = 0 describes a ride of zero miles: you get in, you get out. The model still charges <b>$3.50</b>. That is the <b>base fare</b> &mdash; the part you pay just for the car showing up. Here the intercept is genuinely meaningful, because <i>d</i> = 0 is a real situation.',
+ predSay:'A 7-mile ride should run about <b>$19.25</b>. Seven miles sits <b>inside</b> the 2-to-12-mile range we actually measured, so this is <b>interpolation</b> &mdash; the safe kind of prediction.',
+ warnSay:'Feed the model <i>d</i> = 60 and it answers $138.50. But no ride in the data went past 12 miles. Real fares add airport fees, surge pricing, and long-haul rates &mdash; none of which this line has ever seen. <b>A model is only trustworthy across the range it was built from.</b>',
+ fitSay:function(m,b){ return 'Your line charges <b>$'+m.toFixed(2)+' per mile</b>, on top of a starting charge of <b>$'+b.toFixed(2)+'</b> before the car has moved an inch. Slope is the <b>rate</b>; intercept is the <b>starting value</b>.'; }
+},
+{k:'candle',nm:'Candle',sb:'hours → centimeters',
+ ct:'Height vs. burning time',
+ blurb:'A candle was lit and its height measured over the next five hours.',
+ pts:[[0,20.0],[1,17.6],[2,15.4],[3,12.9],[5,8.0]],
+ i1:1,i2:4,
+ win:{x0:0,x1:9,y0:0,y1:24,xt:1,yt:4},
+ xl:'time lit ',xv:'t',xu:' (hours)',
+ yl:'height ',yv:'h',yu:' (cm)',
+ dy:1,dm:1,sd:3,rd:2,yunit:'cm',
+ unit1:'hour',unitY:'centimeters',
+ rate:'centimeters per hour',
+ sl:{m0:-5,m1:0,ms:0.01,md:2,b0:12,b1:28,bs:0.01,bd:2},
+ st:{m:-1.50,b:22.00},
+ px:4,
+ slopeSay:'The slope is <b>negative</b>, and that sign carries meaning: the candle <b>loses 2.4 cm of height every hour</b>. A negative rate is not a mistake &mdash; it is how the algebra says "going down."',
+ intSay:'At <i>t</i> = 0 the model gives <b>20.0 cm</b> &mdash; the height of the candle at the moment it was lit. Notice the data point (0, 20.0) was never used to build the line, yet the model lands on it exactly. That is a good sign the line is telling the truth.',
+ predSay:'After 4 hours the candle should stand about <b>10.4 cm</b> tall. Four hours is <b>inside</b> the measured 0-to-5-hour window, so this is <b>interpolation</b> &mdash; the safe kind of prediction.',
+ warnSay:'Ask the model about <i>t</i> = 12 and it answers <b>'+MIN+'8.8 cm</b>. A candle cannot be negative centimeters tall. The model stops being true the moment the wax runs out &mdash; when <i>h</i> = 0, at <i>t</i> = 20.0 &divide; 2.4 '+AP+' <b>8.3 hours</b>. Past that point the line keeps going and reality does not.',
+ fitSay:function(m,b){ if(m===0){ return 'A slope of <b>0</b> says the candle never shortens &mdash; a flat line. The data disagrees loudly. Tilt it downward.'; }
+   return 'Your line burns the candle down <b>'+Math.abs(m).toFixed(2)+' cm every hour</b>, starting from a height of <b>'+b.toFixed(2)+' cm</b>. The <b>negative</b> slope is the whole point: this quantity is shrinking.'; }
+},
+{k:'cricket',nm:'Crickets',sb:'degrees → chirps',
+ ct:'Chirp rate vs. temperature',
+ blurb:'On five evenings the air temperature was recorded, along with how many times a snowy tree cricket chirped in one minute.',
+ pts:[[50,40],[55,58],[60,83],[68,110],[75,140]],
+ i1:0,i2:4,
+ win:{x0:40,x1:80,y0:0,y1:160,xt:10,yt:40},
+ xl:'temperature ',xv:'T',xu:' ('+DEG+'F)',
+ yl:'chirps ',yv:'N',yu:' (per minute)',
+ dy:0,dm:0,sd:1,rd:1,yunit:'chirps',
+ unit1:'degree',unitY:'chirps per minute',
+ rate:'chirps per minute, per degree Fahrenheit',
+ sl:{m0:1,m1:7,ms:0.01,md:2,b0:-240,b1:-60,bs:0.1,bd:1},
+ st:{m:2.50,b:-70.0},
+ px:64,
+ slopeSay:'Every <b>1'+DEG+'F</b> of extra warmth buys about <b>4 more chirps</b> per minute. Crickets are cold-blooded, so their whole chemistry &mdash; and their song &mdash; speeds up with temperature.',
+ intSay:'Here the intercept is a <b>warning label</b>, not a fact. <i>b</i> = '+MIN+'160 claims that at 0'+DEG+'F a cricket chirps '+MIN+'160 times a minute, which is nonsense. The coldest evening measured was 50'+DEG+'F, so <i>T</i> = 0 is nowhere near the data. The intercept still does its job algebraically &mdash; it just has no story attached.',
+ predSay:'A 64'+DEG+'F evening should bring about <b>96 chirps</b> per minute. 64'+DEG+'F sits <b>inside</b> the measured 50-to-75'+DEG+'F range, so this is <b>interpolation</b> &mdash; the safe kind of prediction.',
+ warnSay:'The model crosses zero at <i>T</i> = 40'+DEG+'F, and that one <b>is</b> meaningful: below about 40'+DEG+'F the crickets fall silent. But push the other way to 100'+DEG+'F and it promises 240 chirps a minute &mdash; far past anything anyone recorded, and past what a cricket can physically do. <b>Outside the measured range, a model is a guess wearing a lab coat.</b>',
+ fitSay:function(m,b){ return 'Your line adds <b>'+m.toFixed(2)+' chirps per minute</b> for every <b>1'+DEG+'F</b> the evening warms. Its intercept, <b>'+nf(b,1)+'</b>, sits far off the left edge of this graph &mdash; 0'+DEG+'F is nowhere near the data, so that number carries no meaning here.'; }
+}
+];
+
+/* ---------- prepare each situation: two-point model, least squares, grid optimum ---------- */
+function ssr(S,m,b){ var t=0,i,r; for(i=0;i<S.pts.length;i++){ r=S.pts[i][1]-(m*S.pts[i][0]+b); t+=r*r; } return t; }
+(function prep(){
+ for(var s=0;s<SC.length;s++){
+   var S=SC[s], P=S.pts, n=P.length, i;
+   var p1=P[S.i1], p2=P[S.i2];
+   S.M=r6((p2[1]-p1[1])/(p2[0]-p1[0]));
+   S.B=r6(p1[1]-S.M*p1[0]);
+   var sx=0,sy=0,sxy=0,sxx=0;
+   for(i=0;i<n;i++){ sx+=P[i][0]; sy+=P[i][1]; sxy+=P[i][0]*P[i][1]; sxx+=P[i][0]*P[i][0]; }
+   var mx=sx/n, my=sy/n;
+   var lm=(sxy-n*mx*my)/(sxx-n*mx*mx);
+   var lb=my-lm*mx;
+   /* the sliders move on a grid, so snap to the best line the sliders can actually reach.
+      SSR is a convex quadratic, so its grid minimum lies within one step of the true
+      minimum -- a small neighborhood search is guaranteed to find it. */
+   var gm=Math.round(lm/S.sl.ms)*S.sl.ms, gb=Math.round(lb/S.sl.bs)*S.sl.bs;
+   var bm=gm,bb=gb,be=Infinity,j,k,tm,tb,e;
+   for(j=-8;j<=8;j++){ for(k=-8;k<=8;k++){
+     tm=r6(gm+j*S.sl.ms); tb=r6(gb+k*S.sl.bs);
+     if(tm<S.sl.m0||tm>S.sl.m1||tb<S.sl.b0||tb>S.sl.b1) continue;
+     e=ssr(S,tm,tb); if(e<be){ be=e; bm=tm; bb=tb; }
+   }}
+   S.snapM=bm; S.snapB=bb; S.bestSSR=be;
+   var xs=P.map(function(p){return p[0];});
+   S.xmin=Math.min.apply(null,xs); S.xmax=Math.max.apply(null,xs);
+ }
+})();
+
+/* ---------- the derivation ---------- */
+function buildSteps(S){
+ var p1=S.pts[S.i1], p2=S.pts[S.i2];
+ var x1=p1[0],y1=p1[1],x2=p2[0],y2=p2[1];
+ var dY=y2-y1, dX=x2-x1, m=S.M, b=S.B, mx1=r6(m*x1);
+ var dyd=S.dy, dmd=S.dm;
+ var pt=function(x,y){ return '('+nf(x,0)+', '+nf(y,dyd)+')'; };
+ var frac=function(nn,dd){ return '<span class="fr"><span class="n">'+nn+'</span><span class="d">'+dd+'</span></span>'; };
+ var pred=r6(m*S.px+b);
+ var A=[];
+
+ A.push({t:'Two points is all it takes',pl:'Step 1',gfx:'pts2',
+  mx:'(<i>x</i><sub>1</sub>, <i>y</i><sub>1</sub>) = <span class="tg">'+pt(x1,y1)+'</span> &nbsp; (<i>x</i><sub>2</sub>, <i>y</i><sub>2</sub>) = <span class="tg">'+pt(x2,y2)+'</span>',
+  d:'The data wobbles, but it clearly marches in a straight direction. Two points anchor a line completely, so pick two that sit far apart &mdash; the wider the gap, the less a single sloppy measurement can tilt the whole model.',
+  why:''});
+
+ A.push({t:'Write the slope formula',pl:'Step 2',gfx:'tri',
+  mx:'<i>m</i> = '+frac('<i>y</i><sub>2</sub> '+MIN+' <i>y</i><sub>1</sub>','<i>x</i><sub>2</sub> '+MIN+' <i>x</i><sub>1</sub>')+' = '+frac('<span class="tg">change in output</span>','<span class="tg">change in input</span>'),
+  d:'Slope is not a mysterious symbol &mdash; it is a division. Take how much the output moved, divide by how much the input moved. The triangle on the graph shows exactly those two lengths.',
+  why:'<em>Why a ratio?</em>Dividing one change by the other answers a single question: <b>per one unit of input, how much does the output move?</b> That is what makes slope useful in the real world &mdash; it is a rate, and rates predict.'});
+
+ A.push({t:'Substitute the numbers',pl:'Step 3',gfx:'tri',
+  mx:'<i>m</i> = '+frac('<span class="tg">'+nf(y2,dyd)+'</span> '+MIN+' <span class="tg">'+nf(y1,dyd)+'</span>','<span class="tg">'+nf(x2,0)+'</span> '+MIN+' <span class="tg">'+nf(x1,0)+'</span>'),
+  d:'Nothing clever here &mdash; the coordinates of the two chosen points drop straight into their slots. Keep the order consistent: whichever point you call point&nbsp;2 on the top, it must also be point&nbsp;2 on the bottom.',
+  why:'<em>What if you swap them?</em>Flip both rows and every sign flips too &mdash; top and bottom both change sign, and a negative divided by a negative gives back the same slope. Consistency is what matters, not which point you pick first.'});
+
+ A.push({t:'Divide, and attach the units',pl:'Step 4',gfx:'tri',
+  mx:'<i>m</i> = '+frac('<span class="tg">'+nf(dY,dyd)+'</span>','<span class="tg">'+nf(dX,0)+'</span>')+' = <span class="tg">'+nf(m,dmd)+'</span>',
+  d:'This single number is the whole model in miniature. '+S.slopeSay,
+  why:'<em>Why this is a rate</em>The fraction says '+nf(dY,dyd)+' '+S.unitY+' for every '+nf(dX,0)+' '+S.unit1+'s. Divide top <b>and</b> bottom by '+nf(dX,0)+' and the ratio is unchanged &mdash; but now it reads per single '+S.unit1+':<span class="mm">'+frac(nf(dY,dyd),nf(dX,0))+' = '+frac(nf(dY,dyd)+' ÷ '+nf(dX,0),nf(dX,0)+' ÷ '+nf(dX,0))+' = '+frac(nf(m,dmd),'1')+'</span>Units: '+S.rate+'.'});
+
+ A.push({t:'Use point-slope form',pl:'Step 5',gfx:'line',
+  mx:'<i>y</i>'+sf(-y1,dyd)+' = <span class="tg">'+nf(m,dmd)+'</span>(<i>x</i>'+sf(-x1,0)+')',
+  d:'We know the slope and we know one point the line passes through &mdash; that is precisely what point-slope form is built to take.',
+  why:'<em>Why point-slope is true</em>Pick any other point (<i>x</i>, <i>y</i>) on the line. The slope between it and ('+nf(x1,0)+', '+nf(y1,dyd)+') must still be <i>m</i>, because a line has one slope everywhere:<span class="mm">'+frac('<i>y</i> '+MIN+' <i>y</i><sub>1</sub>','<i>x</i> '+MIN+' <i>x</i><sub>1</sub>')+' = <i>m</i></span>Multiply both sides by (<i>x</i> '+MIN+' <i>x</i><sub>1</sub>) and point-slope form falls out. (That first division needs <i>x</i> '+'≠'+' <i>x</i><sub>1</sub>; the finished form is safe for every <i>x</i>.)'});
+
+ A.push({t:'Distribute the slope',pl:'Step 6',gfx:'line',
+  mx:'<i>y</i>'+sf(-y1,dyd)+' = <span class="tg">'+nf(m,dmd)+'<i>x</i>'+sf(-mx1,dyd)+'</span>',
+  d:'Multiply '+nf(m,dmd)+' by each term inside the parentheses: '+nf(m,dmd)+' times <i>x</i> gives '+nf(m,dmd)+'<i>x</i>, and '+nf(m,dmd)+' times '+nf(-x1,0)+' gives '+nf(-mx1,dyd)+'. The parentheses have done their job and can go.',
+  why:''});
+
+ A.push({t:'Undo the subtraction',pl:'Step 7',gfx:'line',
+  mx:'<i>y</i> = '+nf(m,dmd)+'<i>x</i>'+sf(-mx1,dyd)+'<span class="tg">'+sf(y1,dyd)+'</span>',
+  d:'We want <i>y</i> alone on the left. Add '+nf(y1,dyd)+' to <b>both</b> sides &mdash; that cancels the '+nf(-y1,dyd)+' on the left and rides along on the right.',
+  why:'<em>Why "both sides"</em>An equation is a balance. Whatever you do to one side you must do to the other, or the two sides stop being equal. Adding '+nf(y1,dyd)+' twice keeps the balance level while clearing the left.'});
+
+ A.push({t:'Combine the constants',pl:'Step 8',gfx:'line',
+  mx:'<i>y</i> = '+nf(m,dmd)+'<i>x</i><span class="tg">'+sf(b,dyd)+'</span>',
+  d:'Add the two loose numbers: '+nf(-mx1,dyd)+' and '+nf(y1,dyd)+' combine to '+nf(b,dyd)+'. The model is now in slope-intercept form, <i>y</i> = <i>mx</i> + <i>b</i>, where both letters can be read aloud in plain language.',
+  why:''});
+
+ A.push({t:'Name the variables',pl:'Step 9',gfx:'line',
+  mx:'<span class="tg"><i>'+S.yv+'</i></span> = '+nf(m,dmd)+'<span class="tg"><i>'+S.xv+'</i></span>'+sf(b,dyd),
+  d:'<i>x</i> and <i>y</i> are placeholders. Renaming them for the situation &mdash; <i>'+S.xv+'</i> for '+S.xl.replace(/\s+$/,'')+', <i>'+S.yv+'</i> for '+S.yl.replace(/\s+$/,'')+' &mdash; turns a piece of algebra into a <b>model</b>: something you can hand to someone who has never taken this course and still have it make sense.',
+  why:''});
+
+ A.push({t:'Read the intercept',pl:'Step 10',gfx:'yint',
+  mx:'<i>'+S.yv+'</i>(0) = '+nf(m,dmd)+'&middot;<span class="tg">0</span>'+sf(b,dyd)+' = <span class="tg">'+nf(b,dyd)+'</span>',
+  d:S.intSay,
+  why:'<em>Why <i>b</i> is the starting value</em>Put <i>x</i> = 0 into <i>y</i> = <i>mx</i> + <i>b</i>. The <i>mx</i> term becomes <i>m</i>&middot;0 = 0 no matter what <i>m</i> is, so nothing is left but <i>b</i>. That is why <i>b</i> is both the output at zero input and the height where the line crosses the vertical axis.'});
+
+ A.push({t:'Make a prediction',pl:'Step 11',gfx:'pred',
+  mx:'<i>'+S.yv+'</i>(<span class="tg">'+nf(S.px,0)+'</span>) = '+nf(m,dmd)+'&middot;'+nf(S.px,0)+sf(b,dyd)+' = <span class="tg">'+nf(pred,dyd)+'</span>',
+  d:S.predSay,
+  why:'<em>Interpolation vs. extrapolation</em>Predicting <b>between</b> your measurements is interpolation, and the data on both sides vouches for it. Predicting <b>beyond</b> them is extrapolation &mdash; nothing is holding the line down out there.'});
+
+ A.push({t:'Know where it stops being true',pl:'Step 12',gfx:'ex',
+  mx:'valid for <span class="tg">'+nf(S.xmin,0)+' '+'≤'+' <i>'+S.xv+'</i> '+'≤'+' '+nf(S.xmax,0)+'</span>',
+  d:S.warnSay,
+  why:'<em>The honest last line of any model</em>A linear model is a <b>local</b> description, not a law of nature. Always state the range it was fitted over. The algebra will happily answer any question you ask it &mdash; the shaded band on the graph is the only region where you should believe the answer.'});
+
+ return A;
+}
+
+/* ---------- geometry ---------- */
+var PL={l:44,r:308,t:14,b:196};
+var C={line:'#43458f',pt:'#262a5c',res:'#d1495b',anc:'#b8862f',ok:'#2f9e5b'};
+
+function drawGraph(S,m,b,mode,rmode,gfx){
+ var W=S.win;
+ var sx=function(x){ return PL.l+(x-W.x0)/(W.x1-W.x0)*(PL.r-PL.l); };
+ var sy=function(y){ return PL.b-(y-W.y0)/(W.y1-W.y0)*(PL.b-PL.t); };
+ var o='',i,v,n,X,Y;
+
+ o+='<rect x="'+PL.l+'" y="'+PL.t+'" width="'+(PL.r-PL.l)+'" height="'+(PL.b-PL.t)+'" fill="#fbfaff" stroke="#e0e2ef"></rect>';
+
+ /* measured-range band on the prediction / limits steps */
+ if(gfx==='pred'||gfx==='ex'){
+   o+='<rect x="'+sx(S.xmin)+'" y="'+PL.t+'" width="'+(sx(S.xmax)-sx(S.xmin))+'" height="'+(PL.b-PL.t)+'" fill="#43458f" opacity=".07"></rect>';
+   o+='<text x="'+((sx(S.xmin)+sx(S.xmax))/2)+'" y="'+(PL.t+12)+'" font-size="8.5" fill="#43458f" text-anchor="middle" font-weight="700">range we actually measured</text>';
+ }
+
+ /* grid + tick labels */
+ n=Math.round((W.x1-W.x0)/W.xt);
+ for(i=0;i<=n;i++){ v=Math.round((W.x0+i*W.xt)*100)/100; X=sx(v);
+   o+='<line x1="'+X+'" y1="'+PL.t+'" x2="'+X+'" y2="'+PL.b+'" stroke="#e9ebf8"></line>';
+   o+='<text x="'+X+'" y="'+(PL.b+13)+'" font-size="9" fill="#7d7f94" text-anchor="middle">'+v+'</text>'; }
+ n=Math.round((W.y1-W.y0)/W.yt);
+ for(i=0;i<=n;i++){ v=Math.round((W.y0+i*W.yt)*100)/100; Y=sy(v);
+   o+='<line x1="'+PL.l+'" y1="'+Y+'" x2="'+PL.r+'" y2="'+Y+'" stroke="#e9ebf8"></line>';
+   o+='<text x="'+(PL.l-6)+'" y="'+(Y+3.2)+'" font-size="9" fill="#7d7f94" text-anchor="end">'+v+'</text>'; }
+ /* the true axes, only where they exist on screen */
+ if(W.x0<=0&&W.x1>=0){ o+='<line x1="'+sx(0)+'" y1="'+PL.t+'" x2="'+sx(0)+'" y2="'+PL.b+'" stroke="#b9bcdd" stroke-width="1.4"></line>'; }
+ if(W.y0<=0&&W.y1>=0){ o+='<line x1="'+PL.l+'" y1="'+sy(0)+'" x2="'+PL.r+'" y2="'+sy(0)+'" stroke="#b9bcdd" stroke-width="1.4"></line>'; }
+
+ /* clip the line to the window, then plot it by looping over x */
+ var xa=W.x0, xb=W.x1, ok=true;
+ if(Math.abs(m)>1e-9){
+   var ua=(W.y0-b)/m, ub=(W.y1-b)/m;
+   xa=Math.max(xa,Math.min(ua,ub)); xb=Math.min(xb,Math.max(ua,ub));
+   if(xa>=xb) ok=false;
+ } else if(b<W.y0||b>W.y1){ ok=false; }
+
+ /* residual squares / gaps sit under the line */
+ var j,px,pyD,pyM,rp;
+ if(mode==='fit'&&rmode!=='off'){
+   for(j=0;j<S.pts.length;j++){
+     px=sx(S.pts[j][0]); pyD=sy(S.pts[j][1]); pyM=sy(m*S.pts[j][0]+b);
+     if(rmode==='sq'){
+       rp=Math.abs(pyD-pyM);
+       o+='<g clip-path="url(#cp)"><rect x="'+(px-rp)+'" y="'+Math.min(pyD,pyM)+'" width="'+rp+'" height="'+rp+'" fill="'+C.res+'" opacity=".15" stroke="'+C.res+'" stroke-opacity=".45"></rect></g>';
+     }
+     o+='<line x1="'+px+'" y1="'+pyD+'" x2="'+px+'" y2="'+pyM+'" stroke="'+C.res+'" stroke-width="1.5" stroke-dasharray="3 2.5"></line>';
+   }
+ }
+
+ /* the rise / run triangle */
+ if(gfx==='tri'){
+   var q1=S.pts[S.i1], q2=S.pts[S.i2];
+   var ax=sx(q1[0]), ay=sy(q1[1]), bx=sx(q2[0]), by=sy(q2[1]);
+   o+='<path d="M'+ax+' '+ay+' L'+bx+' '+ay+' L'+bx+' '+by+'" fill="none" stroke="'+C.anc+'" stroke-width="1.8" stroke-dasharray="4 3"></path>';
+   o+='<text x="'+((ax+bx)/2)+'" y="'+(ay+(q2[1]>q1[1]?13:-6))+'" font-size="9" fill="'+C.anc+'" text-anchor="middle" font-weight="700">run = '+nf(q2[0]-q1[0],0)+'</text>';
+   o+='<text x="'+(bx-6)+'" y="'+((ay+by)/2+3)+'" font-size="9" fill="'+C.anc+'" text-anchor="end" font-weight="700">rise = '+nf(q2[1]-q1[1],S.dy)+'</text>';
+ }
+
+ /* the model line */
+ if(ok&&(mode==='fit'||(gfx!=='pts2'&&gfx!=='tri'))){
+   var pts2=[],st=(xb-xa)/60,xx;
+   for(i=0;i<=60;i++){ xx=xa+i*st; pts2.push(sx(xx).toFixed(2)+','+sy(m*xx+b).toFixed(2)); }
+   o+='<polyline points="'+pts2.join(' ')+'" fill="none" stroke="'+C.line+'" stroke-width="2.6" stroke-linecap="round"></polyline>';
+ }
+
+ /* the data */
+ for(j=0;j<S.pts.length;j++){
+   px=sx(S.pts[j][0]); pyD=sy(S.pts[j][1]);
+   var isA=(mode==='build'&&(j===S.i1||j===S.i2));
+   if(isA){ o+='<circle cx="'+px+'" cy="'+pyD+'" r="7.5" fill="none" stroke="'+C.anc+'" stroke-width="2"></circle>'; }
+   o+='<circle cx="'+px+'" cy="'+pyD+'" r="4.2" fill="'+(isA?C.anc:C.pt)+'"></circle>';
+ }
+ if(gfx==='pts2'||gfx==='tri'){
+   var r1=S.pts[S.i1], r2=S.pts[S.i2];
+   o+='<text x="'+(sx(r1[0])+10)+'" y="'+(sy(r1[1])-8)+'" font-size="9.5" fill="'+C.anc+'" font-weight="700">(x₁, y₁)</text>';
+   o+='<text x="'+(sx(r2[0])-10)+'" y="'+(sy(r2[1])-10)+'" font-size="9.5" fill="'+C.anc+'" text-anchor="end" font-weight="700">(x₂, y₂)</text>';
+ }
+
+ /* step-specific markers */
+ if(gfx==='yint'){
+   if(W.x0<=0&&W.x1>=0&&S.B>=W.y0&&S.B<=W.y1){
+     o+='<circle cx="'+sx(0)+'" cy="'+sy(S.B)+'" r="6" fill="'+C.ok+'"></circle>';
+     o+='<text x="'+(sx(0)+10)+'" y="'+(sy(S.B)-9)+'" font-size="9.5" fill="'+C.ok+'" font-weight="700">(0, '+nf(S.B,S.dy)+')</text>';
+   } else {
+     o+='<path d="M'+(PL.l+30)+' '+(PL.b-14)+' L'+(PL.l+6)+' '+(PL.b-14)+'" stroke="'+C.res+'" stroke-width="2"></path>';
+     o+='<path d="M'+(PL.l+12)+' '+(PL.b-18)+' L'+(PL.l+5)+' '+(PL.b-14)+' L'+(PL.l+12)+' '+(PL.b-10)+'" fill="none" stroke="'+C.res+'" stroke-width="2"></path>';
+     o+='<text x="'+(PL.l+35)+'" y="'+(PL.b-11)+'" font-size="9" fill="'+C.res+'" font-weight="700">intercept is off this graph</text>';
+   }
+ }
+ if(gfx==='pred'){
+   var yp=S.M*S.px+S.B;
+   o+='<line x1="'+sx(S.px)+'" y1="'+PL.b+'" x2="'+sx(S.px)+'" y2="'+sy(yp)+'" stroke="'+C.ok+'" stroke-width="1.8" stroke-dasharray="4 3"></line>';
+   o+='<line x1="'+PL.l+'" y1="'+sy(yp)+'" x2="'+sx(S.px)+'" y2="'+sy(yp)+'" stroke="'+C.ok+'" stroke-width="1.8" stroke-dasharray="4 3"></line>';
+   o+='<circle cx="'+sx(S.px)+'" cy="'+sy(yp)+'" r="6" fill="'+C.ok+'"></circle>';
+   o+='<text x="'+(sx(S.px)+9)+'" y="'+(sy(yp)-9)+'" font-size="9.5" fill="'+C.ok+'" font-weight="700">('+nf(S.px,0)+', '+nf(yp,S.dy)+')</text>';
+ }
+ if(gfx==='ex'&&Math.abs(S.M)>1e-9){
+   var z=r6(-S.B/S.M);
+   if(z>=W.x0&&z<=W.x1&&W.y0<=0&&W.y1>=0){
+     var zx=sx(z), za='middle', zt=zx;
+     /* keep the label inside the plot when the crossing sits against an edge */
+     if(zx<PL.l+52){ za='start'; zt=zx+9; } else if(zx>PL.r-52){ za='end'; zt=zx-9; }
+     o+='<circle cx="'+zx+'" cy="'+sy(0)+'" r="5.5" fill="'+C.res+'"></circle>';
+     o+='<text x="'+zt+'" y="'+(sy(0)-10)+'" font-size="9" fill="'+C.res+'" text-anchor="'+za+'" font-weight="700">crosses 0 at '+(Math.round(z*10)/10)+'</text>';
+   }
+ }
+
+ /* axis titles */
+ o+='<text x="'+((PL.l+PL.r)/2)+'" y="'+(PL.b+34)+'" font-size="10.5" fill="#4d4f66" text-anchor="middle">'+S.xl+'<tspan font-style="italic" font-weight="700">'+S.xv+'</tspan>'+S.xu+'</text>';
+ o+='<text transform="rotate(-90 13 '+((PL.t+PL.b)/2)+')" x="13" y="'+((PL.t+PL.b)/2)+'" font-size="10.5" fill="#4d4f66" text-anchor="middle">'+S.yl+'<tspan font-style="italic" font-weight="700">'+S.yv+'</tspan>'+S.yu+'</text>';
+
+ $('cpr').setAttribute('x',PL.l); $('cpr').setAttribute('y',PL.t);
+ $('cpr').setAttribute('width',PL.r-PL.l); $('cpr').setAttribute('height',PL.b-PL.t);
+ return o;
+}
+
+/* ---------- state ---------- */
+var si=0, mode='fit', rmode='sq', step=0, mv=0, bv=0, STEPS=[];
+
+function axnote(S){ return S.win.x0!==0?' <b>Careful: the horizontal axis starts at '+S.win.x0+', not at 0 &mdash; so the vertical axis you see is not <i>x</i> = 0.</b>':''; }
+
+function syncSliders(){
+ var S=SC[si];
+ $('ms').min=S.sl.m0; $('ms').max=S.sl.m1; $('ms').step=S.sl.ms; $('ms').value=mv;
+ $('bs').min=S.sl.b0; $('bs').max=S.sl.b1; $('bs').step=S.sl.bs; $('bs').value=bv;
+ $('mlo').innerHTML=nf(S.sl.m0,0); $('mhi').innerHTML=nf(S.sl.m1,0);
+ $('blo').innerHTML=nf(S.sl.b0,0); $('bhi').innerHTML=nf(S.sl.b1,0);
+}
+
+function segs(){
+ $('scen').innerHTML=SC.map(function(s,i){ return '<button data-i="'+i+'" class="'+(i===si?'on':'')+'">'+s.nm+'<small>'+s.sb+'</small></button>'; }).join('');
+ Array.prototype.forEach.call($('scen').children,function(btn){ btn.onclick=function(){ pick(+btn.dataset.i); }; });
+ Array.prototype.forEach.call($('mode').children,function(btn){ btn.className=(btn.dataset.m===mode?'on':''); btn.onclick=function(){ mode=btn.dataset.m; step=0; render(); }; });
+ Array.prototype.forEach.call($('resmode').children,function(btn){ btn.className=(btn.dataset.r===rmode?'on':''); btn.onclick=function(){ rmode=btn.dataset.r; render(); }; });
+}
+
+function pick(i){ si=i; step=0; mv=SC[i].st.m; bv=SC[i].st.b; syncSliders(); STEPS=buildSteps(SC[i]); render(); }
+
+function render(){
+ var S=SC[si];
+ segs();
+ $('cardTitle').innerHTML=S.ct;
+ $('fitpanel').style.display=(mode==='fit'?'':'none');
+ $('buildpanel').style.display=(mode==='build'?'':'none');
+ $('fitmeter').style.display=(mode==='fit'?'':'none');
+
+ if(mode==='fit'){
+   $('art').innerHTML=drawGraph(S,mv,bv,'fit',rmode,'');
+   $('mval').innerHTML=nf(mv,S.sl.md);
+   $('bval').innerHTML=nf(bv,S.sl.bd);
+   $('stage').innerHTML='Your model<small>drag both sliders until the squares shrink</small><span class="big"><i>'+S.yv+'</i> = '+nf(mv,S.sl.md)+'<i>'+S.xv+'</i>'+sf(bv,S.sl.bd)+'</span>';
+   var e=ssr(S,mv,bv), n=S.pts.length;
+   var rms=Math.sqrt(e/n), brms=Math.sqrt(S.bestSSR/n);
+   /* the bar compares typical misses, so it moves at a human pace and only
+      fills completely on the one line that cannot be beaten */
+   var q=(e>1e-12)?Math.min(100,Math.max(2,Math.round(100*brms/rms))):100;
+   $('qpct').innerHTML=rms.toFixed(S.rd)+' '+S.yunit;
+   $('qbar').style.width=q+'%';
+   $('enum').innerHTML='best any line can do: <b>'+brms.toFixed(S.rd)+' '+S.yunit+'</b> &nbsp;&middot;&nbsp; total squared miss <b>'+e.toFixed(S.sd)+'</b>';
+   $('key').innerHTML='<span><i class="dot" style="background:'+C.pt+'"></i>measured data</span><span><i style="background:'+C.line+'"></i>your line</span><span><i style="background:'+C.res+'"></i>the miss</span>';
+   $('gcap').innerHTML=S.blurb+axnote(S);
+   $('info').innerHTML='<span class="n">What your line claims</span>'+S.fitSay(mv,bv);
+ } else {
+   var st=STEPS[step];
+   $('art').innerHTML=drawGraph(S,S.M,S.B,'build',rmode,st.gfx);
+   $('stage').innerHTML=st.t+'<small>step '+(step+1)+' of '+STEPS.length+'</small>';
+   $('mxprev').innerHTML=(step>0?STEPS[step-1].mx:'');
+   $('arrowdn').style.visibility=(step>0?'visible':'hidden');
+   $('mxcur').innerHTML=st.mx;
+   $('whybox').innerHTML=st.why?'<div class="why">'+st.why+'</div>':'';
+   $('dots').innerHTML=STEPS.map(function(x,i){ return '<i class="'+(i===step?'on':(i<step?'done':''))+'"></i>'; }).join('');
+   $('prev').disabled=(step===0); $('next').disabled=(step===STEPS.length-1);
+   $('key').innerHTML='<span><i class="dot" style="background:'+C.pt+'"></i>measured data</span><span><i class="dot" style="background:'+C.anc+'"></i>the two chosen points</span><span><i style="background:'+C.line+'"></i>the model</span>';
+   $('gcap').innerHTML=S.blurb+axnote(S);
+   $('info').innerHTML='<span class="n">'+st.pl+' &middot; '+st.t+'</span>'+st.d;
+ }
+}
+
+/* ---------- wiring ---------- */
+$('ms').oninput=function(){ mv=r6(parseFloat(this.value)); render(); };
+$('bs').oninput=function(){ bv=r6(parseFloat(this.value)); render(); };
+$('snap').onclick=function(){ var S=SC[si]; mv=S.snapM; bv=S.snapB; syncSliders(); render(); };
+$('reset').onclick=function(){ var S=SC[si]; mv=S.st.m; bv=S.st.b; syncSliders(); render(); };
+$('prev').onclick=function(){ if(step>0){ step--; render(); } };
+$('next').onclick=function(){ if(step<STEPS.length-1){ step++; render(); } };
+document.addEventListener('keydown',function(e){
+ if(mode!=='build') return;
+ if(e.key==='ArrowRight'&&step<STEPS.length-1){ step++; render(); }
+ if(e.key==='ArrowLeft'&&step>0){ step--; render(); }
+});
+
+pick(0);
+})();
+</script>
+</body>
+</html>

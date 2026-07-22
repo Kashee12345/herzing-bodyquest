@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Five Ways to Draw a Sample</title>
+<meta name="description" content="Draw simple random, stratified, cluster, systematic and convenience samples from the same town of 300 households, and watch the exact standard errors, bias and design effects change as you go.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15.5px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.hit{border-color:var(--green);background:#f2faf5;} .tiles div.hit .vv{color:#237a45;}
+.tiles div.far{border-color:var(--coral);background:#fdf3f4;} .tiles div.far .vv{color:#b23145;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:15px;font-weight:800;color:var(--teal-dk);min-width:66px;text-align:right;font-variant-numeric:tabular-nums;}
+.lgd{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:11px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.cap{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.ramp{display:flex;align-items:center;gap:8px;margin-top:9px;}
+.ramp .bar{flex:1;height:9px;border-radius:5px;background:linear-gradient(90deg,#eef5f8,#6ba3bd,#123c4c);border:1px solid var(--line);}
+.ramp span{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;}
+.list .it .ct{line-height:1.35;display:block;margin-top:1px;}
+@media (max-width:520px){.row{align-items:stretch;}.row .btn{font-size:12.5px;padding:10px 4px;}.tiles .lb{font-size:8.8px;}.sl label{font-size:10px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 2</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 2</div>
+  <h1>Five Ways to Draw a Sample</h1>
+  <div class="intro">One town. Three hundred households. One number we want: the average commute. Five different ways of choosing who to ask &mdash; and five very different kinds of error. Every method below draws a <b>real sample</b> from the same grid, and every standard error you see is <b>computed exactly from the town itself</b>.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="mapTitle">Ashford &mdash; 300 households</h2>
+      <svg viewBox="0 0 340 252" aria-label="map of the town, one square per household, shaded by commute time"><g id="map"></g></svg>
+      <div class="ramp"><span>4 min</span><div class="bar"></div><span>64 min</span></div>
+      <div class="cap" id="mapCap"></div>
+    </div>
+    <div class="card"><h2 id="histTitle">Where the estimates land</h2>
+      <svg viewBox="0 0 340 176" aria-label="distribution of the estimates produced by the chosen method"><g id="hist"></g></svg>
+      <div class="lgd"><span><i style="background:#2f6f8a"></i>one sample&rsquo;s estimate</span><span><i style="background:#1c4454"></i>the town, 34.0 min</span><span id="lgdSys" style="display:none"><i style="background:#b8862f"></i>every sample this method can produce</span></div>
+    </div>
+    <div class="card"><h2>All five methods, side by side</h2>
+      <svg viewBox="0 0 340 182" aria-label="comparison of the five sampling methods by bias and standard error"><g id="comp"></g></svg>
+      <div class="cap">Dot = the value the method homes in on. Bar = &plusmn;2 standard errors, the ordinary reach of its estimates. A method is good when the dot sits on the dashed line <i>and</i> the bar is short.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Same town, five ways in<small>choose a method, then draw a sample</small></div>
+    <div class="card">
+      <div class="list" id="mlist"></div>
+      <div class="sl"><label for="nSl">Sample size n</label><input type="range" id="nSl" min="0" max="5" step="1" value="4"><span class="nv" id="nVal">60</span></div>
+      <div class="sl"><label for="dSl">Zone gap</label><input type="range" id="dSl" min="0" max="14" step="2" value="10"><span class="nv" id="dVal">10 min</span></div>
+      <div class="cap">Zone gap is how far apart the three zones&rsquo; average commutes are. Whatever you set it to, the town&rsquo;s overall average stays exactly <b>34.0 minutes</b> &mdash; only the shape of the town changes, never the target.</div>
+      <div class="row"><button class="btn solid" id="one">Draw a sample</button><button class="btn" id="many">+50 samples</button><button class="btn" id="rst">Reset</button></div>
+      <div class="tiles">
+        <div><span class="lb">Samples drawn</span><span class="vv" id="tK">0</span></div>
+        <div><span class="lb">This estimate</span><span class="vv" id="tE">&mdash;</span></div>
+        <div id="tErrBox"><span class="lb">Off the truth by</span><span class="vv" id="tErr">&mdash;</span></div>
+        <div><span class="lb">Centre of the pile</span><span class="vv" id="tC">&mdash;</span></div>
+        <div><span class="lb">Spread of the pile</span><span class="vv" id="tSD">&mdash;</span></div>
+        <div><span class="lb">Exact standard error</span><span class="vv" id="tSE">&mdash;</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem">All five estimates are the <b>same arithmetic</b> &mdash; add up the sample, divide by how many. The only thing that ever changes is <b>who ended up in the sample</b>. In survey work the design is the whole game; the formula is an afterthought.</div>
+      <div class="note"><b>Strata and clusters are opposites, and they are the classic mix-up.</b> You take a slice of <b>every</b> stratum, and you want each stratum to be internally alike. You take a <b>few whole</b> clusters, and you want each cluster to be a miniature of the entire population. Same grid, opposite goals.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- seeded PRNG: this page behaves the same on every visit ---------- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+ /* ================= the town ================= */
+ var COLS=20,ROWS=15,N=300;          /* 300 households in reading order, 1..300      */
+ var BW=5,BH=3,NBC=4,NB=20,CSZ=15;   /* 20 blocks, each 5 houses wide and 3 deep     */
+ var ZN=['Old Town','Midtown','Hillside'];
+ var ZC=['#2f6f9f','#b8862f','#7a5a8a'];
+ var ZOFF=[-1,0,1];                  /* zone offsets, weighted mean exactly 0        */
+ var BASEM=34;                       /* the town average, fixed at every setting     */
+ var RSZ=90;                         /* households within a short walk of the desk   */
+ var OX=2.5,OY=1.5;                  /* where the surveyor's desk sits on the grid   */
+
+ var row=[],col=[],zone=[],blk=[],ave=[],blockEff=[],noise=[],y=[];
+ var zIdx=[[],[],[]],bIdx=[],ALL=[],REACH=[],inR=[];
+ var Nh=[0,0,0];
+
+ (function build(){
+   var i,r,c,b,z,g,raw=[],rawE=[],s,ids;
+   for(i=0;i<N;i++){
+     r=Math.floor(i/COLS);c=i%COLS;row[i]=r;col[i]=c;
+     zone[i]=(r<6)?0:(r<9?1:2);                 /* 120 / 60 / 120 households        */
+     blk[i]=Math.floor(r/BH)*NBC+Math.floor(c/BW);
+     ave[i]=(c%5===0||c%5===4)?1:0;             /* houses facing an avenue: 8 of 20 columns */
+     zIdx[zone[i]].push(i);ALL.push(i);Nh[zone[i]]++;
+   }
+   for(b=0;b<NB;b++)bIdx.push([]);
+   for(i=0;i<N;i++)bIdx[blk[i]].push(i);
+   g=mulberry32(20260718);
+   for(b=0;b<NB;b++)raw.push((g()-0.5)*8);
+   for(i=0;i<N;i++)rawE.push((g()-0.5)*14);
+   /* centre the block effects inside each zone, so a zone's mean is exactly on target */
+   for(z=0;z<3;z++){
+     ids=[];for(b=0;b<NB;b++){var br=Math.floor(b/NBC);if((br<2?0:(br<3?1:2))===z)ids.push(b);}
+     s=0;for(b=0;b<ids.length;b++)s+=raw[ids[b]];s/=ids.length;
+     for(b=0;b<ids.length;b++)blockEff[ids[b]]=raw[ids[b]]-s;
+   }
+   /* centre the household noise inside each block, so a block's mean is exactly on target */
+   for(b=0;b<NB;b++){
+     s=0;for(i=0;i<bIdx[b].length;i++)s+=rawE[bIdx[b][i]];s/=bIdx[b].length;
+     for(i=0;i<bIdx[b].length;i++)noise[bIdx[b][i]]=rawE[bIdx[b][i]]-s;
+   }
+   /* the walkable set: the RSZ households nearest the surveyor's desk */
+   var ord=ALL.slice();
+   ord.sort(function(a,d){
+     var da=(col[a]-OX)*(col[a]-OX)+(row[a]-OY)*(row[a]-OY),
+         db=(col[d]-OX)*(col[d]-OX)+(row[d]-OY)*(row[d]-OY);
+     return (da-db)||(a-d);});
+   REACH=ord.slice(0,RSZ);
+   for(i=0;i<N;i++)inR[i]=0;
+   for(i=0;i<RSZ;i++)inR[REACH[i]]=1;
+ })();
+
+ var D=10;
+ function makeTown(){for(var i=0;i<N;i++)y[i]=BASEM+D*ZOFF[zone[i]]+blockEff[blk[i]]+(ave[i]?-6:4)+noise[i];}
+ makeTown();
+
+ /* ================= exact finite-population arithmetic ================= */
+ function mean(ix){var s=0,i;for(i=0;i<ix.length;i++)s+=y[ix[i]];return s/ix.length;}
+ function vr(ix){                                  /* S-squared, divided by (n-1) */
+   var m=mean(ix),s=0,i,d;
+   for(i=0;i<ix.length;i++){d=y[ix[i]]-m;s+=d*d;}
+   return s/(ix.length-1);
+ }
+ function vrOf(a){var i,m=0,s=0,d;for(i=0;i<a.length;i++)m+=a[i];m/=a.length;
+   for(i=0;i<a.length;i++){d=a[i]-m;s+=d*d;}return s/(a.length-1);}
+
+ var NS=[15,25,30,50,60,75],ni=4;
+ function n(){return NS[ni];}
+ function alloc(){                                  /* proportional allocation */
+   var k=n(),a=[],h,t=0;
+   for(h=0;h<3;h++){a[h]=Math.round(k*Nh[h]/N);t+=a[h];}
+   a[2]+=k-t;                                       /* keep the total exactly n */
+   return a;
+ }
+ function clusters(){return Math.max(1,Math.round(n()/CSZ));}
+
+ var T={};
+ function theory(){
+   var k=n(),S2=vr(ALL),h,a=alloc(),v,m,i,s,bm=[],sm=[],idx,kk;
+   /* simple random sampling without replacement */
+   T.srs={e:BASEM,se:Math.sqrt(S2/k*(1-k/N))};
+   /* stratified with proportional allocation */
+   v=0;for(h=0;h<3;h++){var W=Nh[h]/N;v+=W*W*(vr(zIdx[h])/a[h])*(1-a[h]/Nh[h]);}
+   T.str={e:BASEM,se:Math.sqrt(v),a:a};
+   /* one-stage cluster sampling: an SRS of whole blocks, all 15 households in each */
+   for(i=0;i<NB;i++)bm.push(mean(bIdx[i]));
+   m=clusters();
+   T.clu={e:BASEM,se:Math.sqrt((vrOf(bm)/m)*(1-m/NB)),m:m,ach:m*CSZ};
+   /* systematic: with N/n a whole number there are exactly k possible samples, so enumerate them */
+   kk=N/k;s=0;
+   for(i=0;i<kk;i++){idx=[];for(var j=i;j<N;j+=kk)idx.push(j);sm.push(mean(idx));}
+   for(i=0;i<kk;i++)s+=(sm[i]-BASEM)*(sm[i]-BASEM);
+   T.sys={e:BASEM,se:Math.sqrt(s/kk),k:kk,ms:sm};
+   /* convenience: a random draw from the walkable set only */
+   var rm=mean(REACH);
+   T.con={e:rm,se:Math.sqrt(vr(REACH)/k*(1-k/RSZ)),bias:rm-BASEM};
+ }
+
+ /* ================= drawing an actual sample ================= */
+ var M=[
+  {k:'srs',ic:'🎲',nm:'Simple random',ct:'every household equally likely'},
+  {k:'str',ic:'🍰',nm:'Stratified',ct:'split into zones first, then sample each'},
+  {k:'clu',ic:'🧱',nm:'Cluster',ct:'pick whole blocks, survey everyone on them'},
+  {k:'sys',ic:'📏',nm:'Systematic',ct:'random start, then every k-th on the list'},
+  {k:'con',ic:'🚶',nm:'Convenience',ct:'whoever is within a short walk'}
+ ];
+ var mode='srs',EST={},SEL={},LAST={},SYSS={},rs;
+ function reseed(){rs=mulberry32(70413);}
+ function clearAll(){for(var i=0;i<M.length;i++){EST[M[i].k]=[];SEL[M[i].k]=null;LAST[M[i].k]=null;}SYSS={};reseed();}
+ clearAll();
+
+ function take(pool,k){                              /* k distinct members, no replacement */
+   var a=pool.slice(),out=[],i,j,t;
+   if(k>a.length)k=a.length;
+   for(i=0;i<k;i++){j=i+Math.floor(rs()*(a.length-i));t=a[i];a[i]=a[j];a[j]=t;out.push(a[i]);}
+   return out;
+ }
+ function drawSample(){
+   var k=n(),sel=[],h,a,bl,i,st,kk;
+   if(mode==='srs')sel=take(ALL,k);
+   else if(mode==='str'){a=alloc();for(h=0;h<3;h++)sel=sel.concat(take(zIdx[h],a[h]));}
+   else if(mode==='clu'){bl=take(bIdx.map(function(x,ix){return ix;}),clusters());
+     for(i=0;i<bl.length;i++)sel=sel.concat(bIdx[bl[i]]);SYSS.cluBlocks=bl;}
+   else if(mode==='sys'){kk=N/k;st=Math.floor(rs()*kk);for(i=st;i<N;i+=kk)sel.push(i);SYSS.start=st;}
+   else sel=take(REACH,k);
+   SEL[mode]=sel;LAST[mode]=mean(sel);EST[mode].push(LAST[mode]);
+ }
+
+ /* ================= the map ================= */
+ var X0=46,CW=14.4,Y0=26,VLO=4,VHI=64;
+ function lerp(a,b,t){return Math.round(a+(b-a)*t);}
+ function vcol(v){
+   var t=(v-VLO)/(VHI-VLO),u;t=t<0?0:(t>1?1:t);
+   var A=[238,245,248],B=[107,163,189],C=[18,60,76];
+   if(t<0.5){u=t/0.5;return 'rgb('+lerp(A[0],B[0],u)+','+lerp(A[1],B[1],u)+','+lerp(A[2],B[2],u)+')';}
+   u=(t-0.5)/0.5;return 'rgb('+lerp(B[0],C[0],u)+','+lerp(B[1],C[1],u)+','+lerp(B[2],C[2],u)+')';
+ }
+ function drawMap(){
+   var s='',i,b,r,c,sel=SEL[mode],on=[],x,yy;
+   if(sel){for(i=0;i<N;i++)on[i]=0;for(i=0;i<sel.length;i++)on[sel[i]]=1;}
+
+   if(mode==='con'){                                  /* wash over the walkable set */
+     for(i=0;i<N;i++)if(inR[i])
+       s+='<rect x="'+(X0+col[i]*CW).toFixed(1)+'" y="'+(Y0+row[i]*CW).toFixed(1)+'" width="'+CW.toFixed(1)+'" height="'+CW.toFixed(1)+'" fill="#f6e3ae" pointer-events="none"/>';
+   }
+   for(i=0;i<N;i++){
+     x=X0+col[i]*CW+0.7;yy=Y0+row[i]*CW+0.7;
+     s+='<rect data-i="'+i+'" x="'+x.toFixed(1)+'" y="'+yy.toFixed(1)+'" width="'+(CW-1.4).toFixed(1)+'" height="'+(CW-1.4).toFixed(1)+'" rx="2.2" fill="'+vcol(y[i])+'"'+
+        (sel?(on[i]?' stroke="#b8862f" stroke-width="1.9"':' opacity="0.28"'):'')+'/>';
+   }
+   /* block outlines */
+   for(b=0;b<NB;b++){
+     r=Math.floor(b/NBC);c=b%NBC;
+     var hi=(mode==='clu'&&SYSS.cluBlocks&&SYSS.cluBlocks.indexOf(b)>=0);
+     s+='<rect x="'+(X0+c*BW*CW).toFixed(1)+'" y="'+(Y0+r*BH*CW).toFixed(1)+'" width="'+(BW*CW).toFixed(1)+'" height="'+(BH*CW).toFixed(1)+
+        '" fill="none" stroke="'+(hi?'#b8862f':'#9db4bf')+'" stroke-width="'+(hi?2.4:1)+'" opacity="'+(mode==='clu'?(hi?1:0.7):0.45)+'" pointer-events="none"/>';
+   }
+   /* zone bands */
+   var zr=[[0,6],[6,9],[9,15]];
+   for(i=0;i<3;i++){
+     var ya=Y0+zr[i][0]*CW,yb=Y0+zr[i][1]*CW;
+     s+='<rect x="'+(X0-5)+'" y="'+ya.toFixed(1)+'" width="3" height="'+(yb-ya).toFixed(1)+'" rx="1.5" fill="'+ZC[i]+'" pointer-events="none"/>';
+     s+='<text x="'+(X0-9)+'" y="'+((ya+yb)/2+3).toFixed(1)+'" font-size="8.6" font-weight="800" fill="'+ZC[i]+'" text-anchor="end" pointer-events="none">'+ZN[i]+'</text>';
+     if(i)s+='<line x1="'+X0+'" y1="'+ya.toFixed(1)+'" x2="'+(X0+COLS*CW).toFixed(1)+'" y2="'+ya.toFixed(1)+'" stroke="#43606d" stroke-width="1.3" stroke-dasharray="4 3" pointer-events="none"/>';
+   }
+   /* the ruler along the top: position of the house on its street */
+   var rk=[1,5,10,15,20];
+   for(i=0;i<rk.length;i++){
+     s+='<text x="'+(X0+(rk[i]-0.5)*CW).toFixed(1)+'" y="20" font-size="7.6" fill="#a8b6bd" font-weight="700" text-anchor="middle" pointer-events="none">'+rk[i]+'</text>';
+   }
+   s+='<text x="'+X0+'" y="11" font-size="8" fill="#a8b6bd" font-weight="700" pointer-events="none">house position along the street →</text>';
+   /* the surveyor's desk */
+   var ox=X0+(OX+0.5)*CW,oy=Y0+(OY+0.5)*CW;
+   s+='<circle cx="'+ox.toFixed(1)+'" cy="'+oy.toFixed(1)+'" r="5.4" fill="#fffdf9" opacity="'+(mode==='con'?1:0.75)+'" pointer-events="none"/>';
+   s+='<polygon points="'+ox.toFixed(1)+','+(oy-4.6).toFixed(1)+' '+(ox+4.6).toFixed(1)+','+oy.toFixed(1)+' '+ox.toFixed(1)+','+(oy+4.6).toFixed(1)+' '+(ox-4.6).toFixed(1)+','+oy.toFixed(1)+
+      '" fill="'+(mode==='con'?'#b8862f':'#b7c7d0')+'" pointer-events="none"/>';
+   /* systematic: mark the random start */
+   if(mode==='sys'&&SYSS.start!==null&&SYSS.start!==undefined&&sel){
+     var sx=X0+(col[SYSS.start]+0.5)*CW,sy=Y0+(row[SYSS.start]+0.5)*CW;
+     s+='<circle cx="'+sx.toFixed(1)+'" cy="'+sy.toFixed(1)+'" r="3.9" fill="#fffdf9" pointer-events="none"/>'+
+        '<circle cx="'+sx.toFixed(1)+'" cy="'+sy.toFixed(1)+'" r="2.4" fill="#b8862f" pointer-events="none"/>';
+   }
+   $("map").innerHTML=s;
+ }
+
+ /* ================= where the estimates land ================= */
+ var HW=12,H0=24,H1=332,HTOP=30,HBASE=118,BINS=60;
+ function hx(v){return H0+(v-(BASEM-HW))/(2*HW)*(H1-H0);}
+ function clampx(v){return Math.max(H0,Math.min(H1,hx(v)));}
+ function drawHist(){
+   var s='',e=EST[mode],i,j,cnt=[],mx=0,bw=2*HW/BINS,b,cap,st=T[mode];
+   for(i=0;i<BINS;i++)cnt.push(0);
+   for(i=0;i<e.length;i++){b=Math.floor((e[i]-(BASEM-HW))/bw);if(b<0)b=0;if(b>BINS-1)b=BINS-1;cnt[b]++;}
+   for(i=0;i<BINS;i++)if(cnt[i]>mx)mx=cnt[i];
+   cap=Math.floor((HBASE-HTOP)/5.6);
+
+   /* the band this method's estimates ordinarily occupy */
+   var bl=clampx(st.e-2*st.se),br=clampx(st.e+2*st.se);
+   s+='<rect x="'+bl.toFixed(1)+'" y="'+HTOP+'" width="'+Math.max(1,br-bl).toFixed(1)+'" height="'+(HBASE-HTOP)+'" fill="#2f6f8a" opacity=".10"/>';
+
+   /* systematic has only k possible samples in the whole world -- show every one */
+   if(mode==='sys'){
+     for(i=0;i<T.sys.ms.length;i++){var gx=clampx(T.sys.ms[i]);
+       s+='<line x1="'+gx.toFixed(1)+'" y1="'+HTOP+'" x2="'+gx.toFixed(1)+'" y2="'+HBASE+'" stroke="#b8862f" stroke-width="1.8" opacity=".55"/>';}
+   }
+   /* the estimates themselves */
+   if(e.length){
+     if(mx<=cap){
+       for(i=0;i<BINS;i++){if(!cnt[i])continue;var cx=hx(BASEM-HW+(i+0.5)*bw);
+         for(j=0;j<cnt[i];j++)s+='<circle cx="'+cx.toFixed(1)+'" cy="'+(HBASE-3.4-j*5.6).toFixed(1)+'" r="2.5" fill="#2f6f8a"/>';}
+     }else{
+       for(i=0;i<BINS;i++){if(!cnt[i])continue;var h=cnt[i]/mx*(HBASE-HTOP),xl=hx(BASEM-HW+i*bw);
+         s+='<rect x="'+(xl+.3).toFixed(1)+'" y="'+(HBASE-h).toFixed(1)+'" width="'+Math.max(1.7,(H1-H0)/BINS-.7).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="#2f6f8a" rx="1"/>';}
+     }
+   }
+   /* axis */
+   s+='<line x1="'+H0+'" y1="'+HBASE+'" x2="'+H1+'" y2="'+HBASE+'" stroke="#b7c7d0" stroke-width="1.4"/>';
+   var step=(HW>18?10:(HW>9?5:2)),v;
+   for(v=Math.ceil((BASEM-HW)/step)*step;v<=BASEM+HW;v+=step){
+     var tx=hx(v);
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+HBASE+'" x2="'+tx.toFixed(1)+'" y2="'+(HBASE+4)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+     s+='<text x="'+tx.toFixed(1)+'" y="'+(HBASE+15)+'" font-size="9.3" fill="#78868d" font-weight="600" text-anchor="middle">'+v+'</text>';
+   }
+   /* the town average -- it never moves */
+   var tp=hx(BASEM);
+   s+='<line x1="'+tp.toFixed(1)+'" y1="12" x2="'+tp.toFixed(1)+'" y2="'+(HBASE+4)+'" stroke="#1c4454" stroke-width="2" stroke-dasharray="5 4"/>';
+   s+='<text x="'+tp.toFixed(1)+'" y="9" font-size="10.4" font-weight="800" fill="#1c4454" text-anchor="middle">the town = 34.0 min</text>';
+   /* the latest estimate */
+   if(LAST[mode]!==null){
+     var lx=clampx(LAST[mode]);
+     s+='<line x1="'+lx.toFixed(1)+'" y1="'+HTOP+'" x2="'+lx.toFixed(1)+'" y2="'+(HBASE+4)+'" stroke="#b8862f" stroke-width="1.8"/>';
+     s+='<circle cx="'+lx.toFixed(1)+'" cy="'+HTOP+'" r="3.6" fill="#b8862f"/>';
+   }
+   /* the +/- 2 SE bracket, drawn to scale under the axis */
+   var y2=HBASE+40;
+   s+='<line x1="'+bl.toFixed(1)+'" y1="'+y2+'" x2="'+br.toFixed(1)+'" y2="'+y2+'" stroke="#2f6f8a" stroke-width="2.4"/>';
+   s+='<line x1="'+bl.toFixed(1)+'" y1="'+(y2-4)+'" x2="'+bl.toFixed(1)+'" y2="'+(y2+4)+'" stroke="#2f6f8a" stroke-width="2.4"/>';
+   s+='<line x1="'+br.toFixed(1)+'" y1="'+(y2-4)+'" x2="'+br.toFixed(1)+'" y2="'+(y2+4)+'" stroke="#2f6f8a" stroke-width="2.4"/>';
+   var lab=((st.e).toFixed(1))+' ± '+(2*st.se).toFixed(2)+' min';
+   s+='<text x="'+((bl+br)/2).toFixed(1)+'" y="'+(y2-8)+'" font-size="9.6" font-weight="800" fill="#1c4454" text-anchor="middle">'+lab+'</text>';
+   $("hist").innerHTML=s;
+   var k=EST[mode].length;
+   $("histTitle").innerHTML=k?('Where '+k+' sample'+(k===1?'':'s')+' landed'):'Where the estimates land';
+   $("lgdSys").style.display=(mode==='sys')?'inline':'none';
+ }
+
+ /* ================= the five methods side by side ================= */
+ var C0=98,C1=332,CTOP=22,CROW=27;
+ function cx2(v){return C0+(v-(BASEM-HW))/(2*HW)*(C1-C0);}
+ function cclamp(v){return Math.max(C0,Math.min(C1,cx2(v)));}
+ function drawComp(){
+   var s='',i,st,yy,cur,tp=cx2(BASEM);
+   s+='<line x1="'+tp.toFixed(1)+'" y1="10" x2="'+tp.toFixed(1)+'" y2="152" stroke="#1c4454" stroke-width="1.8" stroke-dasharray="5 4"/>';
+   for(i=0;i<M.length;i++){
+     st=T[M[i].k];yy=CTOP+i*CROW;cur=(M[i].k===mode);
+     s+='<text x="92" y="'+(yy+1)+'" font-size="9.8" font-weight="'+(cur?800:700)+'" fill="'+(cur?'#1c4454':'#78868d')+'" text-anchor="end">'+M[i].nm+'</text>';
+     s+='<text x="92" y="'+(yy+11)+'" font-size="8.2" font-weight="600" fill="#a8b6bd" text-anchor="end">SE '+st.se.toFixed(2)+'</text>';
+     var a=cclamp(st.e-2*st.se),b=cclamp(st.e+2*st.se);
+     s+='<line x1="'+a.toFixed(1)+'" y1="'+yy+'" x2="'+b.toFixed(1)+'" y2="'+yy+'" stroke="'+(cur?'#2f6f8a':'#c3d2da')+'" stroke-width="'+(cur?4:3)+'" stroke-linecap="round"/>';
+     var ex=cclamp(st.e);
+     s+='<circle cx="'+ex.toFixed(1)+'" cy="'+yy+'" r="'+(cur?4.6:3.6)+'" fill="'+(cur?'#1c4454':'#8fa6b1')+'"/>';
+     if(Math.abs(st.e-BASEM)>0.15)
+       s+='<text x="'+ex.toFixed(1)+'" y="'+(yy-8)+'" font-size="8.6" font-weight="800" fill="#b23145" text-anchor="middle">bias '+(st.e-BASEM).toFixed(1)+'</text>';
+   }
+   s+='<line x1="'+C0+'" y1="152" x2="'+C1+'" y2="152" stroke="#b7c7d0" stroke-width="1.4"/>';
+   var step=(HW>18?10:(HW>9?5:2)),v;
+   for(v=Math.ceil((BASEM-HW)/step)*step;v<=BASEM+HW;v+=step){
+     var tx=cx2(v);
+     s+='<line x1="'+tx.toFixed(1)+'" y1="152" x2="'+tx.toFixed(1)+'" y2="156" stroke="#b7c7d0" stroke-width="1.2"/>';
+     s+='<text x="'+tx.toFixed(1)+'" y="167" font-size="9.3" fill="#78868d" font-weight="600" text-anchor="middle">'+v+'</text>';
+   }
+   s+='<text x="'+((C0+C1)/2)+'" y="179" font-size="9.4" fill="#95a3aa" font-weight="700" text-anchor="middle">estimated average commute (minutes)</text>';
+   $("comp").innerHTML=s;
+ }
+
+ /* ================= panels ================= */
+ function sgn(v){return (v<0?'−':'+')+Math.abs(v).toFixed(1);}
+ function pc(v){return (v*100).toFixed(0)+'%';}
+
+ function mapCaption(){
+   var sel=SEL[mode],i,z=[0,0,0],a=0,exp=[],h;
+   if(!sel){
+     $("mapCap").innerHTML='Each square is one household, shaded by its commute. The town splits into three <b>zones</b> (120 / 60 / 120 households) and 20 <b>blocks</b> of 15. The two houses at each end of a block face an <b>avenue</b> and get out faster; the three in the middle face a quiet lane. Tap any square to read it.';
+     return;
+   }
+   for(i=0;i<sel.length;i++){z[zone[sel[i]]]++;a+=ave[sel[i]];}
+   for(h=0;h<3;h++)exp.push((sel.length*Nh[h]/N).toFixed(1));
+   $("mapCap").innerHTML='<b>'+sel.length+'</b> households selected — <b>'+z[0]+'</b> Old Town, <b>'+z[1]+'</b> Midtown, <b>'+z[2]+'</b> Hillside (a proportional share would be '+exp.join(' / ')+'). Avenue houses: <b>'+pc(a/sel.length)+'</b> of the sample, against <b>40%</b> of the town.';
+ }
+ function showCell(i){
+   $("mapCap").innerHTML='House <b>#'+(i+1)+'</b> — '+ZN[zone[i]]+', block '+(blk[i]+1)+', '+(ave[i]?'avenue':'lane')+' house. Commute <b>'+y[i].toFixed(1)+' min</b>.';
+ }
+
+ function infoText(){
+   var k=n(),st=T[mode],e=EST[mode],last=LAST[mode],h='',ratio,deff,neff,a=T.str.a;
+   var srsAt=function(m){var S2=vr(ALL);return Math.sqrt(S2/m*(1-m/N));};
+
+   if(mode==='srs'){
+     h='<span class="n">Simple random sample</span>Number the households 1 to 300 and let chance pick <b>'+k+'</b> of them. Every household is equally likely &mdash; and so is every possible group of '+k+'. Zone, block and street position change nothing.'+
+       '<div class="dd">Its error comes straight out of the town. The variance of the sample average is <b>S²/n × (1 − n/N)</b> — the population spread divided by the sample size, then shrunk a little because you have already seen '+pc(k/N)+' of the town — and the standard error is the square root of that: <b>'+st.se.toFixed(2)+' minutes</b>. It is <b>unbiased</b>: run it forever and the estimates centre exactly on 34.0.</div>'+
+       '<div class="dd">At these sizes the estimates come out close to bell-shaped, so roughly 95% of them fall inside &plusmn;2 SE. Read that as a statement about <b>the procedure over the long run</b> &mdash; not as a probability that the one sample in front of you happens to be close.</div>'+
+       '<div class="loc">The trouble with an SRS is practical, never mathematical: it needs a complete list of the population to draw from, and it scatters '+k+' addresses across the whole map. Everything that follows is a trade against one of those two costs &mdash; more precision from the same list, or a cheaper trip at the price of precision.</div>';
+   }else if(mode==='str'){
+     ratio=st.se/T.srs.se;deff=ratio*ratio;neff=k/deff;
+     h='<span class="n">Stratified sample</span>Split the town into its three zones <b>first</b>, then run a separate random draw inside each one, sized in proportion: <b>'+a[0]+' / '+a[1]+' / '+a[2]+'</b> for n = '+k+'. No zone can be missed by bad luck, and because the slices are proportional the estimate is still just the plain average of the sample.'+
+       '<div class="dd">Every difference <i>between</i> zones is removed from the error; only variation <i>within</i> a zone is left. SE = <b>'+st.se.toFixed(2)+'</b> against '+T.srs.se.toFixed(2)+' for a simple random sample of the same size &mdash; <b>'+ratio.toFixed(2)+'×</b> as wide. In precision terms these '+k+' households are worth about <b>'+Math.round(neff)+'</b> randomly chosen ones.</div>'+
+       '<div class="dd">Now drag <b>zone gap</b> down to 0. The zones become identical, the ratio climbs to 1.00, and stratifying buys you nothing at all. Stratification pays only when the strata genuinely differ <b>on the thing you are measuring</b> &mdash; splitting by something irrelevant is free but useless.</div>'+
+       '<div class="loc">It also almost never costs you anything: with proportional allocation the stratified error is at worst a hair above the simple random one, and usually well below. That is why it is the default in serious survey work whenever a usable grouping already exists.</div>';
+   }else if(mode==='clu'){
+     ratio=st.se/srsAt(st.ach);deff=ratio*ratio;neff=st.ach/deff;
+     h='<span class="n">Cluster sample</span>Sample whole <b>blocks</b>, not scattered houses. Draw <b>'+st.m+'</b> of the town’s 20 blocks at random and survey all 15 households on each: <b>'+st.ach+'</b> interviews on '+st.m+' street'+(st.m===1?'':'s')+' instead of '+k+' addresses spread over the map. In the field this is by far the cheapest of the five.'+
+       '<div class="dd">It is still <b>unbiased</b> — the dot sits on the line. But look at the bar: SE = <b>'+st.se.toFixed(2)+'</b> against '+srsAt(st.ach).toFixed(2)+' for '+st.ach+' random households, <b>'+ratio.toFixed(2)+'×</b> as wide. Squared, that is a <b>design effect of '+deff.toFixed(1)+'</b>: these '+st.ach+' interviews carry about as much information as <b>'+Math.round(neff)+'</b> randomly chosen households.</div>'+
+       '<div class="dd">The reason is that neighbours resemble neighbours. Once you know one household on a block you already half know the next, so the fifteenth interview on a street adds very little. You are really sampling <b>blocks</b>, not households &mdash; and the more the blocks differ, the further that effective size falls toward the <b>'+st.m+'</b> block'+(st.m===1?'':'s')+' you actually visited.</div>'+
+       '<div class="loc">Note the reversal from stratifying. Strata should be internally <b>alike</b> and different from each other; clusters should each be a <b>miniature of the whole town</b>. Drag zone gap to 0 to make the blocks nearly interchangeable and watch the penalty collapse.</div>';
+   }else if(mode==='sys'){
+     ratio=st.se/T.srs.se;
+     var resonant=(st.k%5===0);
+     h='<span class="n">Systematic sample</span>Take every <b>k-th</b> household on the list, where k = 300/'+k+' = <b>'+st.k+'</b>. Pick a random start between 1 and '+st.k+', then keep counting. You never need the full list in advance, which is why this is the method people actually use at a door, a checkout or a shelf.'+
+       '<div class="dd">With k a whole number it is <b>exactly unbiased</b>, and it has a hidden bonus: the list runs street by street, so any systematic sample is automatically spread evenly over all three zones. That is stratification for free &mdash; and it is why the <b>zone gap slider does not move this method’s standard error at all</b>. Try it.</div>';
+     if(resonant){
+       h+='<div class="dd">But the step has landed on the town’s own rhythm. Blocks are 5 houses wide, and k = '+st.k+' is a multiple of 5, so every household you select occupies the <b>same position on its block</b>. A sample is therefore either <b>all avenue houses</b> or <b>all lane houses</b> &mdash; never the 40/60 mix the town actually has. SE = <b>'+st.se.toFixed(2)+'</b>, a punishing <b>'+ratio.toFixed(1)+'×</b> the simple random figure, even though nothing is biased.</div>'+
+         '<div class="dd">There are only <b>'+st.k+' possible samples in the entire world</b> for this design; the gold lines on the chart are all of them, and your draws can never land anywhere else. Nudge n one notch to <b>'+(k===60?'75':(k===30?'25':'25'))+'</b>: the step stops being a multiple of 5, and every sample then contains exactly 40% avenue houses.</div>'+
+         '<div class="note" style="margin-top:10px"><b>Periodicity is the one failure mode of systematic sampling.</b> It does not announce itself in the data &mdash; the sample looks perfectly normal. You can only catch it by knowing how the list was ordered.</div>';
+     }else{
+       h+='<div class="dd">And this time the step cuts <b>across</b> the town’s 5-house block pattern rather than riding it, so every sample picks up exactly 40% avenue houses &mdash; the town’s true share. SE = <b>'+st.se.toFixed(2)+'</b>, only <b>'+ratio.toFixed(2)+'×</b> the simple random figure: here systematic sampling is the <b>most accurate</b> method on the board &mdash; cheaper to run than an SRS and more precise as well.</div>'+
+         '<div class="dd">There are still only <b>'+st.k+' possible samples in the entire world</b> for this design — the gold lines are all of them. Slide n to <b>60</b> and watch that same idea turn lethal: the step becomes 5, exactly the block width, and every sample is then all-avenue or all-lane.</div>'+
+         '<div class="note" style="margin-top:10px"><b>The method did not change — only its step did.</b> Systematic sampling is excellent or dreadful depending on whether its interval resonates with a pattern already in the list, and the sample itself never looks any different.</div>';
+     }
+   }else{
+     var rm=st.e;
+     h='<span class="n">Convenience sample</span>Survey whoever is easy: the <b>'+RSZ+'</b> households within a short walk of the desk (the gold patch). There is no randomness anywhere in the choice of <i>who is reachable</i> &mdash; only in which of them answer.'+
+       '<div class="dd">The arithmetic is unchanged and the precision is superb: SE = <b>'+st.se.toFixed(2)+' min</b>, tighter than a simple random sample of the very same size. But it is aimed at the wrong quantity. Those '+RSZ+' homes average <b>'+rm.toFixed(1)+'</b> minutes; the town averages 34.0. So the method homes in on '+rm.toFixed(1)+', a <b>bias of '+sgn(st.bias)+' minutes</b>, and it will still be '+Math.abs(st.bias).toFixed(1)+' minutes off if you interview every one of them.</div>'+
+       '<div class="dd">The bias is not a property of the method alone — it is the method meeting <b>this</b> population. Drag zone gap to 0 and it shrinks to about &minus;1.2 minutes; drag it to 14 and it grows past 10. Same method, same n, same tidy standard error.</div>'+
+       '<div class="loc">Which is the real lesson: a convenience sample is not automatically wrong, it is <b>unverifiable</b>. Nothing inside the data tells you whether the easy-to-reach group resembles the rest, and no formula will warn you. Randomness is what buys the guarantee — that is the entire reason to pay for it.</div>';
+   }
+   if(last!==null&&e.length>=12){
+     var sm=0,i;for(i=0;i<e.length;i++)sm+=e[i];sm/=e.length;
+     var sd=Math.sqrt(vrOf(e));
+     h+='<div class="loc">Your '+e.length+' draws so far are centred on <b>'+sm.toFixed(2)+'</b> with a spread of <b>'+sd.toFixed(2)+'</b>, against the exact values '+st.e.toFixed(2)+' and '+st.se.toFixed(2)+' computed from the whole town. The simulation and the algebra are describing the same thing.</div>';
+   }
+   $("info").innerHTML=h;
+ }
+
+ function render(){
+   var k=n(),e=EST[mode],last=LAST[mode],st=T[mode],i,sm,sd,err;
+
+   $("tK").innerHTML=e.length;
+   $("tE").innerHTML=(last===null)?'&mdash;':last.toFixed(1)+' min';
+   $("tSE").innerHTML='±'+st.se.toFixed(2)+' min';
+   err=(last===null)?null:last-BASEM;
+   var eb=$("tErrBox");eb.className='';
+   if(err===null)$("tErr").innerHTML='&mdash;';
+   else{$("tErr").innerHTML=sgn(err)+' min';
+     eb.className=(Math.abs(err)<=2*T.srs.se)?'hit':(Math.abs(err)>4*T.srs.se?'far':'');}
+   if(e.length){sm=0;for(i=0;i<e.length;i++)sm+=e[i];sm/=e.length;$("tC").innerHTML=sm.toFixed(2);}
+   else $("tC").innerHTML='&mdash;';
+   if(e.length>1){sd=Math.sqrt(vrOf(e));$("tSD").innerHTML=sd.toFixed(2);}
+   else $("tSD").innerHTML='&mdash;';
+
+   var stg=$("stage"),cur=null;
+   for(i=0;i<M.length;i++)if(M[i].k===mode)cur=M[i];
+   if(last===null){
+     stg.style.background='var(--teal)';
+     stg.innerHTML=cur.nm+' sample of '+k+'<small>the town’s true average is 34.0 min — press Draw a sample</small>';
+   }else{
+     var a=Math.abs(err);
+     stg.style.background=(a<=st.se)?'var(--green)':((a<=2*T.srs.se)?'var(--gold)':'var(--coral)');
+     stg.innerHTML=cur.nm+': '+last.toFixed(1)+' min<small>n = '+(mode==='clu'?st.ach+' (in '+st.m+' block'+(st.m===1?'':'s')+')':k)+' · truth = 34.0 · off by '+sgn(err)+' min</small>';
+   }
+   drawMap();drawHist();drawComp();mapCaption();infoText();
+ }
+
+ function recompute(){
+   makeTown();theory();
+   var i,mx=0,st;
+   for(i=0;i<M.length;i++){st=T[M[i].k];mx=Math.max(mx,Math.abs(st.e-BASEM)+2*st.se);}
+   HW=Math.max(5,Math.min(26,mx*1.06));
+   render();
+ }
+
+ function renderList(){
+   $("mlist").innerHTML=M.map(function(m){
+     return '<button class="it'+(m.k===mode?' on':'')+'" data-k="'+m.k+'"><span class="ic">'+m.ic+'</span><span><span class="nm">'+m.nm+'</span><span class="ct">'+m.ct+'</span></span></button>';}).join('');
+   var bs=$("mlist").getElementsByTagName('button');
+   for(var i=0;i<bs.length;i++)bs[i].onclick=function(){mode=this.getAttribute('data-k');renderList();recompute();};
+ }
+
+ $("one").onclick=function(){drawSample();render();};
+ $("many").onclick=function(){for(var i=0;i<50;i++)drawSample();render();};
+ $("rst").onclick=function(){clearAll();recompute();};
+ $("nSl").oninput=function(){ni=+this.value;$("nVal").innerHTML=NS[ni];clearAll();recompute();};
+ $("dSl").oninput=function(){D=+this.value;$("dVal").innerHTML=D+' min';clearAll();recompute();};
+ $("map").onclick=function(ev){
+   var t=ev.target,a=(t&&t.getAttribute)?t.getAttribute('data-i'):null;
+   if(a!==null&&a!=='')showCell(+a);
+ };
+
+ renderList();recompute();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Count the Calories</title>
+<meta name="description" content="Interactive energy calculator — enter grams of carbohydrate, protein, fat, and alcohol and watch the kilocalorie total build from the Atwater factors 4, 4, 9, and 7 kcal per gram.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.fu{border:1px solid var(--line);border-radius:11px;padding:9px 11px 7px;background:#fff;margin-top:7px;transition:.14s;}
+.fu.on{border-color:var(--teal);box-shadow:0 0 0 2px rgba(176,122,30,.13);}
+.fu .hd{display:flex;align-items:center;gap:8px;}
+.fu .sw{width:11px;height:11px;border-radius:3px;flex:none;}
+.fu .nmb{flex:1;text-align:left;border:none;background:none;font-family:var(--sans);font-weight:700;font-size:13px;color:var(--ink);cursor:pointer;padding:0;line-height:1.2;}
+.fu .nmb small{display:block;font-weight:600;font-size:10.4px;color:var(--muted);margin-top:1px;}
+.fu input[type=number]{width:62px;border:1px solid var(--line);border-radius:8px;padding:6px 7px;font-family:var(--sans);font-weight:800;font-size:13px;color:var(--teal-dk);text-align:right;background:#fffdf9;}
+.fu .un{font-size:11px;font-weight:800;color:var(--muted);flex:none;}
+.fu input[type=range]{width:100%;margin-top:6px;height:20px;accent-color:var(--teal);cursor:pointer;display:block;}
+.math{margin-top:11px;border-top:1px solid var(--line);padding-top:8px;}
+.math .ln{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--soft);padding:3px 0;font-variant-numeric:tabular-nums;}
+.math .ln .lf b{color:var(--ink);}
+.math .ln .rt{font-weight:800;color:var(--teal-dk);white-space:nowrap;}
+.math .ln.tt{border-top:1px dashed #ddd2ba;margin-top:5px;padding-top:8px;font-size:12.5px;}
+.math .ln.tt .lf b,.math .ln.tt .rt{color:var(--teal-dk);}
+.tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;border-top:1px solid var(--line);padding-top:9px;}
+.tot span{font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+.tot b{font-family:var(--disp);font-size:25px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.tot b i{font-style:normal;font-size:14px;color:var(--muted);margin-left:3px;}
+.ev{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:3px 9px;vertical-align:middle;}
+.ev.s{background:#e5f3ea;color:#237a45;} .ev.p{background:#fdf0dd;color:#8a6a20;}
+.dri{font-size:12.5px;color:var(--teal-dk);background:#f4ead8;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.5;}
+.ex .k{margin-left:auto;font-size:11.5px;font-weight:800;color:var(--teal-dk);font-variant-numeric:tabular-nums;flex:none;}
+.it.on .k{color:#fff;}
+.hint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.45;text-align:center;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 1</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 1</div>
+  <h1>Count the Calories</h1>
+  <div class="intro">A kilocalorie is not something a food <i>contains</i> &mdash; it is a measurement of the energy released when the body oxidises what the food is made of. Only four substances yield it: <b>carbohydrate 4</b>, <b>protein 4</b>, <b>fat 9</b>, and <b>alcohol 7</b> kilocalories per gram. Type in grams below and watch the total assemble itself.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Grams in, kilocalories out</h2>
+      <svg viewBox="0 0 300 232" aria-label="Stacked column of total energy beside a row for each fuel showing grams, its energy factor, and the kilocalories contributed"><g id="art"></g></svg>
+      <div class="seg" id="useg" style="margin-top:4px;">
+        <button data-u="kcal" class="on">kilocalories<small>the food Calorie</small></button>
+        <button data-u="kJ">kilojoules<small>the SI unit</small></button>
+      </div>
+      <div class="tot"><span>Total energy</span><b><span id="ktot">0</span><i id="kunit">kcal</i></b></div>
+      <div class="math" id="math"></div>
+      <div class="mnem"><b>4 &middot; 4 &middot; 9 &middot; 7.</b> Carbohydrate 4, protein 4, fat 9, alcohol 7 kcal per gram. These are <b>Atwater factors</b> &mdash; average net values that already subtract what is lost in digestion and in urine, so they estimate the energy the body actually gets, not the heat a laboratory bomb calorimeter measures. <span class="ev s">strong evidence</span></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Count the calories<small>enter grams &mdash; the total builds itself</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg"><button data-m="0" class="on">Build it</button><button data-m="1">Worked examples</button></div>
+      <div id="panelBuild">
+        <div id="fuels"></div>
+        <div class="row"><button class="btn" id="clear">Clear</button><button class="btn solid" id="day">A full day</button></div>
+      </div>
+      <div id="panelEx" style="display:none;">
+        <div class="list" id="exlist"></div>
+        <div class="hint">Grams are rounded, illustrative values of the kind printed on a Nutrition Facts panel. They describe composition &mdash; nothing here ranks a food.</div>
+      </div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var F=[
+  {k:'carb',sh:'CARBOHYDRATE',nm:'Carbohydrate',s2:'carbohydrate',ct:'4 kcal per gram',kc:4,col:'#b8862f',dk:'#7a5713',max:500,
+   why:'Carbohydrate is built of carbon and hydrogen that are <b>already partly oxidised</b> &mdash; every carbon in a sugar ring carries an oxygen of its own. Oxidation releases energy by adding oxygen, so a molecule that is halfway there has less left to give. Hence 4, not 9.',
+   more:'<b>Fibre is the exception hiding inside that 4.</b> Fibre is a carbohydrate, but human enzymes cannot break most of it down. Some of it is fermented by bacteria in the colon into short-chain fatty acids that the body does absorb, which works out to roughly <b>2 kcal/g on average</b> across fibre types. United States labelling still counts fibre inside total carbohydrate at 4, so a 4 kcal/g estimate slightly overshoots a high-fibre food. <span class="ev s">strong evidence</span>',
+   dri:'<b>RDA 130 g/day</b> for adults and for children 1 year and older &mdash; a figure set on the brain&rsquo;s glucose consumption, not on appetite or on any body size. <b>175 g/day</b> in pregnancy, <b>210 g/day</b> in lactation.'},
+  {k:'protein',sh:'PROTEIN',nm:'Protein',s2:'protein',ct:'4 kcal per gram',kc:4,col:'#d1495b',dk:'#8f2b3a',max:300,
+   why:'Protein burns at about <b>5.65 kcal/g in a calorimeter</b> &mdash; more than carbohydrate. The body gets less, because protein carries <b>nitrogen</b>, and nitrogen cannot be oxidised for fuel. It leaves as urea in urine and takes usable energy with it. Subtract that loss and the digestive loss, and the net figure lands at 4.',
+   more:'This is why the Atwater factor is described as a <b>net</b> value. It is an average across mixed diets; the true absorbed energy varies with the food and with the person. <span class="ev p">preliminary evidence</span> How much the food matrix and the gut microbiome shift real absorbed energy is an active research question &mdash; whole almonds, for instance, have measured lower than their Atwater prediction because the intact cell walls resist digestion. The effect is real but its size across a whole diet is not settled.',
+   dri:'<b>RDA 0.8 g per kg of body weight per day</b> for adults 19 years and older. Requirements are higher in pregnancy, in lactation, and in a range of clinical conditions &mdash; those are individual determinations made with a clinician, not something a calculator settles.'},
+  {k:'fat',sh:'FAT',nm:'Fat (lipids)',s2:'fat',ct:'9 kcal per gram',kc:9,col:'#2f9e5b',dk:'#1e6b3c',max:200,
+   why:'A fatty acid is a long chain of carbon and hydrogen with <b>almost no oxygen already attached</b> &mdash; just the one acid group at the end. Nearly every bond is still available to oxidise, so oxidising it releases more than twice the energy of the same weight of carbohydrate. That is the whole reason for the 9.',
+   more:'The same chemistry explains why the body stores surplus energy as fat rather than as glycogen. Fat is stored <b>essentially water-free</b> at about 9 kcal/g, while glycogen is stored bound to roughly <b>3 g of water per gram</b>, so its effective density is closer to 1 kcal per gram of stored tissue. Fat is simply the compact format. <span class="ev s">strong evidence</span>',
+   dri:'<b>There is no RDA for total fat</b> in adults. Two fatty acids are essential, and each has an <b>Adequate Intake (AI)</b>: <b>linoleic acid</b> 17 g/day (men 19&ndash;50 y) and 12 g/day (women 19&ndash;50 y); <b>alpha-linolenic acid</b> 1.6 g/day (men) and 1.1 g/day (women), adults.'},
+  {k:'alc',sh:'ALCOHOL',nm:'Alcohol (ethanol)',s2:'alcohol',ct:'7 kcal per gram',kc:7,col:'#7a5a8a',dk:'#523a60',max:120,
+   why:'Ethanol is two carbons carrying a single oxygen &mdash; <b>less oxidised than a sugar, more oxidised than a fatty acid</b>. Its energy yield lands exactly where that chemistry predicts, between the two, at 7.',
+   more:'Ethanol yields energy but the body has <b>no requirement</b> for it, so it is not a nutrient and has <b>no RDA, no AI, and no AMDR</b> &mdash; there is no reference intake to compare an entry against. It is counted here because it is metabolised for energy and therefore belongs in the arithmetic. In the United States a <b>standard drink is defined as 14 g of pure ethanol</b>, which is about 98 kcal from the ethanol alone, before any carbohydrate in the beverage.',
+   dri:'<b>Units matter here:</b> 14 g refers to the <i>ethanol</i>, not to the volume of the drink. Roughly 12 oz of regular beer, 5 oz of table wine, and 1.5 oz of distilled spirits each contain about that same 14 g.'}
+ ];
+ var EX=[
+  {ic:'🍞',nm:'One slice of sandwich bread',g:{carb:14,protein:3,fat:1,alc:0},
+   d:'Your arithmetic gives <b>77 kcal</b>. A United States Nutrition Facts panel would very likely print <b>80</b>. Panels round energy to the nearest 5 kcal once it passes 50, and manufacturers may use food-specific factors rather than the flat 4&middot;4&middot;9&middot;7. A gap of a few percent is <b>rounding, not error</b>.'},
+  {ic:'🫒',nm:'One tablespoon of oil',g:{carb:0,protein:0,fat:14,alc:0},
+   d:'Every one of these kilocalories comes from a single fuel. Fourteen grams is about a tablespoon, and at 9 kcal/g that is <b>126 kcal</b> from a volume that barely coats a pan. This is a statement about energy density, which is a physical property &mdash; it is not a verdict on the oil.'},
+  {ic:'🥚',nm:'Two large eggs',g:{carb:1,protein:13,fat:10,alc:0},
+   d:'Watch the asymmetry: <b>13 g of protein contributes 52 kcal, while 10 g of fat contributes 90</b>. Fewer grams, more energy. Grams on a label never tell you the energy split until you apply the factors.'},
+  {ic:'🍚',nm:'One cup of cooked rice',g:{carb:45,protein:4,fat:0,alc:0},
+   d:'Almost purely carbohydrate. Note what is <b>missing</b> from the calculation: a cup of cooked rice weighs roughly 160 g, but only about 49 g of it appears here. The rest is largely <b>water</b>, and water yields exactly zero. Cooking method changes the weight of a food far more than it changes its energy.'},
+  {ic:'🍺',nm:'A 12-ounce regular beer',g:{carb:13,protein:2,fat:0,alc:14},
+   d:'Ethanol supplies <b>98 of these 158 kcal</b> &mdash; more than the carbohydrate and protein combined. Because a standard drink is defined by its 14 g of ethanol, a 5-oz glass of wine and a 1.5-oz shot of spirits each carry about that same 98 kcal; what differs between them is the carbohydrate sitting alongside it.'},
+  {ic:'⚖️',nm:'100 g of every fuel at once',g:{carb:100,protein:100,fat:100,alc:100},
+   d:'Equal grams, unequal energy: <b>900 from fat, 700 from alcohol, 400 each from carbohydrate and protein</b>. The ranking is fixed by chemistry, not by nutrition policy &mdash; the less oxygen a molecule already carries, the more its oxidation releases. This is the single fact the whole 4&middot;4&middot;9&middot;7 system rests on.'}
+ ];
+ var G={carb:0,protein:0,fat:0,alc:0};
+ var sel='', unit='kcal', mode=0, tween=null, shown=0;
+ var KJ=4.184;
+
+ function fmt(n){ n=Math.round(n); return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+ function conv(k){ return unit==='kJ'?k*KJ:k; }
+ function niceMax(v){ if(v<=0)return 100; var p=Math.pow(10,Math.floor(Math.log(v)/Math.LN10)); var n=v/p;
+   var m=n<=1?1:(n<=2?2:(n<=2.5?2.5:(n<=5?5:10))); return m*p; }
+ function kcalOf(f){ return G[f.k]*f.kc; }
+ function fac(f){ return unit==='kJ'?(f.kc*KJ).toFixed(1)+' kJ/g':f.kc+' kcal/g'; }
+ function total(){ var t=0; for(var i=0;i<4;i++)t+=kcalOf(F[i]); return t; }
+
+ function draw(){
+   var t=total(), out='';
+   var X=34,W=54,BOT=206,TOP=26,H=BOT-TOP;
+   var sMax=niceMax(conv(t));
+   out+='<text x="'+(X+W/2)+'" y="16" font-size="7.6" fill="#8d8270" text-anchor="middle" font-weight="800" letter-spacing=".7">THE STACK</text>';
+   for(var g=0;g<=4;g++){
+     var yy=BOT-H*g/4;
+     out+='<line x1="'+X+'" y1="'+yy.toFixed(1)+'" x2="'+(X+W)+'" y2="'+yy.toFixed(1)+'" stroke="#ece4d6" stroke-width="1"/>';
+     out+='<text x="'+(X-5)+'" y="'+(yy+3).toFixed(1)+'" font-size="7.4" fill="#a89b85" text-anchor="end" font-weight="700">'+fmt(sMax*g/4)+'</text>';
+   }
+   var acc=0;
+   for(var i=0;i<4;i++){
+     var v=conv(kcalOf(F[i])), h=sMax>0?H*v/sMax:0;
+     if(h>0.4){
+       var y=BOT-acc-h;
+       out+='<rect class="rgn" data-k="'+F[i].k+'" x="'+X+'" y="'+y.toFixed(1)+'" width="'+W+'" height="'+h.toFixed(1)+'" fill="'+F[i].col+'"'+(sel===F[i].k?' stroke="#33291a" stroke-width="1.6"':'')+'/>';
+       if(h>=13) out+='<text x="'+(X+W/2)+'" y="'+(y+h/2+3.3).toFixed(1)+'" font-size="8.6" fill="#fff" text-anchor="middle" font-weight="800" pointer-events="none">'+fmt(v)+'</text>';
+     }
+     acc+=h;
+   }
+   out+='<line x1="'+(X-1)+'" y1="'+BOT+'" x2="'+(X+W)+'" y2="'+BOT+'" stroke="#c9bda6" stroke-width="1.5"/>';
+   out+='<text x="'+(X+W/2)+'" y="'+(BOT+15)+'" font-size="7.6" fill="#8d8270" text-anchor="middle" font-weight="800" letter-spacing=".7">'+(unit==='kJ'?'KILOJOULES':'KILOCALORIES')+'</text>';
+
+   var RX=108,RW=184;
+   out+='<text x="'+RX+'" y="16" font-size="7.6" fill="#8d8270" font-weight="800" letter-spacing=".7">GRAMS &nbsp;&times;&nbsp; FACTOR &nbsp;=&nbsp; ENERGY</text>';
+   var gm=0; for(i=0;i<4;i++) if(G[F[i].k]>gm) gm=G[F[i].k];
+   gm=Math.max(50,Math.ceil(gm/50)*50);
+   for(i=0;i<4;i++){
+     var f=F[i], y0=30+i*44, kv=conv(kcalOf(f));
+     var pc=t>0?Math.round(kcalOf(f)/t*100):0;
+     if(sel===f.k) out+='<rect x="'+(RX-6)+'" y="'+(y0-7)+'" width="'+(RW+12)+'" height="41" rx="8" fill="'+f.col+'" opacity=".10"/>';
+     out+='<g class="rgn" data-k="'+f.k+'">';
+     out+='<rect x="'+(RX-6)+'" y="'+(y0-7)+'" width="'+(RW+12)+'" height="41" rx="8" fill="#fff" opacity="0"/>';
+     out+='<text x="'+RX+'" y="'+(y0+4)+'" font-size="9" font-weight="800" fill="'+f.dk+'">'+f.sh+' &nbsp;'+G[f.k]+' g</text>';
+     out+='<text x="'+(RX+RW)+'" y="'+(y0+4)+'" font-size="9" font-weight="800" fill="#33291a" text-anchor="end">'+fmt(kv)+'</text>';
+     out+='<rect x="'+RX+'" y="'+(y0+10)+'" width="'+RW+'" height="9" rx="4.5" fill="#f2ebdd"/>';
+     var bw=RW*Math.min(1,G[f.k]/gm);
+     if(bw>0.5) out+='<rect x="'+RX+'" y="'+(y0+10)+'" width="'+bw.toFixed(1)+'" height="9" rx="4.5" fill="'+f.col+'"/>';
+     out+='<text x="'+RX+'" y="'+(y0+30)+'" font-size="7.8" fill="#8d8270" font-weight="700">&times; '+fac(f)+'</text>';
+     out+='<text x="'+(RX+RW)+'" y="'+(y0+30)+'" font-size="7.8" fill="#8d8270" font-weight="700" text-anchor="end">'+(t>0?pc+'% of total':'&mdash;')+'</text>';
+     out+='</g>';
+   }
+   $('art').innerHTML=out;
+   var ns=$('art').querySelectorAll('.rgn');
+   for(i=0;i<ns.length;i++) ns[i].onclick=(function(k){return function(){pick(k);};})(ns[i].getAttribute('data-k'));
+ }
+
+ function drawMath(){
+   var t=total(), out='', any=0;
+   for(var i=0;i<4;i++){
+     var f=F[i]; if(G[f.k]<=0) continue; any=1;
+     out+='<div class="ln"><span class="lf"><b>'+f.sh.charAt(0)+f.sh.substring(1).toLowerCase()+'</b> &nbsp;'+G[f.k]+' g &times; '+fac(f)+'</span><span class="rt">'+fmt(conv(G[f.k]*f.kc))+' '+unit+'</span></div>';
+   }
+   if(!any) out='<div class="ln"><span class="lf">No grams entered yet &mdash; every fuel reads zero.</span><span class="rt">0 '+unit+'</span></div>';
+   else out+='<div class="ln tt"><span class="lf"><b>Total</b></span><span class="rt">'+fmt(conv(t))+' '+unit+'</span></div>';
+   $('math').innerHTML=out;
+ }
+
+ function setTotal(anim){
+   var target=conv(total());
+   if(tween){cancelAnimationFrame(tween);tween=null;}
+   if(!anim){ shown=target; $('ktot').innerHTML=fmt(target); return; }
+   var from=shown, t0=null;
+   var step=function(ts){ if(t0===null)t0=ts; var p=Math.min(1,(ts-t0)/480); p=1-Math.pow(1-p,3);
+     shown=from+(target-from)*p; $('ktot').innerHTML=fmt(shown);
+     if(p<1) tween=requestAnimationFrame(step); else {shown=target;tween=null;} };
+   tween=requestAnimationFrame(step);
+ }
+
+ function stage(){
+   var t=total();
+   var lead=F[0],hi=-1;
+   for(var i=0;i<4;i++){ if(kcalOf(F[i])>hi){hi=kcalOf(F[i]);lead=F[i];} }
+   if(t<=0){ $('stage').style.background='var(--teal)';
+     $('stage').innerHTML='Count the calories<small>enter grams &mdash; the total builds itself</small>'; return; }
+   $('stage').style.background=lead.col;
+   $('stage').innerHTML=fmt(conv(t))+' '+unit+'<small>largest share: '+lead.s2+', '+Math.round(hi/t*100)+'% of the energy</small>';
+ }
+
+ function fuels(){
+   var out='';
+   for(var i=0;i<4;i++){ var f=F[i];
+     out+='<div class="fu'+(sel===f.k?' on':'')+'" id="fu_'+f.k+'">'+
+       '<div class="hd"><span class="sw" style="background:'+f.col+'"></span>'+
+       '<button class="nmb" data-k="'+f.k+'">'+f.nm+'<small>'+f.ct+'</small></button>'+
+       '<input type="number" id="n_'+f.k+'" min="0" max="'+f.max+'" step="1" value="'+G[f.k]+'" aria-label="grams of '+f.nm+'"><span class="un">g</span></div>'+
+       '<input type="range" id="r_'+f.k+'" min="0" max="'+f.max+'" step="1" value="'+G[f.k]+'" aria-label="grams of '+f.nm+' slider"></div>';
+   }
+   $('fuels').innerHTML=out;
+   for(i=0;i<4;i++){ (function(f){
+     var n=$('n_'+f.k), r=$('r_'+f.k);
+     r.oninput=function(){ G[f.k]=+r.value; n.value=r.value; sel=f.k; sync(false,true); };
+     n.oninput=function(){ var v=parseFloat(n.value); if(isNaN(v))v=0; v=Math.max(0,Math.min(f.max,Math.round(v)));
+       G[f.k]=v; r.value=v; sel=f.k; sync(false,true); };
+     n.onblur=function(){ n.value=G[f.k]; };
+   })(F[i]); }
+   var bs=$('fuels').querySelectorAll('.nmb');
+   for(i=0;i<bs.length;i++) bs[i].onclick=(function(k){return function(){pick(k);};})(bs[i].getAttribute('data-k'));
+ }
+
+ function marks(){
+   for(var i=0;i<4;i++){ var e=$('fu_'+F[i].k); if(e) e.className='fu'+(sel===F[i].k?' on':''); }
+ }
+
+ function exlist(){
+   var out='';
+   for(var i=0;i<EX.length;i++){ var e=EX[i], k=0;
+     for(var j=0;j<4;j++) k+=e.g[F[j].k]*F[j].kc;
+     out+='<button class="it ex" data-i="'+i+'"><span class="ic">'+e.ic+'</span><span><span class="nm">'+e.nm+'</span><br><span class="ct">'+
+       e.g.carb+' g carb &middot; '+e.g.protein+' g pro &middot; '+e.g.fat+' g fat'+(e.g.alc?' &middot; '+e.g.alc+' g alc':'')+'</span></span><span class="k">'+fmt(conv(k))+' '+unit+'</span></button>';
+   }
+   $('exlist').innerHTML=out;
+   var bs=$('exlist').querySelectorAll('.it');
+   for(i=0;i<bs.length;i++) bs[i].onclick=(function(n){return function(){loadEx(n);};})(bs[i].getAttribute('data-i'));
+ }
+
+ function loadEx(n){
+   var e=EX[+n];
+   for(var i=0;i<4;i++) G[F[i].k]=e.g[F[i].k];
+   sel=''; fuels(); sync(true,false);
+   var t=total();
+   $('info').innerHTML='<span class="n">'+e.ic+' '+e.nm+'</span>'+e.d+
+     '<div class="loc">'+fmt(t)+' kcal &nbsp;=&nbsp; '+fmt(t*KJ)+' kJ. One food <b>Calorie</b> with a capital C is one kilocalorie is 4.184 kilojoules &mdash; three names, one quantity.</div>';
+   var bs=$('exlist').querySelectorAll('.it');
+   for(i=0;i<bs.length;i++) bs[i].className='it ex'+(+bs[i].getAttribute('data-i')===+n?' on':'');
+ }
+
+ function pick(k){
+   sel=k; marks();
+   var f=null; for(var i=0;i<4;i++) if(F[i].k===k) f=F[i];
+   if(!f) return;
+   var t=total(), mine=kcalOf(f);
+   $('info').innerHTML='<span class="n">'+f.nm+' &mdash; '+f.kc+' kcal per gram</span>'+f.why+
+     '<div class="dd">'+f.more+'</div>'+
+     '<div class="dri">'+f.dri+'</div>'+
+     '<div class="loc">Right now: <b>'+G[f.k]+' g &times; '+f.kc+' = '+fmt(mine)+' kcal</b>'+(t>0?', which is '+Math.round(mine/t*100)+'% of your running total':'')+'.</div>';
+   draw();
+ }
+
+ function sync(anim,keepInfo){
+   draw(); drawMath(); setTotal(anim); stage(); marks();
+   if(mode===1) exlist();
+   $('kunit').innerHTML=unit;
+   if(!keepInfo) return;
+   if(sel) pick(sel);
+ }
+
+ $('clear').onclick=function(){ G={carb:0,protein:0,fat:0,alc:0}; sel=''; fuels(); sync(true,false); intro(); };
+ $('day').onclick=function(){ G={carb:250,protein:75,fat:70,alc:0}; sel=''; fuels(); sync(true,false);
+   $('info').innerHTML='<span class="n">An illustrative day</span>250 g carbohydrate, 75 g protein, 70 g fat &rarr; <b>1,000 + 300 + 630 = 1,930 kcal</b>. These are round numbers chosen to make the arithmetic visible, <b>not a recommendation and not a target</b>. Energy needs vary enormously with body size, composition, activity, growth, pregnancy, lactation, and health status, and no single number fits a person you have not assessed.'+
+   '<div class="loc">Change any one slider and watch every percentage move. Because the shares are fractions of a total, <b>adding grams of any fuel lowers the percentage of all the others</b> without changing their gram amounts at all.</div>'; };
+
+ var ms=$('modeseg').querySelectorAll('button');
+ for(var q=0;q<ms.length;q++) ms[q].onclick=(function(b){return function(){
+   mode=+b.getAttribute('data-m');
+   for(var z=0;z<ms.length;z++) ms[z].className=(ms[z]===b?'on':'');
+   $('panelBuild').style.display=mode===0?'':'none';
+   $('panelEx').style.display=mode===1?'':'none';
+   if(mode===1) exlist();
+ };})(ms[q]);
+
+ var us=$('useg').querySelectorAll('button');
+ for(var w=0;w<us.length;w++) us[w].onclick=(function(b){return function(){
+   unit=b.getAttribute('data-u');
+   for(var z=0;z<us.length;z++) us[z].className=(us[z]===b?'on':'');
+   shown=0; sync(true,true);
+ };})(us[w]);
+
+ function intro(){
+   $('info').innerHTML='<span class="n">Start with grams</span>Energy is not an ingredient &mdash; it is a <b>property of the ingredients</b>. Weigh the four fuels a food contains, multiply each by its factor, add them up, and you have the food&rsquo;s energy. There is no fifth column: vitamins, minerals, water, and fibre-that-stays-undigested contribute essentially nothing to the total.'+
+     '<div class="dd">The names confuse everyone once. One <b>Calorie</b> on a food label (capital C) is one <b>kilocalorie</b> &mdash; 1,000 of the calories used in physics &mdash; and equals <b>4.184 kilojoules</b>. Most of the world labels food in kilojoules; the arithmetic is identical. Use the toggle beside the chart to switch.</div>'+
+     '<div class="loc">Tap any fuel &mdash; in the chart or in the list &mdash; to see <b>why</b> its number is 4, 9, or 7.</div>';
+ }
+
+ fuels(); exlist(); intro(); sync(false,false);
+})();
+</script>
+</body>
+</html>

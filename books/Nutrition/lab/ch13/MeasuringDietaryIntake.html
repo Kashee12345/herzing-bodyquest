@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Why Intake Data Is Messy</title>
+<meta name="description" content="Compare three ways to measure what people eat — 24-hour recalls, food records, and food frequency questionnaires — and watch the random and systematic error each introduces. An interactive by Dr. Akash Garg &middot; SC 150 &middot; Herzing University.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>
+.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.axcap{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);font-weight:600;margin-top:-2px;}
+.cal .r{display:flex;align-items:center;gap:10px;margin:4px 0 2px;}
+.cal .r label{flex:none;width:118px;font-size:12px;font-weight:700;color:var(--soft);}
+.cal .r input[type=range]{flex:1;accent-color:var(--teal);height:4px;}
+.cal .r input[type=range]:disabled{opacity:.35;}
+.cal .r .g{flex:none;width:60px;text-align:right;font-size:12.5px;font-weight:800;color:var(--teal-dk);}
+.read{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-top:11px;}
+.read div{background:#fff;padding:8px 8px;text-align:center;}
+.read .k{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);}
+.read .v{font-family:var(--disp);font-size:19px;color:var(--teal-dk);margin-top:2px;line-height:1;}
+.read .u{font-size:9.5px;color:var(--muted);font-weight:600;}
+.cmp{display:grid;grid-template-columns:1.05fr 1fr 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-top:2px;}
+.cmp div{background:#fff;padding:7px 8px;font-size:10.7px;line-height:1.32;color:var(--soft);}
+.cmp .h{font-weight:800;font-size:10.7px;color:var(--teal-dk);text-align:center;background:#f7efe0;}
+.cmp .lab{font-weight:700;color:var(--ink);background:#faf6ee;font-size:10.2px;}
+.cmp .sel{background:#f4ead8;}
+.cmp .h.sel{background:var(--teal);color:#fff;}
+.et{font-size:10px;font-weight:800;border-radius:20px;padding:2px 8px;display:inline-block;margin-left:4px;}
+.et.rand{background:#e5eef6;color:#255f8a;} .et.sys{background:#fae5e8;color:#b23145;}
+.asks{font-size:12px;color:var(--teal-dk);background:#f4ead8;border-radius:8px;padding:8px 11px;margin:2px 0 4px;line-height:1.45;font-style:italic;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 13</div>
+  <h1>Why Intake Data Is Messy</h1>
+  <div class="intro">No one can weigh a whole population's dinner. Instead we <b>ask</b> &mdash; and every way of asking bends the truth. The two bends that matter are <b>random error</b> (scatter that averages out) and <b>systematic error</b> (a lopsided pull that does not). Pick a method, add days of data, and watch where its estimate lands next to a person's true usual intake.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="plotTitle">The estimate vs. the truth</h2>
+      <svg viewBox="0 0 220 200" aria-label="measurement error plot"><g id="plot"></g></svg>
+      <div class="axcap"><span>&minus;900</span><span>true usual intake</span><span>+900 kcal</span></div>
+      <div class="read">
+        <div><div class="k">Estimate</div><div class="v" id="rEst">—</div><div class="u">kcal/day</div></div>
+        <div><div class="k">Random ±</div><div class="v" id="rRand">—</div><div class="u">kcal (~95%)</div></div>
+        <div><div class="k">Bias</div><div class="v" id="rBias">—</div><div class="u">kcal shift</div></div>
+      </div>
+    </div>
+    <div class="card"><h2>Collect more data</h2>
+      <div class="cal">
+        <div class="r"><label id="daysLab">Days of intake</label><input type="range" id="sDays" min="1" max="14" step="1" value="1"><span class="g" id="gDays">1 day</span></div>
+      </div>
+      <div class="mnem" id="daysNote">More independent days shrink the <b>random</b> scatter (it falls with the square root of the number of days) &mdash; but the <b>systematic bias arrow never moves</b>. More data cannot fix a lopsided instrument.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Three ways to measure a diet<small>tap one below to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="seg"></div>
+      <div class="asks" id="asks"></div>
+      <div class="cmp" id="cmp"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // TRUE is a reference example only — the general 2,000 kcal/day value used on food labels,
+ // NOT an individual requirement. randSD and bias are illustrative magnitudes to show the
+ // SHAPE of each method's error, not published constants.
+ var TRUE=2000;
+ var M=[
+  {k:'recall',nm:'24-hr Recall',col:'#2f6f9f',repeat:true,randSD:500,bias:-90,
+   asks:'&ldquo;Tell me everything you ate and drank in the last 24 hours.&rdquo;',
+   frame:'Yesterday — one day, looking back',
+   rsh:'High — one day ≠ usual',
+   ssh:'Small under-report',
+   burden:'Low · 20–40 min interview',
+   randSrc:'A single day is rarely a person&rsquo;s usual day, so <b>day-to-day variation</b> throws each recall around the truth. This is <b>random</b> error &mdash; repeat the recall on several non-consecutive days and the average closes in on usual intake.',
+   sysSrc:'Forgotten items and guessed portion sizes add a modest, fairly <b>consistent under-report</b>. Because it leans on yesterday&rsquo;s memory, not the past year&rsquo;s, the systematic pull is smaller than an FFQ&rsquo;s.',
+   good:'Cheap and low-burden, so it scales to large groups. Several repeated recalls are a standard way to estimate the <b>average intake of a population</b>.'},
+  {k:'record',nm:'Food Record',col:'#7a5a8a',repeat:true,randSD:380,bias:-260,
+   asks:'&ldquo;Write down (or weigh) each food and drink as you eat it, for 3–7 days.&rdquo;',
+   frame:'Right now, in real time, for several days',
+   rsh:'Moderate day-to-day',
+   ssh:'Reactivity under-report',
+   burden:'High · log every eating occasion',
+   randSrc:'Logging in real time cuts memory error, but you still only capture a <b>few days</b>, so day-to-day variation keeps some <b>random</b> scatter until you record more days.',
+   sysSrc:'The act of recording changes behavior &mdash; people simplify meals, skip snacks, or eat less. This <b>reactivity</b> produces a larger, one-directional <b>under-report</b> of energy that extra days cannot remove.',
+   good:'Detailed, time-stamped intake. <b>Weighed</b> records are a research reference standard used to validate other tools, despite the heavy burden and drop-out.'},
+  {k:'ffq',nm:'Food Frequency',col:'#b8862f',repeat:false,randSD:240,bias:170,
+   asks:'&ldquo;How often, on average, did you eat each of these 100+ foods over the past year?&rdquo;',
+   frame:'The past months to a year — habitual intake',
+   rsh:'Low for usual intake',
+   ssh:'Large · direction varies',
+   burden:'Low · self-administered checklist',
+   randSrc:'Because it asks about a whole year at once, an FFQ already <b>averages over the long run</b>, so its <b>random</b> scatter for usual intake is low &mdash; there are no &ldquo;unusual days&rdquo; to catch it out.',
+   sysSrc:'The fixed list omits foods you actually eat, and frequency &times; portion is estimated from long-term memory. Absolute intake is often <b>substantially biased, and the direction varies</b> by study and food &mdash; here we simply show a large shift.',
+   good:'Its strength is <b>ranking</b> people from low to high intake across thousands of participants and capturing <b>long-term patterns</b> &mdash; not measuring anyone&rsquo;s exact calories.'}
+ ];
+ var cur='recall', days=1;
+ var X0=18,X1=202,CX=110,SPAN=900,PPK=(X1-X0)/2/SPAN; // px per kcal, ±900 -> ±92px
+ function xOf(k){ return CX+(k-TRUE)*PPK; }
+ function clampx(x){ return Math.max(X0,Math.min(X1,x)); }
+
+ function effSD(m){ return m.repeat ? m.randSD/Math.sqrt(days) : m.randSD; }
+
+ function plot(m){
+   var sd=effSD(m), sigPx=Math.max(6,sd*PPK), cB=xOf(TRUE+m.bias);
+   var baseY=155, peak=98, topReserve=44;
+   var s='';
+   // axis
+   s+='<line x1="12" y1="'+baseY+'" x2="208" y2="'+baseY+'" stroke="#d8ccb6" stroke-width="1.5"/>';
+   // distribution fill (estimate's sampling spread), centered on true+bias
+   var pts='M'+X0+','+baseY;
+   for(var x=X0;x<=X1;x+=2){ var t=x-cB; var y=baseY-peak*Math.exp(-(t*t)/(2*sigPx*sigPx)); pts+=' L'+x.toFixed(1)+','+y.toFixed(1); }
+   pts+=' L'+X1+','+baseY+' Z';
+   s+='<path d="'+pts+'" fill="'+m.col+'" fill-opacity="0.20" stroke="'+m.col+'" stroke-width="1.6"/>';
+   // random-error band (±2 SD) bracket at baseline
+   var lb=clampx(xOf(TRUE+m.bias-2*sd)), rb=clampx(xOf(TRUE+m.bias+2*sd));
+   s+='<line x1="'+lb+'" y1="167" x2="'+rb+'" y2="167" stroke="'+m.col+'" stroke-width="2"/>';
+   s+='<line x1="'+lb+'" y1="163" x2="'+lb+'" y2="171" stroke="'+m.col+'" stroke-width="2"/>';
+   s+='<line x1="'+rb+'" y1="163" x2="'+rb+'" y2="171" stroke="'+m.col+'" stroke-width="2"/>';
+   s+='<text x="'+((lb+rb)/2).toFixed(1)+'" y="181" font-size="9.5" fill="'+m.col+'" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">random error</text>';
+   // TRUE line
+   s+='<line x1="'+CX+'" y1="'+topReserve+'" x2="'+CX+'" y2="160" stroke="#33291a" stroke-width="1.6" stroke-dasharray="4 3"/>';
+   s+='<text x="'+CX+'" y="'+(topReserve-4)+'" font-size="9.5" fill="#33291a" text-anchor="middle" font-weight="800" font-family="Inter,sans-serif">TRUE</text>';
+   // estimate line
+   s+='<line x1="'+cB.toFixed(1)+'" y1="'+(baseY-peak)+'" x2="'+cB.toFixed(1)+'" y2="160" stroke="'+m.col+'" stroke-width="2.4"/>';
+   s+='<circle cx="'+cB.toFixed(1)+'" cy="'+(baseY-peak)+'" r="4" fill="'+m.col+'"/>';
+   // systematic bias arrow between TRUE and estimate
+   if(Math.abs(m.bias)>15){
+     var ay=32, x1=CX, x2=cB;
+     s+='<line x1="'+x1+'" y1="'+ay+'" x2="'+x2.toFixed(1)+'" y2="'+ay+'" stroke="#b23145" stroke-width="2"/>';
+     var dir=(x2>x1)?1:-1;
+     s+='<path d="M'+x2.toFixed(1)+','+ay+' l'+(-7*dir)+',-3.5 l0,7 Z" fill="#b23145"/>';
+     s+='<text x="'+((x1+x2)/2).toFixed(1)+'" y="'+(ay-5)+'" font-size="9.5" fill="#b23145" text-anchor="middle" font-weight="800" font-family="Inter,sans-serif">bias</text>';
+   }
+   return s;
+ }
+ function readouts(m){
+   var sd=effSD(m);
+   $("rEst").textContent=Math.round(TRUE+m.bias);
+   $("rRand").textContent='±'+Math.round(2*sd);
+   $("rBias").textContent=(m.bias>0?'+':'')+m.bias;
+   $("rBias").style.color=(m.bias<0?'#b23145':(m.bias>0?'#b23145':'var(--teal-dk)'));
+ }
+ function seg(){
+   $("seg").innerHTML=M.map(function(x){ return '<button data-k="'+x.k+'" class="'+(x.k===cur?'on':'')+'">'+x.nm+'</button>'; }).join('');
+   document.querySelectorAll('#seg button').forEach(function(b){ b.onclick=function(){ sel(b.dataset.k); }; });
+ }
+ function cmp(){
+   var rows=[
+     ['','h','nm'],
+     ['Time frame','lab',function(x){return x.frame;}],
+     ['Random error','lab',function(x){return x.rsh+' <span class="et rand">random</span>';}],
+     ['Systematic error','lab',function(x){return x.ssh+' <span class="et sys">bias</span>';}],
+     ['Respondent burden','lab',function(x){return x.burden;}]
+   ];
+   var html='';
+   rows.forEach(function(row){
+     var isHead=(row[1]==='h');
+     html+='<div class="'+(isHead?'h':'lab')+'">'+row[0]+'</div>';
+     M.forEach(function(x){
+       var val=row[2]==='nm'?x.nm:row[2](x);
+       var selc=(x.k===cur?' sel':'');
+       html+='<div class="'+(isHead?'h':'')+selc+'">'+val+'</div>';
+     });
+   });
+   $("cmp").innerHTML=html;
+ }
+ function daysUI(m){
+   if(m.repeat){
+     $("sDays").disabled=false; $("daysLab").style.opacity='';
+     $("gDays").textContent=days+(days===1?' day':' days');
+     $("daysNote").innerHTML='More independent days shrink the <b>random</b> scatter (it falls with the square root of the number of days) &mdash; but the <b>systematic bias arrow never moves</b>. More data cannot fix a lopsided instrument.';
+   } else {
+     $("sDays").disabled=true; $("daysLab").style.opacity='.5';
+     $("gDays").textContent='—';
+     $("daysNote").innerHTML='A food frequency questionnaire is a <b>single instrument</b> covering the past year, so the &ldquo;days&rdquo; control does not apply. Its long recall window is exactly what keeps its random error low &mdash; and its memory demand is what makes its bias large.';
+   }
+ }
+ function sel(k){
+   cur=k; var m=M.filter(function(y){return y.k===k;})[0];
+   daysUI(m);
+   $("plot").innerHTML=plot(m);
+   $("plotTitle").textContent=m.nm+' — estimate vs. truth';
+   $("stage").style.background=m.col;
+   $("stage").innerHTML=m.nm+'<small>'+m.frame+'</small>';
+   $("asks").innerHTML=m.asks;
+   readouts(m);
+   $("info").innerHTML='<span class="n">'+m.nm+'</span>'+
+     '<div><b>Random error <span class="et rand">scatters, averages out</span></b><div class="dd">'+m.randSrc+'</div></div>'+
+     '<div style="margin-top:8px"><b>Systematic error <span class="et sys">shifts, stays put</span></b><div class="dd">'+m.sysSrc+'</div></div>'+
+     '<div class="loc">Best used for: '+m.good+'</div>';
+   seg(); cmp();
+ }
+ $("sDays").oninput=function(){ days=+this.value; var m=M.filter(function(y){return y.k===cur;})[0];
+   $("gDays").textContent=days+(days===1?' day':' days');
+   $("plot").innerHTML=plot(m); readouts(m); };
+ sel('recall');
+})();
+</script>
+</body>
+</html>

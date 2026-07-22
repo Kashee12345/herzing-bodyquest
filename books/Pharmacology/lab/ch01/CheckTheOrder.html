@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Check the Order: The Ten Rights</title>
+<meta name="description" content="Interactive medication order check — verify six live orders against the ten rights of medication administration. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:0.92fr 1.08fr;}
+.grid .it{display:flex;align-items:center;gap:8px;font-size:12px;}
+.grid .it .ic{font-size:15px;}
+.grid .it .nm{font-size:12px;line-height:1.15;}
+.grid .it .ct{font-size:9.5px;display:block;}
+.mk{margin-left:auto;font-weight:800;font-size:13px;color:var(--muted);}
+.it.ok .mk{color:var(--green);} .it.bad .mk{color:var(--coral);} .it.wat .mk{color:var(--gold);}
+.it.bad{border-color:var(--coral);background:#fdf1f3;}
+.it.on .mk,.it.on.ok .mk,.it.on.bad .mk,.it.on.wat .mk{color:#fff;}
+.it.on.bad{background:var(--coral);border-color:var(--coral);}
+#info.fail{border-left-color:var(--coral);background:#fdf1f3;}
+#info.watch{border-left-color:var(--gold);background:#fbf6ea;}
+#info .n .pill{margin-left:6px;vertical-align:2px;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 1</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 1</div>
+  <h1>Check the Order: The Ten Rights</h1>
+  <div class="intro">An order is not permission &mdash; it is a claim you have to verify. Five of these six orders are broken, each in a different place. <b>Tap each right</b> to check it against the armband, the order, and the label in your hand.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Case 1</h2>
+    <svg viewBox="0 0 250 284" aria-label="armband, medication order, and drug label"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">Six orders<small>tap each right to check it</small></div>
+    <div class="card">
+      <div class="grid" id="list"></div>
+      <div id="info"><span class="n">Before the first dose</span>Verifying the rights is a <b>nurse</b> function and it is not delegable. The prescriber writes the order; the pharmacist dispenses; <b>you are the last checkpoint before the drug is in the patient.</b> If any right does not check out, the drug does not go in &mdash; you clarify with the prescriber first.</div>
+      <div class="mnem"><b>Read the label three times:</b> when you pull the drug, when you prepare it, and when you give it (or return it to stock).</div>
+      <div class="row"><button class="btn" id="prev">‹ Prev case</button><button class="btn solid" id="next">Next case ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var R=[
+  {k:'patient',ic:'👤',nm:'Right patient',ct:'two identifiers',
+   w:'Two identifiers &mdash; full name plus date of birth or medical record number &mdash; matched against the MAR and the armband, every dose. A room number or bed is never an identifier.',
+   ok:'Name, date of birth, and MRN on the band match the MAR. Scan the band and proceed.'},
+  {k:'drug',ic:'💊',nm:'Right drug',ct:'label vs order',
+   w:'The label name must match the order exactly. Watch look-alike/sound-alike pairs, check the expiration date, and confirm allergies before it goes in.',
+   ok:'The label name matches the order exactly, the drug is in date, and no allergy conflict is documented.'},
+  {k:'dose',ic:'🔢',nm:'Right dose',ct:'range · units · zeros',
+   w:'Recalculate rather than trust. Confirm the number sits in the usual range for this drug and patient, that the units are right, and that the order has a leading zero (0.5 mg) and no trailing zero (1 mg, never 1.0 mg). High-alert drugs get an independent double check.',
+   ok:'The ordered dose is within the usual range and matches the strength on the label.'},
+  {k:'route',ic:'🧭',nm:'Right route',ct:'never assumed',
+   w:'The ordered route must match the formulation you are holding. A nurse never assumes a missing route and never converts one route to another &mdash; that is a new prescription.',
+   ok:'The ordered route matches the formulation in your hand.'},
+  {k:'time',ic:'🕐',nm:'Right time',ct:'frequency · window',
+   w:'Right frequency, and within the agency window (commonly 30 minutes either side of the scheduled time). Check food and drug-timing rules, and for a PRN, when the last dose was actually given.',
+   ok:'Scheduled correctly and due now, with no food or drug-timing conflict.'},
+  {k:'documentation',ic:'📝',nm:'Right documentation',ct:'after, never before',
+   w:'Chart <b>after</b> the drug is given &mdash; never before. Record drug, dose, route, site, and time; for a PRN, the reason and the effect. Charting ahead is falsification and is how a dose gets given twice.',
+   ok:'Nothing to chart yet. Document the moment it is in &mdash; never ahead of it.'},
+  {k:'reason',ic:'🎯',nm:'Right reason',ct:'indication fits',
+   w:'The drug should answer a problem that is actually in this chart. An indication that does not fit the patient is often the first visible edge of a wrong-drug or wrong-patient error.',
+   ok:'The indication matches an active problem in this chart.'},
+  {k:'response',ic:'📈',nm:'Right response',ct:'assess · reassess',
+   w:'Take the assessment the drug requires <b>before</b> the dose (pulse, blood pressure, glucose, pain score, the relevant lab), then reassess afterward to prove the drug did what it was for.',
+   ok:'Take your baseline assessment now, then reassess after the dose.'},
+  {k:'education',ic:'🗣',nm:'Right education',ct:'what · why · report',
+   w:'Before it goes in: what the drug is, why this patient is getting it, and what they must report. A patient who knows the warning signs is a monitor you cannot buy.',
+   ok:'Teach the drug, the reason, and the warning signs before it goes in.'},
+  {k:'refusal',ic:'✋',nm:'Right to refuse',ct:'honored · documented',
+   w:'A competent patient may refuse any drug. Explain the reason and the risk, do not coerce, honor the refusal, document it, and notify the prescriber &mdash; a pattern of refusals is clinical data.',
+   ok:'Offer, explain, and honor a refusal. Document it and notify the prescriber.'}
+ ];
+
+ var RMAP={patient:['band','oPat'],drug:['oDrug','lDrug'],dose:['oDose','lDose'],route:['oRoute','lRoute'],
+   time:['oTime'],documentation:['order'],reason:['oWhy'],response:['band'],education:['band'],refusal:['band']};
+
+ var C=[
+  {t:'Case 1 · The armband',fail:'patient',watch:['response','education'],
+   band:{n:'GARCIA, Mario J',d:'DOB 11/03/1961 · MRN 448120'},
+   marPat:'GARCIA, Maria L · 04/12/1958',
+   ord:{drug:'metoprolol tartrate',dose:'25 mg',route:'PO (oral)',time:'BID · due 0900',why:'Hypertension'},
+   lbl:{drug:'metoprolol tartrate',dose:'25 mg tablet',route:'oral'},
+   notes:{
+    patient:'The band at the bedside reads <b>GARCIA, Mario J · DOB 11/03/1961 · MRN 448120</b>. The MAR reads <b>GARCIA, Maria L · DOB 04/12/1958 · MRN 448210</b>. Same surname, <b>a different human being</b> &mdash; the date of birth and the MRN both disagree, and the transposed digits (448120 / 448210) are exactly the kind of near-miss that slides past a tired eye. <b>Stop.</b> Two identifiers must match; a room number never counts. Find the right patient and the right chart.',
+    response:'Metoprolol is a beta blocker: take an <b>apical pulse for a full minute</b> and a blood pressure before every dose. Typical hold parameters are a heart rate under <b>60</b> or a systolic under <b>90</b> &mdash; follow the order as written, and call rather than guess.',
+    education:'Teach: rise slowly (orthostatic hypotension), report a pulse under 60 or dizziness, and <b>never stop a beta blocker abruptly</b> &mdash; abrupt withdrawal triggers rebound hypertension, tachycardia, and angina. In diabetes, beta blockers <b>mask the tachycardia and tremor of hypoglycemia</b> (sweating still comes through), so glucose gets checked, not assumed.'}},
+
+  {t:'Case 2 · The label in your hand',fail:'drug',watch:['dose','reason'],
+   band:{n:'OKAFOR, Daniel R',d:'DOB 09/22/1979 · MRN 771903'},
+   marPat:'OKAFOR, Daniel R · 09/22/1979',
+   ord:{drug:'hydrOXYzine',dose:'25 mg',route:'PO (oral)',time:'q6h PRN',why:'Anxiety'},
+   lbl:{drug:'hydrALAZINE',dose:'25 mg tablet',route:'oral'},
+   notes:{
+    drug:'The order says <b>hydrOXYzine</b> &mdash; an antihistamine used for anxiety, itching, and nausea. The label in your hand says <b>hydrALAZINE</b> &mdash; a direct arterial vasodilator for hypertension. This is a classic look-alike/sound-alike pair, and the <b>tall-man lettering</b> exists precisely because the two have been swapped before. Give hydralazine to an anxious patient with a normal pressure and you drop that pressure and buy reflex tachycardia. Send it back.',
+    dose:'Both drugs come as a <b>25 mg tablet</b>. The matching number is the trap &mdash; a strength that lines up does not make it the right drug. Read the name, not the number.',
+    reason:'The chart says anxiety. Hydralazine has no anxiety indication, so the indication mismatch is your second, independent catch &mdash; two rights failing together is the signature of a wrong-drug error.'}},
+
+  {t:'Case 3 · The number itself',fail:'dose',watch:['response','education'],
+   band:{n:'BRENNAN, Alice M',d:'DOB 02/14/1944 · MRN 305772'},
+   marPat:'BRENNAN, Alice M · 02/14/1944',
+   ord:{drug:'digoxin',dose:'1.0 mg',route:'PO (oral)',time:'daily · 0800',why:'A-fib · rate control'},
+   lbl:{drug:'digoxin',dose:'0.125 mg tablet',route:'oral'},
+   notes:{
+    dose:'Two failures in four characters. First, <b>"1.0 mg" carries a trailing zero</b> &mdash; a do-not-use notation, because a faint decimal point reads as <b>10 mg</b>, a tenfold overdose. Second, the number is wrong on its own terms: usual adult maintenance digoxin is <b>0.125&ndash;0.25 mg PO daily</b>, and the label in your hand is a 0.125 mg tablet &mdash; eight of them to make this order. Do not administer and do not <i>interpret</i> it. Call the prescriber and have it rewritten with a leading zero and no trailing zero.',
+    response:'Before every digoxin dose: <b>apical pulse for one full minute</b> &mdash; hold and call if under <b>60</b> in an adult. Check the <b>potassium</b>: <b>hypokalemia potentiates digoxin toxicity</b> (so do hypomagnesemia and hypercalcemia), which matters enormously if this patient is also on a loop diuretic. Therapeutic level <b>0.5&ndash;2 ng/mL</b>. Early toxicity is quiet: anorexia, nausea, vomiting, visual changes &mdash; <b>yellow-green halos</b> &mdash; then bradycardia and dysrhythmias. Antidote: <b>digoxin immune Fab</b>.',
+    education:'Teach the patient to take their own pulse before each dose, to report nausea, appetite loss, or halos around lights, and <b>never to double up</b> on a missed dose.'}},
+
+  {t:'Case 4 · The line it goes in',fail:'route',watch:['dose','time','response'],
+   band:{n:'IVERSON, Ruth C',d:'DOB 06/30/1966 · MRN 512480'},
+   marPat:'IVERSON, Ruth C · 06/30/1966',
+   ord:{drug:'insulin glargine',dose:'10 units',route:'IV',time:'daily · 2100',why:'Type 1 DM · basal'},
+   lbl:{drug:'insulin glargine U-100',dose:'10 units drawn',route:'SUBCUTANEOUS ONLY'},
+   notes:{
+    route:'Insulin <b>glargine</b> is a <b>long-acting basal insulin &mdash; subcutaneous only, never IV</b>. The label says so; the order contradicts it. Pushed into a vein, a full day of basal insulin lands at once and the patient falls into severe hypoglycemia. <b>Only regular (short-acting) insulin is given IV.</b> A nurse does not change a route to make an order work &mdash; clarify with the prescriber.',
+    dose:'Insulin is a <b>high-alert drug</b>. Draw it in an <b>insulin syringe</b> marked in units, never a tuberculin or mL syringe, and get an <b>independent double check</b> from a second nurse per policy. Write out <b>units</b> in full &mdash; the abbreviation "U" is read as a zero, and 10U becomes 100.',
+    time:'Basal insulin runs on a fixed schedule and is <b>not simply held because the patient is NPO</b> &mdash; a type 1 diabetic without basal insulin heads toward DKA. Verify with the prescriber rather than skipping the dose on your own.',
+    response:'Glargine is essentially <b>peakless</b> over roughly 24 hours and is <b>never mixed in a syringe with another insulin</b>. Check glucose per order and know your hypoglycemia response: below <b>70 mg/dL</b> in a patient who is awake and can swallow, give <b>15 g of fast carbohydrate and recheck in 15 minutes</b>; if they cannot swallow, IV dextrose or glucagon.'}},
+
+  {t:'Case 5 · The clock and the tray',fail:'time',watch:['education','reason'],
+   band:{n:'HALEY, Norma J',d:'DOB 12/05/1949 · MRN 660214'},
+   marPat:'HALEY, Norma J · 12/05/1949',
+   ord:{drug:'alendronate',dose:'70 mg',route:'PO (oral)',time:'weekly Sun · 0800',why:'Osteoporosis'},
+   lbl:{drug:'alendronate',dose:'70 mg tablet',route:'oral'},
+   ctx:'On the tray: breakfast, calcium carbonate, levothyroxine.',
+   notes:{
+    time:'For a <b>bisphosphonate</b>, the timing <i>is</i> the drug. Alendronate goes in <b>first thing in the morning on an empty stomach with 6&ndash;8 oz of plain water</b> &mdash; not coffee, not juice, not mineral water. Then <b>nothing else by mouth for at least 30 minutes</b>: no food, no other drugs, and above all no calcium, which binds it. Handing it over with the breakfast tray and a calcium tablet wipes out an already tiny absorption. The <b>levothyroxine on the same tray has its own empty-stomach rule</b> and cannot ride along either. Hold the tray, give the alendronate first, and rebuild the pass.',
+    education:'The other half of the rule: <b>stay upright &mdash; sitting or standing &mdash; for at least 30 minutes</b> after the dose, and do not lie back down. The tablet is caustic if it lingers in the esophagus; the risk is <b>esophagitis and esophageal ulceration</b>. Teach the patient to report new heartburn, painful swallowing, or chest pain, and to keep calcium, antacids, and iron well separated from the dose.',
+    reason:'Osteoporosis fits. Before it starts, check <b>calcium and vitamin D status and renal function</b> &mdash; bisphosphonates are held in significant renal impairment, and <b>hypocalcemia must be corrected first</b> or the drug will drive it lower.'}},
+
+  {t:'Case 6 · Nothing wrong',fail:null,watch:[],
+   band:{n:'PARK, Jonathan S',d:'DOB 07/18/1955 · MRN 219640'},
+   marPat:'PARK, Jonathan S · 07/18/1955',
+   ord:{drug:'enoxaparin',dose:'40 mg',route:'subcutaneous',time:'daily · due 2100',why:'DVT prophylaxis'},
+   lbl:{drug:'enoxaparin 40 mg/0.4 mL',dose:'40 mg prefilled syringe',route:'subcutaneous'},
+   notes:{
+    patient:'Band and MAR agree on name, date of birth, and MRN. Allergies checked. Scan and proceed.',
+    dose:'40 mg subcutaneous daily is the standard <b>prophylactic</b> dose. <b>Treatment</b> dosing is weight-based and much larger (about 1 mg/kg every 12 hours) &mdash; always know which one you are giving. The dose is reduced in renal impairment (creatinine clearance under 30 mL/min). Heparins are <b>high-alert</b>: double check per policy.',
+    route:'Give it <b>deep subcutaneously into the abdominal fat, at least 2 inches from the umbilicus</b>, alternating sides. <b>Do not expel the air bubble</b> in the prefilled syringe &mdash; it clears the last of the dose. <b>Do not aspirate</b>, and <b>do not massage</b> the site afterward: massage is what turns a dose into a hematoma.',
+    time:'Scheduled at 2100 and due now &mdash; comfortably inside the agency window (commonly 30 minutes either side).',
+    reason:'DVT prophylaxis in an immobile post-op patient. The indication matches the chart.',
+    response:'Baseline CBC with <b>platelets</b> and renal function. Watch for bleeding: bruising, bleeding gums, black or tarry stools, blood in the urine, a falling hemoglobin. A dropping platelet count means <b>heparin-induced thrombocytopenia (HIT)</b> &mdash; stop the drug and call. Routine aPTT monitoring is <b>not</b> required for enoxaparin (that is unfractionated heparin). Reversal: <b>protamine sulfate</b> &mdash; complete for unfractionated heparin, only partial for enoxaparin.',
+    education:'Teach: soft toothbrush, electric razor, report unusual bruising or bleeding, and no NSAIDs unless the prescriber approves.',
+    documentation:'Chart it <b>after</b> it is in &mdash; drug, dose, route, <b>site</b>, and time. The site matters: the next nurse rotates off it.'}}
+ ];
+
+ var i=0, sel='', seen=[], found=[];
+ for(var z=0;z<C.length;z++){seen.push({});found.push(false);}
+
+ function rget(k){for(var a=0;a<R.length;a++){if(R[a].k===k)return R[a];}return null;}
+ function stat(c,k){ if(c.fail===k)return 'fail'; if(c.watch.indexOf(k)>-1)return 'watch'; return 'pass'; }
+ function colOf(s){ return s==='fail'?'#d1495b':(s==='watch'?'#b8862f':'#2f9e5b'); }
+
+ function cap(y,t){ return '<text x="10" y="'+y+'" font-family="Inter,sans-serif" font-size="7.5" font-weight="800" letter-spacing="1.1" fill="#78828f">'+t+'</text>'; }
+ function mark(y,s){ var g=s==='fail'?'✕':(s==='watch'?'!':'✓');
+   return '<text x="237" y="'+y+'" font-family="Inter,sans-serif" font-size="11" font-weight="800" text-anchor="middle" fill="'+colOf(s)+'">'+g+'</text>'; }
+
+ function rowHTML(r,hit,s){ var o='';
+   if(hit){ o+='<rect x="10" y="'+r.y+'" width="212" height="'+r.h+'" fill="'+colOf(s)+'" opacity=".13"/>';
+     o+='<rect x="10" y="'+r.y+'" width="3" height="'+r.h+'" fill="'+colOf(s)+'"/>'; }
+   var bl=r.y+r.h/2+3.2;
+   o+='<text x="18" y="'+bl+'" font-family="Inter,sans-serif" font-size="7.5" font-weight="700" fill="#78828f">'+r.l+'</text>';
+   o+='<text x="76" y="'+bl+'" font-family="Inter,sans-serif" font-size="8.6" font-weight="700" fill="'+(hit?colOf(s):'#232a36')+'">'+r.v+'</text>';
+   if(hit) o+=mark(bl,s);
+   return o; }
+
+ function draw(){
+   var c=C[i], hl=sel?RMAP[sel]:[], s=sel?stat(c,sel):'pass', o='';
+   function on(k){ return hl.indexOf(k)>-1; }
+
+   o+=cap(11,'AT THE BEDSIDE · ARMBAND');
+   var bh=on('band');
+   o+='<rect x="8" y="16" width="216" height="48" rx="8" fill="#ffffff" stroke="'+(bh?colOf(s):'#dfe4ee')+'" stroke-width="'+(bh?2:1)+'"/>';
+   if(bh) o+='<rect x="8" y="16" width="216" height="48" rx="8" fill="'+colOf(s)+'" opacity=".11"/>';
+   o+='<circle cx="32" cy="40" r="13" fill="#e4eefa"/><text x="32" y="45" font-size="14" text-anchor="middle">🧑</text>';
+   o+='<text x="54" y="37" font-family="Inter,sans-serif" font-size="9.4" font-weight="800" fill="#1e3a63">'+c.band.n+'</text>';
+   o+='<text x="54" y="50" font-family="Inter,sans-serif" font-size="7.6" font-weight="600" fill="#78828f">'+c.band.d+'</text>';
+   if(bh) o+=mark(44,s);
+
+   o+=cap(78,'THE ORDER · MAR');
+   var oh=on('order');
+   o+='<rect x="8" y="82" width="216" height="112" rx="8" fill="#ffffff" stroke="'+(oh?colOf(s):'#dfe4ee')+'" stroke-width="'+(oh?2:1)+'"/>';
+   if(oh) o+='<rect x="8" y="82" width="216" height="112" rx="8" fill="'+colOf(s)+'" opacity=".11"/>';
+   var OR=[
+     {k:'oPat',l:'Patient',v:c.marPat,y:82,h:18},
+     {k:'oDrug',l:'Drug',v:c.ord.drug,y:100,h:18},
+     {k:'oDose',l:'Dose',v:c.ord.dose,y:118,h:18},
+     {k:'oRoute',l:'Route',v:c.ord.route,y:136,h:18},
+     {k:'oTime',l:'Time',v:c.ord.time,y:154,h:18},
+     {k:'oWhy',l:'Indication',v:c.ord.why,y:172,h:22}
+   ];
+   for(var a=0;a<OR.length;a++){
+     if(a>0) o+='<line x1="10" y1="'+OR[a].y+'" x2="222" y2="'+OR[a].y+'" stroke="#eef1f7" stroke-width="1"/>';
+     o+=rowHTML(OR[a],on(OR[a].k),s);
+   }
+   if(oh) o+=mark(93,s);
+
+   o+=cap(210,'IN YOUR HAND · LABEL');
+   o+='<rect x="8" y="214" width="216" height="52" rx="8" fill="#ffffff" stroke="#dfe4ee" stroke-width="1"/>';
+   var LB=[
+     {k:'lDrug',l:'Drug',v:c.lbl.drug,y:214,h:18},
+     {k:'lDose',l:'Strength',v:c.lbl.dose,y:232,h:18},
+     {k:'lRoute',l:'Route',v:c.lbl.route,y:250,h:16}
+   ];
+   for(var b=0;b<LB.length;b++){
+     if(b>0) o+='<line x1="10" y1="'+LB[b].y+'" x2="222" y2="'+LB[b].y+'" stroke="#eef1f7" stroke-width="1"/>';
+     o+=rowHTML(LB[b],on(LB[b].k),s);
+   }
+   if(c.ctx) o+='<text x="10" y="278" font-family="Inter,sans-serif" font-size="7.4" font-weight="600" fill="#b8862f">⚠ '+c.ctx+'</text>';
+   $("art").innerHTML=o;
+ }
+
+ function list(){
+   var c=C[i];
+   $("list").innerHTML=R.map(function(r){
+     var cl='it'; var mk='';
+     if(seen[i][r.k]){ var s=stat(c,r.k);
+       cl+=' '+(s==='fail'?'bad':(s==='watch'?'wat':'ok'));
+       mk=s==='fail'?'✕':(s==='watch'?'!':'✓'); }
+     if(r.k===sel) cl+=' on';
+     return '<button class="'+cl+'" data-k="'+r.k+'"><span class="ic">'+r.ic+'</span><span><span class="nm">'+r.nm+
+       '</span><span class="ct">'+r.ct+'</span></span><span class="mk">'+(mk||'·')+'</span></button>';
+   }).join('');
+   var bs=document.querySelectorAll('#list .it');
+   for(var a=0;a<bs.length;a++){ bs[a].onclick=(function(el){return function(){ pick(el.getAttribute('data-k')); };})(bs[a]); }
+ }
+
+ function count(){ var n=0; for(var k in seen[i]){ if(seen[i][k]) n++; } return n; }
+
+ function stage(){
+   var c=C[i], st=$("stage");
+   if(found[i] && c.fail){ var r=rget(c.fail);
+     st.style.background='#d1495b';
+     st.innerHTML='STOP · do not administer<small>'+r.nm+' fails — clarify with the prescriber before anything goes in</small>';
+   } else if(found[i]){
+     st.style.background='#2f9e5b';
+     st.innerHTML='Cleared · safe to administer<small>all ten rights check out — now go give it correctly</small>';
+   } else {
+     st.style.background='#2f5f9e';
+     st.innerHTML=c.t+'<small>'+count()+' of 10 checked'+(c.fail?' — one right is broken. Find it.':' — check every right before you decide.')+'</small>';
+   }
+ }
+
+ function info(){
+   var c=C[i], el=$("info");
+   if(!sel){ el.className='';
+     el.innerHTML='<span class="n">'+c.t+'</span>Read the armband, the order, and the label on the left, then <b>tap each right</b> to check it. '+
+       (c.fail?'Exactly one of the ten is broken in this order.':'Check all ten before you decide about this one.');
+     return; }
+   var r=rget(sel), s=stat(c,sel);
+   el.className=(s==='fail'?'fail':(s==='watch'?'watch':''));
+   var pill=s==='fail'?'<span class="pill high">fails</span>':(s==='watch'?'<span class="pill low">watch</span>':'<span class="pill normal">clears</span>');
+   el.innerHTML='<span class="n">'+r.nm+' '+pill+'</span>'+(c.notes[sel]||r.ok)+
+     '<div class="loc"><b>What a nurse verifies:</b> '+r.w+'</div>';
+ }
+
+ function pick(k){
+   sel=k; seen[i][k]=1;
+   var c=C[i];
+   if(c.fail===k) found[i]=true;
+   if(!c.fail && count()===R.length) found[i]=true;
+   draw(); list(); stage(); info();
+ }
+
+ function render(){ sel=''; $("cardTitle").innerHTML=C[i].t; draw(); list(); stage(); info();
+   $("prev").disabled=(i===0); $("next").disabled=(i===C.length-1); }
+
+ $("prev").onclick=function(){ if(i>0){ i--; render(); } };
+ $("next").onclick=function(){ if(i<C.length-1){ i++; render(); } };
+ render();
+})();
+</script>
+</body>
+</html>

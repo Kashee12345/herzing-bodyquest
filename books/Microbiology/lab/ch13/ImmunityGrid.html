@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>The Immunity Grid: Active vs Passive, Natural vs Artificial</title>
+<meta name="description" content="Interactive 2×2 grid of adaptive immunity — natural vs artificial and active vs passive — with vaccines, maternal antibodies, and immune globulin. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:8px;font-weight:600;}
+.imz{display:grid;grid-template-columns:auto 1fr 1fr;gap:7px;align-items:stretch;}
+.imz .corner{}
+.imz .ch{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-align:center;align-self:end;padding-bottom:2px;line-height:1.2;transition:color .2s;}
+.imz .ch small{display:block;font-size:9px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--muted);margin-top:1px;}
+.imz .ch.hi{color:var(--teal-dk);}
+.imz .rh{display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding:0 4px;text-align:center;transition:color .2s;}
+.imz .rh small{display:block;font-size:9px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--muted);margin-top:2px;max-width:52px;line-height:1.15;}
+.imz .rh.hi{color:var(--teal-dk);}
+.imz .cell{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 9px;cursor:pointer;text-align:left;font-family:var(--sans);transition:.13s;min-height:80px;display:flex;flex-direction:column;}
+.imz .cell:hover{border-color:var(--teal);transform:translateY(-1px);box-shadow:0 4px 12px rgba(60,42,92,.1);}
+.imz .cell .ci{font-size:20px;line-height:1;}
+.imz .cell .cn{font-weight:800;font-size:12px;color:var(--ink);margin-top:4px;line-height:1.15;}
+.imz .cell .cs{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.25;}
+.imz .cell.on .cn,.imz .cell.on .cs{color:#fff;}
+.props{display:flex;gap:7px;margin-top:11px;}
+.props .p{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 4px;background:#fff;}
+.props .p .pl{font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);}
+.props .p .pv{display:block;font-size:12px;font-weight:800;margin-top:3px;color:var(--soft);line-height:1.15;}
+.props .p.good .pv{color:#237a45;} .props .p.bad .pv{color:#b23145;} .props .p.info .pv{color:#255f8a;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 13</div>
+  <h1>The Immunity Grid</h1>
+  <div class="intro">Every kind of protection answers two questions: <b>who made the antibodies</b> &mdash; you (<b>active</b>) or someone else (<b>passive</b>) &mdash; and <b>how you got them</b> &mdash; through everyday life (<b>natural</b>) or through medicine (<b>artificial</b>). Tap each of the four boxes to see how they differ.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Four routes to immunity</h2>
+    <svg viewBox="0 0 240 200" aria-label="immunity scenario"><g id="art"></g></svg>
+    <div class="props" id="props"></div>
+    <div class="hint" id="hint">Tap a box in the grid to see how that immunity works</div>
+  </div></div>
+  <div>
+    <div id="stage">The immunity grid<small>tap a box to begin</small></div>
+    <div class="card">
+      <div class="imz" id="grid"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ // ---- little drawing helpers ----
+ function ab(x,y,c,s){ s=s||1; // a Y-shaped antibody at (x,y)
+  return '<g stroke="'+c+'" stroke-width="'+(2*s).toFixed(1)+'" fill="none" stroke-linecap="round">'+
+   '<line x1="'+x+'" y1="'+(y+8*s)+'" x2="'+x+'" y2="'+(y+1*s)+'"/>'+
+   '<line x1="'+x+'" y1="'+(y+1*s)+'" x2="'+(x-5.5*s)+'" y2="'+(y-6*s)+'"/>'+
+   '<line x1="'+x+'" y1="'+(y+1*s)+'" x2="'+(x+5.5*s)+'" y2="'+(y-6*s)+'"/></g>';
+ }
+ function person(x,y,s,c){ s=s||1; // x,y = head centre
+  return '<circle cx="'+x+'" cy="'+y+'" r="'+(11*s)+'" fill="'+c+'"/>'+
+   '<path d="M'+(x-16*s)+' '+(y+42*s)+' Q'+x+' '+(y+6*s)+' '+(x+16*s)+' '+(y+42*s)+' Z" fill="'+c+'"/>';
+ }
+ function virus(x,y,c){ var s='<circle cx="'+x+'" cy="'+y+'" r="9" fill="'+c+'"/>';
+  for(var a=0;a<8;a++){var an=a/8*6.283;s+='<line x1="'+(x+9*Math.cos(an)).toFixed(1)+'" y1="'+(y+9*Math.sin(an)).toFixed(1)+'" x2="'+(x+14*Math.cos(an)).toFixed(1)+'" y2="'+(y+14*Math.sin(an)).toFixed(1)+'" stroke="'+c+'" stroke-width="2"/><circle cx="'+(x+14*Math.cos(an)).toFixed(1)+'" cy="'+(y+14*Math.sin(an)).toFixed(1)+'" r="2.4" fill="'+c+'"/>';}
+  return s;
+ }
+ function syringe(x,y,c){ // barrel top-left at (x,y), points right, needle to the right
+  return '<rect x="'+(x-16)+'" y="'+(y+4)+'" width="16" height="12" fill="'+c+'"/>'+
+   '<line x1="'+(x-24)+'" y1="'+(y+10)+'" x2="'+(x-16)+'" y2="'+(y+10)+'" stroke="'+c+'" stroke-width="3"/>'+
+   '<rect x="'+x+'" y="'+y+'" width="46" height="20" rx="3" fill="#fff" stroke="'+c+'" stroke-width="2.5"/>'+
+   '<rect x="'+(x+46)+'" y="'+(y+7)+'" width="9" height="6" fill="'+c+'"/>'+
+   '<line x1="'+(x+55)+'" y1="'+(y+10)+'" x2="'+(x+78)+'" y2="'+(y+10)+'" stroke="'+c+'" stroke-width="2"/>';
+ }
+ function memory(x,y){ // a stored memory B cell
+  return '<circle cx="'+x+'" cy="'+y+'" r="15" fill="none" stroke="#2f6f9f" stroke-width="2.5" stroke-dasharray="4 3"/>'+
+   '<circle cx="'+x+'" cy="'+y+'" r="10" fill="#2f6f9f"/><text x="'+x+'" y="'+(y+4)+'" font-size="11" fill="#fff" text-anchor="middle" font-weight="800">M</text>';
+ }
+ function timer(x,y){ // an hourglass = temporary
+  return '<path d="M'+(x-8)+' '+(y-9)+' h16 l-8 9 l8 9 h-16 l8 -9 Z" fill="none" stroke="#b23145" stroke-width="2.2"/>'+
+   '<path d="M'+(x-4)+' '+(y-9)+' h8 l-4 6 Z" fill="#b23145"/>';
+ }
+
+ // ---- scene art per cell ----
+ function drawNA(){ var s='';
+  s+=virus(40,54,'#c14b3a');
+  s+='<text x="40" y="82" font-size="9" fill="#7a1f2c" text-anchor="middle" font-weight="700">wild infection</text>';
+  s+='<path d="M56 54 C78 54 82 74 96 82" stroke="#b0453a" stroke-width="2" fill="none" stroke-dasharray="3 3" marker-end=""/>';
+  s+='<ellipse cx="120" cy="92" rx="26" ry="23" fill="#2f9e5b"/><circle cx="128" cy="88" r="8" fill="#237a45"/>';
+  s+='<text x="120" y="126" font-size="9" fill="#237a45" text-anchor="middle" font-weight="700">your plasma cell</text>';
+  s+=ab(168,60,'#2f9e5b',1.1)+ab(190,80,'#2f9e5b',1.1)+ab(176,100,'#2f9e5b',1.1)+ab(202,104,'#2f9e5b',1);
+  s+='<text x="196' +'" y="128" font-size="9" fill="#237a45" text-anchor="middle" font-weight="700">antibodies</text>';
+  s+=memory(118,164);
+  s+='<text x="150" y="168" font-size="9" fill="#255f8a" text-anchor="start" font-weight="700">memory kept →</text>';
+  return s;
+ }
+ function drawAA(){ var s='';
+  s+=syringe(34,44,'#6d3f9c');
+  s+='<circle cx="60" cy="54" r="6" fill="#8a63b8" stroke="#6d3f9c" stroke-width="1.5" stroke-dasharray="2 2"/>';
+  s+='<text x="52" y="80" font-size="9" fill="#54308a" text-anchor="middle" font-weight="700">vaccine antigen</text>';
+  s+='<text x="52" y="92" font-size="8.5" fill="#837a94" text-anchor="middle" font-weight="600">(weakened · no disease)</text>';
+  s+='<path d="M112 58 C126 58 130 76 120 88" stroke="#6d3f9c" stroke-width="2" fill="none" stroke-dasharray="3 3"/>';
+  s+='<ellipse cx="150" cy="96" rx="26" ry="23" fill="#6d3f9c"/><circle cx="158" cy="92" r="8" fill="#54308a"/>';
+  s+='<text x="150" y="130" font-size="9" fill="#54308a" text-anchor="middle" font-weight="700">your plasma cell</text>';
+  s+=ab(196,66,'#6d3f9c',1.1)+ab(214,86,'#6d3f9c',1)+ab(200,104,'#6d3f9c',1);
+  s+=memory(150,168);
+  s+='<text x="182" y="172" font-size="9" fill="#255f8a" text-anchor="start" font-weight="700">memory kept →</text>';
+  return s;
+ }
+ function drawNP(){ var s='';
+  s+=person(56,54,1.15,'#b8862f');
+  s+='<text x="56" y="128" font-size="9.5" fill="#8a6a20" text-anchor="middle" font-weight="800">mother</text>';
+  s+=person(176,78,0.72,'#e0a94a');
+  s+='<text x="176" y="128" font-size="9.5" fill="#8a6a20" text-anchor="middle" font-weight="800">newborn</text>';
+  // antibodies flowing mom -> baby
+  s+='<path d="M86 66 C118 64 138 76 158 84" stroke="#b8862f" stroke-width="2" fill="none" stroke-dasharray="4 3"/>';
+  s+=ab(104,58,'#b8862f',1)+ab(126,64,'#b8862f',1)+ab(146,72,'#b8862f',0.9);
+  s+='<text x="120" y="46" font-size="8.5" fill="#8a6a20" text-anchor="middle" font-weight="700">placenta &amp; breast milk</text>';
+  s+=timer(196,66);
+  s+='<text x="176" y="150" font-size="9" fill="#b23145" text-anchor="middle" font-weight="700">fades over months</text>';
+  s+='<text x="120" y="176" font-size="9" fill="#837a94" text-anchor="middle" font-weight="600">baby borrows mom’s antibodies</text>';
+  return s;
+ }
+ function drawAP(){ var s='';
+  s+=syringe(30,50,'#2f6f9f');
+  // preformed antibodies inside/leaving the syringe
+  s+=ab(42,58,'#2f6f9f',0.8)+ab(56,58,'#2f6f9f',0.8);
+  s+='<text x="40" y="86" font-size="9" fill="#255f8a" text-anchor="middle" font-weight="700">immune globulin</text>';
+  s+='<text x="40" y="98" font-size="8.5" fill="#837a94" text-anchor="middle" font-weight="600">(preformed antibodies)</text>';
+  s+='<path d="M118 62 C138 62 150 74 158 82" stroke="#2f6f9f" stroke-width="2" fill="none" stroke-dasharray="4 3"/>';
+  s+=ab(124,62,'#2f6f9f',1)+ab(142,70,'#2f6f9f',1);
+  s+=person(184,72,0.95,'#2f6f9f');
+  s+='<text x="184" y="140" font-size="9.5" fill="#255f8a" text-anchor="middle" font-weight="800">patient</text>';
+  s+=timer(150,120);
+  s+='<text x="120" y="176" font-size="9" fill="#837a94" text-anchor="middle" font-weight="600">instant shield, but temporary</text>';
+  return s;
+ }
+ function drawIntro(){ var s='';
+  s+='<text x="120" y="34" font-size="11" fill="#3d2a5c" text-anchor="middle" font-weight="800">two questions</text>';
+  s+='<text x="120" y="54" font-size="10" fill="#544b66" text-anchor="middle" font-weight="600">who made the antibodies?</text>';
+  s+='<text x="120" y="70" font-size="10" fill="#544b66" text-anchor="middle" font-weight="600">how did you get them?</text>';
+  s+=ab(72,108,'#2f9e5b',1.6)+ab(120,100,'#6d3f9c',1.6)+ab(168,108,'#b8862f',1.6)+ab(96,138,'#2f6f9f',1.4)+ab(146,138,'#d1495b',1.4);
+  s+='<text x="120" y="182" font-size="10" fill="#837a94" text-anchor="middle" font-weight="700">tap a box to explore →</text>';
+  return s;
+ }
+
+ // ---- data ----
+ var C={
+  na:{ row:'active', col:'natural', ic:'🦠', name:'Recover from infection', sub:'caught it, fought it, remembers it',
+    color:'#2f9e5b', draw:drawNA, onset:'Gradual', mem:'Yes', dur:'Long / lifelong',
+    n:'Natural &middot; Active',
+    body:'You catch a live pathogen and <b>your own immune system fights it off</b>. B cells make antibodies and, crucially, leave behind <b>memory cells</b>. Because <i>you</i> built the response, protection is often <b>lifelong</b> &mdash; but you had to get sick to earn it.',
+    ex:['Recovering from chickenpox','Measles','Mono (EBV)'],
+    note:'A patient who had chickenpox as a child is usually immune for life &mdash; a real exposure trained their memory cells.'},
+  aa:{ row:'active', col:'artificial', ic:'💉', name:'Vaccination', sub:'antigen taught the body — no disease',
+    color:'#6d3f9c', draw:drawAA, onset:'Gradual', mem:'Yes', dur:'Long (boosters)',
+    n:'Artificial &middot; Active',
+    body:'A <b>vaccine</b> delivers a safe form of antigen &mdash; <b>live-attenuated, inactivated (killed), toxoid, subunit/conjugate, or mRNA</b> &mdash; so the body mounts <b>its own response and forms memory without the illness</b>. Protection builds over days to weeks and may need <b>boosters</b>.',
+    ex:['MMR','Tetanus toxoid (Tdap)','Hepatitis B','HPV','Influenza','COVID-19'],
+    note:'This is the point of the immunization schedule: give it <b>before</b> exposure so memory is ready. Live-attenuated vaccines are avoided in pregnancy and severe immunosuppression.'},
+  np:{ row:'passive', col:'natural', ic:'👶', name:'Mother to baby', sub:'borrowed antibodies, immediate but fading',
+    color:'#b8862f', draw:drawNP, onset:'Immediate', mem:'No', dur:'Short (weeks–months)',
+    n:'Natural &middot; Passive',
+    body:'A baby receives <b>preformed antibodies from its mother</b>: <b>IgG crosses the placenta</b> before birth and <b>IgA comes through breast milk &amp; colostrum</b> after. The infant makes none of its own, so there is <b>no memory</b> and protection <b>fades in a few months</b>.',
+    ex:['Transplacental IgG','Breast-milk / colostrum IgA'],
+    note:'This borrowed shield covers the newborn until its own immune system matures &mdash; which is why the infant vaccine series starts around 2 months, as maternal antibody wanes.'},
+  ap:{ row:'passive', col:'artificial', ic:'🛡️', name:'Antibody injection', sub:'preformed antibodies given as a drug',
+    color:'#2f6f9f', draw:drawAP, onset:'Immediate', mem:'No', dur:'Short (weeks)',
+    n:'Artificial &middot; Passive',
+    body:'A person is <b>given preformed antibodies</b> made elsewhere &mdash; <b>immune globulin, antitoxin/antiserum, or monoclonal antibodies</b>. Protection is <b>immediate</b>, which makes it ideal <b>after</b> a dangerous exposure, but there is <b>no memory</b> and it wears off in weeks.',
+    ex:['Rabies immune globulin','Tetanus immune globulin (TIG)','RhoGAM (anti-Rh)','RSV antibody (nirsevimab)','Antivenom'],
+    note:'A dirty wound in an unimmunized patient gets <b>both</b> TIG (passive &mdash; instant coverage) <b>and</b> tetanus toxoid (active &mdash; lasting memory). One buys time while the other builds protection.'},
+  intro:{ color:'#6d3f9c', draw:drawIntro, onset:'—', mem:'—', dur:'—',
+    n:'Two axes, four boxes',
+    body:'<b>Active</b> immunity means <i>you</i> made the antibodies &mdash; slow to build, but it leaves <b>memory</b> and lasts. <b>Passive</b> immunity means the antibodies were <b>made by someone else and handed to you</b> &mdash; instant, but no memory and short-lived. <b>Natural</b> happens through ordinary life; <b>artificial</b> happens through medicine.',
+    mnem:'<b>Active = your Army</b> (slow to train, never forgets). <b>Passive = borrowed backup</b> (arrives instantly, forgets fast).'}
+ };
+
+ var CELLS=[
+  {k:'na',cn:'Recover from infection',cs:'catch it &amp; build memory',ic:'🦠'},
+  {k:'aa',cn:'Vaccination',cs:'antigen without the disease',ic:'💉'},
+  {k:'np',cn:'Mother → baby',cs:'placenta &amp; breast milk',ic:'👶'},
+  {k:'ap',cn:'Antibody injection',cs:'immune globulin given',ic:'🛡️'}
+ ];
+
+ var cur='intro';
+
+ function propClass(kind,val){
+  if(kind==='mem') return val==='Yes'?'good':(val==='No'?'bad':'');
+  if(kind==='onset') return val==='Immediate'?'info':'';
+  if(kind==='dur') return /Long/.test(val)?'good':(/Short/.test(val)?'bad':'');
+  return '';
+ }
+
+ function buildGrid(){
+  var g='';
+  g+='<div class="corner"></div>';
+  g+='<div class="ch" id="chNat">Natural<small>through life</small></div>';
+  g+='<div class="ch" id="chArt">Artificial<small>through medicine</small></div>';
+  g+='<div class="rh" id="rhAct">Active<small>you make them</small></div>';
+  g+='<button class="cell" data-k="na"></button>';
+  g+='<button class="cell" data-k="aa"></button>';
+  g+='<div class="rh" id="rhPas">Passive<small>you’re given them</small></div>';
+  g+='<button class="cell" data-k="np"></button>';
+  g+='<button class="cell" data-k="ap"></button>';
+  $("grid").innerHTML=g;
+  document.querySelectorAll('#grid .cell').forEach(function(b){
+   var d=CELLS.filter(function(x){return x.k===b.dataset.k;})[0];
+   b.innerHTML='<span class="ci">'+d.ic+'</span><span class="cn">'+d.cn+'</span><span class="cs">'+d.cs+'</span>';
+   b.onclick=function(){ cur=b.dataset.k; paint(); };
+  });
+ }
+
+ function paint(){
+  var d=C[cur];
+  $("art").innerHTML=d.draw();
+  $("cardTitle").innerHTML = cur==='intro' ? 'Four routes to immunity' : d.n.replace(/ &middot; /,' + ');
+  $("stage").style.background=d.color;
+  if(cur==='intro'){ $("stage").innerHTML='The immunity grid<small>tap a box to begin</small>'; }
+  else { $("stage").innerHTML=d.n+'<small>'+C[cur].name+'</small>'; }
+
+  // property chips
+  $("props").innerHTML=
+   '<div class="p '+propClass('onset',d.onset)+'"><span class="pl">Onset</span><span class="pv">'+d.onset+'</span></div>'+
+   '<div class="p '+propClass('mem',d.mem)+'"><span class="pl">Memory</span><span class="pv">'+d.mem+'</span></div>'+
+   '<div class="p '+propClass('dur',d.dur)+'"><span class="pl">Lasts</span><span class="pv">'+d.dur+'</span></div>';
+  $("hint").innerHTML = cur==='intro' ? 'Tap a box in the grid to see how that immunity works' : 'Compare with the other three boxes';
+
+  // cell + axis highlight
+  document.querySelectorAll('#grid .cell').forEach(function(b){
+   var on=(b.dataset.k===cur);
+   b.classList.toggle('on',on);
+   b.style.background = on ? C[b.dataset.k].color : '#fff';
+   b.style.borderColor = on ? C[b.dataset.k].color : 'var(--line)';
+  });
+  var o = cur!=='intro' ? C[cur] : null;
+  $("chNat").classList.toggle('hi', !!o && o.col==='natural');
+  $("chArt").classList.toggle('hi', !!o && o.col==='artificial');
+  $("rhAct").classList.toggle('hi', !!o && o.row==='active');
+  $("rhPas").classList.toggle('hi', !!o && o.row==='passive');
+
+  // info panel
+  var h='<span class="n">'+d.n+'</span>'+d.body;
+  if(d.ex){ h+='<div class="ex">'; for(var i=0;i<d.ex.length;i++){ h+='<span>'+d.ex[i]+'</span>'; } h+='</div>'; }
+  if(d.mnem){ h+='<div class="mnem"><b>Remember.</b> '+d.mnem+'</div>'; }
+  if(d.note){ h+='<div class="note"><b>Nursing note.</b> '+d.note+'</div>'; }
+  $("info").innerHTML=h;
+ }
+
+ buildGrid();
+ paint();
+})();
+</script>
+</body>
+</html>

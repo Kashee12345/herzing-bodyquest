@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>What a p-Value Is</title>
+<meta name="description" content="Drag the observed result and watch the tail area shade and the p-value recompute &mdash; then run thousands of simulated studies in a world where the null is true and count the extreme ones yourself.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:120px;line-height:1.3;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.alt input[type=range]{background:#e3daea;}
+.sl.alt input[type=range]::-webkit-slider-thumb{background:var(--purple);}
+.sl.alt input[type=range]::-moz-range-thumb{background:var(--purple);}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:62px;text-align:right;font-variant-numeric:tabular-nums;}
+.sl.alt .nv{color:var(--purple);}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.eq{font-size:12.4px;color:var(--soft);line-height:1.95;margin-top:10px;font-variant-numeric:tabular-nums;}
+.eq b{color:var(--teal-dk);}
+.sent{border:1px solid #bcd6e2;border-left:5px solid var(--teal);background:#eef6f9;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:13.2px;line-height:1.6;color:var(--soft);}
+.sent b{color:var(--teal-dk);}
+.sent .big{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.strip div{border:1px solid var(--line);border-radius:10px;padding:7px 8px;background:#fff;text-align:center;}
+.strip .lb{display:block;font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.strip .vv{display:block;font-size:14.5px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-radius:20px;padding:3px 10px;margin-left:6px;vertical-align:2px;}
+.tag.tt{background:#e5f3ea;color:#237a45;} .tag.ff{background:#fae5e8;color:#b23145;}
+.mnem,.note{font-size:12px;border-radius:8px;padding:9px 12px;margin-top:10px;line-height:1.6;}
+.mnem{color:#8a6a20;background:#fbf3e2;border:1px solid #ecd9ac;} .mnem b{color:#5a4212;}
+.note{color:#8a2a3a;background:#fae5e8;border:1px solid #f0c9d0;} .note b{color:#7a1f2c;}
+.list .it .s{display:block;margin-top:2px;line-height:1.35;}
+#chart{cursor:ew-resize;touch-action:none;}
+#info .loc{font-variant-numeric:tabular-nums;font-size:12.2px;line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 10</div>
+  <h1>What a p&#8209;Value Is</h1>
+  <div class="intro">A p&#8209;value answers one narrow question, and it is not the question most people think. It is not the probability that the null hypothesis is true. It is not the probability that your result happened by chance. It is this: <b>if the null hypothesis were true, how often would studies like this one produce a result at least as extreme as the one you actually got?</b> That is a fact about <b>data in a hypothetical world</b> &mdash; a shaded area under a curve you drew before you collected anything. Below you can drag your result along the axis and watch the tail shade and the number recompute. Then, because a probability like this is really just a long&#8209;run frequency, you can build it by hand: run thousands of studies in a world where the null <i>is</i> exactly true, and count the extreme ones yourself.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The tail, shaded</h2>
+      <div class="cap" style="margin-top:0;">The curve is the sampling distribution of your statistic <b>in the world the null hypothesis describes</b> &mdash; centred on the null value, with a spread of one standard error. The dot is what you actually observed. The shaded region is every result <b>at least as extreme</b> as yours, and the p&#8209;value is simply the <b>area</b> of that region. Drag the dot along the axis, or use the sliders on the right.</div>
+      <svg viewBox="0 0 480 272" id="chart" aria-label="the sampling distribution of the statistic if the null hypothesis were true, with every result at least as extreme as the observed one shaded; the shaded area is the p-value"></svg>
+      <div class="lgd">
+        <span><i style="background:#2f6f8a"></i>the curve if H<sub>0</sub> were true</span>
+        <span><i style="background:#1c4454;border-radius:50%"></i>your observed result</span>
+        <span><i style="background:#9fc4d4"></i>at least this extreme &mdash; the p&#8209;value</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>Count it yourself</h2>
+      <div class="cap" style="margin-top:2px;">A probability is a long&#8209;run frequency, so the p&#8209;value can be built without any curve at all. Each click below runs whole studies &mdash; <b>drawing every single observation</b> from a world where the null hypothesis is <i>exactly</i> true &mdash; and drops each study's statistic into the histogram. Studies that landed at least as far out as yours are shaded. The fraction of them <b>is</b> the p&#8209;value, and it settles onto the area of the curve above.</div>
+      <svg viewBox="0 0 480 208" id="sim" aria-label="histogram of statistics from simulated studies run in a world where the null hypothesis is true, with the studies at least as extreme as the observed one shaded"></svg>
+      <div class="strip">
+        <div><span class="lb">Studies<br>run</span><span class="vv" id="sN">0</span></div>
+        <div><span class="lb">At least<br>this extreme</span><span class="vv" id="sK">0</span></div>
+        <div><span class="lb">Simulated<br>fraction</span><span class="vv" id="sF">&mdash;</span></div>
+        <div><span class="lb">Area under<br>the curve</span><span class="vv" id="sT">&mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="run1">Run 250 studies</button><button class="btn" id="run2">Add 2,500 more</button><button class="btn" id="rrs">Reset</button></div>
+      <div class="cap" id="simcap"></div>
+    </div>
+    <div class="card">
+      <h2>Why p is not the probability that H<sub>0</sub> is true</h2>
+      <div class="cap" style="margin-top:2px;">The p&#8209;value is computed <i>inside</i> the null world; it never looks up and asks how likely that world was to begin with. To ask <b>&ldquo;given a small p&#8209;value, how often is the null true anyway?&rdquo;</b> you need two extra facts the p&#8209;value does not contain: how often the hypotheses people test are null, and how good the studies are at detecting real effects. Here are 1,000 hypotheses tested at the usual 5% cutoff. Move the sliders and watch the answer swing between almost nothing and almost everything &mdash; while <i>every rejected study still reported p&nbsp;&lt;&nbsp;0.05</i>.</div>
+      <svg viewBox="0 0 480 250" id="base" aria-label="one thousand tested hypotheses shown as a grid, split into true nulls and false nulls, with false alarms and true detections marked, and a bar showing what share of the rejections were true nulls"></svg>
+      <div class="sl"><label>share truly null</label><input type="range" id="prSl" min="5" max="95" step="5" value="50"><span class="nv" id="prVal">50%</span></div>
+      <div class="sl alt"><label>power when real</label><input type="range" id="pwSl" min="20" max="95" step="5" value="50"><span class="nv" id="pwVal">50%</span></div>
+      <div class="cap" id="basecap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Four studies<small>pick one and move its result</small></div>
+    <div class="card">
+      <h2>The study on the table</h2>
+      <div class="list" id="studies"></div>
+      <div class="cap" id="claimtxt" style="font-size:12.6px;color:var(--soft);"></div>
+    </div>
+    <div class="card">
+      <h2>Your result, and its tail</h2>
+      <div class="hd">1 &middot; What did this sample produce?</div>
+      <div class="sl"><label id="oLab">observed</label><input type="range" id="oSl"><span class="nv" id="oVal">&mdash;</span></div>
+      <div class="hd">2 &middot; How much data was behind it?</div>
+      <div class="sl"><label id="nLab">sample size n</label><input type="range" id="nSl"><span class="nv" id="nVal">&mdash;</span></div>
+      <div class="tiles">
+        <div><span class="lb">Observed<br><span id="tS1">statistic</span></span><span class="vv" id="tStat">&mdash;</span><span class="sub" id="tStatS">&nbsp;</span></div>
+        <div><span class="lb">Std. error<br>under H<sub>0</sub></span><span class="vv" id="tSe">&mdash;</span><span class="sub" id="tSeS">&nbsp;</span></div>
+        <div><span class="lb">Test<br>statistic z</span><span class="vv" id="tZ">&mdash;</span><span class="sub" id="tZs">&nbsp;</span></div>
+        <div><span class="lb">p&#8209;value<br>(the area)</span><span class="vv" id="tP">&mdash;</span><span class="sub" id="tPs">&nbsp;</span></div>
+      </div>
+      <div class="eq" id="eqn"></div>
+      <div class="sent" id="sent"></div>
+      <div class="row"><button class="btn" id="bmid">Put the result on H<sub>0</sub></button><button class="btn" id="brst">Reset the study</button></div>
+    </div>
+    <div class="card">
+      <h2>Read it out loud</h2>
+      <div class="cap" style="margin-top:2px;">Seven sentences people say about a p&#8209;value of 0.04. Two of them are right. Tap each one.</div>
+      <div class="list" id="claims"></div>
+      <div id="info"><span class="n">The definition, in one line</span>The p&#8209;value is <b>P(data at least this extreme <span style="color:var(--teal-dk)">|</span> H<sub>0</sub> true)</b>. Everything that goes wrong with p&#8209;values goes wrong by flipping what is on which side of that bar.</div>
+    </div>
+    <div class="card">
+      <h2>How to think about it every time</h2>
+      <div class="mnem">Say the definition in the order the arithmetic actually happens, and the misreadings become impossible. <b>First, assume.</b> You do not test whether H<sub>0</sub> is true; you <i>grant</i> it, temporarily and completely, and step into that world. <b>Second, describe.</b> In that world, the statistic has a known distribution &mdash; the curve above &mdash; because you know what H<sub>0</sub> centres it on and the standard error tells you how wide it is. <b>Third, count.</b> Ask what share of that world's studies would land at least as far from the null value as yours did. That share is the p&#8209;value: a small one means your data would be a rare event <i>if</i> H<sub>0</sub> held, which is evidence against H<sub>0</sub>; a large one means your data is unremarkable in that world, which is not evidence for anything. Notice what never appeared in those three steps: any statement about how probable H<sub>0</sub> was, and any statement about how big the effect is.</div>
+      <div class="note"><b>Why the shaded region is a tail and not a point.</b> The p&#8209;value counts results <i>at least as extreme</i> as yours, not results equal to yours. For a continuous statistic the probability of landing on any exact value is zero, so &ldquo;the probability of getting this mean&rdquo; is not a usable quantity at all &mdash; it is 0 for every possible outcome, including the ones nobody would find surprising. Extremeness has to be measured as a region, and the region runs outward from your result and away from the null value. That is also why a two&#8209;sided alternative shades both tails: if a departure in either direction would have counted as evidence, then both directions belong in &ldquo;at least this extreme,&rdquo; and the same data honestly yields double the area.</div>
+      <div class="note"><b>The p&#8209;value is not an effect size.</b> Drag n on a study with a fixed gap between the observed result and the null value, and watch the p&#8209;value collapse toward zero while the gap on the axis never changes. Nothing about the world moved; only the sharpness of your instrument did. A tiny p&#8209;value from an enormous sample can accompany a difference too small to matter, and a large p&#8209;value from a small sample can hide a difference that matters enormously. p answers &ldquo;could this plausibly be noise?&rdquo; and nothing else. &ldquo;How big is it, and is that big enough to care?&rdquo; is a separate question, answered with an estimate and an interval, not with p.</div>
+      <div class="cap">One more consequence worth sitting with: because the p&#8209;value is a probability computed under H<sub>0</sub>, and because it is a continuous statistic, <b>the p&#8209;value itself is uniformly distributed between 0 and 1 when H<sub>0</sub> is true</b>. Every value is equally likely. A p of 0.03 is exactly as probable as a p of 0.83 in a world where nothing is going on &mdash; which is another way of saying that 5% of perfectly null studies will always clear a 5% bar, no matter how careful everyone is.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- seeded PRNG (mulberry32) so every run reproduces exactly ---------- */
+ var SEED0=20260719, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ var spare=null;
+ function gauss(){
+   if(spare!==null){ var s=spare; spare=null; return s; }
+   var u=1-rnd(), v=rnd(), r=Math.sqrt(-2*Math.log(u));
+   spare=r*Math.sin(2*Math.PI*v);
+   return r*Math.cos(2*Math.PI*v);
+ }
+
+ /* ---------- standard normal CDF via erfc (fractional error < 1.2e-7) ---------- */
+ function erfc(x){
+   var z=Math.abs(x), t=1/(1+0.5*z);
+   var ans=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+
+     t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+
+     t*(-0.82215223+t*0.17087277)))))))));
+   return x>=0?ans:2-ans;
+ }
+ function normCdf(x){ return 0.5*erfc(-x/Math.SQRT2); }
+ var SQ2PI=Math.sqrt(2*Math.PI);
+
+ /* ================= the four studies ================= */
+ var ST=[
+  {k:'batt', nm:'Battery life', ct:'&mu; &middot; mean hours per cell', col:'#2f6f8a',
+   par:'mu', sym:'&mu;', sub:'0', stat:'x&#772;', statwd:'sample mean', parwd:'population mean',
+   unit:' h', units:'hours', who:'cells tested', sigma:40, dp:1, sdp:3,
+   mu0:500, dir:'lt',
+   oLo:470, oHi:530, oStep:0.5, o0:486,
+   n0:25, nMin:10, nMax:120, nStep:1,
+   claim:'A manufacturer advertises a mean life of <b>500 hours</b> per cell, with a known production spread of &sigma;&nbsp;=&nbsp;40 hours. A consumer group suspects the true mean is <b>lower</b> and tests a random sample of cells.',
+   ha:'&mu; &lt; 500 hours',
+   note:'Only a short battery is evidence against the advertisement, so &ldquo;at least this extreme&rdquo; runs down the <b>left</b> tail. A sample that comes in high is not weak evidence of a short battery &mdash; it is no evidence at all, and it sits outside the shaded region entirely.'},
+
+  {k:'bus', nm:'Bus commute', ct:'&mu; &middot; mean minutes door to door', col:'#7a5a8a',
+   par:'mu', sym:'&mu;', sub:'0', stat:'x&#772;', statwd:'sample mean', parwd:'population mean',
+   unit:' min', units:'minutes', who:'riders timed', sigma:7, dp:2, sdp:3,
+   mu0:28, dir:'ne',
+   oLo:24, oHi:32, oStep:0.1, o0:26.4,
+   n0:40, nMin:10, nMax:200, nStep:2,
+   claim:'A city reroutes a bus line. The old route&rsquo;s mean door&#8209;to&#8209;door time was <b>28 minutes</b> (&sigma;&nbsp;=&nbsp;7). Before any data came in, the analyst asked only whether the mean has <b>moved at all</b> &mdash; faster or slower would both change what the city does next.',
+   ha:'&mu; &ne; 28 minutes',
+   note:'Because a change in <i>either</i> direction was going to count, &ldquo;at least this extreme&rdquo; means &ldquo;at least this far from 28, on either side.&rdquo; Two tails get shaded and the p&#8209;value is exactly double the one&#8209;tailed area. That is not a penalty; it is the honest price of having asked a two&#8209;sided question.'},
+
+  {k:'page', nm:'Donation page', ct:'p &middot; proportion who give', col:'#2f9e5b',
+   par:'p', sym:'p', sub:'0', stat:'p&#770;', statwd:'sample proportion', parwd:'population proportion',
+   unit:'', units:'', who:'visitors shown', sigma:0, dp:3, sdp:4,
+   mu0:0.20, dir:'gt',
+   oLo:0.12, oHi:0.30, oStep:0.005, o0:0.245,
+   n0:400, nMin:100, nMax:2000, nStep:20,
+   claim:'A charity&rsquo;s donation page has converted at a long&#8209;run rate of <b>20%</b> for years. A redesign is shown to a random sample of visitors, and the only question that would justify rolling it out is whether it converts <b>better</b>.',
+   ha:'p &gt; 0.20',
+   note:'Here the simulated studies count actual donations &mdash; each visitor is a separate coin flip with probability 0.20 &mdash; so the histogram is genuinely discrete, in steps of one donation. The smooth curve is a normal <i>approximation</i> to that lumpy count, which is why the counted fraction settles a little above the shaded area instead of landing on it.'},
+
+  {k:'card', nm:'The card guesser', ct:'p &middot; proportion guessed right', col:'#b8862f',
+   par:'p', sym:'p', sub:'0', stat:'p&#770;', statwd:'sample proportion', parwd:'population proportion',
+   unit:'', units:'', who:'sealed pairs', sigma:0, dp:3, sdp:4,
+   mu0:0.50, dir:'gt',
+   oLo:0.40, oHi:0.70, oStep:0.005, o0:0.565,
+   n0:200, nMin:50, nMax:1000, nStep:10,
+   claim:'Someone claims they can tell which of two sealed envelopes holds the marked card <b>more often than chance</b>. Chance is <b>50%</b>. They are tested on a long run of sealed pairs, and the claim is what needs evidence.',
+   ha:'p &gt; 0.50',
+   note:'This is the cleanest case for feeling what a p&#8209;value is: the null world is literally a fair coin, so &ldquo;how often would a guesser with no ability do at least this well?&rdquo; is a question you can answer by flipping coins &mdash; which is exactly what the simulation below does.'}
+ ];
+
+ /* ---------- interpretation statements ---------- */
+ var CLM=[
+  {ok:1, t:'&ldquo;If H<sub>0</sub> were true, about 4% of studies like this one would give a result at least this extreme.&rdquo;',
+   s:'the definition, stated plainly',
+   d:'<b>Correct.</b> This is the p&#8209;value verbatim: a conditional probability about <i>data</i>, computed inside the world where H<sub>0</sub> holds. Notice everything it does not claim &mdash; nothing about how likely that world is, nothing about the size of any effect, nothing about what will happen next time.'},
+  {ok:0, t:'&ldquo;There is a 4% chance that H<sub>0</sub> is true.&rdquo;',
+   s:'the classic inversion',
+   d:'<b>Wrong &mdash; and it is the single most common error.</b> The p&#8209;value is P(extreme data | H<sub>0</sub>), not P(H<sub>0</sub> | data). Those two are different quantities and can be wildly far apart, as the 1,000&#8209;study grid on the left shows: push the share of truly null hypotheses up and the power down, and the share of rejected nulls that were true all along climbs past 80% &mdash; while every one of those studies still printed p&nbsp;&lt;&nbsp;0.05. Getting from one quantity to the other requires information the p&#8209;value simply does not carry.'},
+  {ok:0, t:'&ldquo;There is a 96% chance the effect is real.&rdquo;',
+   s:'the same inversion, dressed up',
+   d:'<b>Wrong.</b> 1&nbsp;&minus;&nbsp;p is not the probability that H<sub>a</sub> is true, for exactly the reason above. It is not a probability about hypotheses at all; it is the area of the <i>unshaded</i> part of a curve drawn under an assumption you were only granting temporarily.'},
+  {ok:0, t:'&ldquo;There is only a 4% chance the result was due to chance.&rdquo;',
+   s:'sounds harmless, says nothing',
+   d:'<b>Wrong.</b> The entire calculation already assumed the result <i>was</i> due to chance &mdash; that is what &ldquo;if H<sub>0</sub> were true&rdquo; means. Inside that assumption the probability of the result being due to chance is 100%, not 4%. The 4% describes how <i>far out</i> chance would have had to reach, not how likely chance is.'},
+  {ok:0, t:'&ldquo;It would replicate 96% of the time.&rdquo;',
+   s:'a prediction p never made',
+   d:'<b>Wrong.</b> Replication probability depends on the true effect size and on the next study&rsquo;s sample size, neither of which appears anywhere in the p&#8209;value. A result at p&nbsp;=&nbsp;0.04 in a small study very often fails to reach significance again.'},
+  {ok:0, t:'&ldquo;A large p&#8209;value shows H<sub>0</sub> is true.&rdquo;',
+   s:'absence of evidence',
+   d:'<b>Wrong.</b> A large p&#8209;value says your data is unsurprising <i>if</i> H<sub>0</sub> holds &mdash; but the same data is often equally unsurprising under plenty of alternatives. Set n to its smallest value on any study here and watch even a large gap produce a comfortable p&#8209;value: that is a statement about your instrument, not about the world. The test can accumulate evidence against H<sub>0</sub>, never for it.'},
+  {ok:1, t:'&ldquo;p was computed assuming H<sub>0</sub>; on its own it says nothing about how likely that assumption was.&rdquo;',
+   s:'what the conditioning bar means',
+   d:'<b>Correct.</b> Everything to the right of the bar in P(data | H<sub>0</sub>) is granted, not evaluated. To say anything about how often H<sub>0</sub> is true you need outside information &mdash; how often the hypotheses in your field are null, and how much power the studies have &mdash; which is exactly the calculation on the left, and exactly the thing a p&#8209;value cannot supply.'}
+ ];
+
+ /* ---------- state ---------- */
+ var si=0, obs=0, n=25, sims=[], simN=0, ci=-1;
+ var pr=50, pw=50, ALPHA=0.05;
+ var GA={lo:0,hi:1,X0:42,X1:466};
+
+ function C(){ return ST[si]; }
+ function com(x){ return String(x).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+ function fmO(v){ return v.toFixed(C().dp); }
+ function fmS(v){ return v.toFixed(C().sdp); }
+ function snap(v,st){ return parseFloat((Math.round(v/st)*st).toFixed(6)); }
+
+ function SE(){
+   var c=C();
+   if(c.par==='mu') return c.sigma/Math.sqrt(n);
+   return Math.sqrt(c.mu0*(1-c.mu0)/n);
+ }
+ function zObs(){ return (obs-C().mu0)/SE(); }
+ function pVal(){
+   var z=zObs(), lo=normCdf(z);
+   var d=C().dir;
+   if(d==='lt') return lo;
+   if(d==='gt') return 1-lo;
+   return 2*Math.min(lo,1-lo);
+ }
+ function pTxt(p){ return p<0.0001?'&lt;0.0001':p.toFixed(4); }
+ function pctTxt(p){ return p<0.0001?'&lt;0.01%':(p*100).toFixed(2)+'%'; }
+
+ /* is a simulated statistic at least as extreme as the observed one? */
+ function isExt(v){
+   var c=C(), e=1e-12;
+   if(c.dir==='lt') return v<=obs+e;
+   if(c.dir==='gt') return v>=obs-e;
+   return Math.abs(v-c.mu0)>=Math.abs(obs-c.mu0)-e;
+ }
+ function extK(){
+   var k=0,i;
+   for(i=0;i<sims.length;i++){ if(isExt(sims[i])) k++; }
+   return k;
+ }
+
+ /* ================= chart A : the null curve and its shaded tail ================= */
+ function chartA(){
+   var c=C(), se=SE(), X0=42, X1=466, Ytop=54, Y1=212, H=Y1-Ytop;
+   var d=Math.abs(obs-c.mu0);
+   var hw=Math.max(3.9*se, d+0.95*se);
+   var lo=c.mu0-hw, hi=c.mu0+hw;
+   GA={lo:lo,hi:hi,X0:X0,X1:X1};
+   function px(v){ var t=X0+(v-lo)/(hi-lo)*(X1-X0); return t<X0-4?X0-4:(t>X1+4?X1+4:t); }
+   function dens(x){ return Math.exp(-0.5*Math.pow((x-c.mu0)/se,2)); }
+   function cy(x){ return Y1-dens(x)*H; }
+   var s='',i,x;
+
+   /* shaded region(s) */
+   function area(a,b){
+     a=Math.max(a,lo); b=Math.min(b,hi);
+     if(b<=a) return '';
+     var p='M'+px(a).toFixed(1)+' '+Y1;
+     for(i=0;i<=72;i++){ x=a+(b-a)*i/72; p+='L'+px(x).toFixed(1)+' '+cy(x).toFixed(1); }
+     return p+'L'+px(b).toFixed(1)+' '+Y1+'Z';
+   }
+   if(c.dir==='lt') s+='<path d="'+area(lo,obs)+'" fill="#9fc4d4" opacity=".72"/>';
+   else if(c.dir==='gt') s+='<path d="'+area(obs,hi)+'" fill="#9fc4d4" opacity=".72"/>';
+   else { s+='<path d="'+area(lo,c.mu0-d)+'" fill="#9fc4d4" opacity=".72"/><path d="'+area(c.mu0+d,hi)+'" fill="#9fc4d4" opacity=".72"/>'; }
+
+   /* the curve */
+   var pth='';
+   for(i=0;i<=200;i++){ x=lo+(hi-lo)*i/200; pth+=(i?'L':'M')+px(x).toFixed(1)+' '+cy(x).toFixed(1); }
+   s+='<path d="'+pth+'" fill="none" stroke="#2f6f8a" stroke-width="2.4"/>';
+
+   /* axis + ticks at z = -3..3 */
+   s+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#c6d7e0" stroke-width="1.2"/>';
+   var k,tv,tx;
+   for(k=-3;k<=3;k++){
+     tv=c.mu0+k*se; if(tv<lo||tv>hi) continue;
+     tx=px(tv);
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+Y1+'" x2="'+tx.toFixed(1)+'" y2="'+(Y1+4)+'" stroke="#c6d7e0" stroke-width="1.2"/>';
+     s+='<text x="'+tx.toFixed(1)+'" y="'+(Y1+16)+'" font-size="9.6" fill="#78868d" text-anchor="middle" font-weight="700">'+fmO(tv)+'</text>';
+     s+='<text x="'+tx.toFixed(1)+'" y="'+(Y1+28)+'" font-size="9" fill="#a9b6bc" text-anchor="middle" font-weight="700">z='+(k>0?'+':'')+k+'</text>';
+   }
+
+   /* the null value */
+   var m0=px(c.mu0);
+   s+='<line x1="'+m0.toFixed(1)+'" y1="'+(Ytop-8)+'" x2="'+m0.toFixed(1)+'" y2="'+Y1+'" stroke="#2f6f8a" stroke-width="1.3" stroke-dasharray="3,3" opacity=".7"/>';
+   s+='<text x="'+m0.toFixed(1)+'" y="'+(Ytop-13)+'" font-size="10.4" fill="#1c4454" text-anchor="middle" font-weight="800">H'+String.fromCharCode(8320)+': '+c.sym+' = '+fmO(c.mu0)+'</text>';
+
+   /* the observed result */
+   var ox=px(obs), oy=cy(obs);
+   s+='<line x1="'+ox.toFixed(1)+'" y1="'+(oy-2).toFixed(1)+'" x2="'+ox.toFixed(1)+'" y2="'+Y1+'" stroke="#1c4454" stroke-width="2"/>';
+   s+='<circle cx="'+ox.toFixed(1)+'" cy="'+oy.toFixed(1)+'" r="5.6" fill="#1c4454"/><circle cx="'+ox.toFixed(1)+'" cy="'+oy.toFixed(1)+'" r="2.2" fill="#fff"/>';
+   var lab=fmO(obs), anch=(ox>X1-56)?'end':((ox<X0+56)?'start':'middle');
+   s+='<text x="'+ox.toFixed(1)+'" y="'+(Ytop-30)+'" font-size="10.6" fill="#1c4454" text-anchor="'+anch+'" font-weight="800">observed '+C().stat+' = '+lab+'</text>';
+   s+='<line x1="'+ox.toFixed(1)+'" y1="'+(Ytop-26)+'" x2="'+ox.toFixed(1)+'" y2="'+Math.max(Ytop-14,oy-9).toFixed(1)+'" stroke="#1c4454" stroke-width="1" stroke-dasharray="2,2" opacity=".6"/>';
+
+   /* the area, called out */
+   var p=pVal();
+   function pct(v){ return v<0.0001?'&lt;0.01%':(v*100).toFixed(2)+'%'; }
+   if(c.dir==='gt'){
+     var lxg=Math.min(X1-4,(ox+X1)/2);
+     s+='<text x="'+lxg.toFixed(1)+'" y="'+(Y1-9)+'" font-size="10.6" fill="#25607a" text-anchor="middle" font-weight="800">'+pct(p)+'</text>';
+   } else if(c.dir==='lt'){
+     var lxl=Math.max(X0+4,(X0+ox)/2);
+     s+='<text x="'+lxl.toFixed(1)+'" y="'+(Y1-9)+'" font-size="10.6" fill="#25607a" text-anchor="middle" font-weight="800">'+pct(p)+'</text>';
+   } else {
+     var la=Math.max(X0+4,(X0+px(c.mu0-d))/2), lb=Math.min(X1-4,(px(c.mu0+d)+X1)/2);
+     s+='<text x="'+la.toFixed(1)+'" y="'+(Y1-9)+'" font-size="10.6" fill="#25607a" text-anchor="middle" font-weight="800">'+pct(p/2)+'</text>';
+     s+='<text x="'+lb.toFixed(1)+'" y="'+(Y1-9)+'" font-size="10.6" fill="#25607a" text-anchor="middle" font-weight="800">'+pct(p/2)+'</text>';
+     s+='<text x="'+la.toFixed(1)+'" y="'+(Y1-21)+'" font-size="9" fill="#7fa4b5" text-anchor="middle" font-weight="700">half of p</text>';
+     s+='<text x="'+lb.toFixed(1)+'" y="'+(Y1-21)+'" font-size="9" fill="#7fa4b5" text-anchor="middle" font-weight="700">half of p</text>';
+   }
+
+   /* footer strip */
+   s+='<text x="'+X0+'" y="'+(Y1+48)+'" font-size="10.4" fill="#4a585f" font-weight="700">shaded area = p&#8209;value = '+pTxt(p)+'</text>';
+   s+='<text x="'+X1+'" y="'+(Y1+48)+'" font-size="10.4" fill="#78868d" text-anchor="end" font-weight="700">standard error = '+fmS(SE())+'</text>';
+   $("chart").innerHTML=s;
+ }
+
+ /* ================= chart B : the simulation histogram ================= */
+ function chartB(){
+   var c=C(), X0=42, X1=466, Ytop=30, Y1=162, H=Y1-Ytop;
+   var lo=GA.lo, hi=GA.hi, NB=45;
+   function px(v){ return X0+(v-lo)/(hi-lo)*(X1-X0); }
+   var s='', i, b;
+   var cnt=[], ext=[];
+   for(i=0;i<NB;i++){ cnt.push(0); ext.push(0); }
+   var below=0, above=0;
+   for(i=0;i<sims.length;i++){
+     var v=sims[i];
+     if(v<lo){ below++; continue; }
+     if(v>hi){ above++; continue; }
+     b=Math.floor((v-lo)/(hi-lo)*NB); if(b>=NB) b=NB-1; if(b<0) b=0;
+     cnt[b]++; if(isExt(v)) ext[b]++;
+   }
+   var mx=1;
+   for(i=0;i<NB;i++){ if(cnt[i]>mx) mx=cnt[i]; }
+   var bw=(X1-X0)/NB;
+   for(i=0;i<NB;i++){
+     if(!cnt[i]) continue;
+     var h=cnt[i]/mx*H, y=Y1-h, xx=X0+i*bw;
+     var frac=ext[i]/cnt[i];
+     if(frac>0.999){
+       s+='<rect x="'+xx.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+(bw-0.8).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="#5f9db8"/>';
+     } else if(frac<0.001){
+       s+='<rect x="'+xx.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+(bw-0.8).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="#dbe7ee"/>';
+     } else {
+       var he=h*frac;
+       s+='<rect x="'+xx.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+(bw-0.8).toFixed(1)+'" height="'+(h-he).toFixed(1)+'" fill="#dbe7ee"/>';
+       s+='<rect x="'+xx.toFixed(1)+'" y="'+(Y1-he).toFixed(1)+'" width="'+(bw-0.8).toFixed(1)+'" height="'+he.toFixed(1)+'" fill="#5f9db8"/>';
+     }
+   }
+   /* axis, null line, observed line */
+   s+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#c6d7e0" stroke-width="1.2"/>';
+   var m0=px(c.mu0);
+   s+='<line x1="'+m0.toFixed(1)+'" y1="'+Ytop+'" x2="'+m0.toFixed(1)+'" y2="'+Y1+'" stroke="#2f6f8a" stroke-width="1.3" stroke-dasharray="3,3" opacity=".75"/>';
+   s+='<text x="'+m0.toFixed(1)+'" y="'+(Ytop-8)+'" font-size="9.8" fill="#1c4454" text-anchor="middle" font-weight="800">the null world is centred here</text>';
+   var ox=px(obs);
+   s+='<line x1="'+ox.toFixed(1)+'" y1="'+(Ytop-2)+'" x2="'+ox.toFixed(1)+'" y2="'+(Y1+5)+'" stroke="#1c4454" stroke-width="2"/>';
+   var anch=(ox>X1-46)?'end':((ox<X0+46)?'start':'middle');
+   s+='<text x="'+ox.toFixed(1)+'" y="'+(Y1+18)+'" font-size="9.8" fill="#1c4454" text-anchor="'+anch+'" font-weight="800">your result</text>';
+   if(c.dir==='ne'){
+     var mx2=px(2*c.mu0-obs);
+     s+='<line x1="'+mx2.toFixed(1)+'" y1="'+(Ytop-2)+'" x2="'+mx2.toFixed(1)+'" y2="'+(Y1+5)+'" stroke="#1c4454" stroke-width="1.4" stroke-dasharray="3,3"/>';
+     s+='<text x="'+mx2.toFixed(1)+'" y="'+(Y1+18)+'" font-size="9.8" fill="#78868d" text-anchor="middle" font-weight="700">mirror</text>';
+   }
+   if(!sims.length){
+     s+='<text x="254" y="'+((Ytop+Y1)/2)+'" font-size="12" fill="#a9b6bc" text-anchor="middle" font-weight="700">no studies run yet &mdash; press a button below</text>';
+   }
+   var off=below+above;
+   if(off) s+='<text x="'+X1+'" y="'+(Y1+34)+'" font-size="9.4" fill="#a9b6bc" text-anchor="end" font-weight="700">'+com(off)+' landed off the axis (still counted)</text>';
+   s+='<text x="'+X0+'" y="'+(Y1+34)+'" font-size="9.8" fill="#4a585f" font-weight="700">every study below was run with H'+String.fromCharCode(8320)+' true, n = '+com(n)+'</text>';
+   $("sim").innerHTML=s;
+
+   var k=extK(), N=sims.length, p=pVal();
+   $("sN").innerHTML=com(N);
+   $("sK").innerHTML=com(k);
+   $("sF").innerHTML=N?(k/N).toFixed(4):'&mdash;';
+   $("sT").innerHTML=pTxt(p);
+   var cap, c2=C();
+   if(!N){
+     cap='Nothing has been simulated yet. Each study run below is a full sample of <b>'+com(n)+'</b> '+(c2.par==='mu'?'observations':'independent trials')+' generated in a world where H'+String.fromCharCode(8320)+' is exactly true &mdash; no effect, nothing but sampling noise.';
+   } else {
+     cap='Out of <b>'+com(N)+'</b> studies run in the null world, <b>'+com(k)+'</b> came out at least as extreme as yours. That is <b>'+(k/N).toFixed(4)+'</b>, against a curve area of <b>'+pTxt(p)+'</b>. ';
+     if(N<600) cap+='With only a couple of hundred studies the count still wobbles noticeably; add more and watch it tighten. ';
+     if(c2.par==='mu'){
+       cap+='Given enough studies it converges onto the curve exactly, because the mean of normal observations is itself exactly normal &mdash; here the curve is not an approximation at all, just a faster way of counting the same thing.';
+     } else {
+       cap+='It settles a little <i>above</i> the curve, and that gap does not shrink with more studies. The simulation counts whole '+(c2.k==='card'?'correct guesses':'donations')+' &mdash; a lumpy integer &mdash; while the curve is a smooth normal approximation that cannot see the gaps between whole counts. The simulated number is the exact answer here; the curve is the convenient one.';
+     }
+     cap+=' Notice that moving your result does not require re-running anything: the null world&rsquo;s studies are unchanged, and only the line marking &ldquo;at least this extreme&rdquo; slides.';
+   }
+   $("simcap").innerHTML=cap;
+ }
+
+ /* ================= chart C : 1,000 tested hypotheses ================= */
+ function chartC(){
+   var COLS=40, ROWS=25, X0=30, Y0=16, cw=10.5, ch=7.2;
+   var tn=Math.round(1000*pr/100), fn=1000-tn;
+   var fa=Math.round(tn*ALPHA), tp=Math.round(fn*pw/100);
+   var tnq=tn-fa, fnq=fn-tp;
+   var groups=[[tnq,'#dbe7ee'],[fa,'#d1495b'],[tp,'#2f9e5b'],[fnq,'#cfe3d5']];
+   var s='', gi=0, left=groups[0][0], i;
+   for(i=0;i<1000;i++){
+     while(gi<4 && left<=0){ gi++; left=(gi<4)?groups[gi][0]:0; }
+     var col=(gi<4)?groups[gi][1]:'#dbe7ee';
+     left--;
+     var r=Math.floor(i/COLS), c2=i%COLS;
+     s+='<rect x="'+(X0+c2*cw).toFixed(1)+'" y="'+(Y0+r*ch).toFixed(1)+'" width="'+(cw-1.6).toFixed(1)+'" height="'+(ch-1.5).toFixed(1)+'" rx="1.2" fill="'+col+'"/>';
+   }
+   var rej=fa+tp;
+   var Yb=Y0+ROWS*ch+22, Wb=COLS*cw-1.6;
+   s+='<text x="'+X0+'" y="'+(Yb-8)+'" font-size="10" fill="#4a585f" font-weight="800">OF THE '+com(rej)+' STUDIES THAT CAME BACK WITH p &lt; 0.05 &hellip;</text>';
+   if(rej>0){
+     var wf=Wb*fa/rej;
+     s+='<rect x="'+X0+'" y="'+Yb+'" width="'+wf.toFixed(1)+'" height="26" rx="4" fill="#d1495b"/>';
+     s+='<rect x="'+(X0+wf).toFixed(1)+'" y="'+Yb+'" width="'+(Wb-wf).toFixed(1)+'" height="26" rx="4" fill="#2f9e5b"/>';
+     var fdr=fa/rej;
+     if(wf>62) s+='<text x="'+(X0+wf/2).toFixed(1)+'" y="'+(Yb+17)+'" font-size="11.5" fill="#fff" text-anchor="middle" font-weight="800">'+(fdr*100).toFixed(0)+'% were true nulls</text>';
+     else s+='<text x="'+(X0+wf+6).toFixed(1)+'" y="'+(Yb+17)+'" font-size="11.5" fill="#fff" font-weight="800">'+(fdr*100).toFixed(0)+'% true nulls</text>';
+     if(Wb-wf>96) s+='<text x="'+(X0+wf+(Wb-wf)/2).toFixed(1)+'" y="'+(Yb+17)+'" font-size="11.5" fill="#fff" text-anchor="middle" font-weight="800">'+((1-fdr)*100).toFixed(0)+'% were real effects</text>';
+   }
+   s+='<text x="'+X0+'" y="'+(Yb+44)+'" font-size="9.6" fill="#78868d" font-weight="700">each square is one tested hypothesis &middot; 1,000 in total</text>';
+   $("base").innerHTML=s;
+
+   var fdr2=rej?fa/rej:0;
+   $("basecap").innerHTML='<span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#dbe7ee;margin-right:4px;"></span>true null, not rejected &nbsp; '+
+     '<span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#d1495b;margin-right:4px;"></span>true null, rejected anyway &mdash; a false alarm &nbsp; '+
+     '<span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#2f9e5b;margin-right:4px;"></span>real effect, detected &nbsp; '+
+     '<span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#cfe3d5;margin-right:4px;"></span>real effect, missed<br>'+
+     'With <b>'+pr+'%</b> of tested hypotheses truly null and <b>'+pw+'%</b> power, <b>'+com(tn)+'</b> nulls are true and 5% of them &mdash; <b>'+com(fa)+'</b> studies &mdash; get rejected anyway, while <b>'+com(tp)+'</b> of the <b>'+com(fn)+'</b> real effects are caught. So among the <b>'+com(rej)+'</b> studies reporting p&nbsp;&lt;&nbsp;0.05, <b>'+(fdr2*100).toFixed(1)+'%</b> had a true null. '+
+     'Every one of those studies reported a p&#8209;value under 0.05, yet the answer here swings from about <b>0.3%</b> to more than <b>80%</b> as the two sliders move &mdash; and those sliders describe the field, not any individual study. That is the proof that <b>p is not the probability the null is true</b>: if it were, this number could not move at all.';
+ }
+
+ /* ================= simulation ================= */
+ function runSims(m){
+   var c=C(), i, j;
+   for(i=0;i<m;i++){
+     if(c.par==='mu'){
+       var s=0;
+       for(j=0;j<n;j++) s+=c.mu0+c.sigma*gauss();
+       sims.push(s/n);
+     } else {
+       var k=0;
+       for(j=0;j<n;j++){ if(rnd()<c.mu0) k++; }
+       sims.push(k/n);
+     }
+   }
+ }
+ function clearSims(){ sims=[]; }
+
+ /* ================= readouts ================= */
+ /* the phrase that names the shaded region, in words */
+ function extPhrase(){
+   var c=C();
+   if(c.dir==='lt') return 'a '+c.statwd+' of <b>'+fmO(obs)+c.unit+' or lower</b>';
+   if(c.dir==='gt') return 'a '+c.statwd+' of <b>'+fmO(obs)+c.unit+' or higher</b>';
+   return 'a '+c.statwd+' <b>at least '+fmO(Math.abs(obs-c.mu0))+c.unit+' away from '+fmO(c.mu0)+c.unit+'</b> &mdash; on either side';
+ }
+ function tiles(){
+   var c=C(), se=SE(), z=zObs(), p=pVal();
+   $("tS1").innerHTML=c.par==='mu'?'mean x&#772;':'proportion p&#770;';
+   $("tStat").innerHTML=fmO(obs);
+   $("tStatS").innerHTML=c.par==='mu'?(c.units):((obs*100).toFixed(1)+'%');
+   $("tSe").innerHTML=fmS(se);
+   $("tSeS").innerHTML=c.par==='mu'?('&sigma;/&radic;n'):('&radic;(p'+String.fromCharCode(8320)+'q'+String.fromCharCode(8320)+'/n)');
+   $("tZ").innerHTML=(z>=0?'+':'')+z.toFixed(3);
+   $("tZs").innerHTML='SEs from H'+String.fromCharCode(8320);
+   $("tP").innerHTML=pTxt(p);
+   $("tPs").innerHTML=pctTxt(p);
+
+   var eq;
+   if(c.par==='mu'){
+     eq='<b>z</b> = (x&#772; &minus; &mu;'+String.fromCharCode(8320)+') / (&sigma;/&radic;n) = ('+fmO(obs)+' &minus; '+fmO(c.mu0)+') / ('+c.sigma+'/&radic;'+n+') = '+(obs-c.mu0).toFixed(3)+' / '+fmS(se)+' = <b>'+z.toFixed(3)+'</b>';
+   } else {
+     eq='<b>z</b> = (p&#770; &minus; p'+String.fromCharCode(8320)+') / &radic;(p'+String.fromCharCode(8320)+'(1&minus;p'+String.fromCharCode(8320)+')/n) = ('+fmO(obs)+' &minus; '+fmO(c.mu0)+') / '+fmS(se)+' = <b>'+z.toFixed(3)+'</b>';
+   }
+   eq+='<br>';
+   if(c.dir==='lt') eq+='<b>p</b> = P(Z &le; '+z.toFixed(3)+') = <b>'+pTxt(p)+'</b>';
+   else if(c.dir==='gt') eq+='<b>p</b> = P(Z &ge; '+z.toFixed(3)+') = <b>'+pTxt(p)+'</b>';
+   else eq+='<b>p</b> = 2 &times; P(Z &ge; '+Math.abs(z).toFixed(3)+') = 2 &times; '+(p/2<0.0001?'0.00005':(p/2).toFixed(4))+' = <b>'+pTxt(p)+'</b>';
+   $("eqn").innerHTML=eq;
+
+   var who=c.who, sent;
+   sent='<span class="big">'+pctTxt(p)+'</span> &mdash; if '+c.sym+' really were '+fmO(c.mu0)+c.unit+', that is the share of studies of '+com(n)+' '+who+' that would produce '+extPhrase()+'. ';
+   if(p>=0.20) sent+='A result like yours is <b>ordinary</b> in the null world, so it is no evidence against H'+String.fromCharCode(8320)+' &mdash; and no evidence for it either.';
+   else if(p>=0.05) sent+='A result like yours is <b>uncommon but not startling</b> in the null world.';
+   else if(p>=0.01) sent+='A result like yours would be <b>rare</b> if H'+String.fromCharCode(8320)+' held &mdash; which is evidence against H'+String.fromCharCode(8320)+'.';
+   else sent+='A result like yours would be <b>very rare</b> if H'+String.fromCharCode(8320)+' held &mdash; strong evidence against H'+String.fromCharCode(8320)+'.';
+   sent+=' Note what this sentence never mentions: how likely H'+String.fromCharCode(8320)+' is.';
+   $("sent").innerHTML=sent;
+
+   var cp='H'+String.fromCharCode(8320)+': '+c.sym+' = '+fmO(c.mu0)+c.unit+' &nbsp;&middot;&nbsp; H'+String.fromCharCode(8336)+': '+c.ha+'. ';
+   cp+=c.note;
+   $("cap").innerHTML=cp;
+ }
+
+ function renderStudies(){
+   $("studies").innerHTML=ST.map(function(x,i){
+     return '<button class="it'+(i===si?' on':'')+'" data-i="'+i+'"><span class="sw" style="background:'+x.col+'"></span><span><span class="nm">'+x.nm+'</span><span class="s">'+x.ct+'</span></span></button>';
+   }).join('');
+   var b=$("studies").querySelectorAll('.it'), q;
+   for(q=0;q<b.length;q++){ b[q].onclick=(function(el){ return function(){ pick(parseInt(el.dataset.i,10)); }; })(b[q]); }
+ }
+ function renderClaims(){
+   $("claims").innerHTML=CLM.map(function(x,i){
+     return '<button class="it'+(i===ci?' on':'')+'" data-i="'+i+'"><span><span class="nm" style="font-weight:600;font-size:12.2px;line-height:1.45;display:block;">'+x.t+'</span></span></button>';
+   }).join('');
+   var b=$("claims").querySelectorAll('.it'), q;
+   for(q=0;q<b.length;q++){ b[q].onclick=(function(el){ return function(){ ci=parseInt(el.dataset.i,10); showClaim(); }; })(b[q]); }
+ }
+ function showClaim(){
+   var x=CLM[ci];
+   $("info").innerHTML='<span class="n">'+x.s+'<span class="tag '+(x.ok?'tt':'ff')+'">'+(x.ok?'correct':'wrong')+'</span></span>'+x.d;
+   renderClaims();
+ }
+
+ function draw(){ chartA(); chartB(); tiles(); }
+
+ function setSliders(){
+   var c=C();
+   var o=$("oSl"); o.min=c.oLo; o.max=c.oHi; o.step=c.oStep; o.value=obs;
+   var q=$("nSl"); q.min=c.nMin; q.max=c.nMax; q.step=c.nStep; q.value=n;
+   $("oLab").innerHTML='observed '+c.stat;
+   $("oVal").innerHTML=fmO(obs);
+   $("nVal").innerHTML=com(n);
+ }
+
+ function pick(i){
+   si=i; var c=C();
+   obs=c.o0; n=c.n0; clearSims();
+   $("stage").style.background=c.col;
+   $("stage").innerHTML=c.nm+'<small>'+c.ct+'</small>';
+   $("claimtxt").innerHTML=c.claim;
+   setSliders(); renderStudies(); draw();
+ }
+
+ /* ---------- drag the observed result along chart A ---------- */
+ var dragging=false;
+ function fromEvent(e){
+   var sv=$("chart"), r=sv.getBoundingClientRect();
+   var cx=(e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX;
+   var vx=(cx-r.left)/r.width*480;
+   var t=(vx-GA.X0)/(GA.X1-GA.X0);
+   var v=GA.lo+t*(GA.hi-GA.lo);
+   var c=C();
+   v=snap(v,c.oStep);
+   if(v<c.oLo) v=c.oLo; if(v>c.oHi) v=c.oHi;
+   obs=v; $("oSl").value=obs; $("oVal").innerHTML=fmO(obs);
+   draw();
+ }
+ $("chart").addEventListener('pointerdown',function(e){ dragging=true; try{ this.setPointerCapture(e.pointerId); }catch(err){} fromEvent(e); e.preventDefault(); });
+ $("chart").addEventListener('pointermove',function(e){ if(dragging){ fromEvent(e); e.preventDefault(); } });
+ window.addEventListener('pointerup',function(){ dragging=false; });
+
+ /* ---------- controls ---------- */
+ $("oSl").oninput=function(){ obs=snap(parseFloat(this.value),C().oStep); $("oVal").innerHTML=fmO(obs); draw(); };
+ $("nSl").oninput=function(){ n=parseInt(this.value,10); $("nVal").innerHTML=com(n); clearSims(); draw(); };
+ $("bmid").onclick=function(){ obs=C().mu0; $("oSl").value=obs; $("oVal").innerHTML=fmO(obs); draw(); };
+ $("brst").onclick=function(){ seed=SEED0; spare=null; pick(si); };
+ $("run1").onclick=function(){ runSims(250); chartB(); };
+ $("run2").onclick=function(){ runSims(2500); chartB(); };
+ $("rrs").onclick=function(){ seed=SEED0; spare=null; clearSims(); chartB(); };
+ $("prSl").oninput=function(){ pr=parseInt(this.value,10); $("prVal").innerHTML=pr+'%'; chartC(); };
+ $("pwSl").oninput=function(){ pw=parseInt(this.value,10); $("pwVal").innerHTML=pw+'%'; chartC(); };
+
+ /* ---------- go ---------- */
+ renderClaims();
+ chartC();
+ pick(0);
+})();
+</script>
+</body>
+</html>

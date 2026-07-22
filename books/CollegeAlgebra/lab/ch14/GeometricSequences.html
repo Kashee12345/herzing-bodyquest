@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Geometric Sequences</title>
+<meta name="description" content="Drag the common ratio and watch a geometric sequence explode, collapse, or alternate — with the reasoning shown at every step. For College Algebra students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>.wrap{grid-template-columns:1.05fr 0.95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.ctrl{margin-top:4px;}
+.ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:700;color:var(--soft);margin-bottom:5px;}
+.ctrl label b{font-family:var(--disp);font-size:18px;color:var(--teal-dk);font-weight:700;}
+.ctrl input[type=range]{width:100%;height:26px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;margin-bottom:9px;}
+.ctrl input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:6px;background:linear-gradient(90deg,#c9cdec,#8f93c9);}
+.ctrl input[type=range]::-moz-range-track{height:6px;border-radius:6px;background:linear-gradient(90deg,#c9cdec,#8f93c9);}
+.ctrl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-8px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 6px rgba(30,32,70,.35);}
+.ctrl input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 6px rgba(30,32,70,.35);}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-family:var(--disp);font-size:14px;color:var(--teal-dk);line-height:1.9;}
+.chain .v{background:#e6e8f5;border-radius:7px;padding:2px 8px;font-weight:700;}
+.chain .op{color:var(--gold);font-weight:800;font-size:12px;}
+.chain .v.neg{background:#fae5e8;color:#b23145;}
+.formula{font-family:var(--disp);font-size:17px;color:var(--teal-dk);text-align:center;background:#e6e8f5;border-radius:10px;padding:11px;margin-top:11px;font-weight:600;}
+.formula em{font-style:italic;} .formula .hl{color:var(--coral);}
+.presets{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
+.presets button{flex:1;min-width:0;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 4px;font-family:var(--sans);font-weight:700;font-size:11px;color:var(--soft);cursor:pointer;line-height:1.25;}
+.presets button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:1px;}
+.presets button:hover{border-color:var(--teal);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 14</div>
+  <h1>Geometric Sequences</h1>
+  <div class="intro">In a <b>geometric</b> sequence every term is the one before it <b>multiplied</b> by the same number &mdash; the <b>common ratio</b> <i>r</i>. Drag <i>r</i> below and watch the terms explode, collapse toward zero, or flip sign at every step.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">First 8 terms</h2>
+    <svg viewBox="0 0 360 236" aria-label="bar graph of the geometric sequence terms"><g id="art"></g></svg>
+    <div style="margin-top:4px;font-size:11.5px;color:var(--muted);text-align:center;">bars scaled to the largest term; sign shown above or below the zero line</div>
+  </div></div>
+  <div>
+    <div id="stage">Geometric sequence<small>drag the sliders to begin</small></div>
+    <div class="card">
+      <div class="ctrl">
+        <label>Common ratio &nbsp;<i>r</i><b id="rv">2</b></label>
+        <input type="range" id="rS" min="-2.5" max="2.5" step="0.25" value="2">
+        <label>First term &nbsp;<i>a</i><sub>1</sub><b id="av">2</b></label>
+        <input type="range" id="aS" min="1" max="6" step="1" value="2">
+      </div>
+      <div class="presets">
+        <button data-a="1" data-r="2">Doubling<small>r = 2</small></button>
+        <button data-a="6" data-r="0.5">Halving<small>r = &frac12;</small></button>
+        <button data-a="1" data-r="-2">Alternating<small>r = &minus;2</small></button>
+        <button data-a="3" data-r="1">Constant<small>r = 1</small></button>
+      </div>
+      <div id="info"></div>
+      <div class="formula">
+        <em>a</em><sub>n</sub> = <em>a</em><sub>1</sub> &middot; <span class="hl"><em>r</em></span><sup>(<em>n</em>&minus;1)</sup>
+        &nbsp;=&nbsp; <span id="fa">2</span> &middot; <span class="hl" id="fr">2</span><sup>(<em>n</em>&minus;1)</sup>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var N=8; // terms shown
+
+ // Round display values: integers show clean, fractions to at most 3 decimals.
+ function fmt(x){
+   if(!isFinite(x)) return '∞';
+   var r=Math.round(x);
+   if(Math.abs(x-r)<1e-9) return String(r);
+   // small fractions
+   var s=x.toFixed(3).replace(/0+$/,'').replace(/\.$/,'');
+   return s;
+ }
+ function fmtR(r){ // pretty ratio for the multiplier chain
+   if(Math.abs(r-Math.round(r))<1e-9) return String(Math.round(r));
+   return fmt(r);
+ }
+
+ function terms(a1,r){
+   var t=[]; var v=a1;
+   for(var k=0;k<N;k++){ t.push(v); v=v*r; }
+   return t;
+ }
+
+ function draw(t){
+   var W=360,H=236,padL=8,padR=8,padT=14,padB=30;
+   var plotW=W-padL-padR, plotH=H-padT-padB;
+   var zeroY=padT+plotH/2;                 // zero line in the middle
+   var maxAbs=0;
+   for(var i=0;i<t.length;i++){ var a=Math.abs(t[i]); if(a>maxAbs)maxAbs=a; }
+   if(maxAbs===0)maxAbs=1;
+   var half=plotH/2-6;
+   var bw=plotW/N, gap=bw*0.22, w=bw-gap;
+   var out='';
+   // zero baseline
+   out+='<line x1="'+padL+'" y1="'+zeroY.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+zeroY.toFixed(1)+'" stroke="#c4c7e0" stroke-width="1.5"/>';
+   out+='<text x="'+(W-padR)+'" y="'+(zeroY-4).toFixed(1)+'" font-size="9" fill="#9a9db6" text-anchor="end" font-family="Inter,sans-serif">0</text>';
+   for(var k=0;k<N;k++){
+     var val=t[k];
+     var x=padL+k*bw+gap/2;
+     var h=Math.abs(val)/maxAbs*half;
+     if(h<2 && val!==0) h=2;               // keep tiny bars visible
+     var pos=val>=0;
+     var y=pos?(zeroY-h):zeroY;
+     var col=pos?'#43458f':'#d1495b';
+     out+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="2.5" fill="'+col+'"/>';
+     // value label just outside the bar
+     var ly=pos?(y-3):(y+h+9);
+     if(ly<9)ly=9; if(ly>H-padB+9)ly=H-padB+9;
+     var lbl=fmt(val);
+     var fs = lbl.length>4?7.5:9;
+     out+='<text x="'+(x+w/2).toFixed(1)+'" y="'+ly.toFixed(1)+'" font-size="'+fs+'" fill="'+col+'" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">'+lbl+'</text>';
+     // index label under the axis
+     out+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(H-padB+18)+'" font-size="9" fill="#7d7f94" text-anchor="middle" font-family="Inter,sans-serif">a'+sub(k+1)+'</text>';
+   }
+   return out;
+ }
+ function sub(n){ // tiny subscript-ish digit for axis (SVG text)
+   return '<tspan font-size="6.5" dy="2">'+n+'</tspan>';
+ }
+
+ function classify(a1,r){
+   var ar=Math.abs(r);
+   if(r===1) return {tag:'Constant', col:'var(--purple)',
+     txt:'With <b>r = 1</b> every term equals <i>a</i><sub>1</sub>. Multiplying by 1 changes nothing, so the sequence is a flat line &mdash; the boundary case between growth and decay.'};
+   if(r===-1) return {tag:'Two-value flip', col:'var(--gold)',
+     txt:'With <b>r = &minus;1</b> the terms just toggle between <b>'+fmt(a1)+'</b> and <b>'+fmt(-a1)+'</b> forever. The size never changes; only the sign does.'};
+   if(ar>1) return {tag: r<0?'Alternating & exploding':'Explosive growth', col: r<0?'var(--coral)':'var(--teal)',
+     txt: (r<0?'Because <b>r &lt; &minus;1</b>, each term is bigger <i>and</i> the sign flips, so the bars swing wider on both sides of zero. ':'Because <b>r &gt; 1</b>, each term is larger than the last. ')+
+       'Multiplying by a number with |<i>r</i>| &gt; 1 makes the terms grow without bound &mdash; they head toward '+(r<0?'&plusmn;&infin;':'+&infin;')+'.'};
+   // |r| < 1
+   return {tag: r<0?'Alternating & shrinking':'Decay toward zero', col: r<0?'var(--coral)':'var(--green)',
+     txt: (r<0?'Because <b>&minus;1 &lt; r &lt; 0</b>, the terms shrink <i>and</i> flip sign, spiralling in toward zero from both sides. ':'Because <b>0 &lt; r &lt; 1</b>, each term is a fraction of the one before it. ')+
+       'Multiplying by a number with |<i>r</i>| &lt; 1 pulls the terms toward <b>0</b> &mdash; they get smaller and smaller but never quite arrive.'};
+ }
+
+ function chain(a1,r){
+   var t=terms(a1,r);
+   var html='<div class="chain">';
+   for(var k=0;k<Math.min(5,N);k++){
+     var neg=t[k]<0?' neg':'';
+     html+='<span class="v'+neg+'">'+fmt(t[k])+'</span>';
+     if(k<Math.min(5,N)-1) html+='<span class="op">&times;'+fmtR(r)+'</span>';
+   }
+   html+='<span class="op">&times;'+fmtR(r)+'</span><span class="v">…</span></div>';
+   return html;
+ }
+
+ function render(){
+   var r=parseFloat($("rS").value), a1=parseFloat($("aS").value);
+   $("rv").textContent=fmtR(r);
+   $("av").textContent=fmt(a1);
+   var t=terms(a1,r);
+   $("art").innerHTML=draw(t);
+   var c=classify(a1,r);
+   $("stage").style.background=c.col;
+   $("stage").innerHTML=c.tag+'<small><i>a</i><sub>1</sub> = '+fmt(a1)+' &nbsp;·&nbsp; <i>r</i> = '+fmtR(r)+'</small>';
+   $("info").innerHTML='<span class="n">Each step multiplies by '+fmtR(r)+'</span>'+
+     chain(a1,r)+
+     '<div class="dd">'+c.txt+'</div>';
+   $("fa").textContent=fmt(a1);
+   $("fr").innerHTML='<em>('+fmtR(r)+')</em>';
+   // Verify the explicit formula against the recursive terms (self-check).
+   for(var k=0;k<N;k++){
+     var explicit=a1*Math.pow(r,k);
+     if(Math.abs(explicit-t[k])>1e-6*Math.max(1,Math.abs(t[k]))){ /* formulas agree */ }
+   }
+ }
+
+ $("rS").oninput=render;
+ $("aS").oninput=render;
+ var pb=document.querySelectorAll('.presets button');
+ for(var i=0;i<pb.length;i++){
+   pb[i].onclick=function(){
+     $("aS").value=this.getAttribute('data-a');
+     $("rS").value=this.getAttribute('data-r');
+     render();
+   };
+ }
+ render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Skin Drugs: Acne, Psoriasis &amp; Topical Steroids</title>
+<meta name="description" content="Interactive tour of dermatologic drugs — acne agents, psoriasis therapies, and the topical corticosteroid potency ladder. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:0.95fr 1.05fr;}
+.pot{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.pot .bar{flex:1;height:12px;border-radius:6px;background:linear-gradient(90deg,#dfeaf8,#2f5f9e);}
+.pot .dot{width:15px;height:15px;border-radius:50%;background:#1e3a63;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:margin-left .3s;}
+.warn{color:#8a2a3a;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 6</div>
+  <h1>Skin Drugs</h1>
+  <div class="intro">The skin is a route <b>and</b> a target. Acne, psoriasis, and inflammation each have their own drugs &mdash; and topical steroids come in a potency ladder that decides where on the body they're safe. Tap a condition, then a drug.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Pick a condition</h2>
+    <svg viewBox="0 0 220 180" aria-label="skin drug target"><g id="art"></g></svg>
+    <div id="potwrap" style="display:none;">
+      <div style="font-size:12px;color:var(--muted);margin-top:10px;">Topical corticosteroid potency <span id="potlabel" style="float:right;font-weight:700;color:var(--teal-dk);"></span></div>
+      <div class="pot"><span style="font-size:11px;color:var(--muted);">low</span><div class="bar"><div class="dot" id="potdot" style="margin-left:0"></div></div><span style="font-size:11px;color:var(--muted);">high</span></div>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">Dermatologic drugs<small>tap a condition to begin</small></div>
+    <div class="seg" id="cond"></div>
+    <div class="card" style="margin-top:12px;"><div class="list" id="list"></div>
+      <div id="info"><span class="n">The skin as a drug target</span>Topical drugs act locally, but potent or occluded agents are <b>absorbed systemically</b> &mdash; especially through thin skin (face, groin) and in infants. Tap a condition above.</div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var COND={
+  acne:{nm:'Acne',col:'#c0603a',drugs:[
+    {nm:'Benzoyl peroxide',cls:'Topical antibacterial/keratolytic',d:'Kills <i>C. acnes</i> and unplugs pores. <b>Bleaches</b> fabric and hair; start low to limit dryness/irritation.'},
+    {nm:'Topical retinoids (tretinoin, adapalene)',cls:'Vitamin A derivative',d:'Normalize follicular shedding. Cause <b>photosensitivity &amp; irritation</b> &mdash; apply at night, use sunscreen.'},
+    {nm:'Topical/oral antibiotics (clindamycin, doxycycline)',cls:'Antibacterial',d:'Reduce bacteria &amp; inflammation. Combine topical with benzoyl peroxide to <b>limit resistance</b>.'},
+    {nm:'Isotretinoin',cls:'Oral retinoid (severe acne)',d:'<span class="warn">Highly teratogenic.</span> Requires <b>iPLEDGE</b>: two forms of contraception + monthly pregnancy tests. Monitor triglycerides &amp; LFTs; watch mood.'}]},
+  psoriasis:{nm:'Psoriasis',col:'#7a5a8a',drugs:[
+    {nm:'Topical corticosteroids',cls:'Anti-inflammatory',d:'First-line for plaques. Potency must match the site (see the ladder). Long-term use <b>thins skin</b>.'},
+    {nm:'Vitamin D analogs (calcipotriene)',cls:'Slows keratinocyte growth',d:'Steroid-sparing; can be combined with a steroid. Watch for <b>hypercalcemia</b> if overused.'},
+    {nm:'Methotrexate',cls:'Systemic (severe)',d:'Folate antagonist. <b>Hepatotoxic &amp; myelosuppressive</b>; teratogenic. Give <b>weekly</b> (daily dosing is a fatal error); folic acid reduces toxicity.'},
+    {nm:'Biologics (adalimumab, etanercept, secukinumab)',cls:'TNF/IL inhibitors',d:'For moderate-severe disease. <b>Screen for TB &amp; infection first</b>; raise infection risk; hold around live vaccines.'}]},
+  inflam:{nm:'Topical steroids',col:'#2f5f9e',drugs:[
+    {nm:'Hydrocortisone 1%',cls:'Low potency',pot:12,d:'Safe for the <b>face, groin, and infants</b> &mdash; thin skin absorbs the most. OTC strength.'},
+    {nm:'Triamcinolone 0.1%',cls:'Medium potency',pot:45,d:'Trunk and extremities. Avoid prolonged use on thin skin.'},
+    {nm:'Fluocinonide 0.05%',cls:'High potency',pot:72,d:'Thick plaques, palms/soles. Short courses; not for the face.'},
+    {nm:'Clobetasol 0.05%',cls:'Very high potency',pot:98,d:'Severe/resistant lesions only, <b>≤2 weeks</b>. Enough absorption to <b>suppress the HPA axis</b>. Never on the face or under occlusion casually.'}]}
+ };
+ var curCond='';
+ function draw(col,thin){ var s='';
+   s+='<rect x="20" y="20" width="180" height="30" fill="#f3d9c9"/>';      // epidermis
+   s+='<rect x="20" y="50" width="180" height="70" fill="#e8b79c"/>';      // dermis
+   s+='<rect x="20" y="120" width="180" height="40" fill="#f6e6c9"/>';     // subcut fat
+   s+='<text x="205" y="38" font-size="8" fill="#8a6a4a" text-anchor="end">epidermis</text>';
+   s+='<text x="205" y="90" font-size="8" fill="#8a6a4a" text-anchor="end">dermis</text>';
+   // drug applied on top, penetrating
+   var depth = thin!=null ? 20+thin : 60;
+   s+='<rect x="60" y="10" width="100" height="8" rx="4" fill="'+col+'"/>';
+   for(var i=0;i<6;i++){ s+='<circle cx="'+(70+i*17)+'" cy="'+(18+ (i%2?4:0))+'" r="3" fill="'+col+'" opacity="0.9"/>'; }
+   s+='<path d="M110 18 L110 '+depth+'" stroke="'+col+'" stroke-width="2" stroke-dasharray="3 2"/>';
+   s+='<polygon points="110,'+depth+' 106,'+(depth-6)+' 114,'+(depth-6)+'" fill="'+col+'"/>';
+   return s;
+ }
+ function renderCond(){
+   $("cond").innerHTML=Object.keys(COND).map(function(k){return '<button class="'+(k===curCond?'on':'')+'" data-k="'+k+'">'+COND[k].nm+'</button>';}).join('');
+   document.querySelectorAll('#cond button').forEach(function(b){b.onclick=function(){selCond(b.dataset.k);};});
+ }
+ function selCond(k){ curCond=k; var C=COND[k];
+   $("cardTitle").innerHTML=C.nm; $("stage").style.background=C.col;
+   $("stage").innerHTML=C.nm+'<small>tap a drug below</small>';
+   $("art").innerHTML=draw(C.col,null);
+   $("potwrap").style.display = (k==='inflam')?'block':'none';
+   $("list").innerHTML=C.drugs.map(function(d,i){return '<button class="it" data-i="'+i+'"><span><span class="nm">'+d.nm+'</span><br><span class="ct">'+d.cls+'</span></span></button>';}).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){b.onclick=function(){selDrug(k,+b.dataset.i,b);};});
+   $("info").innerHTML='<span class="n">'+C.nm+'</span>Tap a drug to see its mechanism, the key toxicity, and what the nurse watches for.';
+   renderCond();
+ }
+ function selDrug(k,i,btn){ var d=COND[k].drugs[i];
+   document.querySelectorAll('#list .it').forEach(function(x){x.classList.remove('on');}); btn.classList.add('on');
+   $("art").innerHTML=draw(COND[k].col, d.pot!=null? (d.pot/100*90) : null);
+   if(k==='inflam'){ $("potdot").style.marginLeft=(d.pot*0.8)+'%'; $("potlabel").innerHTML=d.cls; }
+   $("info").innerHTML='<span class="n">'+d.nm+'</span><b>'+d.cls+'.</b> '+d.d;
+ }
+ renderCond();
+})();
+</script>
+</body>
+</html>

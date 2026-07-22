@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Supply vs Demand: Nitrates &amp; the ACS Bundle</title>
+<meta name="description" content="Interactive angina and acute coronary syndrome simulator — build the ACS bundle drug by drug and watch each agent move myocardial oxygen supply or demand. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:0.95fr 1.05fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.mtr{margin-top:10px;}
+.mtr .lb{display:flex;justify-content:space-between;align-items:baseline;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
+.mtr .lb b{font-family:var(--disp);font-size:15px;letter-spacing:-.3px;}
+.mtr .bar{height:11px;border-radius:6px;background:#e8edf5;overflow:hidden;margin-top:4px;}
+.mtr .bar i{display:block;height:100%;transition:width .45s;border-radius:6px;}
+.sup .lb b{color:var(--teal-dk);} .sup .bar i{background:var(--teal);}
+.dem .lb b{color:#b23145;} .dem .bar i{background:var(--coral);}
+.gapbar{margin-top:11px;display:flex;align-items:center;gap:8px;}
+.gapbar .gv{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.4px;}
+.gapbar .gt{font-size:11px;color:var(--muted);line-height:1.4;}
+.rd{display:flex;gap:5px;margin-bottom:10px;}
+.rd div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:6px 2px;font-size:9px;font-weight:800;color:var(--muted);background:#fff;text-transform:uppercase;letter-spacing:.3px;}
+.rd div .v{display:block;font-family:var(--disp);font-weight:700;font-size:16px;margin-top:2px;color:var(--teal-dk);letter-spacing:-.3px;}
+.rd div.bad{border-color:#e79aa6;background:#fdf0f2;color:#b23145;} .rd div.bad .v{color:#b23145;}
+.chip{width:100%;border:1px dashed var(--line);background:#fff;border-radius:10px;padding:8px 11px;font-family:var(--sans);font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer;text-align:left;margin-bottom:11px;}
+.chip b{color:var(--teal-dk);float:right;}
+.chip.yes{border-style:solid;border-color:#e79aa6;background:#fdf0f2;color:#8a2a3a;} .chip.yes b{color:#b23145;}
+.it .fx{margin-left:auto;display:flex;gap:3px;flex:none;}
+.it .fx span{font-size:8.5px;font-weight:800;border-radius:20px;padding:2px 6px;background:#e4eefa;color:#1e3a63;white-space:nowrap;}
+.it .fx span.d{background:#fae5e8;color:#b23145;}
+.it.on .fx span,.it.on .fx span.d{background:rgba(255,255,255,.2);color:#fff;}
+.it.sel{box-shadow:0 0 0 2px var(--gold);}
+.it .tk{width:15px;flex:none;font-size:12px;font-weight:800;color:var(--line);}
+.it.on .tk{color:#fff;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 10</div>
+  <h1>Supply vs Demand: Nitrates &amp; the ACS Bundle</h1>
+  <div class="intro">Angina is one sentence of physiology: <b>the myocardium is asking for more oxygen than the coronary arteries are delivering.</b> Every drug in the acute coronary syndrome bundle attacks that sentence from one side or the other &mdash; it either <b>lowers demand</b> or <b>raises supply</b>. Tap each order to give it or withhold it, and watch which side of the ledger it actually moves.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Chest pain · 20 minutes, crushing, radiating to the jaw</h2>
+    <svg viewBox="0 0 220 214" aria-label="coronary artery with plaque and thrombus above a heart showing the ischemic territory"><g id="art"></g></svg>
+    <div class="mtr sup"><div class="lb"><span>Oxygen supply · coronary flow</span><b id="sv">38</b></div><div class="bar"><i id="sb" style="width:38%"></i></div></div>
+    <div class="mtr dem"><div class="lb"><span>Oxygen demand · HR × contractility × wall tension</span><b id="dv">100</b></div><div class="bar"><i id="db" style="width:100%"></i></div></div>
+    <div class="gapbar"><span class="gv" id="gv">62</span><span class="gt" id="gt">The <b>ischemic gap</b>. Close it and the pain stops.</span></div>
+    <div class="rule" style="font-size:11.5px;color:var(--teal-dk);background:#e4eefa;border-radius:8px;padding:7px 10px;margin-top:10px;line-height:1.5;">Coronary arteries fill during <b>diastole</b> &mdash; that is why anything that slows the heart raises supply as well as lowering demand, and why tachycardia is an ischemic patient's enemy.</div>
+  </div></div>
+  <div>
+    <div id="stage">Active ischemia<small>nothing given yet — build the bundle</small></div>
+    <div class="card">
+      <div class="rd" id="rd"></div>
+      <button class="chip" id="pde5">Chart check · PDE-5 inhibitor taken in the last 24–48 h? <b>NO</b></button>
+      <div class="list" id="list"></div>
+      <div id="haz" style="display:none"></div>
+      <div id="info"></div>
+      <div class="mnem"><b>MONA is a memory aid, not a priority order.</b> <b>Aspirin</b> and <b>reperfusion</b> save lives; <b>nitrates</b> relieve the pain; <b>oxygen</b> only if SpO₂ &lt; 90%; <b>morphine</b> is last, not first.</div>
+      <div class="row"><button class="btn" id="reset">Reset the patient</button><button class="btn solid" id="all">Give the full bundle</button></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var D=[
+  {k:'asa',ic:'🩸',nm:'Aspirin 162–325 mg, chewed',ct:'Non–enteric-coated · give first',dD:0,dS:6,
+   fx:['↑ supply'],
+   t:'Aspirin — chewed, non–enteric-coated',
+   b:'<b>Irreversibly</b> inhibits <b>COX-1</b> in the platelet, shutting off <b>thromboxane A₂</b> for that platelet\'s entire 7–10 day life. It cannot dissolve the clot that is already there, but it stops the clot from <b>growing</b> — so the flow the artery still has is preserved. This is the earliest, cheapest, highest-yield thing on the list.',
+   ex:['↑ supply: protects residual coronary flow'],
+   n:'<b>Nurse:</b> have the patient <b>chew</b> it — do not swallow whole, and never use enteric-coated in an acute event; chewing gets platelet inhibition in minutes instead of an hour. Give it before the troponin or the ECG result comes back if there is no contraindication.',
+   w:'<b>Hold for:</b> true aspirin allergy, active GI bleeding, or known bleeding disorder. Ask about asthma with nasal polyps (aspirin-exacerbated respiratory disease).'},
+
+  {k:'ntg',ic:'💊',nm:'Nitroglycerin 0.4 mg SL',ct:'q5min × 3 doses · BP before each',dD:-14,dS:4,
+   fx:['↓ demand','↑ supply'],
+   t:'Nitroglycerin — sublingual',
+   b:'Broken down to <b>nitric oxide</b> → cGMP → vascular smooth muscle relaxes. At usual doses it is mostly a <b>venodilator</b>: blood pools in the veins, <b>preload falls</b>, the ventricle is less stretched, <b>wall tension drops</b> — and wall tension is the biggest single driver of oxygen demand. That is the main effect. It also dilates the epicardial coronaries and collaterals and breaks vasospasm, which adds a smaller bump in <b>supply</b>.',
+   ex:['↓ demand: preload → wall tension','↑ supply: coronary dilation'],
+   n:'<b>Nurse:</b> take a <b>blood pressure before every single dose</b> — not just the first. Sit or lay the patient down before giving it. 0.4 mg SL, may repeat q5min up to <b>3 doses</b>. <b>Hold and notify</b> if SBP &lt; 90 mmHg or has fallen &gt; 30 mmHg below baseline. A throbbing <b>headache</b>, flushing, and dizziness are expected, not allergy — treat and reassure. If the chest pain is unrelieved after the first dose, activate emergency care; do not quietly work through all three.',
+   w:'<b>Absolute contraindication: PDE-5 inhibitors.</b> Sildenafil or vardenafil within <b>24 h</b>, tadalafil within <b>48 h</b> → both drugs raise cGMP, and the combination causes profound, refractory hypotension. <b>Ask every patient, every age.</b> Also dangerous in <b>right ventricular infarction</b> (that ventricle is preload-dependent — dropping preload drops the whole cardiac output), severe aortic stenosis, and HOCM.<br><br><b>Tolerance:</b> long-acting nitrates (isosorbide mononitrate, transdermal patch) need a <b>10–12 hour nitrate-free interval</b> — patch off at night — or the receptor stops answering.'},
+
+  {k:'p2y',ic:'🧬',nm:'P2Y12 inhibitor',ct:'clopidogrel · ticagrelor · prasugrel',dD:0,dS:5,
+   fx:['↑ supply'],
+   t:'P2Y12 inhibitor — the second antiplatelet',
+   b:'Blocks <b>ADP</b> at the platelet <b>P2Y12</b> receptor, which prevents the GP IIb/IIIa change that lets platelets stick together. Aspirin closes one door; this closes the other. Together they are <b>dual antiplatelet therapy (DAPT)</b>, and like aspirin the benefit is on the <b>supply</b> side — keeping the artery from re-occluding.',
+   ex:['↑ supply: prevents re-occlusion'],
+   n:'<b>Nurse:</b> bleeding precautions — soft toothbrush, electric razor, no IM injections you can avoid, report black stools or a headache that will not quit. Ask when the patient last took a dose before any planned CABG (<b>clopidogrel and ticagrelor held 5 days, prasugrel 7</b>).',
+   w:'<b>Prasugrel is contraindicated with any prior stroke or TIA</b> and is avoided at age ≥ 75 or weight &lt; 60 kg. <b>Ticagrelor</b> commonly causes <b>dyspnea</b> that is benign and not heart failure, and requires the maintenance <b>aspirin dose stay ≤ 100 mg/day</b>. <b>Clopidogrel</b> is a prodrug needing CYP2C19 — poor metabolizers get less effect, and omeprazole blunts it (use pantoprazole instead).'},
+
+  {k:'hep',ic:'💉',nm:'Anticoagulant — heparin',ct:'unfractionated IV or enoxaparin SubQ',dD:0,dS:4,
+   fx:['↑ supply'],
+   t:'Heparin — anticoagulant, not a clot-buster',
+   b:'Unfractionated heparin potentiates <b>antithrombin</b>, which then inactivates <b>thrombin (IIa)</b> and <b>factor Xa</b>. It stops the existing thrombus from <b>propagating</b> and keeps the vessel from closing off completely — a <b>supply</b> drug. It does <b>not</b> dissolve clot that has already formed; only fibrinolytics or a catheter do that.',
+   ex:['↑ supply: stops clot propagation'],
+   n:'<b>Nurse:</b> for IV heparin monitor <b>aPTT</b> (goal roughly 1.5–2.5 × control) or anti-Xa per protocol, and watch the <b>platelet count</b> — a drop &gt; 50% or below 150,000 around <b>day 5–10</b> means <b>HIT</b>: stop <b>all</b> heparin, including flushes, and expect a non-heparin anticoagulant. <b>Antidote: protamine sulfate.</b>',
+   w:'<b>Enoxaparin:</b> give deep SubQ in the abdomen 2 inches from the umbilicus, <b>do not expel the air bubble</b>, do not aspirate, do not massage the site, rotate sides. Dose is reduced in renal impairment (CrCl &lt; 30 mL/min). Protamine only partially reverses it.'},
+
+  {k:'bb',ic:'🛑',nm:'Beta blocker — metoprolol',ct:'oral within 24 h if no contraindication',dD:-12,dS:4,
+   fx:['↓ demand','↑ supply'],
+   t:'Beta blocker — the demand drug that also buys supply',
+   b:'Blocks <b>beta-1</b> receptors: heart rate falls, contractility falls, blood pressure falls. All three are terms in the demand equation, so <b>demand drops hard</b>. Then the bonus: a slower rate lengthens <b>diastole</b>, and the coronaries only fill in diastole — so the same drug quietly raises <b>supply</b> too. This is why beta blockers reduce reinfarction and ventricular arrhythmia after an MI.',
+   ex:['↓ demand: HR, contractility, BP','↑ supply: longer diastole'],
+   n:'<b>Nurse:</b> take an <b>apical pulse for a full minute</b> and a BP before each dose. <b>Hold and notify</b> for HR &lt; 60 or SBP &lt; 100 (per protocol). Teach the patient to <b>never stop it abruptly</b> — rebound tachycardia, hypertension, and ischemia follow. In a patient with diabetes it <b>masks the signs of hypoglycemia</b> except diaphoresis, so teach glucose checks rather than symptom-watching.',
+   w:'<b>Hold for:</b> decompensated heart failure or any sign of low output / cardiogenic shock, second- or third-degree AV block, active bronchospasm, HR &lt; 60, SBP &lt; 100. <b>Cocaine-associated chest pain is a contraindication</b> — blocking beta leaves alpha unopposed and worsens coronary vasoconstriction; benzodiazepines and nitrates are used instead.'},
+
+  {k:'o2',ic:'💨',nm:'Oxygen',ct:'only if SpO₂ < 90% or distress',dD:0,dS:0,cond:1,
+   fx:['↑ supply only if hypoxic'],
+   t:'Oxygen — measure before you treat',
+   b:'Oxygen raises <b>supply</b> only if the blood arriving at the coronary is actually short of it. <b>This patient\'s SpO₂ is 96% on room air</b>, so the hemoglobin is already saturated and there is nothing left to add — the meters do not move. Routine oxygen in a <b>normoxic</b> ACS patient shows <b>no benefit</b>, and hyperoxia causes coronary vasoconstriction that may enlarge the infarct.',
+   ex:['no change: SpO₂ is 96%'],
+   n:'<b>Nurse:</b> give oxygen for <b>SpO₂ &lt; 90%</b> or respiratory distress, and <b>titrate to 90–94%</b> — the goal is a number, not a nasal cannula on every chest pain. Reassess the saturation after every change.',
+   w:'This is the item most students give reflexively. Being able to say <b>"his sat is 96%, oxygen adds nothing here"</b> is the point of the box.'},
+
+  {k:'mor',ic:'🌙',nm:'Morphine',ct:'only if pain persists despite nitrates',dD:-6,dS:0,
+   fx:['↓ demand'],
+   t:'Morphine — reserved, not reflexive',
+   b:'Relieves pain and anxiety, which <b>turns down sympathetic outflow</b> — heart rate and blood pressure fall, so <b>demand</b> falls. It also venodilates a little, trimming preload, which is why it helps in flash pulmonary edema. It does nothing at all for supply.',
+   ex:['↓ demand: less sympathetic drive'],
+   n:'<b>Nurse:</b> monitor <b>respiratory rate</b> (hold and reassess if &lt; 12), blood pressure, sedation level, and the pain score. <b>Antidote: naloxone.</b> Keep it at the bedside for anyone getting IV opioids.',
+   w:'<b>Deliberately demoted.</b> Morphine <b>delays and blunts the absorption of oral P2Y12 inhibitors</b> by slowing gastric emptying — it can undercut a drug that saves the artery. It also masks the ongoing ischemia you are trying to track. Give it for pain that <b>persists despite nitrates</b>, not as step two of a mnemonic.'},
+
+  {k:'sta',ic:'📉',nm:'High-intensity statin',ct:'atorvastatin 80 mg · before discharge',dD:0,dS:0,
+   fx:['no acute change'],
+   t:'High-intensity statin — tomorrow\'s drug, started tonight',
+   b:'An <b>HMG-CoA reductase</b> inhibitor. Be honest about the timeline: it moves <b>neither meter tonight</b>. Its job is <b>plaque stabilization</b> — quieting the inflamed cap that ruptured in the first place — so the <b>next</b> event does not happen. It is started before discharge <b>regardless of the LDL level</b>, which surprises students.',
+   ex:['no acute change: prevention, not rescue'],
+   n:'<b>Nurse:</b> teach the patient to report <b>unexplained muscle pain, tenderness, or weakness</b>, especially with dark urine — that is the rhabdomyolysis warning, and it earns a CK level. Baseline liver enzymes. Teach that this is <b>lifelong</b>, not a course.',
+   w:'Avoid <b>grapefruit juice</b> with atorvastatin, simvastatin, and lovastatin (CYP3A4 inhibition → higher drug levels → higher myopathy risk). Contraindicated in pregnancy.'},
+
+  {k:'pci',ic:'🎈',nm:'Reperfusion — primary PCI',ct:'door-to-balloon ≤ 90 min',dD:0,dS:38,
+   fx:['↑↑ supply'],
+   t:'Reperfusion — the only thing that reopens the artery',
+   b:'Everything above manages the imbalance. <b>Only this fixes it.</b> A catheter crosses the lesion, the balloon opens it, the stent holds it, and <b>supply comes back</b> in a single step no drug can match. Notice what happens to the meters — the full medication bundle alone still leaves a gap, because the drugs are <b>buying time</b> until the artery is open.',
+   ex:['↑↑ supply: mechanical flow restored'],
+   n:'<b>Nurse:</b> STEMI targets are <b>door-to-balloon ≤ 90 minutes</b> (≤ 120 if transferring out). If PCI cannot happen within 120 minutes, a <b>fibrinolytic</b> (alteplase, tenecteplase) is given with a <b>door-to-needle ≤ 30 minutes</b>. Time is muscle — the nurse\'s job is the clock.',
+   w:'<b>After PCI:</b> check the access site for bleeding or hematoma, check <b>distal pulses</b> and the limb, keep the extremity straight per protocol, watch for <b>reperfusion dysrhythmias</b>, and hydrate / trend renal function after the contrast.<br><br><b>Fibrinolytic absolute contraindications:</b> any prior intracranial hemorrhage, ischemic stroke within 3 months, known intracranial neoplasm or AVM, active bleeding, suspected <b>aortic dissection</b>, significant closed head trauma within 3 months.'}
+ ];
+
+ var on={},sel=null,pde5=0;
+ var DBASE=100,SBASE=38,GAP0=62;
+
+ function calc(){
+  var d=DBASE,s=SBASE;
+  for(var i=0;i<D.length;i++){ if(on[D[i].k]){ d+=D[i].dD; s+=D[i].dS; } }
+  s=Math.max(0,Math.min(100,s)); d=Math.max(0,Math.min(100,d));
+  return {d:d,s:s,gap:Math.max(0,d-s)};
+ }
+
+ function vitals(){
+  var sbp=148,dbp=88,hr=96,sp=96;
+  if(on.ntg){ sbp-=24; dbp-=12; hr+=8; }
+  if(on.bb){ sbp-=12; dbp-=6; hr-=22; }
+  if(on.mor){ sbp-=8; dbp-=4; hr-=6; }
+  if(on.pci){ hr-=4; }
+  if(pde5&&on.ntg){ sbp=58; dbp=30; hr=124; }
+  return {sbp:sbp,dbp:dbp,hr:hr,sp:sp};
+ }
+
+ function draw(c){
+  var haz=(pde5&&on.ntg);
+  var clot=1-((on.asa?0.18:0)+(on.p2y?0.15:0)+(on.hep?0.12:0)+(on.pci?0.55:0));
+  if(clot<0)clot=0;
+  var o='';
+  o+='<text x="110" y="12" font-size="8.5" fill="#78828f" text-anchor="middle" font-weight="700">LEFT ANTERIOR DESCENDING · RUPTURED PLAQUE + THROMBUS</text>';
+  o+='<rect x="10" y="24" width="200" height="46" rx="12" fill="#f6e7ea" stroke="#e4c3ca" stroke-width="1.5"/>';
+  o+='<rect x="14" y="30" width="192" height="34" rx="9" fill="#fdf7f8"/>';
+  o+='<path d="M62 64 C 78 63, 82 42, 100 44 C 118 46, 122 63, 138 64 Z" fill="#cbb15a" stroke="#a98f3e" stroke-width="1"/>';
+  if(clot>0.02){ o+='<ellipse cx="100" cy="45" rx="'+(7+21*clot).toFixed(1)+'" ry="'+(3.5+10*clot).toFixed(1)+'" fill="#8f1f2e" opacity="0.92"/>'; }
+  if(on.pci){
+    o+='<rect x="70" y="31" width="60" height="32" rx="4" fill="none" stroke="#4a5b70" stroke-width="2"/>';
+    for(var g=0;g<5;g++){ o+='<line x1="'+(70+g*15)+'" y1="31" x2="'+(80+g*15)+'" y2="63" stroke="#4a5b70" stroke-width="1.4"/>'; }
+    o+='<text x="100" y="22" font-size="8" fill="#4a5b70" text-anchor="middle" font-weight="800">STENT</text>';
+  }
+  var ax=[20,36];
+  for(var a=0;a<ax.length;a++){ o+='<polygon points="'+ax[a]+',43 '+(ax[a]+9)+',47 '+ax[a]+',51" fill="#c02e42"/>'; }
+  var n=Math.round(c.s/25), dx=[148,164,180,196];
+  for(var f=0;f<n&&f<4;f++){ o+='<polygon points="'+dx[f]+',43 '+(dx[f]+9)+',47 '+dx[f]+',51" fill="#c02e42"/>'; }
+  if(n===0){ o+='<text x="172" y="51" font-size="9" fill="#b23145" text-anchor="middle" font-weight="800">no flow</text>'; }
+
+  var hp='M110 194 C 42 146, 42 102, 76 90 C 96 83, 108 96, 110 106 C 112 96, 124 83, 144 90 C 178 102, 178 146, 110 194 Z';
+  o+='<clipPath id="hc"><path d="'+hp+'"/></clipPath>';
+  o+='<path d="'+hp+'" fill="#d1495b"/>';
+  if(c.gap>0){
+    var h=15+92*(c.gap/GAP0); if(h>112)h=112;
+    o+='<g clip-path="url(#hc)"><rect x="30" y="'+(194-h).toFixed(1)+'" width="160" height="'+h.toFixed(1)+'" fill="#5b6b7f"/></g>';
+  }
+  o+='<path d="'+hp+'" fill="none" stroke="#a83544" stroke-width="1.6"/>';
+  if(haz){ o+='<text x="110" y="150" font-size="26" text-anchor="middle">⚠️</text>'; }
+  else if(c.gap>40){ o+='<text x="176" y="100" font-size="19" text-anchor="middle">⚡</text>'; }
+  else if(c.gap===0){ o+='<text x="110" y="150" font-size="22" text-anchor="middle">✓</text>'; }
+  o+='<text x="110" y="209" font-size="8.5" fill="#78828f" text-anchor="middle" font-weight="700">'+
+     (c.gap===0?'MYOCARDIUM PERFUSED':'SHADED = ISCHEMIC TERRITORY')+'</text>';
+  return o;
+ }
+
+ function renderList(){
+  $("list").innerHTML=D.map(function(m){
+    var chips=m.fx.map(function(x){return '<span'+(x.indexOf('demand')>-1?' class="d"':'')+'>'+x+'</span>';}).join('');
+    return '<button class="it'+(on[m.k]?' on':'')+(sel===m.k?' sel':'')+'" data-k="'+m.k+'">'+
+      '<span class="tk">'+(on[m.k]?'✓':'○')+'</span>'+
+      '<span class="ic">'+m.ic+'</span>'+
+      '<span><span class="nm">'+m.nm+'</span><br><span class="ct">'+m.ct+'</span></span>'+
+      '<span class="fx">'+chips+'</span></button>';
+  }).join('');
+  var b=document.querySelectorAll('#list .it');
+  for(var i=0;i<b.length;i++){
+    b[i].onclick=function(){ var k=this.getAttribute('data-k'); on[k]=!on[k]; sel=k; render(); };
+  }
+ }
+
+ function render(){
+  var c=calc(), v=vitals(), haz=(pde5&&on.ntg);
+
+  $("art").innerHTML=draw(c);
+  $("sv").innerHTML=c.s; $("dv").innerHTML=c.d;
+  $("sb").style.width=c.s+'%'; $("db").style.width=c.d+'%';
+  $("gv").innerHTML=c.gap;
+  $("gv").style.color=c.gap>40?'#b23145':(c.gap>0?'#b8862f':'#237a45');
+  $("gt").innerHTML=c.gap===0?'Supply now meets demand. <b>The pain stops.</b>':
+    'The <b>ischemic gap</b> — demand minus supply. Close it and the pain stops.';
+
+  $("rd").innerHTML=
+   '<div'+((v.sbp<90)?' class="bad"':'')+'>BP<span class="v">'+v.sbp+'/'+v.dbp+'</span></div>'+
+   '<div'+((v.hr<60||v.hr>110)?' class="bad"':'')+'>Pulse<span class="v">'+v.hr+'</span></div>'+
+   '<div'+((v.sp<90)?' class="bad"':'')+'>SpO₂<span class="v">'+v.sp+'%</span></div>'+
+   '<div>Troponin<span class="v">'+(on.pci?'peak':'↑')+'</span></div>';
+
+  $("pde5").className='chip'+(pde5?' yes':'');
+  $("pde5").innerHTML='Chart check · PDE-5 inhibitor taken in the last 24–48 h? <b>'+(pde5?'YES':'NO')+'</b>';
+
+  var st=$("stage");
+  if(haz){
+    st.style.background='#b23145';
+    st.innerHTML='⚠ Stop — nitrate contraindicated<small>BP '+v.sbp+'/'+v.dbp+' · profound hypotension</small>';
+    $("haz").style.display='block';
+    $("haz").className='note';
+    $("haz").innerHTML='<b>Nitrate + PDE-5 inhibitor.</b> Both raise cGMP in vascular smooth muscle, and together they cause <b>severe, refractory hypotension</b> that no amount of nitroglycerin can be titrated around. <b>Sildenafil / vardenafil within 24 h, tadalafil within 48 h → no nitrates.</b><br><br><b>Nurse:</b> ask this of <i>every</i> chest-pain patient before the first dose — the question is asked of every adult, not only the ones you assume take it, and it is asked privately. If hypotension occurs: stop the nitrate, lay the patient flat, raise the legs, give IV fluids, and notify the provider immediately.';
+  } else {
+    $("haz").style.display='none';
+    if(c.gap>45){ st.style.background='#b23145'; st.innerHTML='Active ischemia<small>demand '+c.d+' · supply '+c.s+' — the myocardium is starving</small>'; }
+    else if(c.gap>20){ st.style.background='#b8862f'; st.innerHTML='Partially relieved<small>demand '+c.d+' · supply '+c.s+' — pain is easing, the artery is still narrowed</small>'; }
+    else if(c.gap>0){ st.style.background='#2f6f9f'; st.innerHTML='Nearly resolved<small>demand '+c.d+' · supply '+c.s+' — medications are buying time, not opening the vessel</small>'; }
+    else { st.style.background='#2f9e5b'; st.innerHTML='Perfusion restored<small>demand '+c.d+' · supply '+c.s+' — supply has caught demand</small>'; }
+  }
+
+  if(sel){
+    var m=null; for(var i=0;i<D.length;i++){ if(D[i].k===sel) m=D[i]; }
+    var extra='';
+    if(m.k==='ntg'&&!haz&&on.ntg&&v.sbp<110){
+      extra='<div class="loc">This patient is now <b>'+v.sbp+'/'+v.dbp+'</b>. You are approaching the 90 mmHg floor — <b>recheck the pressure before the next dose</b> and be ready to hold it.</div>';
+    }
+    if(m.k==='bb'&&on.bb&&(v.hr<60||v.sbp<100)){
+      extra='<div class="loc">Recheck: HR <b>'+v.hr+'</b>, BP <b>'+v.sbp+'/'+v.dbp+'</b>. <b>Hold the beta blocker</b> and notify the provider.</div>';
+    }
+    $("info").innerHTML='<span class="n">'+m.t+'</span>'+
+      '<span class="pill '+(on[m.k]?'normal':'low')+'" style="float:right;margin-top:-26px;">'+(on[m.k]?'given':'withheld')+'</span>'+
+      m.b+
+      '<div class="ex">'+m.ex.map(function(x){return '<span>'+x+'</span>';}).join('')+'</div>'+
+      '<div class="dd">'+m.n+'</div>'+
+      '<div class="dd">'+m.w+'</div>'+extra;
+  } else {
+    $("info").innerHTML='<span class="n">Two numbers, one patient</span>'+
+      '<b>Demand</b> is set by heart rate, contractility, and wall tension (preload and afterload). <b>Supply</b> is coronary blood flow, which only happens in <b>diastole</b>. Angina appears the moment demand outruns supply; the difference between <b>stable angina</b>, <b>unstable angina</b>, and an <b>MI</b> is how the gap opened and whether myocardium died — the <b>troponin</b> and the ECG tell you which.'+
+      '<div class="loc">Tap any order to <b>give</b> or <b>withhold</b> it. The panel explains it either way — including why one of them does nothing at all for this patient.</div>';
+  }
+  renderList();
+ }
+
+ $("pde5").onclick=function(){ pde5=pde5?0:1; sel='ntg'; render(); };
+ $("reset").onclick=function(){ on={}; sel=null; pde5=0; render(); };
+ $("all").onclick=function(){ on={}; for(var i=0;i<D.length;i++){ on[D[i].k]=1; } sel='pci'; render(); };
+ render();
+})();
+</script>
+</body>
+</html>

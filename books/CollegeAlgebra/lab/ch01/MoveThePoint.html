@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Move the Point</title>
+<meta name="description" content="Drag an exponent and watch the decimal point walk across the digits. An interactive introduction to scientific notation: converting to and from it, and multiplying and dividing with it.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.94fr 1.06fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.modeseg button{font-size:12.5px;padding:10px 4px;line-height:1.25;}
+.modeseg button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:2px;}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+#stage .big{font-family:var(--math);font-size:25px;font-weight:700;letter-spacing:.4px;}
+#stage .big sup{font-size:.55em;vertical-align:super;}
+.why{font-family:var(--math);font-size:14px;color:var(--teal-dk);text-align:center;background:#f1f2f9;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-top:9px;line-height:1.55;}
+.why sup{font-size:.62em;vertical-align:super;}
+.why em{font-family:var(--sans);font-style:normal;font-size:10.5px;font-weight:800;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.sld{margin-top:13px;}
+.sld .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.sld .lab b{font-family:var(--math);font-size:20px;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+.sld .lab b sup{font-size:.58em;vertical-align:super;}
+.sld .ends{display:flex;justify-content:space-between;font-family:var(--math);font-size:10.5px;color:var(--muted);margin-top:-2px;}
+.sld .ends sup{font-size:.62em;vertical-align:super;}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;display:block;}
+input[type=range]:focus{outline:none;}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);margin-top:-8px;}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);}
+.pset{margin-top:14px;}
+.pset .cap{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.seg button{font-size:11.5px;padding:9px 3px;}
+.seg button small{font-family:var(--math);font-size:10px;}
+/* narrow screens: tile the pickers instead of squeezing 5 columns into a phone */
+@media (max-width:600px){
+  #picker,#presets{display:grid;grid-template-columns:1fr 1fr;}
+  #picker button:last-child:nth-child(odd),#presets button:last-child:nth-child(odd){grid-column:1/-1;}
+  .seg button{font-size:12px;padding:10px 6px;}
+}
+#mb{min-height:210px;display:flex;flex-direction:column;justify-content:center;margin-top:12px;}
+.dl{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:7px 2px;border-bottom:1px dashed var(--line);}
+.dl:last-child{border-bottom:none;}
+.mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.5;}
+.mx sup{font-size:.62em;vertical-align:super;}
+.dl.cur .mx{font-size:20px;color:var(--ink);font-weight:600;}
+.pl{flex:none;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);white-space:nowrap;}
+.dl.cur .pl{color:var(--gold);}
+.tg{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.dl:not(.cur) .tg{background:transparent;box-shadow:none;padding:0;}
+.exlab{font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.55;}
+.exlab b{font-family:var(--math);font-size:14px;color:var(--teal-dk);}
+.bad{font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;color:#b23145;background:#fae5e8;border-radius:20px;padding:2px 8px;white-space:nowrap;}
+.dl:not(.cur) .bad{background:transparent;padding:0;color:#c98a95;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 1</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 1</div>
+  <h1>Move the Point</h1>
+  <div class="intro">A power of ten does exactly one thing to a number: it <b>walks the decimal point</b>. Drag the exponent and watch the point travel. Then step through converting real numbers into scientific notation &mdash; and doing arithmetic with them without ever writing out the zeros.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="artTitle">Where the point lands</h2>
+      <svg viewBox="0 0 250 146" aria-label="digit strip showing the decimal point moving"><g id="art"></g></svg>
+      <div class="why" id="why"></div>
+    </div>
+    <div class="card"><h2>How big is that?</h2>
+      <svg viewBox="0 0 250 88" aria-label="scale of magnitudes from ten to the minus twelve up to ten to the twelve"><g id="scale"></g></svg>
+      <div class="mnem" id="mag"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage"><span class="big">6.02 &times; 10<sup>3</sup></span><small>= 6,020</small></div>
+    <div class="card">
+      <div class="modeseg" id="modes">
+        <button data-m="0" class="on">Slide it<small>the exponent moves the point</small></button>
+        <button data-m="1">Convert it<small>into <i>a</i> &times; 10<sup><i>n</i></sup></small></button>
+        <button data-m="2">Combine it<small>multiply &amp; divide</small></button>
+      </div>
+      <div id="p0">
+        <div class="sld">
+          <div class="lab"><span>Exponent &mdash; drag me</span><b id="nOut">10<sup>3</sup></b></div>
+          <input type="range" id="nRange" min="-9" max="9" step="1" value="3" aria-label="exponent">
+          <div class="ends"><span>10<sup>&minus;9</sup></span><span>10<sup>0</sup></span><span>10<sup>9</sup></span></div>
+        </div>
+        <div class="sld">
+          <div class="lab"><span>Coefficient <i>a</i></span><b id="aOut">6.02</b></div>
+          <input type="range" id="aRange" min="100" max="999" step="1" value="602" aria-label="coefficient">
+          <div class="ends"><span>1.00</span><span>9.99</span></div>
+        </div>
+        <div class="pset">
+          <div class="cap">Or jump to a real measurement</div>
+          <div class="seg" id="presets"></div>
+        </div>
+      </div>
+      <div id="p1" style="display:none">
+        <div class="seg" id="picker"></div>
+        <div id="mb"></div>
+        <div class="exlab" id="exlab"></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>The definition.</b> A number is in scientific notation when it reads <b><i>a</i> &times; 10<sup><i>n</i></sup></b> with <b>1 &le; |<i>a</i>| &lt; 10</b> and <i>n</i> an integer. Exactly one nonzero digit in front of the point &mdash; no more, no fewer.</div>
+      <div class="note" id="trap"><b>The trap.</b> A negative <i>exponent</i> does not make a negative <i>number</i>. 3 &times; 10<sup>&minus;4</sup> = 0.0003, which is positive. The exponent's sign says <b>which way the point moved</b>; the coefficient's sign says <b>whether the number is negative</b>. The two are unrelated.</div>
+      <div class="row" id="nav" style="display:none"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var CORAL='#d1495b', INK='#22243a', MUT='#7d7f94', LINE='#e0e2ef', TEAL='#43458f', TDK='#262a5c';
+ var X='&#215;', MIN='&#8722;', DIV='&#247;', DASH='&#8212;';   /* numeric refs: safe inside SVG */
+
+ /* ---------------- helpers ---------------- */
+ function rep(ch,k){ return k>0 ? new Array(k+1).join(ch) : ''; }
+ function pw(n){ return '10<sup>'+(n<0?'&minus;'+(-n):''+n)+'</sup>'; }
+ function grp(s){ return s.replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+ function pretty(s){ return s.indexOf('.')<0 ? grp(s) : s; }
+ function L10(x){ return Math.log(x)/Math.LN10; }
+ function svsup(e){ return '10<tspan font-size="7" dy="-4">'+(e<0?MIN+(-e):''+e)+'</tspan>'; }
+
+ /* Write digit string d with the decimal point placed after (1+n) digits. */
+ function stdForm(d,n){
+   var L=d.length, p=1+n;
+   if(p>=L) return d+rep('0',p-L);      /* point past the last digit: pad with zeros  */
+   if(p>0)  return d.slice(0,p)+'.'+d.slice(p);
+   return '0.'+rep('0',-p)+d;           /* point ahead of every digit: lead with zeros */
+ }
+ /* 10^n written the long way, so the exponent is never a black box. */
+ function powText(n){
+   var k=Math.abs(n), i, t=[];
+   if(n===0)  return '10<sup>0</sup> = 1';
+   if(n===1)  return '10<sup>1</sup> = 10';
+   if(n===-1) return '10<sup>&minus;1</sup> = 1 &divide; 10 = 0.1';
+   for(i=0;i<k&&i<6;i++) t.push('10');
+   var chain = (k<=6) ? t.join(' &times; ') : ('10 &times; &hellip; &times; 10 &nbsp;('+k+' tens)');
+   var val = grp('1'+rep('0',k));
+   if(n>0) return '10<sup>'+n+'</sup> = '+chain+' = '+val;
+   return '10<sup>&minus;'+k+'</sup> = 1 &divide; ('+chain+') = 1/'+val+' = 0.'+rep('0',k-1)+'1';
+ }
+
+ /* ---------------- SVG: the digit strip ---------------- */
+ function arcArrow(x1,x2,yt,label){
+   var d=Math.abs(x2-x1), lift=Math.min(30,10+d*0.25), mx=(x1+x2)/2, cy=yt-lift*1.8;
+   var s='<path d="M'+x1.toFixed(1)+' '+yt+' Q'+mx.toFixed(1)+' '+cy.toFixed(1)+' '+x2.toFixed(1)+' '+yt+'" fill="none" stroke="'+CORAL+'" stroke-width="2"/>';
+   /* tangent of a quadratic at its endpoint is 2*(P1 - C), so the head always aims along the curve */
+   var tx=x2-mx, ty=yt-cy, m=Math.sqrt(tx*tx+ty*ty); if(m===0) m=1; tx/=m; ty/=m;
+   var px=-ty, py=tx;
+   var ax=x2+tx*3.5, ay=yt+ty*3.5;
+   var b1x=x2-tx*7+px*5, b1y=yt-ty*7+py*5, b2x=x2-tx*7-px*5, b2y=yt-ty*7-py*5;
+   s+='<polygon points="'+ax.toFixed(1)+','+ay.toFixed(1)+' '+b1x.toFixed(1)+','+b1y.toFixed(1)+' '+b2x.toFixed(1)+','+b2y.toFixed(1)+'" fill="'+CORAL+'"/>';
+   s+='<text x="'+mx.toFixed(1)+'" y="'+(yt-lift*0.9-7).toFixed(1)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="'+CORAL+'">'+label+'</text>';
+   return s;
+ }
+ function drawStrip(chars,f,t,note){
+   var n=chars.length, W=250, bw=Math.min(22,224/n), tot=bw*n, x0=(W-tot)/2, by=62, bh=30, s='', i;
+   var fnz=0;   while(fnz<n-1 && chars.charAt(fnz)==='0') fnz++;   /* first significant digit */
+   var lnz=n-1; while(lnz>0   && chars.charAt(lnz)==='0') lnz--;   /* last  significant digit */
+   var anyGray=(fnz>0||lnz<n-1);
+   for(i=0;i<n;i++){
+     var gray=(i<fnz||i>lnz), x=x0+i*bw;
+     s+='<rect x="'+(x+1).toFixed(1)+'" y="'+by+'" width="'+(bw-2).toFixed(1)+'" height="'+bh+'" rx="4" fill="'+(gray?'#f4f5fb':'#e6e8f5')+'" stroke="'+(gray?LINE:'#c6c9de')+'"/>';
+     s+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(by+21)+'" text-anchor="middle" font-family="Georgia,serif" font-size="'+Math.min(17,bw*0.82).toFixed(1)+'" font-weight="700" fill="'+(gray?'#adafc4':INK)+'">'+chars.charAt(i)+'</text>';
+   }
+   if(f!==t){
+     var gx=x0+f*bw;
+     s+='<line x1="'+gx.toFixed(1)+'" y1="'+(by-4)+'" x2="'+gx.toFixed(1)+'" y2="'+(by+bh+8)+'" stroke="#c6c9de" stroke-width="2" stroke-dasharray="3 3"/>';
+     s+='<circle cx="'+gx.toFixed(1)+'" cy="'+(by+bh+12)+'" r="3.4" fill="#c6c9de"/>';
+     s+='<text x="'+gx.toFixed(1)+'" y="'+(by+bh+26)+'" text-anchor="middle" font-size="8" fill="#adafc4">was here</text>';
+   }
+   var tx2=x0+t*bw;
+   s+='<line x1="'+tx2.toFixed(1)+'" y1="'+(by-4)+'" x2="'+tx2.toFixed(1)+'" y2="'+(by+bh+8)+'" stroke="'+CORAL+'" stroke-width="2"/>';
+   s+='<circle cx="'+tx2.toFixed(1)+'" cy="'+(by+bh+12)+'" r="4.6" fill="'+CORAL+'"/>';
+   if(f!==t){
+     var k=Math.abs(t-f);
+     s+=arcArrow(x0+f*bw, tx2, by-9, k+' place'+(k===1?'':'s')+' '+(t>f?'right':'left'));
+   }else{
+     s+='<text x="125" y="34" text-anchor="middle" font-size="10.5" font-weight="700" fill="'+MUT+'">the point stays put</text>';
+   }
+   s+='<text x="125" y="130" text-anchor="middle" font-size="9" fill="'+MUT+'">'+note+'</text>';
+   if(anyGray) s+='<text x="125" y="141" text-anchor="middle" font-size="7.5" fill="#adafc4">pale digits are placeholder zeros '+DASH+' position, not value</text>';
+   return s;
+ }
+
+ /* ---------------- SVG: tens tallied as multipliers and divisors ---------------- */
+ function tensRow(cnt,y,cancel,col,bg){
+   var W=250, bw=Math.min(23,206/Math.max(cnt,1)), tot=bw*cnt, x0=(W-tot)/2, o='', i;
+   if(cnt===0) return '<text x="125" y="'+(y+15)+'" text-anchor="middle" font-size="9.5" fill="#b9bbcd">'+DASH+' none '+DASH+'</text>';
+   for(i=0;i<cnt;i++){
+     var x=x0+i*bw, dim=(i<cancel), op=dim?'0.28':'1';
+     o+='<rect x="'+(x+1.5).toFixed(1)+'" y="'+y+'" width="'+(bw-3).toFixed(1)+'" height="22" rx="4" fill="'+bg+'" stroke="'+col+'" opacity="'+op+'"/>';
+     o+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(y+15)+'" text-anchor="middle" font-family="Georgia,serif" font-size="10.5" font-weight="700" fill="'+col+'" opacity="'+op+'">10</text>';
+     if(dim) o+='<line x1="'+(x+3.5).toFixed(1)+'" y1="'+(y+19)+'" x2="'+(x+bw-3.5).toFixed(1)+'" y2="'+(y+3)+'" stroke="'+CORAL+'" stroke-width="1.6"/>';
+   }
+   return o;
+ }
+ function drawTens(a,b,op){
+   var eb = (op==='x') ? b : -b;             /* dividing by 10^b is multiplying by 10^-b */
+   var up=(a>0?a:0)+(eb>0?eb:0), dn=(a<0?-a:0)+(eb<0?-eb:0);
+   var can=Math.min(up,dn), net=up-dn, s='';
+   s+='<text x="125" y="13" text-anchor="middle" font-size="9" font-weight="700" letter-spacing="0.5" fill="'+TEAL+'">TENS MULTIPLYING: '+up+'</text>';
+   s+=tensRow(up,18,can,TEAL,'#e6e8f5');
+   s+='<line x1="16" y1="52" x2="234" y2="52" stroke="'+LINE+'" stroke-width="1.5" stroke-dasharray="4 3"/>';
+   s+='<text x="125" y="68" text-anchor="middle" font-size="9" font-weight="700" letter-spacing="0.5" fill="'+CORAL+'">TENS DIVIDING: '+dn+'</text>';
+   s+=tensRow(dn,74,can,CORAL,'#fae5e8');
+   s+='<text x="125" y="118" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="'+TDK+'">left over: '+svsup(net)+'</text>';
+   var cap = can>0 ? (can+' pair'+(can===1?'':'s')+' struck out '+DASH+' each pair is 10 '+DIV+' 10 = 1')
+                   : (net===0 ? 'everything cancels, and 10 to the zero is 1'
+                              : 'nothing to cancel '+DASH+' the tens simply pile up');
+   s+='<text x="125" y="137" text-anchor="middle" font-size="9" fill="'+MUT+'">'+cap+'</text>';
+   return s;
+ }
+
+ /* ---------------- SVG: the magnitude ruler ---------------- */
+ function xOf(e){ return 20 + (Math.max(-12,Math.min(12,e))+12)/24*214; }
+ function drawScale(lg,label){
+   var s='', i, e;
+   var bands=[[-12,-4,'#e5eef6','#255f8a','microscopic'],[-4,4,'#e5f3ea','#237a45','everyday'],[4,12,'#fbf3e2','#8a6a20','astronomical']];
+   for(i=0;i<bands.length;i++){
+     var b=bands[i], x1=xOf(b[0]), x2=xOf(b[1]);
+     s+='<rect x="'+x1.toFixed(1)+'" y="38" width="'+(x2-x1).toFixed(1)+'" height="22" fill="'+b[2]+'"/>';
+     s+='<text x="'+((x1+x2)/2).toFixed(1)+'" y="52" text-anchor="middle" font-size="8" font-weight="700" letter-spacing="0.4" fill="'+b[3]+'">'+b[4]+'</text>';
+   }
+   s+='<rect x="20" y="38" width="214" height="22" fill="none" stroke="'+LINE+'"/>';
+   for(e=-12;e<=12;e+=3){
+     var x=xOf(e);
+     s+='<line x1="'+x.toFixed(1)+'" y1="60" x2="'+x.toFixed(1)+'" y2="65" stroke="#b9bbcd" stroke-width="1"/>';
+     s+='<text x="'+x.toFixed(1)+'" y="76" text-anchor="middle" font-family="Georgia,serif" font-size="8.5" fill="'+MUT+'">'+svsup(e)+'</text>';
+   }
+   var mx=xOf(lg), anch = mx<60?'start':(mx>194?'end':'middle');
+   s+='<line x1="'+mx.toFixed(1)+'" y1="26" x2="'+mx.toFixed(1)+'" y2="62" stroke="'+CORAL+'" stroke-width="2"/>';
+   s+='<circle cx="'+mx.toFixed(1)+'" cy="26" r="4.2" fill="'+CORAL+'"/>';
+   var lx = (anch==='start')?20:((anch==='end')?234:mx);
+   s+='<text x="'+lx.toFixed(1)+'" y="16" text-anchor="'+anch+'" font-family="Georgia,serif" font-size="11.5" font-weight="700" fill="'+TDK+'">'+label+'</text>';
+   return s;
+ }
+
+ /* ================= MODE 0 : drag the exponent ================= */
+ var C=602, N=3;
+ var PRESETS=[
+   {c:750,n:-6,nm:'red blood cell',sub:'7.50 &times; 10<sup>&minus;6</sup> m'},
+   {c:170,n:0, nm:'a person',      sub:'1.70 &times; 10<sup>0</sup> m'},
+   {c:422,n:4, nm:'a marathon',    sub:'4.22 &times; 10<sup>4</sup> m'},
+   {c:139,n:9, nm:'the Sun',       sub:'1.39 &times; 10<sup>9</sup> m'}
+ ];
+ function coefStr(c){ var s=''+c; return s.charAt(0)+'.'+s.slice(1); }
+
+ function renderSlide(){
+   var d=''+C, a=coefStr(C);
+   /* pad so both the old and the new point positions exist on the strip */
+   var pad = (N<0) ? -N : 0;
+   var chars = rep('0',pad)+d;
+   if(1+N > d.length) chars = chars + rep('0', 1+N-d.length);
+   var f = pad+1, t = pad+1+N;
+   var raw = stdForm(d,N), std = pretty(raw);
+
+   $('artTitle').innerHTML='Where the point lands';
+   $('art').innerHTML=drawStrip(chars,f,t,'the red point reads '+raw);
+   $('why').innerHTML='<em>the power of ten, written out</em>'+powText(N);
+   $('nOut').innerHTML=pw(N);
+   $('aOut').innerHTML=a;
+   $('stage').innerHTML='<span class="big">'+a+' &times; '+pw(N)+'</span><small>= '+std+'</small>';
+
+   var lg = N + L10(parseFloat(a));
+   $('scale').innerHTML=drawScale(lg, a+' '+X+' '+svsup(N));
+
+   var mtxt;
+   if(N>=0) mtxt='<b>Written out in full</b>, this number carries <b>'+(1+N)+'</b> digit'+(N===0?'':'s')+' in front of the decimal point.';
+   else     mtxt='<b>Written out in full</b>, there '+((-N-1)===1?'is':'are')+' <b>'+(-N-1)+'</b> zero'+((-N-1)===1?'':'s')+' sitting between the decimal point and the first nonzero digit.';
+   $('mag').innerHTML=mtxt+' That is all an exponent ever is: a <b>digit count</b>. You never have to picture the size to get it right.';
+
+   var info;
+   if(N===0){
+     info='<span class="n">10<sup>0</sup> = 1</span>Multiplying by 1 changes nothing, so the point does not move at all &mdash; here the coefficient <b>is</b> the number. This is the hinge of the whole scale: slide right and you build numbers larger than 10, slide left and you build numbers smaller than 1.';
+   }else if(N>0){
+     info='<span class="n">The point walks right</span>'+pw(N)+' says <b>multiply by ten, '+N+' time'+(N===1?'':'s')+'</b>. One multiplication by ten makes every digit worth ten times as much, so each digit shifts up one place &mdash; which looks exactly like the point sliding one place to the <b>right</b>. Do that '+N+' time'+(N===1?'':'s')+' and the point travels <b>'+N+' place'+(N===1?'':'s')+' right</b>.'+
+       '<div class="loc">Point moves <b>right</b> &nbsp;&rArr;&nbsp; the number gets <b>bigger</b> &nbsp;&rArr;&nbsp; the exponent is <b>positive</b>.</div>';
+   }else{
+     var k=-N;
+     info='<span class="n">The point walks left</span>'+pw(N)+' says <b>divide by ten, '+k+' time'+(k===1?'':'s')+'</b>. Each division by ten makes every digit worth a tenth as much, so each digit shifts down one place &mdash; the point slides one place <b>left</b>, and a placeholder zero appears to hold the emptied place open. Do that '+k+' time'+(k===1?'':'s')+' and the point travels <b>'+k+' place'+(k===1?'':'s')+' left</b>.'+
+       '<div class="loc">Point moves <b>left</b> &nbsp;&rArr;&nbsp; the number gets <b>smaller</b> &nbsp;&rArr;&nbsp; the exponent is <b>negative</b>.</div>';
+   }
+   $('info').innerHTML=info;
+
+   $('presets').innerHTML=PRESETS.map(function(p){
+     return '<button data-c="'+p.c+'" data-n="'+p.n+'"'+((p.c===C&&p.n===N)?' class="on"':'')+'>'+p.nm+'<small>'+p.sub+'</small></button>';
+   }).join('');
+   Array.prototype.forEach.call($('presets').querySelectorAll('button'),function(b){
+     b.onclick=function(){
+       C=+b.getAttribute('data-c'); N=+b.getAttribute('data-n');
+       $('aRange').value=C; $('nRange').value=N; renderSlide();
+     };
+   });
+ }
+
+ /* ================= MODES 1 & 2 : worked-step machines ================= */
+ /* st = [digit strip, point was here, point goes here, caption]   bx = [exp a, exp b, op] */
+ var EX=[[
+  { nm:'93,000,000', sub:'big number', v:93000000, vl:'9.3 '+X+' '+svsup(7), tail:'93,000,000 = 9.3 &times; 10<sup>7</sup>',
+    S:[
+    {pl:'THE NUMBER', mx:'93,000,000', st:['93000000',8,8,'the point is invisible, but it lives at the far right'],
+     nt:'<span class="n">Start in standard form</span>Ninety-three million. No decimal point is printed, so it is easy to forget one exists &mdash; but it does, parked just after the final zero. Everything that follows is a negotiation about <b>where that point should sit instead</b>.'},
+    {pl:'THE TARGET', mx:'<i>a</i> &times; 10<sup><i>n</i></sup>', st:['93000000',8,8,'we want exactly one nonzero digit in front of the point'],
+     nt:'<span class="n">What we are aiming at</span>We need the form <b><i>a</i> &times; 10<sup><i>n</i></sup></b> with <b>1 &le; |<i>a</i>| &lt; 10</b>. That inequality is the entire job: exactly <b>one</b> nonzero digit may stand in front of the decimal point. Not zero digits, and not two.'},
+    {pl:'MOVE THE POINT', mx:'<span class="tg">9.3</span>000000', st:['93000000',8,1,'the point re-parks just behind the first nonzero digit'],
+     nt:'<span class="n">Park it behind the 9</span>The first nonzero digit is <b>9</b>, so slide the point until it sits right behind it. Watch the arc on the strip &mdash; that single slide is the whole conversion. Nothing has been decided about the exponent yet.'},
+    {pl:'COUNT THE MOVE', mx:'9.3 &nbsp;<span class="tg">&larr; 7 places</span>', st:['93000000',8,1,'seven places, counted one box at a time'],
+     nt:'<span class="n">Count the boxes it crossed</span>The point crossed <b>7</b> digits going left. Notice too that <b>9.3000000</b> and <b>9.3</b> are the same number &mdash; zeros trailing after a decimal point add nothing, so they are simply dropped.'},
+    {pl:'COMPENSATE', mx:'9.3 &times; <span class="tg">10<sup>7</sup></span>', st:['93000000',8,1,'the power of ten puts back what the move took away'],
+     nt:'<span class="n">Undo the damage</span>Moving the point 7 places left <b>divided</b> the number by 10<sup>7</sup>: it turned 93,000,000 into 9.3. To leave the value untouched we must <b>multiply back</b> by 10<sup>7</sup>. Point went <b>left</b>, so the exponent comes out <b>positive</b>.'},
+    {pl:'CHECK', mx:'9.3 &times; 10<sup>7</sup> = 93,000,000 &#10003;', st:['93000000',8,1,'same value, new costume'],
+     nt:'<span class="n">Verify it</span>10<sup>7</sup> = 10,000,000, and 9.3 &times; 10,000,000 = <b>93,000,000</b>. Right back where we started, so the conversion holds. Always run this check &mdash; it catches an off-by-one in the count instantly.'}
+    ]},
+  { nm:'0.00000642', sub:'small number', v:0.00000642, vl:'6.42 '+X+' '+svsup(-6), tail:'0.00000642 = 6.42 &times; 10<sup>&minus;6</sup>',
+    S:[
+    {pl:'THE NUMBER', mx:'0.00000642', st:['000000642',1,1,'six pale zeros are only holding places open'],
+     nt:'<span class="n">Start in standard form</span>A very small number. Counting those zeros correctly by eye is exactly the sort of thing scientific notation exists to save you from.'},
+    {pl:'FIND THE DIGIT', mx:'0.00000<span class="tg">6</span>42', st:['000000642',1,1,'the first nonzero digit is 6'],
+     nt:'<span class="n">Leading zeros never count</span>The first <b>nonzero</b> digit is <b>6</b>. The zeros ahead of it are placeholders &mdash; they mark position, not value, which is why the strip draws them pale. A leading zero can never head the coefficient, because 0 breaks the requirement 1 &le; |<i>a</i>|.'},
+    {pl:'MOVE THE POINT', mx:'<span class="tg">6.42</span>', st:['000000642',1,7,'the point walks right, past all six zeros'],
+     nt:'<span class="n">Park it behind the 6</span>Slide the point rightward until it sits just behind the 6. It crosses <b>6</b> boxes on the way. Once the point is there the pale zeros in front are doing no work at all, so they vanish.'},
+    {pl:'COUNT THE MOVE', mx:'6.42 &nbsp;<span class="tg">6 places &rarr;</span>', st:['000000642',1,7,'careful: count boxes crossed, not zeros seen'],
+     nt:'<span class="n">Count the boxes it crossed</span>Six places right: the <b>5 zeros</b> written after the decimal point, <b>plus the 6 itself</b>, because the point has to finish on the far side of it. Counting only the zeros gives 5 and an answer of 6.42 &times; 10<sup>&minus;5</sup> = 0.0000642 &mdash; ten times too big. That off-by-one is the classic slip here, and counting boxes on the strip prevents it.'},
+    {pl:'COMPENSATE', mx:'6.42 &times; <span class="tg">10<sup>&minus;6</sup></span>', st:['000000642',1,7,'a negative exponent shrinks it back down'],
+     nt:'<span class="n">Undo the damage</span>Moving right <b>multiplied</b> the number by 10<sup>6</sup> &mdash; it inflated 0.00000642 all the way up to 6.42. To cancel that we must <b>divide</b> by 10<sup>6</sup>, and dividing by 10<sup>6</sup> is multiplying by <b>10<sup>&minus;6</sup></b>. Point went <b>right</b>, so the exponent comes out <b>negative</b>.'},
+    {pl:'CHECK', mx:'6.42 &times; 10<sup>&minus;6</sup> = 0.00000642 &#10003;', st:['000000642',1,7,'same value, new costume'],
+     nt:'<span class="n">Verify it</span>10<sup>&minus;6</sup> = 1/1,000,000, and 6.42 &divide; 1,000,000 = <b>0.00000642</b>. Correct. Note the number itself stayed positive the whole way &mdash; the minus sign lives on the exponent, not on the value.'}
+    ]},
+  { nm:'&minus;0.00305', sub:'negative number', v:0.00305, vl:MIN+'3.05 '+X+' '+svsup(-3), tail:'&minus;0.00305 = &minus;3.05 &times; 10<sup>&minus;3</sup>',
+    S:[
+    {pl:'THE NUMBER', mx:'&minus;0.00305', st:['000305',1,1,'a negative number, smaller than one'],
+     nt:'<span class="n">Two minus signs are coming</span>This number is negative <b>and</b> it is small. Those are two separate facts, and they get collapsed into one constantly. Keep them apart from the very start.'},
+    {pl:'SET THE SIGN ASIDE', mx:'&minus;( <span class="tg">0.00305</span> )', st:['000305',1,1,'work on the size; the sign waits outside'],
+     nt:'<span class="n">Park the minus sign</span>Pull the minus out front and convert <b>0.00305</b> on its own. The sign of a number and the sign of its exponent answer completely different questions, so blending them is the single most common error in this section.'},
+    {pl:'MOVE THE POINT', mx:'<span class="tg">3.05</span>', st:['000305',1,4,'three places right, landing behind the 3'],
+     nt:'<span class="n">Park it behind the 3</span>The first nonzero digit is <b>3</b>, and the point crosses <b>3</b> boxes going right. Notice the <b>0 between the 3 and the 5 stays</b> &mdash; an interior zero is a genuine digit of the coefficient, not a placeholder, which is why the strip keeps it dark.'},
+    {pl:'COMPENSATE', mx:'3.05 &times; <span class="tg">10<sup>&minus;3</sup></span>', st:['000305',1,4,'three places right means an exponent of minus three'],
+     nt:'<span class="n">Undo the damage</span>Three places right multiplied by 10<sup>3</sup>, so we divide by 10<sup>3</sup>: the exponent is <b>&minus;3</b>. And 3.05 does satisfy 1 &le; 3.05 &lt; 10, so the coefficient is legal.'},
+    {pl:'BRING THE SIGN BACK', mx:'<span class="tg">&minus;</span>3.05 &times; 10<sup>&minus;3</sup>', st:['000305',1,4,'the minus rides on the coefficient'],
+     nt:'<span class="n">Reattach it to the coefficient</span>The minus sign belongs to <b><i>a</i></b>, never to <i>n</i>. Here <i>a</i> = &minus;3.05, and the rule is written 1 &le; |<i>a</i>| &lt; 10 with <b>absolute value</b> for exactly this reason: |&minus;3.05| = 3.05, which sits between 1 and 10, so this is proper scientific notation.'},
+    {pl:'CHECK', mx:'&minus;3.05 &times; 10<sup>&minus;3</sup> = &minus;0.00305 &#10003;', st:['000305',1,4,'same value, new costume'],
+     nt:'<span class="n">Verify it</span>3.05 &divide; 1,000 = 0.00305, then apply the minus: <b>&minus;0.00305</b>. Two minus signs in the finished answer, doing two entirely different jobs.'}
+    ]},
+  { nm:'47.3 &times; 10<sup>5</sup>', sub:'coefficient too big', v:4730000, vl:'4.73 '+X+' '+svsup(6), tail:'47.3 &times; 10<sup>5</sup> = 4.73 &times; 10<sup>6</sup>',
+    S:[
+    {pl:'THE NUMBER', mx:'47.3 &times; 10<sup>5</sup>', st:['473',2,2,'a power of ten is present, but the coefficient is wrong'],
+     nt:'<span class="n">Close, but not legal</span>This already carries a power of ten, so it <i>looks</i> finished. It is not in scientific notation, and half-finished answers exactly like this fall out of calculations all the time.'},
+    {pl:'TEST THE COEFFICIENT', mx:'1 &le; <span class="tg">47.3</span> &lt; 10 ?', st:['473',2,2,'two digits stand in front of the point, one too many'],
+     nt:'<span class="n">Run the definition</span>Is 47.3 between 1 and 10? <b>No</b> &mdash; 47.3 is at least 10. Two nonzero digits sit in front of the point where only one is allowed, so the point has to move one place left.'},
+    {pl:'MOVE THE POINT', mx:'<span class="tg">4.73</span> &times; 10<sup>5</sup> &nbsp;<span class="bad">&ne; not yet</span>', st:['473',2,1,'one place left'],
+     nt:'<span class="n">Shift it one place left</span>47.3 becomes <b>4.73</b>. But read that line carefully: 4.73 &times; 10<sup>5</sup> = 473,000, and we started from 4,730,000. The slide <b>divided the coefficient by 10</b>, so as written the expression is <b>ten times too small</b> &mdash; it is a halfway state, not an equal one. It has to be paid for.'},
+    {pl:'COMPENSATE', mx:'4.73 &times; <span class="tg">10<sup>6</sup></span>', st:['473',2,1,'the ten comes off the coefficient and joins the power'],
+     nt:'<span class="n">Pay for it in the exponent</span>Multiply the power of ten by 10 to restore the value: 10<sup>5</sup> &times; 10 = <b>10<sup>6</sup></b>. This is the same trade as before, seen from the other side &mdash; whatever the coefficient loses, the exponent gains.'},
+    {pl:'CHECK', mx:'4.73 &times; 10<sup>6</sup> = 4,730,000 &#10003;', st:['473',2,1,'same value, new costume'],
+     nt:'<span class="n">Verify it</span>Original: 47.3 &times; 100,000 = <b>4,730,000</b>. New: 4.73 &times; 1,000,000 = <b>4,730,000</b>. Identical, so nothing leaked out in the trade.'}
+    ]},
+  { nm:'0.072 &times; 10<sup>&minus;3</sup>', sub:'coefficient too small', v:0.000072, vl:'7.2 '+X+' '+svsup(-5), tail:'0.072 &times; 10<sup>&minus;3</sup> = 7.2 &times; 10<sup>&minus;5</sup>',
+    S:[
+    {pl:'THE NUMBER', mx:'0.072 &times; 10<sup>&minus;3</sup>', st:['0072',1,1,'the coefficient is below 1'],
+     nt:'<span class="n">The opposite failure</span>The same problem as the last example, tipped the other way: this time the coefficient is <b>too small</b> rather than too big.'},
+    {pl:'TEST THE COEFFICIENT', mx:'1 &le; <span class="tg">0.072</span> &lt; 10 ?', st:['0072',1,1,'nothing nonzero stands in front of the point'],
+     nt:'<span class="n">Run the definition</span>Is 0.072 at least 1? <b>No</b> &mdash; it is less than 1, so no nonzero digit stands in front of the point at all. Zero digits is just as illegal as two. The point must move <b>right</b>.'},
+    {pl:'MOVE THE POINT', mx:'<span class="tg">7.2</span> &times; 10<sup>&minus;3</sup> &nbsp;<span class="bad">&ne; not yet</span>', st:['0072',1,3,'two places right'],
+     nt:'<span class="n">Shift it two places right</span>0.072 becomes <b>7.2</b>. Read the line carefully again: 7.2 &times; 10<sup>&minus;3</sup> = 0.0072, and we started from 0.000072. The slide <b>multiplied the coefficient by 10<sup>2</sup> = 100</b>, so the expression is now <b>a hundred times too big</b>. Again it has to be paid for.'},
+    {pl:'COMPENSATE', mx:'7.2 &times; <span class="tg">10<sup>&minus;5</sup></span>', st:['0072',1,3,'the hundred comes off the coefficient and joins the power'],
+     nt:'<span class="n">Pay for it in the exponent</span>Divide the power of ten by 10<sup>2</sup>: 10<sup>&minus;3</sup> &divide; 10<sup>2</sup> = 10<sup>&minus;3&minus;2</sup> = <b>10<sup>&minus;5</sup></b>. The exponent went <b>down</b> because the coefficient went <b>up</b> &mdash; they always move in opposite directions, and that is what keeps the value fixed.'},
+    {pl:'CHECK', mx:'7.2 &times; 10<sup>&minus;5</sup> = 0.000072 &#10003;', st:['0072',1,3,'same value, new costume'],
+     nt:'<span class="n">Verify it</span>Original: 0.072 &times; 0.001 = <b>0.000072</b>. New: 7.2 &divide; 100,000 = <b>0.000072</b>. Identical.'}
+    ]}
+ ],[
+  { nm:'(3&times;10<sup>4</sup>)(2&times;10<sup>5</sup>)', sub:'multiply', v:6e9, vl:'6 '+X+' '+svsup(9), bx:[4,5,'x'], tail:'(3 &times; 10<sup>4</sup>)(2 &times; 10<sup>5</sup>) = 6 &times; 10<sup>9</sup>',
+    S:[
+    {pl:'THE PROBLEM', mx:'(3 &times; 10<sup>4</sup>)(2 &times; 10<sup>5</sup>)',
+     nt:'<span class="n">30,000 times 200,000</span>Written out, this is 30,000 &times; 200,000 &mdash; a multiplication you would rather not do by hand. In scientific notation it takes two small steps and no long column of zeros.'},
+    {pl:'REGROUP', mx:'<span class="tg">(3 &times; 2)</span> &times; <span class="tg">(10<sup>4</sup> &times; 10<sup>5</sup>)</span>',
+     nt:'<span class="n">Sort the pieces</span>Multiplication is <b>commutative</b> and <b>associative</b>, so these four factors may be reordered and regrouped however we please. Put the plain numbers together and the powers of ten together. This regrouping is the only reason the whole method works.'},
+    {pl:'THE NUMBERS', mx:'<span class="tg">6</span> &times; (10<sup>4</sup> &times; 10<sup>5</sup>)',
+     nt:'<span class="n">Handle the coefficients</span>3 &times; 2 = <b>6</b>. Ordinary arithmetic, small enough to do in your head &mdash; which is precisely the point of separating them out.'},
+    {pl:'WHY THEY ADD', mx:'10<sup>4</sup> &times; 10<sup>5</sup> = <span class="tg">10<sup>4+5</sup></span> = 10<sup>9</sup>',
+     nt:'<span class="n">Do not memorise it &mdash; look at it</span>10<sup>4</sup> is four tens multiplied together and 10<sup>5</sup> is five tens. Push them into one product and you have <b>nine tens in a row</b>, which is 10<sup>9</sup>. The exponents add because you are literally counting how many tens are in the pile. The tally on the left <b>is</b> that pile.'},
+    {pl:'ASSEMBLE', mx:'<span class="tg">6 &times; 10<sup>9</sup></span>',
+     nt:'<span class="n">Put it back together</span>6 &times; 10<sup>9</sup>. Check the coefficient before declaring victory: is 1 &le; 6 &lt; 10? <b>Yes</b>, so this is already proper scientific notation and needs no cleanup.'},
+    {pl:'CHECK', mx:'30,000 &times; 200,000 = 6,000,000,000 &#10003;',
+     nt:'<span class="n">Verify it</span>3 &times; 2 = 6, then 4 zeros followed by 5 zeros gives 9 zeros: <b>6,000,000,000</b>. Six billion, which is exactly 6 &times; 10<sup>9</sup>.'}
+    ]},
+  { nm:'(8&times;10<sup>3</sup>)(5&times;10<sup>&minus;7</sup>)', sub:'needs cleanup', v:0.004, vl:'4 '+X+' '+svsup(-3), bx:[3,-7,'x'], tail:'(8 &times; 10<sup>3</sup>)(5 &times; 10<sup>&minus;7</sup>) = 4 &times; 10<sup>&minus;3</sup>',
+    S:[
+    {pl:'THE PROBLEM', mx:'(8 &times; 10<sup>3</sup>)(5 &times; 10<sup>&minus;7</sup>)',
+     nt:'<span class="n">A big number times a tiny one</span>8,000 multiplied by 0.0000005. Mixed signs in the exponents, and an answer that will need tidying afterwards &mdash; the realistic case.'},
+    {pl:'REGROUP', mx:'<span class="tg">(8 &times; 5)</span> &times; <span class="tg">(10<sup>3</sup> &times; 10<sup>&minus;7</sup>)</span>',
+     nt:'<span class="n">Sort the pieces</span>The same move as before: coefficients with coefficients, powers with powers.'},
+    {pl:'THE NUMBERS', mx:'<span class="tg">40</span> &times; (10<sup>3</sup> &times; 10<sup>&minus;7</sup>)',
+     nt:'<span class="n">Handle the coefficients</span>8 &times; 5 = <b>40</b>. Keep an eye on that 40 &mdash; it is about to break the rule.'},
+    {pl:'WHY THEY ADD', mx:'10<sup>3</sup> &times; 10<sup>&minus;7</sup> = <span class="tg">10<sup>3+(&minus;7)</sup></span> = 10<sup>&minus;4</sup>',
+     nt:'<span class="n">Cancelling tens</span>10<sup>3</sup> contributes three tens <b>multiplying</b>; 10<sup>&minus;7</sup> contributes seven tens <b>dividing</b>. Three of them pair off and cancel, since 10 &divide; 10 = 1, leaving <b>four tens still dividing</b> &mdash; that is 10<sup>&minus;4</sup>. Arithmetically, 3 + (&minus;7) = &minus;4. The struck-out pairs on the left are those cancellations.'},
+    {pl:'ASSEMBLE', mx:'<span class="tg">40</span> &times; 10<sup>&minus;4</sup>',
+     nt:'<span class="n">Right value, wrong form</span>40 &times; 10<sup>&minus;4</sup> is the correct <i>number</i>, but 40 is not between 1 and 10, so it is not yet scientific notation. This is where most of the marks get lost &mdash; the arithmetic is finished, the answer is not.'},
+    {pl:'RENORMALISE', mx:'<span class="tg">4</span> &times; 10<sup>1</sup> &times; 10<sup>&minus;4</sup> = 4 &times; <span class="tg">10<sup>&minus;3</sup></span>',
+     nt:'<span class="n">Move the point one last time</span>Write 40 as 4 &times; 10<sup>1</sup>. The point steps one place left, so the exponent climbs by one: 10<sup>1</sup> &times; 10<sup>&minus;4</sup> = 10<sup>&minus;3</sup>. Final answer <b>4 &times; 10<sup>&minus;3</sup></b>, and 1 &le; 4 &lt; 10, so it is legal now.'},
+    {pl:'CHECK', mx:'8,000 &times; 0.0000005 = 0.004 &#10003;',
+     nt:'<span class="n">Verify it</span>8,000 &times; 0.0000005 = <b>0.004</b>, and 4 &times; 10<sup>&minus;3</sup> = 4 &divide; 1,000 = <b>0.004</b>. They agree.'}
+    ]},
+  { nm:'(6.4&times;10<sup>5</sup>) &divide; (8&times;10<sup>&minus;2</sup>)', sub:'divide', v:8e6, vl:'8 '+X+' '+svsup(6), bx:[5,-2,'d'], tail:'(6.4 &times; 10<sup>5</sup>) &divide; (8 &times; 10<sup>&minus;2</sup>) = 8 &times; 10<sup>6</sup>',
+    S:[
+    {pl:'THE PROBLEM', mx:'(6.4 &times; 10<sup>5</sup>) &divide; (8 &times; 10<sup>&minus;2</sup>)',
+     nt:'<span class="n">640,000 divided by 0.08</span>Dividing by a number smaller than 1 makes the answer <b>bigger</b>, which feels wrong until you see why. Scientific notation makes the reason visible instead of mysterious.'},
+    {pl:'SPLIT IT', mx:'<span class="tg">(6.4 &divide; 8)</span> &times; <span class="tg">(10<sup>5</sup> &divide; 10<sup>&minus;2</sup>)</span>',
+     nt:'<span class="n">Sort the pieces</span>A quotient of products splits into a product of quotients: coefficients divide into coefficients, powers into powers. Note the divisor 8 &times; 10<sup>&minus;2</sup> is not zero, so the division is defined &mdash; worth confirming before dividing by anything.'},
+    {pl:'THE NUMBERS', mx:'<span class="tg">0.8</span> &times; (10<sup>5</sup> &divide; 10<sup>&minus;2</sup>)',
+     nt:'<span class="n">Handle the coefficients</span>6.4 &divide; 8 = <b>0.8</b>. Perfectly correct, and already a warning flag &mdash; 0.8 is below 1, so a cleanup step is coming.'},
+    {pl:'WHY THEY SUBTRACT', mx:'10<sup>5</sup> &divide; 10<sup>&minus;2</sup> = <span class="tg">10<sup>5&minus;(&minus;2)</sup></span> = 10<sup>7</sup>',
+     nt:'<span class="n">Dividing by a divider</span>10<sup>&minus;2</sup> is the instruction &ldquo;divide by 100&rdquo;. Dividing <i>by</i> that instruction <b>undoes</b> it, turning it into &ldquo;multiply by 100&rdquo; &mdash; two extra tens on the multiplying side. Five tens plus two more is <b>seven</b>: 10<sup>7</sup>. The double negative in 5 &minus; (&minus;2) = 7 is not a trick; it is that reversal, written down.'},
+    {pl:'ASSEMBLE', mx:'<span class="tg">0.8</span> &times; 10<sup>7</sup>',
+     nt:'<span class="n">Right value, wrong form</span>0.8 &times; 10<sup>7</sup> is the correct number, but 0.8 is less than 1 &mdash; no nonzero digit stands in front of the point, so this is not scientific notation yet.'},
+    {pl:'RENORMALISE', mx:'<span class="tg">8</span> &times; 10<sup>&minus;1</sup> &times; 10<sup>7</sup> = 8 &times; <span class="tg">10<sup>6</sup></span>',
+     nt:'<span class="n">Move the point one last time</span>Write 0.8 as 8 &times; 10<sup>&minus;1</sup>. The point steps one place right, so the exponent drops by one: 10<sup>&minus;1</sup> &times; 10<sup>7</sup> = 10<sup>6</sup>. Final answer <b>8 &times; 10<sup>6</sup></b>.'},
+    {pl:'CHECK', mx:'640,000 &divide; 0.08 = 8,000,000 &#10003;',
+     nt:'<span class="n">Verify it</span>640,000 &divide; 0.08 = <b>8,000,000</b> = 8 &times; 10<sup>6</sup>. Larger than what we started with, exactly as promised &mdash; because we divided by something smaller than 1.'}
+    ]}
+ ]];
+
+ var mode=0, ex=[0,0], step=[0,0];
+
+ function renderSteps(){
+   var m=mode-1, E=EX[m][ex[m]], i=step[m], S=E.S, k, out='';
+
+   $('picker').innerHTML=EX[m].map(function(e,j){
+     return '<button data-k="'+j+'"'+(j===ex[m]?' class="on"':'')+'>'+e.nm+'<small>'+e.sub+'</small></button>';
+   }).join('');
+   Array.prototype.forEach.call($('picker').querySelectorAll('button'),function(b){
+     b.onclick=function(){ ex[m]=+b.getAttribute('data-k'); step[m]=0; renderSteps(); };
+   });
+
+   for(k=0;k<=i;k++){
+     out+='<div class="dl'+(k===i?' cur':'')+'"><span class="mx">'+S[k].mx+'</span><span class="pl">'+S[k].pl+'</span></div>';
+   }
+   $('mb').innerHTML=out;
+   $('exlab').innerHTML='Step '+(i+1)+' of '+S.length+' &nbsp;·&nbsp; <b>'+E.tail+'</b>';
+
+   if(E.bx){
+     $('artTitle').innerHTML='Counting the tens';
+     $('art').innerHTML=drawTens(E.bx[0],E.bx[1],E.bx[2]);
+     $('why').innerHTML='<em>the two exponent rules, unpacked</em>10<sup><i>m</i></sup> &times; 10<sup><i>n</i></sup> = 10<sup><i>m</i>+<i>n</i></sup> &nbsp;&nbsp;·&nbsp;&nbsp; 10<sup><i>m</i></sup> &divide; 10<sup><i>n</i></sup> = 10<sup><i>m</i>&minus;<i>n</i></sup>';
+   }else{
+     var st=S[i].st;
+     $('artTitle').innerHTML='Where the point lands';
+     $('art').innerHTML=drawStrip(st[0],st[1],st[2],st[3]);
+     $('why').innerHTML='<em>the value never changes</em>every line is the same number wearing a different costume';
+   }
+
+   $('stage').innerHTML='<span class="big">'+E.nm+'</span><small>'+S[i].pl.toLowerCase()+' &nbsp;·&nbsp; step '+(i+1)+' of '+S.length+'</small>';
+   $('info').innerHTML=S[i].nt;
+
+   $('scale').innerHTML=drawScale(L10(E.v), E.vl);
+   $('mag').innerHTML='<b>Where this number lives.</b> The marker is pinned to this example\'s true value, and the <b>opening line and the closing line land on exactly this spot</b>. That is the whole test of a correct conversion: the <b>form</b> may change, the <b>value</b> may not. The lines in between are working parts &mdash; any line flagged <b>&ne;</b> is a deliberate halfway state that has not been paid for yet.';
+
+   $('prev').disabled=(i===0); $('next').disabled=(i===S.length-1);
+ }
+
+ /* ---------------- wiring ---------------- */
+ function setMode(m){
+   mode=m;
+   Array.prototype.forEach.call($('modes').querySelectorAll('button'),function(b){
+     b.className=(+b.getAttribute('data-m')===m)?'on':'';
+   });
+   $('p0').style.display  = (m===0)?'':'none';
+   $('p1').style.display  = (m===0)?'none':'';
+   $('nav').style.display = (m===0)?'none':'';
+   $('trap').style.display= (m===2)?'none':'';
+   if(m===0) renderSlide(); else renderSteps();
+ }
+ Array.prototype.forEach.call($('modes').querySelectorAll('button'),function(b){
+   b.onclick=function(){ setMode(+b.getAttribute('data-m')); };
+ });
+ $('nRange').oninput=function(){ N=+this.value; renderSlide(); };
+ $('aRange').oninput=function(){ C=+this.value; renderSlide(); };
+ $('prev').onclick=function(){ var m=mode-1; if(m>=0 && step[m]>0){ step[m]--; renderSteps(); } };
+ $('next').onclick=function(){ var m=mode-1; if(m>=0 && step[m]<EX[m][ex[m]].S.length-1){ step[m]++; renderSteps(); } };
+ document.addEventListener('keydown',function(e){
+   if(mode===0) return;
+   if(e.key==='ArrowLeft')  $('prev').click();
+   if(e.key==='ArrowRight') $('next').click();
+ });
+
+ setMode(0);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Independence: With and Without Replacement</title>
+<meta name="description" content="Draw a chip, then draw another. Put the first one back and the two draws are independent; keep it out and they are not. A live probability tree, a convergence curve, and a real simulation show exactly how much the difference is worth — and that it is exactly 1/(N-1).">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:112px;text-align:right;font-variant-numeric:tabular-nums;}
+.sl .nv small{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:1px;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;min-height:23px;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .fr{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:1px;font-variant-numeric:tabular-nums;}
+.tiles div.arv{border-color:#bcd6e2;background:#f2f8fb;} .tiles div.arv .vv{color:var(--teal);}
+.cmp{width:100%;border-collapse:collapse;margin-top:12px;font-size:12.5px;}
+.cmp th,.cmp td{padding:6px 5px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;}
+.cmp th{font-size:9.2px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.cmp td:first-child,.cmp th:first-child{text-align:left;font-weight:700;color:var(--teal-dk);font-size:11.6px;line-height:1.3;}
+.cmp td{font-weight:700;color:var(--soft);}
+.cmp td.wr{color:var(--blue);} .cmp td.wo{color:var(--gold);} .cmp td.same{color:var(--green);} .cmp td.diff{color:var(--coral);}
+.cmp td .d{display:block;font-size:9.2px;font-weight:700;color:var(--muted);margin-top:1px;}
+.cmp tr.hi td{background:#eff5f8;}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.45;}
+.hd{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;margin-bottom:6px;}
+.grid.g4{grid-template-columns:repeat(4,1fr);}
+.grid.g4 .it{text-align:center;font-size:12.5px;}
+.grid .it .s{display:block;margin-top:2px;font-weight:600;}
+.verd{display:flex;align-items:center;gap:9px;margin-top:12px;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:#fff;}
+.verd .tx{font-size:11.8px;font-weight:700;color:var(--soft);line-height:1.35;}
+.verd .tx b{color:var(--teal-dk);}
+.verd.yes{border-color:#bfe0cc;background:#f2faf5;} .verd.no{border-color:#f0c9d0;background:#fdf4f5;}
+#info .eq{font-size:12.5px;color:var(--teal-dk);background:#e2eff5;border-radius:8px;padding:9px 11px;margin-top:9px;line-height:1.75;font-variant-numeric:tabular-nums;}
+#info .eq .r{display:flex;justify-content:space-between;gap:10px;}
+#info .eq .r b{white-space:nowrap;}
+#info .eq .r.tot{border-top:1px solid #bcd6e2;margin-top:4px;padding-top:4px;}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,1fr);}.sl label{font-size:10px;}.sl .nv{min-width:92px;font-size:13px;}.row .btn{font-size:12px;padding:10px 4px;}.cmp{font-size:11.5px;}.grid.g4{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 5</div>
+  <h1>Independence: With and Without Replacement</h1>
+  <div class="intro">Two events are <b>independent</b> when learning that one of them happened tells you <i>nothing</i> about the other &mdash; and that is a claim about numbers, not about whether the two things feel related. The cleanest place to watch independence appear and vanish is a box of chips. Draw one, then draw another. <b>Put the first chip back</b> and the second draw faces exactly the box the first one did, so the draws are independent. <b>Keep it out</b> and the box has changed: the second draw now depends on what the first one took. Below, a probability tree redraws itself live, a curve shows how fast the dependence dies as the box gets bigger, and a real simulation runs both versions side by side so you can see what the difference is actually worth.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="treeTitle">Two draws, branch by branch</h2>
+      <svg viewBox="0 0 360 272" aria-label="a probability tree for two draws, showing the second-draw probabilities after a marked first draw and after a plain first draw"><g id="tree"></g></svg>
+      <div class="lgd" id="tlgd"></div>
+      <div class="cap" id="treeCap"></div>
+    </div>
+    <div class="card"><h2>How fast the dependence dies</h2>
+      <svg viewBox="0 0 360 216" aria-label="the two conditional probabilities for a second draw without replacement, converging on the population proportion as the population grows"><g id="curve"></g></svg>
+      <div class="lgd">
+        <span><i style="background:#1c4454"></i>with replacement &mdash; always the same</span>
+        <span><i style="background:#d1495b"></i>without replacement &mdash; the two branches</span>
+        <span><i style="background:#f6dde1"></i>how far apart they are</span>
+      </div>
+      <div class="cap" id="curveCap"></div>
+    </div>
+    <div class="card"><h2 id="simTitle">A real run of samples</h2>
+      <svg viewBox="0 0 360 250" aria-label="histograms of the number of marked items in repeated samples, drawn with replacement and without replacement, with the exact distributions overlaid"><g id="sim"></g></svg>
+      <div class="lgd">
+        <span><i style="background:#2f6f9f"></i>with replacement</span>
+        <span><i style="background:#b8862f"></i>without replacement</span>
+        <span><i style="background:#1c4454"></i>exact probability</span>
+      </div>
+      <div class="cap" id="simCap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Independence<small>put the chip back, or keep it out</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="0" class="on">A shuffled deck<small>52 cards</small></button>
+        <button data-v="1">A small team<small>10 people</small></button>
+        <button data-v="2">A whole town<small>5,000 people</small></button>
+      </div>
+      <div class="modeseg" id="mseg" style="margin-top:12px;">
+        <button data-v="1" class="on">Put it back</button>
+        <button data-v="0">Keep it out</button>
+      </div>
+      <div class="sl"><label for="nSl">Box holds</label><input type="range" id="nSl" min="0" max="16" step="1" value="9"><span class="nv" id="nVal">&mdash;</span></div>
+      <div class="sl"><label for="pSl">Marked</label><input type="range" id="pSl" min="5" max="95" step="5" value="25"><span class="nv" id="pVal">&mdash;</span></div>
+      <div class="sl"><label for="kSl">Sample</label><input type="range" id="kSl" min="2" max="15" step="1" value="5"><span class="nv" id="kVal">&mdash;</span></div>
+      <div class="hd">Send the box to</div>
+      <div class="grid g4" id="snap"></div>
+      <div class="sl"><label for="rSl">Repeats</label><input type="range" id="rSl" min="0" max="3" step="1" value="2"><span class="nv" id="rVal">&mdash;</span></div>
+      <div class="row"><button class="btn" id="reset">&#8634; Back to the deck</button><button class="btn solid" id="samp">&#8635; Draw a new run</button></div>
+      <div class="verd" id="verd"></div>
+      <div class="tiles">
+        <div><span class="lb">P(marked on draw 1)</span><span class="vv" id="t1">&mdash;</span><span class="fr" id="f1">&mdash;</span></div>
+        <div><span class="lb">P(marked on 2 | marked on 1)</span><span class="vv" id="t2">&mdash;</span><span class="fr" id="f2">&mdash;</span></div>
+        <div class="arv"><span class="lb">P(marked on both)</span><span class="vv" id="t3">&mdash;</span><span class="fr" id="f3">&mdash;</span></div>
+        <div><span class="lb">P(1st) &times; P(2nd)</span><span class="vv" id="t4">&mdash;</span><span class="fr" id="f4">&mdash;</span></div>
+      </div>
+      <div class="hd">The two draws, side by side</div>
+      <table class="cmp">
+        <tr><th>Question about draw 2</th><th>Put it back</th><th>Keep it out</th></tr>
+        <tr><td>After a <b>marked</b> first draw</td><td class="wr" id="cA1">&mdash;</td><td class="wo" id="cA2">&mdash;</td></tr>
+        <tr><td>After a <b>plain</b> first draw</td><td class="wr" id="cB1">&mdash;</td><td class="wo" id="cB2">&mdash;</td></tr>
+        <tr class="hi"><td>Distance between those two</td><td class="same" id="cC1">&mdash;</td><td class="diff" id="cC2">&mdash;</td></tr>
+        <tr><td>Marked on draw 2, <i>not</i> told the first</td><td class="wr" id="cD1">&mdash;</td><td class="wo" id="cD2">&mdash;</td></tr>
+        <tr><td>Marked on <b>both</b> draws</td><td class="wr" id="cE1">&mdash;</td><td class="wo" id="cE2">&mdash;</td></tr>
+      </table>
+      <div class="cap">Look hard at the fourth row. Even without replacement, the second draw is marked with probability <b>exactly the same</b> as the first &mdash; the two columns agree. Nothing about the second card is worse off until somebody tells you what the first one was. Dependence lives in the <b>conditional</b> rows above it, not in the unconditional one.</div>
+      <div class="hd" id="runHd">Counting marked items in each sample</div>
+      <table class="cmp">
+        <tr><th>How the sample was taken</th><th>Mean marked</th><th>Spread (SD)</th></tr>
+        <tr><td>Put it back &mdash; exact</td><td class="wr" id="mW1">&mdash;</td><td class="wr" id="sW1">&mdash;</td></tr>
+        <tr><td>Put it back &mdash; this run</td><td id="mW2">&mdash;</td><td id="sW2">&mdash;</td></tr>
+        <tr class="hi"><td>Keep it out &mdash; exact</td><td class="wo" id="mO1">&mdash;</td><td class="wo" id="sO1">&mdash;</td></tr>
+        <tr><td>Keep it out &mdash; this run</td><td id="mO2">&mdash;</td><td id="sO2">&mdash;</td></tr>
+      </table>
+      <div class="cap" id="runCap"></div>
+      <div id="info"></div>
+      <div class="mnem">There is one number worth carrying out of this whole page, and it is startlingly simple. Without replacement, the gap between &ldquo;marked on draw 2 given the first was marked&rdquo; and &ldquo;marked on draw 2 given the first was plain&rdquo; is exactly <b>1/(N &minus; 1)</b> &mdash; where N is how many items were in the box to begin with. The two conditionals are K/(N&minus;1) and (K&minus;1)/(N&minus;1), and subtracting them leaves 1/(N&minus;1) with the K gone entirely. <b>How many were marked does not matter.</b> One heart in a deck or twenty-six of them, removing a card shifts the odds by the same 1/51. That single fact is the whole of this section in miniature: dependence created by sampling is a story about the <b>size of the box</b>, not about what is in it. A box of 10 and the shift is 11.1 percentage points, which will wreck any calculation that ignores it. A box of 5,000 and the shift is 0.02 percentage points, which no experiment you will ever run could detect. That is why survey statisticians treat a sample of a thousand people out of a city of a million as if the draws were independent &mdash; not because they <i>are</i>, but because the error from pretending is smaller than the ink used to write it down.</div>
+      <div class="note">Six ways this gets misread. <b>First, independent does not mean unrelated in the world.</b> It is arithmetic: A and B are independent exactly when P(A and B) = P(A) &times; P(B). Suit and rank in a deck are independent in this precise sense even though they are printed on the same card, and two events can be causally tangled yet still satisfy the equation. Check the multiplication; do not consult your intuition about the subject matter. <b>Second, independent is not the same as mutually exclusive</b> &mdash; the two are nearly opposites. Mutually exclusive means they cannot both happen, so learning that A occurred tells you B definitely did <i>not</i>, which is a great deal of information. Two events with non-zero probability can never be both mutually exclusive and independent. <b>Third, the gambler&rsquo;s fallacy is only a fallacy when you replace.</b> A coin, a die, a chip put back &mdash; these genuinely have no memory, and four marked draws in a row change nothing about the fifth. But when you do <i>not</i> replace, the box really is depleted, and expecting the next draw to be different is not superstition, it is correct. Card counting is legal arithmetic, not a losing streak talking. <b>Fourth, sampling without replacement does not bias anything.</b> Both tables above show the same mean, every time; what shrinks is the <b>spread</b>, by the factor (N&minus;n)/(N&minus;1) under the square root. Drawing without replacement is <i>more</i> precise, not less, because a sample that cannot repeat itself covers more of the population. <b>Fifth, the unconditional probability of the second draw never moves.</b> Students routinely say the second card is &ldquo;less likely&rdquo; to be a heart. It is not: it is 13/52 either way, because before you look at the first card every position in the deck is symmetric. Only the conditional probability moves. <b>Sixth, with three or more events, pairwise independence is not enough.</b> Full independence requires the multiplication rule to hold for <i>every</i> subset at once, and it is possible to build three events that pass every pairwise test and fail the three-way one.</div>
+      <div class="fn" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- seeded PRNG, so the page opens with the same run every time ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+ /* ---- log-factorials, for exact binomial and hypergeometric probabilities ---- */
+ var LF=[0,0];
+ (function(){for(var i=2;i<=5000;i++)LF[i]=LF[i-1]+Math.log(i);})();
+ function lc(n,k){if(k<0||k>n||n<0)return -Infinity;return LF[n]-LF[k]-LF[n-k];}
+ function binPmf(n,k,p){if(k<0||k>n)return 0;if(p<=0)return k===0?1:0;if(p>=1)return k===n?1:0;
+   return Math.exp(lc(n,k)+k*Math.log(p)+(n-k)*Math.log(1-p));}
+ function hypPmf(N,K,n,k){if(k<0||k>n||k>K||(n-k)>(N-K))return 0;
+   return Math.exp(lc(K,k)+lc(N-K,n-k)-lc(N,n));}
+
+ /* ================= the boxes ================= */
+ var NV=[6,8,10,12,16,20,26,32,40,52,80,120,200,400,800,2000,5000];
+ var RV=[200,1000,4000,10000];
+
+ var SCN=[
+  {ni:9,pct:25,n:5,exK:13,
+   item:'card',items:'cards',mk:'a heart',mks:'hearts',pl:'a non-heart',pls:'non-hearts',
+   act:'deal cards off a well-shuffled deck',box:'a 52-card deck',
+   open:'Fifty-two cards, thirteen of them hearts. Deal one and it is a heart with probability 13/52 = 25%. Now deal a second. If you had shuffled the first card back in, the second deal meets the same 52-card deck and the answer is 25% again, whatever the first card was. Because you did not, the deck is now 51 cards &mdash; and 12 hearts if the first was a heart, still 13 if it was not. The two answers, 12/51 = 23.53% and 13/51 = 25.49%, are the entire difference between independent and dependent draws, and they sit exactly 1/51 = 1.96 percentage points apart.'},
+  {ni:2,pct:30,n:3,exK:0,
+   item:'member',items:'members',mk:'a certified member',mks:'certified members',pl:'an uncertified member',pls:'uncertified members',
+   act:'pick people one at a time from a team of ten',box:'a ten-person team',
+   open:'Ten people, three of them certified. Pick one at random and the chance of a certified member is 3/10 = 30%. Pick a second without putting the first one back and everything moves violently: if the first was certified only 2 of the remaining 9 are, which is 22.2%; if the first was not, 3 of 9 are, which is 33.3%. Those are eleven percentage points apart, and no honest calculation here can pretend the draws are independent. Small populations are where the difference stops being academic.'},
+  {ni:16,pct:40,n:10,exK:0,
+   item:'resident',items:'residents',mk:'a supporter',mks:'supporters',pl:'a non-supporter',pls:'non-supporters',
+   act:'sample residents one at a time from a town of five thousand',box:'a town of 5,000',
+   open:'Five thousand residents, two thousand of them supporters, so the proportion is 40%. Remove one person and the conditional probability for the next draw moves to either 1,999/4,999 = 39.988% or 2,000/4,999 = 40.008%. The gap is 1/4,999 &mdash; two hundredths of one percentage point. The draws are not independent, and saying they are is technically false; it is also the right thing to do, because the error is far smaller than the noise in any sample you could afford to collect.'}
+ ];
+
+ var MK='#7a5a8a',UN='#c9d5dc',WR='#2f6f9f',WO='#b8862f',DK='#1c4454',GD='#2f9e5b',BD='#d1495b';
+
+ var sc=0,ni=9,pct=25,nn=5,ri=2,seed=0,wr=1;
+
+ function N(){return NV[ni];}
+ function K(){return Math.min(N()-1,Math.max(1,Math.round(pct/100*N())));}
+ function P(){return K()/N();}
+ function nMax(){return Math.min(15,N());}
+
+ /* names adapt when the slider moves the count off the scenario's story */
+ function nmM(pl){var s=SCN[sc];if(s.exK&&K()!==s.exK)return pl?'marked '+s.items:'a marked '+s.item;return pl?s.mks:s.mk;}
+ function nmP(pl){var s=SCN[sc];if(s.exK&&K()!==s.exK)return pl?'plain '+s.items:'a plain '+s.item;return pl?s.pls:s.pl;}
+
+ /* ================= formatting ================= */
+ function fmt(x,d){var v=x.toFixed(d),p=v.split('.');p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');return p.join('.');}
+ function pc(p,d){return (p*100).toFixed(d===undefined?2:d)+'%';}
+ function pts(x,d){return (x*100).toFixed(d===undefined?2:d)+' pts';}
+
+ /* ================= the simulation =================
+    two matched series are run from one seeded stream: one puts the chip back,
+    one does not. the "keep it out" series uses the urn recursion — at each
+    step the chance of a marked item is (marked left)/(items left) — which is
+    exactly sampling without replacement, in O(n) per sample. */
+ function runSim(){
+  var R=RV[ri],Nn=N(),Kk=K(),n=nn,r=mulberry32(20260718+seed*7919);
+  var cw=[],co=[],i,j;
+  for(i=0;i<=n;i++){cw.push(0);co.push(0);}
+  var sw=0,sw2=0,so=0,so2=0,p=Kk/Nn;
+  for(i=0;i<R;i++){
+   var xw=0;
+   for(j=0;j<n;j++){if(r()<p)xw++;}
+   cw[xw]++;sw+=xw;sw2+=xw*xw;
+   var kr=Kk,nr=Nn,xo=0;
+   for(j=0;j<n;j++){if(r()<kr/nr){xo++;kr--;}nr--;}
+   co[xo]++;so+=xo;so2+=xo*xo;
+  }
+  function stat(s,s2){var m=s/R,v=R>1?(s2-R*m*m)/(R-1):0;return{m:m,sd:Math.sqrt(Math.max(0,v))};}
+  return {R:R,cw:cw,co:co,w:stat(sw,sw2),o:stat(so,so2)};
+ }
+
+ /* ================= exact quantities ================= */
+ function exact(){
+  var Nn=N(),Kk=K(),p=Kk/Nn,n=nn;
+  var fpc=(Nn-n)/(Nn-1);
+  return {
+   Nn:Nn,Kk:Kk,p:p,n:n,
+   condMM_w:p, condPM_w:p,                       /* put it back */
+   condMM_o:(Kk-1)/(Nn-1), condPM_o:Kk/(Nn-1),   /* keep it out */
+   gap_o:1/(Nn-1),
+   both_w:p*p, both_o:p*(Kk-1)/(Nn-1),
+   meanW:n*p, sdW:Math.sqrt(n*p*(1-p)),
+   meanO:n*p, sdO:Math.sqrt(n*p*(1-p)*fpc),
+   fpc:fpc
+  };
+ }
+
+ /* ================= chart 1 : the probability tree ================= */
+ function chip(x,y,txt,col,anchor,sz){
+  var s=sz||9.2;
+  return '<text x="'+x+'" y="'+y+'" font-size="'+s+'" font-weight="800" fill="'+col+'" text-anchor="'+(anchor||'middle')+'" font-family="Inter,sans-serif">'+txt+'</text>';
+ }
+ function nodeBox(x,y,w,h,fill,stroke,txt,tcol){
+  return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.4"/>'+
+         '<text x="'+(x+w/2)+'" y="'+(y+h/2+3.4)+'" font-size="9.6" font-weight="800" fill="'+tcol+'" text-anchor="middle" font-family="Inter,sans-serif">'+txt+'</text>';
+ }
+ function drawTree(){
+  var E=exact(),Nn=E.Nn,Kk=E.Kk,p=E.p,s='';
+  var cMM=wr?E.condMM_w:E.condMM_o, cPM=wr?E.condPM_w:E.condPM_o;
+  var cMP=1-cMM, cPP=1-cPM;
+  var eq=wr?1:0, hi=eq?GD:BD;
+
+  /* composition strip */
+  var sx=12,sw=336,mw=sw*Kk/Nn;
+  s+='<rect x="'+sx+'" y="4" width="'+sw+'" height="15" rx="4" fill="'+UN+'"/>';
+  s+='<rect x="'+sx+'" y="4" width="'+Math.max(1,mw)+'" height="15" rx="'+(mw>10?4:1)+'" fill="'+MK+'"/>';
+  s+='<rect x="'+sx+'" y="4" width="'+sw+'" height="15" rx="4" fill="none" stroke="#fff" stroke-width="1.2"/>';
+  s+=chip(sx,32,fmt(Kk,0)+' marked','#6b4d7a','start',9.4);
+  s+=chip(sx+sw,32,fmt(Nn-Kk,0)+' plain  ·  '+fmt(Nn,0)+' in the box','#78868d','end',9.4);
+
+  /* geometry */
+  var rx=26,ry=146, l1x=104,l1w=62,l1h=22, l2x=228,l2w=62,l2h=22;
+  var yMM=62,yMP=118,yPM=174,yPP=230, y1M=90,y1P=202;
+
+  function edge(x1,y1,x2,y2,col,w){return '<path d="M'+x1+' '+y1+' C'+((x1+x2)/2)+' '+y1+','+((x1+x2)/2)+' '+y2+','+x2+' '+y2+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"/>';}
+
+  s+=edge(rx+11,ry,l1x,y1M,MK,Math.max(1.4,p*7));
+  s+=edge(rx+11,ry,l1x,y1P,UN,Math.max(1.4,(1-p)*7));
+  s+=edge(l1x+l1w,y1M,l2x,yMM,eq?GD:hi,Math.max(1.4,cMM*7));
+  s+=edge(l1x+l1w,y1M,l2x,yMP,UN,Math.max(1.4,cMP*7));
+  s+=edge(l1x+l1w,y1P,l2x,yPM,eq?GD:hi,Math.max(1.4,cPM*7));
+  s+=edge(l1x+l1w,y1P,l2x,yPP,UN,Math.max(1.4,cPP*7));
+
+  s+='<circle cx="'+rx+'" cy="'+ry+'" r="11" fill="'+DK+'"/>';
+  s+=chip(rx,ry+3.4,'box','#fff','middle',8.2);
+
+  s+=nodeBox(l1x,y1M-11,l1w,l1h,'#f2edf6',MK,'marked','#5c4169');
+  s+=nodeBox(l1x,y1P-11,l1w,l1h,'#f2f6f8','#aebfc8','plain','#5b6b73');
+  s+=nodeBox(l2x,yMM-11,l2w,l2h,eq?'#eef8f1':'#fdf1f3',hi,'marked',eq?'#237a45':'#a5313f');
+  s+=nodeBox(l2x,yMP-11,l2w,l2h,'#f2f6f8','#aebfc8','plain','#5b6b73');
+  s+=nodeBox(l2x,yPM-11,l2w,l2h,eq?'#eef8f1':'#fdf1f3',hi,'marked',eq?'#237a45':'#a5313f');
+  s+=nodeBox(l2x,yPP-11,l2w,l2h,'#f2f6f8','#aebfc8','plain','#5b6b73');
+
+  /* branch labels */
+  s+=chip(70,112,pc(p,1),'#6b4d7a');
+  s+=chip(70,184,pc(1-p,1),'#78868d');
+  s+=chip(197,70,pc(cMM,1),hi);
+  s+=chip(197,113,pc(cMP,1),'#8b9aa2',null,8.4);
+  s+=chip(197,182,pc(cPM,1),hi);
+  s+=chip(197,225,pc(cPP,1),'#8b9aa2',null,8.4);
+
+  s+=chip(70,124,'draw 1','#a3b2ba',null,7.8);
+  s+=chip(197,58,'draw 2','#a3b2ba',null,7.8);
+
+  /* the bracket that compares the two "marked on draw 2" branches */
+  s+='<path d="M296 '+yMM+' H304 V'+yPM+' H296" fill="none" stroke="'+hi+'" stroke-width="1.6"/>';
+  s+='<text x="309" y="'+((yMM+yPM)/2-3)+'" font-size="8.6" font-weight="800" fill="'+hi+'" font-family="Inter,sans-serif">'+(eq?'same':'apart by')+'</text>';
+  s+='<text x="309" y="'+((yMM+yPM)/2+8)+'" font-size="9.6" font-weight="800" fill="'+hi+'" font-family="Inter,sans-serif">'+(eq?'0.00 pts':pts(E.gap_o,Nn>400?3:2))+'</text>';
+
+  $('tree').innerHTML=s;
+
+  $('tlgd').innerHTML='<span><i style="background:'+MK+'"></i>'+nmM(1)+'</span>'+
+   '<span><i style="background:'+UN+'"></i>'+nmP(1)+'</span>'+
+   '<span><i style="background:'+hi+'"></i>'+(eq?'the two branches agree':'the two branches disagree')+'</span>';
+
+  $('treeCap').innerHTML=wr
+   ? 'The chip goes back, so draw 2 faces the identical box no matter what draw 1 produced. Both second-level <b>marked</b> branches read '+pc(p,2)+', the bracket closes to zero, and P(marked on both) = '+pc(p,2)+' &times; '+pc(p,2)+' = <b>'+pc(E.both_w,3)+'</b> &mdash; the multiplication rule in its unconditional form, which is exactly what independence licenses.'
+   : 'The chip stays out, so draw 2 faces a box of '+fmt(Nn-1,0)+'. A marked first draw leaves '+fmt(Kk-1,0)+' marked of '+fmt(Nn-1,0)+'; a plain one leaves all '+fmt(Kk,0)+'. The two <b>marked</b> branches now differ by <b>'+pts(E.gap_o,3)+' = 1/'+fmt(Nn-1,0)+'</b>, and P(marked on both) = '+pc(p,2)+' &times; '+pc(E.condMM_o,2)+' = <b>'+pc(E.both_o,3)+'</b>. You must walk the branch you are on; you may no longer just square the first number.';
+ }
+
+ /* ================= chart 2 : convergence of the two conditionals ================= */
+ function drawCurve(){
+  var E=exact(),p=E.p,Nn=E.Nn,s='';
+  var X0=44,X1=344,Y0=20,Y1=176;
+  var lo=Math.log(4)/Math.LN10, hi=4; /* N from 4 to 10,000 */
+  function xf(n){return X0+(Math.log(n)/Math.LN10-lo)/(hi-lo)*(X1-X0);}
+  function yf(v){return Y1-Math.max(0,Math.min(1,v))*(Y1-Y0);}
+
+  /* frame */
+  s+='<rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'" fill="#fbfdfe" stroke="#e6eef2"/>';
+  var yt=[0,0.25,0.5,0.75,1],i;
+  for(i=0;i<yt.length;i++){
+   s+='<line x1="'+X0+'" y1="'+yf(yt[i])+'" x2="'+X1+'" y2="'+yf(yt[i])+'" stroke="#eaf1f5"/>';
+   s+=chip(X0-6,yf(yt[i])+3.2,(yt[i]*100).toFixed(0)+'%','#a3b2ba','end',8.4);
+  }
+  var xt=[10,100,1000,10000];
+  for(i=0;i<xt.length;i++){
+   s+='<line x1="'+xf(xt[i])+'" y1="'+Y0+'" x2="'+xf(xt[i])+'" y2="'+Y1+'" stroke="#eaf1f5"/>';
+   s+=chip(xf(xt[i]),Y1+13,fmt(xt[i],0),'#a3b2ba');
+  }
+
+  /* the dependence band, drawn only where at least one marked item fits */
+  var nStart=Math.max(4,Math.ceil(1/p)),up='',dn='',pts2=[],n2,step;
+  var mind=Math.log(nStart)/Math.LN10, maxd=hi;
+  for(i=0;i<=180;i++){
+   var d=mind+(maxd-mind)*i/180; n2=Math.pow(10,d);
+   pts2.push([xf(n2),yf(p*n2/(n2-1)),yf((p*n2-1)/(n2-1))]);
+  }
+  var band='M'+pts2[0][0]+' '+pts2[0][1];
+  for(i=1;i<pts2.length;i++)band+=' L'+pts2[i][0]+' '+pts2[i][1];
+  for(i=pts2.length-1;i>=0;i--)band+=' L'+pts2[i][0]+' '+pts2[i][2];
+  band+=' Z';
+  s+='<path d="'+band+'" fill="#f6dde1"/>';
+  for(i=0;i<pts2.length;i++){up+=(i?' L':'M')+pts2[i][0]+' '+pts2[i][1];dn+=(i?' L':'M')+pts2[i][0]+' '+pts2[i][2];}
+  s+='<path d="'+up+'" fill="none" stroke="'+BD+'" stroke-width="1.9"/>';
+  s+='<path d="'+dn+'" fill="none" stroke="'+BD+'" stroke-width="1.9"/>';
+
+  /* the flat with-replacement line */
+  s+='<line x1="'+X0+'" y1="'+yf(p)+'" x2="'+X1+'" y2="'+yf(p)+'" stroke="'+DK+'" stroke-width="2" stroke-dasharray="5 3"/>';
+  s+=chip(X1-3,yf(p)-6,'p = '+pc(p,1),DK,'end',9);
+
+  /* marker at the live population */
+  var mx=xf(Nn);
+  s+='<line x1="'+mx+'" y1="'+Y0+'" x2="'+mx+'" y2="'+Y1+'" stroke="'+DK+'" stroke-width="1.1" stroke-dasharray="3 3" opacity=".65"/>';
+  if(Nn>=nStart){
+   s+='<circle cx="'+mx+'" cy="'+yf(E.condPM_o)+'" r="3.6" fill="'+BD+'" stroke="#fff" stroke-width="1.4"/>';
+   s+='<circle cx="'+mx+'" cy="'+yf(E.condMM_o)+'" r="3.6" fill="'+BD+'" stroke="#fff" stroke-width="1.4"/>';
+  }
+  s+='<circle cx="'+mx+'" cy="'+yf(p)+'" r="3.2" fill="'+DK+'" stroke="#fff" stroke-width="1.4"/>';
+  s+=chip(Math.min(X1-30,Math.max(X0+30,mx)),Y0-6,'N = '+fmt(Nn,0),DK,'middle',9);
+  s+=chip((X0+X1)/2,Y1+27,'how many items the box holds  (log scale)','#a3b2ba',null,8.8);
+
+  $('curve').innerHTML=s;
+  $('curveCap').innerHTML='Both red curves answer the same question &mdash; is draw 2 marked? &mdash; but one is told the first draw was marked and the other is told it was plain. The vertical distance between them is <b>1/(N &minus; 1)</b> and nothing else. At your box of '+fmt(Nn,0)+' that is <b>'+pts(E.gap_o,3)+'</b>. The dashed line is what you get when you replace: flat at '+pc(p,1)+' forever, because the box never changes. The band squeezes onto it as the box grows, which is the precise sense in which <b>a large enough population makes dependence disappear</b>. The curves start where the proportion first allows a whole marked item.';
+ }
+
+ /* ================= chart 3 : the simulated distributions ================= */
+ function drawSim(S){
+  var E=exact(),n=E.n,Nn=E.Nn,Kk=E.Kk,p=E.p,s='',i,k;
+  var X0=40,X1=348,Y0=16,Y1=178;
+  var slot=(X1-X0)/(n+1), bw=Math.max(3,Math.min(12,slot*0.36));
+  var pw=[],po=[],mx=0;
+  for(k=0;k<=n;k++){
+   pw.push(binPmf(n,k,p));
+   po.push(hypPmf(Nn,Kk,n,k));
+   mx=Math.max(mx,pw[k],po[k],S.cw[k]/S.R,S.co[k]/S.R);
+  }
+  mx=Math.max(mx*1.14,0.06);
+  function xf(k){return X0+(k+0.5)*slot;}
+  function yf(v){return Y1-v/mx*(Y1-Y0);}
+
+  s+='<rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'" fill="#fbfdfe" stroke="#e6eef2"/>';
+  for(i=1;i<=4;i++){var gy=Y0+(Y1-Y0)*i/5;s+='<line x1="'+X0+'" y1="'+gy+'" x2="'+X1+'" y2="'+gy+'" stroke="#eaf1f5"/>';}
+
+  var aW=wr?1:0.42, aO=wr?0.42:1;
+  for(k=0;k<=n;k++){
+   var cx=xf(k), hw=S.cw[k]/S.R, ho=S.co[k]/S.R;
+   if(hw>0)s+='<rect x="'+(cx-bw-1)+'" y="'+yf(hw)+'" width="'+bw+'" height="'+(Y1-yf(hw))+'" rx="1.5" fill="'+WR+'" opacity="'+aW+'"/>';
+   if(ho>0)s+='<rect x="'+(cx+1)+'" y="'+yf(ho)+'" width="'+bw+'" height="'+(Y1-yf(ho))+'" rx="1.5" fill="'+WO+'" opacity="'+aO+'"/>';
+   if(pw[k]>0.0004)s+='<line x1="'+(cx-bw-1.6)+'" y1="'+yf(pw[k])+'" x2="'+(cx-0.4)+'" y2="'+yf(pw[k])+'" stroke="'+DK+'" stroke-width="1.7"/>';
+   if(po[k]>0.0004)s+='<line x1="'+(cx+0.4)+'" y1="'+yf(po[k])+'" x2="'+(cx+bw+1.6)+'" y2="'+yf(po[k])+'" stroke="'+DK+'" stroke-width="1.7"/>';
+   if(n<=10||k%2===0)s+=chip(cx,Y1+13,String(k),'#a3b2ba',null,8.4);
+  }
+  s+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#cddae1"/>';
+  s+=chip((X0+X1)/2,Y1+27,'marked items found in a sample of '+n,'#a3b2ba',null,8.8);
+
+  /* the shared mean */
+  var mxp=X0+(E.meanW+0.5)*slot;
+  s+='<line x1="'+mxp+'" y1="'+Y0+'" x2="'+mxp+'" y2="'+Y1+'" stroke="'+DK+'" stroke-width="1.2" stroke-dasharray="4 3"/>';
+  s+=chip(mxp,Y0+10,'both average '+E.meanW.toFixed(2),DK,'middle',8.6);
+
+  /* the two spreads, drawn to the same scale */
+  function rule(y,m,sd,col,lab){
+   var a=Math.max(X0,X0+(m-sd+0.5)*slot), b=Math.min(X1,X0+(m+sd+0.5)*slot),o='';
+   o+=chip(X0+2,y-6,lab,col,'start',8.8);
+   o+='<line x1="'+a+'" y1="'+y+'" x2="'+b+'" y2="'+y+'" stroke="'+col+'" stroke-width="5" stroke-linecap="round" opacity=".85"/>';
+   o+='<line x1="'+a+'" y1="'+(y-5)+'" x2="'+a+'" y2="'+(y+5)+'" stroke="'+col+'" stroke-width="1.6"/>';
+   o+='<line x1="'+b+'" y1="'+(y-5)+'" x2="'+b+'" y2="'+(y+5)+'" stroke="'+col+'" stroke-width="1.6"/>';
+   return o;
+  }
+  s+=rule(214,E.meanW,E.sdW,WR,'put it back  ·  SD '+E.sdW.toFixed(3));
+  s+=rule(240,E.meanO,E.sdO,WO,'keep it out  ·  SD '+E.sdO.toFixed(3)+(E.sdW>0?'   ('+(100*E.sdO/E.sdW).toFixed(1)+'% as wide)':''));
+
+  $('sim').innerHTML=s;
+  $('simTitle').innerHTML='A real run of '+fmt(S.R,0)+' samples';
+  var shrink=E.sdW>0?(1-E.sdO/E.sdW)*100:0;
+  $('simCap').innerHTML='Each of the '+fmt(S.R,0)+' repeats takes a fresh sample of '+n+' from a box of '+fmt(Nn,0)+' and counts the marked items. Blue replaces the item each time, gold does not. The dark ticks are the <b>exact</b> probabilities &mdash; binomial for blue, hypergeometric for gold &mdash; and the bars land on them, which is how you know the simulation is telling the truth. The two histograms share a centre and differ in width: keeping the item out narrows the spread by <b>'+shrink.toFixed(1)+'%</b> here, because a sample of '+n+' out of '+fmt(Nn,0)+' can never waste a draw repeating itself.';
+ }
+
+ /* ================= panel ================= */
+ function paint(){
+  var E=exact(),S=runSim(),Nn=E.Nn,Kk=E.Kk,p=E.p,n=E.n;
+
+  drawTree();drawCurve();drawSim(S);
+
+  var cMM=wr?E.condMM_w:E.condMM_o, both=wr?E.both_w:E.both_o;
+
+  $('t1').innerHTML=pc(p,2); $('f1').innerHTML=fmt(Kk,0)+'/'+fmt(Nn,0);
+  $('t2').innerHTML=pc(cMM,2); $('f2').innerHTML=wr?(fmt(Kk,0)+'/'+fmt(Nn,0)):(fmt(Kk-1,0)+'/'+fmt(Nn-1,0));
+  $('t3').innerHTML=pc(both,3); $('f3').innerHTML=wr?'squared':(fmt(Kk,0)+'/'+fmt(Nn,0)+' &times; '+fmt(Kk-1,0)+'/'+fmt(Nn-1,0));
+  $('t4').innerHTML=pc(p*p,3); $('f4').innerHTML='if independent';
+
+  $('cA1').innerHTML=pc(E.condMM_w,2); $('cA2').innerHTML=pc(E.condMM_o,2);
+  $('cB1').innerHTML=pc(E.condPM_w,2); $('cB2').innerHTML=pc(E.condPM_o,2);
+  $('cC1').innerHTML='0.00 pts<span class="d">identical</span>';
+  $('cC2').innerHTML=pts(E.gap_o,3)+'<span class="d">= 1/'+fmt(Nn-1,0)+'</span>';
+  $('cD1').innerHTML=pc(p,2); $('cD2').innerHTML=pc(p,2);
+  $('cE1').innerHTML=pc(E.both_w,3); $('cE2').innerHTML=pc(E.both_o,3);
+
+  $('mW1').innerHTML=E.meanW.toFixed(3); $('sW1').innerHTML=E.sdW.toFixed(3);
+  $('mW2').innerHTML=S.w.m.toFixed(3);   $('sW2').innerHTML=S.w.sd.toFixed(3);
+  $('mO1').innerHTML=E.meanO.toFixed(3); $('sO1').innerHTML=E.sdO.toFixed(3);
+  $('mO2').innerHTML=S.o.m.toFixed(3);   $('sO2').innerHTML=S.o.sd.toFixed(3);
+
+  var v=$('verd');
+  v.className='verd '+(wr?'yes':'no');
+  v.innerHTML='<span class="pill '+(wr?'normal':'high')+'">'+(wr?'independent':'not independent')+'</span>'+
+   '<span class="tx">'+(wr
+    ? 'P(both) = <b>'+pc(E.both_w,3)+'</b> and P(1st)&times;P(2nd) = <b>'+pc(p*p,3)+'</b>. They match, so the draws are independent.'
+    : 'P(both) = <b>'+pc(E.both_o,3)+'</b> but P(1st)&times;P(2nd) = <b>'+pc(p*p,3)+'</b>. They differ, so the draws are <b>not</b> independent.')+'</span>';
+
+  $('stage').style.background=wr?'#2f6f8a':'#8a5a2f';
+  $('stage').innerHTML=(wr?'Put it back':'Keep it out')+'<small>'+fmt(Kk,0)+' marked in a box of '+fmt(Nn,0)+' &middot; '+(wr?'the two draws are independent':'the two draws are dependent by '+pts(E.gap_o,3))+'</small>';
+
+  $('runHd').innerHTML='Counting marked items in samples of '+n;
+  var over=E.sdO>0?(E.sdW/E.sdO-1)*100:0;
+  $('runCap').innerHTML='Both methods have the <b>same</b> exact mean, '+E.meanW.toFixed(3)+' &mdash; taking items out does not bias the count. What changes is the spread: multiply the with-replacement variance by the <b>finite population correction</b> (N &minus; n)/(N &minus; 1) = '+E.fpc.toFixed(4)+' and take the square root. Here your sample is '+pc(n/Nn,1)+' of the box, so treating the draws as independent would report a standard deviation <b>'+over.toFixed(1)+'% too large</b> &mdash; an error on the safe side, since it overstates the uncertainty rather than hiding it.'+(n===Nn?' You have set the sample to the entire box, so there is nothing left to be random about and the exact spread is zero.':'');
+
+  var sN=SCN[sc], moved=(ni!==sN.ni||pct!==sN.pct||nn!==sN.n);
+  $('info').innerHTML='<span class="n">'+(moved?'A box of '+fmt(Nn,0):['A shuffled deck','A small team','A whole town'][sc])+'</span>'+
+   (moved
+    ? 'You are drawing from a box of '+fmt(Nn,0)+' in which '+fmt(Kk,0)+' items are marked, so the proportion is '+pc(p,2)+'. '+(wr?'Because each item goes back, draw 2 meets the identical box and the first draw is worthless as evidence &mdash; that is independence, and it is why you may simply multiply.':'Because each item stays out, draw 2 meets a box of '+fmt(Nn-1,0)+', and the answer swings between '+pc(E.condMM_o,2)+' and '+pc(E.condPM_o,2)+' depending on what draw 1 was. That swing is '+pts(E.gap_o,3)+' wide, and it is 1/(N &minus; 1) exactly.')
+    : sN.open)+
+   '<div class="eq">'+
+    '<div class="r"><span>P(marked on draw 1)</span><b>'+fmt(Kk,0)+'/'+fmt(Nn,0)+' = '+pc(p,2)+'</b></div>'+
+    '<div class="r"><span>P(marked on draw 2 <i>given</i> marked on 1)</span><b>'+(wr?fmt(Kk,0)+'/'+fmt(Nn,0):fmt(Kk-1,0)+'/'+fmt(Nn-1,0))+' = '+pc(cMM,2)+'</b></div>'+
+    '<div class="r tot"><span>P(marked on both)</span><b>'+pc(both,3)+'</b></div>'+
+   '</div>'+
+   '<div class="dd">'+(wr
+    ? 'The multiplication rule always reads P(A and B) = P(A) &times; P(B | A). Independence is the special case where P(B | A) is just P(B), which collapses it to a plain product. That collapse is the only thing independence buys you &mdash; and it is worth a great deal, because it means you never have to track what has already happened.'
+    : 'The multiplication rule still reads P(A and B) = P(A) &times; P(B | A), and it is still correct &mdash; the conditional factor simply is not P(B) any more. Nothing has broken. You have merely lost the shortcut, and must carry the history of the draws with you.')+'</div>';
+
+  $('fnote').innerHTML='The count of marked items in a sample of n is <b>binomial</b> when you replace and <b>hypergeometric</b> when you do not: P(X = k) = C(K, k) C(N &minus; K, n &minus; k) / C(N, n). Both have mean n&thinsp;K/N; the variances differ by the finite population correction (N &minus; n)/(N &minus; 1), which is 1 when n = 1 and 0 when n = N. The exact curves are computed with log-factorials so that boxes in the thousands stay accurate. The simulation uses a seeded generator, so the page opens with the same run every time and every control you touch is a genuine re-computation rather than a stored answer.';
+ }
+
+ /* ================= controls ================= */
+ function labels(){
+  var Nn=N(),Kk=K();
+  $('nVal').innerHTML=fmt(Nn,0)+'<small>items in the box</small>';
+  $('pVal').innerHTML=pc(Kk/Nn,1)+'<small>'+fmt(Kk,0)+' marked</small>';
+  $('kVal').innerHTML=nn+'<small>drawn each time</small>';
+  $('rVal').innerHTML=fmt(RV[ri],0)+'<small>samples</small>';
+ }
+ function clampN(){
+  var m=nMax();
+  $('kSl').max=m;
+  if(nn>m){nn=m;$('kSl').value=m;}
+ }
+ function all(){clampN();labels();paint();}
+
+ function segs(id,cb){
+  var w=$(id);
+  w.onclick=function(e){
+   var b=e.target.closest('button'); if(!b)return;
+   var bs=w.querySelectorAll('button'),i;
+   for(i=0;i<bs.length;i++)bs[i].className=bs[i]===b?'on':'';
+   cb(+b.dataset.v);
+  };
+ }
+ segs('seg',function(v){
+  sc=v; var s=SCN[v];
+  ni=s.ni; pct=s.pct; nn=s.n;
+  $('nSl').value=ni; $('pSl').value=pct;
+  clampN(); $('kSl').value=nn;
+  all();
+ });
+ segs('mseg',function(v){wr=v;all();});
+
+ $('nSl').oninput=function(){ni=+this.value;all();};
+ $('pSl').oninput=function(){pct=+this.value;all();};
+ $('kSl').oninput=function(){nn=+this.value;all();};
+ $('rSl').oninput=function(){ri=+this.value;all();};
+ $('samp').onclick=function(){seed++;all();};
+ $('reset').onclick=function(){
+  sc=0;ni=9;pct=25;nn=5;ri=2;seed=0;wr=1;
+  $('nSl').value=9;$('pSl').value=25;$('rSl').value=2;
+  clampN();$('kSl').value=5;
+  var bs=$('seg').querySelectorAll('button'),i;
+  for(i=0;i<bs.length;i++)bs[i].className=i===0?'on':'';
+  bs=$('mseg').querySelectorAll('button');
+  for(i=0;i<bs.length;i++)bs[i].className=i===0?'on':'';
+  all();
+ };
+
+ /* quick jumps for the population size */
+ var SNAP=[{i:2,l:'10',s:'obvious'},{i:9,l:'52',s:'a deck'},{i:12,l:'200',s:'faint'},{i:16,l:'5,000',s:'invisible'}];
+ $('snap').innerHTML=SNAP.map(function(x){return '<button class="it" data-i="'+x.i+'">N = '+x.l+'<span class="s">'+x.s+'</span></button>';}).join('');
+ $('snap').onclick=function(e){
+  var b=e.target.closest('button'); if(!b)return;
+  ni=+b.dataset.i; $('nSl').value=ni; all();
+ };
+
+ all();
+})();
+</script>
+</body>
+</html>

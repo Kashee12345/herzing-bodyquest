@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f7f2">
+<title>Kohlberg's Stages · The Heinz Dilemma</title>
+<meta name="description" content="Interactive sorter for Kohlberg's theory of moral development. Read six ways of reasoning about a moral dilemma and place each into the correct stage and level.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_humdev.css">
+<style>
+.wrap{grid-template-columns:0.94fr 1.06fr;}
+.q{background:#f0f7f3;border:1px solid var(--line);border-left:5px solid var(--gold);border-radius:11px;padding:13px 15px;font-family:var(--disp);font-size:15.5px;line-height:1.5;color:var(--teal-dk);margin-bottom:11px;}
+.vd{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-radius:20px;padding:3px 11px;margin-bottom:9px;}
+.vd.yes{background:#e5f3ea;color:#237a45;} .vd.no{background:#fae5e8;color:#b23145;}
+.grid .it{position:relative;padding:9px 30px 9px 11px;}
+.it .qn{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:6px;background:#eef4f0;color:var(--teal-dk);font-size:11px;font-weight:800;margin-right:6px;vertical-align:-3px;}
+.it .s{font-size:10.5px;color:var(--muted);margin-top:2px;display:block;}
+.it.correct{background:#e5f3ea;border-color:var(--green);} .it.correct .nm{color:var(--teal-dk);} .it.correct .qn{background:var(--green);color:#fff;}
+.it.wrong{background:#fae5e8;border-color:var(--coral);} .it.wrong .nm{color:#b23145;} .it.wrong .qn{background:var(--coral);color:#fff;}
+.it.dim{opacity:.5;} .it.locked{cursor:default;}
+.mark{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:800;}
+.mark.ok{color:var(--green);} .mark.no{color:var(--coral);}
+#info .lvchip{display:inline-block;font-size:11px;font-weight:800;border-radius:20px;padding:3px 10px;margin-top:8px;color:#fff;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 8</a></div>
+<header>
+  <div class="kick">Human Development · Chapter 8</div>
+  <h1>Kohlberg's Stages of Moral Reasoning</h1>
+  <div class="intro"><b>Heinz's wife is dying.</b> A druggist has the only drug that can save her but charges ten times what it costs to make &mdash; far more than Heinz can pay. The druggist refuses to sell cheaper or wait for payment, so Heinz considers <b>breaking in to steal it.</b> Kohlberg found that <b>what people decide</b> matters less than <b>how they justify it.</b> Read each justification and place it in the right stage.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The moral ladder</h2>
+    <svg viewBox="0 0 250 232" aria-label="Kohlberg's six stages grouped into three levels"><g id="art"></g></svg>
+    <div style="margin-top:8px;font-size:11.5px;color:var(--muted);line-height:1.45;">Six stages climb through <b style="color:var(--blue)">three levels</b>. Higher is not "smarter" &mdash; it is a wider circle of who and what the reasoning considers.</div>
+  </div></div>
+  <div>
+    <div id="stage">Six justifications, six stages<small>tap the stage each reasoning fits</small></div>
+    <div class="card">
+      <div class="q" id="quote"></div>
+      <span class="vd" id="vd"></span>
+      <div class="grid" id="opts"></div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Human Development · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ // Kohlberg's three levels
+ var LV=[
+  {nm:'Level 1 · Preconventional',col:'#2f6f9f',tag:'PRE',
+   age:'Common in children (roughly to age 9)',
+   desc:'Right and wrong come from outside &mdash; from rewards and punishments aimed at <b>me</b>.'},
+  {nm:'Level 2 · Conventional',col:'#b8862f',tag:'CONV',
+   age:'Most adolescents and adults',
+   desc:'Morality means upholding the <b>expectations, roles, and laws</b> that hold society together.'},
+  {nm:'Level 3 · Postconventional',col:'#7a5a8a',tag:'POST',
+   age:'Some adults &mdash; many never reach it',
+   desc:'Morality rests on <b>abstract, self-chosen principles</b> of justice that can outrank the law.'}
+ ];
+
+ // The six stages (index 0..5 -> stage 1..6)
+ var ST=[
+  {n:1,name:'Obedience & Punishment',lvl:0,s:'Avoid getting punished'},
+  {n:2,name:'Self-Interest & Exchange',lvl:0,s:"What's in it for me"},
+  {n:3,name:'Social Approval',lvl:1,s:'Be seen as a good person'},
+  {n:4,name:'Law & Order',lvl:1,s:'Uphold rules & duty'},
+  {n:5,name:'Social Contract',lvl:2,s:'Rights & changeable laws'},
+  {n:6,name:'Universal Principles',lvl:2,s:'Abstract justice'}
+ ];
+
+ // Six justifications, one per stage
+ var D=[
+  {stage:1,yes:0,
+   q:'"He shouldn’t take the drug. If he breaks in and gets caught, he’ll be arrested and thrown in jail."',
+   why:'The only thing weighed is <b>getting caught and punished</b>. Right and wrong are defined purely by the consequences to <i>oneself</i> &mdash; the signature of <b>Stage 1</b>.'},
+  {stage:2,yes:1,
+   q:'"He should take it. He wants his wife around to take care of him, and having her alive is worth more to him than the risk of a short sentence."',
+   why:'The reasoning is a personal <b>cost–benefit deal</b>: what do <i>I</i> get out of it? Morality as serving one’s own needs and interests is <b>Stage 2</b>.'},
+  {stage:3,yes:1,
+   q:'"He should take it. A loving husband would do anything for his wife — everyone would think he was heartless if he just let her die."',
+   why:'The driver is <b>living up to others’ expectations</b> and being seen as “good.” Seeking approval and fulfilling a social role is <b>Stage 3</b>.'},
+  {stage:4,yes:0,
+   q:'"He shouldn’t steal, no matter the reason. Stealing is against the law, and if everyone broke the law whenever they felt like it, society would fall apart."',
+   why:'Here the <b>law and social order</b> are treated as fixed duties that keep society working. Upholding rules and authority for their own sake is <b>Stage 4</b>.'},
+  {stage:5,yes:1,
+   q:'"He should take it. Laws protect property, but this law was never meant to let a person die. The right to life outweighs the druggist’s profit, and rules that fail people like this should be changed."',
+   why:'Laws are seen as a <b>social contract</b> that can be questioned and reformed for the greater good, and individual rights are weighed against them. That is <b>Stage 5</b>.'},
+  {stage:6,yes:1,
+   q:'"He should take it. The value of a human life is a principle that stands above any law or price. To let her die to protect property would betray justice itself."',
+   why:'The decision rests on <b>self-chosen, universal ethical principles</b> — justice and the dignity of life — that hold regardless of the law. This abstract, principled reasoning is <b>Stage 6</b>.'}
+ ];
+
+ var i=0;
+ var ans=[null,null,null,null,null,null]; // guessed stage number per item, or null
+
+ // ---- SVG ladder ----
+ function bar(idx){ return 190 - idx*32; } // y of stage (idx 0=stage1 bottom)
+ function draw(){
+   var cur=D[i], guess=ans[i], answered=(guess!==null), out='';
+   // level brackets on the left
+   for(var l=0;l<3;l++){
+     var top,bot;
+     if(l===0){top=bar(1);bot=bar(0)+28;}       // stages 1-2
+     else if(l===1){top=bar(3);bot=bar(2)+28;}  // stages 3-4
+     else {top=bar(5);bot=bar(4)+28;}           // stages 5-6
+     var mid=(top+bot)/2;
+     out+='<rect x="8" y="'+top+'" width="7" height="'+(bot-top)+'" rx="3.5" fill="'+LV[l].col+'"/>';
+     out+='<text x="30" y="'+mid+'" font-size="9" font-weight="800" fill="'+LV[l].col+'" text-anchor="middle" transform="rotate(-90 30 '+mid+')">'+LV[l].tag+'</text>';
+   }
+   // six stage bars
+   for(var s=0;s<6;s++){
+     var st=ST[s], y=bar(s), col=LV[st.lvl].col;
+     var fillOp=0.5, stroke=col, sw=1, isCorrect=false, isWrong=false, dim=false;
+     if(answered){
+       if(st.n===cur.stage){isCorrect=true;fillOp=0.85;stroke=LV[st.lvl].col;sw=3;}
+       else if(st.n===guess){isWrong=true;fillOp=0.28;stroke='#d1495b';sw=2.5;}
+       else {dim=true;fillOp=0.16;stroke='#e0eee6';sw=1;}
+     }
+     out+='<rect x="52" y="'+y+'" width="190" height="28" rx="8" fill="'+col+'" fill-opacity="'+fillOp+'" stroke="'+stroke+'" stroke-width="'+sw+'"/>';
+     // number chip
+     var chipBg = isCorrect?'#2f9e5b':(isWrong?'#d1495b':'#fffdf9');
+     var chipTx = (isCorrect||isWrong)?'#fff':LV[st.lvl].col;
+     out+='<circle cx="67" cy="'+(y+14)+'" r="10.5" fill="'+chipBg+'" stroke="'+col+'" stroke-width="1.5"/>';
+     out+='<text x="67" y="'+(y+18)+'" font-size="12" font-weight="800" fill="'+chipTx+'" text-anchor="middle">'+st.n+'</text>';
+     // label
+     var txCol = dim?'#9aa8a0':'#1f2a24';
+     out+='<text x="84" y="'+(y+18)+'" font-size="10.5" font-weight="700" fill="'+txCol+'">'+st.name+'</text>';
+     // mark
+     if(isCorrect) out+='<text x="234" y="'+(y+19)+'" font-size="15" font-weight="800" fill="#237a45" text-anchor="end">✓</text>';
+     if(isWrong)   out+='<text x="234" y="'+(y+19)+'" font-size="15" font-weight="800" fill="#b23145" text-anchor="end">✕</text>';
+   }
+   $("art").innerHTML=out;
+ }
+
+ // ---- option buttons ----
+ function opts(){
+   var guess=ans[i], answered=(guess!==null), cur=D[i];
+   var html=ST.map(function(st){
+     var cls='it';
+     if(answered){
+       cls+=' locked';
+       if(st.n===cur.stage) cls+=' correct';
+       else if(st.n===guess) cls+=' wrong';
+       else cls+=' dim';
+     }
+     var mk='';
+     if(answered && st.n===cur.stage) mk='<span class="mark ok">✓</span>';
+     else if(answered && st.n===guess) mk='<span class="mark no">✕</span>';
+     return '<button class="'+cls+'" data-n="'+st.n+'"><span class="qn">'+st.n+'</span><span class="nm">'+st.name+'</span><span class="s">'+st.s+'</span>'+mk+'</button>';
+   }).join('');
+   $("opts").innerHTML=html;
+   if(!answered){
+     document.querySelectorAll('#opts .it').forEach(function(b){
+       b.onclick=function(){ pick(parseInt(b.dataset.n,10)); };
+     });
+   }
+ }
+
+ function score(){ var c=0; for(var k=0;k<6;k++){ if(ans[k]!==null && ans[k]===D[k].stage) c++; } return c; }
+ function answeredCount(){ var a=0; for(var k=0;k<6;k++){ if(ans[k]!==null) a++; } return a; }
+
+ function pick(n){ if(ans[i]!==null) return; ans[i]=n; render(); }
+
+ function render(){
+   var cur=D[i], guess=ans[i], answered=(guess!==null);
+   var lv=LV[ST[cur.stage-1].lvl];
+   draw(); opts();
+   // quote + verdict
+   $("quote").innerHTML=cur.q;
+   var vd=$("vd");
+   vd.className='vd '+(cur.yes?'yes':'no');
+   vd.innerHTML=cur.yes?'Verdict: he SHOULD steal':'Verdict: he should NOT steal';
+   // stage banner
+   if(!answered){
+     $("stage").style.background='var(--teal)';
+     $("stage").innerHTML='Reasoning '+(i+1)+' of 6<small>Which stage of moral reasoning is this?</small>';
+   } else {
+     var ok=(guess===cur.stage);
+     $("stage").style.background=lv.col;
+     $("stage").innerHTML='Stage '+cur.stage+' · '+ST[cur.stage-1].name+
+       '<small>'+(ok?'✓ Correct':'Review — you chose Stage '+guess)+' · '+score()+'/'+answeredCount()+' right</small>';
+   }
+   // info
+   var info='';
+   if(!answered){
+     info='<span class="n">Look past the verdict</span>Notice whether Heinz "should" or "should not" is <b>not</b> what Kohlberg scored &mdash; both appear across the ladder. Ask instead: <b>what makes it right or wrong to this person?</b> Then tap a stage.';
+   } else {
+     var ok=(guess===cur.stage);
+     info='<span class="n">'+(ok?'✓ Stage '+cur.stage:'This is Stage '+cur.stage+', not '+guess)+'</span>'+cur.why;
+     info+='<div class="dd"><b>'+lv.nm+'.</b> '+lv.desc+'</div>';
+     info+='<span class="lvchip" style="background:'+lv.col+'">'+lv.age+'</span>';
+     if(answeredCount()===6){
+       info+='<div class="mnem" style="margin-top:11px;"><b>Big idea:</b> “Should” answers landed at Stages 2, 3, 5 and 6; “should not” at Stages 1 and 4. Kohlberg scored the <b>reasoning</b>, never the choice — and found people move <i>up</i> the ladder in order, rarely skipping a rung. Final score: <b>'+score()+'/6</b>.</div>';
+     }
+   }
+   $("info").innerHTML=info;
+   // nav
+   $("prev").disabled=(i===0);
+   $("next").disabled=(i===D.length-1);
+ }
+
+ $("prev").onclick=function(){ if(i>0){ i--; render(); } };
+ $("next").onclick=function(){ if(i<D.length-1){ i++; render(); } };
+ render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Change of Base</title>
+<meta name="description" content="Your calculator has only two log buttons. Change of base turns any logarithm into a ratio of those two — derived one highlighted step at a time, with a live graph proving the ratio is the same no matter which new base you pick.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* math typography — pure HTML, no renderer */
+.fr{display:inline-flex;flex-direction:column;vertical-align:-0.58em;text-align:center;font-size:.87em;line-height:1.14;margin:0 4px;}
+.fr .nu{border-bottom:1.6px solid currentColor;padding:0 6px 2px;}
+.fr .de{padding:2px 6px 0;}
+.hl{background:#fbf0cf;border-radius:4px;padding:1px 4px;box-shadow:inset 0 -2px 0 #e8cf8a;}
+.big{font-size:19px;font-weight:700;color:var(--teal-dk);text-align:center;line-height:2.1;padding:6px 0 2px;}
+.big2{font-size:15px;font-weight:700;color:var(--teal-dk);text-align:center;line-height:2.2;}
+/* step machine */
+.ln{border-radius:10px;padding:8px 11px;margin-bottom:5px;border:1px solid transparent;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.ln.done{opacity:.48;}
+.ln.cur{background:#f3f4fb;border-color:#dfe2f2;}
+.ln .eqx{font-size:15.5px;font-weight:700;color:var(--teal-dk);line-height:1.95;}
+.ln .rl{display:block;font-size:9.6px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;margin-top:3px;}
+.ln .vv{flex:none;font-size:11.5px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;line-height:1.35;}
+.pend{border-radius:10px;padding:7px 11px;margin-bottom:5px;font-size:12px;font-weight:700;color:#c3c6d8;letter-spacing:2px;}
+/* sliders */
+.numhd{font-size:9.8px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:13px 0 2px;border-top:1px solid var(--line);padding-top:11px;}
+.numhd:first-child{border-top:none;padding-top:0;margin-top:0;}
+.sld{width:100%;-webkit-appearance:none;appearance:none;height:20px;background:transparent;cursor:pointer;margin-top:2px;}
+.sld::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-moz-range-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);margin-top:-7px;}
+.sld::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);}
+.sldlab{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--muted);font-weight:600;gap:8px;}
+.sldlab b{font-size:15px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+/* graph readouts */
+.ro{display:flex;gap:6px;margin-top:9px;}
+.ro div{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 4px;text-align:center;}
+.ro div span{display:block;font-size:10px;font-weight:700;color:var(--muted);line-height:1.35;}
+.ro div b{display:block;font-size:15px;font-variant-numeric:tabular-nums;margin-top:2px;color:var(--teal-dk);}
+.ro div.keep{background:#fbf3e2;border-color:#ecd9ac;}
+.ro div.keep span{color:#8a6a20;} .ro div.keep b{color:#5a4212;}
+.lg{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px;font-size:11px;font-weight:600;color:var(--soft);}
+.lg i{display:inline-block;width:15px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px;}
+.cap{font-size:12.6px;line-height:1.55;color:var(--soft);margin-top:9px;} .cap b{color:var(--ink);}
+.mini{flex:none;padding:8px 12px;font-size:12px;}
+.grid .it .nm{display:block;font-size:14px;line-height:1.55;}
+.grid .it .s{display:block;margin-top:3px;font-size:10.2px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+.ok{margin-top:11px;border-radius:9px;padding:9px 12px;font-size:12.3px;line-height:1.5;background:#e5f3ea;border:1px solid #bfe3cd;color:#237a45;font-weight:600;}
+.ok b{color:#186036;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">&larr; Chapter 12</a></div>
+<header>
+  <div class="kick">College Algebra &middot; Chapter 12</div>
+  <h1>Change of Base</h1>
+  <div class="intro">Your calculator has exactly two log buttons: <b>log</b> (base 10) and <b>ln</b> (base <i>e</i>). There is no base&#8209;5 button. Change of base is the one move that turns <i>any</i> logarithm into a <b>ratio of two logs you can actually type in</b> &mdash; and it comes straight from the power rule.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="gTitle">Does it matter which new base you pick?</h2>
+      <svg viewBox="0 0 340 240" aria-label="Graph of the two logarithms and their ratio as the new base changes"><g id="art"></g></svg>
+      <div class="lg">
+        <span><i style="background:#2f6f9f"></i><span id="lg1">log<sub><i>c</i></sub> <i>M</i></span></span>
+        <span><i style="background:#7a5a8a"></i><span id="lg2">log<sub><i>c</i></sub> <i>b</i></span></span>
+        <span><i style="background:#b8862f;height:4px"></i><b style="color:#5a4212">their ratio</b></span>
+      </div>
+      <div class="ro">
+        <div><span id="k1">top</span><b id="rv1">&mdash;</b></div>
+        <div><span id="k2">bottom</span><b id="rv2">&mdash;</b></div>
+        <div class="keep"><span id="k3">ratio</span><b id="rv3">&mdash;</b></div>
+      </div>
+      <div class="numhd">Drag the new base <i>c</i></div>
+      <div class="sldlab"><span>new base <i>c</i></span><b id="cVal">10</b></div>
+      <input class="sld" type="range" id="cS" min="15" max="200" step="1" value="100">
+      <div class="row"><button class="btn mini" id="snapE">snap to <i>c</i> = <i>e</i></button><button class="btn mini" id="snap10">snap to <i>c</i> = 10</button></div>
+      <div class="cap" id="gCap"></div>
+    </div>
+    <div class="card">
+      <h2>The formula, in general</h2>
+      <div class="big">log<sub><i>b</i></sub> <i>M</i> &nbsp;=&nbsp; <span class="fr"><span class="nu">log<sub><i>c</i></sub> <i>M</i></span><span class="de">log<sub><i>c</i></sub> <i>b</i></span></span></div>
+      <div class="cap">Any legal new base <i>c</i> works, so in practice you only ever need the two on your keypad:</div>
+      <div class="big2" style="margin-top:6px;">log<sub><i>b</i></sub> <i>M</i> = <span class="fr"><span class="nu">log <i>M</i></span><span class="de">log <i>b</i></span></span> = <span class="fr"><span class="nu">ln <i>M</i></span><span class="de">ln <i>b</i></span></span></div>
+      <div class="mnem"><b>Which one goes on top?</b> The <b>argument</b> rides on top; the <b>old base sinks to the bottom</b>. Same order as the words: log<sub><i>b</i></sub> <i>M</i> reads bottom&#8209;then&#8209;top, so the fraction flips it back &mdash; <i>M</i> over <i>b</i>.</div>
+      <div class="note"><b>The trap.</b> A quotient of two logs is <b>not</b> the log of a quotient. Check it: <b>log 8 &divide; log 2 = 0.9031 &divide; 0.3010 = 3</b>, but <b>log(8 &divide; 2) = log 4 &asymp; 0.6021</b>. Those are nowhere near each other. (The 3 is no accident &mdash; it is log<sub>2</sub> 8, exactly what change of base promises.) You also cannot &ldquo;cancel the logs.&rdquo;</div>
+      <div id="dom" style="font-size:12px;border-radius:8px;padding:9px 12px;margin-top:10px;line-height:1.55;color:#5a4212;background:#fbf3e2;border:1px solid #ecd9ac;"><b>Excluded values.</b> Every base must satisfy <b><i>b</i> &gt; 0, <i>b</i> &ne; 1</b> and <b><i>c</i> &gt; 0, <i>c</i> &ne; 1</b>, and the argument must satisfy <b><i>M</i> &gt; 0</b>. The condition <i>b</i> &ne; 1 is exactly what keeps the denominator alive: log<sub><i>c</i></sub> 1 = 0, so a base of 1 would put a <b>0 in the bottom</b>.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Change of base<small>pick a problem to begin</small></div>
+    <div class="card">
+      <h2>Choose a problem</h2>
+      <div class="grid" id="picks"></div>
+      <div class="numhd">Or build your own</div>
+      <div class="sldlab"><span>old base <i>b</i></span><b id="bVal">5</b></div>
+      <input class="sld" type="range" id="bS" min="2" max="20" step="1" value="5">
+      <div class="sldlab" style="margin-top:8px;"><span>argument <i>M</i></span><b id="mVal">89</b></div>
+      <input class="sld" type="range" id="mS" min="0" max="44" step="1" value="32">
+      <div class="numhd">Which calculator button?</div>
+      <div class="modeseg" id="mode" style="margin-bottom:0;"><button data-m="log" class="on">log &mdash; base 10</button><button data-m="ln">ln &mdash; base <i>e</i></button></div>
+    </div>
+    <div class="card">
+      <h2 id="stepTitle">Where the formula comes from</h2>
+      <div id="steps"></div>
+      <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+      <div id="info"></div>
+      <div class="ok" id="okbox" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra &middot; an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- state ---------- */
+ var MV=[0.05,0.1,0.2,0.3,0.4,0.5,0.6,0.75,0.9,1,1.5,2,2.5,3,4,5,6,7,8,9,10,12,15,20,25,30,40,50,60,70,80,81,89,100,125,150,200,250,300,400,500,600,750,800,1000];
+ var b=5, M=89, cc=10, cLbl=null, mode='log', si=0;
+
+ var EX=[
+  {b:5,  M:89,   nm:'log<sub>5</sub> 89',   s:'the standard case'},
+  {b:2,  M:1000, nm:'log<sub>2</sub> 1000', s:'close to 10, but not 10'},
+  {b:7,  M:0.3,  nm:'log<sub>7</sub> 0.3',  s:'answer is negative'},
+  {b:3,  M:81,   nm:'log<sub>3</sub> 81',   s:'comes out exact'}
+ ];
+
+ /* ---------- helpers ---------- */
+ function ms(v){ return String(v); }
+ function neg(s){ return s.charAt(0)==='-' ? '&minus;'+s.slice(1) : s; }
+ function num(v,d){ var r=(Math.abs(v)<5e-13?0:v).toFixed(d); if(/^-0\.?0*$/.test(r)) r=r.slice(1); return neg(r); }
+ function frac(n,d){ return '<span class="fr"><span class="nu">'+n+'</span><span class="de">'+d+'</span></span>'; }
+ function Lname(){ return mode==='log' ? 'log' : 'ln'; }
+ function Lf(v){ return mode==='log' ? Math.log(v)/Math.LN10 : Math.log(v); }
+ function Lbase(){ return mode==='log' ? '10' : '<i>e</i>'; }
+ function cText(){ return cLbl ? '<i>e</i> &asymp; 2.7183' : (cc%1===0?cc.toFixed(0):cc.toFixed(1)); }
+ function niceStep(r){ if(!(r>0))return 1; var p=Math.pow(10,Math.floor(Math.log(r)/Math.LN10)); var f=r/p, s;
+   if(f<=1)s=1; else if(f<=2)s=2; else if(f<=5)s=5; else s=10; return s*p; }
+
+ /* ---------- the live graph ---------- */
+ function drawGraph(){
+   var W=340,H=240,padL=46,padR=13,padT=15,padB=30;
+   var pw=W-padL-padR, ph=H-padT-padB;
+   var cmin=1.5, cmax=20, N=170;
+   var lnM=Math.log(M), lnB=Math.log(b), ratio=lnM/lnB;
+   var xs=[],vm=[],vb=[],lo=ratio,hi=ratio,i,c,l,v;
+   for(i=0;i<=N;i++){
+     c=cmin+(cmax-cmin)*i/N; l=Math.log(c);
+     xs.push(c);
+     v=lnM/l; vm.push(v); if(v<lo)lo=v; if(v>hi)hi=v;
+     v=lnB/l; vb.push(v); if(v<lo)lo=v; if(v>hi)hi=v;
+   }
+   if(hi-lo<1e-6){ hi=lo+1; }
+   var pd=(hi-lo)*0.09; lo-=pd; hi+=pd;
+   function X(c){ return padL+(c-cmin)/(cmax-cmin)*pw; }
+   function Y(v){ return padT+(hi-v)/(hi-lo)*ph; }
+
+   var s='<rect x="'+padL+'" y="'+padT+'" width="'+pw+'" height="'+ph+'" fill="#fbfaff" stroke="#e6e8f5"/>';
+
+   /* horizontal gridlines + y labels */
+   var st=niceStep((hi-lo)/5), dec = st>=1?0:(st>=0.1?1:2);
+   var t=Math.ceil(lo/st)*st;
+   for(; t<=hi+1e-9; t+=st){
+     var yy=Y(t), isz=Math.abs(t)<1e-9;
+     s+='<line x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(padL+pw)+'" y2="'+yy.toFixed(1)+'" stroke="'+(isz?'#b9bcd2':'#eceef8')+'" stroke-width="'+(isz?1.4:1)+'"/>';
+     s+='<text x="'+(padL-6)+'" y="'+(yy+3.4).toFixed(1)+'" font-size="9" fill="#7d7f94" text-anchor="end">'+num(isz?0:t,dec)+'</text>';
+   }
+   /* x ticks */
+   [2,5,10,15,20].forEach(function(tc){
+     var xx=X(tc);
+     s+='<line x1="'+xx.toFixed(1)+'" y1="'+(padT+ph)+'" x2="'+xx.toFixed(1)+'" y2="'+(padT+ph+4)+'" stroke="#b9bcd2"/>';
+     s+='<text x="'+xx.toFixed(1)+'" y="'+(padT+ph+15)+'" font-size="9" fill="#7d7f94" text-anchor="middle">'+tc+'</text>';
+   });
+   s+='<text x="'+(padL+pw/2)+'" y="'+(H-3)+'" font-size="9.5" fill="#7d7f94" text-anchor="middle" font-weight="700">new base c</text>';
+
+   /* dashed markers at c = e and c = 10 */
+   [[Math.E,'e'],[10,'10']].forEach(function(p){
+     var xx=X(p[0]);
+     s+='<line x1="'+xx.toFixed(1)+'" y1="'+padT+'" x2="'+xx.toFixed(1)+'" y2="'+(padT+ph)+'" stroke="#c9cce0" stroke-width="1" stroke-dasharray="3 3"/>';
+     s+='<text x="'+(xx+3).toFixed(1)+'" y="'+(padT+10)+'" font-size="9" fill="#9a9db3" font-style="italic">c='+p[1]+'</text>';
+   });
+
+   /* curves */
+   function poly(arr,col,w){
+     var p='';
+     for(var i=0;i<=N;i++){
+       var yv=Math.max(padT-30,Math.min(padT+ph+30,Y(arr[i])));
+       p+=X(xs[i]).toFixed(1)+','+yv.toFixed(1)+' ';
+     }
+     return '<polyline points="'+p+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-linejoin="round"/>';
+   }
+   s+='<clipPath id="cp"><rect x="'+padL+'" y="'+padT+'" width="'+pw+'" height="'+ph+'"/></clipPath><g clip-path="url(#cp)">';
+   s+=poly(vm,'#2f6f9f',2);
+   s+=poly(vb,'#7a5a8a',2);
+   /* the invariant ratio */
+   s+='<line x1="'+padL+'" y1="'+Y(ratio).toFixed(1)+'" x2="'+(padL+pw)+'" y2="'+Y(ratio).toFixed(1)+'" stroke="#b8862f" stroke-width="3.2"/>';
+   /* current-c marker */
+   var mx=X(cc), lc=Math.log(cc);
+   s+='<line x1="'+mx.toFixed(1)+'" y1="'+padT+'" x2="'+mx.toFixed(1)+'" y2="'+(padT+ph)+'" stroke="#43458f" stroke-width="1.2" opacity=".55"/>';
+   s+='<circle cx="'+mx.toFixed(1)+'" cy="'+Y(lnM/lc).toFixed(1)+'" r="4.2" fill="#2f6f9f" stroke="#fff" stroke-width="1.6"/>';
+   s+='<circle cx="'+mx.toFixed(1)+'" cy="'+Y(lnB/lc).toFixed(1)+'" r="4.2" fill="#7a5a8a" stroke="#fff" stroke-width="1.6"/>';
+   s+='<circle cx="'+mx.toFixed(1)+'" cy="'+Y(ratio).toFixed(1)+'" r="5" fill="#b8862f" stroke="#fff" stroke-width="1.8"/>';
+   s+='</g>';
+   /* ratio label */
+   var ly=Y(ratio)-9; if(ly<padT+11) ly=Y(ratio)+15;
+   s+='<text x="'+(padL+pw-5)+'" y="'+ly.toFixed(1)+'" font-size="10" font-weight="800" fill="#8a6a20" text-anchor="end">ratio = '+num(ratio,4)+' &#8212; flat</text>';
+   $("art").innerHTML=s;
+
+   /* readouts */
+   var csub = cLbl ? '<i>e</i>' : num(cc,cc%1===0?0:1);
+   $("k1").innerHTML='log<sub>'+csub+'</sub> '+ms(M);
+   $("k2").innerHTML='log<sub>'+csub+'</sub> '+ms(b);
+   $("k3").innerHTML='top &divide; bottom';
+   $("rv1").innerHTML=num(lnM/lc,4);
+   $("rv2").innerHTML=num(lnB/lc,4);
+   $("rv3").innerHTML=num(ratio,4);
+   $("lg1").innerHTML='log<sub><i>c</i></sub> '+ms(M);
+   $("lg2").innerHTML='log<sub><i>c</i></sub> '+ms(b);
+   $("gCap").innerHTML='Drag <i>c</i> and watch: the <b style="color:#2f6f9f">top</b> and the <b style="color:#7a5a8a">bottom</b> swing all over the place &mdash; but the <b style="color:#8a6a20">gold line never moves</b>. Both logs stretch by the same factor when you change base, so the stretch cancels in the ratio. That is why log 10 and ln both give the identical answer for log<sub>'+ms(b)+'</sub> '+ms(M)+', and why you are free to use whichever button you like. Snap to <b><i>c</i> = 10</b> or <b><i>c</i> = <i>e</i></b> and the top two boxes become exactly the numbers you would type into your calculator.';
+ }
+
+ /* ---------- the worked-step machine ---------- */
+ function build(){
+   var L=Lname(), nM=Lf(M), nB=Lf(b), y=nM/nB;
+   var yr=Math.round(y*10000)/10000;
+   var chk=Math.pow(b,yr);
+   var exact=Math.abs(y-Math.round(y))<1e-9;
+   var chkTxt = chk>=100 ? num(chk,3) : num(chk,4);
+
+   return [
+    {e:'<i>y</i> = log<sub>'+ms(b)+'</sub> '+ms(M),
+     r:'NAME THE ANSWER', c:'#43458f', v:'',
+     t:'Name what you want',
+     d:'Give the unknown a name. <b><i>y</i> is an exponent</b> &mdash; the power that turns '+ms(b)+' into '+ms(M)+'. Nothing has been solved yet; we have only agreed what we are hunting. And notice the problem: there is <b>no base&#8209;'+ms(b)+' button</b> on any calculator, so we cannot simply type this in.'},
+
+    {e:'<span class="hl">'+ms(b)+'<sup><i>y</i></sup> = '+ms(M)+'</span>',
+     r:'EXPONENTIAL FORM', c:'#2f6f9f', v:'',
+     t:'Trade the log for an exponent',
+     d:'A logarithm <b>is</b> an exponent, so &ldquo;<i>y</i> = log<sub>'+ms(b)+'</sub> '+ms(M)+'&rdquo; and &ldquo;'+ms(b)+'<sup><i>y</i></sup> = '+ms(M)+'&rdquo; are two spellings of one identical fact. This is the whole trick: <b>there is now no logarithm in the equation at all</b>, which frees us to bring in a log of our own choosing.'},
+
+    {e:'<span class="hl">'+L+'</span>('+ms(b)+'<sup><i>y</i></sup>) = <span class="hl">'+L+'</span> '+ms(M),
+     r:'TAKE A LOG OF BOTH SIDES', c:'#2f6f9f', v:'',
+     t:'Apply a log you can actually compute',
+     d:'Both sides are the same positive number, so their logarithms are equal too &mdash; taking a log of both sides is as legal as adding 3 to both sides. We pick <b>'+L+'</b>, base '+Lbase()+', because that button exists. <b>Any</b> valid base would work here; the graph on the left is the proof.'},
+
+    {e:'<span class="hl"><i>y</i> &middot; '+L+' '+ms(b)+'</span> = '+L+' '+ms(M),
+     r:'POWER RULE', c:'#b8862f', v:'',
+     t:'The power rule does all the work',
+     d:'log(<i>b</i><sup><i>p</i></sup>) = <i>p</i> &middot; log <i>b</i> &mdash; <b>the exponent comes down out front</b>. That single move is the entire reason change of base exists. <i>y</i> was locked inside a logarithm; now it is an ordinary factor sitting in a plain linear equation.'},
+
+    {e:'<i>y</i> = <span class="hl">'+frac(L+' '+ms(M), L+' '+ms(b))+'</span>',
+     r:'DIVIDE BY '+L+' '+ms(b), c:'#7a5a8a', v:'',
+     t:'That is the formula',
+     d:'Divide both sides by '+L+' '+ms(b)+'. This is legal only because that value is <b>not zero</b> &mdash; and '+L+' of a number is zero only when the number is 1. So the rule <b><i>b</i> &ne; 1</b> is not fussiness; it is what protects this denominator. <b>Argument on top, old base on the bottom.</b>'},
+
+    {e:'<i>y</i> = '+frac('<span class="hl">'+num(nM,4)+'</span>','<span class="hl">'+num(nB,4)+'</span>'),
+     r:'PUT THE NUMBERS IN', c:'#2f9e5b',
+     v:L+' '+ms(M)+' = '+num(nM,4)+'<br>'+L+' '+ms(b)+' = '+num(nB,4),
+     t:'Two keystrokes',
+     d:'Type '+L+' '+ms(M)+' &rarr; <b>'+num(nM,6)+'</b>, then '+L+' '+ms(b)+' &rarr; <b>'+num(nB,6)+'</b>. Do <b>not</b> round these before dividing &mdash; keep the full display and let the calculator carry the digits, or your answer will drift in the last places.'},
+
+    {e:'<i>y</i> &asymp; <span class="hl">'+num(yr,4)+'</span>',
+     r:'DIVIDE', c:'#2f9e5b', v:'log<sub>'+ms(b)+'</sub> '+ms(M)+'<br>&asymp; '+num(yr,4),
+     t:'The answer',
+     d:'log<sub>'+ms(b)+'</sub> '+ms(M)+' &asymp; <b>'+num(y,6)+'</b>'+(exact?', and this one lands <b>exactly</b> on '+num(Math.round(y),0)+'.':'.')+' Sanity check the size before you trust it: '+sizeCheck(y)+
+        (mode==='log'?' Switch to <b>ln</b> above and watch the two middle numbers change completely while this answer does not move.':' Switch to <b>log</b> above and watch the two middle numbers change completely while this answer does not move.')},
+
+    {e:ms(b)+'<sup>'+num(yr,4)+'</sup> &asymp; <span class="hl">'+chkTxt+'</span>',
+     r:'CHECK IT', c:'#d1495b', v:'target<br>'+ms(M),
+     t:'Prove it to yourself',
+     d:'Raise the original base to the answer and you should land back on '+ms(M)+'. Using the rounded exponent '+num(yr,4)+' gives <b>'+chkTxt+'</b>'+
+        (exact?' &mdash; <b>dead on</b>, because this logarithm is a whole number and nothing had to be rounded.':' &mdash; the small gap is <b>the rounding in the exponent, not an error in the method</b>. Carry more decimals and the gap shrinks toward zero.')+
+        ' A logarithm you cannot verify is a logarithm you should not submit.'}
+   ];
+ }
+
+ function sizeCheck(y){
+   var lo=Math.floor(y), hi=lo+1;
+   if(Math.abs(y-Math.round(y))<1e-9){ return '<b>'+ms(b)+'<sup>'+num(y,0)+'</sup> = '+ms(M)+'</b> exactly.'; }
+   return '<b>'+ms(b)+'<sup>'+num(lo,0)+'</sup> = '+trim(Math.pow(b,lo))+'</b> and <b>'+ms(b)+'<sup>'+num(hi,0)+'</sup> = '+trim(Math.pow(b,hi))+'</b>, and '+ms(M)+' sits between them &mdash; so the exponent must sit between '+num(lo,0)+' and '+num(hi,0)+'. It does.';
+ }
+ function trim(v){
+   if(v>=1000) return neg(v.toFixed(0));
+   if(v>=1) return neg((Math.round(v*1000)/1000).toString());
+   return neg((Math.round(v*100000)/100000).toString());
+ }
+
+ /* ---------- render ---------- */
+ function render(){
+   var S=build();
+   if(si>S.length-1) si=S.length-1;
+   var h='';
+   for(var i=0;i<S.length;i++){
+     if(i>si){ h+='<div class="pend">&middot; &middot; &middot;</div>'; }
+     else {
+       h+='<div class="ln '+(i===si?'cur':'done')+'"><div><span class="eqx">'+S[i].e+'</span>'+
+          '<span class="rl" style="color:'+S[i].c+'">'+S[i].r+'</span></div>'+
+          (S[i].v?'<div class="vv">'+S[i].v+'</div>':'')+'</div>';
+     }
+   }
+   $("steps").innerHTML=h;
+   $("info").innerHTML='<span class="n">'+S[si].t+'</span>'+S[si].d;
+   $("prev").disabled=(si===0); $("next").disabled=(si===S.length-1);
+   $("stepTitle").innerHTML='Step '+(si+1)+' of '+S.length;
+
+   var nM=Lf(M), nB=Lf(b), y=nM/nB;
+   $("stage").innerHTML='log<sub>'+ms(b)+'</sub> '+ms(M)+' <small>rewritten with '+Lname()+' &mdash; base '+(mode==='log'?'10':'e')+'</small>';
+
+   if(si===S.length-1){
+     $("okbox").style.display='block';
+     $("okbox").innerHTML='<b>log<sub>'+ms(b)+'</sub> '+ms(M)+' = '+frac(Lname()+' '+ms(M),Lname()+' '+ms(b))+' &asymp; '+num(Math.round(y*10000)/10000,4)+'</b> &mdash; and the other button gives the same number. That is change of base, start to finish.';
+   } else { $("okbox").style.display='none'; }
+
+   /* labels + selection states */
+   $("bVal").innerHTML=ms(b); $("mVal").innerHTML=ms(M);
+   $("cVal").innerHTML=cText();
+   var ph='';
+   for(var k=0;k<EX.length;k++){
+     var on=(EX[k].b===b && EX[k].M===M);
+     ph+='<button class="it'+(on?' on':'')+'" data-i="'+k+'"><span class="nm">'+EX[k].nm+'</span><span class="s">'+EX[k].s+'</span></button>';
+   }
+   $("picks").innerHTML=ph;
+   var bs=$("picks").getElementsByTagName('button');
+   for(var j=0;j<bs.length;j++){ bs[j].onclick=(function(n){return function(){ pick(n); };})(j); }
+
+   drawGraph();
+ }
+
+ function pick(n){
+   b=EX[n].b; M=EX[n].M; si=0;
+   $("bS").value=b;
+   var idx=MV.indexOf(M); if(idx>=0) $("mS").value=idx;
+   render();
+ }
+
+ /* ---------- wiring ---------- */
+ $("prev").onclick=function(){ if(si>0){ si--; render(); } };
+ $("next").onclick=function(){ var n=build().length; if(si<n-1){ si++; render(); } };
+ $("bS").oninput=function(){ b=parseInt(this.value,10); render(); };
+ $("mS").oninput=function(){ M=MV[parseInt(this.value,10)]; render(); };
+ $("cS").oninput=function(){ cc=parseInt(this.value,10)/10; cLbl=null; drawGraph(); $("cVal").innerHTML=cText(); };
+ $("snapE").onclick=function(){ cc=Math.E; cLbl='e'; $("cS").value=27; drawGraph(); $("cVal").innerHTML=cText(); };
+ $("snap10").onclick=function(){ cc=10; cLbl=null; $("cS").value=100; drawGraph(); $("cVal").innerHTML=cText(); };
+ var mb=$("mode").getElementsByTagName('button');
+ for(var q=0;q<mb.length;q++){
+   mb[q].onclick=(function(el){ return function(){
+     for(var z=0;z<mb.length;z++) mb[z].className='';
+     el.className='on'; mode=el.getAttribute('data-m'); render();
+   };})(mb[q]);
+ }
+
+ render();
+})();
+</script>
+</body>
+</html>

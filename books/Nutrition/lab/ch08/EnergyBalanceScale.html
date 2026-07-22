@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>The Energy Balance Scale</title>
+<meta name="description" content="Interactive energy balance model — move intake, resting metabolic rate, NEAT, and exercise, watch a drawn balance beam tip, and see why expenditure tracks body mass instead of following the static 3,500-kcal rule.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.fu{border:1px solid var(--line);border-radius:11px;padding:9px 11px 7px;background:#fff;margin-top:7px;transition:.14s;}
+.fu.on{border-color:var(--teal);box-shadow:0 0 0 2px rgba(176,122,30,.13);}
+.fu .hd{display:flex;align-items:center;gap:8px;}
+.fu .sw{width:11px;height:11px;border-radius:3px;flex:none;}
+.fu .nmb{flex:1;text-align:left;border:none;background:none;font-family:var(--sans);font-weight:700;font-size:13px;color:var(--ink);cursor:pointer;padding:0;line-height:1.2;}
+.fu .nmb small{display:block;font-weight:600;font-size:10.4px;color:var(--muted);margin-top:1px;}
+.fu input[type=number]{width:66px;border:1px solid var(--line);border-radius:8px;padding:6px 7px;font-family:var(--sans);font-weight:800;font-size:13px;color:var(--teal-dk);text-align:right;background:#fffdf9;}
+.fu .un{font-size:10px;font-weight:800;color:var(--muted);flex:none;}
+.fu input[type=range]{width:100%;margin-top:6px;height:20px;accent-color:var(--teal);cursor:pointer;display:block;}
+.fu.calc{background:#f9f4ea;border-style:dashed;}
+.fu.calc .rd{font-family:var(--sans);font-weight:800;font-size:13px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.math{margin-top:11px;border-top:1px solid var(--line);padding-top:8px;}
+.math .ln{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--soft);padding:3px 0;font-variant-numeric:tabular-nums;cursor:pointer;}
+.math .ln .lf b{color:var(--ink);}
+.math .ln .lf .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:-1px;}
+.math .ln .rt{font-weight:800;color:var(--teal-dk);white-space:nowrap;}
+.math .ln.tt{border-top:1px dashed #ddd2ba;margin-top:5px;padding-top:8px;font-size:12.5px;cursor:default;}
+.math .ln.tt .lf b,.math .ln.tt .rt{color:var(--teal-dk);}
+.tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;border-top:1px solid var(--line);padding-top:9px;}
+.tot span{font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+.tot b{font-family:var(--disp);font-size:25px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.tot b i{font-style:normal;font-size:13px;color:var(--muted);margin-left:3px;}
+.ev{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:3px 9px;vertical-align:middle;}
+.ev.s{background:#e5f3ea;color:#237a45;} .ev.p{background:#fdf0dd;color:#8a6a20;}
+.dri{font-size:12.5px;color:var(--teal-dk);background:#f4ead8;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.5;}
+.hint{font-size:11.4px;color:var(--muted);margin-top:8px;line-height:1.5;}
+.ex .k{margin-left:auto;font-size:11.5px;font-weight:800;color:var(--teal-dk);font-variant-numeric:tabular-nums;flex:none;}
+.it.on .k{color:#fff;}
+.seg.sm button{font-size:12px;padding:9px 4px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 8</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 8</div>
+  <h1>The Energy Balance Scale</h1>
+  <div class="intro">Energy balance is the first law of thermodynamics applied to a body: energy taken in, minus energy spent, equals energy stored. It is a <b>description of physics &mdash; not a verdict on a person, a body, or a meal.</b> The interesting part is that the two pans are not independent. Move any slider and watch both sides respond.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Intake against expenditure</h2>
+      <svg viewBox="0 0 300 216" aria-label="A balance beam tipping between a pan holding energy intake and a pan holding a stack of the four components of total energy expenditure"><g id="art"></g></svg>
+      <div class="math" id="math"></div>
+      <div class="tot"><span id="totlab">Energy balance</span><b><span id="btot">0</span><i>kcal/day</i></b></div>
+      <div class="mnem"><b>TEE = RMR + TEF + NEAT + EAT.</b> Total energy expenditure is four things, not one: what it costs to stay alive at rest, what it costs to process the food itself, all the movement you never planned, and the movement you did. Tap any block on the scale &mdash; or any line above &mdash; to open it up. <span class="ev s">strong evidence</span></div>
+    </div>
+    <div class="card">
+      <h2>Where a sustained gap actually goes</h2>
+      <svg viewBox="0 0 300 176" aria-label="Line chart comparing predicted body-mass change over twelve months under the static 3,500-kilocalorie rule against a model in which expenditure falls as body mass falls"><g id="proj"></g></svg>
+      <div class="seg sm" id="useg"><button data-u="kg" class="on">kilograms<small>SI</small></button><button data-u="lb">pounds<small>US customary</small></button></div>
+      <div class="hint" id="projnote"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">The scale is level<small>move a slider and watch it tip</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg"><button data-m="0" class="on">Move the scale</button><button data-m="1">Scenarios</button></div>
+      <div id="panelAdj">
+        <div id="sliders"></div>
+        <div style="margin-top:11px;font-size:11.5px;font-weight:800;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Thermic effect of food</div>
+        <div class="seg sm" id="tefseg" style="margin-top:5px;">
+          <button data-t="8">8%<small>fat-weighted mix</small></button>
+          <button data-t="10" class="on">10%<small>typical mixed diet</small></button>
+          <button data-t="14">14%<small>protein-weighted mix</small></button>
+        </div>
+        <div class="row"><button class="btn" id="reset">Reset</button><button class="btn solid" id="bal">Find the balance point</button></div>
+        <div class="hint">TEF is not a slider because you do not set it &mdash; it is a <b>percentage of whatever you eat</b>, so it moves the moment intake moves. That single coupling is why the pans can never be adjusted one at a time.</div>
+      </div>
+      <div id="panelSc" style="display:none;">
+        <div class="list" id="sclist"></div>
+        <div class="hint">These are illustrative demonstrations of physiology built from round numbers. None of them is a plan, a target, or a recommendation for any particular person.</div>
+      </div>
+      <div id="info"></div>
+      <div class="note"><b>Body weight is a crude readout of all this.</b> The scale in a bathroom cannot separate fat from lean tissue, from glycogen (stored with roughly 3 g of water per gram), from gut contents, from hydration &mdash; so day-to-day swings of 1&ndash;2 kg are mostly water, not stored energy. <b>BMI</b> is weaker still: it is mass divided by height squared, a nineteenth-century population ratio that says nothing about tissue type, distribution, fitness, or health, and was never designed to assess an individual. <span class="ev s">strong evidence</span> Everything on this page is a teaching model of average physiology &mdash; not medical or dietary advice, and no substitute for an assessment by a qualified clinician.</div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var S=[
+  {k:'intake',nm:'Energy intake',ct:'everything eaten and drunk',col:'#b8862f',dk:'#7a5713',min:1000,max:4500,step:5,side:'in'},
+  {k:'rmr',nm:'Resting metabolic rate',ct:'RMR — the cost of simply being alive',col:'#2f6f9f',dk:'#22537a',min:900,max:2600,step:10,side:'out'},
+  {k:'neat',nm:'Non-exercise activity',ct:'NEAT — posture, fidgeting, walking about',col:'#2f9e5b',dk:'#1e6b3c',min:50,max:1200,step:10,side:'out'},
+  {k:'eat',nm:'Exercise activity',ct:'EAT — deliberate, planned movement',col:'#d1495b',dk:'#8f2b3a',min:0,max:1200,step:10,side:'out'}
+ ];
+ var TEFC={col:'#7a5a8a',dk:'#523a60',nm:'Thermic effect of food',ct:'TEF — the cost of digesting and storing'};
+
+ var DEF={intake:2200,rmr:1480,neat:350,eat:150};
+ var V={intake:2200,rmr:1480,neat:350,eat:150};
+ var tefPct=0.10, sel='', mode=0, wunit='kg', tween=null, shown=0;
+ var RHO=7700;   /* kcal per kg of mixed tissue gained or lost */
+ var KADJ=24;    /* kcal/day that expenditure shifts per kg of body-mass change */
+
+ var DETAIL={
+  intake:{
+   nm:'Energy intake',
+   why:'Everything that carries usable energy: <b>carbohydrate at 4, protein at 4, fat at 9, and alcohol at 7 kcal per gram</b>. Nothing else on a plate contributes &mdash; water, vitamins, minerals, and the fibre that stays undigested add essentially zero. Intake is therefore a property of the grams, not of any food&rsquo;s reputation.',
+   more:'The honest problem with this pan is <b>measurement</b>. Self-reported intake is under-reported by roughly <b>20&ndash;30% on average</b> in adults, verified against doubly labelled water, and the error is not random &mdash; it grows with body size and varies by food type. <span class="ev s">strong evidence</span> This is a limitation of the method, not a failing of the people recording; the same bias appears in trained dietitians recording their own intake.',
+   note:'No food here is categorised. A kilocalorie is a unit of energy, and energy density is a physical property of a molecule &mdash; it is not a moral rank, and this page will not treat it as one.'},
+  rmr:{
+   nm:'Resting metabolic rate (RMR)',
+   why:'The largest pan by far: typically <b>60&ndash;75% of total energy expenditure</b> in an adult who is not an endurance athlete. It pays for ion pumping, protein turnover, breathing, circulation, and thermoregulation &mdash; the work of staying alive with the body at complete rest. <span class="ev s">strong evidence</span>',
+   more:'What predicts it is mostly <b>fat-free mass</b> &mdash; the organs and muscle, not the total on a scale. Brain, liver, kidney, and heart are only about 6% of body mass but account for roughly 60&ndash;70% of RMR. That is why two adults of identical weight can differ by 10% or more, and why RMR falls when body mass falls: there is simply less tissue to run. Age, sex, thyroid status, and genetics move it further.',
+   note:'<b>BMR vs RMR:</b> basal metabolic rate is measured under strict conditions &mdash; awake, supine, thermoneutral, 12 hours fasted, no prior activity. RMR is measured under slightly relaxed conditions and runs about <b>10% higher</b>. Prediction equations estimate this number to within roughly &plusmn;10% for a group and can be further off for an individual.'},
+  tef:{
+   nm:'Thermic effect of food (TEF)',
+   why:'Digesting, absorbing, transporting, and storing a meal <b>costs energy</b>. Across a mixed diet it consumes about <b>8&ndash;10% of the energy eaten</b>, which is why this block is drawn as a share of the intake pan rather than as an independent quantity. <span class="ev s">strong evidence</span>',
+   more:'It differs sharply by fuel: <b>protein 20&ndash;30%</b> of its own energy (peptide bonds are expensive to break and amino acids expensive to process), <b>carbohydrate 5&ndash;10%</b>, <b>fat 0&ndash;3%</b> (fat is nearly stored as-is), and <b>alcohol roughly 15&ndash;20%</b>. Shifting the composition of a diet at constant total energy moves this block by a hundred kilocalories or so &mdash; real, measurable, and much smaller than it is often claimed to be.',
+   note:'Because TEF is a percentage of intake, <b>eating more raises expenditure automatically</b>. Add 500 kcal on a 10% diet and the gap that opens is about 450, not 500. The pans are wired together.'},
+  neat:{
+   nm:'Non-exercise activity thermogenesis (NEAT)',
+   why:'Every joule of movement that was not deliberate exercise: standing, walking to a room, occupational activity, fidgeting, maintaining posture, even shivering. In most adults it is <b>the second largest and by far the most variable</b> component of expenditure. <span class="ev s">strong evidence</span>',
+   more:'Estimates put the spread between similar-sized adults at as much as <b>~2,000 kcal/day</b> &mdash; a difference larger than any realistic exercise programme could create. <span class="ev p">preliminary evidence</span> The figure comes from small, tightly controlled chamber and overfeeding studies; the direction is well replicated, the exact magnitude in free-living people is not settled.',
+   note:'NEAT also <b>adapts</b>. During sustained energy restriction spontaneous movement falls without any conscious decision, which quietly shrinks the gap you were trying to hold. That is one of the mechanisms behind the plateau in the chart on the left.'},
+  eat:{
+   nm:'Exercise activity thermogenesis (EAT)',
+   why:'Deliberate, structured movement. For most adults it is the <b>smallest slice of the four</b> &mdash; commonly 0&ndash;10% of total energy expenditure, rising well past that only in people training seriously. Moving this slider a long way moves the beam surprisingly little.',
+   more:'There is also evidence for partial <b>compensation</b>: added exercise is often followed by reduced NEAT or increased intake, so the measured change in total expenditure is smaller than the exercise&rsquo;s own energy cost. <span class="ev p">preliminary evidence</span> How much compensation occurs, and in whom, varies widely and is actively debated.',
+   note:'Worth separating from this pan entirely: the health effects of physical activity &mdash; cardiorespiratory fitness, insulin sensitivity, blood pressure, mood, bone density, all-cause mortality &mdash; are <b>documented largely independently of whether body weight changes at all</b>. <span class="ev s">strong evidence</span> Exercise is a poor lever on this scale and an excellent one on health.'}
+ };
+
+ var SC=[
+  {ic:'⚖️',nm:'A balanced day',ct:'set intake to the balance point',
+   set:function(){V.rmr=1480;V.neat=350;V.eat=150;tefPct=0.10;V.intake=Math.round((V.rmr+V.neat+V.eat)/(1-tefPct)/5)*5;},
+   d:'The beam sits level: intake equals expenditure, storage does not change. Notice that the balance point is not simply RMR + NEAT + EAT. Because TEF is a share of intake, the intake that balances is <b>(RMR + NEAT + EAT) &divide; (1 &minus; TEF%)</b> &mdash; 1,980 &divide; 0.90 = 2,200 kcal/day here.',
+   loc:'Balance is a <b>state, not an accomplishment</b>. Most adults hover near it most of the time without measuring anything, because appetite and spontaneous movement are regulated.'},
+  {ic:'🍽️',nm:'Add 500 kcal of intake',ct:'watch the other pan move too',
+   set:function(){V.rmr=1480;V.neat=350;V.eat=150;tefPct=0.10;V.intake=2700;},
+   d:'Intake went up by 500. The gap that opened is about <b>450</b>, not 500 &mdash; because TEF is 10% of intake, expenditure rose by roughly 50 kcal/day on its own. This is the smallest of several couplings, and the easiest one to calculate.',
+   loc:'Switch the TEF segment to 14% &mdash; a protein-weighted mix &mdash; and the same 2,700 kcal leaves a gap of about <b>340</b> instead of 450, because TEF now claims 378 kcal instead of 270. Composition changes the arithmetic by about a hundred kilocalories; it does not rewrite it.'},
+  {ic:'🪑',nm:'A still day',ct:'NEAT down to 120 kcal/day',
+   set:function(){V.rmr=1480;V.eat=150;tefPct=0.10;V.intake=2200;V.neat=120;},
+   d:'A long day at a desk, a long journey, an illness, a cast on a leg. NEAT collapses by more than 200 kcal/day without a single decision being made about food or exercise.',
+   loc:'Compare the size of this move to what the exercise slider can do. For most people <b>NEAT is the bigger dial</b>, and it is largely automatic.'},
+  {ic:'🚶',nm:'A restless day',ct:'NEAT up to 800 kcal/day',
+   set:function(){V.rmr=1480;V.eat=150;tefPct=0.10;V.intake=2200;V.neat=800;},
+   d:'Standing work, walking between tasks, an active occupation, high spontaneous fidgeting. Same food, same workout, same body &mdash; the beam has swung the other way entirely.',
+   loc:'The swing between this scenario and the previous one is roughly 680 kcal/day. Between-person differences in NEAT are estimated to be larger still. <span class="ev p">preliminary evidence</span>'},
+  {ic:'🏃',nm:'Add a hard workout',ct:'EAT up to 450 kcal/day',
+   set:function(){V.rmr=1480;V.neat=350;tefPct=0.10;V.intake=2200;V.eat=450;},
+   d:'A genuinely demanding session, added on top of a balanced day. The beam tips &mdash; but compare the size of this tip with the NEAT scenarios, and remember that in free-living people some of it is commonly offset by reduced spontaneous movement or increased intake. <span class="ev p">preliminary evidence</span>',
+   loc:'The reason to move is not the tilt of this beam. Fitness, insulin sensitivity, blood pressure, bone, mood, and mortality all improve with activity <b>whether or not body weight changes</b>. <span class="ev s">strong evidence</span>'},
+  {ic:'📉',nm:'A sustained 500 kcal gap',ct:'then look at the chart',
+   set:function(){V.rmr=1480;V.neat=350;V.eat=150;tefPct=0.10;V.intake=1645;},
+   d:'A negative balance of about 500 kcal/day, held constant. The static rule &mdash; 3,500 kcal per pound of tissue &mdash; predicts a straight line downward forever. The model beside it lets expenditure fall as body mass falls, and it bends into a <b>plateau</b>.',
+   loc:'Both lines start identically. They diverge because the first assumes the body is a fixed machine and the second does not. Over a year the difference is enormous, and the second is the one that matches measured data. <span class="ev s">strong evidence</span>'},
+  {ic:'🌱',nm:'When positive balance is the point',ct:'growth, pregnancy, recovery',
+   set:function(){V.rmr=1560;V.neat=350;V.eat=150;tefPct=0.10;V.intake=2600;},
+   d:'A positive energy balance is <b>required</b>, not a problem, in infancy and childhood, in adolescence, across pregnancy, during lactation, in recovery from illness, injury, or surgery, and in building muscle in training. Storage is how tissue gets built.',
+   loc:'This is why &ldquo;balance&rdquo; must never be read as &ldquo;the correct state.&rdquo; The right side of this scale depends entirely on what a body is doing, and that judgement belongs to the person and their clinician &mdash; not to an equation.'}
+ ];
+
+ function fmt(n){n=Math.round(n);var s=Math.abs(n)+'';return (n<0?'−':'')+s.replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+ function sgn(n){n=Math.round(n);if(n===0)return '0';return (n>0?'+':'−')+(Math.abs(n)+'').replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+ function tef(){return V.intake*tefPct;}
+ function tee(){return V.rmr+tef()+V.neat+V.eat;}
+ function bal(){return V.intake-tee();}
+ function valOf(k){return k==='tef'?tef():(k==='intake'?V.intake:V[k]);}
+ function colOf(k){if(k==='tef')return TEFC.col;for(var i=0;i<S.length;i++)if(S[i].k===k)return S[i].col;return '#b07a1e';}
+ function wfmt(kg){var v=wunit==='lb'?kg*2.20462:kg;var a=Math.abs(v);return (v<0?'−':(v>0?'+':''))+(a<10?a.toFixed(1):Math.round(a))+' '+wunit;}
+
+ /* ---------- the balance beam ---------- */
+ function drawScale(){
+   var I=V.intake, E=tee(), d=I-E, out='';
+   var mx=Math.max(I,E,1), per=48/Math.max(2400,mx);
+   var rel=Math.max(-1,Math.min(1,d/(0.15*mx)));
+   var th=rel*15*Math.PI/180;
+   var cx=150, cy=40, arm=88;
+   var lx=cx-arm*Math.cos(th), ly=cy+arm*Math.sin(th);
+   var rx=cx+arm*Math.cos(th), ry=cy-arm*Math.sin(th);
+   var lp=ly+78, rp=ry+78;
+
+   out+='<rect x="0" y="0" width="300" height="216" fill="#fffdf9"/>';
+   var st=(Math.abs(d)<10)?'THE SCALE IS LEVEL':(d>0?'POSITIVE BALANCE  '+sgn(d)+' kcal/day':'NEGATIVE BALANCE  '+sgn(d)+' kcal/day');
+   var sc=(Math.abs(d)<10)?'#6b4710':(d>0?'#7a5713':'#22537a');
+   out+='<text x="150" y="13" font-size="8.4" fill="'+sc+'" text-anchor="middle" font-weight="800" letter-spacing=".8">'+st+'</text>';
+
+   out+='<polygon points="150,46 127,178 173,178" fill="#efe6d5" stroke="#ddd2ba" stroke-width="1"/>';
+   out+='<rect x="106" y="177" width="88" height="7" rx="3.5" fill="#d9cdb6"/>';
+   out+='<line x1="'+lx.toFixed(1)+'" y1="'+ly.toFixed(1)+'" x2="'+rx.toFixed(1)+'" y2="'+ry.toFixed(1)+'" stroke="#8d8270" stroke-width="6" stroke-linecap="round"/>';
+   out+='<circle cx="150" cy="40" r="8" fill="#6b4710"/><circle cx="150" cy="40" r="3" fill="#fffdf9"/>';
+
+   function pan(x,ey,py,items,tag){
+     var o='';
+     o+='<line x1="'+x.toFixed(1)+'" y1="'+ey.toFixed(1)+'" x2="'+(x-31).toFixed(1)+'" y2="'+py.toFixed(1)+'" stroke="#b3a892" stroke-width="1.2"/>';
+     o+='<line x1="'+x.toFixed(1)+'" y1="'+ey.toFixed(1)+'" x2="'+(x+31).toFixed(1)+'" y2="'+py.toFixed(1)+'" stroke="#b3a892" stroke-width="1.2"/>';
+     o+='<circle cx="'+x.toFixed(1)+'" cy="'+ey.toFixed(1)+'" r="2.6" fill="#8d8270"/>';
+     var base=py;
+     for(var i=0;i<items.length;i++){
+       var it=items[i], h=valOf(it)*per;
+       if(h<0.6) continue;
+       var y=base-h;
+       o+='<rect class="rgn" data-k="'+it+'" x="'+(x-28)+'" y="'+y.toFixed(1)+'" width="56" height="'+h.toFixed(1)+'" rx="2" fill="'+colOf(it)+'" '+(sel===it?'stroke="#33291a" stroke-width="1.7"':'stroke="#fffdf9" stroke-width="0.7"')+'/>';
+       if(h>=11) o+='<text x="'+x+'" y="'+(y+h/2+3.2).toFixed(1)+'" font-size="8.2" fill="#fff" text-anchor="middle" font-weight="800" pointer-events="none">'+fmt(valOf(it))+'</text>';
+       base=y;
+     }
+     o+='<rect x="'+(x-34)+'" y="'+py.toFixed(1)+'" width="68" height="5" rx="2.5" fill="#8d8270"/>';
+     o+='<text x="'+x+'" y="'+(py+16).toFixed(1)+'" font-size="7.4" fill="#8d8270" text-anchor="middle" font-weight="800" letter-spacing=".6">'+tag+'</text>';
+     return o;
+   }
+   out+=pan(lx,ly,lp,['intake'],'INTAKE');
+   out+=pan(rx,ry,rp,['rmr','tef','neat','eat'],'EXPENDITURE');
+
+   out+='<text x="68" y="198" font-size="9" fill="#7a5713" text-anchor="middle" font-weight="800">'+fmt(I)+' kcal/day</text>';
+   out+='<text x="232" y="198" font-size="9" fill="#22537a" text-anchor="middle" font-weight="800">'+fmt(E)+' kcal/day</text>';
+   out+='<text x="150" y="211" font-size="7.4" fill="#a89b85" text-anchor="middle" font-weight="700">stack height is drawn to a shared kcal scale &mdash; tap any block</text>';
+
+   $('art').innerHTML=out;
+   var ns=$('art').querySelectorAll('.rgn');
+   for(var q=0;q<ns.length;q++) ns[q].onclick=(function(k){return function(){pick(k);};})(ns[q].getAttribute('data-k'));
+ }
+
+ /* ---------- the projection ---------- */
+ function drawProj(){
+   var d=bal(), days=365, out='';
+   var plate=d/KADJ, stEnd=d*days/RHO;
+   var ymax=Math.max(Math.abs(stEnd)*1.12,1);
+   var x0=36,x1=286,yc=76,hh=56;
+   var X=function(t){return x0+(t/days)*(x1-x0);};
+   var Y=function(w){return yc-(w/ymax)*hh;};
+
+   out+='<rect x="0" y="0" width="300" height="176" fill="#fffdf9"/>';
+   out+='<text x="36" y="12" font-size="7.6" fill="#8d8270" font-weight="800" letter-spacing=".7">PREDICTED CHANGE IN BODY MASS OVER 12 MONTHS</text>';
+   var gl=[1,0.5,0,-0.5,-1];
+   for(var g=0;g<gl.length;g++){
+     var w=ymax*gl[g], yy=Y(w);
+     out+='<line x1="'+x0+'" y1="'+yy.toFixed(1)+'" x2="'+x1+'" y2="'+yy.toFixed(1)+'" stroke="'+(gl[g]===0?'#c9bda6':'#ece4d6')+'" stroke-width="1"/>';
+     out+='<text x="'+(x0-4)+'" y="'+(yy+2.8).toFixed(1)+'" font-size="7.2" fill="#a89b85" text-anchor="end" font-weight="700">'+(gl[g]===0?'0':wfmt(w))+'</text>';
+   }
+   for(var m=0;m<=12;m+=3){
+     var xx=X(days*m/12);
+     out+='<line x1="'+xx.toFixed(1)+'" y1="'+(yc+hh)+'" x2="'+xx.toFixed(1)+'" y2="'+(yc+hh+3)+'" stroke="#c9bda6" stroke-width="1"/>';
+     out+='<text x="'+xx.toFixed(1)+'" y="'+(yc+hh+13)+'" font-size="7.2" fill="#a89b85" text-anchor="middle" font-weight="700">'+(m===12?'12 mo':m)+'</text>';
+   }
+   out+='<line x1="'+x0+'" y1="'+Y(0).toFixed(1)+'" x2="'+X(days).toFixed(1)+'" y2="'+Y(stEnd).toFixed(1)+'" stroke="#a89b85" stroke-width="1.8" stroke-dasharray="5 3"/>';
+   if(Math.abs(plate)>0.05)
+     out+='<line x1="'+x0+'" y1="'+Y(plate).toFixed(1)+'" x2="'+x1+'" y2="'+Y(plate).toFixed(1)+'" stroke="#7a5a8a" stroke-width="1" stroke-dasharray="2 3"/>';
+   var pts=[];
+   for(var i=0;i<=48;i++){var t=days*i/48; var w=(d/KADJ)*(1-Math.exp(-KADJ*t/RHO)); pts.push(X(t).toFixed(1)+','+Y(w).toFixed(1));}
+   out+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="#b07a1e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+   var dyEnd=(d/KADJ)*(1-Math.exp(-KADJ*days/RHO));
+   out+='<circle cx="'+X(days).toFixed(1)+'" cy="'+Y(dyEnd).toFixed(1)+'" r="3.2" fill="#b07a1e"/>';
+   out+='<circle cx="'+X(days).toFixed(1)+'" cy="'+Y(stEnd).toFixed(1)+'" r="3.2" fill="#a89b85"/>';
+
+   out+='<line x1="36" y1="152" x2="54" y2="152" stroke="#a89b85" stroke-width="1.8" stroke-dasharray="5 3"/>';
+   out+='<text x="59" y="155" font-size="7.4" fill="#8d8270" font-weight="700">STATIC 3,500 kcal-per-pound RULE &mdash; '+wfmt(stEnd)+' at 12 mo</text>';
+   out+='<line x1="36" y1="166" x2="54" y2="166" stroke="#b07a1e" stroke-width="2.6"/>';
+   out+='<text x="59" y="169" font-size="7.4" fill="#6b4710" font-weight="800">EXPENDITURE TRACKS BODY MASS &mdash; '+wfmt(dyEnd)+' at 12 mo</text>';
+   $('proj').innerHTML=out;
+
+   var pct=Math.abs(stEnd)>0.01?Math.round((1-Math.abs(dyEnd)/Math.abs(stEnd))*100):0;
+   if(Math.abs(d)<10){
+     $('projnote').innerHTML='The beam is level, so both lines are flat &mdash; no stored energy is predicted to change. Open a gap on either side to see the two models separate.';
+   } else {
+     $('projnote').innerHTML='A steady gap of <b>'+sgn(d)+' kcal/day</b>. The static rule divides by the energy density of tissue &mdash; about <b>7,700 kcal/kg</b> (3,500 kcal/lb) &mdash; and never stops. The solid curve subtracts about <b>'+KADJ+' kcal/day of expenditure for every kilogram of body mass changed</b>, so the gap closes itself and the curve settles toward a plateau near <b>'+wfmt(plate)+'</b>. At 12 months the difference between the two is <b>'+pct+'%</b>. Model outputs are group averages with wide individual variation, not predictions about any one person.';
+   }
+ }
+
+ /* ---------- panels ---------- */
+ function drawMath(){
+   var E=tee(), out='';
+   function ln(k,nm,rt,extra){
+     return '<div class="ln rgn2" data-k="'+k+'"><span class="lf"><span class="sw" style="background:'+colOf(k)+'"></span><b>'+nm+'</b>'+(extra?' &nbsp;'+extra:'')+'</span><span class="rt">'+rt+'</span></div>';
+   }
+   out+=ln('rmr','Resting metabolic rate',fmt(V.rmr)+' kcal/day',Math.round(V.rmr/E*100)+'% of TEE');
+   out+=ln('tef','Thermic effect of food',fmt(tef())+' kcal/day','&nbsp;'+Math.round(tefPct*100)+'% &times; '+fmt(V.intake));
+   out+=ln('neat','Non-exercise activity',fmt(V.neat)+' kcal/day',Math.round(V.neat/E*100)+'% of TEE');
+   out+=ln('eat','Exercise activity',fmt(V.eat)+' kcal/day',Math.round(V.eat/E*100)+'% of TEE');
+   out+='<div class="ln tt"><span class="lf"><b>Total energy expenditure</b></span><span class="rt">'+fmt(E)+' kcal/day</span></div>';
+   out+='<div class="ln tt"><span class="lf"><b>Energy intake</b></span><span class="rt">'+fmt(V.intake)+' kcal/day</span></div>';
+   $('math').innerHTML=out;
+   var ns=$('math').querySelectorAll('.rgn2');
+   for(var i=0;i<ns.length;i++) ns[i].onclick=(function(k){return function(){pick(k);};})(ns[i].getAttribute('data-k'));
+ }
+
+ function setTotal(anim){
+   var target=bal();
+   if(tween){cancelAnimationFrame(tween);tween=null;}
+   if(!anim){shown=target;$('btot').innerHTML=sgn(target);return;}
+   var from=shown,t0=null;
+   var step=function(ts){if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/480);p=1-Math.pow(1-p,3);
+     shown=from+(target-from)*p;$('btot').innerHTML=sgn(shown);
+     if(p<1)tween=requestAnimationFrame(step);else{shown=target;tween=null;}};
+   tween=requestAnimationFrame(step);
+ }
+
+ function stage(){
+   var d=bal();
+   if(Math.abs(d)<10){$('stage').style.background='var(--teal)';
+     $('stage').innerHTML='The scale is level<small>intake matches expenditure &mdash; stored energy is steady</small>';return;}
+   if(d>0){$('stage').style.background='#7a5a8a';
+     $('stage').innerHTML='Positive balance '+sgn(d)+' kcal/day<small>intake exceeds expenditure &mdash; energy is being stored</small>';}
+   else {$('stage').style.background='#2f6f9f';
+     $('stage').innerHTML='Negative balance '+sgn(d)+' kcal/day<small>expenditure exceeds intake &mdash; stored energy is being drawn on</small>';}
+ }
+
+ function sliders(){
+   var out='';
+   for(var i=0;i<S.length;i++){var f=S[i];
+     out+='<div class="fu'+(sel===f.k?' on':'')+'" id="fu_'+f.k+'">'+
+       '<div class="hd"><span class="sw" style="background:'+f.col+'"></span>'+
+       '<button class="nmb" data-k="'+f.k+'">'+f.nm+'<small>'+f.ct+'</small></button>'+
+       '<input type="number" id="n_'+f.k+'" min="'+f.min+'" max="'+f.max+'" step="'+f.step+'" value="'+V[f.k]+'" aria-label="'+f.nm+' in kilocalories per day"><span class="un">kcal<br>/day</span></div>'+
+       '<input type="range" id="r_'+f.k+'" min="'+f.min+'" max="'+f.max+'" step="'+f.step+'" value="'+V[f.k]+'" aria-label="'+f.nm+' slider"></div>';
+     if(f.k==='intake')
+       out+='<div class="fu calc'+(sel==='tef'?' on':'')+'" id="fu_tef"><div class="hd"><span class="sw" style="background:'+TEFC.col+'"></span>'+
+         '<button class="nmb" data-k="tef">'+TEFC.nm+'<small>'+TEFC.ct+' &mdash; calculated, not set</small></button>'+
+         '<span class="rd" id="tefread">0</span><span class="un">kcal<br>/day</span></div></div>';
+   }
+   $('sliders').innerHTML=out;
+   for(i=0;i<S.length;i++){(function(f){
+     var n=$('n_'+f.k), r=$('r_'+f.k);
+     r.oninput=function(){V[f.k]=+r.value;n.value=r.value;sel=f.k;sync(false,true);};
+     n.oninput=function(){var v=parseFloat(n.value);if(isNaN(v))v=f.min;
+       v=Math.max(f.min,Math.min(f.max,Math.round(v)));V[f.k]=v;r.value=v;sel=f.k;sync(false,true);};
+     n.onblur=function(){n.value=V[f.k];};
+   })(S[i]);}
+   var bs=$('sliders').querySelectorAll('.nmb');
+   for(i=0;i<bs.length;i++) bs[i].onclick=(function(k){return function(){pick(k);};})(bs[i].getAttribute('data-k'));
+ }
+
+ function marks(){
+   for(var i=0;i<S.length;i++){var e=$('fu_'+S[i].k);if(e)e.className='fu'+(sel===S[i].k?' on':'');}
+   var t=$('fu_tef');if(t)t.className='fu calc'+(sel==='tef'?' on':'');
+   var v=$('tefread');if(v)v.innerHTML=fmt(tef());
+   for(i=0;i<S.length;i++){var n=$('n_'+S[i].k),r=$('r_'+S[i].k);
+     if(n&&document.activeElement!==n)n.value=V[S[i].k];
+     if(r)r.value=V[S[i].k];}
+   var ts=$('tefseg').querySelectorAll('button');
+   for(i=0;i<ts.length;i++) ts[i].className=(Math.round(tefPct*100)===+ts[i].getAttribute('data-t')?'on':'');
+ }
+
+ function sclist(){
+   var out='';
+   for(var i=0;i<SC.length;i++){
+     out+='<button class="it ex" data-i="'+i+'"><span class="ic">'+SC[i].ic+'</span><span><span class="nm">'+SC[i].nm+'</span><br><span class="ct">'+SC[i].ct+'</span></span></button>';
+   }
+   $('sclist').innerHTML=out;
+   var bs=$('sclist').querySelectorAll('.it');
+   for(i=0;i<bs.length;i++) bs[i].onclick=(function(n){return function(){loadSc(n);};})(bs[i].getAttribute('data-i'));
+ }
+
+ function loadSc(n){
+   var s=SC[+n]; s.set(); sel=''; sliders(); sync(true,false);
+   var d=bal();
+   $('info').innerHTML='<span class="n">'+s.ic+' '+s.nm+'</span>'+s.d+'<div class="loc">'+s.loc+'</div>'+
+     '<div class="dd" style="font-weight:600;color:var(--teal-dk);">Now on the scale: intake '+fmt(V.intake)+', expenditure '+fmt(tee())+', balance <b>'+sgn(d)+' kcal/day</b>.</div>';
+   var bs=$('sclist').querySelectorAll('.it');
+   for(var i=0;i<bs.length;i++) bs[i].className='it ex'+(+bs[i].getAttribute('data-i')===+n?' on':'');
+ }
+
+ function pick(k){
+   var D=DETAIL[k]; if(!D) return;
+   sel=k; marks();
+   var E=tee(), v=valOf(k);
+   var share=(k==='intake')?'':' &mdash; '+Math.round(v/E*100)+'% of total expenditure right now';
+   $('info').innerHTML='<span class="n">'+D.nm+'</span>'+D.why+
+     '<div class="dd">'+D.more+'</div>'+
+     '<div class="dri">'+D.note+'</div>'+
+     '<div class="loc">Currently <b>'+fmt(v)+' kcal/day</b>'+share+'.</div>';
+   drawScale();
+ }
+
+ function intro(){
+   $('info').innerHTML='<span class="n">Two pans, one equation</span>Energy in &minus; energy out = energy stored. Nothing on this page violates that, and nothing here needs to: the first law is not in dispute. What the beam hides is that <b>the two pans share inputs</b>. TEF is a fraction of intake. Resting metabolism scales with the tissue you carry. Spontaneous movement rises with overfeeding and falls with restriction. Push one side and the other moves before you have finished pushing.'+
+     '<div class="dd">That is why energy balance is an excellent <b>explanation</b> and a poor <b>controller</b>. It describes what happened with complete accuracy after the fact, and predicts what will happen only loosely, because the terms are not independent variables you can hold still.</div>'+
+     '<div class="dri"><b>The DRI for energy is the Estimated Energy Requirement (EER)</b> &mdash; the average dietary energy intake, in <b>kcal/day</b>, predicted to maintain energy balance in a healthy adult of a defined age, sex, weight, height, and physical activity level. Unlike an RDA it is a <b>median, not a generous margin</b>: by design roughly half of a matched group needs more than the EER. Separate EER equations exist for infants, children and adolescents, pregnancy (with additions by trimester), and lactation.</div>'+
+     '<div class="loc">Tap any coloured block on the beam &mdash; or any line in the breakdown &mdash; to open that component.</div>';
+ }
+
+ function sync(anim,keepInfo){
+   drawScale(); drawMath(); drawProj(); setTotal(anim); stage(); marks();
+   if(mode===1) sclist();
+   if(keepInfo&&sel) pick(sel);
+ }
+
+ $('reset').onclick=function(){V={intake:DEF.intake,rmr:DEF.rmr,neat:DEF.neat,eat:DEF.eat};tefPct=0.10;sel='';sliders();sync(true,false);intro();};
+ $('bal').onclick=function(){
+   var want=Math.round((V.rmr+V.neat+V.eat)/(1-tefPct)/5)*5;
+   V.intake=Math.max(S[0].min,Math.min(S[0].max,want));
+   sel='';sliders();sync(true,false);
+   var capped=(want!==V.intake)?' &mdash; though the slider stops at '+fmt(V.intake)+', so the beam here is as level as this range allows':'';
+   $('info').innerHTML='<span class="n">The balance point</span>Intake set to <b>'+fmt(want)+' kcal/day</b>, where the beam sits level'+capped+'. The arithmetic is not simply RMR + NEAT + EAT, because TEF is a share of intake and therefore appears on both sides of the equation. Solve it and you get <b>intake = (RMR + NEAT + EAT) &divide; (1 &minus; TEF%)</b> = '+fmt(V.rmr+V.neat+V.eat)+' &divide; '+(1-tefPct).toFixed(2)+' = '+fmt(want)+'.'+
+     '<div class="dd">Note what this number is <b>not</b>. It is the balance point of <i>this model with these four inputs</i>, three of which are estimates with error bars of their own &mdash; RMR predicted to about &plusmn;10%, NEAT barely measurable outside a chamber, intake systematically under-reported. Stack those uncertainties and a calculated requirement is a starting hypothesis, never a prescription.</div>'+
+     '<div class="loc">A real person&rsquo;s balance point also drifts &mdash; with season, sleep, illness, menstrual cycle phase, ambient temperature, and body composition. It is a moving target, which is exactly why appetite regulation exists and why most people track it without arithmetic.</div>';
+ };
+
+ var ms=$('modeseg').querySelectorAll('button');
+ for(var q=0;q<ms.length;q++) ms[q].onclick=(function(b){return function(){
+   mode=+b.getAttribute('data-m');
+   for(var z=0;z<ms.length;z++) ms[z].className=(ms[z]===b?'on':'');
+   $('panelAdj').style.display=mode===0?'':'none';
+   $('panelSc').style.display=mode===1?'':'none';
+   if(mode===1) sclist();
+ };})(ms[q]);
+
+ var ts=$('tefseg').querySelectorAll('button');
+ for(var w=0;w<ts.length;w++) ts[w].onclick=(function(b){return function(){
+   tefPct=(+b.getAttribute('data-t'))/100; sel='tef'; sync(true,true);
+ };})(ts[w]);
+
+ var us=$('useg').querySelectorAll('button');
+ for(var u=0;u<us.length;u++) us[u].onclick=(function(b){return function(){
+   wunit=b.getAttribute('data-u');
+   for(var z=0;z<us.length;z++) us[z].className=(us[z]===b?'on':'');
+   drawProj();
+ };})(us[u]);
+
+ sliders(); sclist(); intro(); sync(false,false);
+})();
+</script>
+</body>
+</html>

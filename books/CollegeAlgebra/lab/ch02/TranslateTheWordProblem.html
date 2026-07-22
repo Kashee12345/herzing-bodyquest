@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Translate the Word Problem</title>
+<meta name="description" content="Turn English sentences into equations one phrase at a time. Six worked word problems, each translated phrase by phrase, then solved and checked against the original words.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.94fr 1.06fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+#picks{grid-template-columns:repeat(2,1fr);}
+#picks .it{display:block;padding:9px 10px;}
+#picks .nm{display:block;font-size:12.5px;line-height:1.2;}
+#picks .s{display:block;font-size:10.5px;margin-top:3px;line-height:1.25;}
+@media (max-width:520px){#picks{grid-template-columns:1fr;}}
+#cap{font-size:12px;color:var(--soft);line-height:1.5;margin-top:9px;text-align:center;}
+#cap b{color:var(--teal-dk);}
+/* the sentence */
+.sent{font-size:16.5px;line-height:2.05;color:var(--soft);letter-spacing:.1px;}
+.ph{border-radius:5px;padding:2px 3px;transition:.15s;}
+.ph.done{color:var(--teal-dk);font-weight:600;box-shadow:inset 0 -2px 0 #c3c6e4;}
+.ph.on{background:#ffeaa8;box-shadow:inset 0 0 0 1.8px #e5c46a;color:var(--ink);font-weight:700;}
+.qn{display:block;font-size:13px;color:var(--muted);margin-top:8px;font-style:italic;}
+/* the let-line */
+.letline{font-family:var(--math);font-size:15px;color:var(--teal-dk);background:#e6e8f5;border-radius:9px;padding:8px 12px;margin-top:11px;font-weight:600;}
+.letline .lb{font-family:var(--sans);font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:2px;}
+/* phrase ledger */
+.lg{display:flex;align-items:baseline;gap:9px;padding:6px 2px;border-bottom:1px dashed var(--line);}
+.lg:last-child{border-bottom:none;}
+.lg .en{flex:1;font-size:12.5px;color:var(--muted);line-height:1.35;}
+.lg .ar{flex:none;color:var(--line);font-size:13px;}
+.lg .mx{flex:none;font-family:var(--math);font-size:15px;color:var(--soft);font-weight:600;min-width:74px;text-align:right;}
+.lg.cur .en{color:var(--ink);font-weight:600;}
+.lg.cur .mx{color:var(--teal-dk);font-size:18px;}
+.lg.cur{background:#f7f4ec;border-radius:7px;padding:6px 7px;}
+/* equation stack */
+.dl{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:5px 2px;border-bottom:1px dashed var(--line);}
+.dl:last-child{border-bottom:none;}
+.dl .mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.7;}
+.dl.cur .mx{font-size:20px;color:var(--ink);font-weight:600;}
+.dl .pl{flex:none;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);text-align:right;max-width:132px;line-height:1.3;}
+.dl.cur .pl{color:var(--gold);}
+.tg{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.dl:not(.cur) .tg{background:transparent;box-shadow:none;padding:0;}
+.wk{font-family:var(--math);font-size:13px;color:var(--muted);padding:2px 2px 7px;border-bottom:1px dashed var(--line);}
+.wk .lb{font-family:var(--sans);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--gold);margin-right:7px;}
+/* dictionary */
+.dc{display:flex;align-items:baseline;gap:8px;padding:5px 6px;border-radius:7px;font-size:11.5px;color:var(--muted);line-height:1.35;transition:.15s;}
+.dc .k{flex:1;}
+.dc .v{flex:none;font-family:var(--math);font-size:14px;font-weight:600;color:var(--soft);min-width:52px;text-align:right;}
+.dc.on{background:#e6e8f5;color:var(--teal-dk);font-weight:600;}
+.dc.on .v{color:var(--teal-dk);}
+.hd{font-size:9.8px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin:12px 0 4px;}
+.hd:first-child{margin-top:0;}
+/* answer */
+.ansbox{margin-top:11px;border-radius:10px;padding:11px 13px;background:#e5f3ea;border:1px solid #b9e0c8;font-size:13px;color:#1f6b3d;line-height:1.6;}
+.ansbox .big{font-family:var(--math);font-size:19px;font-weight:700;color:#17603a;display:block;margin-bottom:5px;}
+.ansbox .ck{font-family:var(--math);font-size:13.5px;color:#2b6b48;display:block;margin-top:3px;}
+.ansbox b{color:#14522f;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 2</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 2</div>
+  <h1>Translate the Word Problem</h1>
+  <div class="intro">A word problem is not a wall of text to be stared at until an answer appears. It is a sentence written in English that can be rewritten, <b>a few words at a time</b>, in algebra. Name the unknown, translate one phrase, then the next, and the equation assembles itself. Pick a problem and step through it &mdash; the phrase being translated lights up in the sentence, in the picture, and in the dictionary all at once.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="artTitle">A picture of the sentence</h2>
+      <svg id="tape" viewBox="0 0 290 180" aria-label="bar model of the quantities in the problem"><g id="art"></g></svg>
+      <div id="cap"></div>
+    </div>
+    <div class="card"><h2>The translator&rsquo;s dictionary</h2>
+      <div id="dict"></div>
+      <div class="note"><b>The one that bites.</b> &ldquo;Seven less than <i>x</i>&rdquo; is <i>x</i> &minus; 7, <b>not</b> 7 &minus; <i>x</i>. The phrase says the small piece first but the algebra writes it last. Problem 2 shows exactly what that mistake costs.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Pick a problem<small>then step through the translation</small></div>
+    <div class="card"><h2>Six problems</h2>
+      <div class="grid" id="picks"></div>
+    </div>
+    <div class="card">
+      <div class="sent" id="sent"></div>
+      <div class="letline" id="let"></div>
+      <div class="hd" id="hdLg" style="display:none">Phrase by phrase</div>
+      <div id="ledger"></div>
+      <div class="hd" id="hdEq" style="display:none">The equation, then the solving</div>
+      <div id="eqs"></div>
+      <div id="info"></div>
+      <div id="extra"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var MINUS='−', DOT='·', ELL='ℓ';
+
+ /* ---------- the dictionary ---------- */
+ var DICT=[
+  {k:'var',e:'a number &middot; what number &middot; how many &middot; the price',v:'a letter'},
+  {k:'eq', e:'is &middot; was &middot; equals &middot; gives &middot; totals &middot; will be',v:'='},
+  {k:'add',e:'more than &middot; sum &middot; increased by &middot; together &middot; older than',v:'+'},
+  {k:'sub',e:'less than &middot; decreased by &middot; fewer than &middot; discount',v:'&minus;'},
+  {k:'mul',e:'of &middot; times &middot; twice &middot; product &middot; each &middot; per',v:'&times;'},
+  {k:'div',e:'quotient &middot; split evenly &middot; shared among',v:'&divide;'},
+  {k:'pct',e:'percent &middot; % &nbsp;(20% = 20/100 = 0.20)',v:'&divide; 100'}
+ ];
+
+ /* ---------- problems ---------- */
+ var P=[
+ {k:'p1',nm:'Five more than',ct:'the gentle opener',col:'#43458f',
+  cap:'Both bars are the same length &mdash; that is all an equals sign ever claims. The two blue boxes are equal but unknown; the gold block is the known 5.',
+  lt:'Let <i>x</i> = the number',
+  sent:[{t:'Five more than',p:0},{t:'twice',p:1},{t:'a number',p:2},{t:'is',p:3},{t:'27',p:4},{t:'.',p:-1}],
+  q:'Find the number.',
+  tape:[{c:'twice the number, plus five',s:[{v:11,t:'x',i:1,k:'x'},{v:11,t:'x',i:1,k:'x'},{v:5,t:'5',k:'k'}]},
+        {c:'and that equals 27',s:[{v:27,t:'27',k:'r'}]}],
+  st:[
+   {hi:[2],dk:['var'],ld:{en:'&ldquo;a number&rdquo;',al:'<i>x</i>'},
+    ti:'Name the unknown before anything else',
+    bd:'Read the sentence once for meaning. Then find the quantity nobody has told you &mdash; here, the number itself &mdash; and give it a letter. Write <b>Let <i>x</i> = the number</b> and leave it on the page where you can see it. Every phrase that follows will be built out of that <i>x</i>.'},
+   {hi:[1,2],th:['0.0','0.1'],dk:['mul'],ld:{en:'&ldquo;twice a number&rdquo;',al:'2<i>x</i>'},
+    ti:'Translate from the inside out',
+    bd:'<b>Twice</b> means two of them, so twice <i>x</i> is <i>x</i> + <i>x</i>, written <b>2<i>x</i></b>. In the picture those are the two blue boxes. You do not know how long one box is &mdash; but you know the two are identical, and that is enough to draw.'},
+   {hi:[0],th:['0.2'],dk:['add'],ld:{en:'&ldquo;five more than&rdquo;',al:'+ 5'},
+    ti:'&ldquo;More than&rdquo; adds on to what you already built',
+    bd:'&ldquo;Five more than 2<i>x</i>&rdquo; means: start at 2<i>x</i>, go up by 5. That is <b>2<i>x</i> + 5</b>. Sanity-test the phrase on a number you can check in your head &mdash; five more than 30 is 35, and 35 is 30 + 5. The gold block on the end of the bar is that 5.',
+    no:{c:'mnem',h:'Why &ldquo;more than&rdquo; forgives you',t:'2<i>x</i> + 5 and 5 + 2<i>x</i> are the same number, so writing the pieces in the wrong order costs nothing here. Subtraction is not so kind. Hold that thought &mdash; problem 2 collects on it.'}},
+   {hi:[3],dk:['eq'],ld:{en:'&ldquo;is&rdquo;',al:'='},
+    ti:'The verb is the equals sign',
+    bd:'The sentence splits at its verb. <b>Is</b>, <b>was</b>, <b>equals</b>, <b>gives</b>, <b>yields</b>, and <b>results in</b> all become <b>=</b>. Everything before the verb has piled up on the left side; everything after it belongs on the right.'},
+   {hi:[4],th:['1.0'],ld:{en:'&ldquo;27&rdquo;',al:'27'},
+    ti:'The right-hand side',
+    bd:'Whatever the sentence claims the pile equals becomes the other side &mdash; here just the number <b>27</b>. Now both bars in the picture are the same total length, which is exactly the claim the equals sign is making.'},
+   {hi:[0,1,2,3,4],eq:{op:'the translated sentence',mx:'2<i>x</i> + 5 = 27'},
+    ti:'Read the whole thing back',
+    bd:'Phrase by phrase, &ldquo;Five more than twice a number is 27&rdquo; has become <b>2<i>x</i> + 5 = 27</b>. Nothing has been solved yet, and that is deliberate: translating and solving are two different jobs, and most word-problem errors happen when someone tries to do both at once.'},
+   {eq:{op:'subtract 5 from both sides',wk:'2<i>x</i> + 5 &minus; 5 = 27 &minus; 5',mx:'2<i>x</i> = <span class="tg">22</span>'},
+    ti:'Peel off the +5',
+    bd:'The 5 is added to 2<i>x</i>, so subtract 5 &mdash; from <b>both</b> sides, which keeps the two bars equal. On the left, +5 &minus; 5 leaves nothing behind. On the right, 27 &minus; 5 = 22.'},
+   {eq:{op:'divide both sides by 2',wk:'2<i>x</i> &divide; 2 = 22 &divide; 2',mx:'<i>x</i> = <span class="tg">11</span>'},
+    ti:'Split the two equal boxes',
+    bd:'Two identical boxes hold 22 between them, so one box holds 11. Dividing both sides by 2 says the same thing in symbols.'},
+   {an:{big:'The number is 11.',
+        ck:['twice 11 &nbsp;=&nbsp; 22','five more than 22 &nbsp;=&nbsp; 27 &nbsp;&check;'],
+        no:'Check against the <b>original English</b>, never against your own equation. If you mistranslated, your equation will happily confirm the wrong answer; the sentence will not.'},
+    ti:'Check it against the words, not the algebra',
+    bd:'Take 11 back to the sentence you started from and walk the phrases forward: twice 11 is 22, five more than 22 is 27. The sentence said 27. It holds.'}
+  ]},
+
+ {k:'p2',nm:'Seven less than',ct:'the reversal trap',col:'#d1495b',
+  cap:'The four blue boxes are the number counted four times. Seven is then <b>taken away</b> from that pile &mdash; the dashed block is what leaves &mdash; and 25 remains.',
+  lt:'Let <i>x</i> = the number',
+  sent:[{t:'Seven less than',p:0},{t:'four times',p:1},{t:'a number',p:2},{t:'is',p:3},{t:'25',p:4},{t:'.',p:-1}],
+  q:'Find the number.',
+  tape:[{c:'four times the number',s:[{v:8,t:'x',i:1,k:'x'},{v:8,t:'x',i:1,k:'x'},{v:8,t:'x',i:1,k:'x'},{v:8,t:'x',i:1,k:'x'}]},
+        {c:'now take seven away',s:[{v:25,t:'25 left',k:'g'},{v:7,t:MINUS+' 7',k:'m'}]},
+        {c:'and that equals 25',s:[{v:25,t:'25',k:'r'}]}],
+  st:[
+   {hi:[2],dk:['var'],ld:{en:'&ldquo;a number&rdquo;',al:'<i>x</i>'},
+    ti:'Same opening move, every time',
+    bd:'The unknown is the number itself. <b>Let <i>x</i> = the number.</b> This never changes: whatever the question asks you to find, that is what gets the letter.'},
+   {hi:[1,2],th:['0.0','0.1','0.2','0.3'],dk:['mul'],ld:{en:'&ldquo;four times a number&rdquo;',al:'4<i>x</i>'},
+    ti:'Build the inner pile first',
+    bd:'<b>Four times</b> the number is <b>4<i>x</i></b> &mdash; four identical boxes in the picture. Build this before you touch the &ldquo;seven less than,&rdquo; because the seven is taken away from <em>this</em> pile.'},
+   {hi:[0],th:['1.1'],dk:['sub'],ld:{en:'&ldquo;seven less than&rdquo;',al:'&minus; 7 &nbsp;(at the end)'},
+    ti:'&ldquo;Less than&rdquo; runs backwards &mdash; read it carefully',
+    bd:'&ldquo;Seven less than 4<i>x</i>&rdquo; means: <b>start at 4<i>x</i> and come down 7</b>. It is <b>4<i>x</i> &minus; 7</b>. It is <em>not</em> 7 &minus; 4<i>x</i>, even though the seven is spoken first.',
+    no:{c:'note',h:'Prove it on numbers you already know',t:'&ldquo;Seven less than twenty&rdquo; is 13. And 20 &minus; 7 = 13, while 7 &minus; 20 = &minus;13. The phrase names the amount removed first but the subtraction writes the starting amount first. Same for <b>fewer than</b>, <b>decreased by</b>, and <b>subtracted from</b>.'}},
+   {hi:[3],dk:['eq'],ld:{en:'&ldquo;is&rdquo;',al:'='},
+    ti:'Split at the verb',
+    bd:'Everything built so far &mdash; 4<i>x</i> &minus; 7 &mdash; sits on the left of the <b>=</b>.'},
+   {hi:[4],th:['2.0'],ld:{en:'&ldquo;25&rdquo;',al:'25'},
+    ti:'The right-hand side',
+    bd:'What remains after the seven is removed is <b>25</b>. Look at the middle bar in the picture: the green piece is the 25 that survives, the dashed piece is the 7 that left.'},
+   {hi:[0,1,2,3,4],eq:{op:'the translated sentence',mx:'4<i>x</i> &minus; 7 = 25'},
+    ti:'The finished translation',
+    bd:'&ldquo;Seven less than four times a number is 25&rdquo; becomes <b>4<i>x</i> &minus; 7 = 25</b>. One phrase reversed itself; the rest went straight across.'},
+   {eq:{op:'add 7 to both sides',wk:'4<i>x</i> &minus; 7 + 7 = 25 + 7',mx:'4<i>x</i> = <span class="tg">32</span>'},
+    ti:'Put the seven back',
+    bd:'Seven was taken away, so add seven &mdash; to both sides. The left side returns to the full pile 4<i>x</i>; the right becomes 25 + 7 = 32.'},
+   {eq:{op:'divide both sides by 4',wk:'4<i>x</i> &divide; 4 = 32 &divide; 4',mx:'<i>x</i> = <span class="tg">8</span>'},
+    ti:'Four equal boxes hold 32',
+    bd:'So one box holds 8.'},
+   {an:{big:'The number is 8.',
+        ck:['four times 8 &nbsp;=&nbsp; 32','seven less than 32 &nbsp;=&nbsp; 25 &nbsp;&check;'],
+        no:'<b>What the reversal would have cost.</b> Writing 7 &minus; 4<i>x</i> = 25 gives &minus;4<i>x</i> = 18, so <i>x</i> = &minus;4.5. Test that against the English: four times &minus;4.5 is &minus;18, and seven less than &minus;18 is &minus;25 &mdash; not 25. The algebra was flawless; the translation was not. Only the sentence can catch that.'},
+    ti:'Check it &mdash; and see what the trap does',
+    bd:'Four times 8 is 32; seven less than 32 is 25. Correct. Now read the box below to see how convincingly wrong the reversed version looks.'}
+  ]},
+
+ {k:'p3',nm:'Ages that add up',ct:'two unknowns, one letter',col:'#2f9e5b',
+  cap:'Maya&rsquo;s bar is built out of three copies of her brother&rsquo;s bar, plus 4. Stack the two of them and you must get 40.',
+  lt:'Let <i>b</i> = the brother&rsquo;s age, in years',
+  sent:[{t:'Maya',p:0},{t:'is',p:1},{t:'four years older than',p:2},{t:'three times',p:3},{t:'her brother&rsquo;s age',p:4},{t:'. Together their ages',p:-1},{t:'total',p:5},{t:'40',p:6},{t:'.',p:-1}],
+  q:'How old is each of them?',
+  tape:[{c:'brother: b',s:[{v:9,t:'b',i:1,k:'x'}]},
+        {c:'Maya: three of those, plus 4',s:[{v:9,t:'b',i:1,k:'x'},{v:9,t:'b',i:1,k:'x'},{v:9,t:'b',i:1,k:'x'},{v:4,t:'4',k:'k'}]},
+        {c:'together they must total 40',s:[{v:9,t:'b',i:1,k:'x'},{v:31,t:'3b + 4',k:'g'}]}],
+  st:[
+   {hi:[4],dk:['var'],ld:{en:'&ldquo;her brother&rsquo;s age&rdquo;',al:'<i>b</i>'},
+    ti:'Give the letter to the age everything else is measured from',
+    bd:'Two people, two unknown ages &mdash; but only one letter is needed. Maya&rsquo;s age is described <em>in terms of</em> her brother&rsquo;s, so make the <b>brother</b> the letter and build Maya out of him. Choose the other way round and you would be stuck describing the brother as (Maya &minus; 4) &divide; 3 before you had even started.'},
+   {hi:[3,4],th:['1.0','1.1','1.2'],dk:['mul'],ld:{en:'&ldquo;three times her brother&rsquo;s age&rdquo;',al:'3<i>b</i>'},
+    ti:'Inside out again',
+    bd:'<b>Three times</b> <i>b</i> is <b>3<i>b</i></b> &mdash; the three blue boxes in Maya&rsquo;s bar.'},
+   {hi:[2],th:['1.3'],dk:['add'],ld:{en:'&ldquo;four years older than&rdquo;',al:'+ 4'},
+    ti:'&ldquo;Older than&rdquo; is just &ldquo;more than&rdquo; wearing a hat',
+    bd:'Four years older than 3<i>b</i> means 3<i>b</i> and then four more: <b>3<i>b</i> + 4</b>. Word problems dress addition up in a hundred costumes &mdash; older, taller, heavier, farther, longer, warmer &mdash; and every one of them is a plus sign.'},
+   {hi:[0,1],ld:{en:'&ldquo;Maya is &hellip;&rdquo;',al:'<i>M</i> = 3<i>b</i> + 4'},
+    ti:'Careful &mdash; not every &ldquo;is&rdquo; is the equation',
+    bd:'This &ldquo;is&rdquo; only <b>names</b> Maya in terms of <i>b</i>. It is a definition you carry along, not the equation you will solve. The equation always comes from the sentence that reports a <em>number</em> you can compare against &mdash; and that sentence is still ahead of you.'},
+   {hi:[5,6],th:['2.0','2.1'],dk:['add','eq'],ld:{en:'&ldquo;together their ages total 40&rdquo;',al:'<i>b</i> + (3<i>b</i> + 4) = 40'},
+    ti:'There is the real equation',
+    bd:'<b>Together</b> means add, and <b>total</b> is another equals sign. His age plus her age is 40. Substitute the definition of Maya straight in &mdash; that is why the parentheses are there, holding her whole age together as one quantity.'},
+   {hi:[0,1,2,3,4,5,6],eq:{op:'the translated sentences',mx:'<i>b</i> + (3<i>b</i> + 4) = 40'},
+    ti:'Two sentences, one equation',
+    bd:'The first sentence gave a definition; the second gave the equation. That is the usual shape of a two-person word problem.'},
+   {eq:{op:'combine like terms',wk:'<i>b</i> + 3<i>b</i> = 4<i>b</i>',mx:'<span class="tg">4<i>b</i></span> + 4 = 40'},
+    ti:'One brother plus three brothers is four brothers',
+    bd:'The parentheses were only holding Maya&rsquo;s age together; since everything is being added, they can come off without changing a sign. Then <i>b</i> + 3<i>b</i> = 4<i>b</i> &mdash; four boxes of the same unknown size.'},
+   {eq:{op:'subtract 4 from both sides',wk:'4<i>b</i> + 4 &minus; 4 = 40 &minus; 4',mx:'4<i>b</i> = <span class="tg">36</span>'},
+    ti:'Strip off the known 4',
+    bd:'The gold block of 4 is the only piece whose size you know, so remove it from both sides and see what the four boxes are worth: 36.'},
+   {eq:{op:'divide both sides by 4',wk:'4<i>b</i> &divide; 4 = 36 &divide; 4',mx:'<i>b</i> = <span class="tg">9</span>'},
+    ti:'One box is 9',
+    bd:'The brother is 9 years old. But stop &mdash; the question did not ask for <i>b</i>.'},
+   {an:{big:'The brother is 9; Maya is 31.',
+        ck:['Maya = 3(9) + 4 = 27 + 4 = 31','9 + 31 &nbsp;=&nbsp; 40 &nbsp;&check;','31 is 4 more than 27 &nbsp;&check;'],
+        no:'<b>Answer the question that was asked.</b> Solving for the letter is not the end of a word problem &mdash; it is the second-to-last step. The question asked for <em>both</em> ages, so go back to the definition and finish. Sense check: both ages are positive whole numbers, which is the only kind an age can be.'},
+    ti:'Finish the job',
+    bd:'Take <i>b</i> = 9 back to the definition: Maya = 3(9) + 4 = 31. Then test both against the original English &mdash; is 31 four more than three times 9? Yes. Do they total 40? Yes.'}
+  ]},
+
+ {k:'p4',nm:'A rectangle',ct:'when you supply the formula',col:'#7a5a8a',
+  cap:'The perimeter bar is two lengths and two widths laid end to end. Drawn to scale, the whole thing measures 42 cm.',
+  lt:'Let <i>w</i> = the width, in cm',
+  sent:[{t:'The length',p:0},{t:'of a rectangle is',p:1},{t:'3 cm more than',p:2},{t:'twice',p:3},{t:'its width',p:4},{t:'. The',p:-1},{t:'perimeter',p:5},{t:'is',p:6},{t:'42 cm',p:7},{t:'.',p:-1}],
+  q:'Find the length and the width.',
+  tape:[{c:'width: w',s:[{v:6,t:'w',i:1,k:'x'}]},
+        {c:'length: twice the width, plus 3',s:[{v:6,t:'w',i:1,k:'x'},{v:6,t:'w',i:1,k:'x'},{v:3,t:'3',k:'k'}]},
+        {c:'perimeter: two lengths and two widths',s:[{v:15,t:ELL,i:1,k:'g'},{v:15,t:ELL,i:1,k:'g'},{v:6,t:'w',i:1,k:'x'},{v:6,t:'w',i:1,k:'x'}]},
+        {c:'and that measures 42 cm',s:[{v:42,t:'42 cm',k:'r'}]}],
+  st:[
+   {hi:[4],dk:['var'],ld:{en:'&ldquo;its width&rdquo;',al:'<i>w</i>'},
+    ti:'Let the width be the letter',
+    bd:'The length is described in terms of the width, so the <b>width</b> gets the letter and the length gets built from it. Same rule as the ages problem: the letter goes to whatever the other quantity leans on.'},
+   {hi:[3,4],th:['1.0','1.1'],dk:['mul'],ld:{en:'&ldquo;twice its width&rdquo;',al:'2<i>w</i>'},
+    ti:'Twice the width',
+    bd:'<b>2<i>w</i></b> &mdash; two width-boxes side by side, the first two pieces of the length bar.'},
+   {hi:[0,1,2],th:['1.2'],dk:['add'],ld:{en:'&ldquo;the length is 3 cm more than &hellip;&rdquo;',al:'<i>&#8467;</i> = 2<i>w</i> + 3'},
+    ti:'Three more centimetres on the end',
+    bd:'The length is <b>2<i>w</i> + 3</b>. Call it <i>&#8467;</i> so it is easier to talk about, but remember it is not a new unknown &mdash; it is a known recipe made of <i>w</i>.'},
+   {hi:[5],th:['2.0','2.1','2.2','2.3'],ld:{en:'&ldquo;perimeter&rdquo;',al:'2<i>&#8467;</i> + 2<i>w</i>'},
+    ti:'Some words are pointers to a formula',
+    bd:'The sentence never says what perimeter means &mdash; it expects you to know. <b>Perimeter is the distance all the way around</b>: two lengths and two widths, so <b>2<i>&#8467;</i> + 2<i>w</i></b>. The same is true of <b>area</b>, of <b>distance = rate &times; time</b>, and of <b>interest = principal &times; rate &times; time</b>. When a word points at a formula, write the formula down before you substitute anything into it.'},
+   {hi:[5,6,7],th:['3.0'],dk:['eq'],ld:{en:'&ldquo;is 42 cm&rdquo;',al:'2(2<i>w</i> + 3) + 2<i>w</i> = 42'},
+    ti:'Substitute the recipe into the formula',
+    bd:'Replace <i>&#8467;</i> with what it actually is, <b>2<i>w</i> + 3</b>, keeping it inside parentheses so the whole length gets doubled &mdash; not just the 2<i>w</i>. Now every symbol in the equation is either a number or <i>w</i>, which is exactly the condition for being solvable.'},
+   {hi:[0,1,2,3,4,5,6,7],eq:{op:'the translated sentences',mx:'2(2<i>w</i> + 3) + 2<i>w</i> = 42'},
+    ti:'The finished translation',
+    bd:'One unknown, one equation. Everything else was English.'},
+   {eq:{op:'distribute the 2',wk:'2(2<i>w</i> + 3) = 2&middot;2<i>w</i> + 2&middot;3',mx:'<span class="tg">4<i>w</i> + 6</span> + 2<i>w</i> = 42'},
+    ti:'Why the 3 gets doubled too',
+    bd:'Two lengths means the <em>whole</em> length twice &mdash; both the 2<i>w</i> part and the 3 part. Written out: (2<i>w</i> + 3) + (2<i>w</i> + 3) = 4<i>w</i> + 6. That is all distributing is; the parentheses were never optional.'},
+   {eq:{op:'combine like terms',wk:'4<i>w</i> + 2<i>w</i> = 6<i>w</i>',mx:'<span class="tg">6<i>w</i></span> + 6 = 42'},
+    ti:'Gather the width-boxes',
+    bd:'Four width-boxes from the two lengths, plus the two widths themselves: six boxes in all, plus the known 6.'},
+   {eq:{op:'subtract 6 from both sides',wk:'6<i>w</i> + 6 &minus; 6 = 42 &minus; 6',mx:'6<i>w</i> = <span class="tg">36</span>'},
+    ti:'Remove the known piece',
+    bd:'Six boxes are worth 36 cm between them.'},
+   {eq:{op:'divide both sides by 6',wk:'6<i>w</i> &divide; 6 = 36 &divide; 6',mx:'<i>w</i> = <span class="tg">6</span>'},
+    ti:'One box is 6 cm',
+    bd:'That is the width. The question also asked for the length.'},
+   {an:{big:'Width 6 cm, length 15 cm.',
+        ck:['length = 2(6) + 3 = 12 + 3 = 15','perimeter = 2(15) + 2(6) = 30 + 12 = 42 &nbsp;&check;','15 is 3 more than twice 6 &nbsp;&check;'],
+        no:'<b>A dimension must be positive.</b> Geometry quietly excludes <i>w</i> &le; 0 &mdash; if the algebra had handed back &minus;6, the arithmetic could still be perfect while the answer was impossible, and that is your signal that the translation went wrong. Always ask whether the number is allowed to exist before you circle it.'},
+    ti:'Check both dimensions in the original words',
+    bd:'Width 6, length 2(6) + 3 = 15. Is the length 3 more than twice the width? 2(6) = 12, and 12 + 3 = 15 &mdash; yes. Is the perimeter 42? 15 + 15 + 6 + 6 = 42 &mdash; yes.'}
+  ]},
+
+ {k:'p5',nm:'Tickets and money',ct:'the total-minus-x move',col:'#b8862f',
+  cap:'Two bars, two different totals: the top counts <b>tickets</b> (240 of them), the bottom counts <b>dollars</b> ($3,270). Each bar splits the same way &mdash; adults, then students.',
+  lt:'Let <i>a</i> = the number of adult tickets sold',
+  sent:[{t:'A theatre sold',p:-1},{t:'240 tickets',p:0},{t:'in all.',p:-1},{t:'Adult tickets were $18 each',p:1},{t:'and',p:-1},{t:'student tickets were $11 each',p:2},{t:'. The box office',p:-1},{t:'took in $3,270',p:3},{t:'.',p:-1}],
+  q:'How many of each kind were sold?',
+  tape:[{g:1,c:'240 tickets in all',s:[{v:90,t:'a  adults',k:'x'},{v:150,t:'240 '+MINUS+' a  students',k:'g'}]},
+        {g:2,c:'$3,270 taken in',s:[{v:1620,t:'$18 '+DOT+' a',k:'x'},{v:1650,t:'$11 '+DOT+' (240 '+MINUS+' a)',k:'g'}]}],
+  st:[
+   {hi:[0],th:['0.0'],dk:['var'],ld:{en:'&ldquo;240 tickets&rdquo; &mdash; of two kinds',al:'<i>a</i> = adults'},
+    ti:'Two unknowns, and still only one letter',
+    bd:'You do not know how many adult tickets sold, and you do not know how many student tickets sold. Name just one of them: <b>Let <i>a</i> = the number of adult tickets</b>. The next step shows why the second unknown does not need a letter of its own.'},
+   {hi:[0],th:['0.1'],dk:['sub'],ld:{en:'the rest of the 240',al:'240 &minus; <i>a</i>'},
+    ti:'The total-minus-<i>x</i> move &mdash; learn this one',
+    bd:'Every ticket is either adult or student, and there are 240 altogether. So once <i>a</i> of them are adult, the students are <b>whatever is left: 240 &minus; <i>a</i></b>. Whenever two quantities are forced to add to a known total, name one of them <i>x</i> and call the other <b>total &minus; <i>x</i></b>. It turns two unknowns into one, every time.'},
+   {hi:[1],th:['1.0'],dk:['mul'],ld:{en:'&ldquo;$18 each&rdquo;',al:'18<i>a</i>'},
+    ti:'&ldquo;Each&rdquo; and &ldquo;per&rdquo; mean multiply',
+    bd:'A price per ticket times a count of tickets gives money: <b>18<i>a</i></b> dollars from the adults. Watch the units &mdash; dollars-per-ticket &times; tickets = dollars. If your units do not come out right, your translation is wrong no matter how tidy it looks.'},
+   {hi:[2],th:['1.1'],dk:['mul'],ld:{en:'&ldquo;$11 each&rdquo;',al:'11(240 &minus; <i>a</i>)'},
+    ti:'The same move on the other group',
+    bd:'Eleven dollars for every student ticket, and there are 240 &minus; <i>a</i> of those: <b>11(240 &minus; <i>a</i>)</b> dollars. The parentheses matter &mdash; every one of those tickets brings in $11, not just the 240 of them.'},
+   {hi:[3],dk:['add','eq'],ld:{en:'&ldquo;took in $3,270&rdquo;',al:'18<i>a</i> + 11(240 &minus; <i>a</i>) = 3270'},
+    ti:'Add the two piles of money',
+    bd:'The money from adults plus the money from students is the whole take. <b>Add only things measured in the same units</b> &mdash; dollars with dollars. The 240 in the first bar is a count of tickets and never gets added to a dollar amount.'},
+   {hi:[0,1,2,3],eq:{op:'the translated sentences',mx:'18<i>a</i> + 11(240 &minus; <i>a</i>) = 3270'},
+    ti:'Three sentences, one equation',
+    bd:'Notice how much of the work happened before any algebra: choosing <i>a</i>, and writing the students as 240 &minus; <i>a</i>. That single choice is what made a two-unknown problem into a one-line equation.'},
+   {eq:{op:'distribute the 11',wk:'11(240 &minus; <i>a</i>) = 11&middot;240 &minus; 11&middot;<i>a</i> = 2640 &minus; 11<i>a</i>',mx:'18<i>a</i> + <span class="tg">2640 &minus; 11<i>a</i></span> = 3270'},
+    ti:'Both pieces inside get multiplied',
+    bd:'Eleven dollars applies to every student ticket, so it applies to the 240 and to the &minus;<i>a</i> alike. Keep the minus sign attached: 11 &times; (&minus;<i>a</i>) = &minus;11<i>a</i>. Dropping that sign is the single most common slip in mixture problems.'},
+   {eq:{op:'combine like terms',wk:'18<i>a</i> &minus; 11<i>a</i> = 7<i>a</i>',mx:'<span class="tg">7<i>a</i></span> + 2640 = 3270'},
+    ti:'What one extra adult ticket is worth',
+    bd:'That 7 has a meaning worth pausing on: an adult ticket brings in $18 while the student ticket it replaces would have brought $11, so <b>each swap gains exactly $7</b>. The algebra found the same number your intuition would.'},
+   {eq:{op:'subtract 2640 from both sides',wk:'7<i>a</i> + 2640 &minus; 2640 = 3270 &minus; 2640',mx:'7<i>a</i> = <span class="tg">630</span>'},
+    ti:'Set the baseline aside',
+    bd:'$2,640 is what 240 student tickets alone would have earned. The real take beat that by $630.'},
+   {eq:{op:'divide both sides by 7',wk:'7<i>a</i> &divide; 7 = 630 &divide; 7',mx:'<i>a</i> = <span class="tg">90</span>'},
+    ti:'$630 of surplus at $7 a swap',
+    bd:'90 adult tickets. And the students are whatever is left.'},
+   {an:{big:'90 adult tickets, 150 student tickets.',
+        ck:['students = 240 &minus; 90 = 150','90(18) = $1,620 &nbsp;and&nbsp; 150(11) = $1,650','1620 + 1650 = $3,270 &nbsp;&check;','90 + 150 = 240 tickets &nbsp;&check;'],
+        no:'<b>Check that the answer is even possible.</b> Here <i>a</i> has to be a whole number with 0 &le; <i>a</i> &le; 240 &mdash; there is no such thing as 90.4 tickets or &minus;12 tickets. If the arithmetic had produced one of those, the equation itself was mistranslated. Word problems carry these hidden restrictions everywhere: counts are whole, prices and lengths are positive, and a percentage of a real quantity cannot exceed 100%.'},
+    ti:'Check both totals, and check the answer is possible',
+    bd:'Two conditions were given, so test both: the tickets must total 240, and the money must total $3,270. An answer that satisfies only one of them is a warning that a phrase went astray.'}
+  ]},
+
+ {k:'p6',nm:'20% off',ct:'percent of what?',col:'#2f6f9f',
+  cap:'The unknown is the <b>whole</b> bar &mdash; the original price, which is 100%. The discount is cut from that bar, and the green piece is the $68 you actually hand over.',
+  lt:'Let <i>p</i> = the original price, in dollars',
+  sent:[{t:'After a',p:-1},{t:'20% discount',p:0},{t:', a jacket',p:-1},{t:'sells for $68',p:1},{t:'.',p:-1},{t:'What was the original price',p:2},{t:'?',p:-1}],
+  q:'Find the original price.',
+  tape:[{c:'original price: p, which is 100%',s:[{v:85,t:'p',i:1,k:'x'}]},
+        {c:'what you pay, plus what you save',s:[{v:68,t:'0.80p = $68',k:'g'},{v:17,t:'0.20p',k:'k'}]}],
+  st:[
+   {hi:[2],dk:['var'],ld:{en:'&ldquo;the original price&rdquo;',al:'<i>p</i>'},
+    ti:'The letter goes to the price the percent is taken OF',
+    bd:'A percentage is always a percentage <em>of</em> something, and that something is called the <b>base</b>. Here the 20% is taken off the original price, so the original price is the base &mdash; and the base is what gets the letter. Getting this backwards is what makes percent problems feel slippery.'},
+   {hi:[0],th:['1.1'],dk:['pct','mul'],ld:{en:'&ldquo;20% discount&rdquo;',al:'0.20<i>p</i>'},
+    ti:'Percent means divide by a hundred; &ldquo;of&rdquo; means multiply',
+    bd:'20% = 20/100 = <b>0.20</b>. And &ldquo;20% <b>of</b> <i>p</i>&rdquo; is <b>0.20<i>p</i></b> &mdash; the word <em>of</em> is a multiplication sign in disguise. That gold piece is the money that comes off.'},
+   {hi:[0],th:['1.0'],dk:['sub'],ld:{en:'&ldquo;after&rdquo; the discount',al:'<i>p</i> &minus; 0.20<i>p</i>'},
+    ti:'What you pay is what is left',
+    bd:'Start at the full price and take the discount away: <b><i>p</i> &minus; 0.20<i>p</i></b>. In the picture, the green piece is exactly the bar minus the gold piece.'},
+   {hi:[1],dk:['eq'],ld:{en:'&ldquo;sells for $68&rdquo;',al:'= 68'},
+    ti:'&ldquo;Sells for&rdquo; is another equals sign',
+    bd:'The $68 is what you pay <em>after</em> the cut &mdash; it is the green piece, not the whole bar. Reading the 68 as the original price is the mistake this problem is built to expose.'},
+   {hi:[0,1,2],eq:{op:'the translated sentence',mx:'<i>p</i> &minus; 0.20<i>p</i> = 68'},
+    ti:'The finished translation',
+    bd:'One unknown, one equation &mdash; and notice the unknown appears twice. That is normal, and the next step handles it.'},
+   {eq:{op:'combine like terms',wk:'<i>p</i> = 1.00<i>p</i>, so 1.00<i>p</i> &minus; 0.20<i>p</i> = 0.80<i>p</i>',mx:'<span class="tg">0.80<i>p</i></span> = 68'},
+    ti:'Why a lone <i>p</i> counts as 1.00<i>p</i>',
+    bd:'A variable with no visible coefficient has an invisible <b>1</b> in front of it. Writing <i>p</i> as 1.00<i>p</i> makes the subtraction obvious: 1.00 &minus; 0.20 = 0.80, so what you pay is <b>0.80<i>p</i></b> &mdash; 80% of the original. That matches plain sense: if 20% comes off, 80% stays on.'},
+   {eq:{op:'divide both sides by 0.80',wk:'0.80<i>p</i> &divide; 0.80 = 68 &divide; 0.80',mx:'<i>p</i> = <span class="tg">85</span>'},
+    ti:'Undo the multiplication',
+    bd:'<i>p</i> is multiplied by 0.80, so divide by 0.80: 68 &divide; 0.80 = 85. Check the size of that before moving on &mdash; dividing by a number smaller than 1 makes the result <em>bigger</em>, which is right, because the original price must be more than the sale price.'},
+   {an:{big:'The original price was $85.',
+        ck:['20% of 85 = 0.20(85) = $17','85 &minus; 17 = $68 &nbsp;&check;'],
+        no:'<b>The tempting wrong answer.</b> Adding 20% back onto $68 gives 68 + 13.60 = $81.60 &mdash; and that is wrong, because the 20% was taken of the <em>original</em> $85, not of the sale price. 20% of 85 is $17; 20% of 68 is only $13.60. A percentage is meaningless until you say what it is a percentage of.'},
+    ti:'Check it &mdash; and refuse the shortcut',
+    bd:'Twenty percent of 85 is 17, and 85 &minus; 17 = 68. It holds. Now read below for the shortcut almost everyone reaches for first, and why it quietly gives a different number.'}
+  ]}
+ ];
+
+ /* ---------- colours for the bar model ---------- */
+ var CK={x:'#43458f',g:'#2f9e5b',k:'#b8862f',r:'#7a5a8a'};
+
+ function drawTape(pr,hi){
+  var rows=pr.tape, W=290, PAD=4, BH=25, ROW=44;
+  var gm={};
+  rows.forEach(function(r){var s=0;r.s.forEach(function(g){s+=g.v;});var q=r.g||1;gm[q]=Math.max(gm[q]||0,s);});
+  var out='', y=6, any=(hi&&hi.length>0);
+  rows.forEach(function(r,ri){
+   var sc=(W-2*PAD)/gm[r.g||1], x=PAD;
+   out+='<text x="'+PAD+'" y="'+(y+8)+'" font-size="9.6" font-weight="700" fill="#7d7f94" font-family="Inter,sans-serif">'+r.c+'</text>';
+   r.s.forEach(function(g,gi){
+    var w=g.v*sc, on=any&&hi.indexOf(ri+'.'+gi)>=0, op=any?(on?1:0.26):1;
+    var by=y+14;
+    if(g.k==='m'){
+     out+='<rect x="'+x.toFixed(1)+'" y="'+by+'" width="'+Math.max(w-1.5,1).toFixed(1)+'" height="'+BH+'" rx="4" fill="#fffdf9" stroke="#d1495b" stroke-width="'+(on?2.2:1.5)+'" stroke-dasharray="4 3" opacity="'+op+'"/>';
+     if(w>30)out+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(by+17)+'" font-size="10.5" font-weight="700" fill="#b23145" text-anchor="middle" font-family="Inter,sans-serif" opacity="'+op+'">'+g.t+'</text>';
+    }else{
+     out+='<rect x="'+x.toFixed(1)+'" y="'+by+'" width="'+Math.max(w-1.5,1).toFixed(1)+'" height="'+BH+'" rx="4" fill="'+CK[g.k]+'" opacity="'+op+'"'+(on?' stroke="#22243a" stroke-width="2"':'')+'/>';
+     if(w>28)out+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(by+17)+'" font-size="10.6" font-weight="700" fill="#fff" text-anchor="middle" font-family="'+(g.i?'Georgia,serif':'Inter,sans-serif')+'"'+(g.i?' font-style="italic"':'')+' opacity="'+op+'">'+g.t+'</text>';
+    }
+    x+=w;
+   });
+   y+=ROW;
+  });
+  return {s:out,h:y};
+ }
+
+ /* ---------- state ---------- */
+ var cur=0, i=0;
+
+ function picks(){
+  $('picks').innerHTML=P.map(function(p,n){
+   return '<button class="it'+(n===cur?' on':'')+'" data-n="'+n+'"><span class="nm">'+(n+1)+'. '+p.nm+'</span><span class="s">'+p.ct+'</span></button>';
+  }).join('');
+  Array.prototype.forEach.call(document.querySelectorAll('#picks .it'),function(b){
+   b.onclick=function(){cur=+b.dataset.n;i=0;picks();render();};
+  });
+ }
+
+ function render(){
+  var pr=P[cur], st=pr.st[i];
+
+  /* sentence */
+  var done={}, k;
+  for(k=0;k<i;k++){ if(pr.st[k].hi) pr.st[k].hi.forEach(function(h){done[h]=1;}); }
+  var sen='';
+  pr.sent.forEach(function(w,nn){
+   if(nn>0&&'.,?!;:'.indexOf(w.t.charAt(0))<0) sen+=' ';
+   if(w.p<0){ sen+='<span>'+w.t+'</span>'; return; }
+   var c='ph'+(st.hi&&st.hi.indexOf(w.p)>=0?' on':(done[w.p]?' done':''));
+   sen+='<span class="'+c+'">'+w.t+'</span>';
+  });
+  $('sent').innerHTML=sen+'<span class="qn">'+pr.q+'</span>';
+
+  /* let-line */
+  $('let').innerHTML='<span class="lb">the unknown</span>'+pr.lt;
+
+  /* ledger */
+  var lg='';
+  for(k=0;k<=i;k++){ var s=pr.st[k]; if(!s.ld)continue;
+   lg+='<div class="lg'+(k===i?' cur':'')+'"><span class="en">'+s.ld.en+'</span><span class="ar">&rarr;</span><span class="mx">'+s.ld.al+'</span></div>';
+  }
+  $('ledger').innerHTML=lg;
+  $('hdLg').style.display=lg?'block':'none';
+
+  /* equations */
+  var eq='';
+  for(k=0;k<=i;k++){ var t=pr.st[k]; if(!t.eq)continue;
+   if(k===i&&t.eq.wk) eq+='<div class="wk"><span class="lb">why</span>'+t.eq.wk+'</div>';
+   eq+='<div class="dl'+(k===i?' cur':'')+'"><span class="mx">'+t.eq.mx+'</span><span class="pl">'+t.eq.op+'</span></div>';
+  }
+  $('eqs').innerHTML=eq;
+  $('hdEq').style.display=eq?'block':'none';
+
+  /* picture */
+  var d=drawTape(pr,st.th||[]);
+  $('tape').setAttribute('viewBox','0 0 290 '+d.h);
+  $('art').innerHTML=d.s;
+  $('cap').innerHTML=pr.cap;
+  $('artTitle').innerHTML=pr.nm+' &mdash; a picture of the sentence';
+
+  /* dictionary */
+  $('dict').innerHTML=DICT.map(function(d2){
+   var on=st.dk&&st.dk.indexOf(d2.k)>=0;
+   return '<div class="dc'+(on?' on':'')+'"><span class="k">'+d2.e+'</span><span class="v">'+d2.v+'</span></div>';
+  }).join('');
+
+  /* info + extras */
+  $('info').innerHTML='<span class="n">'+st.ti+'</span>'+st.bd;
+  var ex='';
+  if(st.no) ex+='<div class="'+st.no.c+'"><b>'+st.no.h+'.</b> '+st.no.t+'</div>';
+  if(st.an){
+   ex+='<div class="ansbox"><span class="big">'+st.an.big+'</span>'+
+       st.an.ck.map(function(c){return '<span class="ck">'+c+'</span>';}).join('')+'</div>';
+   if(st.an.no) ex+='<div class="note">'+st.an.no+'</div>';
+  }
+  $('extra').innerHTML=ex;
+
+  /* stage */
+  $('stage').style.background=pr.col;
+  $('stage').innerHTML=pr.nm+'<small>step '+(i+1)+' of '+pr.st.length+' &nbsp;&middot;&nbsp; '+st.ti+'</small>';
+  $('prev').disabled=(i===0);
+  $('next').disabled=(i===pr.st.length-1);
+ }
+
+ $('prev').onclick=function(){ if(i>0){i--;render();} };
+ $('next').onclick=function(){ if(i<P[cur].st.length-1){i++;render();} };
+ document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowLeft'&&i>0){i--;render();}
+  else if(e.key==='ArrowRight'&&i<P[cur].st.length-1){i++;render();}
+ });
+
+ picks(); render();
+})();
+</script>
+</body>
+</html>

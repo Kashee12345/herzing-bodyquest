@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>The Microbial Death Curve</title>
+<meta name="description" content="Interactive death curve: microbes die by a constant fraction per unit time. Slide exposure time and flip between log and linear scales. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:1.05fr 0.95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.slab{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:700;color:var(--muted);margin:14px 2px 7px;}
+.slab #tval{font-size:14px;color:var(--teal-dk);font-family:var(--disp);}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:5px;background:#e6dcf0;accent-color:var(--teal);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(60,42,92,.45);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(60,42,92,.45);cursor:pointer;}
+.stat{display:flex;gap:8px;margin-top:14px;}
+.stat div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:9px 4px;background:#fff;}
+.stat .k{font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);}
+.stat .v{display:block;font-size:16px;font-weight:800;color:var(--teal-dk);font-family:var(--disp);margin-top:3px;line-height:1;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 8</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 8</div>
+  <h1>The Microbial Death Curve</h1>
+  <div class="intro">When you hit a microbial population with heat, radiation, or a chemical, the survivors don't drop by a fixed <i>number</i> each minute &mdash; they drop by a fixed <b>fraction</b>. Slide through exposure time, then flip the y-axis between log and linear to see why that one fact changes everything.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Survivor curve</h2>
+    <svg viewBox="0 0 340 250" aria-label="microbial death curve plot"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">1,000,000 survivors<small>0 min · 0-log reduction · 0% killed</small></div>
+    <div class="card">
+      <div class="seg" id="scale">
+        <button data-m="log" class="on">Log&#8321;&#8320; scale<small>survivors fall on a straight line</small></button>
+        <button data-m="lin">Linear scale<small>raw survivor count</small></button>
+      </div>
+      <div class="slab"><span>Exposure time</span><span id="tval">0 min</span></div>
+      <input id="t" type="range" min="0" max="6" step="0.25" value="0">
+      <div class="stat">
+        <div><span class="k">Survivors</span><span class="v" id="sSurv">1,000,000</span></div>
+        <div><span class="k">% killed</span><span class="v" id="sKill">0%</span></div>
+        <div><span class="k">Log&#8321;&#8320; drop</span><span class="v" id="sLog">0</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>Why the log-scale line is straight:</b> a constant <i>fraction</i> lost per minute becomes a constant <i>distance</i> dropped on a log&#8321;&#8320; axis. Flip to <b>Linear scale</b> and the very same deaths look like a curve that &ldquo;flattens out&rdquo; &mdash; but the microbes are still dying just as fast.</div>
+      <div class="note"><b>D-value = decimal reduction time.</b> Here one minute kills 90% (one log&#8321;&#8320;), so D&nbsp;=&nbsp;1&nbsp;min. Real D-values depend on the organism, temperature, and agent. Because you can only ever cut the count by tenths, sterilization is defined by probability &mdash; a Sterility Assurance Level of 10&#8315;&#8310; means under one chance in a million a microbe survives. Cleaning an instrument first lowers the starting bioburden, so the same exposure clears that margin sooner.</div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var N0=1e6, D=1, Tmax=6;         // start count, D-value (min/log), max exposure
+ var mode='log';
+ // plot geometry
+ var L=46, R=326, T=16, B=208, W=R-L, H=B-T;
+ function surv(t){ return N0*Math.pow(10,-t/D); }
+ function xt(t){ return L + t/Tmax*W; }
+ function ylog(N){ var v=Math.log(Math.max(N,1))/Math.LN10; return B - v/6*H; }
+ function ylin(N){ return B - N/N0*H; }
+ function yy(N){ return mode==='log'?ylog(N):ylin(N); }
+ function trim(x,d){ var s=(+x).toFixed(d); if(s.indexOf('.')>-1){ s=s.replace(/0+$/,'').replace(/\.$/,''); } return s; }
+ function comma(n){ return Math.round(n).toLocaleString('en-US'); }
+
+ function draw(t){
+   var s='';
+   // axis lines
+   s+='<line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+B+'" stroke="#c9bfda" stroke-width="1.3"/>';
+   s+='<line x1="'+L+'" y1="'+B+'" x2="'+R+'" y2="'+B+'" stroke="#c9bfda" stroke-width="1.3"/>';
+   // horizontal gridlines + y labels
+   if(mode==='log'){
+     var labs=['1','10','100','1K','10K','100K','1M'];
+     for(var k=0;k<=6;k++){
+       var y=B - k/6*H;
+       if(k>0){ s+='<line x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+R+'" y2="'+y.toFixed(1)+'" stroke="#efe6f6" stroke-width="1"/>'; }
+       s+='<text x="'+(L-7)+'" y="'+(y+3.3).toFixed(1)+'" font-size="9" fill="#837a94" text-anchor="end">'+labs[k]+'</text>';
+     }
+   } else {
+     var lin=[['1M',1e6],['750K',.75e6],['500K',.5e6],['250K',.25e6],['0',0]];
+     for(var j=0;j<lin.length;j++){
+       var yl=ylin(lin[j][1]);
+       if(lin[j][1]>0){ s+='<line x1="'+L+'" y1="'+yl.toFixed(1)+'" x2="'+R+'" y2="'+yl.toFixed(1)+'" stroke="#efe6f6" stroke-width="1"/>'; }
+       s+='<text x="'+(L-7)+'" y="'+(yl+3.3).toFixed(1)+'" font-size="9" fill="#837a94" text-anchor="end">'+lin[j][0]+'</text>';
+     }
+   }
+   // vertical minute ticks + x labels
+   for(var m=0;m<=6;m++){
+     var x=xt(m);
+     s+='<text x="'+x.toFixed(1)+'" y="'+(B+15)+'" font-size="9" fill="#837a94" text-anchor="middle">'+m+'</text>';
+   }
+   // axis titles
+   s+='<text x="'+((L+R)/2)+'" y="'+(B+30)+'" font-size="9.5" fill="#544b66" text-anchor="middle" font-weight="700">Exposure time (min)</text>';
+   s+='<text transform="translate(12,'+((T+B)/2)+') rotate(-90)" font-size="9.5" fill="#544b66" text-anchor="middle" font-weight="700">'+(mode==='log'?'Survivors (log₁₀)':'Survivors')+'</text>';
+   // the curve (same underlying deaths, drawn in the active scale)
+   var pts=[];
+   for(var i=0;i<=140;i++){ var tt=i/140*Tmax; var N=surv(tt); pts.push(xt(tt).toFixed(1)+','+yy(N).toFixed(1)); }
+   s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="var(--teal)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+   // current marker + guide lines
+   var Nc=surv(t), cx=xt(t), cy=yy(Nc);
+   s+='<line x1="'+cx.toFixed(1)+'" y1="'+cy.toFixed(1)+'" x2="'+cx.toFixed(1)+'" y2="'+B+'" stroke="var(--coral)" stroke-width="1.2" stroke-dasharray="3 3"/>';
+   s+='<line x1="'+L+'" y1="'+cy.toFixed(1)+'" x2="'+cx.toFixed(1)+'" y2="'+cy.toFixed(1)+'" stroke="var(--coral)" stroke-width="1.2" stroke-dasharray="3 3"/>';
+   s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="5.5" fill="var(--coral)" stroke="#fff" stroke-width="2"/>';
+   return s;
+ }
+
+ function info(t){
+   if(t<0.001){
+     return '<span class="n">Time zero</span>Nothing has happened yet &mdash; <b>1,000,000</b> live microbes. Start the clock and watch how they fall.';
+   }
+   return '<span class="n">A constant fraction falls</span>'+
+     'After <b>'+trim(t,2)+' min</b>, about <b>'+comma(surv(t))+'</b> microbes are still alive. '+
+     'The agent removes the <b>same 90% of the survivors every minute</b> &mdash; not 90% of the original crowd, but 90% of whoever is <i>still standing</i>. '+
+     'That is why the number never quite reaches zero: it just keeps getting ten times smaller.';
+ }
+
+ function render(){
+   var t=+$("t").value;
+   var Nc=surv(t);
+   var killed=100*(1-Math.pow(10,-t/D));
+   $("art").innerHTML=draw(t);
+   $("tval").innerHTML=trim(t,2)+' min';
+   $("sSurv").innerHTML=comma(Nc);
+   $("sKill").innerHTML=trim(killed,4)+'%';
+   $("sLog").innerHTML=trim(t/D,2);
+   $("stage").innerHTML=comma(Nc)+' survivors<small>'+trim(t,2)+' min · '+trim(t/D,2)+'-log reduction · '+trim(killed,4)+'% killed</small>';
+   $("info").innerHTML=info(t);
+ }
+
+ $("t").oninput=render;
+ document.querySelectorAll('#scale button').forEach(function(b){
+   b.onclick=function(){
+     mode=b.dataset.m;
+     document.querySelectorAll('#scale button').forEach(function(x){ x.classList.remove('on'); });
+     b.classList.add('on');
+     render();
+   };
+ });
+ render();
+})();
+</script>
+</body>
+</html>

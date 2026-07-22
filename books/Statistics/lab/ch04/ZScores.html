@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Z-Scores</title>
+<meta name="description" content="Standardize a value and lay two scores from completely different distributions on a single unitless ruler. Live z arithmetic, a shared standard scale, and the z-to-percentile curve — every number computed on the page.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:96px;text-align:right;font-variant-numeric:tabular-nums;}
+.sl.a input[type=range]{background:linear-gradient(90deg,#2f6f9f,#bcd3e4);} .sl.a .nv{color:#2f6f9f;}
+.sl.a input[type=range]::-webkit-slider-thumb{background:#2f6f9f;} .sl.a input[type=range]::-moz-range-thumb{background:#2f6f9f;}
+.sl.b input[type=range]{background:linear-gradient(90deg,#b8862f,#e6d6b4);} .sl.b .nv{color:#8a6a20;}
+.sl.b input[type=range]::-webkit-slider-thumb{background:#b8862f;} .sl.b input[type=range]::-moz-range-thumb{background:#b8862f;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.za .vv{color:#2f6f9f;} .tiles div.zb .vv{color:#8a6a20;}
+.cov{display:flex;gap:6px;margin-top:8px;}
+.cov div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:6px 3px;background:#fff;font-size:9.3px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.cov div .v{display:block;font-size:14px;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;letter-spacing:0;}
+.cov div .r{display:block;font-size:9px;color:var(--muted);font-weight:600;letter-spacing:0;text-transform:none;margin-top:1px;}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.pl{display:flex;align-items:center;gap:7px;font-size:11.6px;font-weight:800;color:var(--teal-dk);margin-top:11px;margin-bottom:1px;}
+.pl i{width:10px;height:10px;border-radius:3px;flex:none;}
+.pl span{font-weight:600;color:var(--muted);font-size:10.7px;letter-spacing:0;}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.45;}
+.hd{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;margin-bottom:6px;}
+.grid.g5{grid-template-columns:repeat(5,1fr);}
+.grid.g5 .it{text-align:center;font-size:12px;padding:8px 3px;}
+.grid .it .s{display:block;margin-top:2px;font-weight:600;font-size:10px;}
+#info .eq{font-size:12.5px;color:var(--teal-dk);background:#e2eff5;border-radius:8px;padding:9px 11px;margin-top:9px;line-height:1.7;font-variant-numeric:tabular-nums;}
+#info .eq .r{display:flex;justify-content:space-between;gap:10px;}
+#info .eq .r b{white-space:nowrap;}
+#info .eq .r.tot{border-top:1px solid #c2d8e4;margin-top:3px;padding-top:3px;}
+#info .eq .h{display:block;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;}
+#info .eq.ea{background:#e6eef6;} #info .eq.ea .h{color:#2f6f9f;}
+#info .eq.eb{background:#f7f0e0;} #info .eq.eb .h{color:#8a6a20;} #info .eq.eb{color:#5a4212;}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,1fr);}.sl label{font-size:10px;}.sl .nv{min-width:84px;font-size:13px;}.row .btn{font-size:12px;padding:10px 4px;}.grid.g5 .it{font-size:11px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 4</div>
+  <h1>Z-Scores</h1>
+  <div class="intro">A finishing time of 23.5 minutes and one of 51 minutes. A price of $452k and one of $1,050k. A height in centimetres and a weight in kilograms. These pairs cannot be compared &mdash; not because the arithmetic is hard, but because the numbers are measured on different rulers. <b>Standardizing</b> fixes that with two operations: subtract the mean, then divide by the standard deviation. What comes out is a <b>z-score</b>, a pure number with no units at all, and pure numbers <i>can</i> be compared. Move the sliders below and watch both values land on a single shared scale.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2>Two distributions, two different rulers</h2>
+      <div class="pl" id="labA"><i style="background:#2f6f9f"></i><b>A</b></div>
+      <svg viewBox="0 0 340 136" aria-label="distribution A drawn on its own measurement axis with the chosen value marked"><g id="panA"></g></svg>
+      <div class="pl" id="labB"><i style="background:#b8862f"></i><b>B</b></div>
+      <svg viewBox="0 0 340 136" aria-label="distribution B drawn on its own measurement axis with the chosen value marked"><g id="panB"></g></svg>
+      <div class="cap" id="cap1"></div>
+    </div>
+    <div class="card"><h2>The same two values on one ruler</h2>
+      <svg viewBox="0 0 340 178" aria-label="both values plotted on a shared standard scale measured in standard deviations"><g id="zax"></g></svg>
+      <div class="lgd">
+        <span><i style="background:#cfe3ee"></i>within 1 SD</span>
+        <span><i style="background:#e8f1f6"></i>within 2 SD</span>
+        <span><i style="background:#2f6f9f"></i>value A</span>
+        <span><i style="background:#b8862f"></i>value B</span>
+      </div>
+      <div class="cap" id="cap2"></div>
+    </div>
+    <div class="card"><h2 id="c3t">From a z-score to a percentile</h2>
+      <svg viewBox="0 0 340 186" aria-label="the share of a bell-shaped distribution falling at or below each z-score"><g id="pct"></g></svg>
+      <div class="cap" id="cap3"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Z-scores<small>move a slider to begin</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="0" class="on">Two races<small>lower is better</small></button>
+        <button data-v="1">Two markets<small>different price levels</small></button>
+        <button data-v="2">Height &amp; weight<small>different quantities</small></button>
+      </div>
+      <div class="sl a"><label for="aSl" id="aLab">Value A</label><input type="range" id="aSl"><span class="nv" id="aVal">&mdash;</span></div>
+      <div class="sl b"><label for="bSl" id="bLab">Value B</label><input type="range" id="bSl"><span class="nv" id="bVal">&mdash;</span></div>
+      <div class="sl"><label for="sSl">B&rsquo;s spread</label><input type="range" id="sSl" min="70" max="160" step="5" value="100"><span class="nv" id="sVal">&times;1.00</span></div>
+      <div class="row"><button class="btn" id="reset">&#8634; Reset</button><button class="btn" id="samp">&#8635; New sample</button></div>
+      <div class="row"><button class="btn solid" id="match">Give B the same z as A</button></div>
+      <div class="hd">Send A to a chosen z</div>
+      <div class="grid g5" id="jump"></div>
+      <div class="hd">Report the percentile as</div>
+      <div class="modeseg" id="pseg">
+        <button data-v="0" class="on">Share at or below</button>
+        <button data-v="1">Share above</button>
+      </div>
+      <div class="tiles">
+        <div class="za"><span class="lb">z on A</span><span class="vv" id="tZA">&mdash;</span></div>
+        <div class="zb"><span class="lb">z on B</span><span class="vv" id="tZB">&mdash;</span></div>
+        <div><span class="lb" id="lbPA">A &mdash; at or below</span><span class="vv" id="tPA">&mdash;</span></div>
+        <div><span class="lb" id="lbPB">B &mdash; at or below</span><span class="vv" id="tPB">&mdash;</span></div>
+      </div>
+      <div class="cov">
+        <div>A &minus; its mean<span class="v" id="dA">&mdash;</span><span class="r">raw units</span></div>
+        <div>B &minus; its mean<span class="v" id="dB">&mdash;</span><span class="r">raw units</span></div>
+        <div>gap in z<span class="v" id="dZ">&mdash;</span><span class="r">standard deviations</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem">Read <b>z = (x &minus; mean) &divide; SD</b> as two separate moves and it stops being a formula to memorize. <b>Subtracting the mean recenters the distribution</b> so that its middle sits at zero; what is left, <b>x &minus; mean</b>, is the deviation &mdash; how far this value is from typical, and on which side. <b>Dividing by the standard deviation rescales it</b> so that one SD becomes one unit of the new scale. And here is the part worth pausing on: the numerator is in minutes and the denominator is in minutes, so <b>the units cancel</b>. Dollars over dollars, kilograms over kilograms &mdash; whatever you feed in, <b>z comes out as a bare number</b>. That cancellation is the entire trick. It is why a race time, an asking price and a body weight can be laid side by side on one axis, and why the same z means the same thing no matter what was measured. The move also runs backwards: <b>x = mean + z &times; SD</b> turns a standing back into a raw value, which is exactly what the five buttons above do to A.</div>
+      <div class="note">Five ways this goes wrong. <b>First, a z-score is not a percentile.</b> Converting one to the other &mdash; the third chart &mdash; runs the number through a <i>bell curve</i>, so that percentage is only as good as the assumption that the data are roughly bell-shaped. Standardizing itself assumes nothing at all; only the percentile step does. Real race times, incomes and prices are usually right-skewed, so treat those percentages as a model&rsquo;s estimate, not a count. <b>Second, standardizing does not change the shape.</b> It slides and stretches the axis, nothing more. A skewed distribution standardized is a skewed distribution with new labels &mdash; it does not become normal, and no amount of dividing will make it so. <b>Third, a negative z is not automatically bad.</b> In the race scenario the more negative z is the better run. Whether high or low is desirable is a fact about the world, not about the arithmetic, and z will never tell you which. <b>Fourth, |z| &gt; 2 is a rough flag, not a verdict.</b> It marks a value as unusual relative to its own group; it does not make it an error, an outlier by any formal rule, or a problem. In a bell-shaped group about 1 value in 20 clears that bar routinely. <b>Fifth, z is only as good as the mean and SD you divide by.</b> Standardize against the wrong reference group and the arithmetic stays flawless while the answer becomes meaningless.</div>
+      <div class="fn" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var CA='#2f6f9f',CB='#b8862f';
+
+ /* ---------- seeded PRNG so the page opens identically every time ---------- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function nrm(r){var u=1-r(),v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+
+ /* ---------- standard normal density and cumulative ---------- */
+ function pdf(z){return Math.exp(-z*z/2)/2.5066282746310002;}
+ /* Zelen & Severo rational approximation, |error| < 7.5e-8 */
+ function cdf(z){
+  var neg=z<0,x=neg?-z:z,t=1/(1+0.2316419*x);
+  var poly=t*(0.319381530+t*(-0.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429))));
+  var v=1-pdf(x)*poly;
+  return neg?1-v:v;
+ }
+
+ /* ================== three pairs that cannot be compared raw ================== */
+ var SC=[
+  {k:'race',goal:-1,
+   A:{nm:'5 km road race',mu:27.4,sd:3.1,un:' min',dec:1,tdec:0,stp:0.1,ax:'finishing time in the 5 km (minutes)',uw:'minutes',def:23.5,one:'time'},
+   B:{nm:'10 km road race',mu:56.0,sd:5.8,un:' min',dec:1,tdec:0,stp:0.1,ax:'finishing time in the 10 km (minutes)',uw:'minutes',def:51.0,one:'time'},
+   up:'slower than the field',dn:'faster than the field',
+   win:'the stronger run',rule:'a fast time is a low time and the <b>more negative</b> z marks the better performance',
+   q:'One runner entered both races. Which was the stronger run relative to its own field?',
+   story:'Twenty-three and a half minutes against fifty-one minutes. The second number is more than twice the first and that comparison is worthless &mdash; they are different distances over different fields. What survives the change of ruler is the standing: how far each time sits from its own race&rsquo;s mean, counted in that race&rsquo;s own standard deviations. That is the number a coach actually wants, and it is the only one of the two that can be argued about.'},
+  {k:'price',goal:1,
+   A:{nm:'Riverbend listings',mu:340,sd:62,pre:'$',un:'k',dec:0,tdec:0,stp:1,ax:'asking price in Riverbend (thousands of dollars)',uw:'thousands of dollars',def:452,one:'listing'},
+   B:{nm:'Lakeshore listings',mu:815,sd:195,pre:'$',un:'k',dec:0,tdec:0,stp:5,ax:'asking price in Lakeshore (thousands of dollars)',uw:'thousands of dollars',def:1050,one:'listing'},
+   up:'expensive for its market',dn:'cheap for its market',
+   win:'the pricier listing relative to its own market',rule:'a higher price means a higher z and the <b>larger</b> z stands further above its own market',
+   q:'Two listings, two towns. Which one is the bigger stretch for its own market?',
+   story:'A million-dollar listing sounds expensive until you learn the town&rsquo;s typical house costs $815k and prices swing by nearly $200k either way. Standardizing strips out both the price level and the price spread, leaving only the question that transfers between towns: how far above ordinary is this, measured in that market&rsquo;s own units of variation? The dearer house in dollars is very often the more ordinary house in z.'},
+  {k:'growth',goal:0,
+   A:{nm:'Height for age',mu:110.0,sd:4.8,un:' cm',dec:1,tdec:0,stp:0.1,ax:'height (centimetres)',uw:'centimetres',def:116.0,one:'measurement'},
+   B:{nm:'Weight for age',mu:19.5,sd:2.6,un:' kg',dec:1,tdec:0,stp:0.1,ax:'weight (kilograms)',uw:'kilograms',def:25.4,one:'measurement'},
+   up:'above the reference mean',dn:'below the reference mean',
+   win:'the more unusual of the two measurements',rule:'neither direction counts as better here and the comparison rests on <b>size alone</b>, where the larger |z| is the more unusual',
+   q:'One child, two measurements. Which one stands further from what is typical?',
+   story:'Centimetres and kilograms are not merely different scales; they measure different things, and no arithmetic will ever turn one into the other. Standardizing sidesteps the problem entirely. It does not convert height into weight &mdash; it converts each into a statement about <i>rarity within its own reference group</i>, and rarity is a currency both can be paid in. Growth charts do exactly this, then quote the answer as a percentile so nobody has to look at a z at all.'}
+ ];
+
+ var N=40;
+ var JZ=[-2,-1,0,1,2];
+
+ var sc=0,ai=0,bi=0,spr=100,pmode=0,seed=0;
+ var zsA=[],zsB=[],mZA=0,sZA=0;
+
+ function A(){return SC[sc].A;} function B(){return SC[sc].B;}
+ function sdA(){return A().sd;}
+ function sdB(){return B().sd*spr/100;}
+ function rawA(){return rnd(ai*A().stp);}
+ function rawB(){return rnd(bi*B().stp);}
+ function zA(){return (rawA()-A().mu)/sdA();}
+ function zB(){return (rawB()-B().mu)/sdB();}
+ function rnd(v){return Math.round(v*1e6)/1e6;}
+
+ /* slider bounds in step-units, always +/- 3.4 base SDs around the mean */
+ function loI(D){return Math.ceil((D.mu-3.4*D.sd)/D.stp);}
+ function hiI(D){return Math.floor((D.mu+3.4*D.sd)/D.stp);}
+ function clampI(D,i){var a=loI(D),b=hiI(D);return i<a?a:(i>b?b:i);}
+
+ /* ---------- the seeded sample: 40 z-values reused by every chart ---------- */
+ function gen(){
+  var r=mulberry32(20260718+seed*7919+sc*104729),i,z,t=0,q=0;
+  zsA=[];zsB=[];
+  for(i=0;i<N;i++){do{z=nrm(r);}while(z>3.2||z<-3.2);zsA.push(z);}
+  for(i=0;i<N;i++){do{z=nrm(r);}while(z>3.2||z<-3.2);zsB.push(z);}
+  for(i=0;i<N;i++)t+=zsA[i];
+  mZA=t/N;
+  for(i=0;i<N;i++)q+=(zsA[i]-mZA)*(zsA[i]-mZA);
+  sZA=Math.sqrt(q/(N-1));
+ }
+
+ /* ---------- formatting ---------- */
+ function num(x,dec){
+  if(dec===0&&Math.abs(x)>=1000)return Math.round(x).toLocaleString('en-US');
+  return x.toFixed(dec);
+ }
+ function fv(D,x){return (D.pre||'')+num(x,D.dec)+(D.un||'');}
+ function fd(D,x){return (x<0?'&minus;':'+')+(D.pre||'')+num(Math.abs(x),D.dec)+(D.un||'');}
+ function zf(z){return (z<0?'&minus;':'+')+Math.abs(z).toFixed(2);}
+ function zp(z){return (z<0?'-':'+')+Math.abs(z).toFixed(2);}
+ function fp(p){
+  if(p<0.0005)return '&lt;0.05%';
+  if(p>0.9995)return '&gt;99.95%';
+  if(p<0.01||p>0.99)return (p*100).toFixed(2)+'%';
+  return (p*100).toFixed(1)+'%';
+ }
+ function pOf(z){return pmode?1-cdf(z):cdf(z);}
+ function niceStep(span){
+  var raw=span/6,mag=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10)),u=raw/mag,st;
+  if(u<1.5)st=1;else if(u<3)st=2;else if(u<7)st=5;else st=10;
+  return st*mag;
+ }
+ function chip(x,y,txt,col){
+  var w=11+txt.length*5.0,cx=x;
+  if(cx-w/2<2)cx=2+w/2;
+  if(cx+w/2>338)cx=338-w/2;
+  return '<rect x="'+(cx-w/2).toFixed(1)+'" y="'+y+'" width="'+w.toFixed(1)+'" height="14" rx="7" fill="'+col+'"/>'+
+         '<text x="'+cx.toFixed(1)+'" y="'+(y+10.1)+'" font-size="9.1" font-weight="800" fill="#fff" text-anchor="middle">'+txt+'</text>';
+ }
+
+ /* ============ card 1: each distribution on its own measurement axis ============ */
+ /* the x-window is fixed by the BASE sd, so turning the spread dial visibly
+    widens or narrows curve B against a ruler that does not move */
+ var PX0=26,PX1=332,PTOP=18,PBASE=98;
+ function drawPanel(id,D,raw,sde,col){
+  var W0=D.mu-3.6*D.sd,W1=D.mu+3.6*D.sd,s='',i;
+  function X(v){var t=PX0+(v-W0)/(W1-W0)*(PX1-PX0);return t<PX0?PX0:(t>PX1?PX1:t);}
+  var Hm=PBASE-PTOP,hs=0.70*(D.sd/sde);
+  function Yv(v){var z=(v-D.mu)/sde,h=Hm*hs*Math.exp(-z*z/2);if(h>Hm)h=Hm;return PBASE-h;}
+
+  /* the density curve, drawn from the computed normal model */
+  var d='M'+PX0+' '+PBASE.toFixed(1);
+  for(i=0;i<=152;i++){var v=W0+(W1-W0)*i/152;d+=' L'+X(v).toFixed(1)+' '+Yv(v).toFixed(1);}
+  d+=' L'+PX1+' '+PBASE.toFixed(1)+' Z';
+  s+='<path d="'+d+'" fill="'+col+'" opacity=".15"/>';
+  s+='<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="1.9" opacity=".85"/>';
+
+  /* the mean */
+  var mx=X(D.mu);
+  s+='<line x1="'+mx.toFixed(1)+'" y1="'+Yv(D.mu).toFixed(1)+'" x2="'+mx.toFixed(1)+'" y2="'+PBASE+'" stroke="#1c4454" stroke-width="1.3" stroke-dasharray="3 3"/>';
+  s+='<text x="'+mx.toFixed(1)+'" y="'+(Yv(D.mu)-4).toFixed(1)+'" font-size="8.6" font-weight="800" fill="#1c4454" text-anchor="middle">mean</text>';
+
+  /* a bracket exactly one standard deviation wide, in raw units */
+  var b0=mx,b1=X(D.mu+sde),by=PBASE-13;
+  s+='<line x1="'+b0.toFixed(1)+'" y1="'+by+'" x2="'+b1.toFixed(1)+'" y2="'+by+'" stroke="#1c4454" stroke-width="1.3"/>';
+  s+='<line x1="'+b0.toFixed(1)+'" y1="'+(by-3)+'" x2="'+b0.toFixed(1)+'" y2="'+(by+3)+'" stroke="#1c4454" stroke-width="1.3"/>';
+  s+='<line x1="'+b1.toFixed(1)+'" y1="'+(by-3)+'" x2="'+b1.toFixed(1)+'" y2="'+(by+3)+'" stroke="#1c4454" stroke-width="1.3"/>';
+  s+='<text x="'+((b0+b1)/2).toFixed(1)+'" y="'+(by-6)+'" font-size="8.4" font-weight="800" fill="#1c4454" text-anchor="middle">1 SD = '+fv(D,sde)+'</text>';
+
+  /* 40 seeded values from this distribution, as a rug just above the axis */
+  var zs=(id==='panA')?zsA:zsB;
+  for(i=0;i<N;i++){
+   var xv=D.mu+sde*zs[i];
+   if(xv>=W0&&xv<=W1)s+='<circle cx="'+X(xv).toFixed(1)+'" cy="'+(PBASE-4)+'" r="1.7" fill="'+col+'" opacity=".65"/>';
+  }
+
+  /* the chosen value */
+  var vx=X(raw);
+  s+='<line x1="'+vx.toFixed(1)+'" y1="17" x2="'+vx.toFixed(1)+'" y2="'+PBASE+'" stroke="'+col+'" stroke-width="2"/>';
+  s+='<circle cx="'+vx.toFixed(1)+'" cy="'+PBASE+'" r="3.6" fill="'+col+'" stroke="#fff" stroke-width="1.4"/>';
+  s+=chip(vx,1,fv(D,raw).replace('&minus;','-'),col);
+
+  /* the measurement axis */
+  s+='<line x1="'+PX0+'" y1="'+PBASE+'" x2="'+PX1+'" y2="'+PBASE+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  var st=niceStep(W1-W0),t0=Math.ceil(W0/st)*st,v2;
+  for(v2=t0;v2<=W1+st*1e-6;v2+=st){
+   var tx=X(v2);
+   s+='<line x1="'+tx.toFixed(1)+'" y1="'+PBASE+'" x2="'+tx.toFixed(1)+'" y2="'+(PBASE+4)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+   s+='<text x="'+tx.toFixed(1)+'" y="'+(PBASE+15)+'" font-size="8.4" font-weight="700" fill="#78868d" text-anchor="middle">'+v2.toFixed(D.tdec)+'</text>';
+  }
+  s+='<text x="179" y="131" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">'+D.ax+'</text>';
+  $(id).innerHTML=s;
+ }
+
+ /* ================ card 2: one shared, unitless standard scale ================ */
+ var ZX0=26,ZX1=330,ZTOP=34,ZBASE=124;
+ function drawZ(){
+  var s='',i,za=zA(),zb=zB();
+  function X(z){var t=ZX0+(z+3.5)/7*(ZX1-ZX0);return t<ZX0?ZX0:(t>ZX1?ZX1:t);}
+  var Hm=ZBASE-ZTOP;
+  function Y(z){return ZBASE-Hm*Math.exp(-z*z/2);}
+
+  s+='<rect x="'+X(-2).toFixed(1)+'" y="30" width="'+(X(2)-X(-2)).toFixed(1)+'" height="'+(ZBASE-30)+'" fill="#e8f1f6"/>';
+  s+='<rect x="'+X(-1).toFixed(1)+'" y="30" width="'+(X(1)-X(-1)).toFixed(1)+'" height="'+(ZBASE-30)+'" fill="#cfe3ee"/>';
+
+  var d='M'+X(-3.5).toFixed(1)+' '+ZBASE;
+  for(i=0;i<=140;i++){var z=-3.5+7*i/140;d+=' L'+X(z).toFixed(1)+' '+Y(z).toFixed(1);}
+  d+=' L'+X(3.5).toFixed(1)+' '+ZBASE+' Z';
+  s+='<path d="'+d+'" fill="none" stroke="#2f6f8a" stroke-width="2"/>';
+
+  s+='<line x1="'+X(0).toFixed(1)+'" y1="30" x2="'+X(0).toFixed(1)+'" y2="'+ZBASE+'" stroke="#1c4454" stroke-width="1.3" stroke-dasharray="3 3"/>';
+
+  /* the two standardized samples, one rug each */
+  for(i=0;i<N;i++)s+='<circle cx="'+X(zsA[i]).toFixed(1)+'" cy="110" r="1.7" fill="'+CA+'" opacity=".6"/>';
+  for(i=0;i<N;i++)s+='<circle cx="'+X(zsB[i]).toFixed(1)+'" cy="119" r="1.7" fill="'+CB+'" opacity=".6"/>';
+  s+='<text x="6" y="113" font-size="8.2" font-weight="800" fill="'+CA+'">A</text>';
+  s+='<text x="6" y="122" font-size="8.2" font-weight="800" fill="'+CB+'">B</text>';
+
+  /* the two values */
+  s+='<line x1="'+X(za).toFixed(1)+'" y1="30" x2="'+X(za).toFixed(1)+'" y2="'+ZBASE+'" stroke="'+CA+'" stroke-width="2"/>';
+  s+='<circle cx="'+X(za).toFixed(1)+'" cy="'+ZBASE+'" r="3.8" fill="'+CA+'" stroke="#fff" stroke-width="1.4"/>';
+  s+='<line x1="'+X(zb).toFixed(1)+'" y1="30" x2="'+X(zb).toFixed(1)+'" y2="'+ZBASE+'" stroke="'+CB+'" stroke-width="2"/>';
+  s+='<circle cx="'+X(zb).toFixed(1)+'" cy="'+ZBASE+'" r="3.8" fill="'+CB+'" stroke="#fff" stroke-width="1.4"/>';
+  s+=chip(X(za),1,'A  z = '+zp(za),CA);
+  s+=chip(X(zb),16,'B  z = '+zp(zb),CB);
+
+  s+='<line x1="'+ZX0+'" y1="'+ZBASE+'" x2="'+ZX1+'" y2="'+ZBASE+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  for(i=-3;i<=3;i++){
+   var tx=X(i);
+   s+='<line x1="'+tx.toFixed(1)+'" y1="'+ZBASE+'" x2="'+tx.toFixed(1)+'" y2="'+(ZBASE+4)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+   s+='<text x="'+tx.toFixed(1)+'" y="'+(ZBASE+15)+'" font-size="8.6" font-weight="700" fill="#78868d" text-anchor="middle">'+(i>0?'+':'')+i+'</text>';
+  }
+  s+='<text x="178" y="157" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">z &mdash; standard deviations from that value&rsquo;s own mean</text>';
+  s+='<text x="178" y="171" font-size="9.2" font-weight="800" fill="#1c4454" text-anchor="middle">no minutes, no dollars, no kilograms: the units cancelled out</text>';
+  $("zax").innerHTML=s;
+ }
+
+ /* ============ card 3: the z-to-percentile map, computed from the curve ============ */
+ var QX0=44,QX1=328,QY0=20,QY1=146;
+ function drawPct(){
+  var s='',i,za=zA(),zb=zB();
+  function X(z){var t=QX0+(z+3.5)/7*(QX1-QX0);return t<QX0?QX0:(t>QX1?QX1:t);}
+  function Y(p){return QY1-p*(QY1-QY0);}
+
+  for(i=0;i<=4;i++){
+   var gy=Y(i/4);
+   s+='<line x1="'+QX0+'" y1="'+gy.toFixed(1)+'" x2="'+QX1+'" y2="'+gy.toFixed(1)+'" stroke="#e7eef2" stroke-width="1"/>';
+   s+='<text x="'+(QX0-6)+'" y="'+(gy+3.2).toFixed(1)+'" font-size="8.4" font-weight="700" fill="#78868d" text-anchor="end">'+(i*25)+'%</text>';
+  }
+  for(i=-3;i<=3;i++){
+   var gx=X(i);
+   s+='<line x1="'+gx.toFixed(1)+'" y1="'+QY0+'" x2="'+gx.toFixed(1)+'" y2="'+QY1+'" stroke="#eff4f7" stroke-width="1"/>';
+   s+='<text x="'+gx.toFixed(1)+'" y="'+(QY1+15)+'" font-size="8.6" font-weight="700" fill="#78868d" text-anchor="middle">'+(i>0?'+':'')+i+'</text>';
+  }
+
+  var d='M'+X(-3.5).toFixed(1)+' '+Y(pOf(-3.5)).toFixed(1);
+  for(i=1;i<=140;i++){var z=-3.5+7*i/140;d+=' L'+X(z).toFixed(1)+' '+Y(pOf(z)).toFixed(1);}
+  s+='<path d="'+d+'" fill="none" stroke="#2f6f8a" stroke-width="2.4"/>';
+
+  function mark(z,col){
+   var p=pOf(z),x=X(z),y=Y(p),o='';
+   o+='<line x1="'+QX0+'" y1="'+y.toFixed(1)+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+col+'" stroke-width="1.1" stroke-dasharray="3 3"/>';
+   o+='<line x1="'+x.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+x.toFixed(1)+'" y2="'+QY1+'" stroke="'+col+'" stroke-width="1.1" stroke-dasharray="3 3"/>';
+   o+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="4.4" fill="'+col+'" stroke="#fff" stroke-width="1.6"/>';
+   return o;
+  }
+  s+=mark(za,CA)+mark(zb,CB);
+  s+=chip(X(za),2,'A '+fp(pOf(za)),CA);
+  s+=chip(X(zb),16,'B '+fp(pOf(zb)),CB);
+
+  s+='<line x1="'+QX0+'" y1="'+QY0+'" x2="'+QX0+'" y2="'+QY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<line x1="'+QX0+'" y1="'+QY1+'" x2="'+QX1+'" y2="'+QY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<text x="186" y="178" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">z &mdash; and the share of a <tspan font-weight="800" fill="#1c4454">bell-shaped</tspan> distribution '+(pmode?'above':'at or below')+' it</text>';
+  $("pct").innerHTML=s;
+ }
+
+ /* ========================== the reading panel ========================== */
+ function drawInfo(){
+  var S=SC[sc],a=A(),b=B(),ra=rawA(),rb=rawB(),sa=sdA(),sb=sdB(),za=zA(),zb=zB(),t='';
+  var tie=Math.abs(za-zb)<0.005;
+  var aWins=S.goal===0?(Math.abs(za)>Math.abs(zb)):(S.goal>0?(za>zb):(za<zb));
+  var wn=aWins?('A &mdash; '+a.nm):('B &mdash; '+b.nm);
+
+  t+='<span class="n">'+(tie?'A dead heat on the standard scale':wn)+'</span>';
+  t+=S.q+' The raw numbers &mdash; <b>'+fv(a,ra)+'</b> and <b>'+fv(b,rb)+'</b> &mdash; cannot answer it, because they are not measured against the same thing. ';
+  t+='Standardized, A sits <b>'+Math.abs(za).toFixed(2)+'</b> standard deviation'+(Math.abs(za).toFixed(2)==='1.00'?'':'s')+' '+(za<0?'below':'above')+' its own mean and B sits <b>'+Math.abs(zb).toFixed(2)+'</b> '+(Math.abs(zb).toFixed(2)==='1.00'?'standard deviation':'standard deviations')+' '+(zb<0?'below':'above')+' its own mean. Since '+S.rule+', ';
+  t+=tie?'the two are effectively equivalent: the same standing, reached in two different distributions.':('<b>'+(aWins?'A':'B')+'</b> is '+S.win+'.');
+
+  t+='<div class="eq ea"><span class="h">A &middot; '+a.nm+'</span>'+
+     '<div class="r"><span>value x</span><b>'+fv(a,ra)+'</b></div>'+
+     '<div class="r"><span>&minus; mean</span><b>&minus;'+fv(a,a.mu)+'</b></div>'+
+     '<div class="r"><span>= deviation</span><b>'+fd(a,ra-a.mu)+'</b></div>'+
+     '<div class="r"><span>&divide; SD</span><b>&divide; '+fv(a,sa)+'</b></div>'+
+     '<div class="r tot"><span>= z</span><b>'+zf(za)+'</b></div></div>';
+  t+='<div class="eq eb"><span class="h">B &middot; '+b.nm+'</span>'+
+     '<div class="r"><span>value x</span><b>'+fv(b,rb)+'</b></div>'+
+     '<div class="r"><span>&minus; mean</span><b>&minus;'+fv(b,b.mu)+'</b></div>'+
+     '<div class="r"><span>= deviation</span><b>'+fd(b,rb-b.mu)+'</b></div>'+
+     '<div class="r"><span>&divide; SD</span><b>&divide; '+fv(b,sb)+'</b></div>'+
+     '<div class="r tot"><span>= z</span><b>'+zf(zb)+'</b></div></div>';
+
+  t+='<div class="dd">Notice what happened to the units. The deviation for A is in '+a.uw+' and so is its standard deviation, so the division leaves <b>'+zf(za)+'</b> with nothing attached &mdash; not '+zf(za)+' anything. The same is true of B, which is why the two can share the axis in the middle chart. Read backwards, <b>x = mean + z &times; SD</b> returns you to raw units: A&rsquo;s z of '+zf(za)+' is '+fv(a,a.mu)+' '+(za<0?'&minus;':'+')+' '+Math.abs(za).toFixed(2)+' &times; '+fv(a,sa)+' = <b>'+fv(a,ra)+'</b>.</div>';
+
+  if(spr!==100){
+   t+='<div class="dd"><b>You have set B&rsquo;s spread to &times;'+(spr/100).toFixed(2)+'.</b> B&rsquo;s value has not moved and neither has its mean &mdash; only the standard deviation you divide by, now '+fv(b,sb)+' instead of '+fv(b,b.sd)+'. That alone dragged z'+(spr<100?' outward to ':' inward to ')+'<b>'+zf(zb)+'</b>. The same raw measurement is unremarkable in a scattered group and striking in a tight one, and z is the number that knows the difference.</div>';
+  }
+
+  var pa=pOf(za),pb=pOf(zb);
+  t+='<div class="dd">If &mdash; and only if &mdash; each distribution really is close to bell-shaped, those z-scores convert to percentiles: about <b>'+fp(pa)+'</b> of A&rsquo;s distribution falls '+(pmode?'above':'at or below')+' '+fv(a,ra)+', and about <b>'+fp(pb)+'</b> of B&rsquo;s falls '+(pmode?'above':'at or below')+' '+fv(b,rb)+'. Those two percentages come from the bell curve, not from the data.</div>';
+
+  t+='<div class="loc">'+S.story+'</div>';
+  $("info").innerHTML=t;
+ }
+
+ /* ============================== chrome ============================== */
+ function render(){
+  var S=SC[sc],a=A(),b=B(),ra=rawA(),rb=rawB(),sa=sdA(),sb=sdB(),za=zA(),zb=zB();
+
+  drawPanel('panA',a,ra,sa,CA);
+  drawPanel('panB',b,rb,sb,CB);
+  drawZ();drawPct();drawInfo();
+
+  $("labA").innerHTML='<i style="background:'+CA+'"></i><b>A &middot; '+a.nm+'</b> <span>mean '+fv(a,a.mu)+' &middot; SD '+fv(a,sa)+'</span>';
+  $("labB").innerHTML='<i style="background:'+CB+'"></i><b>B &middot; '+b.nm+'</b> <span>mean '+fv(b,b.mu)+' &middot; SD '+fv(b,sb)+'</span>';
+  $("aVal").innerHTML=fv(a,ra);
+  $("bVal").innerHTML=fv(b,rb);
+  $("sVal").innerHTML='&times;'+(spr/100).toFixed(2);
+
+  $("tZA").innerHTML=zf(za);
+  $("tZB").innerHTML=zf(zb);
+  $("tPA").innerHTML=fp(pOf(za));
+  $("tPB").innerHTML=fp(pOf(zb));
+  $("lbPA").innerHTML='A &mdash; '+(pmode?'above':'at or below');
+  $("lbPB").innerHTML='B &mdash; '+(pmode?'above':'at or below');
+  $("dA").innerHTML=fd(a,ra-a.mu);
+  $("dB").innerHTML=fd(b,rb-b.mu);
+  $("dZ").innerHTML=Math.abs(za-zb).toFixed(2);
+
+  var tie=Math.abs(za-zb)<0.005;
+  var aWins=S.goal===0?(Math.abs(za)>Math.abs(zb)):(S.goal>0?(za>zb):(za<zb));
+  $("stage").style.background=tie?'#2f6f8a':(aWins?CA:CB);
+  $("stage").innerHTML='A: z = '+zf(za)+' &nbsp;&nbsp;·&nbsp;&nbsp; B: z = '+zf(zb)+
+    '<small>'+(tie?'level &mdash; the same standing in two different distributions':((aWins?'A':'B')+' is '+S.win))+'</small>';
+
+  $("cap1").innerHTML='Two curves, two axes, and no way to compare a point on one with a point on the other. Look at the brackets: <b>one standard deviation is '+fv(a,sa)+' on top and '+fv(b,sb)+' underneath</b>, so the same raw gap means something completely different in each panel. The forty dots on each baseline are a seeded random sample from that distribution. The x-window is pinned to the original spread, so turning the spread dial visibly stretches or squeezes curve B against a ruler that stays put.';
+
+  $("cap2").innerHTML='Both values have been recentered and rescaled onto one axis whose unit is &ldquo;one standard deviation of whichever distribution the value came from.&rdquo; A stands at <b>'+zf(za)+'</b> and B at <b>'+zf(zb)+'</b>, a gap of <b>'+Math.abs(za-zb).toFixed(2)+'</b>. The two rugs are the same forty-and-forty sampled values from the chart above, standardized &mdash; they now overlap almost perfectly, because standardizing gives every distribution the same center and the same width. What it does <i>not</i> do is change any distribution&rsquo;s shape.';
+
+  $("c3t").innerHTML=pmode?'From a z-score to the share above it':'From a z-score to a percentile';
+  $("cap3").innerHTML='Feed a z into a bell curve and it comes back as a proportion. The curve is steep in the middle and flat in the tails, so <b>equal steps in z are not equal steps in percentile</b>: going from z = 0 to z = 1 moves you 34.1 percentage points, while going from z = 2 to z = 3 moves you only 2.1. That is why a z of 3 is dramatic and a z of 1 is ordinary. <b>This chart, and only this chart, assumes the data are bell-shaped</b> &mdash; the z-scores themselves needed no such assumption.';
+
+  $("jump").innerHTML=JZ.map(function(z){
+   var v=rnd(clampI(a,Math.round((a.mu+z*a.sd)/a.stp))*a.stp);
+   var on=Math.abs(za-z)<0.005?' on':'';
+   return '<button class="it'+on+'" data-v="'+z+'">z = '+(z>0?'+':'')+z+'<span class="s">'+fv(a,v)+'</span></button>';
+  }).join('');
+  document.querySelectorAll('#jump .it').forEach(function(btn){
+   btn.onclick=function(){
+    ai=clampI(a,Math.round((a.mu+(+btn.dataset.v)*a.sd)/a.stp));
+    $("aSl").value=ai;render();
+   };
+  });
+
+  $("fnote").innerHTML='Every figure on this page is computed live from the values currently on screen &mdash; the curves are normal densities evaluated point by point, and the percentiles come from a rational approximation to the standard normal cumulative function accurate to better than one part in ten million. The forty dots per distribution are drawn from a seeded pseudo-random generator, so the page opens the same way each time and &ldquo;New sample&rdquo; draws a fresh one. Standardized against the stated mean and SD, A&rsquo;s current sample has mean <b>'+mZA.toFixed(3)+'</b> and standard deviation <b>'+sZA.toFixed(3)+'</b> &mdash; near 0 and 1, but not exactly, because it is a sample. Standardize a dataset against <i>its own</i> mean and SD and you get exactly 0 and exactly 1, every time.';
+ }
+
+ /* ---------- setting up a scenario ---------- */
+ function load(){
+  var a=A(),b=B();
+  $("aSl").min=loI(a);$("aSl").max=hiI(a);$("aSl").step=1;
+  $("bSl").min=loI(b);$("bSl").max=hiI(b);$("bSl").step=1;
+  ai=clampI(a,Math.round(a.def/a.stp));
+  bi=clampI(b,Math.round(b.def/b.stp));
+  spr=100;$("sSl").value=100;
+  $("aSl").value=ai;$("bSl").value=bi;
+  gen();
+ }
+
+ /* ---------- wiring ---------- */
+ $("aSl").oninput=function(){ai=+this.value;render();};
+ $("bSl").oninput=function(){bi=+this.value;render();};
+ $("sSl").oninput=function(){spr=+this.value;render();};
+ $("reset").onclick=function(){load();render();};
+ $("samp").onclick=function(){seed++;gen();render();};
+ $("match").onclick=function(){
+  var b=B();
+  bi=clampI(b,Math.round((b.mu+zA()*sdB())/b.stp));
+  $("bSl").value=bi;render();
+ };
+ document.querySelectorAll('#seg button').forEach(function(btn){
+  btn.onclick=function(){
+   sc=+btn.dataset.v;
+   document.querySelectorAll('#seg button').forEach(function(x){x.className='';});
+   btn.className='on';
+   load();render();
+  };
+ });
+ document.querySelectorAll('#pseg button').forEach(function(btn){
+  btn.onclick=function(){
+   pmode=+btn.dataset.v;
+   document.querySelectorAll('#pseg button').forEach(function(x){x.className='';});
+   btn.className='on';
+   render();
+  };
+ });
+
+ load();render();
+})();
+</script>
+</body>
+</html>

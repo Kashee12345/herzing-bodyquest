@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Balance the Equation</title>
+<meta name="description" content="Solve linear equations on a balance scale. Do the same thing to both sides, watch the blocks come off in pairs, and see the variable end up alone.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.98fr 1.02fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+#tracks{grid-template-columns:repeat(5,1fr);}
+#tracks .it{padding:8px 4px;text-align:center;display:block;}
+#tracks .nm{display:block;font-size:11.5px;line-height:1.2;}
+#tracks .s{display:block;font-family:var(--math);font-size:12px;margin-top:4px;color:var(--muted);}
+#tracks .it.on .s{color:rgba(255,255,255,.9);}
+@media (max-width:620px){#tracks{grid-template-columns:repeat(2,1fr);}#tracks .it:nth-child(5){grid-column:span 2;}}
+#mb{min-height:214px;margin-top:12px;}
+.dl{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:6px 2px;border-bottom:1px dashed var(--line);}
+.dl:last-child{border-bottom:none;}
+.mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.7;}
+.dl.cur .mx{font-size:20px;color:var(--ink);font-weight:600;}
+.pl{flex:none;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);white-space:nowrap;}
+.dl.cur .pl{color:var(--gold);}
+.tg{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.dl:not(.cur) .tg{background:transparent;box-shadow:none;padding:0;}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;}
+.fr .nu{border-bottom:1.6px solid currentColor;padding:0 6px 2px;}
+.fr .de{padding:2px 6px 0;}
+#cap{font-size:12.5px;color:var(--soft);text-align:center;line-height:1.5;margin-top:8px;}
+#cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--muted);}
+.lgd span{display:inline-flex;align-items:center;gap:6px;}
+.lgd i{display:inline-block;flex:none;border-radius:3px;}
+.bx{width:22px;height:15px;background:#43458f;}
+.bu{width:14px;height:14px;background:#b8862f;}
+.bm{width:14px;height:14px;background:#fffdf9;box-shadow:inset 0 0 0 1.7px #d1495b;}
+.sl{margin-top:4px;}
+.sl label{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:700;color:var(--soft);margin-bottom:2px;}
+.sl label b{font-family:var(--math);font-size:16px;color:var(--teal-dk);}
+input[type=range]{width:100%;accent-color:var(--teal);height:24px;cursor:pointer;}
+.arith{font-family:var(--math);font-size:13.5px;color:var(--soft);line-height:1.75;margin-top:4px;}
+.arith .lb{font-family:var(--sans);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-right:6px;}
+.arith b{color:var(--teal-dk);}
+.verdict{margin-top:9px;text-align:center;font-size:12.5px;font-weight:700;color:#237a45;background:#e5f3ea;border-radius:8px;padding:9px 11px;line-height:1.5;}
+.verdict.off{color:#8a6a20;background:#fbf3e2;}
+.verdict.bad{color:#b23145;background:#fae5e8;}
+.eqbox{font-family:var(--math);font-size:16px;text-align:center;color:var(--teal-dk);font-weight:600;margin-top:6px;}
+.eqbox .sm{display:block;font-family:var(--sans);font-size:11.5px;font-weight:600;color:var(--muted);margin-top:3px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 2</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 2</div>
+  <h1>Balance the Equation</h1>
+  <div class="intro">An equals sign is not an instruction &mdash; it is a <b>claim that two things weigh the same</b>. So picture a balance scale. You may add, remove, double, or halve as much as you like, and the scale stays level <b>as long as you do the very same thing to both pans</b>. Keep doing that until one pan holds nothing but <i>x</i>, and the other pan has told you the answer.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="artTitle">The scale at this step</h2>
+      <svg viewBox="0 0 290 205" aria-label="balance scale showing the current step"><g id="art"></g></svg>
+      <div id="cap"></div>
+      <div class="lgd">
+        <span><i class="bx"></i> one <i>x</i> &mdash; unknown weight</span>
+        <span><i class="bu"></i> one unit</span>
+        <span><i class="bm"></i> a &minus;1 &mdash; cancels a unit</span>
+      </div>
+    </div>
+    <div class="card"><h2>Weigh it yourself</h2>
+      <div class="sl"><label><span>try a value for <i>x</i></span><b id="lx">0</b></label>
+        <input type="range" id="sx" min="0" max="10" step="1" value="0" aria-label="trial value of x"></div>
+      <svg viewBox="0 0 290 172" aria-label="scale tilting for the trial value"><g id="live"></g></svg>
+      <div class="arith" id="arith"></div>
+      <div class="verdict" id="verdict"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Pick an equation<small>then press Next &rsaquo;</small></div>
+    <div class="card">
+      <div class="grid" id="tracks"></div>
+      <div id="mb"></div>
+      <div id="info"></div>
+      <div class="note" id="note"></div>
+      <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+    </div>
+    <div class="card"><h2>Why <i>both</i> sides?</h2>
+      <div class="modeseg" id="modes">
+        <button data-m="B">Same move, both sides</button>
+        <button data-m="O">Left side only</button>
+      </div>
+      <svg viewBox="0 0 290 172" aria-label="what happens when the move is applied to one side only"><g id="one"></g></svg>
+      <div class="eqbox" id="oneeq"></div>
+      <div class="verdict" id="onev"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var IND='#43458f', GLD='#b8862f', RED='#d1495b';
+
+ /* ---------- math written as HTML only (no LaTeX anywhere) ---------- */
+ var xi='<i>x</i>';
+ function HL(s){return '<span class="tg">'+s+'</span>';}
+ function FR(n,d){return '<span class="fr"><span class="nu">'+n+'</span><span class="de">'+d+'</span></span>';}
+ function N(v){return v<0?'&minus;'+(-v):''+v;}
+
+ /* ---------- block geometry ---------- */
+ var BW={x:24,u:13,m:13,g:42}, BH={x:20,u:13,m:13,g:20};
+ function blockSvg(k,x,y,dead){
+   var w=BW[k],h=BH[k],s='';
+   var fill=dead?'#eef0f7':(k==='x'?IND:(k==='u'?GLD:'#fffdf9'));
+   var stroke=dead?'#c9ccdd':(k==='m'?RED:'none');
+   var tcol=dead?'#aeb1c8':(k==='m'?RED:'#fff');
+   if(k==='g'){
+     s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="5" fill="#eef0f7" stroke="'+(dead?'#c9ccdd':IND)+'" stroke-width="1.5" stroke-dasharray="3 2"/>';
+     s+='<text x="'+(x+w/2)+'" y="'+(y+h/2+4)+'" text-anchor="middle" font-size="11" font-family="Georgia,serif" fill="'+(dead?'#aeb1c8':'#262a5c')+'"><tspan font-style="italic">x</tspan>&#8722;2</text>';
+     return s;
+   }
+   s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="3.5" fill="'+fill+'"'+(stroke==='none'?'':' stroke="'+stroke+'" stroke-width="1.7"')+'/>';
+   var fs=(k==='x')?13:9.5;
+   var lab=(k==='x')?'<tspan font-style="italic">x</tspan>':(k==='u'?'1':'&#8722;');
+   s+='<text x="'+(x+w/2)+'" y="'+(y+h/2+fs*0.36)+'" text-anchor="middle" font-size="'+fs+'" font-family="Georgia,serif" font-weight="700" fill="'+tcol+'">'+lab+'</text>';
+   if(dead){s+='<line x1="'+(x-1)+'" y1="'+(y+h+2)+'" x2="'+(x+w+1)+'" y2="'+(y-2)+'" stroke="'+RED+'" stroke-width="2" stroke-linecap="round"/>';}
+   return s;
+ }
+ function packRows(items,maxW){
+   var list=[],rows=[[]],w=0,i,k,it;
+   for(i=0;i<items.length;i++){it=items[i];for(k=0;k<it.n;k++){list.push({k:it.k,d:k<(it.cross||0)});}}
+   for(i=0;i<list.length;i++){
+     var bw=BW[list[i].k];
+     if(rows[rows.length-1].length && w+bw>maxW){rows.push([]);w=0;}
+     rows[rows.length-1].push(list[i]); w+=bw+3;
+   }
+   if(!rows[0].length){rows=[];}
+   return rows;
+ }
+ function drawSide(items,cx,floorY){
+   var rows=packRows(items,92),s='',i,j,y=floorY;
+   for(i=0;i<rows.length;i++){
+     var r=rows[i],w=0,h=0;
+     for(j=0;j<r.length;j++){w+=BW[r[j].k]+3;h=Math.max(h,BH[r[j].k]);}
+     w-=3; y-=h;
+     var x=cx-w/2;
+     for(j=0;j<r.length;j++){s+=blockSvg(r[j].k,x,y,r[j].d);x+=BW[r[j].k]+3;}
+     y-=3;
+   }
+   return s;
+ }
+
+ /* ---------- the big block scale (always level: that is the point) ---------- */
+ function pan(px,ey,fy){
+   return '<line x1="'+px.toFixed(1)+'" y1="'+ey.toFixed(1)+'" x2="'+px.toFixed(1)+'" y2="'+(fy-1).toFixed(1)+'" stroke="#a9acc4" stroke-width="1.6"/>'+
+     '<path d="M'+(px-50).toFixed(1)+' '+fy.toFixed(1)+' h100 l-8 10 h-84 Z" fill="#e6e8f5" stroke="#a9acc4" stroke-width="1.4" stroke-linejoin="round"/>';
+ }
+ function blockScale(L,R){
+   var CX=145,PY=52,HLN=92,FLOOR=176,s='';
+   s+='<rect x="103" y="192" width="84" height="7" rx="3.5" fill="#c9ccdd"/>';
+   s+='<path d="M131 192 L141 58 L149 58 L159 192 Z" fill="#d8dbe9"/>';
+   var lx=CX-HLN,rx=CX+HLN;
+   s+='<line x1="'+lx+'" y1="'+PY+'" x2="'+rx+'" y2="'+PY+'" stroke="#4d4f66" stroke-width="6" stroke-linecap="round"/>';
+   s+='<circle cx="'+CX+'" cy="'+PY+'" r="8.5" fill="#4d4f66"/><circle cx="'+CX+'" cy="'+PY+'" r="3" fill="#fffdf9"/>';
+   s+=pan(lx,PY,FLOOR)+pan(rx,PY,FLOOR);
+   s+=drawSide(L,lx,FLOOR-1)+drawSide(R,rx,FLOOR-1);
+   s+='<text x="'+CX+'" y="42" text-anchor="middle" font-size="13" font-family="Georgia,serif" font-weight="700" fill="#7d7f94">=</text>';
+   return s;
+ }
+
+ /* ---------- the numeric scale that actually tilts ---------- */
+ function numPan(px,ey,fy,val,expr,heavy){
+   var s='';
+   s+='<line x1="'+px.toFixed(1)+'" y1="'+ey.toFixed(1)+'" x2="'+px.toFixed(1)+'" y2="'+fy.toFixed(1)+'" stroke="#a9acc4" stroke-width="1.6"/>';
+   s+='<rect x="'+(px-44).toFixed(1)+'" y="'+fy.toFixed(1)+'" width="88" height="44" rx="10" fill="#fffdf9" stroke="'+(heavy?RED:'#a9acc4')+'" stroke-width="'+(heavy?2:1.4)+'"/>';
+   s+='<text x="'+px.toFixed(1)+'" y="'+(fy+23).toFixed(1)+'" text-anchor="middle" font-size="19" font-family="Georgia,serif" font-weight="700" fill="'+(heavy?RED:'#262a5c')+'">'+val+'</text>';
+   s+='<text x="'+px.toFixed(1)+'" y="'+(fy+37).toFixed(1)+'" text-anchor="middle" font-size="10" font-family="Georgia,serif" fill="#7d7f94">'+expr+'</text>';
+   return s;
+ }
+ function numScale(lv,rv,le,re){
+   var CX=145,PY=36,HLN=92,HANG=87,s='';
+   var d=lv-rv, t=(d===0)?0:d/(Math.abs(d)+6), th=0.25*t;
+   var dx=HLN*Math.cos(th), dy=HLN*Math.sin(th);
+   var lx=CX-dx, ly=PY+dy, rx=CX+dx, ry=PY-dy;
+   var lf=HANG+dy, rf=HANG-dy;
+   s+='<rect x="102" y="158" width="86" height="7" rx="3.5" fill="#c9ccdd"/>';
+   s+='<path d="M131 158 L141 42 L149 42 L159 158 Z" fill="#d8dbe9"/>';
+   s+='<line x1="'+lx.toFixed(1)+'" y1="'+ly.toFixed(1)+'" x2="'+rx.toFixed(1)+'" y2="'+ry.toFixed(1)+'" stroke="#4d4f66" stroke-width="6" stroke-linecap="round"/>';
+   s+='<circle cx="'+CX+'" cy="'+PY+'" r="8.5" fill="#4d4f66"/><circle cx="'+CX+'" cy="'+PY+'" r="3" fill="#fffdf9"/>';
+   s+=numPan(lx,ly,lf,N(lv),le,d>0)+numPan(rx,ry,rf,N(rv),re,d<0);
+   s+='<text x="'+CX+'" y="'+(PY-16)+'" text-anchor="middle" font-size="11.5" font-family="Inter,sans-serif" font-weight="800" fill="'+(d===0?'#237a45':'#b23145')+'">'+(d===0?'BALANCED':'NOT BALANCED')+'</text>';
+   return s;
+ }
+
+ /* ---------- the five equations ---------- */
+ var T=[
+ {id:'a',nm:'One step',bs:xi+' + 4 = 9',col:IND,sol:5,min:0,max:10,
+  le:xi+' + 4',re:'9',
+  L:function(x){return x+4;},R:function(){return 9;},
+  aL:function(x){return xi+' + 4 &rarr; '+x+' + 4 = <b>'+(x+4)+'</b>';},
+  aR:function(){return 'the right side is just <b>9</b>';},
+  warn:'&ldquo;Subtract 4&rdquo; means subtract 4 from the <b>entire</b> left side and the <b>entire</b> right side. It is not permission to delete the 4 you dislike and leave the other side alone.',
+  one:{op:'take 4 off',
+   B:{le:xi+' + 4 &minus; 4',re:'9 &minus; 4',lv:5,rv:5,eq:xi+' = 5',sm:'the same equation, in simpler clothes'},
+   O:{le:xi+' + 4 &minus; 4',re:'9',lv:5,rv:9,eq:xi+' = 9',sm:'a different equation, with a different answer'},
+   why:'The true value <i>x</i> = 5 still balances the honest version. In the one-sided version the left pan holds 5 and the right holds 9, so <i>x</i> = 5 is no longer a solution &mdash; the answer silently moved to 9.'},
+  st:[
+   {m:xi+' + 4 = 9',pl:'start',h:'Read the scale, not the symbols',
+    a:{L:[{k:'x',n:1},{k:'u',n:4}],R:[{k:'u',n:9}]},
+    c:'One mystery block plus 4 units weighs exactly what 9 units weigh.',
+    d:'The left pan holds an <i>x</i>-block of unknown weight together with 4 single units. The right pan holds 9 units. The equals sign is reporting a fact: <b>those two pans balance</b>. Your job is not to &ldquo;do algebra&rdquo; &mdash; it is to strip the left pan down to the <i>x</i>-block alone without ever tipping the scale.'},
+   {m:xi+' + 4 '+HL('&minus; 4')+' = 9 '+HL('&minus; 4'),pl:'subtract 4 from both sides',h:'Lift 4 units off each pan',
+    a:{L:[{k:'x',n:1},{k:'u',n:4,cross:4}],R:[{k:'u',n:9,cross:4}]},
+    c:'Four units leave the left pan &mdash; and four leave the right at the same instant.',
+    d:'The 4 units are what is keeping <i>x</i> company, so lift them off. The moment you take 4 off the left, the left pan is 4 lighter and the scale would swing &mdash; unless you take 4 off the right in the same breath. <b>Equal changes to equal weights leave them equal.</b> That single sentence is the whole permission slip for everything in this chapter.'},
+   {m:xi+' + '+HL('0')+' = '+HL('5'),pl:'simplify each side',h:'Now clean up',
+    a:{L:[{k:'x',n:1}],R:[{k:'u',n:5}]},
+    c:'Left: 4 &minus; 4 = 0 units left over. Right: 9 &minus; 4 = <b>5</b>.',
+    d:'Each side is tidied on its own &mdash; nothing crosses the equals sign here, you are only doing arithmetic inside one pan at a time. The left pan is down to the <i>x</i>-block plus nothing; the right pan has 5 units.'},
+   {m:xi+' = '+HL('5'),pl:'solved',h:'The scale has answered',
+    a:{L:[{k:'x',n:1}],R:[{k:'u',n:5}]},
+    c:'One <i>x</i>-block balances 5 units, so the block weighs 5.',
+    d:'The variable is <b>isolated</b> &mdash; alone on its pan &mdash; and the other pan is now a plain number. That number is the weight of <i>x</i>. Slide the checker below to <i>x</i> = 5 and watch the beam go level; every other value tips it.'}
+  ]},
+
+ {id:'b',nm:'Undo a multiplier',bs:'3'+xi+' = 12',col:'#2f6f9f',sol:4,min:0,max:9,
+  le:'3'+xi,re:'12',
+  L:function(x){return 3*x;},R:function(){return 12;},
+  aL:function(x){return '3'+xi+' &rarr; 3('+x+') = <b>'+(3*x)+'</b>';},
+  aR:function(){return 'the right side is just <b>12</b>';},
+  warn:'3<i>x</i> means 3 <b>times</b> <i>x</i>, so it is undone by dividing, not by subtracting. And dividing both sides is safe only because 3 is not zero &mdash; dividing an equation by something that could be 0 is exactly how solutions get destroyed.',
+  one:{op:'divide by 3',
+   B:{le:'3'+xi+' &divide; 3',re:'12 &divide; 3',lv:4,rv:4,eq:xi+' = 4',sm:'the same equation, in simpler clothes'},
+   O:{le:'3'+xi+' &divide; 3',re:'12',lv:4,rv:12,eq:xi+' = 12',sm:'a different equation, with a different answer'},
+   why:'Shrinking one pan to a third of itself and leaving the other alone is not a legal move. The honest version keeps <i>x</i> = 4; the one-sided version quietly claims <i>x</i> = 12, which does not satisfy 3<i>x</i> = 12 at all.'},
+  st:[
+   {m:'3'+xi+' = 12',pl:'start',h:'Three identical mysteries',
+    a:{L:[{k:'x',n:3}],R:[{k:'u',n:12}]},
+    c:'Three <i>x</i>-blocks &mdash; all the same weight &mdash; balance 12 units.',
+    d:'Nothing is being added here, so there is nothing to lift off. The left pan is <b>three copies of the same block</b>. Notice how differently this behaves from <i>x</i> + 3: that would be one block and three units.'},
+   {m:HL(xi+' + '+xi+' + '+xi)+' = 12',pl:'what 3x means',h:'Say what 3x actually is',
+    a:{L:[{k:'x',n:3}],R:[{k:'u',n:12}]},
+    c:'A coefficient is a count of copies, not something added on.',
+    d:'Written out, 3<i>x</i> is <i>x</i> + <i>x</i> + <i>x</i>. Subtracting 3 would remove three <b>units</b>, and there are no units on this pan to remove &mdash; so subtraction is simply the wrong tool. What you need is a move that takes <b>one of the three copies</b>.'},
+   {m:FR('3'+xi,HL('3'))+' = '+FR('12',HL('3')),pl:'divide both sides by 3',h:'Take one third of each pan',
+    a:{L:[{k:'x',n:1}],R:[{k:'u',n:4}]},
+    c:'One third of three blocks is one block; one third of 12 units is <b>4</b>.',
+    d:'Split each pan into 3 equal shares and keep one share from each. The left pan had 3 blocks, so one share is exactly 1 block. The right pan had 12 units, so one share is 4. Both pans shrank <b>by the same factor</b>, which is why the beam never moves &mdash; a third of equal weights are still equal.'},
+   {m:xi+' = '+HL('4'),pl:'simplify',h:'One block, four units',
+    a:{L:[{k:'x',n:1}],R:[{k:'u',n:4}]},
+    c:'Each <i>x</i>-block weighs 4 &mdash; and 3 of them weigh 12. &#10003;',
+    d:'<b>Adding is undone by subtracting; multiplying is undone by dividing.</b> Match the undo to the crime. To confirm it without any algebra at all, put the 3 blocks back: 3 blocks at 4 apiece is 12 units, exactly what the right pan held.'}
+  ]},
+
+ {id:'c',nm:'Two steps',bs:'2'+xi+' + 5 = 17',col:'#2f9e5b',sol:6,min:0,max:11,
+  le:'2'+xi+' + 5',re:'17',
+  L:function(x){return 2*x+5;},R:function(){return 17;},
+  aL:function(x){return '2'+xi+' + 5 &rarr; 2('+x+') + 5 = '+(2*x)+' + 5 = <b>'+(2*x+5)+'</b>';},
+  aR:function(){return 'the right side is just <b>17</b>';},
+  warn:'2<i>x</i> + 5 is <b>not</b> 7<i>x</i>. An <i>x</i>-block and a unit block are different objects; you can only combine terms that are copies of the same thing.',
+  one:{op:'take 5 off',
+   B:{le:'2'+xi+' + 5 &minus; 5',re:'17 &minus; 5',lv:12,rv:12,eq:'2'+xi+' = 12, so '+xi+' = 6',sm:'the same equation, in simpler clothes'},
+   O:{le:'2'+xi+' + 5 &minus; 5',re:'17',lv:12,rv:17,eq:'2'+xi+' = 17, so '+xi+' = 8.5',sm:'a different equation, with a different answer'},
+   why:'The true solution <i>x</i> = 6 makes the honest version balance at 12 and 12. In the one-sided version the pans read 12 and 17, so <i>x</i> = 6 stops working and the answer drifts to 8.5 &mdash; an answer to a question nobody asked.'},
+  st:[
+   {m:'2'+xi+' + 5 = 17',pl:'start',h:'Two blocks and some loose change',
+    a:{L:[{k:'x',n:2},{k:'u',n:5}],R:[{k:'u',n:17}]},
+    c:'Two <i>x</i>-blocks plus 5 units balance 17 units.',
+    d:'Two different things are standing between you and a lone <i>x</i>: the <b>+ 5</b> sitting beside the blocks, and the <b>2</b> counting them. You will remove them one at a time &mdash; and the order matters.'},
+   {m:'2'+xi+' + 5 '+HL('&minus; 5')+' = 17 '+HL('&minus; 5'),pl:'subtract 5 from both sides',h:'Loose units first',
+    a:{L:[{k:'x',n:2},{k:'u',n:5,cross:5}],R:[{k:'u',n:17,cross:5}]},
+    c:'Five off the left, five off the right, in the same motion.',
+    d:'Clear the <b>added</b> clutter before you touch the count of blocks. Think of order of operations run backwards: to build 2<i>x</i> + 5 you would multiply first and add second, so to take it apart you <b>subtract first and divide second</b>. Undo the last thing that was done, first.'},
+   {m:'2'+xi+' = '+HL('12'),pl:'simplify',h:'A cleaner scale',
+    a:{L:[{k:'x',n:2}],R:[{k:'u',n:12}]},
+    c:'17 &minus; 5 = 12. Now it looks like the previous equation.',
+    d:'This is now the same shape as 3<i>x</i> = 12 &mdash; a pile of identical blocks against a pile of units. Most of algebra is exactly this: <b>keep making the problem look like one you have already solved.</b>'},
+   {m:FR('2'+xi,HL('2'))+' = '+FR('12',HL('2')),pl:'divide both sides by 2',h:'Halve each pan',
+    a:{L:[{k:'x',n:1}],R:[{k:'u',n:6}]},
+    c:'Half of 2 blocks is 1 block; half of 12 units is <b>6</b>.',
+    d:'Cut each pan in half. Halving two equal weights leaves them equal, so the beam holds still, and one block now sits against 6 units.'},
+   {m:xi+' = '+HL('6'),pl:'solved',h:'Check it in the original',
+    a:{L:[{k:'x',n:1}],R:[{k:'u',n:6}]},
+    c:'2(6) + 5 = 12 + 5 = 17. &#10003;',
+    d:'Always test the answer in the <b>original</b> equation, not in a line you rewrote &mdash; that way a slip in the middle cannot hide. Every move used here (subtracting a number, dividing by 2) is <b>reversible</b>, so nothing was gained or lost along the way and 6 is the one and only solution.'}
+  ]},
+
+ {id:'d',nm:'x on both sides',bs:'5'+xi+' &minus; 3 = 2'+xi+' + 9',col:GLD,sol:4,min:1,max:9,
+  le:'5'+xi+' &minus; 3',re:'2'+xi+' + 9',
+  L:function(x){return 5*x-3;},R:function(x){return 2*x+9;},
+  aL:function(x){return '5'+xi+' &minus; 3 &rarr; 5('+x+') &minus; 3 = '+(5*x)+' &minus; 3 = <b>'+(5*x-3)+'</b>';},
+  aR:function(x){return '2'+xi+' + 9 &rarr; 2('+x+') + 9 = '+(2*x)+' + 9 = <b>'+(2*x+9)+'</b>';},
+  warn:'&ldquo;Move the 2<i>x</i> across and flip its sign&rdquo; is not a separate rule &mdash; it is subtracting 2<i>x</i> from both sides with the middle line left unwritten. Write the middle line until the shortcut feels obvious.',
+  one:{op:'take 2x off',
+   B:{le:'5'+xi+' &minus; 3 &minus; 2'+xi,re:'2'+xi+' + 9 &minus; 2'+xi,lv:9,rv:9,eq:'3'+xi+' &minus; 3 = 9, so '+xi+' = 4',sm:'the same equation, in simpler clothes'},
+   O:{le:'5'+xi+' &minus; 3 &minus; 2'+xi,re:'2'+xi+' + 9',lv:9,rv:17,eq:'3'+xi+' &minus; 3 = 2'+xi+' + 9, so '+xi+' = 12',sm:'a different equation, with a different answer'},
+   why:'Both pans are shown at the true solution <i>x</i> = 4. Removing 2 blocks from the left only leaves 9 against 17, so <i>x</i> = 4 has been thrown away and a stranger, <i>x</i> = 12, has taken its place.'},
+  st:[
+   {m:'5'+xi+' &minus; 3 = 2'+xi+' + 9',pl:'start',h:'Unknowns on both pans',
+    a:{L:[{k:'x',n:5},{k:'m',n:3}],R:[{k:'x',n:2},{k:'u',n:9}]},
+    c:'A <span style="color:#d1495b;font-weight:700">&minus;1</span> block is a hole: pair it with a unit and both disappear.',
+    d:'Now <i>x</i> appears on both pans, and the left carries a <b>&minus; 3</b>. A negative block is best pictured as a hollow &mdash; a debt of one unit. Drop a real unit into it and the pair is worth nothing at all. That pairing-to-zero is the only thing the minus sign is doing here.'},
+   {m:'5'+xi+' &minus; 3 '+HL('&minus; 2'+xi)+' = 2'+xi+' + 9 '+HL('&minus; 2'+xi),pl:'subtract 2x from both sides',h:'Clear x off one pan',
+    a:{L:[{k:'x',n:5,cross:2},{k:'m',n:3}],R:[{k:'x',n:2,cross:2},{k:'u',n:9}]},
+    c:'Two <i>x</i>-blocks lifted from each pan &mdash; equal weights, so still level.',
+    d:'You may remove an unknown weight, as long as you remove the <b>same</b> unknown weight from both pans. Nobody has to know what an <i>x</i>-block weighs for this to be fair. Aim at the side with <b>fewer</b> blocks (here the right, with 2) so the survivors stay positive and the arithmetic stays friendly.'},
+   {m:HL('3'+xi)+' &minus; 3 = '+HL('9'),pl:'simplify',h:'All the x in one place',
+    a:{L:[{k:'x',n:3},{k:'m',n:3}],R:[{k:'u',n:9}]},
+    c:'5 blocks &minus; 2 blocks = 3 blocks. The right pan has no blocks left.',
+    d:'Every <i>x</i> now lives on the left and every plain number is heading for the right. From here it is the two-step problem you have already solved &mdash; only the unwanted &minus; 3 stands in the way.'},
+   {m:'3'+xi+' &minus; 3 '+HL('+ 3')+' = 9 '+HL('+ 3'),pl:'add 3 to both sides',h:'Fill in the holes',
+    a:{L:[{k:'x',n:3},{k:'m',n:3,cross:3},{k:'u',n:3,cross:3}],R:[{k:'u',n:12}]},
+    c:'Three units drop into three holes: each pair is worth <b>0</b>.',
+    d:'To clear a &minus; 3, add 3 &mdash; and add 3 to the other pan too, or the beam swings. On the left, each unit meets a hole and the pair vanishes; on the right, the 3 simply joins the 9. <b>Every unwanted term is removed by adding its opposite.</b>'},
+   {m:'3'+xi+' = '+HL('12'),pl:'simplify',h:'Down to the familiar shape',
+    a:{L:[{k:'x',n:3}],R:[{k:'u',n:12}]},
+    c:'9 + 3 = 12. Three blocks against 12 units.',
+    d:'This is the second equation of this page, arrived at by a longer road. Recognising an old friend is the whole reward for the work above.'},
+   {m:FR('3'+xi,HL('3'))+' = '+FR('12',HL('3')),pl:'divide both sides by 3',h:'One third of each pan',
+    a:{L:[{k:'x',n:1}],R:[{k:'u',n:4}]},
+    c:'One block against 4 units.',
+    d:'The last obstacle is the coefficient 3, and division removes it. Because 3 is a nonzero constant, this step is fully reversible &mdash; multiply by 3 and you are back where you started.'},
+   {m:xi+' = '+HL('4'),pl:'solved',h:'Check it in the original',
+    a:{L:[{k:'x',n:1}],R:[{k:'u',n:4}]},
+    c:'Left: 5(4) &minus; 3 = 17. Right: 2(4) + 9 = 17. &#10003;',
+    d:'Both sides of the <b>original</b> equation land on 17, so the pans really do balance at <i>x</i> = 4. Notice that the check does not care how you got here &mdash; that is exactly why it is worth doing.'}
+  ]},
+
+ {id:'e',nm:'Open the brackets',bs:'4('+xi+' &minus; 2) = 2'+xi+' + 6',col:'#7a5a8a',sol:7,min:2,max:12,
+  le:'4('+xi+'&minus;2)',re:'2'+xi+' + 6',
+  L:function(x){return 4*(x-2);},R:function(x){return 2*x+6;},
+  aL:function(x){return '4('+xi+' &minus; 2) &rarr; 4('+x+' &minus; 2) = 4('+(x-2)+') = <b>'+(4*(x-2))+'</b>';},
+  aR:function(x){return '2'+xi+' + 6 &rarr; 2('+x+') + 6 = '+(2*x)+' + 6 = <b>'+(2*x+6)+'</b>';},
+  warn:'4(<i>x</i> &minus; 2) is 4<i>x</i> <b>&minus; 8</b>, never 4<i>x</i> &minus; 2. The 4 multiplies <b>everything</b> inside the bracket, and there are four copies of that &minus; 2.',
+  one:{op:'take 2x off',
+   B:{le:'4'+xi+' &minus; 8 &minus; 2'+xi,re:'2'+xi+' + 6 &minus; 2'+xi,lv:6,rv:6,eq:'2'+xi+' &minus; 8 = 6, so '+xi+' = 7',sm:'the same equation, in simpler clothes'},
+   O:{le:'4'+xi+' &minus; 8 &minus; 2'+xi,re:'2'+xi+' + 6',lv:6,rv:20,eq:'2'+xi+' &minus; 8 = 2'+xi+' + 6',sm:'&minus;8 = 6 is false: no solution at all'},
+   why:'Shown at the true solution <i>x</i> = 7, the honest version balances 6 against 6. The one-sided version reads 6 against 20 &mdash; and simplifies to &minus;8 = 6, which no value of <i>x</i> can ever fix. One careless move did not just change the answer; it destroyed it.'},
+  st:[
+   {m:'4('+xi+' &minus; 2) = 2'+xi+' + 6',pl:'start',h:'Four identical bundles',
+    a:{L:[{k:'g',n:4}],R:[{k:'x',n:2},{k:'u',n:6}]},
+    c:'The bracket is a bundle, and the 4 says there are four of them.',
+    d:'A bracket is a package. Here the left pan holds <b>four copies</b> of the package (<i>x</i> &minus; 2). Nothing on that pan can be simplified while it is still wrapped up, so the first move is to open the packages.'},
+   {m:HL('4'+xi+' &minus; 8')+' = 2'+xi+' + 6',pl:'distribute the 4',h:'Tip the bundles out',
+    a:{L:[{k:'x',n:4},{k:'m',n:8}],R:[{k:'x',n:2},{k:'u',n:6}]},
+    c:'Four bundles = four <i>x</i>-blocks and 4 &times; 2 = <b>8</b> holes.',
+    d:'Each package contributes one <i>x</i>-block and two holes. Four packages therefore give 4 blocks and 4 &times; 2 = <b>8</b> holes &mdash; which is the whole reason the 4 must reach the &minus; 2 as well as the <i>x</i>. Nothing was added or removed, so the scale has not moved: <b>the pan was only unpacked.</b>'},
+   {m:'4'+xi+' &minus; 8 '+HL('&minus; 2'+xi)+' = 2'+xi+' + 6 '+HL('&minus; 2'+xi),pl:'subtract 2x from both sides',h:'Gather the unknowns',
+    a:{L:[{k:'x',n:4,cross:2},{k:'m',n:8}],R:[{k:'x',n:2,cross:2},{k:'u',n:6}]},
+    c:'Two blocks off each pan &mdash; the right pan runs out of them.',
+    d:'The right pan has the smaller pile of blocks, so removing 2 from each side clears it completely. The same unknown weight left both pans, so the beam has no reason to move.'},
+   {m:HL('2'+xi)+' &minus; 8 = '+HL('6'),pl:'simplify',h:'Blocks left, numbers right',
+    a:{L:[{k:'x',n:2},{k:'m',n:8}],R:[{k:'u',n:6}]},
+    c:'4 blocks &minus; 2 blocks = 2 blocks, still sitting over 8 holes.',
+    d:'The unknowns are collected. Only the 8 holes on the left keep <i>x</i> from standing alone.'},
+   {m:'2'+xi+' &minus; 8 '+HL('+ 8')+' = 6 '+HL('+ 8'),pl:'add 8 to both sides',h:'Fill every hole',
+    a:{L:[{k:'x',n:2},{k:'m',n:8,cross:8},{k:'u',n:8,cross:8}],R:[{k:'u',n:14}]},
+    c:'Eight units into eight holes: all sixteen blocks cancel to <b>0</b>.',
+    d:'Add 8 to both pans. On the left every hole swallows a unit and the pairs vanish; on the right the pan grows from 6 to 14. The left pan lost nothing in value &mdash; it gained 8, and then 8 worth of holes ate it.'},
+   {m:'2'+xi+' = '+HL('14'),pl:'simplify',h:'The familiar shape again',
+    a:{L:[{k:'x',n:2}],R:[{k:'u',n:14}]},
+    c:'Two blocks balance 14 units.',
+    d:'Every route through this chapter empties into the same little pond: a pile of identical blocks against a pile of units.'},
+   {m:FR('2'+xi,HL('2'))+' = '+FR('14',HL('2')),pl:'divide both sides by 2',h:'Halve each pan',
+    a:{L:[{k:'x',n:1}],R:[{k:'u',n:7}]},
+    c:'Half of 2 blocks is 1; half of 14 units is <b>7</b>.',
+    d:'Halving both pans keeps them equal, and the block finally stands alone.'},
+   {m:xi+' = '+HL('7'),pl:'solved',h:'Check it in the original',
+    a:{L:[{k:'x',n:1}],R:[{k:'u',n:7}]},
+    c:'Left: 4(7 &minus; 2) = 4(5) = 20. Right: 2(7) + 6 = 20. &#10003;',
+    d:'Both sides of the untouched original give 20. Every move on the way here &mdash; unpacking a bracket, subtracting 2<i>x</i>, adding 8, halving &mdash; can be run backwards, so no solution was invented and none was lost. That is why a linear equation like this one has <b>exactly one</b> answer.'}
+  ]}
+ ];
+
+ /* ---------- stepper ---------- */
+ var ti=0,si=0,mode='B';
+ function render(){
+   var t=T[ti],st=t.st[si],i;
+   $("stage").style.background=t.col;
+   $("stage").innerHTML=t.bs+'<small>step '+(si+1)+' of '+t.st.length+'</small>';
+   $("tracks").innerHTML=T.map(function(o,k){
+     return '<button class="it'+(k===ti?' on':'')+'" data-k="'+k+'"><span class="nm">'+o.nm+'</span><span class="s">'+o.bs+'</span></button>';
+   }).join('');
+   var bs=$("tracks").getElementsByTagName('button');
+   for(i=0;i<bs.length;i++){bs[i].onclick=(function(k){return function(){ti=k;si=0;resetSlider();render();};})(i);}
+   var h='';
+   for(i=0;i<=si;i++){
+     h+='<div class="dl'+(i===si?' cur':'')+'"><span class="mx">'+t.st[i].m+'</span><span class="pl">'+t.st[i].pl+'</span></div>';
+   }
+   $("mb").innerHTML=h;
+   $("art").innerHTML=blockScale(st.a.L,st.a.R);
+   $("artTitle").innerHTML='The scale at step '+(si+1);
+   $("cap").innerHTML=st.c;
+   $("info").innerHTML='<span class="n">'+st.h+'</span>'+st.d;
+   $("note").innerHTML='<b>Watch out.</b> '+t.warn;
+   $("prev").disabled=(si===0);
+   $("next").disabled=(si===t.st.length-1);
+   live(); oneSide();
+ }
+ $("prev").onclick=function(){if(si>0){si--;render();}};
+ $("next").onclick=function(){if(si<T[ti].st.length-1){si++;render();}};
+
+ /* ---------- live "weigh it yourself" ---------- */
+ function resetSlider(){
+   var t=T[ti];
+   $("sx").min=t.min; $("sx").max=t.max;
+   $("sx").value=t.min;
+ }
+ function live(){
+   var t=T[ti],x=+$("sx").value,lv=t.L(x),rv=t.R(x),d=lv-rv;
+   $("lx").innerHTML=N(x);
+   $("live").innerHTML=numScale(lv,rv,t.le,t.re);
+   $("arith").innerHTML='<div><span class="lb">left</span>'+t.aL(x)+'</div><div><span class="lb">right</span>'+t.aR(x)+'</div>';
+   var v=$("verdict");
+   if(d===0){
+     v.className='verdict';
+     v.innerHTML='Level. Both pans read '+N(lv)+', so <i>x</i> = '+N(x)+' makes the original statement true &mdash; it is the solution.';
+   }else{
+     v.className='verdict off';
+     v.innerHTML='Off by '+Math.abs(d)+'. The '+(d>0?'left':'right')+' pan is heavier, so <i>x</i> = '+N(x)+' is not a solution &mdash; try '+(d>0?'a smaller':'a larger')+' value.';
+   }
+ }
+ $("sx").oninput=live;
+
+ /* ---------- "why both sides?" ---------- */
+ function oneSide(){
+   var t=T[ti],o=t.one,p=(mode==='B')?o.B:o.O,bs=$("modes").getElementsByTagName('button'),i;
+   for(i=0;i<bs.length;i++){bs[i].className=(bs[i].getAttribute('data-m')===mode)?'on':'';}
+   $("one").innerHTML=numScale(p.lv,p.rv,p.le,p.re);
+   $("oneeq").innerHTML=p.eq+'<span class="sm">'+p.sm+'</span>';
+   var v=$("onev");
+   if(mode==='B'){
+     v.className='verdict';
+     v.innerHTML='Legal. Both pans shown at the true answer <i>x</i> = '+t.sol+'. The move &ldquo;'+o.op+'&rdquo; was applied to <b>both</b> sides, the beam stayed level, and the solution survived.';
+   }else{
+     v.className='verdict bad';
+     v.innerHTML='<b>Illegal.</b> '+o.why;
+   }
+ }
+ (function(){
+   var bs=$("modes").getElementsByTagName('button'),i;
+   for(i=0;i<bs.length;i++){
+     bs[i].onclick=(function(m){return function(){mode=m;oneSide();};})(bs[i].getAttribute('data-m'));
+   }
+ })();
+
+ resetSlider();
+ render();
+})();
+</script>
+</body>
+</html>

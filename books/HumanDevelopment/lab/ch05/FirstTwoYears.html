@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f7f2">
+<title>The First Two Years</title>
+<meta name="description" content="Interactive slider: scrub from birth to 24 months to watch an infant's body, posture, and brain grow together through real motor and neural milestones. For human-development students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_humdev.css">
+<style>.wrap{grid-template-columns:0.98fr 1.02fr;}
+.szrow{margin-top:11px;font-size:12px;color:var(--muted);font-weight:600;}
+.szrow .v{float:right;font-weight:800;color:var(--teal-dk);}
+.szrow .x{color:var(--purple);font-weight:800;}
+.sizebar{height:11px;border-radius:6px;background:#e6f1ea;overflow:hidden;margin-top:5px;}
+.sizebar i{display:block;height:100%;width:0;transition:width .38s;}
+.sizebar i.body{background:linear-gradient(90deg,var(--green),var(--blue));}
+.sizebar i.brainf{background:linear-gradient(90deg,#cf93da,#7a5a8a);}
+.tlwrap{margin:13px 0 3px;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:5px;background:#dcebe2;outline:none;margin:4px 0 2px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 6px rgba(30,60,45,.35);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 6px rgba(30,60,45,.35);cursor:pointer;}
+.pill.newborn{background:#e5f3ea;color:#237a45;}
+.pill.infant{background:#fbf3e2;color:#8a6a20;}
+.pill.toddler{background:#e5eef6;color:#255f8a;}
+.seg button small{font-size:9.3px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Human Development · Chapter 5</div>
+  <h1>The First Two Years</h1>
+  <div class="intro">In just <b>24 months</b> an infant grows from a reflexive newborn into a running, talking toddler &mdash; while the brain balloons from about <b>a quarter</b> to <b>four-fifths</b> of its adult weight. Drag the slider, tap a phase, or step forward to watch body and brain grow together.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Birth</h2>
+    <svg viewBox="0 0 240 220" aria-label="infant posture and brain at the selected age"><g id="art"></g></svg>
+    <div class="szrow">Body weight <span class="v" id="wttxt"></span></div>
+    <div class="sizebar"><i class="body" id="wtbar"></i></div>
+    <div class="szrow">Brain weight <span class="v" id="brtxt"></span></div>
+    <div class="sizebar"><i class="brainf" id="brbar"></i></div>
+  </div></div>
+  <div>
+    <div id="stage">Reflexes rule<small>Birth · Newborn</small></div>
+    <div class="card">
+      <div class="seg" id="phaseSeg"></div>
+      <div class="tlwrap"><svg viewBox="0 0 300 50" id="tl" aria-label="first two years timeline"><g></g></svg></div>
+      <input type="range" id="slider" min="0" max="7" step="1" value="0" aria-label="age in months">
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Human Development · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var PH={
+  newborn:{nm:'Newborn',col:'#2f9e5b',pill:'newborn',span:'Birth–1 mo'},
+  infant:{nm:'Infant',col:'#b8862f',pill:'infant',span:'1–12 mo'},
+  toddler:{nm:'Toddler',col:'#2f6f9f',pill:'toddler',span:'12–24 mo'}
+ };
+ var M=[
+  {age:'Birth',mo:0,phase:'newborn',pose:'lie',hr:27,wt:3.4,wtx:'×1',brainG:'~350 g',brainPct:25,
+   title:'Reflexes rule',
+   d:'A newborn arrives with almost all <b>86 billion neurons</b> it will ever have, but a barely-wired brain &mdash; only sparse connections between them. Behavior runs on survival <b>reflexes</b>: rooting, sucking, the <b>Moro</b> (startle) reflex, and a palmar grasp. The head is enormous, about <b>one-quarter</b> of total body length.',
+   ms:'Reflexes — rooting, sucking, Moro, grasp',
+   note:'Vision is blurriest at birth (~20/400) and focuses best at <b>8–12 inches</b> &mdash; about the distance to a caregiver’s face during feeding. Hearing, by contrast, is already sharp.'},
+  {age:'2 months',mo:2,phase:'infant',pose:'prop',hr:26,wt:5.5,wtx:null,brainG:'~450 g',brainPct:33,
+   title:'Lifts the head',
+   d:'Head control develops from the top down. Lying on the tummy, a 2-month-old props on the forearms and <b>lifts the head and chest</b>. The first true <b>social smile</b> &mdash; smiling back at a face &mdash; appears, a sign that the brain’s social circuits are wiring fast as synapses form at a furious pace.',
+   ms:'Social smile; lifts head when prone',
+   mnem:'Growth runs <b>head-to-toe (cephalocaudal)</b>: babies control the head before the trunk, and the trunk before the legs.'},
+  {age:'4 months',mo:4,phase:'infant',pose:'reach',hr:25,wt:6.4,wtx:null,brainG:'~550 g',brainPct:40,
+   title:'Reaches & rolls',
+   d:'The head is now held <b>steady and upright</b>. Many babies <b>roll from front to back</b> and reach out to bat at a toy. As the cortex takes command, newborn reflexes like the Moro <b>fade away</b>, replaced by voluntary, aimed movement.',
+   ms:'Rolls over; reaches for objects',
+   mnem:'Control also spreads <b>center-to-outward (proximodistal)</b>: the shoulders and arms steady before the hands and fingers.'},
+  {age:'6 months',mo:6,phase:'infant',pose:'sit',hr:24,wt:7.6,wtx:'×2 birth',brainG:'~650 g',brainPct:50,
+   title:'Sits up',
+   d:'Birth weight has roughly <b>doubled</b>. The baby sits propped &mdash; then briefly on its own &mdash; which frees the hands to explore, passing a block from hand to hand. Fatty <b>myelin</b> now sheathes many nerve fibers, and the brain has reached about half its adult weight.',
+   ms:'Sits with support; birth weight doubled',
+   note:'<b>Myelination</b> &mdash; wrapping neurons in fatty myelin that speeds their signals &mdash; is a major reason brain volume balloons across the first year.'},
+  {age:'9 months',mo:9,phase:'infant',pose:'crawl',hr:23,wt:8.9,wtx:null,brainG:'~850 g',brainPct:62,
+   title:'Crawls',
+   d:'Now sitting unaided and <b>crawling</b> to chase whatever it wants. A refined <b>pincer grasp</b> (thumb + forefinger) lets tiny objects be picked up. Cognitively, the infant begins to grasp <b>object permanence</b> &mdash; that a hidden toy still exists.',
+   ms:'Crawls; pincer grasp; object permanence',
+   mnem:'In <b>Piaget’s sensorimotor stage</b> (birth–~2 yr), infants learn through senses and action, culminating in object permanence.'},
+  {age:'12 months',mo:12,phase:'infant',pose:'stand',hr:22,wt:10.2,wtx:'×3 birth',brainG:'~950 g',brainPct:70,
+   title:'First steps',
+   d:'The first birthday: birth weight has <b>tripled</b> and length is up by half. Many babies <b>stand alone</b> and take first wobbly steps, and say a first meaningful <b>word</b> or two. The brain has swelled to about <b>70%</b> of its adult weight.',
+   ms:'First steps; first words',
+   mnem:'Handy rule: birth weight <b>doubles by ~5 months</b> and <b>triples by the first birthday</b>.'},
+  {age:'18 months',mo:18,phase:'toddler',pose:'walk',hr:21,wt:11.3,wtx:null,brainG:'~1050 g',brainPct:77,
+   title:'Walks well',
+   d:'A confident walker who climbs and carries things. Vocabulary starts to <b>take off</b>. Behind the scenes, <b>synaptic pruning</b> trims the excess connections built during infancy&rsquo;s bloom &mdash; a use-it-or-lose-it sculpting that makes the surviving circuits faster and more efficient.',
+   ms:'Walks well; vocabulary spurt begins',
+   mnem:'The infant brain overproduces synapses (<b>blooming</b>), then removes the unused ones (<b>pruning</b>) &mdash; experience decides which connections stay.'},
+  {age:'24 months',mo:24,phase:'toddler',pose:'run',hr:20,wt:12.5,wtx:null,brainG:'~1100 g',brainPct:80,
+   title:'Runs & talks',
+   d:'By the second birthday the child <b>runs</b>, kicks a ball, and combines words into <b>two-word phrases</b> (&ldquo;more milk&rdquo;). The brain has reached about <b>80%</b> of adult weight, and height is already about <b>half</b> of eventual adult height. The sensorimotor stage is drawing to a close as symbolic thought begins.',
+   ms:'Runs; two-word phrases; brain ~80% adult',
+   note:'These first two years are a window of remarkable <b>plasticity</b>: the brain is uniquely shaped by early experience, for better or worse.'}
+ ];
+ var idx=0;
+ var FIRST={newborn:0,infant:1,toddler:6};
+ var skin='#f0b892',sl='#d08a5f',hairc='#8a5a3a',eye='#4a3526';
+
+ function lb(x1,y1,x2,y2,w,c){return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="'+w+'" stroke-linecap="round"/>';}
+ function dot(x,y,r,c){return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+c+'"/>';}
+ function head(cx,cy,r,side){
+   var s='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+skin+'" stroke="'+sl+'" stroke-width="1.5"/>';
+   s+='<path d="M'+(cx-r+3)+','+(cy-r+5)+' q'+(r-3)+',-9 '+(2*r-6)+',0" fill="none" stroke="'+hairc+'" stroke-width="2.6" stroke-linecap="round"/>';
+   if(side){ s+=dot(cx+r*0.35,cy-2,2.2,eye);
+     s+='<path d="M'+(cx+r*0.1)+','+(cy+6)+' q6,4 11,-1" fill="none" stroke="'+sl+'" stroke-width="1.5" stroke-linecap="round"/>';
+     s+='<path d="M'+(cx-r)+','+cy+' q-4,3 0,7" fill="none" stroke="'+sl+'" stroke-width="1.4"/>'; }
+   else { s+=dot(cx-r*0.34,cy-2,2.2,eye); s+=dot(cx+r*0.34,cy-2,2.2,eye);
+     s+='<path d="M'+(cx-7)+','+(cy+7)+' q7,5 14,0" fill="none" stroke="'+sl+'" stroke-width="1.5" stroke-linecap="round"/>';
+     s+=dot(cx-r*0.62,cy+3,2.6,'#f4a3a3'); s+=dot(cx+r*0.62,cy+3,2.6,'#f4a3a3'); }
+   return s;
+ }
+ function brainGlyph(pct){
+   var sc=0.5+pct/100*0.62;
+   var g='<g transform="translate(204,40) scale('+sc+')">';
+   g+='<ellipse cx="0" cy="0" rx="20" ry="15" fill="#f3ccd6" stroke="#d98aa0" stroke-width="1.6"/>';
+   g+='<path d="M-13,-4 q6,5 0,10 M-3,-9 q6,7 0,11 M7,-9 q6,7 0,11 M13,-3 q4,6 -2,9" fill="none" stroke="#d98aa0" stroke-width="1.3" stroke-linecap="round"/>';
+   g+='<line x1="0" y1="-14" x2="0" y2="13" stroke="#d98aa0" stroke-width="1.1"/>';
+   g+='</g>';
+   g+='<text x="204" y="68" font-size="9" fill="#9a7a86" font-weight="700" text-anchor="middle" font-family="Inter,sans-serif">brain</text>';
+   return g;
+ }
+ function mat(y){return '<rect x="26" y="'+y+'" width="188" height="30" rx="15" fill="#f2e6dd"/>';}
+ function floor(){return '<ellipse cx="120" cy="196" rx="98" ry="12" fill="#e4efe8"/>';}
+
+ function pose(m){
+   var c=m.col,hr=m.hr,p=m.pose,s='';
+   if(p==='lie'){
+     s+=mat(150);
+     s+='<ellipse cx="130" cy="153" rx="52" ry="25" fill="'+c+'"/>';
+     s+=dot(180,150,7,skin); s+=dot(180,162,7,skin);
+     s+='<circle cx="74" cy="150" r="'+hr+'" fill="'+skin+'" stroke="'+sl+'" stroke-width="1.5"/>';
+     s+='<path d="M'+(74-hr+3)+','+(150-hr+5)+' q'+(hr-3)+',-9 '+(2*hr-6)+',0" fill="none" stroke="'+hairc+'" stroke-width="2.6" stroke-linecap="round"/>';
+     s+='<path d="M64,148 q4,3 8,0" fill="none" stroke="'+sl+'" stroke-width="1.6" stroke-linecap="round"/>';
+     s+='<path d="M78,148 q4,3 8,0" fill="none" stroke="'+sl+'" stroke-width="1.6" stroke-linecap="round"/>';
+     s+='<path d="M70,159 q6,4 12,0" fill="none" stroke="'+sl+'" stroke-width="1.4"/>';
+     s+='<text x="104" y="122" font-size="13" fill="#9aa8a0" font-weight="800" font-family="Inter,sans-serif">z</text>';
+     s+='<text x="116" y="112" font-size="10" fill="#b6c2ba" font-weight="800" font-family="Inter,sans-serif">z</text>';
+   } else if(p==='prop'){
+     s+=mat(166);
+     s+='<ellipse cx="134" cy="164" rx="56" ry="17" fill="'+c+'"/>';
+     s+=lb(178,162,196,168,9,c); s+=dot(198,169,6,skin);
+     s+=lb(96,158,86,178,9,c); s+=dot(85,181,6,skin);
+     s+=lb(90,150,100,158,10,skin);
+     s+=head(74,138,hr,false);
+   } else if(p==='reach'){
+     s+=mat(154);
+     s+='<ellipse cx="130" cy="158" rx="50" ry="24" fill="'+c+'"/>';
+     s+=lb(170,154,184,138,10,c); s+=dot(186,136,6,skin);
+     s+=lb(150,150,168,140,10,c); s+=dot(170,138,6,skin);
+     s+=lb(112,146,120,114,9,c); s+=dot(120,111,6,skin);
+     s+=lb(132,148,146,120,9,c); s+=dot(147,117,6,skin);
+     s+='<circle cx="134" cy="98" r="12" fill="#d1495b"/>'; s+=lb(134,110,134,122,4,'#b8862f');
+     s+=head(78,152,hr,false);
+   } else if(p==='sit'){
+     s+=floor();
+     s+='<ellipse cx="120" cy="176" rx="34" ry="13" fill="'+c+'"/>';
+     s+=lb(112,176,92,186,12,c); s+=dot(88,187,7,skin);
+     s+=lb(128,176,148,186,12,c); s+=dot(152,187,7,skin);
+     s+='<rect x="102" y="140" width="36" height="40" rx="16" fill="'+c+'"/>';
+     s+=lb(104,152,90,162,9,c); s+=dot(88,164,6,skin);
+     s+=lb(136,152,150,158,9,c); s+=dot(153,160,6,skin);
+     s+='<rect x="147" y="152" width="13" height="13" rx="2.5" fill="#2f9e5b"/>';
+     s+=head(120,118,hr,false);
+   } else if(p==='crawl'){
+     s+=floor();
+     s+='<ellipse cx="128" cy="148" rx="46" ry="20" fill="'+c+'" transform="rotate(-6 128 148)"/>';
+     s+=lb(118,152,114,184,9,c); s+=dot(114,186,6,'#e8ab88');
+     s+=lb(170,150,188,178,11,c); s+=dot(190,180,7,skin);
+     s+=lb(150,158,150,184,11,c); s+=dot(150,186,7,skin);
+     s+=lb(96,152,92,184,9,c); s+=dot(92,186,6,skin);
+     s+=head(78,138,hr,true);
+   } else if(p==='stand'){
+     s+=floor();
+     s+=lb(110,150,106,188,12,c); s+=dot(104,190,8,skin);
+     s+=lb(130,150,134,188,12,c); s+=dot(136,190,8,skin);
+     s+='<rect x="100" y="112" width="40" height="44" rx="18" fill="'+c+'"/>';
+     s+=lb(102,124,80,116,9,c); s+=dot(78,114,6,skin);
+     s+=lb(138,124,160,116,9,c); s+=dot(162,114,6,skin);
+     s+=head(120,92,hr,false);
+   } else if(p==='walk'){
+     s+=floor();
+     s+=lb(122,150,104,186,12,c); s+=dot(101,188,8,skin);
+     s+=lb(124,150,144,182,12,c); s+=dot(148,184,8,skin);
+     s+='<rect x="110" y="112" width="30" height="42" rx="14" fill="'+c+'" transform="rotate(4 125 133)"/>';
+     s+=lb(120,122,106,140,9,c); s+=dot(104,142,6,skin);
+     s+=lb(130,122,146,134,9,c); s+=dot(148,136,6,skin);
+     s+=head(132,92,hr,true);
+   } else {
+     s+=floor();
+     s+=lb(118,148,98,178,12,c); s+=dot(95,180,8,skin);
+     s+=lb(120,148,140,168,12,c); s+=lb(140,168,150,150,12,c); s+=dot(152,148,8,skin);
+     s+='<rect x="106" y="108" width="30" height="42" rx="14" fill="'+c+'" transform="rotate(10 121 129)"/>';
+     s+=lb(116,120,100,110,9,c); s+=dot(98,108,6,skin);
+     s+=lb(128,122,146,132,9,c); s+=dot(148,134,6,skin);
+     s+=head(136,88,hr,true);
+     s+=lb(70,118,88,118,3,'#c8d6cd'); s+=lb(64,132,84,132,3,'#c8d6cd');
+   }
+   return s;
+ }
+ function draw(m){ return pose({col:PH[m.phase].col,hr:m.hr,pose:m.pose})+brainGlyph(m.brainPct); }
+
+ function drawTL(i){
+   var x0=6,W=288,y=16,h=14,s='';
+   function X(mo){return x0+(mo/24)*W;}
+   s+='<rect x="'+x0+'" y="'+y+'" width="'+(X(1)-x0)+'" height="'+h+'" rx="5" fill="#bfe3cf"/>';
+   s+='<rect x="'+X(1)+'" y="'+y+'" width="'+(X(12)-X(1))+'" height="'+h+'" rx="5" fill="#ecdcac"/>';
+   s+='<rect x="'+X(12)+'" y="'+y+'" width="'+(x0+W-X(12))+'" height="'+h+'" rx="5" fill="#c4d9ec"/>';
+   var mx=X(M[i].mo);
+   s+='<line x1="'+mx+'" y1="'+(y-5)+'" x2="'+mx+'" y2="'+(y+h+5)+'" stroke="#1f2a24" stroke-width="2"/>';
+   s+='<polygon points="'+(mx-5)+','+(y-7)+' '+(mx+5)+','+(y-7)+' '+mx+','+(y-1)+'" fill="#1f2a24"/>';
+   s+='<circle cx="'+mx+'" cy="'+(y+h+5)+'" r="4.5" fill="'+PH[M[i].phase].col+'" stroke="#fff" stroke-width="1.5"/>';
+   s+='<text x="'+x0+'" y="46" font-size="9.5" fill="#7a8880" font-weight="700" font-family="Inter,sans-serif">Birth</text>';
+   s+='<text x="'+(x0+W)+'" y="46" font-size="9.5" fill="#7a8880" font-weight="700" text-anchor="end" font-family="Inter,sans-serif">2 years</text>';
+   return s;
+ }
+ function drawSeg(){
+   var cur=M[idx].phase,order=['newborn','infant','toddler'];
+   $("phaseSeg").innerHTML=order.map(function(k){var g=PH[k];
+     return '<button data-k="'+k+'" class="'+(k===cur?'on':'')+'">'+g.nm+'<small>'+g.span+'</small></button>';}).join('');
+   document.querySelectorAll('#phaseSeg button').forEach(function(b){b.onclick=function(){idx=FIRST[b.dataset.k];render();};});
+ }
+ function render(){
+   var m=M[idx],g=PH[m.phase];
+   $("art").innerHTML=draw(m);
+   $("tl").innerHTML=drawTL(idx);
+   $("cardTitle").innerHTML=m.age;
+   $("stage").style.background=g.col;
+   $("stage").innerHTML=m.title+'<small>'+m.age+' · '+g.nm+'</small>';
+   $("wttxt").innerHTML=m.wt+' kg'+(m.wtx?' <span class="x">· '+m.wtx+'</span>':'');
+   $("wtbar").style.width=Math.round(m.wt/13*100)+'%';
+   $("brtxt").innerHTML=m.brainG+' <span class="x">· '+m.brainPct+'% adult</span>';
+   $("brbar").style.width=m.brainPct+'%';
+   var html='<span class="n">'+m.title+' <span class="pill '+g.pill+'">'+g.nm+'</span></span>'+m.d+
+     '<div class="loc">★ Milestone: '+m.ms+'</div>';
+   if(m.note) html+='<div class="note">'+m.note+'</div>';
+   if(m.mnem) html+='<div class="mnem">'+m.mnem+'</div>';
+   $("info").innerHTML=html;
+   $("slider").value=idx;
+   $("prev").disabled=(idx===0);
+   $("next").disabled=(idx===M.length-1);
+   drawSeg();
+ }
+ $("slider").oninput=function(){idx=+this.value;render();};
+ $("prev").onclick=function(){if(idx>0){idx--;render();}};
+ $("next").onclick=function(){if(idx<M.length-1){idx++;render();}};
+ render();
+})();
+</script>
+</body>
+</html>

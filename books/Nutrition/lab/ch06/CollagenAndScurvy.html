@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Collagen and Scurvy: When Vitamin C Runs Out</title>
+<meta name="description" content="See what collagen needs vitamin C for, and simulate what happens to the body's vitamin C pool without it. An interactive for nutrition learners.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:0.98fr 1.02fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sld{margin-top:12px;}
+.sld label{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:var(--soft);margin-bottom:5px;}
+.sld label b{color:var(--teal-dk);font-size:14px;font-variant-numeric:tabular-nums;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:7px;border-radius:5px;background:#eadfc9;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);cursor:pointer;border:3px solid #fff;box-shadow:0 1px 4px rgba(70,50,20,.3);}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);cursor:pointer;border:3px solid #fff;}
+.readout{display:flex;gap:8px;margin-top:12px;}
+.readout div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:9px 4px;background:#fff;}
+.readout .rl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);}
+.readout .rv{display:block;font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.statusline{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;font-weight:700;color:var(--soft);}
+.tag{display:inline-block;font-size:11px;font-weight:800;border-radius:20px;padding:3px 10px;}
+.tag.strong{background:#e5f3ea;color:#237a45;} .tag.prelim{background:#f3ecdd;color:#8a6a20;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 6</div>
+  <h1>Collagen and Scurvy: When Vitamin C Runs Out</h1>
+  <div class="intro">Vitamin C is the <b>cofactor</b> that lets your body finish building collagen &mdash; the protein that holds skin, blood vessels, and gums together. First explore <b>what collagen needs it for</b>, then run a simulator to watch the body's vitamin C pool <b>drain when intake stops</b>.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The collagen build site</h2>
+    <svg viewBox="0 0 240 232" aria-label="collagen strands and vitamin C pool"><g id="art"></g></svg>
+    <div style="margin-top:2px;font-size:11.5px;color:var(--muted);text-align:center;">Illustrative model &mdash; drawn to teach the pattern, not to diagnose.</div>
+  </div></div>
+  <div>
+    <div class="modeseg">
+      <button id="mExplore" class="on">What collagen needs it for</button>
+      <button id="mSim">What happens without it</button>
+    </div>
+    <div id="stage">Vitamin C &amp; collagen<small>tap a step to begin</small></div>
+    <div class="card">
+      <!-- EXPLORE -->
+      <div id="paneExplore">
+        <div class="list" id="list"></div>
+      </div>
+      <!-- SIMULATE -->
+      <div id="paneSim" style="display:none;">
+        <div class="sld">
+          <label>Daily vitamin C intake <b><span id="inLab">0</span> mg/day</b></label>
+          <input type="range" id="intake" min="0" max="200" step="5" value="0">
+        </div>
+        <div class="sld">
+          <label>Days elapsed <b><span id="dayLab">45</span> days</b></label>
+          <input type="range" id="days" min="0" max="120" step="1" value="45">
+        </div>
+        <div class="readout">
+          <div><span class="rl">Body pool</span><span class="rv" id="poolV">—</span></div>
+          <div><span class="rl">of saturated</span><span class="rv" id="pctV">—</span></div>
+          <div><span class="rl">Collagen integrity</span><span class="rv" id="intV">—</span></div>
+        </div>
+        <div class="statusline">Status: <span id="statusPill" class="pill normal">replete</span></div>
+      </div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- shared drawing ---------- */
+ // integrity 0..100 controls how frayed the triple helix looks.
+ // opts: {oh:bool show hydroxyl groups, links:bool emphasise crosslinks, pool:0..1, symptoms:bool}
+ function draw(integrity,opts){
+   opts=opts||{};
+   var f=1-Math.max(0,Math.min(100,integrity))/100; // fray 0..1
+   var out='';
+   // panel backdrop
+   out+='<rect x="0" y="0" width="240" height="232" rx="12" fill="#fbf7ef"/>';
+   // ---- triple helix (three strands weaving) ----
+   var x0=18,x1=176,cy=70,amp=13,spread=9+f*22;
+   var cols=f>0.55?['#c9a24a','#cbb27e','#c9a24a']:['#b07a1e','#8a6a20','#b07a1e'];
+   for(var s=0;s<3;s++){
+     var ph=s*2.094; // 120deg apart
+     var yoff=(s-1)*spread*0.35;
+     var d='';
+     for(var x=x0;x<=x1;x+=4){
+       var t=(x-x0)/22;
+       var y=cy+yoff+Math.sin(t+ph)*amp*(1+ (s-1)*0 );
+       d+=(x===x0?'M':'L')+x+' '+y.toFixed(1)+' ';
+     }
+     out+='<path d="'+d+'" fill="none" stroke="'+cols[s]+'" stroke-width="'+(4-f*1.5).toFixed(1)+'" stroke-linecap="round" opacity="'+(1-f*0.35).toFixed(2)+'"/>';
+   }
+   // crosslinks between strands (break as it frays)
+   var nl=6;
+   for(var k=0;k<nl;k++){
+     var lx=x0+14+k*26;
+     var broken=(k/nl)<f; // more broken as fray grows
+     if(!broken){
+       out+='<line x1="'+lx+'" y1="'+(cy-amp)+'" x2="'+lx+'" y2="'+(cy+amp)+'" stroke="'+(opts.links?'#2f9e5b':'#d8b877')+'" stroke-width="'+(opts.links?3:2)+'" opacity="'+(opts.links?0.95:0.6)+'"/>';
+     } else {
+       out+='<line x1="'+lx+'" y1="'+(cy-amp+3)+'" x2="'+lx+'" y2="'+(cy-2)+'" stroke="#d1495b" stroke-width="2" opacity="0.7"/>';
+       out+='<line x1="'+lx+'" y1="'+(cy+2)+'" x2="'+lx+'" y2="'+(cy+amp-3)+'" stroke="#d1495b" stroke-width="2" opacity="0.7"/>';
+     }
+   }
+   // hydroxyl (-OH) tags added by vitamin C-dependent enzymes
+   if(opts.oh){
+     var ohx=[38,64,90,116,142,168];
+     for(var o=0;o<ohx.length;o++){
+       var oy=cy+Math.sin((ohx[o]-x0)/22)*amp-14;
+       out+='<circle cx="'+ohx[o]+'" cy="'+oy+'" r="8" fill="#2f9e5b"/><text x="'+ohx[o]+'" y="'+(oy+3)+'" font-size="8" fill="#fff" text-anchor="middle" font-weight="800">OH</text>';
+     }
+     out+='<text x="97" y="24" font-size="10.5" fill="#237a45" text-anchor="middle" font-weight="700">hydroxyl groups added</text>';
+   }
+   // label under helix
+   var hlab=f>0.55?'under&#8209;hydroxylated &mdash; unstable':(opts.links?'crosslinked &mdash; strong':'stable triple helix');
+   out+='<text x="97" y="115" font-size="10.5" fill="'+(f>0.55?'#b23145':'#6b4710')+'" text-anchor="middle" font-weight="700">'+hlab+'</text>';
+
+   // ---- body vitamin C pool tank (right side) ----
+   var tx=196,tw=30,ty=18,th=118;
+   out+='<rect x="'+tx+'" y="'+ty+'" width="'+tw+'" height="'+th+'" rx="7" fill="#fff" stroke="#e0d3ba" stroke-width="2"/>';
+   var pool=(opts.pool==null)?1:opts.pool;
+   var fillh=th*Math.max(0,Math.min(1,pool));
+   var pcol=pool>=0.4?'#2f9e5b':(pool>=0.2?'#2f6f9f':'#d1495b');
+   out+='<rect x="'+(tx+2)+'" y="'+(ty+th-fillh)+'" width="'+(tw-4)+'" height="'+fillh+'" rx="5" fill="'+pcol+'" opacity="0.85"/>';
+   // threshold line (~300 of 1500 mg => 0.2)
+   var thy=ty+th-th*0.2;
+   out+='<line x1="'+(tx-4)+'" y1="'+thy+'" x2="'+(tx+tw+4)+'" y2="'+thy+'" stroke="#d1495b" stroke-width="1.5" stroke-dasharray="3 3"/>';
+   out+='<text x="'+(tx+tw/2)+'" y="'+(ty-4)+'" font-size="9.5" fill="#6b4710" text-anchor="middle" font-weight="700">C pool</text>';
+   out+='<text x="'+(tx+tw+6)+'" y="'+(thy-3)+'" font-size="8" fill="#b23145" font-weight="700">scurvy</text>';
+   out+='<text x="'+(tx+tw+6)+'" y="'+(thy+7)+'" font-size="8" fill="#b23145" font-weight="700">threshold</text>';
+
+   // ---- tissues that depend on collagen ----
+   out+='<text x="12" y="150" font-size="10" fill="#8d8270" font-weight="700">Collagen holds together:</text>';
+   var tis=[['🩸','vessels'],['🦷','gums'],['🧑','skin'],['🩹','wounds heal']];
+   for(var i=0;i<tis.length;i++){
+     var bx=14+i*58, by=178;
+     var weak=opts.symptoms && (integrity<55);
+     out+='<rect x="'+bx+'" y="158" width="52" height="60" rx="9" fill="'+(weak?'#fae5e8':'#f4ead8')+'" stroke="'+(weak?'#f0c9d0':'#e6d7ba')+'"/>';
+     out+='<text x="'+(bx+26)+'" y="184" font-size="18" text-anchor="middle">'+tis[i][0]+'</text>';
+     out+='<text x="'+(bx+26)+'" y="203" font-size="8.5" fill="#5f5340" text-anchor="middle" font-weight="700">'+tis[i][1]+'</text>';
+     if(weak){ out+='<text x="'+(bx+42)+'" y="170" font-size="12" text-anchor="middle">⚠</text>'; }
+   }
+   return out;
+ }
+
+ /* ---------- EXPLORE mode ---------- */
+ var STEPS=[
+  {k:'raw',ic:'🧵',nm:'Procollagen strands',ct:'the raw protein',
+    integ:70,opts:{},
+    info:'<span class="n">Start: bare procollagen</span>Cells first make long chains of the collagen protein, rich in the amino acids <b>proline</b> and <b>lysine</b>. On their own these chains form only a <b>loose, unstable</b> triple helix &mdash; they are not finished yet.'},
+  {k:'oh',ic:'💧',nm:'Vitamin C adds –OH',ct:'the cofactor step',
+    integ:88,opts:{oh:true},
+    info:'<span class="n">Vitamin C powers the enzymes</span>Ascorbate (vitamin&nbsp;C) is a required <b>cofactor</b> for <b>prolyl hydroxylase</b> and <b>lysyl hydroxylase</b>. These enzymes attach hydroxyl (&ndash;OH) groups, turning proline into <b>hydroxyproline</b> and lysine into <b>hydroxylysine</b>. <span class="tag strong">strong evidence</span>'},
+  {k:'helix',ic:'🧬',nm:'Helix locks tight',ct:'stability',
+    integ:100,opts:{oh:true},
+    info:'<span class="n">Hydroxyproline stabilises the helix</span>The new &ndash;OH groups let the three strands form extra <b>hydrogen bonds</b>. This locks the triple helix into a <b>stable, secretable</b> molecule. Without hydroxylation the helix unravels at body temperature.'},
+  {k:'links',ic:'🔗',nm:'Crosslinks form',ct:'strength',
+    integ:100,opts:{links:true},
+    info:'<span class="n">Hydroxylysine builds crosslinks</span>Hydroxylysine lets neighbouring collagen molecules form strong <b>covalent crosslinks</b>, weaving fibrils into tough fibres. This is what gives skin, tendon, and blood-vessel walls their <b>tensile strength</b>.'},
+  {k:'fail',ic:'⚠️',nm:'Without vitamin C',ct:'collagen fails',
+    integ:25,opts:{symptoms:true},
+    info:'<span class="n">No cofactor → weak collagen</span>With too little vitamin&nbsp;C, collagen stays <b>under-hydroxylated</b>: the helix is unstable and poorly crosslinked. Fragile connective tissue shows up as <b>bleeding gums, easy bruising, tiny skin hemorrhages, joint pain, and slow wound healing</b> &mdash; the classic picture of <b>scurvy</b>. <span class="tag strong">strong evidence</span>'}
+ ];
+ var curStep=0;
+ function renderList(){
+   $("list").innerHTML=STEPS.map(function(s,ix){
+     return '<button class="it'+(ix===curStep?' on':'')+'" data-i="'+ix+'"><span class="ic">'+s.ic+'</span><span><span class="nm">'+s.nm+'</span><br><span class="ct">'+s.ct+'</span></span></button>';
+   }).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){b.onclick=function(){selStep(+b.dataset.i);};});
+ }
+ function selStep(ix){
+   curStep=ix; var s=STEPS[ix];
+   $("art").innerHTML=draw(s.integ,Object.assign({pool:s.k==='fail'?0.14:1},s.opts));
+   $("cardTitle").innerHTML=s.nm;
+   $("stage").style.background=s.k==='fail'?'#b23145':'var(--teal)';
+   $("stage").innerHTML=s.nm+'<small>step '+(ix+1)+' of '+STEPS.length+'</small>';
+   $("info").innerHTML=s.info;
+   renderList();
+ }
+
+ /* ---------- SIMULATE mode ---------- */
+ var SAT=1500;      // saturated body pool, mg (adult, illustrative)
+ var THRESH=300;    // ~ scurvy risk when pool below this, mg
+ var TAU=30;        // time constant for pool change, days (illustrative)
+ function eqPool(intake){ return SAT*intake/(intake+15); } // saturating steady state
+ function sim(){
+   var intake=+$("intake").value, day=+$("days").value;
+   $("inLab").innerHTML=intake; $("dayLab").innerHTML=day;
+   var peq=eqPool(intake);
+   var pool=peq+(SAT-peq)*Math.exp(-day/TAU); // start saturated, drift toward eq
+   pool=Math.max(0,Math.min(SAT,pool));
+   var pct=Math.round(pool/SAT*100);
+   var integ=Math.max(0,Math.min(100,Math.round((pool/900)*100)));
+   $("poolV").innerHTML=Math.round(pool)+'<span style="font-size:11px"> mg</span>';
+   $("pctV").innerHTML=pct+'%';
+   $("intV").innerHTML=integ+'%';
+   var pill=$("statusPill"), stageCol, stageTxt, sub;
+   if(pool>=600){ pill.className='pill normal'; pill.innerHTML='replete'; stageCol='var(--teal)'; stageTxt='Pool is topped up'; sub='connective tissue well supplied'; }
+   else if(pool>=THRESH){ pill.className='pill low'; pill.innerHTML='marginal'; stageCol='#2f6f9f'; stageTxt='Pool is dropping'; sub='reserves low but above the scurvy threshold'; }
+   else { pill.className='pill high'; pill.innerHTML='scurvy risk'; stageCol='#b23145'; stageTxt='Below the scurvy threshold'; sub='collagen synthesis is impaired'; }
+   $("stage").style.background=stageCol;
+   $("stage").innerHTML=stageTxt+'<small>'+sub+'</small>';
+   $("art").innerHTML=draw(integ,{pool:pool/SAT,symptoms:true,links:integ>75});
+   $("cardTitle").innerHTML='Body pool: '+Math.round(pool)+' mg';
+   // narrative info
+   var msg;
+   if(pool>=600){
+     msg='At <b>'+intake+' mg/day</b>, after <b>'+day+' days</b> the modelled pool settles near <b>'+Math.round(peq)+' mg</b>. Vitamin&nbsp;C is water-soluble and not stored long-term, so the pool tracks recent intake. Enzymes have the cofactor they need and collagen is fully hydroxylated.';
+   } else if(pool>=THRESH){
+     msg='Intake of <b>'+intake+' mg/day</b> can\'t hold the pool at saturation. After <b>'+day+' days</b> it has drifted toward its steady state of <b>'+Math.round(peq)+' mg</b>. Reserves are thinning but still above the ~'+THRESH+' mg point where symptoms typically begin.';
+   } else {
+     var iEq=THRESH*15/(SAT-THRESH); // intake giving eq = threshold
+     msg='At <b>'+intake+' mg/day</b> the modelled pool has fallen below <b>~'+THRESH+' mg</b> by day <b>'+day+'</b>. Under-hydroxylated collagen weakens vessels, gums, and skin &mdash; historically scurvy appeared after <b>weeks to a few months</b> without vitamin&nbsp;C. Notably, only about <b>'+iEq.toFixed(0)+'&ndash;10 mg/day</b> is enough to <b>prevent</b> scurvy in this model.';
+   }
+   $("info").innerHTML='<span class="n">Draining the pool</span>'+msg+
+     '<div class="loc">RDA (adults): <b>90 mg/day</b> for men, <b>75 mg/day</b> for women; smokers add <b>+35 mg/day</b>. Tolerable Upper Intake Level: <b>2000 mg/day</b>. Small amounts (~10 mg/day) prevent scurvy; higher intakes saturate the pool.</div>'+
+     '<div class="note"><b>Evidence note:</b> vitamin C <b>preventing and treating scurvy</b> is well established <span class="tag strong">strong</span>. Claims that extra vitamin C prevents colds or other disease are <b>not established</b> <span class="tag prelim">preliminary</span>. No single food causes or cures scurvy &mdash; it reflects total intake over time. This tool is educational, not medical advice.</div>';
+ }
+
+ /* ---------- mode switching ---------- */
+ function setMode(sim_on){
+   $("mSim").className=sim_on?'on':'';
+   $("mExplore").className=sim_on?'':'on';
+   $("paneSim").style.display=sim_on?'':'none';
+   $("paneExplore").style.display=sim_on?'none':'';
+   if(sim_on){ sim(); } else { selStep(curStep); }
+ }
+ $("mExplore").onclick=function(){setMode(false);};
+ $("mSim").onclick=function(){setMode(true);};
+ $("intake").oninput=sim; $("days").oninput=sim;
+
+ renderList();
+ selStep(0);
+})();
+</script>
+</body>
+</html>

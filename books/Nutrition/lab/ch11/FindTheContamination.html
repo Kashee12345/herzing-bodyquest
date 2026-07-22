@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Find the Contamination</title>
+<meta name="description" content="Inspect a kitchen scene and tap every cross-contamination hazard. Each one explains how bacteria travel from raw foods to ready-to-eat foods — and how to break the chain.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:1.06fr 0.94fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+svg#scene{background:#f3ead9;border-radius:12px;border:1px solid var(--line);}
+.rgn{cursor:pointer;}
+.cap{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:9px;}
+.cap b{color:var(--teal-dk);}
+.grid{grid-template-columns:1fr;gap:5px;}
+.grid .it{display:flex;align-items:center;gap:9px;padding:8px 11px;line-height:1.2;}
+.grid .it .num{width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:#efe4cf;color:var(--muted);}
+.grid .it .ic{font-size:17px;line-height:1;}
+.grid .it .tt{font-weight:700;font-size:12.5px;color:var(--muted);}
+.grid .it.done{border-color:var(--green);background:#eef7f0;}
+.grid .it.done .num{background:var(--green);color:#fff;}
+.grid .it.done .tt{color:var(--ink);}
+.grid .it.sel{box-shadow:0 0 0 2px var(--teal);}
+.fixbox{font-size:12.5px;color:#237a45;background:#eef7f0;border:1px solid #cfe8d7;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.5;}
+.fixbox b{color:#186b38;} .fixbox .fl{font-weight:800;text-transform:uppercase;letter-spacing:.5px;font-size:9.5px;color:#3a9c5f;display:block;margin-bottom:2px;}
+.done-all{background:var(--green)!important;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 11</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 11</div>
+  <h1>Find the Contamination</h1>
+  <div class="intro">Cross-contamination is how bacteria travel from <b>raw</b> foods to <b>ready-to-eat</b> foods that never get a cooking step to kill them. Inspect this kitchen and tap everything that lets them make the jump &mdash; there are <b>seven</b> hazards hiding in plain sight.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The kitchen — tap to inspect</h2>
+    <svg id="scene" viewBox="0 0 360 300" aria-label="kitchen scene with cross-contamination hazards">
+      <g id="art"></g><g id="rings"></g><g id="hot"></g>
+    </svg>
+    <div class="cap">Tap items to inspect them. Some spots are <b>safe practice</b> &mdash; part of the job is telling hazards from habits that already protect the food.</div>
+  </div></div>
+  <div>
+    <div id="stage">🔍 Inspect the kitchen<small>0 of 7 hazards found</small></div>
+    <div class="card">
+      <div class="grid" id="list"></div>
+      <div id="info"><span class="n">Start inspecting</span>Tap anything in the scene. When you find a real cross-contamination hazard it gets checked off here, with the reason it matters and the fix that breaks the chain.</div>
+      <div class="row"><button class="btn" id="reveal">Reveal remaining</button><button class="btn solid" id="reset">Reset</button></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var CORAL='#d1495b', GREEN='#2f9e5b';
+ // Each item: id, hazard?(safe flag), checklist icon, title, hotspot rect (x,y,w,h), why, fix
+ var ITEMS=[
+  {id:'fridge',ic:'🥩',t:'Raw meat above produce',x:14,y:46,w:88,h:110,
+   why:'Uncovered raw meat sits on the top fridge shelf, directly above ready-to-eat lettuce and tomatoes. Thawing juices drip down and can carry <b>Salmonella</b>, <b>Campylobacter</b>, or Shiga toxin&ndash;producing <b>E. coli</b> onto food that will be eaten with no further cooking.',
+   fix:'Store raw meat, poultry, and fish sealed on the <b>lowest</b> shelf, below and away from ready-to-eat foods.'},
+  {id:'board',ic:'🔪',t:'Raw chicken &amp; salad, one board',x:126,y:118,w:106,h:68,
+   why:'Raw chicken and cut salad greens share a single cutting board. Bacteria pass from the raw surface onto greens that get no heat step to kill them &mdash; a classic source of foodborne illness.',
+   fix:'Keep <b>separate boards</b> for raw animal foods and ready-to-eat foods, or wash and sanitize thoroughly between them.'},
+  {id:'knife',ic:'🍞',t:'One knife, raw then bread',x:240,y:114,w:78,h:40,
+   why:'The same unwashed knife cuts raw meat and then slices bread. The blade ferries organisms straight onto food that is served exactly as-is.',
+   fix:'Wash knives in hot soapy water between a raw task and a ready-to-eat task.'},
+  {id:'thaw',ic:'💧',t:'Meat thawing on the counter',x:124,y:196,w:82,h:52,
+   why:'Meat thaws at room temperature and its juices pool and spread across the counter. Beyond the drip contamination, the surface sits in the <b>danger zone</b> &mdash; 40&ndash;140&deg;F (4&ndash;60&deg;C) &mdash; where bacteria multiply fastest.',
+   fix:'Thaw in the refrigerator, under cold running water, or in the microwave &mdash; never on the counter. Clean any surface the juices touch.'},
+  {id:'plate',ic:'🍔',t:'Cooked food on the raw plate',x:212,y:194,w:78,h:54,
+   why:'The cooked burger is set back onto the very plate that held the raw patties. Cooking killed the bacteria on the meat, but the plate was never washed &mdash; so the cooked food is re-seeded.',
+   fix:'Always move cooked food onto a <b>clean</b> plate, never the one that held it raw.'},
+  {id:'fruit',ic:'🍎',t:'Uncovered fruit by raw prep',x:294,y:194,w:58,h:54,
+   why:'A bowl of ready-to-eat apples sits open right beside the raw-meat prep area, within splash and hand-transfer range.',
+   fix:'Keep ready-to-eat foods covered and away from raw-meat prep zones.'},
+  {id:'cloth',ic:'🧽',t:'One cloth wipes everything',x:316,y:110,w:38,h:38,
+   why:'A single damp cloth mops up raw-meat juice and then wipes the prep surface, <b>spreading</b> organisms instead of removing them. Damp cloths also let bacteria grow between uses.',
+   fix:'Use disposable towels or dedicated cloths laundered often, and sanitize surfaces as a separate step.'},
+  // safe decoys
+  {id:'sink',ic:'🚰',t:'Handwashing sink',safe:1,x:298,y:44,w:56,h:50,
+   why:'Soap and warm running water at a dedicated sink. Washing hands between tasks is one of the <b>strongest</b> defenses against cross-contamination. No hazard here &mdash; keep it up.'},
+  {id:'crisper',ic:'🥦',t:'Sealed produce drawer',safe:1,x:14,y:206,w:88,h:40,
+   why:'Produce kept in a closed drawer at the bottom of the fridge, away from any raw-meat drips. That is exactly where ready-to-eat produce belongs. No hazard here.'}
+ ];
+ var HAZ=ITEMS.filter(function(x){return !x.safe;});
+ var found={}, cur=null;
+
+ function scene(){
+   var s='';
+   // wall + floor
+   s+='<rect x="0" y="0" width="360" height="212" fill="#efe6d3"/>';
+   s+='<rect x="0" y="212" width="360" height="88" fill="#e2d3b6"/>';
+   s+='<line x1="0" y1="212" x2="360" y2="212" stroke="#d3c19c" stroke-width="2"/>';
+   // ---- fridge ----
+   s+='<rect x="12" y="40" width="92" height="210" rx="7" fill="#f7f2e8" stroke="#cdbfa2" stroke-width="2"/>';
+   s+='<line x1="12" y1="110" x2="104" y2="110" stroke="#ddd0b5" stroke-width="2"/>';
+   s+='<line x1="12" y1="158" x2="104" y2="158" stroke="#ddd0b5" stroke-width="2"/>';
+   s+='<line x1="12" y1="204" x2="104" y2="204" stroke="#ddd0b5" stroke-width="2"/>';
+   s+='<rect x="96" y="60" width="5" height="150" rx="2" fill="#cdbfa2"/>';
+   // top shelf raw meat + drip
+   s+='<text x="58" y="96" font-size="26" text-anchor="middle">🥩</text>';
+   s+='<circle cx="46" cy="120" r="2.4" fill="'+CORAL+'"/><circle cx="60" cy="132" r="2" fill="'+CORAL+'"/><circle cx="70" cy="124" r="1.8" fill="'+CORAL+'"/>';
+   // mid shelf produce
+   s+='<text x="40" y="150" font-size="20" text-anchor="middle">🥬</text><text x="72" y="150" font-size="18" text-anchor="middle">🍅</text>';
+   // bottom neutral
+   s+='<text x="42" y="196" font-size="18" text-anchor="middle">🥛</text><text x="72" y="196" font-size="17" text-anchor="middle">🥚</text>';
+   // crisper drawer (safe)
+   s+='<rect x="18" y="210" width="80" height="34" rx="4" fill="#e9f2e4" stroke="#bcd8b6" stroke-width="1.5"/><text x="58" y="234" font-size="18" text-anchor="middle">🥦</text>';
+   s+='<text x="58" y="54" font-size="8.5" text-anchor="middle" fill="#8d8270" font-weight="700">FRIDGE</text>';
+   // ---- back-wall sink (safe) ----
+   s+='<rect x="300" y="50" width="52" height="40" rx="5" fill="#dfe9f0" stroke="#a9c2d4" stroke-width="1.6"/>';
+   s+='<rect x="316" y="40" width="6" height="16" rx="3" fill="#9fb6c6"/><rect x="316" y="40" width="18" height="5" rx="2.5" fill="#9fb6c6"/>';
+   s+='<text x="326" y="82" font-size="16" text-anchor="middle">🚰</text>';
+   // ---- counter ----
+   s+='<rect x="116" y="108" width="238" height="142" rx="6" fill="#c9a878" stroke="#b08f5f" stroke-width="2"/>';
+   // cutting board (raw + salad)
+   s+='<rect x="128" y="120" width="102" height="62" rx="6" fill="#e7d3ae" stroke="#c9ad7e" stroke-width="1.5"/>';
+   s+='<text x="156" y="158" font-size="24" text-anchor="middle">🍗</text><text x="204" y="156" font-size="20" text-anchor="middle">🥬</text>';
+   // knife + bread
+   s+='<text x="256" y="138" font-size="21" text-anchor="middle">🔪</text><line x1="248" y1="130" x2="264" y2="130" stroke="'+CORAL+'" stroke-width="2.2"/>';
+   s+='<text x="296" y="140" font-size="21" text-anchor="middle">🍞</text>';
+   // cloth (top-right)
+   s+='<rect x="320" y="114" width="30" height="30" rx="4" fill="#e6b7bd" stroke="#cf8a92" stroke-width="1.4"/><text x="335" y="136" font-size="15" text-anchor="middle">🧽</text>';
+   // front row: thaw tray, plate, fruit bowl
+   s+='<rect x="126" y="200" width="76" height="44" rx="5" fill="#e9dcc2" stroke="#cbb488" stroke-width="1.5"/><text x="150" y="230" font-size="21" text-anchor="middle">🥩</text>';
+   s+='<ellipse cx="170" cy="242" rx="30" ry="5" fill="'+CORAL+'" opacity=".35"/><circle cx="186" cy="238" r="2.3" fill="'+CORAL+'"/><circle cx="196" cy="230" r="1.9" fill="'+CORAL+'"/>';
+   s+='<ellipse cx="250" cy="222" rx="34" ry="24" fill="#f4efe6" stroke="#d8ccb6" stroke-width="1.6"/><text x="250" y="230" font-size="24" text-anchor="middle">🍔</text>';
+   s+='<ellipse cx="323" cy="228" rx="27" ry="19" fill="#eadfc6" stroke="#cbb488" stroke-width="1.5"/><text x="323" y="234" font-size="20" text-anchor="middle">🍎</text>';
+   return s;
+ }
+ function rings(){
+   var s='';
+   ITEMS.forEach(function(it){
+     if(!found[it.id])return;
+     var cx=it.x+it.w/2, cy=it.y+it.h/2, r=Math.max(it.w,it.h)/2+3;
+     var col=it.safe?GREEN:CORAL;
+     s+='<rect x="'+it.x+'" y="'+it.y+'" width="'+it.w+'" height="'+it.h+'" rx="8" fill="none" stroke="'+col+'" stroke-width="2.5" opacity=".9"/>';
+     s+='<circle cx="'+(it.x+it.w-4)+'" cy="'+(it.y+4)+'" r="9" fill="'+col+'"/>';
+     s+='<text x="'+(it.x+it.w-4)+'" y="'+(it.y+8)+'" font-size="11" text-anchor="middle" fill="#fff" font-weight="800">'+(it.safe?'✓':'!')+'</text>';
+   });
+   return s;
+ }
+ function hot(){
+   return ITEMS.map(function(it){
+     return '<rect class="rgn" data-id="'+it.id+'" x="'+it.x+'" y="'+it.y+'" width="'+it.w+'" height="'+it.h+'" rx="8" fill="#fff" fill-opacity="0.001"/>';
+   }).join('');
+ }
+ function list(){
+   $("list").innerHTML=HAZ.map(function(it,n){
+     var done=!!found[it.id];
+     return '<button class="it'+(done?' done':'')+(cur===it.id?' sel':'')+'" data-id="'+it.id+'">'+
+       '<span class="num">'+(done?(n+1):'?')+'</span>'+
+       (done?'<span class="ic">'+it.ic+'</span>':'')+
+       '<span class="tt">'+(done?it.t:'Hazard #'+(n+1)+' — not spotted yet')+'</span></button>';
+   }).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){
+     b.onclick=function(){ if(found[b.dataset.id]) show(b.dataset.id); };
+   });
+ }
+ function count(){ return HAZ.filter(function(h){return found[h.id];}).length; }
+ function stage(){
+   var c=count(), all=c===HAZ.length;
+   $("stage").className=all?'done-all':'';
+   $("stage").style.background=all?GREEN:'';
+   $("stage").innerHTML=(all?'✓ All clear':'🔍 Inspect the kitchen')+
+     '<small>'+c+' of '+HAZ.length+' hazards found'+(all?' — you spotted every one':'')+'</small>';
+ }
+ function show(id){
+   cur=id;
+   var it=ITEMS.filter(function(x){return x.id===id;})[0];
+   var html='<span class="n">'+it.ic+' '+it.t+'</span>'+it.why;
+   if(it.safe){
+     html='<span class="n">'+it.ic+' '+it.t+' <span class="pill normal">safe</span></span>'+it.why;
+   }else if(it.fix){
+     html+='<div class="fixbox"><span class="fl">Break the chain</span>'+it.fix+'</div>';
+   }
+   $("info").innerHTML=html;
+   $("cardTitle").innerHTML=it.safe?'Good practice — not a hazard':'Hazard: '+it.t;
+   draw();
+ }
+ function tap(id){
+   var it=ITEMS.filter(function(x){return x.id===id;})[0];
+   if(!found[id]){ found[id]=1; }
+   show(id);
+ }
+ function draw(){
+   $("art").innerHTML=scene();
+   $("rings").innerHTML=rings();
+   $("hot").innerHTML=hot();
+   document.querySelectorAll('#hot .rgn').forEach(function(r){
+     r.onclick=function(){ tap(r.dataset.id); };
+   });
+   list(); stage();
+ }
+ $("reveal").onclick=function(){ ITEMS.forEach(function(it){found[it.id]=1;}); cur=null;
+   $("info").innerHTML='<span class="n">Every hazard revealed</span>All seven cross-contamination hazards are now ringed in red, and the two green rings mark habits that were already protecting the food. Tap any checked item to review why it matters.';
+   $("cardTitle").innerHTML='All hazards revealed'; draw(); };
+ $("reset").onclick=function(){ found={}; cur=null;
+   $("info").innerHTML='<span class="n">Start inspecting</span>Tap anything in the scene. When you find a real cross-contamination hazard it gets checked off here, with the reason it matters and the fix that breaks the chain.';
+   $("cardTitle").innerHTML='The kitchen — tap to inspect'; draw(); };
+ draw();
+})();
+</script>
+</body>
+</html>

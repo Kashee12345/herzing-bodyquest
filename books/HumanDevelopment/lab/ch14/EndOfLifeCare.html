@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f7f2">
+<title>End-of-Life Care</title>
+<meta name="description" content="Interactive tour of the three pillars of end-of-life care — palliative care, hospice, and advance directives — mapped onto the trajectory of a serious illness.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_humdev.css">
+<style>.wrap{grid-template-columns:0.98fr 1.02fr;}
+.legend{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:8px;font-size:11px;color:var(--muted);font-weight:600;}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">Human Development · Chapter 14</div>
+  <h1>End-of-Life Care</h1>
+  <div class="intro">When a cure is no longer the whole story, care turns toward <b>comfort, choice, and dignity</b>. Three pillars support a person through a serious illness &mdash; and each enters at a different point on the timeline. Tap one to see <b>when</b> it applies.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">An illness over time</h2>
+    <svg viewBox="0 0 260 182" aria-label="trajectory of a serious illness with the applicable care window highlighted"><g id="art"></g></svg>
+    <div class="legend">
+      <span><i style="background:#9db3a7"></i>health &amp; function</span>
+      <span><i id="lgSwatch" style="background:#e2efe7"></i><span id="lgLabel">tap a pillar to highlight its window</span></span>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">The three pillars<small>tap one to begin</small></div>
+    <div class="card"><div class="list" id="list"></div>
+      <div id="info"><span class="n">A shared goal</span>All three pillars aim at <b>quality of life</b>, not just length of life. They are <b>not</b> interchangeable, though: <b>palliative care</b> can start the day of diagnosis, <b>hospice</b> begins only when an illness is terminal, and <b>advance directives</b> are best written long before either is needed.</div>
+    </div>
+  </div>
+</div>
+<footer>Human Development · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var CARE=[
+  {k:'palliative',ic:'🩺',nm:'Palliative Care',ct:'Any stage of a serious illness',col:'#2f6f9f',win:'full',
+   def:'Specialized medical care that treats the <b>symptoms, pain, and stress</b> of a serious illness. It can begin <b>at diagnosis</b> and runs <b>alongside curative or life-prolonging treatment</b> &mdash; a patient never has to choose one or the other.',
+   facts:['No prognosis limit','With or without curative Rx','Hospital · clinic · home','Interdisciplinary team'],
+   goal:'Goal: the best possible quality of life for the <b>patient and family</b> &mdash; at any age, at any stage of illness.',
+   note:{cls:'mnem',html:'<b>All hospice is palliative care, but not all palliative care is hospice.</b> Palliative care carries no time limit and never requires giving up treatment.'}},
+  {k:'hospice',ic:'🕊️',nm:'Hospice Care',ct:'Terminal illness · comfort focus',col:'#7a5a8a',win:'end',
+   def:'A form of palliative care for people who are <b>terminally ill</b>. The focus shifts <b>entirely to comfort and dignity</b>; attempts to cure the disease are <b>set aside</b> in favor of the quality of the time that remains.',
+   facts:['Prognosis ~6 months or less','Curative treatment stopped','Most often in the home','Family bereavement support'],
+   goal:'Goal: comfort, dignity, and meaning in the final months &mdash; with grief support that continues for the family for months after the death.',
+   note:{cls:'note',html:'Eligibility (U.S. Medicare hospice benefit) generally requires a <b>physician-certified prognosis of 6 months or less</b> if the illness runs its natural course.'}},
+  {k:'directive',ic:'📜',nm:'Advance Directives',ct:'Plan ahead · your voice on record',col:'#2f9e5b',win:'plan',
+   def:'<b>Legal documents that record your medical wishes</b> in case you can no longer speak for yourself. They are best completed <b>before a crisis</b> &mdash; ideally while healthy &mdash; as part of advance-care planning.',
+   facts:['Living will','Health-care proxy (DPOA)','DNR order','POLST / MOLST'],
+   goal:'Goal: protect <b>autonomy</b> &mdash; your own choices continue to guide your care even when you cannot voice them.',
+   note:{cls:'mnem',html:'A <b>living will</b> states which treatments you do or don\'t want; a <b>durable power of attorney for health care</b> names a person to decide for you. The <b>Patient Self-Determination Act (1990)</b> requires facilities to ask about them.'}}
+ ];
+
+ // layout anchors for the illness-trajectory chart
+ var x0=32, x1=118, x2=182, x3=232, top=36, base=150;
+ var marks=[[x0,'Dx'],[x1,'Advanced'],[x2,'~6 mo'],[x3,'Death']];
+
+ function label(cx,y,t,col){
+   var w=t.length*4.7+14;
+   return '<rect x="'+(cx-w/2)+'" y="'+(y-8.5)+'" width="'+w+'" height="16" rx="8" fill="'+col+'"/>'+
+     '<text x="'+cx+'" y="'+(y+2.6)+'" font-size="8.3" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800" fill="#fff">'+t+'</text>';
+ }
+
+ function draw(c){
+   var s='';
+   // highlighted care window (drawn under the curve)
+   if(c&&c.win==='full'){ s+='<rect x="'+x0+'" y="'+top+'" width="'+(x3-x0)+'" height="'+(base-top)+'" rx="4" fill="'+c.col+'" opacity=".12"/>'; }
+   else if(c&&c.win==='end'){ s+='<rect x="'+x2+'" y="'+top+'" width="'+(x3-x2)+'" height="'+(base-top)+'" rx="4" fill="'+c.col+'" opacity=".17"/>'; }
+   // vertical guides + baseline
+   marks.forEach(function(m){ s+='<line x1="'+m[0]+'" y1="'+top+'" x2="'+m[0]+'" y2="'+base+'" stroke="#e2efe7" stroke-width="1"/>'; });
+   s+='<line x1="22" y1="'+base+'" x2="238" y2="'+base+'" stroke="#cfe2d6" stroke-width="2"/>';
+   // declining health / function curve
+   s+='<path d="M32,54 C70,60 96,72 118,86 C146,104 164,110 182,116 C202,124 218,138 232,150" fill="none" stroke="#9db3a7" stroke-width="3" stroke-linecap="round"/>';
+   s+='<text x="32" y="46" font-size="8.3" font-family="Inter,sans-serif" font-weight="700" fill="#9db3a7">health / function</text>';
+   // x-axis labels
+   marks.forEach(function(m){ s+='<text x="'+m[0]+'" y="166" font-size="8.5" text-anchor="middle" font-family="Inter,sans-serif" font-weight="700" fill="#7a8880">'+m[1]+'</text>'; });
+   if(!c) return s;
+   // per-pillar decorations
+   if(c.win==='full'){
+     s+=label((x0+x3)/2,26,'PALLIATIVE · from Dx onward',c.col);
+   } else if(c.win==='end'){
+     s+=label((x2+x3)/2,26,'HOSPICE',c.col);
+     s+='<line x1="'+x2+'" y1="'+top+'" x2="'+x2+'" y2="'+base+'" stroke="'+c.col+'" stroke-width="1.6" stroke-dasharray="3 3"/>';
+     s+='<circle cx="'+x2+'" cy="116" r="4" fill="'+c.col+'"/>';
+     s+='<text x="'+(x2-4)+'" y="132" font-size="8" text-anchor="end" font-family="Inter,sans-serif" font-weight="700" fill="'+c.col+'">cure stops →</text>';
+   } else {
+     // advance directives: documents planned early + surrogate takes over at incapacity
+     var dcx=150,dcy=52;
+     for(var i=0;i<3;i++){ var ox=dcx-16+i*13, oy=dcy-6+i*3;
+       s+='<rect x="'+ox+'" y="'+oy+'" width="20" height="26" rx="2" fill="#fffdf9" stroke="'+c.col+'" stroke-width="1.5"/>';
+       s+='<line x1="'+(ox+4)+'" y1="'+(oy+7)+'" x2="'+(ox+16)+'" y2="'+(oy+7)+'" stroke="'+c.col+'" stroke-width="1.3"/>';
+       s+='<line x1="'+(ox+4)+'" y1="'+(oy+12)+'" x2="'+(ox+16)+'" y2="'+(oy+12)+'" stroke="'+c.col+'" stroke-width="1.3"/>';
+       s+='<line x1="'+(ox+4)+'" y1="'+(oy+17)+'" x2="'+(ox+12)+'" y2="'+(oy+17)+'" stroke="'+c.col+'" stroke-width="1.3"/>';
+     }
+     s+='<line x1="'+x0+'" y1="'+base+'" x2="'+x0+'" y2="70" stroke="'+c.col+'" stroke-width="2"/>';
+     s+='<path d="M'+x0+' 70 L'+(x0+19)+' 74 L'+x0+' 82 Z" fill="'+c.col+'"/>';
+     s+=label(x0+35,66,'plan early',c.col);
+     s+='<line x1="'+x1+'" y1="'+top+'" x2="'+x1+'" y2="'+base+'" stroke="'+c.col+'" stroke-width="1.6" stroke-dasharray="3 3"/>';
+     s+='<text x="'+x1+'" y="'+(top-4)+'" font-size="8" text-anchor="middle" font-family="Inter,sans-serif" font-weight="700" fill="'+c.col+'">if you can\'t speak</text>';
+   }
+   return s;
+ }
+
+ function render(cur){
+   $('list').innerHTML=CARE.map(function(m){
+     return '<button class="it'+(m.k===cur?' on':'')+'" data-k="'+m.k+'"><span class="ic">'+m.ic+'</span><span><span class="nm">'+m.nm+'</span><br><span class="ct">'+m.ct+'</span></span></button>';
+   }).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){ b.onclick=function(){ sel(b.dataset.k); }; });
+ }
+
+ function sel(k){
+   var c=CARE.filter(function(x){return x.k===k;})[0];
+   $('art').innerHTML=draw(c);
+   $('cardTitle').innerHTML=c.nm;
+   $('stage').style.background=c.col;
+   $('stage').innerHTML=c.nm+'<small>'+c.ct+'</small>';
+   $('lgSwatch').style.background=c.col;
+   $('lgLabel').innerHTML=(c.win==='full'?'palliative window':(c.win==='end'?'hospice window':'plan-ahead documents'));
+   var chips=c.facts.map(function(f){return '<span>'+f+'</span>';}).join('');
+   $('info').innerHTML='<span class="n">'+c.nm+'</span>'+c.def+
+     '<div class="ex">'+chips+'</div>'+
+     '<div class="loc">'+c.goal+'</div>'+
+     '<div class="'+c.note.cls+'">'+c.note.html+'</div>';
+   render(k);
+ }
+
+ $('art').innerHTML=draw(null);
+ render('');
+})();
+</script>
+</body>
+</html>

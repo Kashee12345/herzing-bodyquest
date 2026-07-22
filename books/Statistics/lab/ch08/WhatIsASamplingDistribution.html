@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>What a Sampling Distribution Is</title>
+<meta name="description" content="Build a sampling distribution one dot at a time. Draw real samples from a population, compute a statistic, and watch the statistic&rsquo;s own distribution appear &mdash; with live centre and spread checked against the exact formulas.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.06fr 0.94fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:88px;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:12.5px;font-weight:800;color:var(--teal-dk);min-width:96px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;border:1px solid #d5e3ea;}
+.grid .it .nm{display:block;} .grid .it .s{display:block;margin-top:2px;font-weight:600;}
+#info .loc{font-variant-numeric:tabular-nums;font-size:12px;line-height:1.7;}
+.obs{font-size:12.4px;color:#5a4212;background:#fbf3e2;border:1px solid #ecd9ac;border-radius:8px;padding:7px 11px;margin-top:9px;line-height:1.5;font-variant-numeric:tabular-nums;}
+.obs b{color:#5a4212;}
+.row .btn{padding:10px 4px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 8</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 8</div>
+  <h1>What a Sampling Distribution Is</h1>
+  <div class="intro">A statistic is a number squeezed out of a sample &mdash; and a <b>different sample would have given a different number</b>. So the statistic is itself a random quantity, and random quantities have distributions. Sample after sample, plot the statistic you get, and a shape appears: the <b>sampling distribution</b>. It is not the population, and it is not the data from any one sample. Build one below, one dot at a time.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Adult male height &mdash; sample mean, n = 9</h2>
+      <svg viewBox="0 0 480 478" id="chart" aria-label="population, one sample, and the accumulating sampling distribution on a shared axis"></svg>
+      <div class="seg" id="scaleseg" style="margin-top:11px;">
+        <button data-z="0" class="on">Same axis as the population<small>see how much narrower it is</small></button>
+        <button data-z="1">Zoom into the pile<small>see its shape</small></button>
+      </div>
+      <div class="lgd">
+        <span><i style="background:#dce9f0"></i>population</span>
+        <span><i style="background:#b8862f"></i>this sample's values</span>
+        <span><i style="background:#2f6f8a"></i>one dot = one sample's statistic</span>
+        <span><i style="background:#d1495b"></i>newest dot</span>
+        <span><i style="background:#2f9e5b"></i>what the population says the centre should be</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Adult male height<small>&mu; = 69 in &middot; &sigma; = 3 in</small></div>
+    <div class="card">
+      <div class="hd">1 &middot; Pick a population to sample from</div>
+      <div class="grid" id="pops"></div>
+      <div class="hd">2 &middot; Pick the statistic you compute from each sample</div>
+      <div class="seg" id="statseg">
+        <button data-s="mean" class="on">Mean<small>x&#772;</small></button>
+        <button data-s="median">Median<small>middle value</small></button>
+        <button data-s="max">Maximum<small>largest value</small></button>
+        <button data-s="prop">Proportion<small>p-hat</small></button>
+      </div>
+      <div class="sl"><label>sample size n</label><input type="range" id="nSl" min="2" max="50" step="1" value="9"><span class="nv" id="nVal">n = 9</span></div>
+      <div class="hd">3 &middot; Draw samples and watch the pile build</div>
+      <div class="row">
+        <button class="btn solid" id="one">Draw 1 sample</button>
+        <button class="btn" id="ten">+ 10</button>
+        <button class="btn" id="hun">+ 100</button>
+        <button class="btn" id="rst">Reset</button>
+      </div>
+      <div class="tiles">
+        <div><span class="lb">Samples drawn</span><span class="vv" id="tK">0</span><span class="sub">dots in the pile</span></div>
+        <div><span class="lb">Latest value</span><span class="vv" id="tL">&mdash;</span><span class="sub" id="tLs">&nbsp;</span></div>
+        <div><span class="lb">Centre of pile</span><span class="vv" id="tC">&mdash;</span><span class="sub" id="tCs">&nbsp;</span></div>
+        <div><span class="lb">Spread of pile</span><span class="vv" id="tS">&mdash;</span><span class="sub" id="tSs">&nbsp;</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>Three distributions, and students confuse them constantly.</b> <b>(1) The population distribution</b> &mdash; how the individual values are spread out. Its centre is &mu; and its spread is &sigma;, and they do not budge no matter what you do. <b>(2) The distribution of one sample</b> &mdash; the n values you actually collected, sitting in the middle strip. Draw again and you get n different values. <b>(3) The sampling distribution</b> &mdash; the spread of the <i>statistic</i> across all the samples you could have taken. Only the third one is new here, and only the third one changes when you change n.</div>
+      <div class="note"><b>Four things this picture is quietly telling you.</b> <b>A sampling distribution is a theoretical object</b> &mdash; the distribution of the statistic over <i>every</i> sample that could be drawn. The dots are a simulation that approximates it; 20 dots barely sketch it, 1,000 dots trace it closely, but no finite pile <i>is</i> it. <b>It belongs to a statistic, not to data</b> &mdash; change the statistic and the shape can change entirely, as the maximum shows. <b>It depends on n</b>, which is why the pile clears whenever you move the slider: a new n is a different distribution, not more of the same one. And <b>in real work you get one sample and one dot</b> &mdash; the whole reason for this theory is to know what the rest of the pile would have looked like without ever having to draw it.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ================= normal machinery, computed not looked up ================= */
+ var SQ2PI=Math.sqrt(2*Math.PI);
+ function phi(z){ return Math.exp(-0.5*z*z)/SQ2PI; }
+ function simp(b,n){                       /* Simpson's rule, 0 to b */
+   var h=b/n, s=phi(0)+phi(b), i;
+   for(i=1;i<n;i++){ s+=(i%2?4:2)*phi(i*h); }
+   return s*h/3;
+ }
+ function Phi(z){                          /* P(Z < z) */
+   if(z<-8.5)return 0;
+   if(z>8.5)return 1;
+   var a=simp(Math.abs(z),800);
+   return z>=0?(0.5+a):(0.5-a);
+ }
+
+ /* ================= seeded PRNG (mulberry32) ================= */
+ var SEED0=20260719, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ function gauss(){                          /* Box-Muller */
+   var u1=rnd(); if(u1<1e-12)u1=1e-12;
+   return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*rnd());
+ }
+
+ /* ================= the populations =================
+    Each is a model with a KNOWN mu, sigma and median, so every "target"
+    printed on screen is exact arithmetic, not an estimate. Sampling is
+    independent draws from the model (equivalently, with replacement from
+    an unlimited population), which is what makes sigma/sqrt(n) exact. */
+ var LM=Math.log(28), LS=0.75;
+ var WMU=Math.exp(LM+LS*LS/2);                     /* 37.09 min */
+ var WSD=WMU*Math.sqrt(Math.exp(LS*LS)-1);         /* 32.23 min */
+ var EMU=71, ESD=Math.sqrt(0.5*(49+169)+0.5*(36+169));  /* 14.543 pts */
+
+ var P=[
+  {k:'ht',nm:'Adult male height',s:'bell-shaped',col:'#2f6f8a',
+   mu:69,sg:3,med:69,dec:0,sdec:2,unit:' in',lo:57,hi:81,tk:[57,63,69,75,81],
+   noun:'men',ax:'height (inches)',cut:72,cutTxt:'taller than 72 in',disc:0,
+   gen:function(){return 69+3*gauss();},
+   den:function(x){return phi((x-69)/3)/3;},
+   pAb:function(){return 1-Phi((72-69)/3);},
+   bl:'Height within one sex piles up symmetrically around a single peak &mdash; the friendliest possible population, and the one where every result below will look tidiest.'},
+
+  {k:'wt',nm:'Emergency-department wait',s:'strongly right-skewed',col:'#d1495b',
+   mu:WMU,sg:WSD,med:28,dec:0,sdec:1,unit:' min',lo:0,hi:150,tk:[0,30,60,90,120,150],
+   noun:'patients',ax:'wait time (minutes)',cut:60,cutTxt:'waiting more than 60 min',disc:0,
+   gen:function(){return Math.exp(LM+LS*gauss());},
+   den:function(x){ if(x<=0)return 0; var z=(Math.log(x)-LM)/LS; return Math.exp(-0.5*z*z)/(x*LS*SQ2PI); },
+   pAb:function(){return 1-Phi((Math.log(60)-LM)/LS);},
+   bl:'Waits are jammed against zero with a long tail of miserable outliers. The population is nothing like a bell &mdash; which makes what happens to the pile of sample means worth watching closely.'},
+
+  {k:'di',nm:'Roll of a fair die',s:'flat &middot; six values only',col:'#b8862f',
+   mu:3.5,sg:Math.sqrt(35/12),med:3.5,dec:0,sdec:2,unit:'',lo:0.5,hi:6.5,tk:[1,2,3,4,5,6],
+   noun:'rolls',ax:'number rolled',cut:4.5,cutTxt:'a 5 or a 6',disc:1,
+   gen:function(){return 1+Math.floor(rnd()*6);},
+   den:function(){return 1/6;},
+   pAb:function(){return 2/6;},
+   bl:'Six equally likely values and nothing in between. A perfectly flat population, and a discrete one &mdash; so the statistic can only land on certain values, and the pile below will show visible gaps.'},
+
+  {k:'ex',nm:'Exam score, split class',s:'two peaks',col:'#7a5a8a',
+   mu:EMU,sg:ESD,med:72,dec:0,sdec:2,unit:' pts',lo:35,hi:110,tk:[35,50,65,80,95,110],
+   noun:'students',ax:'exam score (points)',cut:70,cutTxt:'scoring above 70',disc:0,
+   gen:function(){ return rnd()<0.5 ? 58+7*gauss() : 84+6*gauss(); },
+   den:function(x){ return 0.5*phi((x-58)/7)/7 + 0.5*phi((x-84)/6)/6; },
+   pAb:function(){ return 0.5*(1-Phi((70-58)/7)) + 0.5*(1-Phi((70-84)/6)); },
+   bl:'Half the class understood the material and half did not, so the scores come in two humps with a valley between them. Notice that almost nobody scores at the mean of 71 &mdash; a mean can name a value the population avoids.'}
+ ];
+ var cur=P[0];
+
+ /* ================= the statistics ================= */
+ var ST={
+  mean:  {nm:'sample mean',      sh:'mean',      ax:'sample mean'},
+  median:{nm:'sample median',    sh:'median',    ax:'sample median'},
+  max:   {nm:'sample maximum',   sh:'maximum',   ax:'sample maximum'},
+  prop:  {nm:'sample proportion',sh:'proportion',ax:'sample proportion (p-hat)'}
+ };
+ var STAT='mean', N=9, ZOOM=0;
+ var T=[];        /* every statistic value computed so far  */
+ var S=null;      /* the most recent sample, as drawn       */
+
+ function statOf(a){
+   var i,s;
+   if(STAT==='mean'){ s=0; for(i=0;i<a.length;i++)s+=a[i]; return s/a.length; }
+   if(STAT==='max'){ s=a[0]; for(i=1;i<a.length;i++) if(a[i]>s)s=a[i]; return s; }
+   if(STAT==='prop'){ s=0; for(i=0;i<a.length;i++) if(a[i]>cur.cut)s++; return s/a.length; }
+   var b=a.slice(0).sort(function(x,y){return x-y;}), m=b.length;
+   return m%2 ? b[(m-1)/2] : (b[m/2-1]+b[m/2])/2;
+ }
+ function drawSample(){
+   var a=[],i;
+   for(i=0;i<N;i++)a.push(cur.gen());
+   S=a;
+   if(T.length<2000)T.push(statOf(a));
+ }
+
+ /* what the population itself says the centre and the spread should be */
+ function target(){
+   if(STAT==='mean')return cur.mu;
+   if(STAT==='median')return cur.med;
+   if(STAT==='prop')return cur.pAb();
+   return null;                       /* the maximum has no fixed centre */
+ }
+ function targetSD(){
+   if(STAT==='mean')return cur.sg/Math.sqrt(N);
+   if(STAT==='prop'){ var p=cur.pAb(); return Math.sqrt(p*(1-p)/N); }
+   return null;                       /* no elementary formula for these */
+ }
+
+ /* ================= formatting ================= */
+ function com(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+ function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+ function fmt(v){ return v.toFixed(cur.dec)+cur.unit; }                    /* a population value */
+ function sfm(v){ return STAT==='prop'? v.toFixed(3) : v.toFixed(cur.sdec)+cur.unit; }
+ function sdf(v){ return STAT==='prop'? v.toFixed(4) : v.toFixed(cur.sdec+1)+cur.unit; }
+ function pct(p){ return (p*100).toFixed(1)+'%'; }
+ function decFor(r){ return r<0.5?3:(r<5?2:(r<50?1:0)); }
+
+ /* ================= pile statistics, computed from the dots ================= */
+ function pileMean(){ var s=0,i; for(i=0;i<T.length;i++)s+=T[i]; return s/T.length; }
+ function pileSD(){
+   if(T.length<2)return null;
+   var m=pileMean(), s=0, i;
+   for(i=0;i<T.length;i++)s+=(T[i]-m)*(T[i]-m);
+   return Math.sqrt(s/(T.length-1));
+ }
+
+ /* ================= geometry ================= */
+ var VW=480,VH=478,ML=46,MR=14,PW=VW-ML-MR;
+ var POP_TOP=26,POP_BASE=146;
+ var STRIP_TOP=184,STRIP_BOT=224,STRIP_MID=204;
+ var DOT_TOP=258,DOT_BASE=434;
+
+ function zoomed(){ return ZOOM && T.length>1; }
+ function bdom(){
+   var i,a,b,pad;
+   if(!zoomed()) return STAT==='prop' ? [0,1] : [cur.lo,cur.hi];
+   a=T[0]; b=T[0];
+   for(i=1;i<T.length;i++){ if(T[i]<a)a=T[i]; if(T[i]>b)b=T[i]; }
+   pad=(b-a)*0.16;
+   if(pad<1e-9) pad=(STAT==='prop'?0.06:Math.max(0.5,Math.abs(a)*0.03));
+   a-=pad; b+=pad;
+   if(STAT==='prop'){ if(a<0)a=0; if(b>1)b=1; if(b-a<1e-6){a=0;b=1;} }
+   return [a,b];
+ }
+ function xTop(v){ return ML+(v-cur.lo)/(cur.hi-cur.lo)*PW; }
+ function xBot(v){ var d=bdom(); return ML+(v-d[0])/(d[1]-d[0])*PW; }
+
+ function stacks(){
+   var d=bdom(), lo=d[0], hi=d[1], nb=61, bw=(hi-lo)/nb;
+   var cnt=[],pos=[],i,ix,over=0;
+   for(i=0;i<nb;i++)cnt[i]=0;
+   for(i=0;i<T.length;i++){
+     ix=Math.floor((T[i]-lo)/bw);
+     if(ix<0){ix=0;over++;} else if(ix>=nb){ix=nb-1;over++;}
+     pos.push([ix,cnt[ix]]);
+     cnt[ix]++;
+   }
+   var mx=0; for(i=0;i<nb;i++) if(cnt[i]>mx)mx=cnt[i];
+   return {pos:pos,mx:mx,bw:bw,lo:lo,nb:nb,over:over};
+ }
+
+ /* ================= the chart ================= */
+ function drawChart(){
+   var s='',i,x,tv;
+   var d=bdom(), blo=d[0], bhi=d[1];
+   var pAvail=POP_BASE-POP_TOP-8;
+
+   /* ---------- panel 1 : the population ---------- */
+   s+='<text x="'+ML+'" y="16" font-size="9.6" font-weight="800" fill="#78868d" letter-spacing="1.1">1 &#183; THE POPULATION &#8212; every value that could be drawn</text>';
+   if(cur.disc){
+     var bw6=PW/9;
+     for(i=1;i<=6;i++){
+       x=xTop(i);
+       s+='<rect x="'+(x-bw6/2).toFixed(1)+'" y="'+(POP_TOP+14)+'" width="'+bw6.toFixed(1)+'" height="'+(POP_BASE-POP_TOP-14)+'" fill="#dce9f0" stroke="#1c4454" stroke-width="1.6"/>';
+       if(STAT==='prop'&&i>cur.cut){
+         s+='<rect x="'+(x-bw6/2).toFixed(1)+'" y="'+(POP_TOP+14)+'" width="'+bw6.toFixed(1)+'" height="'+(POP_BASE-POP_TOP-14)+'" fill="#d1495b" opacity=".26"/>';
+       }
+     }
+   }else{
+     var dmax=0,dd;
+     for(i=0;i<=300;i++){ dd=cur.den(cur.lo+(cur.hi-cur.lo)*i/300); if(dd>dmax)dmax=dd; }
+     var yP=function(v){ return POP_BASE-clamp(v/dmax,0,1)*pAvail; };
+     var pathAB=function(a,b){
+       var t,p='',stp=240,xx;
+       for(t=0;t<=stp;t++){ xx=a+(b-a)*t/stp; p+=(t?'L':'M')+xTop(xx).toFixed(1)+' '+yP(cur.den(xx)).toFixed(1)+' '; }
+       return p+'L'+xTop(b).toFixed(1)+' '+POP_BASE+' L'+xTop(a).toFixed(1)+' '+POP_BASE+' Z';
+     };
+     s+='<path d="'+pathAB(cur.lo,cur.hi)+'" fill="#dce9f0"/>';
+     if(STAT==='prop'&&cur.cut<cur.hi){
+       s+='<path d="'+pathAB(cur.cut,cur.hi)+'" fill="#d1495b" opacity=".26"/>';
+     }
+     s+='<path d="'+pathAB(cur.lo,cur.hi)+'" fill="none" stroke="#1c4454" stroke-width="2.3" stroke-linejoin="round"/>';
+   }
+   /* the population mean, which never moves */
+   s+='<line x1="'+xTop(cur.mu).toFixed(1)+'" y1="'+(POP_TOP+10)+'" x2="'+xTop(cur.mu).toFixed(1)+'" y2="'+POP_BASE+'" stroke="#1c4454" stroke-width="1.5" stroke-dasharray="5 4"/>';
+   s+='<text x="'+(xTop(cur.mu)+4).toFixed(1)+'" y="'+(POP_TOP+9)+'" font-size="9.6" font-weight="800" fill="#1c4454">&#956; = '+fmt(cur.mu)+'</text>';
+   if(STAT==='prop'){
+     s+='<line x1="'+xTop(cur.cut).toFixed(1)+'" y1="'+(POP_TOP+2)+'" x2="'+xTop(cur.cut).toFixed(1)+'" y2="'+STRIP_BOT+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="4 3"/>';
+   }
+   s+='<line x1="'+ML+'" y1="'+POP_BASE+'" x2="'+(ML+PW)+'" y2="'+POP_BASE+'" stroke="#8fa6b0" stroke-width="1.2"/>';
+   for(i=0;i<cur.tk.length;i++){
+     tv=cur.tk[i]; x=xTop(tv);
+     s+='<line x1="'+x.toFixed(1)+'" y1="'+POP_BASE+'" x2="'+x.toFixed(1)+'" y2="'+(POP_BASE+4)+'" stroke="#8fa6b0" stroke-width="1"/>';
+     s+='<text x="'+x.toFixed(1)+'" y="'+(POP_BASE+16)+'" font-size="9.2" fill="#4a585f" text-anchor="middle" font-weight="700">'+tv+'</text>';
+   }
+   s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="'+(POP_BASE+29)+'" font-size="9.8" fill="#78868d" text-anchor="middle" font-weight="700">'+cur.ax+'</text>';
+
+   /* ---------- panel 2 : one sample ---------- */
+   s+='<text x="'+ML+'" y="'+(STRIP_TOP-8)+'" font-size="9.6" font-weight="800" fill="#78868d" letter-spacing="1.1">2 &#183; ONE SAMPLE &#8212; n = '+N+' values actually drawn from it</text>';
+   s+='<rect x="'+ML+'" y="'+STRIP_TOP+'" width="'+PW+'" height="'+(STRIP_BOT-STRIP_TOP)+'" rx="8" fill="#f6fafb" stroke="#dfe8ed" stroke-width="1"/>';
+   var sv=null;
+   if(S){
+     sv=T.length?T[T.length-1]:statOf(S);
+     for(i=0;i<S.length;i++){
+       x=clamp(xTop(S[i]),ML+4,ML+PW-4);
+       var jy=STRIP_MID+(((i*29)%25)-12)*0.78;
+       var hot=(STAT==='prop'&&S[i]>cur.cut);
+       s+='<circle cx="'+x.toFixed(1)+'" cy="'+jy.toFixed(1)+'" r="3.4" fill="'+(hot?'#d1495b':'#b8862f')+'" opacity=".82"/>';
+     }
+     if(STAT!=='prop'){
+       var xs=clamp(xTop(sv),ML,ML+PW);
+       s+='<line x1="'+xs.toFixed(1)+'" y1="'+(STRIP_TOP+2)+'" x2="'+xs.toFixed(1)+'" y2="'+(STRIP_BOT+4)+'" stroke="#d1495b" stroke-width="2"/>';
+       s+='<text x="'+clamp(xs,ML+34,ML+PW-34).toFixed(1)+'" y="'+(STRIP_TOP-0.5)+'" font-size="9.4" font-weight="800" fill="#d1495b" text-anchor="middle">'+ST[STAT].sh+' = '+sfm(sv)+'</text>';
+     }else{
+       s+='<text x="'+(ML+PW-4)+'" y="'+(STRIP_TOP-0.5)+'" font-size="9.4" font-weight="800" fill="#d1495b" text-anchor="end">'+Math.round(sv*N)+' of '+N+' '+cur.cutTxt+' &#8594; p-hat = '+sv.toFixed(3)+'</text>';
+     }
+   }else{
+     s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="'+(STRIP_MID+4)+'" font-size="11" fill="#9aa9b1" text-anchor="middle" font-weight="700">press &#8220;Draw 1 sample&#8221; &#8212; n values will land here</text>';
+   }
+
+   /* ---------- panel 3 : the sampling distribution ---------- */
+   s+='<text x="'+ML+'" y="'+(DOT_TOP-10)+'" font-size="9.6" font-weight="800" fill="#78868d" letter-spacing="1.1">3 &#183; THE SAMPLING DISTRIBUTION &#8212; one dot per sample</text>';
+
+   var K=stacks(), avail=DOT_BASE-DOT_TOP-4;
+   var step=K.mx?Math.min(8.5,avail/K.mx):8.5;
+   var rr=clamp(step*0.44,0.75,3.6);
+   for(i=0;i<K.pos.length;i++){
+     var cx=xBot(K.lo+(K.pos[i][0]+0.5)*K.bw);
+     var cy=DOT_BASE-2-(K.pos[i][1]+0.5)*step;
+     var last=(i===K.pos.length-1);
+     s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+(last?Math.max(rr,2.6):rr).toFixed(2)+'" fill="'+(last?'#d1495b':'#2f6f8a')+'" opacity="'+(last?'1':'.72')+'"/>';
+     if(last){
+       s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="3" fill="none" stroke="#d1495b" stroke-width="2">'+
+          '<animate attributeName="r" from="3" to="17" dur="0.75s" fill="freeze"/>'+
+          '<animate attributeName="opacity" from="0.85" to="0" dur="0.75s" fill="freeze"/></circle>';
+       /* the dashed hand-off: this sample's statistic becomes that dot */
+       var x0=(STAT==='prop')?xTop(cur.cut):clamp(xTop(sv),ML,ML+PW);
+       s+='<polyline points="'+x0.toFixed(1)+','+(STRIP_BOT+5)+' '+x0.toFixed(1)+','+(STRIP_BOT+15)+' '+cx.toFixed(1)+','+(DOT_TOP-4)+' '+cx.toFixed(1)+','+(cy-rr-3).toFixed(1)+'" fill="none" stroke="#d1495b" stroke-width="1.3" stroke-dasharray="4 3" opacity=".75"/>';
+     }
+   }
+
+   /* where the population says the centre should sit */
+   var tg=target();
+   if(tg!==null&&tg>=blo&&tg<=bhi){
+     x=xBot(tg);
+     s+='<line x1="'+x.toFixed(1)+'" y1="'+(DOT_TOP-2)+'" x2="'+x.toFixed(1)+'" y2="'+DOT_BASE+'" stroke="#2f9e5b" stroke-width="1.8" stroke-dasharray="6 4"/>';
+     s+='<text x="'+clamp(x,ML+40,ML+PW-40).toFixed(1)+'" y="'+(DOT_TOP+8)+'" font-size="9.4" font-weight="800" fill="#2f9e5b" text-anchor="middle">'+
+        (STAT==='mean'?'&#956;':(STAT==='median'?'population median':'p'))+' = '+sfm(tg)+'</text>';
+   }
+   /* and where it actually sits */
+   if(T.length>1){
+     var pm=pileMean();
+     if(pm>=blo&&pm<=bhi){
+       x=xBot(pm);
+       s+='<line x1="'+x.toFixed(1)+'" y1="'+(DOT_TOP+14)+'" x2="'+x.toFixed(1)+'" y2="'+DOT_BASE+'" stroke="#1c4454" stroke-width="1.8"/>';
+       s+='<text x="'+clamp(x,ML+34,ML+PW-34).toFixed(1)+'" y="'+(DOT_TOP+24)+'" font-size="9.4" font-weight="800" fill="#1c4454" text-anchor="middle">pile centre '+sfm(pm)+'</text>';
+     }
+   }
+
+   s+='<line x1="'+ML+'" y1="'+DOT_BASE+'" x2="'+(ML+PW)+'" y2="'+DOT_BASE+'" stroke="#8fa6b0" stroke-width="1.2"/>';
+   /* bottom axis: identical to the top one unless zoomed, or unless the
+      statistic is a proportion and therefore in different units entirely */
+   var bt=[],bd;
+   if(zoomed()){ for(i=0;i<=4;i++)bt.push(blo+(bhi-blo)*i/4); bd=decFor(bhi-blo); }
+   else if(STAT==='prop'){ bt=[0,0.25,0.5,0.75,1]; bd=2; }
+   else { bt=cur.tk.slice(0); bd=cur.dec; }
+   for(i=0;i<bt.length;i++){
+     x=xBot(bt[i]);
+     s+='<line x1="'+x.toFixed(1)+'" y1="'+DOT_BASE+'" x2="'+x.toFixed(1)+'" y2="'+(DOT_BASE+4)+'" stroke="#8fa6b0" stroke-width="1"/>';
+     s+='<text x="'+x.toFixed(1)+'" y="'+(DOT_BASE+16)+'" font-size="9.2" fill="#4a585f" text-anchor="middle" font-weight="700">'+bt[i].toFixed(bd)+'</text>';
+   }
+   s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="'+(DOT_BASE+31)+'" font-size="10.2" fill="#4a585f" text-anchor="middle" font-weight="700">'+ST[STAT].ax+
+      (STAT==='prop'?'':' ('+cur.ax.replace(/^[a-z ]*\(/,'').replace(/\)$/,'')+')')+'</text>';
+   if(K.over){
+     s+='<text x="'+(ML+2)+'" y="'+(DOT_TOP+38)+'" font-size="9" fill="#b23145" font-weight="800">'+com(K.over)+' value'+(K.over===1?'':'s')+' ran past the end of this axis, stacked at the edge &#8212; try &#8220;Zoom into the pile&#8221;</text>';
+   }
+   $('chart').innerHTML=s;
+ }
+
+ /* ================= words ================= */
+ function sampleLine(){
+   if(!S)return '';
+   var i,t=[],b;
+   if(N<=10){
+     if(STAT==='median'){
+       b=S.slice(0).sort(function(x,y){return x-y;});
+       for(i=0;i<b.length;i++){
+         var mid=(N%2)?(i===(N-1)/2):(i===N/2-1||i===N/2);
+         t.push(mid?('<b>'+b[i].toFixed(cur.dec)+'</b>'):b[i].toFixed(cur.dec));
+       }
+       return '<div class="dd">Sorted: '+t.join(', ')+' '+cur.unit+' &rarr; median <b>'+sfm(T[T.length-1])+'</b>. The middle value is a different kind of summary from the mean, so it wanders differently &mdash; and it has its own sampling distribution.</div>';
+     }
+     for(i=0;i<S.length;i++){
+       var hi=(STAT==='prop'&&S[i]>cur.cut);
+       t.push(hi?('<b>'+S[i].toFixed(cur.dec)+'</b>'):S[i].toFixed(cur.dec));
+     }
+     return '<div class="dd">This sample:&nbsp; '+t.join(', ')+' '+cur.unit+' &rarr; '+ST[STAT].sh+' <b>'+sfm(T[T.length-1])+'</b>.</div>';
+   }
+   return '<div class="dd">This sample holds '+N+' values &mdash; too many to list, but you can see them all in the middle strip. Their '+ST[STAT].sh+' is <b>'+sfm(T[T.length-1])+'</b>.</div>';
+ }
+
+ function infoText(){
+   var k=T.length, s='', tg=target(), tsd=targetSD();
+   if(!k){
+     s+='<span class="n">An empty pile</span>';
+     s+='Nothing drawn yet. Press <b>Draw 1 sample</b>: '+N+' values will be drawn at random from the population above, they will appear in the middle strip, their <b>'+ST[STAT].nm+'</b> will be computed, and exactly <b>one dot</b> will drop into the bottom panel. Then do it again. And again.';
+     s+='<div class="dd">The bottom panel starts empty because a sampling distribution is not something you look up &mdash; it is what emerges when the same study is repeated over and over.</div>';
+     return s;
+   }
+   var pm=pileMean(), ps=pileSD();
+   s+='<span class="n">'+com(k)+' sample'+(k===1?'':'s')+' drawn</span>';
+   s+='Each dot is one whole sample of '+N+' '+cur.noun+', boiled down to a single number: its <b>'+ST[STAT].nm+'</b>. ';
+   if(k===1){
+     s+='You have one dot. <b>That is exactly what a real study gives you</b> &mdash; one number, with no way of seeing the pile it came from. Keep drawing.';
+   }else if(k<25){
+     s+='The dots are scattering, but '+com(k)+' of them is far too few to call a shape. Push on to a hundred or more.';
+   }else{
+     s+='A shape has appeared. It has a centre and a width of its own, and neither is the same as the population&rsquo;s.';
+   }
+   s+=sampleLine();
+
+   s+='<div class="loc">';
+   s+='latest '+ST[STAT].sh+': <b>'+sfm(T[k-1])+'</b><br>';
+   s+='centre of the pile (mean of all '+com(k)+'): <b>'+sfm(pm)+'</b>';
+   if(tg!==null){ s+=' &nbsp;&middot;&nbsp; population says '+(STAT==='median'?'about ':'')+'<b>'+sfm(tg)+'</b> &nbsp;(off by '+sdf(Math.abs(pm-tg))+')'; }
+   s+='<br>';
+   if(ps!==null){
+     s+='spread of the pile (SD of all '+com(k)+'): <b>'+sdf(ps)+'</b>';
+     if(tsd!==null){ s+=' &nbsp;&middot;&nbsp; formula gives <b>'+sdf(tsd)+'</b>'; }
+     s+='<br>';
+   }
+   s+='population spread for one individual: <b>&sigma; = '+sdf(cur.sg)+'</b>';
+   s+='</div>';
+
+   if(STAT==='mean'){
+     s+='<div class="obs"><b>Two facts that hold for every population on this page, bell-shaped or not.</b> The pile of sample means centres on <b>&mu; = '+fmt(cur.mu)+'</b> exactly, and its SD is exactly <b>&sigma;/&radic;n = '+sdf(cur.sg)+' / &radic;'+N+' = '+sdf(tsd)+'</b>. Individual '+cur.noun+' scatter by '+sdf(cur.sg)+'; averages of '+N+' of them scatter by only '+sdf(tsd)+'. Averaging did not change where the centre is &mdash; it changed how far you are likely to land from it.</div>';
+   }else if(STAT==='prop'){
+     s+='<div class="obs"><b>The same two facts, in proportion form.</b> With p = '+pct(tg)+' of '+cur.noun+' '+cur.cutTxt+', the pile of sample proportions centres on <b>p = '+tg.toFixed(3)+'</b> and has SD <b>&radic;(p(1&minus;p)/n) = '+tsd.toFixed(4)+'</b>. At n = '+N+' a sample proportion can only take '+(N+1)+' distinct values &mdash; 0, 1/'+N+', 2/'+N+' and so on &mdash; which is why the dots fall into tidy columns rather than spreading smoothly.</div>';
+   }else if(STAT==='median'){
+     s+='<div class="obs"><b>No formula, and still a distribution.</b> There is no tidy expression for the SD of a sample median the way there is for a mean, and the median is not guaranteed to centre exactly on the population median. None of that stops it having a sampling distribution &mdash; you are looking at one. A statistic does not need a formula to vary in a describable way.</div>';
+   }else{
+     s+='<div class="obs"><b>A sampling distribution that is not remotely bell-shaped.</b> The largest value in a sample can never exceed the largest value in the population, so the pile is crushed against its upper edge and trails off to the left &mdash; the mirror image of a normal curve. Raise n and the whole pile slides <i>upward</i>, because a bigger net catches bigger fish. The shape belongs to the statistic, not to the population.</div>';
+   }
+   return s;
+ }
+
+ function capText(){
+   var t=cur.bl+' <br>';
+   t+='All three panels share one horizontal axis'+(STAT==='prop'?', except the bottom one &mdash; a proportion is not measured in '+cur.ax.replace(/ \(.*/,'')+', so it gets its own 0-to-1 scale':'')+'. ';
+   if(STAT!=='prop'){
+     t+='Read it downward: the top curve is where <b>individual '+cur.noun+'</b> land, the gold dots are the '+N+' that landed in <b>this</b> sample, and the blue dot at the bottom is what those '+N+' values collapsed into. The dashed red line traces that hand-off.';
+   }else{
+     t+='The shaded slice of the population is the part that counts as a success &mdash; '+cur.cutTxt+'. Gold dots in the strip missed the cut, red ones made it, and the fraction in red is the single number that drops into the pile below.';
+   }
+   if(zoomed()){
+     t+=' <b>You are zoomed in</b>, so the pile fills the width. Switch back to the shared axis to see how narrow it really is next to the population.';
+   }else if(T.length>1&&STAT!=='prop'){
+     t+=' Because the axis is shared, the width of the pile is directly comparable to the width of the population above it.';
+   }
+   return t;
+ }
+
+ /* ================= render ================= */
+ function render(){
+   $('cardTitle').innerHTML=cur.nm+' &mdash; '+ST[STAT].nm+', n = '+N;
+   $('stage').style.background=cur.col;
+   $('stage').innerHTML=cur.nm+'<small>&mu; = '+fmt(cur.mu)+' &middot; &sigma; = '+fmt(cur.sg)+' &middot; '+cur.s+'</small>';
+   $('nVal').innerHTML='n = '+N;
+
+   drawChart();
+   $('cap').innerHTML=capText();
+   $('info').innerHTML=infoText();
+
+   var k=T.length, ps=pileSD(), tsd=targetSD(), tg=target();
+   $('tK').innerHTML=com(k);
+   $('tL').innerHTML=k?sfm(T[k-1]):'&mdash;';
+   $('tLs').innerHTML=k?('newest dot'):'&nbsp;';
+   $('tC').innerHTML=k?sfm(pileMean()):'&mdash;';
+   $('tCs').innerHTML=(tg!==null)?('target '+sfm(tg)):'no fixed target';
+   $('tS').innerHTML=(ps!==null)?sdf(ps):'&mdash;';
+   $('tSs').innerHTML=(tsd!==null)?('formula '+sdf(tsd)):'no simple formula';
+ }
+
+ function reset(hard){
+   T=[]; S=null;
+   if(hard)seed=SEED0+P.indexOf(cur)*7919;
+ }
+
+ /* ================= wiring ================= */
+ $('pops').innerHTML=P.map(function(x,i){
+   return '<button class="it'+(i===0?' on':'')+'" data-i="'+i+'"><span class="nm">'+x.nm+'</span><span class="s">'+x.s+'</span></button>';
+ }).join('');
+ var pb=document.querySelectorAll('#pops .it');
+ for(var b=0;b<pb.length;b++){
+   pb[b].onclick=function(){
+     var i=parseInt(this.getAttribute('data-i'),10);
+     cur=P[i];
+     for(var z=0;z<pb.length;z++){ pb[z].className=(z===i)?'it on':'it'; }
+     reset(1); render();
+   };
+ }
+ var sb=document.querySelectorAll('#statseg button');
+ for(var m=0;m<sb.length;m++){
+   sb[m].onclick=function(){
+     STAT=this.getAttribute('data-s');
+     for(var z=0;z<sb.length;z++){ sb[z].className=(sb[z]===this?'on':''); }
+     reset(0); render();      /* a different statistic is a different sampling distribution */
+   };
+ }
+ var zb=document.querySelectorAll('#scaleseg button');
+ for(var g=0;g<zb.length;g++){
+   zb[g].onclick=function(){
+     ZOOM=parseInt(this.getAttribute('data-z'),10);
+     for(var z=0;z<zb.length;z++){ zb[z].className=(zb[z]===this?'on':''); }
+     render();
+   };
+ }
+ $('nSl').oninput=function(){
+   N=parseInt(this.value,10);
+   reset(0); render();        /* a different n is a different sampling distribution */
+ };
+ function many(c){ for(var i=0;i<c;i++){ if(T.length<2000)drawSample(); } render(); }
+ $('one').onclick=function(){ many(1); };
+ $('ten').onclick=function(){ many(10); };
+ $('hun').onclick=function(){ many(100); };
+ $('rst').onclick=function(){ reset(1); render(); };
+
+ render();
+})();
+</script>
+</body>
+</html>

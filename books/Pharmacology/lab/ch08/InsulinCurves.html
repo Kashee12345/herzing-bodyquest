@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Insulin Curves: Onset, Peak, and the Hypoglycemia Window</title>
+<meta name="description" content="Interactive insulin time-action curves — pick an insulin, set the dose time, and find the hypoglycemia risk window against the meal tray. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.labs{display:flex;gap:6px;margin-top:10px;}
+.labs div{flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 6px;text-align:center;}
+.labs .k{font-size:9px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);}
+.labs .v{font-size:14px;font-weight:800;margin-top:2px;color:var(--ink);line-height:1.15;}
+.labs .r{font-size:9px;color:var(--muted);margin-top:1px;}
+.sl{margin-top:12px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 12px 11px;}
+.sl .lb{display:flex;justify-content:space-between;align-items:baseline;font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);}
+.sl .lb b{font-family:var(--disp);font-size:19px;letter-spacing:0;text-transform:none;color:var(--teal-dk);}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:4px;background:linear-gradient(90deg,#dfe4ee,#c9d6e8);margin-top:8px;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,45,70,.3);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,45,70,.3);cursor:pointer;}
+.risk{display:flex;align-items:center;gap:8px;margin-top:10px;background:#fae5e8;border:1px solid #f0c9d0;border-radius:10px;padding:8px 11px;}
+.risk .rk{font-size:9.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#8a2a3a;}
+.risk .rv{font-family:var(--disp);font-weight:700;font-size:16px;color:#7a1f2c;margin-left:auto;}
+.risk.flat{background:#e5eef6;border-color:#c3d7e8;} .risk.flat .rk{color:#255f8a;} .risk.flat .rv{color:#1e3a63;font-size:13px;}
+.verdict{border-radius:10px;padding:9px 12px;margin-top:11px;font-size:12.3px;line-height:1.5;border:1px solid;}
+.verdict .vh{display:block;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.verdict.good{background:#e5f3ea;border-color:#b6ddc6;color:#236b41;} .verdict.good b{color:#17532e;}
+.verdict.caution{background:#fbf3e2;border-color:#ecd9ac;color:#8a6a20;} .verdict.caution b{color:#5a4212;}
+.verdict.harm{background:#fae5e8;border-color:#f0c9d0;color:#8a2a3a;} .verdict.harm b{color:#7a1f2c;}
+.list .it{gap:9px;} .list .it .s{display:block;}
+.list .it .pk{margin-left:auto;font-size:10px;font-weight:800;color:var(--muted);text-align:right;line-height:1.25;flex:none;}
+.it.on .pk{color:rgba(255,255,255,.9);}
+.hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:9px;}
+.dl{list-style:none;margin-top:8px;}
+.dl li{font-size:12.2px;color:var(--soft);line-height:1.45;padding-left:14px;position:relative;margin-top:6px;}
+.dl li:before{content:'\25B8';position:absolute;left:0;color:var(--teal);font-weight:800;}
+.dl li b{color:var(--ink);}
+#mech{font-size:12.5px;color:var(--soft);line-height:1.5;} #mech b{color:var(--ink);}
+#chart{cursor:crosshair;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 8</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 8</div>
+  <h1>Insulin Curves</h1>
+  <div class="intro">Every insulin is the same hormone. What makes them different &mdash; and dangerous &mdash; is <b>time</b>: when it starts, when it peaks, and how long it lasts. <b>Hypoglycemia happens at the peak</b>, so the nurse's job is to know where that peak lands and make sure food lands there too. Pick an insulin, drag the dose time, and watch the risk window move.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Insulin lispro</h2>
+    <svg id="chart" viewBox="0 0 300 228" aria-label="24-hour insulin time-action curve with meals and hypoglycemia risk window"><g id="art"></g></svg>
+    <div class="sl">
+      <div class="lb"><span>Dose given at</span><b id="doseT">07:15</b></div>
+      <input type="range" id="slider" min="0" max="23.75" step="0.25" value="1.25">
+    </div>
+    <div class="labs">
+      <div><span class="k">Onset</span><span class="v" id="lOn">—</span><span class="r">starts working</span></div>
+      <div><span class="k">Peak</span><span class="v" id="lPk">—</span><span class="r">danger point</span></div>
+      <div><span class="k">Duration</span><span class="v" id="lDu">—</span><span class="r">total effect</span></div>
+    </div>
+    <div class="risk" id="risk"><span class="rk">Hypoglycemia risk window</span><span class="rv" id="riskV">—</span></div>
+    <div class="hint">Drag the slider &mdash; or tap anywhere on the graph &mdash; to move the dose time</div>
+  </div></div>
+  <div>
+    <div id="stage">Insulin time-action<small>pick an insulin, then place the dose</small></div>
+    <div class="card">
+      <div class="modeseg" id="mealseg">
+        <button data-m="on" class="on">🍽️ Trays on time</button>
+        <button data-m="late">⏳ Tray delayed 90 min</button>
+        <button data-m="npo">🚫 Patient NPO</button>
+      </div>
+      <div class="list" id="list"></div>
+      <div class="verdict good" id="verdict"></div>
+      <div id="info"></div>
+    </div>
+    <div class="card"><h2 id="drugTitle">The insulin</h2>
+      <div id="mech"></div>
+      <ul class="dl" id="nurse"></ul>
+      <div class="ex" id="chips" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;"></div>
+      <div id="alert"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- time helpers: t = hours since 06:00 ---------- */
+ function fmt(t){ var h=((6+t)%24+24)%24, hh=Math.floor(h), mm=Math.round((h-hh)*60);
+   if(mm===60){mm=0;hh=(hh+1)%24;}
+   return (hh<10?'0':'')+hh+':'+(mm<10?'0':'')+mm; }
+ function span(a,b){ return fmt(a)+'&ndash;'+fmt(b); }
+
+ /* ---------- the insulins ---------- */
+ /* on/pk/du are hours after the dose. shape: peak | flat | bi */
+ var INS=[
+  {k:'lispro',nm:'Insulin lispro',sub:'Rapid-acting analog · clear',ic:'⚡',col:'#d1495b',shape:'peak',tie:'rapid',
+   on:[.17,.25],pk:[1,2],du:[3,5],onT:'10&ndash;15 min',pkT:'1&ndash;2 h',pkS:'1–2 h',duT:'3&ndash;5 h',
+   mech:'A human insulin analog with two amino acids swapped so it will not clump into hexamers in the subcutaneous tissue &mdash; it is absorbed as a <b>monomer</b>, almost immediately. That speed is the whole point: it mimics the burst of insulin a normal pancreas releases at a meal. <b>Insulin aspart</b> and <b>insulin glulisine</b> are the same class with the same clock. Clear solution.',
+   nurse:['<b>Give 0&ndash;15 minutes before the meal</b> &mdash; and confirm the <b>tray is actually in the room</b> before you give it. This is the single most common insulin error on a med-surg floor.',
+          'If intake is unreliable (nausea, poor appetite, confusion), give it <b>immediately after</b> the patient eats and dose to what was actually eaten.',
+          'Peak is <b>1&ndash;2 hours</b> &mdash; that is when you look for shakiness, diaphoresis, tachycardia, and confusion, and that is when a fingerstick answers the question.',
+          'Used in <b>insulin pumps</b> as the only insulin in the reservoir; a pump occlusion means the patient has <b>no</b> insulin on board within hours &rarr; ketosis.',
+          'May be <b>mixed with NPH</b> in one syringe &mdash; draw up the <b>clear rapid insulin first</b>, then the cloudy NPH, and give within 15 minutes.',
+          '<b>Correction (sliding) scale</b> insulin is usually a rapid analog. Never stack doses closer than the ordered interval &mdash; stacking is how hypoglycemia is manufactured.'],
+   chips:['insulin lispro','insulin aspart','insulin glulisine','tray at the bedside','peak 1–2 h'],
+   alert:'<div class="note"><b>Never give a rapid-acting insulin and then leave the room to find food.</b> Onset is 10&ndash;15 minutes. If the tray is late, the patient is already dropping.</div>'},
+
+  {k:'aspart',nm:'Insulin aspart',sub:'Rapid-acting analog · clear',ic:'⚡',col:'#c94a68',shape:'peak',tie:'rapid',
+   on:[.17,.33],pk:[1,3],du:[3,5],onT:'10&ndash;20 min',pkT:'1&ndash;3 h',pkS:'1–3 h',duT:'3&ndash;5 h',
+   mech:'A rapid-acting analog with a single proline&rarr;aspartic acid substitution that blocks hexamer formation, so absorption is fast and predictable. Functionally interchangeable with <b>insulin lispro</b> at the bedside &mdash; the shape of the curve, not the brand, is what you nurse. Clear solution.',
+   nurse:['<b>Give 5&ndash;15 minutes before eating.</b> Same rule as lispro: <b>see the tray first</b>.',
+          'Approved for <b>subcutaneous, pump, and IV</b> use, but the classic IV insulin on the floor and in DKA protocols remains <b>regular insulin</b>.',
+          'Peak <b>1&ndash;3 hours</b> after the dose &mdash; roughly halfway between the meal and the next one, which is exactly when an underfed patient bottoms out.',
+          'Hold and clarify if the patient is going to a procedure, is vomiting, or the diet order has just changed to NPO.',
+          'Check the fingerstick <b>immediately before</b> the dose &mdash; not an hour ago. A glucose of 62 changes the plan.'],
+   chips:['insulin aspart','SC · pump · IV','give 5–15 min before meal','peak 1–3 h'],
+   alert:'<div class="mnem">All three rapid analogs &mdash; <b>lispro, aspart, glulisine</b> &mdash; are <b>clear</b>. So is regular. Cloudy means <b>NPH</b> or a premix, and cloudy always needs to be resuspended.</div>'},
+
+  {k:'reg',nm:'Regular insulin',sub:'Short-acting · clear · the IV one',ic:'💧',col:'#b8862f',shape:'peak',tie:'short',
+   on:[.5,1],pk:[2,3],du:[5,8],onT:'30&ndash;60 min',pkT:'2&ndash;3 h',pkS:'2–3 h',duT:'5&ndash;8 h',
+   mech:'Unmodified human insulin. In the vial it sits as <b>hexamers</b> that must dissociate before absorption, which is why it is slower than the analogs &mdash; and why it must go in <b>30 minutes before</b> the meal. It is <b>the insulin given intravenously</b>: in an IV line the hexamers dissociate instantly, so onset is within minutes and duration is 30&ndash;60 minutes. Clear solution.',
+   nurse:['<b>Give 30 minutes before the meal.</b> Given with the first bite, it peaks long after the food has been absorbed.',
+          '<b>The only insulin routinely given IV</b> &mdash; DKA and HHS infusions, and the emergency treatment of <b>hyperkalemia</b> (insulin drives K&#8314; into the cell; give <b>dextrose with it</b> unless the glucose is already high).',
+          'On an IV insulin infusion: glucose checks <b>hourly</b>, dedicated pump, and <b>watch the potassium</b> &mdash; it falls as the insulin works, and hypokalemia is what kills in DKA.',
+          'In DKA, when the glucose reaches about <b>200&ndash;250 mg/dL</b>, <b>dextrose is added to the fluids</b> and the infusion continues &mdash; the insulin is there to close the anion gap and stop ketogenesis, not just to lower the sugar.',
+          'The insulin <b>mixed with NPH</b> in one syringe. Air into the cloudy NPH vial first, air into the clear regular vial, then <b>draw up the clear regular first</b> &mdash; contaminating the clear vial with NPH ruins it.',
+          '<b>U-500 regular is five times concentrated</b> and a documented killer. Verify concentration and syringe; it is never interchangeable with U-100.'],
+   chips:['regular insulin','IV: DKA · hyperkalemia','30 min before meal','clear before cloudy','U-500 caution'],
+   alert:'<div class="mnem"><b>"Clear before cloudy."</b> Regular (clear) is drawn up <b>before</b> NPH (cloudy). And <b>only regular goes in the IV</b> &mdash; that pair of sentences answers most insulin questions.</div>'},
+
+  {k:'nph',nm:'NPH insulin',sub:'Intermediate · CLOUDY · isophane',ic:'☁️',col:'#7a5a8a',shape:'peak',tie:null,
+   on:[1,2],pk:[4,12],du:[14,18],onT:'1&ndash;2 h',pkT:'4&ndash;12 h',pkS:'4–12 h',duT:'14&ndash;24 h',
+   mech:'Regular insulin crystallized with <b>protamine</b> and zinc into a suspension that dissolves slowly under the skin. That suspension is why NPH is the <b>only cloudy</b> insulin in common use &mdash; and why it must be <b>resuspended</b> before every dose. Its problem is the peak: a broad, unavoidable <b>4&ndash;12 hour</b> hump that no one is eating through. Twice daily, usually before breakfast and before supper.',
+   nurse:['<b>Roll gently between the palms &mdash; never shake.</b> Shaking froths the suspension and makes the dose unmeasurable. If it stays clumped or frosted on the vial wall, discard it.',
+          '<b>Given before breakfast, it peaks in the afternoon</b> &mdash; hypoglycemia before dinner. <b>Given before supper, it peaks at 02:00&ndash;04:00</b> &mdash; hypoglycemia in the patient\'s sleep, which is why a <b>bedtime snack</b> with protein and complex carbohydrate belongs on the plan.',
+          'Morning glucose high? <b>Check a 02:00&ndash;03:00 glucose</b> to tell the two causes apart: <b>Somogyi</b> (nighttime <i>low</i> &rarr; counter-regulatory rebound &rarr; morning high; the fix is <b>less</b> evening NPH or a bedtime snack) versus <b>dawn phenomenon</b> (a 03:00&ndash;06:00 growth-hormone and cortisol surge with <b>no</b> nighttime low; the fix is <b>more</b> evening basal). Same morning number, <b>opposite</b> interventions.',
+          'May be mixed with regular or a rapid analog. <b>Never</b> mix with glargine, detemir, or degludec.',
+          'Watch the patient who ate half the tray, walked the hall, or had their steroid stopped &mdash; all three drop the glucose right at the NPH peak.'],
+   chips:['NPH (isophane)','roll — never shake','peak 4–12 h','HS snack','02:00 glucose'],
+   alert:'<div class="note"><b>NPH is the classic cause of nocturnal hypoglycemia.</b> Move the dose to supper and the peak lands in the middle of the night, when no one is eating and the patient cannot tell you they feel shaky.</div>'},
+
+  {k:'glar',nm:'Insulin glargine',sub:'Long-acting basal · peakless · clear',ic:'➖',col:'#2f6f9f',shape:'flat',tie:null,
+   on:[1.5,2],pk:null,du:[22,24],onT:'1&ndash;2 h',pkT:'no peak',pkS:'none',duT:'~24 h',
+   mech:'Formulated at <b>pH 4</b>: it is clear in the vial, but the moment it hits the neutral pH of subcutaneous tissue it <b>microprecipitates</b> and dissolves back into the blood at a nearly constant rate. The result is a <b>flat, peakless</b> 24-hour concentration &mdash; a stand-in for the basal insulin a pancreas trickles out between meals. Once daily, same time every day.',
+   nurse:['<b>Never mix glargine with any other insulin, and never dilute it.</b> Its acidic pH is what makes it work; buffering it destroys the flat curve. Two syringes, two sites.',
+          '<b>Clear but long-acting</b> &mdash; the one insulin that breaks the "clear = fast" habit. Read the label, not the color.',
+          '<b>Never give it IV.</b> Subcutaneous only.',
+          '<b>No peak means no scheduled danger hour</b>, but it does not mean no hypoglycemia. The risk is a <b>missed or skipped meal</b>, unplanned exercise, or alcohol &mdash; the basal keeps working whether the patient eats or not.',
+          'Basal insulin is usually <b>continued when the patient is NPO</b> (sometimes at a reduced dose) while the mealtime insulin is held &mdash; stopping the basal in type 1 diabetes invites <b>DKA</b>, even with a normal glucose. Clarify the order; do not just hold it.',
+          'Give it at the <b>same time daily</b>. Bedtime and morning both work; consistency is what matters.'],
+   chips:['insulin glargine','do not mix · do not dilute','SC only','once daily, same time','peakless'],
+   alert:'<div class="mnem"><b>Clear does not mean rapid.</b> Glargine, detemir, and degludec are all clear and all last about a day. The vial that is <b>cloudy</b> is NPH.</div>'},
+
+  {k:'det',nm:'Insulin detemir',sub:'Long-acting basal · nearly flat · clear',ic:'➖',col:'#3f7fae',shape:'flat',tie:null,
+   on:[1,2],pk:null,du:[12,20],onT:'1&ndash;2 h',pkT:'minimal / none',pkS:'none',duT:'12&ndash;24 h (dose-dependent)',
+   mech:'A fatty-acid chain attached to the insulin molecule lets it <b>bind reversibly to albumin</b>, both in the tissue and in the blood. That albumin reservoir releases it slowly, giving a long, nearly flat curve. Its duration is <b>dose-dependent</b>: at small doses it may not carry a full 24 hours, so it is sometimes ordered twice daily. Clear solution.',
+   nurse:['<b>Do not mix with any other insulin.</b> Same rule as glargine &mdash; separate syringe, separate site.',
+          '<b>May be ordered once or twice daily.</b> A low once-daily dose can leave a gap before the next dose &mdash; if the glucose climbs late in the interval, that gap is the reason.',
+          '<b>Subcutaneous only.</b> Never IV.',
+          'Rotate <b>within one anatomic region</b> rather than jumping abdomen&rarr;thigh, so absorption stays predictable dose to dose.',
+          'Basal insulin covers the <b>fasting</b> glucose. Judge it by the <b>morning, pre-meal</b> number &mdash; not by the reading two hours after dinner, which belongs to the mealtime insulin.'],
+   chips:['insulin detemir','albumin-bound','once or twice daily','do not mix','SC only'],
+   alert:'<div class="mnem">Basal insulin is judged by the <b>fasting</b> glucose; mealtime insulin is judged by the <b>2-hour post-meal</b> glucose. Match the number to the insulin that owns that hour.</div>'},
+
+  {k:'deg',nm:'Insulin degludec',sub:'Ultra-long basal · peakless · clear',ic:'⏳',col:'#1e3a63',shape:'flat',tie:null,
+   on:[1,1.5],pk:null,du:[42,42],onT:'~1 h',pkT:'no peak',pkS:'none',duT:'&gt;42 h',
+   mech:'Forms long <b>multihexamer chains</b> in the subcutaneous tissue that unspool one molecule at a time. The curve is flat and lasts <b>more than 42 hours</b>, so the effect from yesterday\'s dose is still present today. Steady state takes <b>3&ndash;4 days</b> &mdash; which means a dose change is not judged until then. Clear solution.',
+   nurse:['<b>Do not chase the glucose after a dose change.</b> Steady state takes 3&ndash;4 days; adjusting daily stacks the effect and drives the patient low.',
+          'Flexible timing &mdash; the long tail forgives a shifted dose &mdash; but <b>never give two doses within 8 hours</b> of each other.',
+          '<b>Do not mix. Subcutaneous only.</b>',
+          'The long tail cuts both ways: if hypoglycemia happens, it can <b>recur for a day or more</b>. One tube of glucose gel does not end the event &mdash; keep monitoring.',
+          'Available as <b>U-100 and U-200</b>. Confirm the concentration on the pen; the numbers are not interchangeable.'],
+   chips:['insulin degludec','>42 h duration','steady state 3–4 days','U-100 / U-200','do not mix'],
+   alert:'<div class="note"><b>A long insulin means a long hypoglycemia.</b> Treat the low, then recheck &mdash; and keep rechecking. The insulin that caused it is still on board tomorrow.</div>'},
+
+  {k:'mix',nm:'Insulin 70/30 premix',sub:'70% NPH + 30% regular · CLOUDY',ic:'🌗',col:'#2f9e5b',shape:'bi',tie:'short',
+   on:[.5,1],pk:[2,3],du:[14,18],onT:'30&ndash;60 min',pkT:'2&ndash;3 h <i>and</i> 4&ndash;12 h',pkS:'2–3 &amp; 4–12 h',duT:'14&ndash;24 h',
+   mech:'One vial containing <b>70% NPH</b> and <b>30% regular</b> insulin &mdash; a fixed mix that trades flexibility for simplicity. It gives <b>two peaks</b> off one injection: the regular component covers the meal in front of it, the NPH component covers the hours after. Two doses a day, before breakfast and before supper. <b>Cloudy</b>: it must be resuspended.',
+   nurse:['<b>Roll gently &mdash; never shake &mdash; until uniformly cloudy</b>, then give <b>30 minutes before the meal</b> (the regular component sets the timing).',
+          '<b>The ratio is fixed.</b> You cannot adjust one component without moving the other, so this is for the patient who cannot manage a basal&ndash;bolus regimen, not the patient who needs tight control.',
+          '<b>Two peaks means two risk windows</b> from one injection &mdash; an early one after the meal and a broad late one from the NPH.',
+          'The classic error: giving the premix and skipping the meal. <b>Both</b> components are already committed.',
+          'Never mix a premix with anything else, and never substitute a premix for a basal insulin &mdash; it is not peakless.'],
+   chips:['70/30 premix','roll until cloudy','30 min before meal','two peaks','fixed ratio'],
+   alert:'<div class="note">A premix is <b>not</b> a basal insulin. It carries NPH\'s whole 4&ndash;12 hour peak inside it &mdash; including the nighttime one when the evening dose is given.</div>'}
+ ];
+
+ var MEALS={
+  on:  [{t:1.5,nm:'Breakfast',ic:'🍳'},{t:6,nm:'Lunch',ic:'🥗'},{t:12,nm:'Dinner',ic:'🍽️'},{t:15,nm:'HS snack',ic:'🍪'}],
+  late:[{t:3,nm:'Breakfast',ic:'🍳'},{t:7.5,nm:'Lunch',ic:'🥗'},{t:13.5,nm:'Dinner',ic:'🍽️'},{t:15,nm:'HS snack',ic:'🍪'}],
+  npo: []
+ };
+ var MODE_NM={on:'trays on time',late:'tray delayed 90 min',npo:'patient NPO'};
+
+ var cur='lispro', dose=1.25, mode='on';
+ function ins(){ for(var i=0;i<INS.length;i++){ if(INS[i].k===cur) return INS[i]; } return INS[0]; }
+ function meals(){ return MEALS[mode]; }
+
+ /* ---------- curve math ---------- */
+ function bump(x,on,p1,p2,du){
+   if(x<=on||x>=du) return 0;
+   if(x<p1) return .5-.5*Math.cos(Math.PI*(x-on)/(p1-on));
+   if(x<=p2) return 1;
+   return .5+.5*Math.cos(Math.PI*(x-p2)/(du-p2));
+ }
+ function act(o,x){ /* x = hours since the dose */
+   if(o.shape==='flat'){ var on=o.on[0],du=o.du[1]; return .42*bump(x,on,Math.min(on+2,du/2),Math.max(du-2.5,du/2),du); }
+   if(o.shape==='bi'){ return Math.min(1,.58*bump(x,.5,2,3,7)+.66*bump(x,1.5,4,12,17)); }
+   return bump(x,o.on[0],o.pk[0],o.pk[1],o.du[1]);
+ }
+ /* risk windows in absolute t (hours since 06:00), possibly extending past 24 */
+ function windows(o){
+   if(o.shape==='flat') return [];
+   if(o.shape==='bi') return [{a:dose+2,b:dose+3,l:'regular'},{a:dose+4,b:dose+12,l:'NPH'}];
+   return [{a:dose+o.pk[0],b:dose+o.pk[1],l:''}];
+ }
+
+ /* ---------- chart ---------- */
+ var X0=32,X1=292,Y0=26,Y1=170;
+ function PX(t){ return X0+(t/24)*(X1-X0); }
+ function PY(v){ return Y1-v*(Y1-Y0); }
+
+ function draw(){
+  var o=ins(), s='', i, m, M=meals(), W=windows(o);
+
+  /* night band 22:00 – 06:00  (t 16 → 24) */
+  s+='<rect x="'+PX(16)+'" y="'+Y0+'" width="'+(PX(24)-PX(16))+'" height="'+(Y1-Y0)+'" fill="#e7ecf5"/>';
+  s+='<text x="'+PX(20)+'" y="'+(Y0+11)+'" font-size="8" font-weight="700" text-anchor="middle" fill="#a2adbc">NIGHT · ASLEEP</text>';
+
+  /* risk windows */
+  for(i=0;i<W.length;i++){
+    var a=Math.max(0,Math.min(24,W[i].a)), b=Math.max(0,Math.min(24,W[i].b));
+    if(b>a){
+      s+='<rect x="'+PX(a)+'" y="'+Y0+'" width="'+(PX(b)-PX(a))+'" height="'+(Y1-Y0)+'" fill="#d1495b" opacity=".13"/>';
+      s+='<line x1="'+PX(a)+'" y1="'+Y0+'" x2="'+PX(a)+'" y2="'+Y1+'" stroke="#d1495b" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>';
+      s+='<line x1="'+PX(b)+'" y1="'+Y0+'" x2="'+PX(b)+'" y2="'+Y1+'" stroke="#d1495b" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>';
+      if(PX(b)-PX(a)>44){
+        var lx=Math.max(X0+30,Math.min(X1-30,(PX(a)+PX(b))/2)); /* keep the label inside the plot when the window is clipped */
+        s+='<text x="'+lx+'" y="'+(Y0+22)+'" font-size="7.5" font-weight="800" text-anchor="middle" fill="#b23145">PEAK · LOW RISK</text>';
+      }
+    }
+  }
+
+  /* grid + axis labels every 3 h */
+  for(i=0;i<=24;i+=3){
+    s+='<line x1="'+PX(i)+'" y1="'+Y0+'" x2="'+PX(i)+'" y2="'+Y1+'" stroke="#dfe4ee" stroke-width="1"/>';
+    var anc=(i===0?'start':(i===24?'end':'middle'));
+    s+='<text x="'+PX(i)+'" y="'+(Y1+12)+'" font-size="8" font-weight="700" text-anchor="'+anc+'" fill="#78828f">'+fmt(i)+'</text>';
+  }
+  s+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#a2adbc" stroke-width="1.4"/>';
+  s+='<line x1="'+X0+'" y1="'+Y0+'" x2="'+X0+'" y2="'+Y1+'" stroke="#a2adbc" stroke-width="1.4"/>';
+  s+='<text x="8" y="'+((Y0+Y1)/2)+'" font-size="8" font-weight="800" fill="#78828f" text-anchor="middle" transform="rotate(-90 8 '+((Y0+Y1)/2)+')">INSULIN ACTION</text>';
+
+  /* the curve */
+  var d='', f='', started=false;
+  for(i=0;i<=240;i++){
+    var t=i/10, v=act(o,t-dose);
+    var px=PX(t).toFixed(1), py=PY(v).toFixed(1);
+    d+=(started?'L':'M')+px+' '+py+' '; started=true;
+  }
+  f='M'+PX(0).toFixed(1)+' '+Y1+' L'+d.substring(1)+'L'+PX(24).toFixed(1)+' '+Y1+' Z';
+  s+='<path d="'+f+'" fill="'+o.col+'" opacity=".18"/>';
+  s+='<path d="'+d+'" fill="none" stroke="'+o.col+'" stroke-width="2.6" stroke-linejoin="round"/>';
+
+  /* still-acting-tomorrow tail */
+  if(dose+o.du[1]>24){
+    s+='<text x="'+(X1-3)+'" y="'+(Y0+11)+'" font-size="7.5" font-weight="800" text-anchor="end" fill="'+o.col+'">still working &rarr;</text>';
+  }
+
+  /* dose marker */
+  s+='<line x1="'+PX(dose)+'" y1="'+(Y0-4)+'" x2="'+PX(dose)+'" y2="'+Y1+'" stroke="'+o.col+'" stroke-width="1.8" stroke-dasharray="4 3"/>';
+  s+='<circle cx="'+PX(dose)+'" cy="'+(Y0-8)+'" r="7.5" fill="'+o.col+'"/>';
+  s+='<text x="'+PX(dose)+'" y="'+(Y0-5)+'" font-size="8" text-anchor="middle" fill="#fff">💉</text>';
+
+  /* meals */
+  for(i=0;i<M.length;i++){
+    m=M[i];
+    s+='<line x1="'+PX(m.t)+'" y1="'+Y1+'" x2="'+PX(m.t)+'" y2="'+(Y1+4)+'" stroke="#2f9e5b" stroke-width="1.6"/>';
+    s+='<text x="'+PX(m.t)+'" y="'+(Y1+27)+'" font-size="11" text-anchor="middle">'+m.ic+'</text>';
+    s+='<text x="'+PX(m.t)+'" y="'+(Y1+36)+'" font-size="6.5" font-weight="700" text-anchor="middle" fill="#237a45">'+fmt(m.t)+'</text>';
+  }
+  if(mode==='npo'){
+    s+='<text x="'+((X0+X1)/2)+'" y="'+(Y1+30)+'" font-size="9" font-weight="800" text-anchor="middle" fill="#b23145">🚫 NO FOOD ALL DAY &mdash; NOTHING COVERS ANY PEAK</text>';
+  }
+
+  /* legend */
+  s+='<rect x="'+X0+'" y="'+(Y1+42)+'" width="9" height="9" rx="2" fill="'+o.col+'" opacity=".5"/>';
+  s+='<text x="'+(X0+13)+'" y="'+(Y1+49.5)+'" font-size="7.5" font-weight="700" fill="#78828f">insulin on board</text>';
+  s+='<rect x="'+(X0+92)+'" y="'+(Y1+42)+'" width="9" height="9" rx="2" fill="#d1495b" opacity=".3"/>';
+  s+='<text x="'+(X0+105)+'" y="'+(Y1+49.5)+'" font-size="7.5" font-weight="700" fill="#78828f">hypoglycemia risk window</text>';
+  s+='<text x="'+(X0+218)+'" y="'+(Y1+49.5)+'" font-size="7.5" font-weight="700" fill="#237a45">🍽️ food</text>';
+  return s;
+ }
+
+ /* ---------- clinical verdict ---------- */
+ function overlap(a,b,c,d){ return Math.min(b,d)-Math.max(a,c)>0; }
+
+ function verdict(){
+  var o=ins(), M=meals(), W=windows(o), i, m;
+
+  if(mode==='npo'){
+    if(o.tie) return {c:'harm',h:'Hold it — no tray, no mealtime insulin',
+      d:'<b>'+o.nm+'</b> is nutritional insulin: it exists to cover food that is not coming. Given to an NPO patient it peaks at '+span(dose+o.pk[0],dose+o.pk[1])+' into an empty gut. <b>Hold the dose and clarify the order.</b> A correction scale for a genuinely high glucose may still be appropriate &mdash; the scheduled mealtime dose is not.'};
+    return {c:'caution',h:'Basal usually continues when NPO',
+      d:'<b>'+o.nm+'</b> is basal insulin &mdash; it covers the liver\'s glucose output, not the tray, so it is generally <b>continued</b> (sometimes at a reduced dose) while the mealtime insulin is held. In type 1 diabetes, <b>stopping the basal invites DKA even with a normal glucose</b>. Do not hold it on your own: clarify with the prescriber, check the glucose <b>q4&ndash;6 h</b>, and confirm the IV dextrose order.'};
+  }
+
+  /* mealtime insulins: judge the dose-to-meal interval */
+  if(o.tie){
+    var next=null;
+    for(i=0;i<M.length;i++){ if(M[i].nm!=='HS snack' && M[i].t>=dose-0.3 && M[i].t-dose<=3.5){ next=M[i]; break; } }
+    if(!next){
+      return {c:'harm',h:'No meal to cover this dose',
+        d:'The peak lands at <b>'+span(dose+o.pk[0],dose+o.pk[1])+'</b> and there is no meal within reach of it. A mealtime insulin without a meal is a hypoglycemia order. <b>Do not give it &mdash; find out when the patient is eating first.</b>'};
+    }
+    var gap=next.t-dose, gm=Math.round(gap*60);
+    var ideal=(o.tie==='rapid')?'0&ndash;15 minutes':'30 minutes';
+    if(o.tie==='rapid'){
+      if(gap>=-0.3 && gap<=0.3) return {c:'good',h:'Correctly timed',
+        d:'Dose at <b>'+fmt(dose)+'</b>, <b>'+next.nm.toLowerCase()+' at '+fmt(next.t)+'</b> &mdash; a '+gm+'-minute lead. A rapid analog needs <b>'+ideal+'</b> and a tray you can see. The peak at <b>'+span(dose+o.pk[0],dose+o.pk[1])+'</b> now lands on absorbed food. <b>Check the glucose there anyway</b> &mdash; that is the hour it drops.'};
+      if(gap<=0.75) return {c:'caution',h:'Given too early',
+        d:'A <b>'+gm+'-minute</b> lead on a rapid analog with onset in 10&ndash;15 minutes. The insulin is working before the food arrives, and the pre-meal glucose dips. Give it <b>'+ideal+' before the meal</b>, once the tray is in the room.'};
+      return {c:'harm',h:'Dangerously early',
+        d:'<b>'+gm+' minutes</b> ahead of the meal for an insulin that starts working in 10&ndash;15 minutes and peaks at <b>'+span(dose+o.pk[0],dose+o.pk[1])+'</b>. The patient will be hypoglycemic before the tray is uncovered. Rapid analogs go in <b>'+ideal+' before eating</b> &mdash; not on the med pass at whatever hour is convenient.'};
+    }
+    /* regular / premix: 30 min */
+    if(gap>=0.4 && gap<=0.85){
+      /* a premix carries NPH inside it — the second peak can still land at night */
+      if(o.shape==='bi' && overlap(dose+4,dose+12,19,22)) return {c:'caution',h:'Timed right — but the second peak lands at night',
+        d:'The <b>regular component</b> is timed correctly: a '+gm+'-minute lead on <b>'+next.nm.toLowerCase()+' at '+fmt(next.t)+'</b>. But this is a premix, and the <b>NPH component peaks across '+span(dose+4,dose+12)+'</b> &mdash; through <b>02:00&ndash;04:00</b>, while the patient sleeps. One injection, <b>two</b> risk windows. A <b>bedtime snack</b> with protein and complex carbohydrate belongs on the plan, and a high morning glucose needs a <b>02:00&ndash;03:00 check</b> before anyone raises the dose.'};
+      return {c:'good',h:'Correctly timed',
+      d:'Dose at <b>'+fmt(dose)+'</b>, <b>'+next.nm.toLowerCase()+' at '+fmt(next.t)+'</b> &mdash; a '+gm+'-minute lead, which is exactly what '+o.nm+' needs. Its hexamers take <b>30&ndash;60 minutes</b> to dissociate, so the food and the insulin arrive together and the '+span(dose+o.pk[0],dose+o.pk[1])+' peak has something to work on.'+
+        (o.shape==='bi'?' The <b>NPH component</b> then peaks across <b>'+span(dose+4,dose+12)+'</b> &mdash; a second risk window from the same injection.':'')};
+    }
+    if(gap<0.4) return {c:'caution',h:'Given too late',
+      d:'Only a <b>'+gm+'-minute</b> lead. '+o.nm+' does not start for <b>30&ndash;60 minutes</b>, so the meal is absorbed and the glucose spikes <i>before</i> the insulin arrives &mdash; then the insulin peaks at <b>'+span(dose+o.pk[0],dose+o.pk[1])+'</b>, well after the food is gone, and the patient drops. Give it <b>'+ideal+' before the meal</b>.'};
+    return {c:'harm',h:'Given far too early',
+      d:'<b>'+gm+' minutes</b> before the meal. '+o.nm+' will be peaking at <b>'+span(dose+o.pk[0],dose+o.pk[1])+'</b> on a stomach that is still empty. The rule is <b>'+ideal+'</b>, and with a delayed tray the answer is to <b>wait, not to give and hope</b>.'};
+  }
+
+  /* basal insulins */
+  if(o.shape==='flat'){
+    return {c:'good',h:'Basal — no scheduled peak',
+      d:'<b>'+o.nm+'</b> has <b>no peak</b>, so there is no single danger hour to plot &mdash; it holds a flat background level for '+o.duT+'. That is the safety of it. The risk is not the clock, it is the <b>missed meal, the unplanned walk down the hall, and alcohol</b> &mdash; the basal keeps working whether or not the patient eats. Judge it by the <b>fasting</b> glucose and give it at the <b>same time every day</b>.'};
+  }
+
+  /* NPH */
+  var ps=dose+o.pk[0], pe=dose+o.pk[1];
+  var night=overlap(ps,pe,19,22)||overlap(ps,pe,43,46);
+  var covered=null;
+  for(i=0;i<M.length;i++){ if(M[i].t>=ps&&M[i].t<=pe){ covered=M[i]; break; } }
+  if(night) return {c:'caution',h:'Peak lands in the middle of the night',
+    d:'NPH at <b>'+fmt(dose)+'</b> peaks across <b>'+span(ps,pe)+'</b> &mdash; straight through <b>02:00&ndash;04:00</b>, when the patient is asleep and cannot tell you they feel shaky. This is the classic setup for <b>nocturnal hypoglycemia</b>. Make sure a <b>bedtime snack</b> with protein and complex carbohydrate is on the plan, and if the morning glucose is high, <b>check a 02:00&ndash;03:00 level</b> before anyone increases the dose &mdash; a <b>Somogyi</b> rebound needs <i>less</i> insulin, not more.'};
+  if(covered) return {c:'good',h:'Peak is covered by food',
+    d:'NPH at <b>'+fmt(dose)+'</b> peaks across <b>'+span(ps,pe)+'</b>, and <b>'+covered.nm.toLowerCase()+' at '+fmt(covered.t)+'</b> falls inside that window. That is what makes the broad NPH peak survivable: food inside the hump. Keep checking through the window &mdash; the peak is 8 hours wide and the patient may only eat part of the tray.'};
+  return {c:'caution',h:'A long peak with nothing in it',
+    d:'NPH at <b>'+fmt(dose)+'</b> peaks across <b>'+span(ps,pe)+'</b> and <b>no meal or snack falls inside that window</b>. An 8-hour peak with no food in it is the reason NPH patients go low in the late afternoon. Move the dose, add a snack into the window, or expect the low.'};
+ }
+
+ /* ---------- render ---------- */
+ function renderList(){
+  $("list").innerHTML=INS.map(function(o){
+    return '<button class="it'+(o.k===cur?' on':'')+'" data-k="'+o.k+'">'+
+      '<span class="sw" style="background:'+o.col+'"></span>'+
+      '<span><span class="nm">'+o.ic+' '+o.nm+'</span><br><span class="s">'+o.sub+'</span></span>'+
+      '<span class="pk">peak<br>'+o.pkS+'</span></button>';
+  }).join('');
+  Array.prototype.forEach.call(document.querySelectorAll('#list .it'),function(b){
+    b.onclick=function(){ cur=b.dataset.k; render(); };
+  });
+ }
+
+ function render(){
+  var o=ins(), v=verdict(), W=windows(o);
+  $("art").innerHTML=draw();
+  $("cardTitle").innerHTML=o.nm+' &mdash; '+o.sub;
+  $("doseT").innerHTML=fmt(dose);
+  $("lOn").innerHTML=o.onT; $("lPk").innerHTML=o.pkT; $("lDu").innerHTML=o.duT;
+  $("lPk").style.color=o.pk?'#b23145':'#255f8a';
+
+  if(!W.length){
+    $("risk").className='risk flat';
+    $("riskV").innerHTML='no peak &mdash; risk is the <b>missed meal</b>';
+  } else {
+    $("risk").className='risk';
+    $("riskV").innerHTML=W.map(function(w){return span(w.a,w.b)+(w.l?' <span style="font-size:10px;font-weight:800;color:#8a2a3a;">'+w.l+'</span>':'');}).join(' &nbsp;·&nbsp; ');
+  }
+
+  $("stage").style.background=o.col;
+  $("stage").innerHTML=o.nm+' at '+fmt(dose)+'<small>'+MODE_NM[mode]+' &mdash; '+(o.pk?'peak '+o.pkT:'peakless basal')+'</small>';
+
+  Array.prototype.forEach.call(document.querySelectorAll('#mealseg button'),function(b){ b.className=(b.dataset.m===mode?'on':''); });
+  $("verdict").className='verdict '+v.c;
+  $("verdict").innerHTML='<span class="vh">'+v.h+'</span>'+v.d;
+
+  $("info").innerHTML='<span class="n">Where the peak is, the low is</span>'+
+   'Insulin does not cause hypoglycemia at a random hour &mdash; it causes it <b>at its peak</b>. Everything a nurse does with insulin follows from that one sentence: check the glucose at the peak, put food at the peak, and never give an insulin whose peak has nothing to work on.'+
+   '<div class="loc"><b>Hypoglycemia &lt;70 mg/dL:</b> shaky, diaphoretic, tachycardic, hungry, anxious, confused. <b>Awake and able to swallow &rarr; Rule of 15:</b> 15 g of fast carbohydrate (4 oz juice, 3&ndash;4 glucose tablets), recheck in <b>15 minutes</b>, repeat until above 70, then a carbohydrate-plus-protein snack if the next meal is over an hour away. <b>Unresponsive &rarr;</b> nothing by mouth: <b>glucagon</b> 1 mg IM/SC (turn the patient on their side &mdash; it causes vomiting) or <b>IV dextrose 50%</b> if there is a line.</div>'+
+   '<div class="mnem"><b>Beta blockers mask the warning.</b> They blunt the tachycardia and tremor the patient depends on to feel a low &mdash; <b>diaphoresis</b> is the sign that survives. In a patient on a beta blocker, the glucometer is the only honest warning you get.</div>';
+
+  $("drugTitle").innerHTML=o.ic+' '+o.nm;
+  $("mech").innerHTML=o.mech;
+  $("nurse").innerHTML=o.nurse.map(function(x){return '<li>'+x+'</li>';}).join('');
+  $("chips").innerHTML=o.chips.map(function(x){return '<span>'+x+'</span>';}).join('');
+  $("alert").innerHTML=o.alert;
+  renderList();
+ }
+
+ /* ---------- events ---------- */
+ $("slider").oninput=function(){ dose=parseFloat(this.value); render(); };
+ Array.prototype.forEach.call(document.querySelectorAll('#mealseg button'),function(b){
+   b.onclick=function(){ mode=b.dataset.m; render(); };
+ });
+ $("chart").onclick=function(e){
+   var r=this.getBoundingClientRect();
+   var px=(e.clientX-r.left)/r.width*300;
+   var t=(px-X0)/(X1-X0)*24;
+   t=Math.max(0,Math.min(23.75,Math.round(t*4)/4));
+   dose=t; $("slider").value=t; render();
+ };
+
+ render();
+})();
+</script>
+</body>
+</html>

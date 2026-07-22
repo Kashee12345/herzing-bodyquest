@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Algorithm vs. Heuristic</title>
+<meta name="description" content="Solve the same scrambled word two ways — an exhaustive algorithm versus a mental-shortcut heuristic — and watch the attempt counts diverge. An interactive for introductory psychology.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:0.95fr 1.05fr;}
+.cmp{display:flex;gap:8px;margin:12px 0 2px;}
+.cmp div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:9px 4px;font-size:11.5px;font-weight:700;color:var(--muted);background:#fff;}
+.cmp div .v{display:block;font-size:20px;font-family:var(--disp);font-weight:700;margin-top:2px;color:var(--muted);}
+.cmp div.algo.done{border-color:var(--blue);background:#eef4fa;} .cmp div.algo.done .v{color:var(--blue);}
+.cmp div.heur.done{border-color:var(--green);background:#eef7f0;} .cmp div.heur.done .v{color:var(--green);}
+.subhint{font-size:12px;color:var(--muted);text-align:center;margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 8</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 8</div>
+  <h1>Algorithm vs. Heuristic</h1>
+  <div class="intro">Unscramble the <b>same</b> five letters two different ways. An <b>algorithm</b> checks every possibility &mdash; guaranteed to work, but slow. A <b>heuristic</b> is a mental shortcut &mdash; fast and usually right, but not guaranteed. Pick a strategy, then step or auto-run and watch the attempt counts diverge.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The scramble</h2>
+    <svg viewBox="0 0 260 150" aria-label="letter tiles"><g id="art"></g></svg>
+    <div class="cmp">
+      <div class="algo" id="cAlgo">Algorithm<span class="v" id="vAlgo">—</span></div>
+      <div class="heur" id="cHeur">Heuristic<span class="v" id="vHeur">—</span></div>
+    </div>
+    <div class="subhint">attempts needed to reach the answer</div>
+  </div></div>
+  <div>
+    <div class="modeseg" id="mode">
+      <button data-m="algo" class="on">Algorithm</button>
+      <button data-m="heur">Heuristic</button>
+    </div>
+    <div id="stage">Choose a strategy<small>then press Try next ›</small></div>
+    <div class="card">
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="reset">↺ Reset</button><button class="btn" id="auto">Auto-run</button><button class="btn solid" id="next">Try next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var TARGET='BRAIN';
+ var REST=['A','I','R','B','N'];           // resting scramble
+ var SORTED=['A','B','I','N','R'];          // lexicographic start for the algorithm
+ // Heuristic path: plausible shortcut guesses that narrow toward the answer.
+ var HEUR=[
+   {a:['B','A','R','I','N'],n:'Shortcut #1 &mdash; English words often start with a consonant, so try <b>B</b> first: <b>BARIN</b>. Not a word.'},
+   {a:['B','R','I','A','N'],n:'Shortcut #2 &mdash; <b>&ldquo;BR&rdquo;</b> is a common English onset, so front-load it: <b>BRIAN</b>. Looks like a name, not our word.'},
+   {a:['B','R','A','I','N'],n:'Shortcut #3 &mdash; combine the <b>&ldquo;BR&rdquo;</b> onset with the familiar <b>&ldquo;&ndash;AIN&rdquo;</b> ending &rarr; <b>BRAIN</b>. Solved!'}
+ ];
+ var TOTAL=120;                             // 5! possible arrangements
+ var score={algo:null,heur:null};
+ var mode='algo', cur=REST.slice(), att=0, found=false, timer=null;
+
+ // Standard next-lexicographic-permutation, in place.
+ function nextPerm(a){
+   var i=a.length-2;
+   while(i>=0 && a[i]>=a[i+1]) i--;
+   if(i<0) return false;
+   var j=a.length-1;
+   while(a[j]<=a[i]) j--;
+   var t=a[i];a[i]=a[j];a[j]=t;
+   for(var l=i+1,r=a.length-1;l<r;l++,r--){var s=a[l];a[l]=a[r];a[r]=s;}
+   return true;
+ }
+
+ function draw(arr,ok){
+   var out='', n=arr.length, w=40, gap=8, tot=n*w+(n-1)*gap, x0=(260-tot)/2, y=38;
+   for(var k=0;k<n;k++){
+     var x=x0+k*(w+gap);
+     var fill=ok?'#2f9e5b':'#fffcfa', stroke=ok?'#2f9e5b':'#a1466b', tcol=ok?'#fff':'#5e2846';
+     out+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+w+'" rx="9" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2.5"/>';
+     out+='<text x="'+(x+w/2)+'" y="'+(y+w/2+7.5)+'" text-anchor="middle" font-family="Fraunces,serif" font-weight="700" font-size="23" fill="'+tcol+'">'+arr[k]+'</text>';
+   }
+   var msg = att===0 ? 'Scrambled &mdash; ready to solve'
+          : ok ? '✓ '+TARGET+' — solved!'
+          : '✕ not yet';
+   var mc = att===0 ? '#94818b' : ok ? '#2f9e5b' : '#d1495b';
+   out+='<text x="130" y="118" text-anchor="middle" font-family="Inter,sans-serif" font-weight="700" font-size="13" fill="'+mc+'">'+msg+'</text>';
+   return out;
+ }
+
+ function scoreboard(){
+   $("cAlgo").className='algo'+(score.algo!==null?' done':'');
+   $("cHeur").className='heur'+(score.heur!==null?' done':'');
+   $("vAlgo").innerHTML=score.algo!==null?score.algo:'—';
+   $("vHeur").innerHTML=score.heur!==null?score.heur:'—';
+ }
+
+ function baseInfo(){
+   if(mode==='algo'){
+     return '<span class="n">Algorithm</span>A step-by-step procedure that is <b>guaranteed</b> to reach a correct solution. Here it tries every arrangement of the letters in fixed order. With 5 letters there are <b>5! = 120</b> possibilities, so it always works &mdash; but it can be slow.'
+       +'<div class="mnem"><b>Everyday example:</b> a recipe, long division, or checking every combination on a lock. Slow but sure.</div>';
+   }
+   return '<span class="n">Heuristic</span>A <b>mental shortcut</b> or rule of thumb that reaches a good answer fast by skipping most possibilities. It is <b>not guaranteed</b> &mdash; a shortcut can settle on a plausible wrong answer &mdash; but for familiar problems it usually lands quickly.'
+     +'<div class="note"><b>Trade-off:</b> heuristics save effort but can misfire. Psychologists study these shortcuts (and the biases they cause) as a core part of everyday thinking.</div>';
+ }
+
+ function stopAuto(){ if(timer){clearInterval(timer);timer=null;} $("auto").innerHTML='Auto-run'; }
+
+ function render(){
+   $("art").innerHTML=draw(cur,found);
+   $("cardTitle").innerHTML=mode==='algo'?'Checking every arrangement':'Taking smart shortcuts';
+   $("stage").style.background=found?'#2f9e5b':(mode==='algo'?'#2f6f9f':'#a1466b');
+   if(att===0){
+     $("stage").innerHTML=(mode==='algo'?'Algorithm':'Heuristic')+'<small>press Try next › to begin</small>';
+   }else if(found){
+     $("stage").innerHTML='Solved in '+att+' attempt'+(att===1?'':'s')+'<small>'+(mode==='algo'?'checked every arrangement in order':'used shortcuts to skip the rest')+'</small>';
+   }else{
+     var of = mode==='algo' ? ' of up to '+TOTAL : '';
+     $("stage").innerHTML='Attempt '+att+of+'<small>'+(mode==='algo'?'BRAIN is the 43rd arrangement in order':'narrowing with rules of thumb')+'</small>';
+   }
+   // info
+   if(att===0){ $("info").innerHTML=baseInfo(); }
+   else if(mode==='heur'){ $("info").innerHTML='<span class="n">Heuristic · attempt '+att+'</span>'+HEUR[att-1].n
+       +(found?'<div class="note"><b>Found in '+att+' attempts</b> vs. 43 for the algorithm. The shortcut used what you know about English &mdash; common onsets, familiar endings &mdash; to skip 117 possibilities. Fast and right here, but a heuristic isn’t guaranteed.</div>':''); }
+   else { // algo running
+     $("info").innerHTML='<span class="n">Algorithm · attempt '+att+' of '+TOTAL+'</span>Trying arrangements in strict order: <b>'+cur.join('')+'</b>.'
+       +(found?'<div class="mnem"><b>Found in '+att+' attempts.</b> The algorithm was <b>guaranteed</b> to succeed, but it had to grind through 42 wrong arrangements first. Reliable, not fast.</div>':' The method never guesses &mdash; it just keeps going until it hits '+TARGET+'.');
+   }
+   // buttons
+   $("next").disabled=found;
+   $("auto").disabled=found;
+   scoreboard();
+ }
+
+ function step(){
+   if(found) return;
+   if(mode==='algo'){
+     if(att===0){ cur=SORTED.slice(); att=1; }
+     else { if(nextPerm(cur)) att++; }
+     if(cur.join('')===TARGET){ found=true; if(score.algo===null||att<score.algo) score.algo=att; stopAuto(); }
+   }else{
+     if(att<HEUR.length){ att++; cur=HEUR[att-1].a.slice(); }
+     if(cur.join('')===TARGET){ found=true; if(score.heur===null||att<score.heur) score.heur=att; stopAuto(); }
+   }
+   render();
+ }
+
+ function resetPuzzle(){ stopAuto(); cur=REST.slice(); att=0; found=false; render(); }
+
+ function auto(){
+   if(timer){ stopAuto(); return; }
+   if(found) return;
+   $("auto").innerHTML='Pause';
+   var speed = mode==='algo' ? 45 : 620;
+   timer=setInterval(function(){ if(found){stopAuto();return;} step(); }, speed);
+ }
+
+ // mode switch
+ Array.prototype.forEach.call($("mode").children,function(b){
+   b.onclick=function(){
+     Array.prototype.forEach.call($("mode").children,function(x){x.className='';});
+     b.className='on';
+     mode=b.dataset.m;
+     resetPuzzle();
+   };
+ });
+ $("next").onclick=step;
+ $("reset").onclick=resetPuzzle;
+ $("auto").onclick=auto;
+ render();
+})();
+</script>
+</body>
+</html>

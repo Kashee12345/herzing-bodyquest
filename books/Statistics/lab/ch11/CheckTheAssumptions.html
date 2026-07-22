@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Check the Assumptions</title>
+<meta name="description" content="Decide which one-sample test is appropriate for a situation, then break each assumption in turn and watch the simulated false-alarm rate leave the value you asked for.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:normal;min-width:132px;max-width:132px;line-height:1.3;}
+.sl input[type=range]{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.a2 input[type=range]{background:#e3daea;}
+.sl.a2 input[type=range]::-webkit-slider-thumb{background:var(--purple);}
+.sl.a2 input[type=range]::-moz-range-thumb{background:var(--purple);}
+.sl.a3 input[type=range]{background:#eadcc4;}
+.sl.a3 input[type=range]::-webkit-slider-thumb{background:var(--gold);}
+.sl.a3 input[type=range]::-moz-range-thumb{background:var(--gold);}
+.sl.a4 input[type=range]{background:#eecfd5;}
+.sl.a4 input[type=range]::-webkit-slider-thumb{background:var(--coral);}
+.sl.a4 input[type=range]::-moz-range-thumb{background:var(--coral);}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:84px;text-align:right;font-variant-numeric:tabular-nums;line-height:1.2;}
+.sl .nv small{display:block;font-size:9.4px;font-weight:700;color:var(--muted);}
+.sl.a2 .nv{color:var(--purple);} .sl.a3 .nv{color:var(--gold);} .sl.a4 .nv{color:var(--coral);}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.tiles div.rj{border-color:#e2adb7;background:#fdf1f3;} .tiles div.rj .vv{color:#b23145;}
+.tiles div.fr{border-color:#b6d8c4;background:#f0f8f3;} .tiles div.fr .vv{color:#237a45;}
+.tiles div.cs{border-color:#b9cfe0;background:#f1f6fa;} .tiles div.cs .vv{color:#255f8a;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.55;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.sent{border:1px solid #bcd6e2;border-left:5px solid var(--teal);background:#eef6f9;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:13.2px;line-height:1.6;color:var(--soft);}
+.sent b{color:var(--teal-dk);}
+.sent .big{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.sent.rj{border-color:#e2adb7;border-left-color:#d1495b;background:#fdf1f3;} .sent.rj .big{color:#b23145;}
+.sent.ok{border-color:#b6d8c4;border-left-color:#2f9e5b;background:#f2f9f5;} .sent.ok .big{color:#237a45;}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.strip div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;text-align:left;}
+.strip .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.strip .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.cnd{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px;}
+.cnd div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;}
+.cnd .lb{display:block;font-size:9.4px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.3;}
+.cnd .vv{display:block;font-size:14.5px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums;color:var(--teal-dk);}
+.cnd .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;line-height:1.35;}
+.cnd div.pass{border-color:#b6d8c4;background:#f0f8f3;} .cnd div.pass .vv{color:#237a45;}
+.cnd div.fail{border-color:#e2adb7;background:#fdf1f3;} .cnd div.fail .vv{color:#b23145;}
+.cl{display:block;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 11px;cursor:pointer;text-align:left;font-family:var(--sans);width:100%;font-size:12.4px;line-height:1.5;color:var(--soft);font-weight:600;transition:.12s;}
+.cl:hover{border-color:var(--teal);}
+.cl .vd{display:none;margin-top:6px;padding-top:6px;border-top:1px solid var(--line);font-size:11.9px;font-weight:600;}
+.cl.open .vd{display:block;}
+.cl.open.good{border-color:#b6d8c4;background:#f4faf6;} .cl.open.bad{border-color:#e2adb7;background:#fdf4f5;}
+.cl .mk{font-weight:800;margin-right:5px;}
+.cl.open.good .mk,.cl.open.good .vd b{color:#237a45;} .cl.open.bad .mk,.cl.open.bad .vd b{color:#b23145;}
+.grid .it .s2{display:block;font-size:10.2px;font-weight:600;color:var(--muted);margin-top:2px;line-height:1.35;}
+.grid .it.on .s2{color:rgba(255,255,255,.86);}
+.fb{border:1px solid var(--line);border-left:5px solid var(--muted);background:#f7fafc;border-radius:10px;padding:10px 13px;margin-top:10px;font-size:12.6px;line-height:1.6;color:var(--soft);}
+.fb b{color:var(--teal-dk);}
+.fb .n{font-family:var(--disp);font-weight:600;font-size:14.5px;display:block;margin-bottom:3px;color:var(--teal-dk);}
+.fb.good{border-color:#b6d8c4;border-left-color:#2f9e5b;background:#f2f9f5;} .fb.good .n{color:#237a45;}
+.fb.bad{border-color:#e2adb7;border-left-color:#d1495b;background:#fdf1f3;} .fb.bad .n{color:#b23145;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 11</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 11</div>
+  <h1>Check the Assumptions</h1>
+  <div class="intro">Every test in this chapter comes with fine print. Behind the tidy formula sits a list of things that must be true about <b>where your numbers came from</b> &mdash; and if they aren&rsquo;t true, nothing complains. The arithmetic still runs. The software still prints a p&#8209;value to four decimal places. It is simply an answer to a question about a world that is not yours. So the real skill in this chapter is not computing z or t. It is looking at a situation and deciding <b>which test, if any, belongs here</b>. Below, that decision is made concrete: pick a situation, choose the procedure you would run, and then break the assumptions one at a time with the four sliders. A live simulation runs the test you chose thousands of times in a world where <b>the claim is true</b>, and reports how often it raises a false alarm anyway. You asked for 5%. Watch what you actually get.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="popTitle">The population you are actually sampling from</h2>
+      <div class="cap" id="popcap" style="margin-top:0;"></div>
+      <svg viewBox="0 0 480 216" id="pop" aria-label="the shape of the population being sampled, with the claimed value and the true value of the sampled group marked"></svg>
+      <div class="lgd" id="poplgd"></div>
+      <div class="row"><button class="btn solid" id="bdraw">Draw one sample</button><button class="btn" id="bclean">Restore every assumption</button></div>
+      <div class="cap" id="popfoot"></div>
+    </div>
+    <div class="card">
+      <h2>What the test statistic actually does &mdash; versus what the test assumes it does</h2>
+      <div class="cap" style="margin-top:2px;">Here is the whole argument in one picture. The <b>smooth curve</b> is the distribution the test believes its statistic follows when the claim is true &mdash; a t curve with n&minus;1 degrees of freedom, or the standard normal, depending on which procedure you chose. The <b>bars</b> are where the statistic really lands, measured by simulating the entire study thousands of times in a world where the claim is exactly true. When the assumptions hold, the bars sit under the curve and the test is telling the truth. When they don&rsquo;t, the bars slide out from under it &mdash; and every p&#8209;value read off that curve is wrong by however far they have drifted. Bars past the dashed lines are the runs that rejected a true claim.</div>
+      <svg viewBox="0 0 480 250" id="sdist" aria-label="histogram of simulated test statistics compared against the reference curve the test assumes"></svg>
+      <div class="lgd">
+        <span><i style="background:#bcd9e6"></i>where the statistic really lands</span>
+        <span><i style="background:#e8b6c0"></i>runs that rejected a true claim</span>
+        <span><i style="background:#7a5a8a"></i>the curve the test reads p&#8209;values from</span>
+      </div>
+      <div class="cap" id="sdcap"></div>
+    </div>
+    <div class="card">
+      <h2>Does a bigger sample fix it?</h2>
+      <div class="cap" style="margin-top:2px;">This is the question that separates the three assumptions from one another, and it is worth more than any rule of thumb. Each point is the whole study run <b>600 times over</b> at that sample size, with your current settings, counting how often the test rejects a claim that is true. The dashed green line is the false&#8209;alarm rate you <i>asked</i> for. A curve that <b>slides down onto the line</b> is a shape problem: the Central Limit Theorem is fixing it, and patience is the cure. A curve that stays <b>flat above the line</b> is a dependence problem: no sample size on earth touches it. A curve that <b>climbs toward the top</b> is a sampling problem: more data is making things actively worse. And a curve that simply <b>jumps around</b> without settling is the signature of a count that is too small to be smooth &mdash; there the rate is not merely wrong, it is unpredictable, landing above &alpha; at one sample size and below it at the next for no reason you could have anticipated.</div>
+      <svg viewBox="0 0 480 232" id="sweep" aria-label="simulated false alarm rate plotted against sample size, with the nominal significance level marked"></svg>
+      <div class="strip">
+        <div><span class="lb">Tests<br>run</span><span class="vv" id="rN">0</span></div>
+        <div><span class="lb">False<br>alarms</span><span class="vv" id="rK">0</span></div>
+        <div><span class="lb">Rate you<br>actually get</span><span class="vv" id="rObs">&mdash;</span></div>
+        <div><span class="lb">Rate you<br>asked for</span><span class="vv" id="rExp">&mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="run1">Run 600 tests at this n</button><button class="btn" id="run2">Add 6,000 more</button><button class="btn" id="rrs">Reset</button></div>
+      <div class="sent" id="verdict"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Six situations<small>pick one to begin</small></div>
+    <div class="card">
+      <h2>The situation in front of you</h2>
+      <div class="list" id="scen"></div>
+      <div class="cap" id="sittxt" style="font-size:12.7px;color:var(--soft);"></div>
+    </div>
+    <div class="card">
+      <h2>Which procedure is appropriate here?</h2>
+      <div class="cap" style="margin-top:2px;">Two questions, in this order. <b>First:</b> does the test match the situation &mdash; is the variable quantitative or binary, is the claim about a mean or a proportion, and is &sigma; genuinely known or being estimated from these very data? <b>Second:</b> do its conditions hold? A procedure is appropriate only if it survives both.</div>
+      <div class="grid" id="picks" style="margin-top:9px;"></div>
+      <div class="fb" id="fb"><span class="n">Make a choice</span>Nothing is graded until you commit to one. The simulation below is already running the test a careless analyst would reach for in this situation, so you can see what it delivers before you decide.</div>
+    </div>
+    <div class="card">
+      <h2>Break the assumptions, one knob at a time</h2>
+      <div class="hd">How much false-alarm risk did you agree to?</div>
+      <div class="seg" id="alSeg">
+        <button data-v="0.10">&alpha; = 0.10<small>looser</small></button>
+        <button data-v="0.05">&alpha; = 0.05<small>the usual</small></button>
+        <button data-v="0.01">&alpha; = 0.01<small>stricter</small></button>
+      </div>
+      <div class="hd">The one knob that is supposed to help</div>
+      <div class="sl"><label>sample size n</label><input type="range" id="s1"><span class="nv" id="v1">&mdash;</span></div>
+      <div class="hd">Three knobs, three assumptions</div>
+      <div class="sl a2"><label id="l2">population skewness &gamma;</label><input type="range" id="s2"><span class="nv" id="v2">&mdash;</span></div>
+      <div class="sl a3"><label>dependence within groups &rho;</label><input type="range" id="s3"><span class="nv" id="v3">&mdash;</span></div>
+      <div class="sl a4"><label id="l4">selection bias &delta;</label><input type="range" id="s4"><span class="nv" id="v4">&mdash;</span></div>
+      <div class="cap" id="knobcap"></div>
+    </div>
+    <div class="card">
+      <h2>Do the conditions hold?</h2>
+      <div class="cnd" id="cnd"></div>
+      <div class="cap" id="cndcap"></div>
+    </div>
+    <div class="card">
+      <h2>Say it right</h2>
+      <div class="cap" style="margin-top:2px;">Seven things people say about conditions and assumptions. <b>Three</b> of them are correct. Tap each one.</div>
+      <div class="list" id="claims" style="margin-top:8px;"></div>
+      <div id="info"><span class="n">The habit worth building</span>Before you compute anything, say out loud where the numbers came from and what had to be true for the formula to mean what you want it to mean. <b>A condition is a statement about the data&rsquo;s origin, not about the data&rsquo;s appearance</b> &mdash; and no amount of staring at the numbers on the page will tell you how they were chosen.</div>
+    </div>
+    <div class="card">
+      <h2>Three assumptions, one repair</h2>
+      <div class="mnem"><b>Sample size is not a general&#8209;purpose fix. It repairs exactly one of the three things on this list.</b> <b>Shape</b> is the forgiving one: the Central Limit Theorem says the sampling distribution of x&#772; drifts toward normal as n grows no matter what the population looks like, so a skewed population is a problem that <i>expires</i>. How long it takes depends on how skewed &mdash; one rough guide is that you want <b>n</b> above roughly <b>25&gamma;&sup2;</b>, which asks for about 25 observations at a skewness of 1 and about a hundred at a skewness of 2. Treat that as a hint, not a law; the curve above is the actual answer for the actual population. <b>Dependence</b> is unforgiving: if observations come in correlated groups, every extra observation adds less information than the formula credits it with, so the error stays put as n climbs. <b>A non&#8209;random sample</b> is worse than unforgiving &mdash; it is <i>anti</i>&#8209;forgiving. The bias does not shrink with n, but the standard error does, so a large biased sample converges confidently onto the wrong number.</div>
+      <div class="note"><b>The normality condition is about the population, not about your histogram.</b> This trips up nearly everyone. The condition the t&#8209;test needs is that the <i>population</i> be roughly normal, or that n be large enough for the CLT to take over. Your sample is only evidence about that population &mdash; and it is thin evidence when n is small, which is precisely when the condition matters most. A sample of 8 from a perfectly normal population routinely looks lumpy and lopsided; a sample of 8 from a badly skewed population routinely looks fine. So the sample histogram is worth a glance for <b>outliers and obvious multiple peaks</b>, but the stronger evidence is usually what you know about the variable itself. Charges, incomes, durations, and counts of rare events are right&#8209;skewed as a matter of subject knowledge, whether or not this particular sample shows it.</div>
+      <div class="note"><b>The independence condition has a quiet version and a loud version.</b> The loud version is repeated measurement &mdash; two eyes, two knees, four visits from the same patient, five students from the same classroom &mdash; and it inflates the false&#8209;alarm rate exactly as the &rho; slider shows. The quiet version is <b>sampling without replacement</b>: once you have drawn someone, they cannot be drawn again, so the draws are not strictly independent. That dependence is negligible as long as the sample is a small slice of the population, which is where the familiar <b>10% condition</b> comes from. Note which way it errs: sampling without replacement makes x&#772; <i>less</i> variable than the formula thinks, so ignoring it makes the test conservative rather than reckless. It is the only violation on this page that errs in your favour, and it is still worth knowing about.</div>
+      <div class="note"><b>When a condition fails, the answer is a different procedure &mdash; not a softer sentence.</b> A failing condition is not a reason to write &ldquo;results should be interpreted with caution&rdquo; under a p&#8209;value you no longer believe. If np&#8320; is too small, the count really does follow a binomial distribution, and you can add binomial probabilities directly: that is the <b>exact binomial test</b>, and it carries no large&#8209;count condition at all. If the population is badly skewed and n is small, there are procedures that never assumed normality in the first place. If the observations come in clusters, collapse each cluster to one number and test those. In every case you are trading some power for an answer that means what it says &mdash; which is the only kind worth reporting.</div>
+      <div class="cap">One closing distinction, because the simulation makes it easy to blur. Everything on this page is about the <b>false&#8209;alarm rate</b>: how often a test rejects a claim that is true. That is the promise &alpha; makes, and it is the promise a broken assumption breaks. It is a statement about the <b>long&#8209;run behaviour of the procedure</b>, not about your one study &mdash; a single p&#8209;value of 0.03 is not &ldquo;a 3% chance the claim is true,&rdquo; and it never was, in a well&#8209;behaved world or a broken one. What the meter above tells you is narrower and more useful than that: whether the machine you are about to trust is calibrated.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ================= seeded PRNG (mulberry32) — every run reproduces ================= */
+ var SEED0=20260719, seed=SEED0, gspare=null;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ function setSeed(s){ seed=s|0; gspare=null; }
+
+ /* standard normal by polar Box-Muller */
+ function gauss(){
+   if(gspare!==null){ var g=gspare; gspare=null; return g; }
+   var u,v,q;
+   do{ u=2*rnd()-1; v=2*rnd()-1; q=u*u+v*v; }while(q>=1||q===0);
+   var f=Math.sqrt(-2*Math.log(q)/q);
+   gspare=v*f; return u*f;
+ }
+ /* Gamma(k,1) — Marsaglia & Tsang */
+ function gamrnd(k){
+   if(k<1){ return gamrnd(1+k)*Math.pow(rnd(),1/k); }
+   var d=k-1/3, c=1/Math.sqrt(9*d), x, v, u;
+   for(;;){
+     do{ x=gauss(); v=1+c*x; }while(v<=0);
+     v=v*v*v; u=rnd();
+     if(u<1-0.0331*x*x*x*x) return d*v;
+     if(Math.log(u)<0.5*x*x+d*(1-v+Math.log(v))) return d*v;
+   }
+ }
+ /* one draw, mean 0, sd 1, skewness g.  G~Gamma(k,1) has skew 2/sqrt(k), so k=4/g^2. */
+ function zskew(g){
+   if(g<=0.02) return gauss();
+   var k=4/(g*g);
+   return (gamrnd(k)-k)/Math.sqrt(k);
+ }
+ function betarnd(a,b){ var x=gamrnd(a), y=gamrnd(b); return x/(x+y); }
+
+ /* ================= distributions ================= */
+ function erfc(x){
+   var z=Math.abs(x), t=1/(1+0.5*z);
+   var ans=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+
+     t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+
+     t*(-0.82215223+t*0.17087277)))))))));
+   return x>=0?ans:2-ans;
+ }
+ function normCdf(x){ return 0.5*erfc(-x/Math.SQRT2); }
+ function phi(z){ return Math.exp(-z*z/2)/2.5066282746310002; }
+ function invNorm(p){
+   var lo=-9,hi=9,mid,i;
+   for(i=0;i<90;i++){ mid=(lo+hi)/2; if(normCdf(mid)<p){ lo=mid; } else { hi=mid; } }
+   return (lo+hi)/2;
+ }
+ function lgamma(x){
+   var g=[676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,
+          12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+   if(x<0.5) return Math.log(Math.PI/Math.sin(Math.PI*x))-lgamma(1-x);
+   x-=1; var a=0.99999999999980993, t=x+7.5, i;
+   for(i=0;i<8;i++){ a+=g[i]/(x+i+1); }
+   return 0.5*Math.log(2*Math.PI)+(x+0.5)*Math.log(t)-t+Math.log(a);
+ }
+ function betacf(a,b,x){
+   var MAXIT=220, EPS=3e-13, FPMIN=1e-300;
+   var qab=a+b, qap=a+1, qam=a-1, c=1, d=1-qab*x/qap, m, m2, aa, del, h;
+   if(Math.abs(d)<FPMIN) d=FPMIN;
+   d=1/d; h=d;
+   for(m=1;m<=MAXIT;m++){
+     m2=2*m;
+     aa=m*(b-m)*x/((qam+m2)*(a+m2));
+     d=1+aa*d; if(Math.abs(d)<FPMIN) d=FPMIN;
+     c=1+aa/c; if(Math.abs(c)<FPMIN) c=FPMIN;
+     d=1/d; h*=d*c;
+     aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+     d=1+aa*d; if(Math.abs(d)<FPMIN) d=FPMIN;
+     c=1+aa/c; if(Math.abs(c)<FPMIN) c=FPMIN;
+     d=1/d; del=d*c; h*=del;
+     if(Math.abs(del-1)<EPS) break;
+   }
+   return h;
+ }
+ function betai(a,b,x){
+   if(x<=0) return 0;
+   if(x>=1) return 1;
+   var bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));
+   if(x<(a+1)/(a+b+2)) return bt*betacf(a,b,x)/a;
+   return 1-bt*betacf(b,a,1-x)/b;
+ }
+ /* P(T <= t) for nu degrees of freedom */
+ function tCdf(t,nu){
+   var x=nu/(nu+t*t), p=0.5*betai(nu/2,0.5,x);
+   return t>0?1-p:p;
+ }
+ function tInv(p,nu){
+   var lo=-80,hi=80,mid,i;
+   for(i=0;i<90;i++){ mid=(lo+hi)/2; if(tCdf(mid,nu)<p){ lo=mid; } else { hi=mid; } }
+   return (lo+hi)/2;
+ }
+ function tPdf(t,nu){
+   return Math.exp(lgamma((nu+1)/2)-lgamma(nu/2)-0.5*Math.log(nu*Math.PI)
+     -((nu+1)/2)*Math.log(1+t*t/nu));
+ }
+ /* exact binomial pmf by a stable log recursion */
+ function binomPmf(n,p){
+   p=Math.min(0.999999,Math.max(0.000001,p));
+   var a=new Array(n+1), lp=Math.log(p), lq=Math.log(1-p), cur=n*lq, i;
+   a[0]=Math.exp(cur);
+   for(i=1;i<=n;i++){ cur+=Math.log((n-i+1)/i)+lp-lq; a[i]=Math.exp(cur); }
+   return a;
+ }
+
+ /* ================= the six situations ================= */
+ var SC=[
+  {k:'na', nm:'Serum sodium', ct:'a mean · &sigma; unknown · n = 40', col:'#2f6f8a',
+   kind:'mean', sigKnown:false, cand:'t', ans:'t',
+   unit:'mmol/L', mu0:140, sig:3.2, dp:1,
+   n0:40, nMin:5, nMax:400, nStep:1,
+   v20:0.25, v2Min:0, v2Max:2.4, v2Step:0.05,
+   rho0:0, cs:4, csTxt:'four repeat draws from the same patient',
+   d0:0, dMax:0.8, dStep:0.02, dTxt:'pulling charts only from the intensive care unit, where sodium runs differently',
+   pop:'about 9,000 patients on file &mdash; 40 is well under 10% of it',
+   sit:'A hospital laboratory pulls the charts of <b>40 patients chosen at random</b> from its records and tests whether their mean serum sodium differs from the reference value of <b>140 mmol/L</b>. Sodium is held in a narrow range by the body, and its distribution across patients is close to symmetric. Nobody knows the population standard deviation; it has to be estimated from these 40 values.',
+   why:'The variable is <b>quantitative</b>, the claim is about a <b>mean</b>, and &sigma; is <b>unknown</b>. That last point is what decides t over z: the denominator of the statistic contains an estimate, so it wobbles from sample to sample, and the reference distribution has to be widened to account for it &mdash; a <b>t curve with 39 degrees of freedom</b>. The sample is random, each patient contributes one value, and a nearly symmetric population at n = 40 is comfortably inside what the Central Limit Theorem handles. Every condition holds. Run it.'},
+
+  {k:'bal', nm:'Balance calibration', ct:'a mean · &sigma; genuinely known', col:'#7a5a8a',
+   kind:'mean', sigKnown:true, cand:'zm', ans:'zm',
+   unit:'mg', mu0:100, sig:0.8, dp:2,
+   n0:25, nMin:5, nMax:400, nStep:1,
+   v20:0, v2Min:0, v2Max:2.4, v2Step:0.05,
+   rho0:0, cs:5, csTxt:'weighing in runs of five without re-zeroing between them',
+   d0:0, dMax:0.8, dStep:0.02, dTxt:'taking every reading late in the day, when the bench has warmed',
+   pop:'an unlimited stream of readings &mdash; the 10% condition cannot bind',
+   sit:'A laboratory balance is checked by weighing a <b>certified 100 mg reference mass 25 times</b>. The manufacturer certifies the instrument&rsquo;s measurement error as normal with a stable, documented standard deviation of <b>&sigma; = 0.8 mg</b>, established from tens of thousands of readings across the product line. The question is whether this balance reads 100 mg on average.',
+   why:'This is the uncommon case where a <b>z&#8209;test for a mean</b> is honest. &sigma; is not being estimated from these 25 readings &mdash; it is a documented property of the instrument, fixed in advance from a vastly larger body of data. With &sigma; genuinely known there is no estimation wobble in the denominator to pay for, so the reference distribution is the <b>standard normal</b>, not t. Change one word of the setup &mdash; &ldquo;the standard deviation <i>of the 25 readings</i> was 0.8 mg&rdquo; &mdash; and the correct answer becomes t. That word is the entire distinction, and in practice it almost always points to t.'},
+
+  {k:'poll', nm:'Referendum poll', ct:'a proportion · n = 500 · p&#8320; = 0.50', col:'#2f9e5b',
+   kind:'prop', sigKnown:false, cand:'zp', ans:'zp',
+   unit:'', mu0:0, sig:1, dp:3,
+   n0:500, nMin:20, nMax:600, nStep:10,
+   v20:0.50, v2Min:0.005, v2Max:0.6, v2Step:0.005,
+   rho0:0, cs:4, csTxt:'interviewing whole households of four, whose members tend to vote alike',
+   d0:0, dMax:0.15, dStep:0.005, dTxt:'reaching only people who answer an unknown number, who differ from those who don&rsquo;t',
+   pop:'an electorate of several million &mdash; 500 is a vanishing slice of it',
+   sit:'A polling organisation draws a <b>random sample of 500 registered voters</b> from an electorate of several million and asks each one whether they intend to vote yes. A campaign has been claiming the yes share is <b>50%</b>. Each voter is contacted once; nobody is asked twice.',
+   why:'The response is <b>binary</b> and the claim is about a <b>proportion</b>, so the candidate is the one&#8209;proportion z&#8209;test &mdash; and here every condition it needs is satisfied. The sample is random. Five hundred is far under 10% of a multi&#8209;million electorate, so drawing without replacement barely dents independence. And the expected counts under the claim, <b>np&#8320; = 250</b> and <b>n(1&minus;p&#8320;) = 250</b>, are enormous, which is exactly the condition that licenses replacing the binomial with a normal curve. Notice the condition is checked with <b>p&#8320;</b>, the claimed value &mdash; not with the proportion you observed.'},
+
+  {k:'def', nm:'Rare defect guarantee', ct:'a proportion · n = 120 · p&#8320; = 0.02', col:'#b8862f',
+   kind:'prop', sigKnown:false, cand:'zp', ans:'none',
+   unit:'', mu0:0, sig:1, dp:3,
+   n0:120, nMin:20, nMax:600, nStep:10,
+   v20:0.02, v2Min:0.005, v2Max:0.6, v2Step:0.005,
+   rho0:0, cs:6, csTxt:'pulling components six to a carton, since a bad carton is bad throughout',
+   d0:0, dMax:0.15, dStep:0.005, dTxt:'taking every component off the top layer of the pallet',
+   pop:'a production run of hundreds of thousands',
+   sit:'A supplier guarantees that no more than <b>2%</b> of its components are defective. An inspector tests <b>120 randomly chosen components</b> against that guarantee. Under the claim, the expected number of defectives among 120 is <b>2.4</b>, and the inspector expects to see two or three &mdash; sometimes zero, sometimes six.',
+   why:'The one&#8209;proportion z&#8209;test is the natural candidate, and it is <b>not appropriate</b>: np&#8320; = 2.4, far below the usual threshold of 10. Look at the first panel. The count of defectives is jammed against zero and its distribution is a short row of tall, lopsided bars &mdash; nothing like the smooth symmetric curve the z&#8209;test lays over it. Nothing is wrong with the sample or the inspector; the <b>approximation</b> is what fails. Look closely at what it fails <i>into</i>. At these settings the test turns out <b>conservative</b> &mdash; it raises fewer false alarms than promised &mdash; and every one of them lands in a single tail, because a count that cannot go below zero has nowhere to be surprising on the low side. That is luck, not safety: nudge n along the slider and the rate jumps above &alpha; and back below it with no pattern you could have predicted in advance. <b>An approximation that fails is not reliably cautious. It is simply unmoored.</b> And the repair is not a caveat in a footnote, it is a different procedure: the <b>exact binomial test</b> computes the p&#8209;value by adding binomial probabilities directly and needs no large&#8209;count condition at all. Push n up the slider and watch the moment the bars grow tall enough for the curve to fit them.'},
+
+  {k:'eye', nm:'Both eyes, counted twice', ct:'a mean · 30 patients called n = 60', col:'#d1495b',
+   kind:'mean', sigKnown:false, cand:'t', ans:'none',
+   unit:'mmHg', mu0:16, sig:2.6, dp:1,
+   n0:60, nMin:6, nMax:400, nStep:2,
+   v20:0.2, v2Min:0, v2Max:2.4, v2Step:0.05,
+   rho0:0.6, cs:2, csTxt:'two eyes in one head, which are far more alike than two eyes from different people',
+   d0:0, dMax:0.8, dStep:0.02, dTxt:'recruiting from a referral clinic, where pressures already run high',
+   pop:'a clinic population of a few thousand',
+   sit:'A trial measures intraocular pressure in <b>both eyes of 30 patients</b>, and the analyst enters all <b>60 eyes</b> as the sample, testing whether the mean pressure differs from <b>16 mmHg</b>. Two eyes in the same head share a person, a physiology, and a treatment history; they are far more alike than two eyes drawn from two different people.',
+   why:'A t&#8209;test on n = 60 is <b>not appropriate</b>, because those 60 measurements are not 60 independent pieces of information. Every standard error in this chapter is derived from independent draws; feed it correlated ones and s/&radic;n understates how much x&#772; really varies, t comes out too large, and the p&#8209;value comes out too small. The test cannot detect this from the numbers &mdash; the correlation is a fact about the study design, not about the column of values. The repair is structural rather than statistical: <b>collapse each patient to one number</b>, the average of their two eyes, and run a t&#8209;test on n = 30. You give up degrees of freedom and you get an answer that means what it says. Slide &rho; to zero to see the same study done on 60 genuinely unrelated eyes.'},
+
+  {k:'vol', nm:'Online volunteers', ct:'a mean · n = 800 · nobody sampled', col:'#2f6f9f',
+   kind:'mean', sigKnown:false, cand:'t', ans:'none',
+   unit:'hours', mu0:3.0, sig:1.4, dp:2,
+   n0:800, nMin:10, nMax:800, nStep:10,
+   v20:0.5, v2Min:0, v2Max:2.4, v2Step:0.05,
+   rho0:0, cs:5, csTxt:'volunteers arriving in friend groups of five who share habits',
+   d0:0.35, dMax:0.8, dStep:0.02, dTxt:'volunteering through a social media advertisement, which selects heavier users',
+   pop:'the adult population &mdash; but not the one the volunteers came from',
+   sit:'A study of daily screen time recruits participants through an <b>advertisement on a social media platform</b>. <b>Eight hundred people</b> volunteer and report their usage, and the researchers test whether the population mean differs from <b>3.0 hours a day</b>. The sample is large, the response rate is irrelevant because nobody was asked, and the arithmetic is spotless.',
+   why:'No one&#8209;sample test in this chapter applies, and <b>no sample size rescues it</b>. Everything here is built on a random sample from the population the claim is about. People who answer an advertisement on a social platform are, as a group, heavier users of screens than the population at large &mdash; so these 800 numbers estimate the mean of a <b>different population</b> than the one in the hypothesis. That gap does not shrink as n grows. What n does shrink is the standard error, which makes the test <b>more and more confident about the wrong number</b>. Watch the third panel: with the bias in place the false&#8209;alarm curve climbs toward 100%. A large biased sample is not weak evidence. It is confident, precise, and wrong.'}
+ ];
+
+ var TESTS=[
+  {k:'t',  nm:'t-test for a mean',  s:'quantitative data, &sigma; estimated from the sample'},
+  {k:'zm', nm:'z-test for a mean',  s:'quantitative data, &sigma; known in advance'},
+  {k:'zp', nm:'z-test for a proportion', s:'binary data, a claim about a share'},
+  {k:'none', nm:'None of these', s:'no one-sample test here is trustworthy'}
+ ];
+
+ /* ================= state ================= */
+ var S=SC[0], pick=null, alpha=0.05;
+ var n=40, v2=0.25, rho=0, dbias=0;
+ var accN=0, accK=0, accL=0, accR=0, accHist=null, accSeed=SEED0;
+ var refPop=null, sampleVals=null;
+ var sweepPts=null;
+ var NLADDER=[8,15,25,40,70,120,250,500,800];
+ var SWEEPR=600;
+
+ function effTest(){
+   var p=(pick===null||pick==='none')?S.cand:pick;
+   if(S.kind==='prop') return 'zp';
+   if(p==='zp') return S.cand;
+   return p;
+ }
+ function crit(nn){
+   if(effTest()==='t') return tInv(1-alpha/2, Math.max(1,nn-1));
+   return invNorm(1-alpha/2);
+ }
+ function refPdf(x,nn){
+   if(effTest()==='t') return tPdf(x, Math.max(1,nn-1));
+   return phi(x);
+ }
+ function skew(){ return S.kind==='prop'?0:v2; }
+ function p0(){ return S.kind==='prop'?v2:0; }
+ /* marginal skewness once the population is split into a cluster part and a within part:
+    X = sqrt(rho)*U + sqrt(1-rho)*E with U,E independent and each of skewness g. */
+ function margSkew(){
+   var g=skew();
+   if(rho<=0.001) return g;
+   return g*(Math.pow(rho,1.5)+Math.pow(1-rho,1.5));
+ }
+ function designEff(){ return 1+(S.cs-1)*rho; }
+
+ /* ================= sampling ================= */
+ function meanSample(nn){
+   var g=skew(), i, j, s=0, ss=0, x, u, a, b, cs=S.cs;
+   if(rho<=0.001){
+     for(i=0;i<nn;i++){ x=zskew(g)+dbias; s+=x; ss+=x*x; }
+   } else {
+     a=Math.sqrt(rho); b=Math.sqrt(1-rho); i=0;
+     while(i<nn){
+       u=a*zskew(g);
+       for(j=0;j<cs&&i<nn;j++,i++){ x=u+b*zskew(g)+dbias; s+=x; ss+=x*x; }
+     }
+   }
+   var m=s/nn, v=(ss-nn*m*m)/(nn-1);
+   if(!(v>0)) v=0;
+   return {m:m, sd:Math.sqrt(v)};
+ }
+ function propSample(nn){
+   var p=Math.min(0.9995,Math.max(0.0005,p0()+dbias)), k=0, i, j, cs=S.cs, t, pc;
+   if(rho<=0.001){
+     for(i=0;i<nn;i++){ if(rnd()<p) k++; }
+   } else {
+     t=1/rho-1; i=0;
+     while(i<nn){
+       pc=betarnd(p*t,(1-p)*t);
+       for(j=0;j<cs&&i<nn;j++,i++){ if(rnd()<pc) k++; }
+     }
+   }
+   return k;
+ }
+ /* one replicate of the whole study, in a world where the claim is TRUE */
+ function oneStat(nn){
+   var et=effTest();
+   if(et==='zp'){
+     var pp=p0(), k=propSample(nn);
+     return (k/nn-pp)/Math.sqrt(pp*(1-pp)/nn);
+   }
+   var r=meanSample(nn);
+   var sd=(et==='zm'&&S.sigKnown)?1:r.sd;
+   if(!(sd>0)) sd=1e-9;
+   return r.m/(sd/Math.sqrt(nn));
+ }
+
+ /* ================= the accumulator (many tests at the current n) ================= */
+ var HB=52, HLO=-5.2, HHI=5.2, HW=(HHI-HLO)/HB;
+ function resetAcc(){
+   accN=0; accK=0; accL=0; accR=0; accSeed=SEED0;
+   accHist=new Array(HB); for(var i=0;i<HB;i++){ accHist[i]=0; }
+ }
+ function runAcc(R){
+   var sv=seed, sg=gspare;
+   setSeed(accSeed);
+   var c=crit(n), i, t, b;
+   for(i=0;i<R;i++){
+     t=oneStat(n);
+     if(t<-c){ accK++; accL++; } else if(t>c){ accK++; accR++; }
+     b=Math.floor((t-HLO)/HW);
+     if(b<0) b=0; if(b>=HB) b=HB-1;
+     accHist[b]++;
+     accN++;
+   }
+   accSeed=seed;
+   seed=sv; gspare=sg;
+ }
+
+ /* ================= the sweep (rate as a function of n) ================= */
+ function runSweep(){
+   var sv=seed, sg=gspare;
+   setSeed(SEED0+7919);
+   var R=SWEEPR, out=[], i, j, nn, c, k, t;
+   for(i=0;i<NLADDER.length;i++){
+     nn=NLADDER[i];
+     if(nn<3) continue;
+     c=crit(nn); k=0;
+     for(j=0;j<R;j++){ t=oneStat(nn); if(t<-c||t>c) k++; }
+     out.push({n:nn, r:k/R, R:R});
+   }
+   seed=sv; gspare=sg;
+   sweepPts=out;
+ }
+
+ /* ================= reference population + one visible sample ================= */
+ function buildPop(){
+   if(S.kind==='prop'){ refPop=null; return; }
+   var sv=seed, sg=gspare;
+   setSeed(SEED0+1337);
+   var M=12000, g=skew(), a=Math.sqrt(rho), b=Math.sqrt(1-rho);
+   var arr=new Float64Array(M), i, j, u, x, lo=1e9, hi=-1e9, s=0, ss=0;
+   if(rho<=0.001){
+     for(i=0;i<M;i++){ x=zskew(g)+dbias; arr[i]=x; if(x<lo)lo=x; if(x>hi)hi=x; s+=x; ss+=x*x; }
+   } else {
+     i=0;
+     while(i<M){
+       u=a*zskew(g);
+       for(j=0;j<S.cs&&i<M;j++,i++){ x=u+b*zskew(g)+dbias; arr[i]=x; if(x<lo)lo=x; if(x>hi)hi=x; s+=x; ss+=x*x; }
+     }
+   }
+   var m=s/M, sd=Math.sqrt(ss/M-m*m), g2=margSkew();
+   var LO=Math.max(lo, m-3.5*sd), HI=Math.min(hi, m+(3.5+2.6*Math.abs(g2))*sd);
+   var NB=54, h=new Array(NB), w=(HI-LO)/NB, bi;
+   for(i=0;i<NB;i++){ h[i]=0; }
+   for(i=0;i<M;i++){ bi=Math.floor((arr[i]-LO)/w); if(bi<0)bi=0; if(bi>=NB)bi=NB-1; h[bi]++; }
+   var mx=0;
+   for(i=0;i<NB;i++){ if(h[i]>mx) mx=h[i]; }
+   refPop={lo:LO,hi:HI,w:w,h:h,mx:mx,nb:NB,mean:m,sd:sd};
+   seed=sv; gspare=sg;
+ }
+ function drawSample(){
+   var sv=seed, sg=gspare;
+   setSeed(SEED0+2718+n+Math.round(v2*1000)+Math.round(rho*1000)+Math.round(dbias*1000));
+   var K=Math.min(n,140), i, out=[];
+   if(S.kind==='prop'){
+     var k=propSample(n);
+     sampleVals={cnt:k};
+   } else {
+     var g=skew(), a=Math.sqrt(rho), b=Math.sqrt(1-rho), j, u;
+     if(rho<=0.001){ for(i=0;i<K;i++){ out.push(zskew(g)+dbias); } }
+     else { i=0; while(i<K){ u=a*zskew(g); for(j=0;j<S.cs&&i<K;j++,i++){ out.push(u+b*zskew(g)+dbias); } } }
+     sampleVals={v:out};
+   }
+   seed=sv; gspare=sg;
+ }
+
+ /* ================= small SVG helpers ================= */
+ function esc(s){ return String(s); }
+ function ln(x1,y1,x2,y2,col,w,dash){
+   return '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+
+     '" stroke="'+col+'" stroke-width="'+(w||1)+'"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+ }
+ function tx(x,y,s,size,col,anch,wt){
+   return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" font-size="'+size+'" fill="'+col+
+     '" text-anchor="'+(anch||'middle')+'" font-family="Inter,sans-serif" font-weight="'+(wt||600)+'">'+esc(s)+'</text>';
+ }
+ function rect(x,y,w,h,col,op){
+   if(h<=0||w<=0) return '';
+   return '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+h.toFixed(1)+
+     '" fill="'+col+'"'+(op?' opacity="'+op+'"':'')+'/>';
+ }
+ function fmt(x,d){ return x.toFixed(d); }
+ function pct(x,d){ return (100*x).toFixed(d===undefined?1:d)+'%'; }
+
+ /* ================= panel 1 — the population ================= */
+ function drawPop(){
+   var W=480,H=216,L=44,R=14,T=16,B=34, PW=W-L-R, PH=H-T-B, s='';
+   s+=rect(L,T,PW,PH,'#fbfdfe');
+   if(S.kind==='prop'){
+     var nn=n, pp=p0(), mu=nn*pp, sg=Math.sqrt(nn*pp*(1-pp));
+     var lo=Math.max(0,Math.floor(mu-5*sg)-1), hi=Math.min(nn,Math.ceil(mu+5*sg)+1);
+     if(hi-lo<6){ hi=Math.min(nn,lo+6); }
+     var pm=binomPmf(nn,pp), i, mx=0;
+     for(i=lo;i<=hi;i++){ if(pm[i]>mx) mx=pm[i]; }
+     if(mx<=0) mx=1;
+     var zc=invNorm(1-alpha/2), se=Math.sqrt(pp*(1-pp)/nn);
+     var cnt=hi-lo+1, bw=PW/cnt;
+     var X=function(v){ return L+(v-lo+0.5)*bw; };
+     var Y=function(d){ return T+PH-(d/mx)*PH*0.9; };
+     for(i=lo;i<=hi;i++){
+       var z=((i/nn)-pp)/se, rej=(z<-zc||z>zc);
+       s+=rect(X(i)-bw*0.42, Y(pm[i]), bw*0.84, T+PH-Y(pm[i]), rej?'#e8b6c0':'#bcd9e6');
+     }
+     var pth='', k, xx, yy, first=true;
+     for(k=0;k<=180;k++){
+       xx=lo+(hi-lo)*k/180;
+       yy=Math.exp(-(xx-mu)*(xx-mu)/(2*sg*sg))/(sg*2.5066282746310002);
+       pth+=(first?'M':'L')+X(xx).toFixed(1)+' '+Y(yy).toFixed(1); first=false;
+     }
+     s+='<path d="'+pth+'" fill="none" stroke="#7a5a8a" stroke-width="2.2"/>';
+     s+=ln(L,T+PH,L+PW,T+PH,'#c9d8e0',1.4);
+     var stepc=Math.max(1,Math.ceil(cnt/9));
+     for(i=lo;i<=hi;i+=stepc){
+       s+=ln(X(i),T+PH,X(i),T+PH+4,'#c9d8e0',1);
+       s+=tx(X(i),T+PH+15,i,9.4,'#78868d');
+     }
+     s+=tx(L+PW/2,H-4,'number of successes in a sample of '+nn+'  ·  expected under the claim: '+fmt(mu,1),10,'#78868d');
+     s+=tx(L,T-4,'exact probability of each count',9.6,'#78868d','start',700);
+   } else {
+     if(!refPop) buildPop();
+     var p=refPop, i2, X2=function(z){ return L+(z-p.lo)/(p.hi-p.lo)*PW; };
+     for(i2=0;i2<p.nb;i2++){
+       var hgt=(p.h[i2]/p.mx)*PH*0.88;
+       s+=rect(L+i2*(PW/p.nb)+0.4, T+PH-hgt, PW/p.nb-0.8, hgt, '#bcd9e6');
+     }
+     var zc0=0, zt=dbias;
+     if(zc0>=p.lo&&zc0<=p.hi){
+       s+=ln(X2(zc0),T,X2(zc0),T+PH,'#1c4454',2,'5 3');
+       s+=tx(Math.min(L+PW-30,Math.max(L+30,X2(zc0))),T+11,'claimed value',9.4,'#1c4454');
+     }
+     if(Math.abs(dbias)>0.02&&zt>=p.lo&&zt<=p.hi){
+       s+=ln(X2(zt),T,X2(zt),T+PH,'#d1495b',2,'5 3');
+       s+=tx(Math.min(L+PW-40,Math.max(L+40,X2(zt))),T+24,'true mean of the group you sampled',9.4,'#d1495b');
+     }
+     if(sampleVals&&sampleVals.v){
+       for(i2=0;i2<sampleVals.v.length;i2++){
+         var zz=Math.min(p.hi,Math.max(p.lo,sampleVals.v[i2]));
+         s+='<circle cx="'+X2(zz).toFixed(1)+'" cy="'+(T+PH-4).toFixed(1)+'" r="2.5" fill="#1c4454" opacity="0.42"/>';
+       }
+     }
+     s+=ln(L,T+PH,L+PW,T+PH,'#c9d8e0',1.4);
+     var k2;
+     for(k2=0;k2<=6;k2++){
+       var zv=p.lo+(p.hi-p.lo)*k2/6;
+       s+=ln(X2(zv),T+PH,X2(zv),T+PH+4,'#c9d8e0',1);
+       s+=tx(X2(zv),T+PH+15,fmt(S.mu0+S.sig*zv,S.dp),9.4,'#78868d');
+     }
+     s+=tx(L+PW/2,H-4,'values in the population, in '+(S.unit||'units'),10,'#78868d');
+     s+=tx(L,T-4,'how common each value is',9.6,'#78868d','start',700);
+   }
+   $('pop').innerHTML=s;
+ }
+
+ /* ================= panel 2 — the sampling distribution of the statistic ================= */
+ function drawSdist(){
+   var W=480,H=250,L=44,R=14,T=18,B=36, PW=W-L-R, PH=H-T-B, s='';
+   s+=rect(L,T,PW,PH,'#fbfdfe');
+   var c=crit(n), X=function(z){ return L+(z-HLO)/(HHI-HLO)*PW; };
+   var dens=[], i, mx=0;
+   for(i=0;i<HB;i++){ dens[i]=accN>0?accHist[i]/(accN*HW):0; if(dens[i]>mx) mx=dens[i]; }
+   var pk=refPdf(0,n);
+   if(pk>mx) mx=pk;
+   if(mx<=0) mx=0.45;
+   mx*=1.14;
+   var Y=function(d){ return T+PH-(d/mx)*PH; };
+   s+=rect(L,T,Math.max(0,X(-c)-L),PH,'#fbeef1');
+   s+=rect(X(c),T,Math.max(0,L+PW-X(c)),PH,'#fbeef1');
+   for(i=0;i<HB;i++){
+     if(dens[i]<=0) continue;
+     var xc=HLO+(i+0.5)*HW, rej=(xc<-c||xc>c);
+     s+=rect(L+i*(PW/HB)+0.3, Y(dens[i]), PW/HB-0.6, T+PH-Y(dens[i]), rej?'#e8b6c0':'#bcd9e6');
+   }
+   var pth='', k, first=true;
+   for(k=0;k<=240;k++){
+     var z=HLO+(HHI-HLO)*k/240;
+     pth+=(first?'M':'L')+X(z).toFixed(1)+' '+Y(refPdf(z,n)).toFixed(1); first=false;
+   }
+   s+='<path d="'+pth+'" fill="none" stroke="#7a5a8a" stroke-width="2.4"/>';
+   s+=ln(X(-c),T,X(-c),T+PH,'#d1495b',1.6,'5 3');
+   s+=ln(X(c),T,X(c),T+PH,'#d1495b',1.6,'5 3');
+   s+=tx(X(c),T+11,'+'+fmt(c,3),9.6,'#b23145');
+   s+=tx(X(-c),T+11,fmt(-c,3),9.6,'#b23145');
+   s+=ln(L,T+PH,L+PW,T+PH,'#c9d8e0',1.4);
+   for(k=-5;k<=5;k++){
+     s+=ln(X(k),T+PH,X(k),T+PH+4,'#c9d8e0',1);
+     s+=tx(X(k),T+PH+15,k,9.4,'#78868d');
+   }
+   var lbl=effTest()==='t'?('t with '+(n-1)+' degrees of freedom'):'the standard normal curve';
+   s+=tx(L+PW/2,H-6,'value of the test statistic  ·  the test reads its p-values from '+lbl,10,'#78868d');
+   s+=tx(L,T-5,accN>0?('measured from '+accN.toLocaleString()+' simulated studies'):'press a run button below',9.6,'#78868d','start',700);
+   $('sdist').innerHTML=s;
+ }
+
+ /* ================= panel 3 — false-alarm rate versus sample size ================= */
+ function drawSweep(){
+   var W=480,H=232,L=48,R=16,T=16,B=38, PW=W-L-R, PH=H-T-B, s='';
+   s+=rect(L,T,PW,PH,'#fbfdfe');
+   if(!sweepPts) runSweep();
+   var pts=sweepPts, i, mx=alpha*2.2;
+   for(i=0;i<pts.length;i++){ if(pts[i].r>mx) mx=pts[i].r; }
+   mx=Math.min(1,mx*1.18);
+   if(mx<0.12) mx=0.12;
+   var lo=Math.log(NLADDER[0]), hi=Math.log(NLADDER[NLADDER.length-1]);
+   var X=function(nv){ return L+(Math.log(nv)-lo)/(hi-lo)*PW; };
+   var Y=function(r){ return T+PH-(r/mx)*PH; };
+   var k, gr=5;
+   for(k=0;k<=gr;k++){
+     var rv=mx*k/gr;
+     s+=ln(L,Y(rv),L+PW,Y(rv),'#eef3f6',1);
+     s+=tx(L-6,Y(rv)+3.4,pct(rv,0),9.4,'#78868d','end');
+   }
+   s+=ln(L,Y(alpha),L+PW,Y(alpha),'#2f9e5b',1.8,'6 4');
+   s+=tx(L+PW-2,Y(alpha)-5,'the rate you asked for: '+pct(alpha,0),9.6,'#237a45','end',700);
+   var nm=Math.min(NLADDER[NLADDER.length-1],Math.max(NLADDER[0],n));
+   s+=ln(X(nm),T,X(nm),T+PH,'#cfdde5',1.4,'3 3');
+   s+=tx(Math.min(L+PW-18,Math.max(L+18,X(nm))),T+10,'your n',9.2,'#9aa9b1');
+   var pth='', first=true;
+   for(i=0;i<pts.length;i++){
+     pth+=(first?'M':'L')+X(pts[i].n).toFixed(1)+' '+Y(pts[i].r).toFixed(1); first=false;
+   }
+   s+='<path d="'+pth+'" fill="none" stroke="#1c4454" stroke-width="2.4"/>';
+   for(i=0;i<pts.length;i++){
+     var bad=Math.abs(pts[i].r-alpha)>Math.max(0.012,2.6*Math.sqrt(alpha*(1-alpha)/pts[i].R));
+     s+='<circle cx="'+X(pts[i].n).toFixed(1)+'" cy="'+Y(pts[i].r).toFixed(1)+'" r="4" fill="'+(bad?'#d1495b':'#2f9e5b')+'" stroke="#fff" stroke-width="1.6"/>';
+   }
+   s+=ln(L,T+PH,L+PW,T+PH,'#c9d8e0',1.4);
+   for(i=0;i<NLADDER.length;i++){
+     s+=ln(X(NLADDER[i]),T+PH,X(NLADDER[i]),T+PH+4,'#c9d8e0',1);
+     s+=tx(X(NLADDER[i]),T+PH+15,NLADDER[i],9.4,'#78868d');
+   }
+   s+=tx(L+PW/2,H-6,'sample size n  ·  '+SWEEPR+' complete studies simulated at each point',10,'#78868d');
+   s+=tx(L-40,T-4,'false-alarm rate',9.6,'#78868d','start',700);
+   $('sweep').innerHTML=s;
+ }
+
+ /* ================= the conditions panel ================= */
+ function drawCond(){
+   var s='', g=margSkew(), need=25*g*g, de=designEff();
+   if(S.kind==='prop'){
+     var pp=p0(), a=n*pp, b=n*(1-pp);
+     s+=cell(Math.abs(dbias)<0.0025, 'The sample is random',
+        Math.abs(dbias)<0.0025?'yes':('off by '+fmt(100*dbias,1)+' pts'),
+        Math.abs(dbias)<0.0025?'the group sampled is the population the claim is about':'the group you sampled has a different true proportion than p&#8320;');
+     s+=cell(rho<0.01, 'Trials are independent', rho<0.01?'yes':('&rho; = '+fmt(rho,2)),
+        rho<0.01?'no clustering; every trial carries its own information':('grouped in '+S.cs+'s &mdash; each group counts for less than '+S.cs+' trials'));
+     s+=cell(a>=10, 'n &times; p&#8320; &mdash; expected successes', fmt(a,1), a>=10?'at least 10 &mdash; the normal curve can stand in':'below 10 &mdash; the binomial is too lumpy for a normal curve');
+     s+=cell(b>=10, 'n &times; (1&minus;p&#8320;) &mdash; expected failures', fmt(b,1), b>=10?'at least 10 &mdash; the normal curve can stand in':'below 10 &mdash; the binomial is too lumpy for a normal curve');
+   } else {
+     var et=effTest(), curveOk=(S.sigKnown?(et==='zm'):(et==='t'));
+     var shapeOk=(g<=0.02)||(n>=need);
+     s+=cell(Math.abs(dbias)<0.011, 'The sample is random',
+        Math.abs(dbias)<0.011?'yes':('off by '+fmt(dbias,2)+' sd'),
+        Math.abs(dbias)<0.011?'the group sampled is the population the claim is about':'no sample size repairs this &mdash; and a larger n hides it better');
+     s+=cell(rho<0.01, 'Observations are independent', rho<0.01?'yes':('&rho; = '+fmt(rho,2)),
+        rho<0.01?'design effect 1.00 &mdash; n observations, n pieces of information':('design effect '+fmt(de,2)+' &mdash; n behaves like about '+Math.round(n/de)+' independent values'));
+     s+=cell(shapeOk, 'Normal population, or n large enough',
+        'n = '+n+(g<=0.02?'':' vs '+Math.round(need)),
+        g<=0.02?'the population is symmetric &mdash; any n is fine':('skewness '+fmt(g,2)+' asks for roughly n &ge; 25&gamma;&sup2; &asymp; '+Math.round(need)));
+     s+=cell(curveOk, 'The right reference curve',
+        curveOk?(S.sigKnown?'normal':'t, df '+(n-1)):(S.sigKnown?'should be normal':'should be t'),
+        S.sigKnown?'&sigma; is documented in advance, so no estimation wobble to pay for':'&sigma; comes from these data, so the curve must be widened to t');
+   }
+   $('cnd').innerHTML=s;
+   var extra='';
+   if(S.kind==='prop'){
+     extra='Population: '+S.pop+'. The two count conditions are checked with <b>p&#8320;</b>, the claimed proportion &mdash; not with the p&#770; you observed &mdash; because the whole p&#8209;value is computed inside the pretend world where the claim is true.';
+   } else {
+     extra='Population: '+S.pop+'. Note what the normality condition is and is not: it is a statement about the <b>population</b>, checked indirectly through the sample and through what you know about the variable. It is not a demand that your histogram look bell&#8209;shaped.';
+   }
+   $('cndcap').innerHTML=extra;
+ }
+ function cell(ok,lb,vv,sub){
+   return '<div class="'+(ok?'pass':'fail')+'"><span class="lb">'+lb+'</span><span class="vv">'+
+     (ok?'✓ ':'✕ ')+vv+'</span><span class="sub">'+sub+'</span></div>';
+ }
+
+ /* ================= verdict + tiles ================= */
+ function drawStats(){
+   var r=accN>0?accK/accN:0;
+   var mc=accN>0?1.96*Math.sqrt(Math.max(r*(1-r),1e-9)/accN):0;
+   $('rN').innerHTML=accN.toLocaleString();
+   $('rK').innerHTML=accK.toLocaleString();
+   $('rObs').innerHTML=accN>0?pct(r,2):'&mdash;';
+   $('rExp').innerHTML=pct(alpha,0);
+   var box=$('verdict'), st, hd, body;
+   if(accN<200){
+     box.className='sent';
+     box.innerHTML='<span class="big">Run the test a few thousand times</span>One study tells you nothing about whether a procedure is calibrated &mdash; it either rejects or it doesn&rsquo;t. Press a run button and the whole study is repeated, from scratch, in a world where the claim is exactly true.';
+     return;
+   }
+   var lo=r-mc, hi=r+mc, tail='', d=r-alpha;
+   /* "off" means off by enough to matter — in absolute AND relative terms. With enough
+      replicates the simulation can resolve a gap of 0.005, which is real but immaterial. */
+   var material=(Math.abs(d)>0.008)||(Math.abs(d)/alpha>0.25);
+   if(!material){
+     st='ok'; hd='Calibrated &mdash; the test is keeping its promise';
+     if(lo>alpha||hi<alpha){
+       tail=' The residual gap of '+pct(Math.abs(d),2)+' is real rather than simulation noise, and it is still far too small to change any decision. '+
+         (effTest()==='zp'?'A test built on a whole&#8209;number count can never sit exactly on &alpha;: the achievable rates come in steps, and the best any of them can do is straddle the value you asked for.'
+                          :'No finite sample reproduces the reference curve perfectly; what the condition buys you is a gap this size instead of one worth worrying about.');
+     }
+   }
+   else if(d>0){ st='rj'; hd='Anti-conservative &mdash; more false alarms than you agreed to'; }
+   else { st=''; hd='Conservative &mdash; the error is in your favour, but it is still an error';
+     tail=' Erring low is the safer direction to be wrong in, and it is not free: a test that only raises alarms '+pct(r,2)+
+       ' of the time when it promised '+pct(alpha,0)+' is also missing real effects it was built to catch. Its p&#8209;values are not the numbers they claim to be, they are merely wrong in the direction nobody complains about.'; }
+   box.className='sent '+st;
+   var tailtxt='';
+   if(accK>0){
+     var skewy=Math.abs(accL-accR)/accK>0.25;
+     tailtxt=' Of those false alarms, <b>'+pct(accL/accK,0)+'</b> landed in the lower tail and <b>'+pct(accR/accK,0)+
+       '</b> in the upper. A calibrated two&#8209;sided test splits them evenly'+(skewy?
+       ', so a split this lopsided is the asymmetry of the real distribution leaking through &mdash; and it means a <i>one</i>&#8209;sided test here would be in worse trouble than the two&#8209;sided figure above admits.':'.');
+   }
+   tailtxt+=tail;
+   body='Across <b>'+accN.toLocaleString()+'</b> complete studies, all run in a world where the claim is <b>true</b>, this procedure rejected it <b>'+
+     accK.toLocaleString()+'</b> times &mdash; a false-alarm rate of <b>'+pct(r,2)+'</b> against the <b>'+pct(alpha,0)+
+     '</b> you agreed to. Simulation has its own noise, so read that as '+pct(r,2)+' &plusmn; '+pct(mc,2)+
+     ' with 95% confidence; run more tests to tighten it.'+tailtxt;
+   box.innerHTML='<span class="big">'+hd+'</span>'+body;
+ }
+
+ /* ================= captions ================= */
+ function drawCaps(){
+   var et=effTest(), g=margSkew();
+   if(S.kind==='prop'){
+     $('popTitle').innerHTML='What the count can actually do, and what the test pretends it does';
+     $('popcap').innerHTML='For a binary variable there is no population histogram to inspect &mdash; there is only a proportion. So the picture that matters is the distribution of the <b>count of successes</b> under the claim, which is exactly binomial: one bar per possible outcome, nothing in between. The z&#8209;test throws away those bars and reads its p&#8209;values off the <b>smooth curve drawn over them</b>. When the bars are tall, numerous and symmetric, that swap costs almost nothing. When np&#8320; is small they pile against zero, the curve spills past the wall into impossible territory, and the p&#8209;values start to lie.';
+     $('poplgd').innerHTML='<span><i style="background:#bcd9e6"></i>exact binomial &mdash; one bar per possible count</span>'+
+       '<span><i style="background:#e8b6c0"></i>counts that would reject the claim</span>'+
+       '<span><i style="background:#7a5a8a"></i>the normal curve the test uses instead</span>';
+     $('popfoot').innerHTML='This sample produced <b>'+(sampleVals&&sampleVals.cnt!==undefined?sampleVals.cnt:0)+
+       '</b> successes out of '+n+' &mdash; p&#770; = <b>'+fmt((sampleVals&&sampleVals.cnt!==undefined?sampleVals.cnt:0)/n,3)+
+       '</b> against a claimed p&#8320; of '+fmt(p0(),3)+'. Press the button for a genuinely new draw.';
+   } else {
+     $('popTitle').innerHTML='The population you are actually sampling from';
+     $('popcap').innerHTML='This is the world the data come out of &mdash; not your sample, the whole population &mdash; and the assumptions are claims about <i>it</i>. The dark dashed line is the value the claim names. The dots along the bottom are one real sample of '+
+       (n>140?'140 of your ':'your ')+n+' observations, redrawn whenever anything changes. Push the skewness slider and the population leans; push the bias slider and the whole population slides off the claimed value while the test goes on testing it anyway.';
+     $('poplgd').innerHTML='<span><i style="background:#bcd9e6"></i>the population&rsquo;s shape</span>'+
+       '<span><i style="background:#1c4454;border-radius:50%"></i>one sample of real observations</span>'+
+       (Math.abs(dbias)>0.02?'<span><i style="background:#d1495b"></i>where the sampled group really sits</span>':'');
+     var pmean=S.mu0+S.sig*dbias;
+     $('popfoot').innerHTML='Population skewness <b>'+fmt(g,2)+'</b>'+(rho>0.01?' (softened by clustering, which averages skew away)':'')+
+       ' · true mean of the group you are sampling <b>'+fmt(pmean,S.dp)+' '+S.unit+'</b> against a claimed <b>'+fmt(S.mu0,S.dp)+' '+S.unit+'</b>.';
+   }
+   var lbl=et==='t'?('a <b>t curve with '+(n-1)+' degrees of freedom</b>'):'the <b>standard normal curve</b>';
+   var chose=(pick===null)?'the test a careless analyst would reach for here':(pick==='none'?'the test that would be run if you did not stop it':'the test you chose');
+   $('sdcap').innerHTML='Running '+chose+'. It reads its p&#8209;values from '+lbl+
+     '. Everything simulated here happens in a world where the claim is <b>true</b>, so every bar past a dashed line is a study that would have rejected a true claim &mdash; the shaded pink area is supposed to hold exactly '+pct(alpha,0)+
+     ' of them.';
+   $('knobcap').innerHTML='In this study, dependence would come from <b>'+S.csTxt+'</b>; bias would come from <b>'+S.dTxt+
+     '</b>. Every knob is set to the honest value when you press &ldquo;restore every assumption&rdquo; &mdash; move one at a time and watch which panel reacts.';
+ }
+
+ /* ================= feedback on the chosen procedure ================= */
+ function drawFb(){
+   var box=$('fb');
+   if(pick===null){
+     box.className='fb';
+     box.innerHTML='<span class="n">Make a choice</span>Nothing is graded until you commit to one. The simulation is already running the test a careless analyst would reach for in this situation, so you can see what it delivers before you decide.';
+     return;
+   }
+   var right=(pick===S.ans);
+   box.className='fb '+(right?'good':'bad');
+   var head=right?'Correct':'Not this one';
+   var extra='';
+   if(!right){
+     var an=S.ans==='none'?'None of these':(S.ans==='t'?'The t-test for a mean':(S.ans==='zm'?'The z-test for a mean':'The z-test for a proportion'));
+     if(S.kind==='prop'&&(pick==='t'||pick==='zm')){
+       extra=' There is no mean here to test &mdash; each observation is a yes or a no, and the only summary is a share. ';
+     } else if(S.kind==='mean'&&pick==='zp'){
+       extra=' There is no proportion here to test &mdash; the observations are measurements on a scale, not successes and failures. ';
+     } else if(pick==='zm'&&!S.sigKnown){
+       extra=' The z&#8209;test for a mean needs &sigma; <b>known in advance</b>. Here it is estimated from the sample, so the denominator carries error of its own and the curve must be widened to t &mdash; which matters most at exactly the small sample sizes where people are tempted to skip it. ';
+     } else if(pick==='t'&&S.sigKnown){
+       extra=' The t&#8209;test is never <i>wrong</i> so much as unnecessarily wide here: with &sigma; documented in advance there is no estimation wobble to compensate for, so t throws away power for nothing. ';
+     }
+     extra+='<b>'+an+'</b> is the answer. ';
+   }
+   box.innerHTML='<span class="n">'+head+'</span>'+extra+S.why;
+ }
+
+ /* ================= claims ================= */
+ var CLAIMS=[
+  {g:0, t:'&ldquo;Once n is at least 30, the t&#8209;test is valid.&rdquo;',
+   v:'<b>No.</b> The 30 is a rule of thumb about how fast the Central Limit Theorem works on <i>mildly</i> skewed populations, and it fails badly on strongly skewed ones &mdash; push the skewness slider to 2 and watch the curve in the third panel need hundreds. It also says nothing whatsoever about the other two assumptions: 30 dependent observations, or 30 non&#8209;randomly chosen ones, are no better than 3,000 of them.'},
+  {g:1, t:'&ldquo;The normality condition is about the population the data came from &mdash; my sample is only evidence about it.&rdquo;',
+   v:'<b>Yes.</b> And it is thin evidence when n is small, which is precisely when the condition bites hardest. Small samples from perfectly normal populations look ragged all the time. Use the sample to spot outliers and obvious multiple peaks, and use what you know about the variable &mdash; charges, incomes, durations and counts of rare events are skewed whether or not this particular sample shows it.'},
+  {g:0, t:'&ldquo;My sample histogram isn&rsquo;t bell&#8209;shaped, so the t&#8209;test is invalid.&rdquo;',
+   v:'<b>No.</b> A jagged histogram from n = 12 is what a normal population usually looks like at n = 12. Judging normality by eye from a small sample is close to guessing, and it errs in both directions. The condition is about the population; the sample is one noisy look at it.'},
+  {g:0, t:'&ldquo;A big enough sample compensates for a sample that wasn&rsquo;t randomly chosen.&rdquo;',
+   v:'<b>No &mdash; it does the opposite.</b> Bias is a fixed distance between the group you sampled and the population you are talking about, and it does not shrink with n. The standard error does shrink, so the interval tightens around the wrong number and the test grows more and more certain of it. Set the bias slider above zero and slide n upward: the false&#8209;alarm rate climbs toward 100%.'},
+  {g:0, t:'&ldquo;If the observations aren&rsquo;t independent, I can fix it by collecting more of the same kind.&rdquo;',
+   v:'<b>No.</b> Adding more correlated observations adds less information than the formula credits, so the standard error stays too small and the error rate stays inflated no matter how far you push n. That is why the &rho; curve in the third panel is flat rather than descending. The fix is to change what counts as one observation &mdash; collapse each cluster to a single number and test those.'},
+  {g:1, t:'&ldquo;The large&#8209;count condition for a proportion test uses p&#8320;, not the p&#770; I observed.&rdquo;',
+   v:'<b>Yes.</b> The p&#8209;value is computed entirely inside the world where the claim is true, so every quantity in the calculation &mdash; the standard error, and the condition that licenses the normal approximation &mdash; is built from p&#8320;. A confidence interval, which makes no claim to test, uses p&#770; instead. The two are usually close, which is exactly why the mix&#8209;up survives.'},
+  {g:1, t:'&ldquo;When a condition fails, the p&#8209;value is still computed correctly &mdash; it just answers a question about the wrong world.&rdquo;',
+   v:'<b>Yes, and that is what makes it dangerous.</b> Nothing errors out. The arithmetic is flawless; the probability model underneath it is wrong. That is why a broken assumption cannot be detected by re&#8209;checking your calculation, and why the only defence is knowing where the numbers came from.'}
+ ];
+
+ /* ================= rendering the controls ================= */
+ function renderScen(){
+   $('scen').innerHTML=SC.map(function(x){
+     return '<button class="it'+(x.k===S.k?' on':'')+'" data-k="'+x.k+'"><span class="sw" style="background:'+x.col+
+       '"></span><span><span class="nm">'+x.nm+'</span><br><span class="ct">'+x.ct+'</span></span></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#scen .it'),function(b){
+     b.onclick=function(){ selScen(b.getAttribute('data-k')); };
+   });
+ }
+ function renderPicks(){
+   $('picks').innerHTML=TESTS.map(function(x){
+     return '<button class="it'+(x.k===pick?' on':'')+'" data-k="'+x.k+'"><span class="nm">'+x.nm+
+       '</span><span class="s2">'+x.s+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#picks .it'),function(b){
+     b.onclick=function(){ pick=b.getAttribute('data-k'); renderPicks(); resetAcc(); sweepPts=null; runAcc(600); refresh(); };
+   });
+ }
+ function renderClaims(){
+   $('claims').innerHTML=CLAIMS.map(function(c,i){
+     return '<button class="cl" data-i="'+i+'"><span class="mk">?</span>'+c.t+'<span class="vd">'+c.v+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#claims .cl'),function(b){
+     b.onclick=function(){
+       var c=CLAIMS[+b.getAttribute('data-i')];
+       if(b.className.indexOf('open')>=0){ b.className='cl'; b.querySelector('.mk').innerHTML='?'; }
+       else { b.className='cl open '+(c.g?'good':'bad'); b.querySelector('.mk').innerHTML=c.g?'✓':'✕'; }
+     };
+   });
+ }
+ function renderSegs(){
+   Array.prototype.forEach.call(document.querySelectorAll('#alSeg button'),function(b){
+     b.className=(parseFloat(b.getAttribute('data-v'))===alpha)?'on':'';
+     b.onclick=function(){ alpha=parseFloat(b.getAttribute('data-v')); renderSegs(); recompute(); };
+   });
+ }
+
+ function setSliders(){
+   var a=$('s1'); a.min=S.nMin; a.max=S.nMax; a.step=S.nStep; a.value=n;
+   var b=$('s2'); b.min=S.v2Min; b.max=S.v2Max; b.step=S.v2Step; b.value=v2;
+   var c=$('s3'); c.min=0; c.max=0.8; c.step=0.02; c.value=rho;
+   var d=$('s4'); d.min=0; d.max=S.dMax; d.step=S.dStep; d.value=dbias;
+   $('l2').innerHTML=S.kind==='prop'?'claimed proportion p&#8320;':'population skewness &gamma;';
+   $('l4').innerHTML=S.kind==='prop'?'selection bias &delta;':'selection bias &delta;';
+   readSliders();
+ }
+ function readSliders(){
+   $('v1').innerHTML=n+'<small>observations</small>';
+   if(S.kind==='prop'){ $('v2').innerHTML=fmt(v2,3)+'<small>the claim</small>'; }
+   else { $('v2').innerHTML=fmt(v2,2)+'<small>'+(v2<0.05?'symmetric':(v2<0.6?'a slight lean':(v2<1.2?'clearly skewed':'heavily skewed')))+'</small>'; }
+   $('v3').innerHTML=fmt(rho,2)+'<small>'+(rho<0.01?'independent':'groups of '+S.cs)+'</small>';
+   if(S.kind==='prop'){ $('v4').innerHTML=(dbias>=0?'+':'')+fmt(dbias,3)+'<small>'+(dbias<0.0025?'representative':'off target')+'</small>'; }
+   else { $('v4').innerHTML=(dbias>=0?'+':'')+fmt(dbias,2)+'<small>'+(dbias<0.011?'representative':'sd off target')+'</small>'; }
+ }
+
+ /* ================= orchestration ================= */
+ function recompute(){
+   refPop=null;
+   sweepPts=null;
+   resetAcc();
+   buildPop();
+   drawSample();
+   runAcc(600);
+   refresh();
+ }
+ function refresh(){
+   readSliders();
+   drawPop(); drawSdist(); drawSweep(); drawCond(); drawStats(); drawCaps(); drawFb();
+ }
+ function selScen(k){
+   var i;
+   for(i=0;i<SC.length;i++){ if(SC[i].k===k) S=SC[i]; }
+   pick=null;
+   n=S.n0; v2=S.v20; rho=S.rho0; dbias=S.d0;
+   $('stage').style.background=S.col;
+   $('stage').innerHTML=S.nm+'<small>situation '+(SC.indexOf(S)+1)+' of '+SC.length+'</small>';
+   $('sittxt').innerHTML=S.sit;
+   renderScen(); renderPicks(); setSliders(); recompute();
+ }
+
+ /* ================= wiring ================= */
+ $('s1').oninput=function(){ n=Math.max(3,parseInt(this.value,10)); recompute(); };
+ $('s2').oninput=function(){ v2=parseFloat(this.value); recompute(); };
+ $('s3').oninput=function(){ rho=parseFloat(this.value); recompute(); };
+ $('s4').oninput=function(){ dbias=parseFloat(this.value); recompute(); };
+ $('bdraw').onclick=function(){
+   setSeed((seed*7+101)|0);
+   if(S.kind==='prop'){ sampleVals={cnt:propSample(n)}; }
+   else {
+     var K=Math.min(n,140), out=[], g=skew(), a=Math.sqrt(rho), b=Math.sqrt(1-rho), i, j, u;
+     if(rho<=0.001){ for(i=0;i<K;i++){ out.push(zskew(g)+dbias); } }
+     else { i=0; while(i<K){ u=a*zskew(g); for(j=0;j<S.cs&&i<K;j++,i++){ out.push(u+b*zskew(g)+dbias); } } }
+     sampleVals={v:out};
+   }
+   drawPop(); drawCaps();
+ };
+ $('bclean').onclick=function(){
+   rho=0; dbias=0;
+   if(S.kind!=='prop'){ v2=0; }
+   $('s3').value=0; $('s4').value=0; if(S.kind!=='prop') $('s2').value=0;
+   recompute();
+ };
+ $('run1').onclick=function(){ runAcc(600); drawSdist(); drawStats(); drawCaps(); };
+ $('run2').onclick=function(){ runAcc(6000); drawSdist(); drawStats(); drawCaps(); };
+ $('rrs').onclick=function(){ resetAcc(); drawSdist(); drawStats(); };
+
+ renderClaims();
+ renderSegs();
+ selScen('na');
+})();
+</script>
+</body>
+</html>

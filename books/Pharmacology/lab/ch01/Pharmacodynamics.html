@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>What the Drug Does to the Body</title>
+<meta name="description" content="Interactive pharmacodynamics — drag the dose along a dose-response curve, compare agonists, partial agonists and antagonists at the receptor, and explore the therapeutic index of digoxin, lithium, warfarin and phenytoin. For nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:1fr 1fr;}
+.stats{display:flex;gap:7px;margin:12px 0 2px;}
+.stats div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 3px;font-size:9.5px;font-weight:700;color:var(--muted);background:#fff;letter-spacing:.3px;text-transform:uppercase;}
+.stats div .v{display:block;font-size:14px;margin-top:3px;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+.stats div.warn .v{color:#b23145;}
+.stats div.good .v{color:#237a45;}
+.slbox{margin-top:12px;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 12px 8px;}
+.sllab{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:6px;}
+.sllab b{color:var(--teal-dk);font-size:12.5px;}
+.sl{width:100%;-webkit-appearance:none;appearance:none;height:24px;background:transparent;outline:none;cursor:pointer;display:block;}
+.sl::-webkit-slider-runnable-track{height:8px;border-radius:5px;background:#e2e9f3;}
+.sl::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin-top:-7px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,45,70,.35);cursor:pointer;}
+.sl::-moz-range-track{height:8px;border-radius:5px;background:#e2e9f3;}
+.sl::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,45,70,.35);cursor:pointer;}
+.sl:focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:5px;}
+.ends{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:600;margin-top:4px;}
+.cap{font-size:10.5px;color:var(--muted);line-height:1.45;margin-top:6px;}
+.hide{display:none;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 1</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 1</div>
+  <h1>What the Drug Does to the Body</h1>
+  <div class="intro">Pharmacokinetics is what the body does to the drug. <b>Pharmacodynamics is the reverse</b> &mdash; what the drug does at the receptor, how the response grows with dose, and how close the helpful dose sits to the harmful one. Drag the slider and watch all three.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="artTitle">At the receptor</h2>
+      <svg viewBox="0 0 220 200" aria-label="receptor diagram"><g id="art"></g></svg>
+    </div>
+    <div class="card"><h2 id="curveTitle">Dose–response curve</h2>
+      <svg viewBox="0 0 240 178" aria-label="curve"><g id="curve"></g></svg>
+      <div class="cap" id="cap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Pharmacodynamics<small>pick a mode below</small></div>
+    <div class="modeseg">
+      <button id="mA" class="on">Agonist vs antagonist</button>
+      <button id="mB">Therapeutic index</button>
+    </div>
+    <div class="card">
+      <div class="list" id="list"></div>
+      <div class="slbox">
+        <div class="sllab"><span id="slName">Dose</span><b id="slVal">—</b></div>
+        <input type="range" min="0" max="100" value="42" class="sl" id="sl">
+        <div class="ends"><span id="e0">low</span><span id="e1">high</span></div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var GREY='#c3cddb', PLOT={l:36,r:228,t:14,b:138};
+
+ /* ---------------- MODE A: agonist / antagonist at the mu-opioid receptor ------------- */
+ var Lg=[
+  {k:'full',nm:'Full agonist',ct:'morphine',col:'#2f9e5b',emax:100,ec50:10,kd:10,
+   d:'A full agonist has <b>affinity</b> (it binds the receptor) and full <b>intrinsic activity</b> (it switches the receptor fully on). Morphine does both at the mu-opioid receptor. As the dose rises, more receptors are occupied, response climbs, and the curve finally <b>plateaus at E<sub>max</sub></b> &mdash; every receptor is already busy, so more drug buys nothing but toxicity.',
+   ex:['affinity + full intrinsic activity','E-max = 100% of possible response'],
+   nurse:'Analgesia and respiratory depression sit on the <b>same rising curve</b> &mdash; a full opioid agonist has no ceiling. Assess respiratory rate and sedation level before and after each dose; increasing sedation appears <b>before</b> the respiratory rate falls. Keep naloxone available.'},
+  {k:'partial',nm:'Partial agonist',ct:'buprenorphine',col:'#b8862f',emax:50,ec50:3,kd:3,
+   d:'A partial agonist binds <b>tightly</b> (high affinity &mdash; note the curve sits to the <b>left</b>) but only <b>partly activates</b> the receptor. Even when occupancy reaches 100%, the response plateaus well below a full agonist\'s. That plateau is the <b>ceiling effect</b>: occupancy and response are not the same thing.',
+   ex:['high affinity, low intrinsic activity','ceiling effect'],
+   nurse:'The ceiling on respiratory depression is what makes buprenorphine attractive. But because it <b>outbinds</b> a full agonist while activating less, it will displace one and can <b>precipitate acute withdrawal</b> in an opioid-dependent patient. Confirm how long since the last full-agonist dose and that early withdrawal has begun before the first dose.'},
+  {k:'antag',nm:'Antagonist alone',ct:'naloxone',col:'#d1495b',emax:0,ec50:1,kd:1,
+   d:'An antagonist has <b>affinity but zero intrinsic activity</b> &mdash; it occupies the receptor and does nothing. Watch the receptors fill while the curve stays flat on the floor. Given to a patient with <b>no opioid on board, naloxone produces essentially no effect</b>. Its entire job is to keep an agonist out.',
+   ex:['affinity, no intrinsic activity','flat curve = no response'],
+   nurse:'Naloxone reverses opioid-induced <b>respiratory depression</b>. Titrate to respiratory rate, not to full alertness &mdash; it also reverses analgesia and can precipitate acute withdrawal. Its duration (roughly <b>30&ndash;90 minutes</b>) is shorter than most opioids, especially extended-release ones, so <b>re-sedation is expected</b>: keep monitoring and be ready to repeat.'},
+  {k:'both',nm:'Agonist + antagonist',ct:'morphine with naloxone on board',col:'#7a5a8a',emax:100,ec50:100,kd:100,
+   d:'Both compete for the <b>same site</b>. With naloxone present, morphine\'s curve <b>shifts to the right</b>: the same maximum is still reachable, but it takes far more morphine to get there. That is <b>competitive antagonism</b> &mdash; it is <b>surmountable</b>. Push the dose up and watch morphine displace naloxone receptor by receptor.',
+   ex:['curve shifts right, E-max unchanged','surmountable block'],
+   nurse:'This is exactly why a patient reversed with naloxone can <b>slide back into respiratory depression</b>: naloxone wears off first and the opioid still occupying the body wins the competition again. Contrast an <b>irreversible / non-competitive</b> antagonist (phenoxybenzamine at alpha receptors, aspirin on platelet COX-1): it <b>lowers the ceiling</b>, cannot be outcompeted, and lasts until new receptor or enzyme is made.'}
+ ];
+
+ /* ---------------- MODE B: therapeutic index ------------- */
+ var Dg=[
+  {k:'dig',nm:'Digoxin',ct:'heart failure · rate control in AF',col:'#2f5f9e',unit:'ng/mL',smax:4,lo:0.5,hi:2.0,ed50:0.55,td50:2.6,
+   ticks:[0,1,2,3,4],dec:2,ti:'narrow',
+   zsub:['level below 0.5 ng/mL','symptoms / rate control may return'],
+   zther:['0.5–2.0 ng/mL  (0.5–0.9 targeted in HF)','apical pulse ≥60 · keep K+ normal'],
+   ztox:['above 2.0 ng/mL','anorexia · N/V · yellow-green halos','bradycardia · arrhythmias'],
+   d:'Therapeutic serum level <b>0.5&ndash;2.0 ng/mL</b>; in heart failure the target is the lower end, <b>0.5&ndash;0.9 ng/mL</b>. The effect curve and the toxicity curve almost touch &mdash; that is what "narrow therapeutic index" looks like.',
+   nurse:'Count the <b>apical pulse for one full minute before every dose</b>; hold the dose and notify the prescriber if it is <b>&lt;60 bpm</b> in an adult. Early toxicity is GI and visual: anorexia, nausea, vomiting, blurred or <b>yellow-green vision with halos</b> &mdash; then bradycardia and arrhythmias. <b>Hypokalemia potentiates digoxin toxicity</b>, so a patient on a loop diuretic can be toxic at a "normal" level: watch K+, magnesium and renal function. Antidote: <b>digoxin immune Fab</b>.'},
+  {k:'li',nm:'Lithium',ct:'bipolar disorder',col:'#7a5a8a',unit:'mEq/L',smax:3,lo:0.6,hi:1.2,ed50:0.55,td50:1.9,
+   ticks:[0,0.5,1,1.5,2,2.5,3],dec:2,ti:'narrow',
+   zsub:['below 0.6 mEq/L','mood symptoms may return'],
+   zther:['0.6–1.2 mEq/L maintenance','fine hand tremor is common, not toxicity'],
+   ztox:['above 1.5 mEq/L = toxic','coarse tremor · vomiting · diarrhea','ataxia · slurred speech · confusion'],
+   d:'Maintenance level <b>0.6&ndash;1.2 mEq/L</b>. Above <b>1.5 mEq/L</b> is toxic and above 2.0 is severe &mdash; the whole safe corridor is about half a unit wide.',
+   nurse:'The kidney handles lithium like <b>sodium</b>: dehydration, salt restriction, vomiting or diarrhea, <b>NSAIDs, ACE inhibitors and thiazide diuretics all raise the level</b>. Teach a consistent daily salt intake and about <b>2&ndash;3 L of fluid a day</b>, and to hold the dose and call for coarse tremor, persistent vomiting or diarrhea, ataxia, slurred speech or confusion. There is <b>no antidote</b> &mdash; severe toxicity is treated with hemodialysis. Monitor levels, sodium, renal and thyroid function.'},
+  {k:'warf',nm:'Warfarin',ct:'anticoagulation · monitored by INR',col:'#d1495b',unit:'INR',smax:6,lo:2.0,hi:3.0,ed50:1.9,td50:4.2,
+   ticks:[0,1,2,3,4,5,6],dec:1,ti:'narrow',
+   zsub:['INR below 2.0','not anticoagulated — clot risk'],
+   zther:['INR 2.0–3.0 for AF and most VTE','2.5–3.5 for a mechanical mitral valve','still assess for bleeding every shift'],
+   ztox:['INR above 3.0 — risk climbs steeply past 4','bruising · bleeding gums','black tarry stools · hematuria'],
+   d:'A vitamin K antagonist: it blocks synthesis of clotting <b>factors II, VII, IX and X</b> (and proteins C and S). Dosed to an <b>INR of 2.0&ndash;3.0</b> for atrial fibrillation and most venous thromboembolism; <b>2.5&ndash;3.5</b> for a mechanical mitral valve. Below the range the patient clots; above it, bleeds.',
+   nurse:'Full effect takes several days, so a <b>heparin bridge</b> covers the gap. Teach a <b>consistent &mdash; not zero &mdash; vitamin K intake</b> (green leafy vegetables), and to report bruising, bleeding gums, black tarry stools or hematuria. Many interactions (amiodarone, antibiotics, NSAIDs, azole antifungals). Antidote: <b>vitamin K (phytonadione)</b>; major bleeding gets 4-factor PCC or FFP. Compare <b>heparin</b>: monitored by <b>aPTT</b> (1.5&ndash;2.5× control), reversed by <b>protamine sulfate</b>.'},
+  {k:'phen',nm:'Phenytoin',ct:'antiseizure',col:'#b8862f',unit:'mcg/mL',smax:40,lo:10,hi:20,ed50:9,td50:26,
+   ticks:[0,10,20,30,40],dec:1,ti:'narrow',
+   zsub:['below 10 mcg/mL','breakthrough seizure risk'],
+   zther:['10–20 mcg/mL','never stop abruptly'],
+   ztox:['above 20 mcg/mL','nystagmus appears first','then ataxia · slurred speech · confusion'],
+   d:'Therapeutic serum level <b>10&ndash;20 mcg/mL</b>. Phenytoin also has <b>nonlinear (saturable) kinetics</b> &mdash; once the enzymes are saturated, a small dose increase can send the level far up, which makes a narrow window narrower still.',
+   nurse:'Toxicity is neurologic and arrives in order: <b>nystagmus first</b>, then ataxia and slurred speech, then confusion &mdash; check for nystagmus at every assessment. IV push <b>no faster than 50 mg/min</b> in an adult (hypotension, arrhythmias), and mix <b>only with normal saline</b> &mdash; dextrose precipitates it. Teach meticulous oral hygiene and dental follow-up for <b>gingival hyperplasia</b>; it is a strong enzyme inducer and lowers oral contraceptive levels.'},
+  {k:'amox',nm:'Amoxicillin',ct:'wide index — shown for contrast',col:'#2f9e5b',unit:'× usual dose',smax:20,lo:1,hi:3,ed50:0.8,td50:60,
+   ticks:[0,5,10,15,20],dec:1,ti:'wide',aboveNm:'Above usual dose',
+   zsub:['under the effective dose','underdosing breeds resistance'],
+   zther:['the usual therapeutic dose range','ask about penicillin allergy first'],
+   ztox:['still far from a toxic dose','the toxicity curve is off this plot','allergy — not dose — is the danger'],
+   d:'A <b>wide</b> therapeutic index drug, here for contrast. The gap between the dose that works and the dose that harms is enormous &mdash; the toxicity curve sits far off the right edge of this plot, so <b>no routine serum levels are drawn</b>.',
+   nurse:'With a wide index the limiting problem is <b>allergy, not dose</b>. Ask about penicillin allergy before the first dose and pin down what actually happened &mdash; a mild childhood rash is a different matter from <b>anaphylaxis</b>, which is a contraindication. Teach the patient to finish the full course. Contrast this with the four narrow-index drugs above: those need levels, and small errors matter.'}
+ ];
+
+ var mode='A', curL='full', curD='dig', v=42;
+
+ /* ---------------- math ------------- */
+ function hill(x,k,n){ if(x<=0) return 0; var a=Math.pow(x,n); return a/(a+Math.pow(k,n)); }
+ function respA(d,l){ return l.emax*hill(d,l.ec50,1.2); }
+ function occA(d,l){ return hill(d,l.kd,1.2); }
+ function doseOf(val){ return Math.pow(10,-1+val/100*4); }        /* 0.1 → 1000 */
+ function valOfDose(d){ return (Math.log(d)/Math.LN10+1)/4*100; }
+ function fmtD(d){ return d<1?d.toFixed(2):(d<10?d.toFixed(1):Math.round(d)+''); }
+ function px(logd){ return PLOT.l+(logd+1)/4*(PLOT.r-PLOT.l); }
+ function py(r){ return PLOT.b-r/100*(PLOT.b-PLOT.t); }
+ function pxLin(c,smax){ return PLOT.l+c/smax*(PLOT.r-PLOT.l); }
+
+ /* ---------------- shared plot frame ------------- */
+ function frame(yLab,xLab){
+   var s='<rect x="'+PLOT.l+'" y="'+PLOT.t+'" width="'+(PLOT.r-PLOT.l)+'" height="'+(PLOT.b-PLOT.t)+'" fill="#fff" stroke="#e6ebf3"/>';
+   [0,25,50,75,100].forEach(function(r){
+     s+='<line x1="'+PLOT.l+'" y1="'+py(r)+'" x2="'+PLOT.r+'" y2="'+py(r)+'" stroke="#eef2f8" stroke-width="1"/>';
+     if(r%50===0) s+='<text x="'+(PLOT.l-5)+'" y="'+(py(r)+3.5)+'" font-size="8" fill="#78828f" text-anchor="end">'+r+'</text>';
+   });
+   s+='<text x="11" y="'+((PLOT.t+PLOT.b)/2)+'" font-size="8" fill="#78828f" text-anchor="middle" transform="rotate(-90 11 '+((PLOT.t+PLOT.b)/2)+')">'+yLab+'</text>';
+   s+='<text x="'+((PLOT.l+PLOT.r)/2)+'" y="171" font-size="8.5" fill="#78828f" text-anchor="middle">'+xLab+'</text>';
+   return s;
+ }
+
+ /* ---------------- MODE A drawing ------------- */
+ function statesA(d,l){
+   var st=[];
+   if(l.k==='both'){
+     var mo=occA(d,l), na=(1-mo)*0.9;
+     var nm=Math.round(mo*5), nn=Math.min(5-nm,Math.round(na*5));
+     for(var i=0;i<5;i++) st.push(i<nm?'ag':(i<nm+nn?'bl':'em'));
+   }else{
+     var o=occA(d,l), n=Math.round(o*5);
+     var t=l.k==='partial'?'pa':(l.k==='antag'?'bl':'ag');
+     for(var j=0;j<5;j++) st.push(j<n?t:'em');
+   }
+   return st;
+ }
+ function drawA(d,l){
+   var st=statesA(d,l), s='';
+   s+='<text x="110" y="12" font-size="8.5" fill="#78828f" text-anchor="middle" font-weight="700">OUTSIDE THE CELL</text>';
+   s+='<rect x="0" y="60" width="220" height="36" fill="#dfe7f2"/>';
+   s+='<line x1="0" y1="60" x2="220" y2="60" stroke="#c3cddb" stroke-width="2"/>';
+   s+='<line x1="0" y1="96" x2="220" y2="96" stroke="#c3cddb" stroke-width="2"/>';
+   s+='<text x="110" y="196" font-size="8.5" fill="#78828f" text-anchor="middle" font-weight="700">INSIDE THE CELL</text>';
+   for(var i=0;i<5;i++){
+     var cx=30+i*40, t=st[i];
+     s+='<rect x="'+(cx-13)+'" y="58" width="26" height="40" rx="5" fill="'+GREY+'"/>';
+     s+='<rect x="'+(cx-7)+'" y="54" width="14" height="11" rx="3" fill="#f0f4fa"/>';
+     if(t!=='em'){
+       var col=(t==='ag'?'#2f9e5b':(t==='pa'?'#b8862f':'#d1495b'));
+       s+='<circle cx="'+cx+'" cy="52" r="8.5" fill="'+col+'"/>';
+       s+='<circle cx="'+(cx-3)+'" cy="49" r="2.5" fill="#fff" opacity=".45"/>';
+     }
+     if(t==='ag'){
+       s+='<line x1="'+cx+'" y1="100" x2="'+cx+'" y2="132" stroke="#2f9e5b" stroke-width="3.5"/>';
+       s+='<polygon points="'+cx+',142 '+(cx-6)+',130 '+(cx+6)+',130" fill="#2f9e5b"/>';
+       s+='<circle cx="'+cx+'" cy="158" r="6" fill="#2f9e5b" opacity=".9"/>';
+     }else if(t==='pa'){
+       s+='<line x1="'+cx+'" y1="100" x2="'+cx+'" y2="120" stroke="#b8862f" stroke-width="3.5" stroke-dasharray="4 3"/>';
+       s+='<polygon points="'+cx+',130 '+(cx-5)+',119 '+(cx+5)+',119" fill="#b8862f"/>';
+       s+='<circle cx="'+cx+'" cy="158" r="4" fill="#b8862f" opacity=".55"/>';
+     }else if(t==='bl'){
+       s+='<line x1="'+(cx-7)+'" y1="112" x2="'+(cx+7)+'" y2="126" stroke="#d1495b" stroke-width="3"/>';
+       s+='<line x1="'+(cx+7)+'" y1="112" x2="'+(cx-7)+'" y2="126" stroke="#d1495b" stroke-width="3"/>';
+     }
+   }
+   var key=(l.k==='both')?'<tspan fill="#2f9e5b">■</tspan> morphine   <tspan fill="#d1495b">■</tspan> naloxone (blocked)'
+        :(l.k==='partial'?'<tspan fill="#b8862f">■</tspan> bound — only partly activated'
+        :(l.k==='antag'?'<tspan fill="#d1495b">■</tspan> bound — no signal at all'
+        :'<tspan fill="#2f9e5b">■</tspan> bound — receptor fully activated'));
+   s+='<text x="110" y="180" font-size="8" fill="#4b5563" text-anchor="middle" font-weight="600">'+key+'</text>';
+   return s;
+ }
+ function curveA(d,l){
+   var s=frame('response (% of E-max)','dose  →  (log scale)'), i, p;
+   [0.1,1,10,100,1000].forEach(function(t){
+     var x=px(Math.log(t)/Math.LN10);
+     s+='<line x1="'+x+'" y1="'+PLOT.t+'" x2="'+x+'" y2="'+PLOT.b+'" stroke="#eef2f8"/>';
+     s+='<text x="'+x+'" y="'+(PLOT.b+11)+'" font-size="7.5" fill="#78828f" text-anchor="middle">'+t+'</text>';
+   });
+   /* reference full-agonist curve */
+   if(l.k!=='full'){
+     p='';
+     for(i=0;i<=60;i++){ var ld=-1+i/60*4; p+=(i?'L':'M')+px(ld).toFixed(1)+' '+py(respA(Math.pow(10,ld),Lg[0])).toFixed(1)+' '; }
+     s+='<path d="'+p+'" fill="none" stroke="'+GREY+'" stroke-width="2" stroke-dasharray="4 3"/>';
+     s+='<text x="'+(PLOT.r-3)+'" y="'+(py(100)-4)+'" font-size="7" fill="#96a1b2" text-anchor="end">morphine alone</text>';
+   }
+   /* active curve */
+   p='';
+   for(i=0;i<=60;i++){ var ld2=-1+i/60*4; p+=(i?'L':'M')+px(ld2).toFixed(1)+' '+py(respA(Math.pow(10,ld2),l)).toFixed(1)+' '; }
+   s+='<path d="'+p+'" fill="none" stroke="'+l.col+'" stroke-width="2.6"/>';
+   /* EC50 guide */
+   if(l.emax>0){
+     var ex=px(Math.log(l.ec50)/Math.LN10), ey=py(l.emax/2);
+     s+='<line x1="'+ex+'" y1="'+ey+'" x2="'+ex+'" y2="'+PLOT.b+'" stroke="'+l.col+'" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>';
+     s+='<line x1="'+PLOT.l+'" y1="'+ey+'" x2="'+ex+'" y2="'+ey+'" stroke="'+l.col+'" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>';
+     s+='<text x="'+(ex+3)+'" y="'+(PLOT.b-4)+'" font-size="7.5" fill="'+l.col+'" font-weight="700">EC50</text>';
+   }
+   /* live marker */
+   var mx=px(Math.log(d)/Math.LN10), my=py(respA(d,l));
+   s+='<line x1="'+mx+'" y1="'+PLOT.t+'" x2="'+mx+'" y2="'+PLOT.b+'" stroke="'+l.col+'" stroke-width="1" opacity=".35"/>';
+   s+='<circle cx="'+mx+'" cy="'+my+'" r="5.5" fill="'+l.col+'" stroke="#fff" stroke-width="2.2"/>';
+   return s;
+ }
+
+ /* ---------------- MODE B drawing ------------- */
+ function zoneOf(c,g){ return c<g.lo?'sub':(c<=g.hi?'ther':'tox'); }
+ function drawB(c,g){
+   var z=zoneOf(c,g), s='', x0=20, x1=200, W=x1-x0;
+   var xl=x0+g.lo/g.smax*W, xh=x0+g.hi/g.smax*W, xm=x0+c/g.smax*W;
+   s+='<text x="110" y="14" font-size="8.5" fill="#78828f" text-anchor="middle" font-weight="700">WHERE THIS PATIENT SITS</text>';
+   s+='<rect x="'+x0+'" y="30" width="'+(xl-x0)+'" height="26" fill="#e7ecf4"/>';
+   s+='<rect x="'+xl+'" y="30" width="'+(xh-xl)+'" height="26" fill="#cfe9d9"/>';
+   s+='<rect x="'+xh+'" y="30" width="'+(x1-xh)+'" height="26" fill="'+(g.ti==='wide'?'#e7ecf4':'#f6d9de')+'"/>';
+   s+='<rect x="'+x0+'" y="30" width="'+W+'" height="26" fill="none" stroke="#c3cddb"/>';
+   s+='<text x="'+((x0+xl)/2)+'" y="47" font-size="7.5" fill="#78828f" text-anchor="middle" font-weight="700">SUB</text>';
+   s+='<text x="'+((xl+xh)/2)+'" y="47" font-size="7.5" fill="#237a45" text-anchor="middle" font-weight="700">THERAPEUTIC</text>';
+   s+='<text x="'+((xh+x1)/2)+'" y="47" font-size="7.5" fill="'+(g.ti==='wide'?'#78828f':'#b23145')+'" text-anchor="middle" font-weight="700">'+(g.ti==='wide'?'HIGHER':'TOXIC')+'</text>';
+   s+='<text x="'+xl+'" y="66" font-size="7.5" fill="#4b5563" text-anchor="middle" font-weight="700">'+g.lo+'</text>';
+   s+='<text x="'+xh+'" y="66" font-size="7.5" fill="#4b5563" text-anchor="middle" font-weight="700">'+g.hi+'</text>';
+   s+='<text x="110" y="76" font-size="7.5" fill="#78828f" text-anchor="middle">'+g.unit+'</text>';
+   s+='<polygon points="'+xm+',28 '+(xm-6)+',16 '+(xm+6)+',16" fill="'+g.col+'"/>';
+   var zc=(z==='ther'?'#237a45':(z==='sub'?'#78828f':(g.ti==='wide'?'#78828f':'#b23145')));
+   var zf=(z==='ther'?'#eef7f2':(z==='sub'?'#f2f5f9':(g.ti==='wide'?'#f2f5f9':'#fdf1f3')));
+   var zn=(z==='ther'?'THERAPEUTIC':(z==='sub'?'SUBTHERAPEUTIC':(g.aboveNm?g.aboveNm.toUpperCase():'TOXIC RANGE')));
+   var lines=(z==='ther'?g.zther:(z==='sub'?g.zsub:g.ztox));
+   var ic=(z==='ther'?'🙂':(z==='sub'?'😐':(g.ti==='wide'?'🙂':'🤢')));
+   s+='<rect x="14" y="92" width="192" height="'+(46+lines.length*13)+'" rx="9" fill="'+zf+'" stroke="'+zc+'" stroke-opacity=".4"/>';
+   s+='<text x="30" y="118" font-size="19" text-anchor="middle">'+ic+'</text>';
+   s+='<text x="46" y="115" font-size="10" fill="'+zc+'" font-weight="700">'+zn+'</text>';
+   for(var i=0;i<lines.length;i++)
+     s+='<text x="46" y="'+(131+i*13)+'" font-size="8.5" fill="#4b5563">'+lines[i]+'</text>';
+   return s;
+ }
+ function curveB(c,g){
+   var s=frame('% of patients affected','plasma level / effect  ('+g.unit+')'), i, p;
+   g.ticks.forEach(function(t){
+     var x=pxLin(t,g.smax);
+     s+='<line x1="'+x+'" y1="'+PLOT.t+'" x2="'+x+'" y2="'+PLOT.b+'" stroke="#eef2f8"/>';
+     s+='<text x="'+x+'" y="'+(PLOT.b+11)+'" font-size="7.5" fill="#78828f" text-anchor="middle">'+t+'</text>';
+   });
+   /* therapeutic window band */
+   s+='<rect x="'+pxLin(g.lo,g.smax)+'" y="'+PLOT.t+'" width="'+(pxLin(g.hi,g.smax)-pxLin(g.lo,g.smax))+'" height="'+(PLOT.b-PLOT.t)+'" fill="#2f9e5b" opacity=".13"/>';
+   /* desired-effect curve */
+   p='';
+   for(i=0;i<=70;i++){ var c1=i/70*g.smax; p+=(i?'L':'M')+pxLin(c1,g.smax).toFixed(1)+' '+py(100*hill(c1,g.ed50,5)).toFixed(1)+' '; }
+   s+='<path d="'+p+'" fill="none" stroke="#2f5f9e" stroke-width="2.6"/>';
+   /* toxic-effect curve */
+   p='';
+   for(i=0;i<=70;i++){ var c2=i/70*g.smax; p+=(i?'L':'M')+pxLin(c2,g.smax).toFixed(1)+' '+py(100*hill(c2,g.td50,5)).toFixed(1)+' '; }
+   s+='<path d="'+p+'" fill="none" stroke="#d1495b" stroke-width="2.6" stroke-dasharray="5 3"/>';
+   /* live marker */
+   var mx=pxLin(c,g.smax);
+   s+='<line x1="'+mx+'" y1="'+PLOT.t+'" x2="'+mx+'" y2="'+PLOT.b+'" stroke="'+g.col+'" stroke-width="1.4"/>';
+   s+='<circle cx="'+mx+'" cy="'+py(100*hill(c,g.ed50,5))+'" r="4.5" fill="#2f5f9e" stroke="#fff" stroke-width="2"/>';
+   s+='<circle cx="'+mx+'" cy="'+py(100*hill(c,g.td50,5))+'" r="4.5" fill="#d1495b" stroke="#fff" stroke-width="2"/>';
+   s+='<text x="'+(PLOT.l+5)+'" y="24" font-size="7.5" fill="#2f5f9e" font-weight="700">— desired effect</text>';
+   s+='<text x="'+(PLOT.l+5)+'" y="34" font-size="7.5" fill="#d1495b" font-weight="700">- - toxic effect</text>';
+   return s;
+ }
+
+ /* ---------------- render ------------- */
+ function tiles(a){
+   $("stats").innerHTML=a.map(function(t){
+     return '<div class="'+(t[2]||'')+'">'+t[0]+'<span class="v">'+t[1]+'</span></div>';
+   }).join('');
+ }
+ function renderList(){
+   var A=(mode==='A'), src=A?Lg:Dg, cur=A?curL:curD;
+   $("list").innerHTML=src.map(function(o){
+     return '<button class="it'+(o.k===cur?' on':'')+'" data-k="'+o.k+'">'+
+       '<span class="sw" style="background:'+o.col+'"></span>'+
+       '<span><span class="nm">'+o.nm+'</span><br><span class="ct">'+o.ct+'</span></span></button>';
+   }).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){
+     b.onclick=function(){
+       if(mode==='A'){ curL=b.dataset.k; v=42; }
+       else{ curD=b.dataset.k; var g=gd(); v=(g.lo+g.hi)/2/g.smax*100; }
+       $("sl").value=v; render();
+     };
+   });
+ }
+ function gl(){ return Lg.filter(function(x){return x.k===curL;})[0]; }
+ function gd(){ return Dg.filter(function(x){return x.k===curD;})[0]; }
+
+ function render(){
+   if(mode==='A'){
+     var l=gl(), d=doseOf(v), r=respA(d,l), o=occA(d,l)*100;
+     if(l.k==='both'){ var mo=occA(d,l); o=(mo+(1-mo)*0.9)*100; }
+     $("artTitle").innerHTML='At the mu-opioid receptor';
+     $("curveTitle").innerHTML='Dose–response curve';
+     $("art").innerHTML=drawA(d,l);
+     $("curve").innerHTML=curveA(d,l);
+     $("cap").innerHTML='<b>Potency</b> is where the curve sits left-to-right (EC50 &mdash; the dose giving 50% of that drug\'s own maximum). <b>Efficacy</b> is how high it can reach (E<sub>max</sub>). A more potent drug is not a better drug &mdash; it just needs fewer milligrams.';
+     $("stage").style.background=l.col;
+     $("stage").innerHTML=l.nm+'<small>'+l.ct+'</small>';
+     $("slName").innerHTML='Dose of '+(l.k==='both'?'morphine':l.ct);
+     $("slVal").innerHTML=fmtD(d)+' relative units';
+     $("e0").innerHTML='0.1'; $("e1").innerHTML='1000';
+     tiles([
+       ['Occupancy',Math.round(o)+'%',''],
+       ['Response',Math.round(r)+'%',r>=70?'warn':(r>0?'good':'')],
+       ['Ceiling (E-max)',l.emax+'%','']
+     ]);
+     $("info").innerHTML='<span class="n">'+l.nm+'</span>'+l.d+
+       '<div class="ex">'+l.ex.map(function(e){return '<span>'+e+'</span>';}).join('')+'</div>'+
+       '<div class="loc"><b>At the bedside &mdash;</b> '+l.nurse+'</div>';
+   }else{
+     var g=gd(), c=v/100*g.smax, z=zoneOf(c,g);
+     var tox=100*hill(c,g.td50,5), eff=100*hill(c,g.ed50,5);
+     $("artTitle").innerHTML=g.nm+' — the therapeutic window';
+     $("curveTitle").innerHTML='Desired effect vs toxic effect';
+     $("art").innerHTML=drawB(c,g);
+     $("curve").innerHTML=curveB(c,g);
+     $("cap").innerHTML='<b>Therapeutic index = TD<sub>50</sub> ÷ ED<sub>50</sub></b> &mdash; how far the toxicity curve sits to the right of the effect curve. When the two crowd together, the drug is <b>narrow index</b> and needs levels, exact dosing and constant assessment. Curve <i>shapes</i> here are illustrative; the shaded window and the thresholds are the real clinical numbers.';
+     $("stage").style.background=g.col;
+     $("stage").innerHTML=g.nm+'<small>'+g.ct+'</small>';
+     $("slName").innerHTML=(g.k==='warf'?'INR':(g.k==='amox'?'Dose':'Serum level'));
+     $("slVal").innerHTML=c.toFixed(g.dec)+' '+g.unit;
+     $("e0").innerHTML='0'; $("e1").innerHTML=g.smax+' '+g.unit;
+     tiles([
+       ['Index',g.ti==='wide'?'WIDE':'NARROW',g.ti==='wide'?'good':'warn'],
+       ['Zone',z==='ther'?'Therapeutic':(z==='sub'?'Sub':(g.aboveNm?'High':'Toxic')),z==='ther'?'good':(z==='tox'&&g.ti!=='wide'?'warn':'')],
+       ['Toxic risk',Math.round(tox)+'%',tox>=20?'warn':''],
+       ['Effect',Math.round(eff)+'%',eff>=50?'good':'']
+     ]);
+     $("info").innerHTML='<span class="n">'+g.nm+'</span>'+g.d+
+       '<div class="ex"><span>'+(g.ti==='wide'?'wide therapeutic index':'narrow therapeutic index')+'</span><span>'+
+       (g.k==='warf'?'target INR 2.0–3.0':(g.k==='amox'?'no routine levels':'range '+g.lo+'–'+g.hi+' '+g.unit))+'</span></div>'+
+       '<div class="loc"><b>At the bedside &mdash;</b> '+g.nurse+'</div>';
+   }
+   renderList();
+ }
+
+ $("sl").oninput=function(){ v=+this.value; render(); };
+ $("mA").onclick=function(){ if(mode==='A')return; mode='A'; curL='full'; v=42;
+   $("mA").className='on'; $("mB").className=''; $("sl").value=v; render(); };
+ $("mB").onclick=function(){ if(mode==='B')return; mode='B'; curD='dig';
+   var g=gd(); v=(g.lo+g.hi)/2/g.smax*100;
+   $("mB").className='on'; $("mA").className=''; $("sl").value=v; render(); };
+ render();
+})();
+</script>
+</body>
+</html>

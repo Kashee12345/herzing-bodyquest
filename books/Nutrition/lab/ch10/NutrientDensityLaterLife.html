@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Nutrient Density in Later Life</title>
+<meta name="description" content="An interactive engine showing why older adults need the same or more of many nutrients while their calorie needs fall — so each calorie must carry more nutrition.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>
+.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr !important;}}
+.ctl{margin-top:12px;}
+.ctl > label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:5px;}
+.ctl > label .vv{color:var(--teal-dk);font-variant-numeric:tabular-nums;font-size:14px;}
+.ctl > label .vv small{font-size:10px;font-weight:700;color:var(--muted);}
+input[type=range]{width:100%;height:22px;accent-color:var(--teal);cursor:pointer;display:block;}
+.seg + .seg{margin-top:9px;}
+.rise{font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;border-radius:20px;padding:2px 8px;margin-left:auto;flex:none;}
+.rise.up{background:#f4ead8;color:var(--teal-dk);} .rise.flat{background:#e5eef6;color:#255f8a;}
+.it.on .rise{background:rgba(255,255,255,.24);color:#fff;}
+.evtag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;border-radius:20px;padding:2px 9px;margin-left:6px;vertical-align:middle;}
+.evtag.strong{background:#e5f3ea;color:#237a45;} .evtag.prelim{background:#fbf3e2;color:#8a6a20;}
+#info .u{font-size:12px;color:var(--muted);font-weight:700;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 10</div>
+  <h1>Nutrient Density in Later Life</h1>
+  <div class="intro">As we age, the body tends to burn <b>fewer calories</b> &mdash; but the need for most vitamins, minerals, and protein holds steady or even <b>rises</b>. That squeeze means every calorie has to carry more nutrition. Move the age slider and watch the two bars pull apart.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The nutrient-density squeeze</h2>
+    <svg viewBox="0 0 300 250" aria-label="calorie need falling while required nutrient density rises"><g id="art"></g></svg>
+    <div id="info"></div>
+  </div></div>
+  <div>
+    <div id="stage">Set the scenario<small>drag the age slider to begin</small></div>
+    <div class="card">
+      <div class="ctl">
+        <label>Age <span class="vv" id="ageV">30 <small>yr</small></span></label>
+        <input type="range" id="age" min="25" max="90" step="1" value="30">
+      </div>
+      <div class="ctl">
+        <div class="seg" id="act">
+          <button data-a="1.2" class="on">Mostly seated<small>light daily movement</small></button>
+          <button data-a="1.375">Somewhat active<small>on feet, some walking</small></button>
+          <button data-a="1.55">Active<small>regular exercise</small></button>
+        </div>
+        <div class="seg" id="sex">
+          <button data-s="f" class="on">Reference body A<small>illustration only</small></button>
+          <button data-s="m">Reference body B<small>illustration only</small></button>
+        </div>
+      </div>
+      <div style="margin-top:13px;font-size:12px;font-weight:700;color:var(--soft);">Track a nutrient</div>
+      <div class="list" id="list" style="margin-top:6px;"></div>
+      <div class="note"><b>An illustration, not a personal target.</b> The calorie figure comes from a standard estimating equation applied to a fixed reference body, shown only to reveal the age <i>trend</i>. Real needs vary widely from person to person, and this is not medical or dietary advice. Targets shown are U.S. DRI values with their population and units named.</div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // Illustrative reference bodies (used ONLY to show the age trend, never as a target)
+ var BODY={f:{ht:163,wt:68,c:-161,lbl:'ref. body A'},m:{ht:178,wt:78,c:5,lbl:'ref. body B'}};
+ var state={age:30,act:1.2,sex:'f',nut:'vitd'};
+
+ // Mifflin–St Jeor estimated daily energy (kcal), rounded to nearest 10.
+ function energy(age,sex,act){var b=BODY[sex];var bmr=10*b.wt+6.25*b.ht-5*age+b.c;return Math.round(bmr*act/10)*10;}
+
+ // Nutrient targets. amt() returns the daily target for this age/sex; unit + population are named.
+ var NUTS=[
+  {k:'vitd',ic:'☀️',nm:'Vitamin D',unit:'IU',
+    amt:function(age,sex){return age>70?800:600;},
+    pop:'RDA · age &gt;70 yr rises to 800 IU (20 µg); 600 IU (15 µg) at 19–70',
+    rises:'up',evid:'strong',
+    why:'The vitamin D RDA <b>climbs from 600 IU to 800 IU (15→20 µg) after age 70</b>. Aging skin makes less vitamin D from sunlight and many older adults spend less time outdoors, so the target rises even as calories fall &mdash; a double squeeze on density.'},
+  {k:'ca',ic:'🦴',nm:'Calcium',unit:'mg',
+    amt:function(age,sex){if(sex==='f')return age>50?1200:1000;return age>70?1200:1000;},
+    pop:'RDA · women 51+ &amp; men 71+ rise to 1200 mg; 1000 mg for younger adults',
+    rises:'up',evid:'strong',
+    why:'The calcium RDA <b>rises to 1200 mg/day</b> for women after 50 and men after 70, because absorption becomes less efficient and bone turnover shifts. More calcium is asked of a smaller calorie budget.'},
+  {k:'pro',ic:'🥚',nm:'Protein',unit:'g',
+    amt:function(age,sex){return Math.round(0.8*BODY[sex].wt);},
+    pop:'RDA · 0.8 g/kg/day for all adults ≥19 yr',
+    rises:'flat',evid:'strong',
+    why:'The protein RDA (<b>0.8 g/kg/day</b>) does not fall with age &mdash; so the same grams must fit into fewer calories, raising required density on its own. <span class="evtag prelim">preliminary</span> A growing body of research suggests many older adults may benefit from more (around 1.0–1.2 g/kg) to help offset age-related muscle loss; this is an active question, not a settled DRI.'},
+  {k:'b12',ic:'🧬',nm:'Vitamin B12',unit:'µg',
+    amt:function(age,sex){return 2.4;},
+    pop:'RDA · 2.4 µg/day for all adults ≥19 yr',
+    rises:'flat',evid:'strong',
+    why:'The B12 RDA stays at <b>2.4 µg</b>, yet required density still rises because calories fall. There is a twist: with age the stomach often makes less acid (atrophic gastritis), so B12 <b>bound to food is absorbed less well</b>. Guidance is to meet much of the target from fortified foods or supplements, whose B12 is more readily absorbed.'},
+  {k:'fib',ic:'🌾',nm:'Fiber',unit:'g',
+    amt:function(age,sex,en){return Math.round(14*en/1000);},
+    pop:'AI · 14 g per 1000 kcal for all adults',
+    rises:'flat',evid:'strong',
+    why:'Fiber is set as <b>14 g per 1000 kcal</b>, so its target scales <i>down</i> with calories &mdash; the one nutrient here whose required <b>density stays constant</b> by definition. It is the useful contrast: it shows the squeeze is real for nutrients whose targets are fixed amounts, not ratios.'}
+ ];
+ function nut(k){for(var i=0;i<NUTS.length;i++){if(NUTS[i].k===k)return NUTS[i];}return NUTS[0];}
+
+ function density(age,sex,act,N){var en=energy(age,sex,act);return N.amt(age,sex,en)/en*1000;}
+
+ function draw(){
+  var N=nut(state.nut);
+  var en=energy(state.age,state.sex,state.act);
+  var baseE=energy(30,state.sex,state.act);
+  var dens=density(state.age,state.sex,state.act,N);
+  var baseD=density(30,state.sex,state.act,N);
+  var calR=Math.max(0,Math.min(1,en/baseE));
+  var densR=dens/baseD;
+  var bx=22,bw=256;
+  var s='';
+  // headline numbers
+  s+='<text x="150" y="20" text-anchor="middle" font-size="12" font-weight="800" fill="#8d8270" letter-spacing="0.5">FROM A YOUNGER ADULT (age 30) TO AGE '+state.age+'</text>';
+  // --- Calorie bar (shrinks) ---
+  s+='<text x="'+bx+'" y="52" font-size="12.5" font-weight="800" fill="#33291a">Estimated calories / day</text>';
+  s+='<rect x="'+bx+'" y="60" width="'+bw+'" height="26" rx="7" fill="#f1e7d4"/>';
+  s+='<rect x="'+bx+'" y="60" width="'+(bw*calR).toFixed(1)+'" height="26" rx="7" fill="#b07a1e"/>';
+  s+='<line x1="'+(bx+bw)+'" y1="55" x2="'+(bx+bw)+'" y2="91" stroke="#6b4710" stroke-width="2" stroke-dasharray="3 3"/>';
+  s+='<text x="'+(bx+bw)+'" y="104" text-anchor="end" font-size="10.5" font-weight="700" fill="#8d8270">age-30 level</text>';
+  s+='<text x="'+(bx+6)+'" y="78" font-size="13" font-weight="800" fill="#fff">'+en+' kcal</text>';
+  var calDrop=Math.round((1-calR)*100);
+  s+='<text x="150" y="126" text-anchor="middle" font-size="12.5" font-weight="800" fill="#b23145">'+(calDrop>0?'▼ '+calDrop+'% fewer calories to work with':'same calorie budget')+'</text>';
+  // --- Density bar (grows) ---
+  var track=baseD*1.7;
+  var dR=Math.max(0,Math.min(1,dens/track));
+  var baseTick=bx+bw*(baseD/track);
+  s+='<text x="'+bx+'" y="162" font-size="12.5" font-weight="800" fill="#33291a">'+N.nm+' needed per 1000 kcal</text>';
+  s+='<rect x="'+bx+'" y="170" width="'+bw+'" height="26" rx="7" fill="#e6efe9"/>';
+  s+='<rect x="'+bx+'" y="170" width="'+(bw*dR).toFixed(1)+'" height="26" rx="7" fill="#2f9e5b"/>';
+  s+='<line x1="'+baseTick.toFixed(1)+'" y1="165" x2="'+baseTick.toFixed(1)+'" y2="201" stroke="#237a45" stroke-width="2" stroke-dasharray="3 3"/>';
+  s+='<text x="'+baseTick.toFixed(1)+'" y="214" text-anchor="middle" font-size="10.5" font-weight="700" fill="#8d8270">age-30 level</text>';
+  var densTxt=(dens<10?dens.toFixed(1):Math.round(dens))+' '+N.unit;
+  s+='<text x="'+(bx+6)+'" y="188" font-size="13" font-weight="800" fill="#fff">'+densTxt+'</text>';
+  var densUp=Math.round((densR-1)*100);
+  s+='<text x="150" y="236" text-anchor="middle" font-size="12.5" font-weight="800" fill="#237a45">'+(densUp>0?'▲ '+densUp+'% more '+N.nm.toLowerCase()+' per calorie':(densUp<0?densUp+'% (target scales with calories)':'density unchanged'))+'</text>';
+  $("art").innerHTML=s;
+ }
+
+ function renderList(){
+  $("list").innerHTML=NUTS.map(function(N){
+    return '<button class="it'+(N.k===state.nut?' on':'')+'" data-k="'+N.k+'"><span class="ic">'+N.ic+'</span>'+
+      '<span><span class="nm">'+N.nm+'</span><br><span class="ct">'+N.pop+'</span></span>'+
+      '<span class="rise '+(N.rises==='up'?'up':'flat')+'">'+(N.rises==='up'?'target ↑':'target =')+'</span></button>';
+  }).join('');
+  document.querySelectorAll('#list .it').forEach(function(b){b.onclick=function(){state.nut=b.dataset.k;update();};});
+ }
+
+ function update(){
+  var N=nut(state.nut);
+  var en=energy(state.age,state.sex,state.act);
+  var amt=N.amt(state.age,state.sex,en);
+  var amtTxt=(amt<10?amt:Math.round(amt))+' '+N.unit;
+  $("ageV").innerHTML=state.age+' <small>yr</small>';
+  $("stage").style.background=(N.rises==='up'?'#237a45':'#b07a1e');
+  $("stage").innerHTML='Tracking '+N.nm+'<small>daily target at age '+state.age+': '+amtTxt+'</small>';
+  $("info").innerHTML='<span class="n">'+N.ic+' '+N.nm+' <span class="evtag '+(N.evid==='strong'?'strong':'prelim')+'">'+(N.evid==='strong'?'strong evidence':'preliminary')+'</span></span>'+
+    '<span class="u">'+N.pop+'</span>'+
+    '<div class="dd" style="margin-top:8px;">'+N.why+'</div>'+
+    '<div class="loc">The point isn\'t any single food &mdash; it\'s the pattern: with fewer calories, meals need to be richer in vitamins, minerals, and protein overall.</div>';
+  draw();
+  renderList();
+ }
+
+ $("age").oninput=function(){state.age=+this.value;update();};
+ document.querySelectorAll('#act button').forEach(function(b){b.onclick=function(){
+   document.querySelectorAll('#act button').forEach(function(x){x.classList.remove('on');});
+   b.classList.add('on');state.act=+b.dataset.a;update();};});
+ document.querySelectorAll('#sex button').forEach(function(b){b.onclick=function(){
+   document.querySelectorAll('#sex button').forEach(function(x){x.classList.remove('on');});
+   b.classList.add('on');state.sex=b.dataset.s;update();};});
+
+ update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Fit an Exponential Model</title>
+<meta name="description" content="Drag two sliders to fit a curve to real data, watch the residuals shrink, and read what the starting value and growth factor actually mean.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+.wrap{grid-template-columns:1.05fr 0.95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{margin-top:12px;}
+.sl label{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:var(--soft);margin-bottom:4px;}
+.sl label b{font-family:var(--disp);color:var(--teal-dk);font-size:15px;}
+.sl input[type=range]{width:100%;-webkit-appearance:none;height:7px;border-radius:6px;background:#e0e2ef;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);cursor:pointer;box-shadow:0 1px 4px rgba(30,32,70,.4);}
+.sl input[type=range]::-moz-range-thumb{width:20px;height:20px;border:none;border-radius:50%;background:var(--teal);cursor:pointer;}
+.eq{font-family:var(--disp);font-size:20px;color:var(--teal-dk);text-align:center;background:#eef0fa;border:1px solid var(--line);border-radius:10px;padding:11px 8px;margin-top:2px;font-weight:600;}
+.eq b{color:var(--coral);}
+.fitbar{height:13px;border-radius:7px;background:#efe6f6;overflow:hidden;margin-top:6px;}
+.fitbar i{display:block;height:100%;width:0;background:var(--green);transition:width .25s,background .25s;}
+.fitrow{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--muted);margin-top:11px;}
+.fitrow b{color:var(--teal-dk);font-size:13.5px;}
+.strip{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap;}
+.strip .p{flex:1;min-width:42px;text-align:center;border:1px solid var(--line);border-radius:8px;padding:5px 3px;background:#fff;font-size:12px;font-weight:800;color:var(--teal-dk);}
+.strip .p small{display:block;font-size:9px;font-weight:600;color:var(--muted);margin-top:1px;letter-spacing:.3px;}
+.slab{font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:2px 0 -3px;}
+.leg{display:flex;gap:14px;justify-content:center;font-size:11px;color:var(--muted);font-weight:600;margin-top:4px;}
+.leg span::before{content:"";display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.leg .d::before{background:var(--teal-dk);border-radius:50%;} .leg .c::before{background:var(--gold);} .leg .r::before{background:var(--coral);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 13</div>
+  <h1>Fit an Exponential Model</h1>
+  <div class="intro">Data rarely lands on a perfect curve &mdash; your job is to <b>choose the right shape</b> and tune it until it hugs the points. Drag the two sliders to fit the data, then read what each number is <i>telling you</i>.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="plotTitle">Your model vs. the data</h2>
+      <svg viewBox="0 0 300 232" aria-label="scatter plot with fitted curve"><g id="art"></g></svg>
+      <div class="leg"><span class="d">data points</span><span class="c">your model</span><span class="r">miss (residual)</span></div>
+    </div>
+    <div class="card"><h2>Why exponential? Look at the steps</h2>
+      <div class="slab">y divided by the previous y  (ratios)</div>
+      <div class="strip" id="ratios"></div>
+      <div class="slab" style="margin-top:11px">y minus the previous y  (differences)</div>
+      <div class="strip" id="diffs"></div>
+      <div id="clue" class="mnem"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Pick a dataset<small>then fit the curve</small></div>
+    <div class="card">
+      <div class="seg" id="dataSeg"></div>
+      <div class="modeseg" id="modelSeg" style="margin-top:11px">
+        <button data-m="exp" class="on">Exponential &nbsp;y = a·b<sup>x</sup></button>
+        <button data-m="lin">Linear &nbsp;y = a + bx</button>
+      </div>
+      <div class="eq" id="eq"></div>
+      <div class="sl"><label><span id="laba">a &mdash; starting value</span><b id="va"></b></label><input type="range" id="sa"></div>
+      <div class="sl"><label><span id="labb">b &mdash; growth factor</span><b id="vb"></b></label><input type="range" id="sb"></div>
+      <div class="fitrow"><span>Fit quality (R<sup>2</sup>)</span><b id="fitpct"></b></div>
+      <div class="fitbar"><i id="fitbar"></i></div>
+      <div class="fitrow"><span>Total squared miss (SSE)</span><b id="sse"></b></div>
+      <div class="row"><button class="btn solid" id="snap">Snap to best fit ✦</button></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var PL=38,PR=290,PT=12,PB=196,XMAX=5;
+
+ var DATA=[
+  {k:'grow',nm:'Bacteria culture',sub:'thousands of cells vs. hours',xl:'hours',yl:'cells (×1000)',
+   x:[0,1,2,3,4,5], y:[6,11,20,37,68,124], ymax:140,
+   exp:{amin:1,amax:40,astep:0.5,a0:15, bmin:1,bmax:2.6,bstep:0.01,b0:1.45},
+   lin:{amin:-30,amax:90,astep:1,a0:0, bmin:-10,bmax:45,bstep:0.5,b0:15}},
+  {k:'decay',nm:'Caffeine in blood',sub:'milligrams vs. hours',xl:'hours',yl:'mg',
+   x:[0,1,2,3,4,5], y:[200,150,113,85,64,48], ymax:215,
+   exp:{amin:80,amax:300,astep:2,a0:170, bmin:0.4,bmax:1.1,bstep:0.01,b0:0.88},
+   lin:{amin:0,amax:260,astep:2,a0:200, bmin:-70,bmax:10,bstep:1,b0:-20}}
+ ];
+ var di=0, mode='exp';
+
+ function D(){return DATA[di];}
+ function P(){return D()[mode];}
+ function f(a,b,x){return mode==='exp' ? a*Math.pow(b,x) : a+b*x;}
+
+ // ---- best-fit computation ----
+ function bestFit(){
+   var d=D(), n=d.x.length, i, sx=0,sy=0,sxx=0,sxy=0;
+   if(mode==='lin'){
+     for(i=0;i<n;i++){sx+=d.x[i];sy+=d.y[i];sxx+=d.x[i]*d.x[i];sxy+=d.x[i]*d.y[i];}
+     var b=(n*sxy-sx*sy)/(n*sxx-sx*sx);
+     var a=(sy-b*sx)/n;
+     return {a:a,b:b};
+   } else {
+     // linearize: ln y = ln a + (ln b) x  -> least squares on ln y
+     for(i=0;i<n;i++){var Y=Math.log(d.y[i]); sx+=d.x[i]; sy+=Y; sxx+=d.x[i]*d.x[i]; sxy+=d.x[i]*Y;}
+     var B=(n*sxy-sx*sy)/(n*sxx-sx*sx);   // = ln b
+     var A=(sy-B*sx)/n;                    // = ln a
+     return {a:Math.exp(A), b:Math.exp(B)};
+   }
+ }
+
+ function sse(a,b){ var d=D(),s=0,i; for(i=0;i<d.x.length;i++){var e=d.y[i]-f(a,b,d.x[i]); s+=e*e;} return s; }
+ function sstot(){ var d=D(),m=0,i; for(i=0;i<d.y.length;i++)m+=d.y[i]; m/=d.y.length; var s=0; for(i=0;i<d.y.length;i++){var e=d.y[i]-m; s+=e*e;} return s; }
+
+ // ---- coordinate mapping ----
+ function sxc(x){return PL+(x/XMAX)*(PR-PL);}
+ function syc(v,ym){var y=PB-(v/ym)*(PB-PT); return Math.max(PT-4,Math.min(PB+4,y));}
+
+ function draw(a,b){
+   var d=D(), ym=d.ymax, s='', i, gx, gy;
+   // gridlines + y ticks (0, half, max)
+   var yt=[0, ym/2, ym];
+   for(i=0;i<yt.length;i++){ gy=syc(yt[i],ym);
+     s+='<line x1="'+PL+'" y1="'+gy+'" x2="'+PR+'" y2="'+gy+'" stroke="#eceef7" stroke-width="1"/>';
+     s+='<text x="'+(PL-5)+'" y="'+(gy+3.5)+'" font-size="9" fill="#9799ad" text-anchor="end" font-family="Inter">'+Math.round(yt[i])+'</text>';
+   }
+   // axes
+   s+='<line x1="'+PL+'" y1="'+PT+'" x2="'+PL+'" y2="'+PB+'" stroke="#c7cadd" stroke-width="1.4"/>';
+   s+='<line x1="'+PL+'" y1="'+PB+'" x2="'+PR+'" y2="'+PB+'" stroke="#c7cadd" stroke-width="1.4"/>';
+   // x ticks
+   for(i=0;i<=XMAX;i++){ gx=sxc(i); s+='<text x="'+gx+'" y="'+(PB+13)+'" font-size="9" fill="#9799ad" text-anchor="middle" font-family="Inter">'+i+'</text>'; }
+   s+='<text x="'+((PL+PR)/2)+'" y="'+(PB+24)+'" font-size="9.5" fill="#7d7f94" text-anchor="middle" font-weight="700" font-family="Inter">'+d.xl+'</text>';
+   s+='<text x="11" y="'+((PT+PB)/2)+'" font-size="9.5" fill="#7d7f94" text-anchor="middle" font-weight="700" font-family="Inter" transform="rotate(-90 11 '+((PT+PB)/2)+')">'+d.yl+'</text>';
+   // model curve (sampled)
+   var pts='';
+   for(var t=0;t<=XMAX+0.001;t+=0.1){ pts+=sxc(t)+','+syc(f(a,b,t),ym)+' '; }
+   s+='<polyline points="'+pts+'" fill="none" stroke="#b8862f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+   // residuals + data points
+   for(i=0;i<d.x.length;i++){
+     var px=sxc(d.x[i]), pdy=syc(d.y[i],ym), pfy=syc(f(a,b,d.x[i]),ym);
+     s+='<line x1="'+px+'" y1="'+pdy+'" x2="'+px+'" y2="'+pfy+'" stroke="#d1495b" stroke-width="2" stroke-dasharray="3 2" opacity=".85"/>';
+   }
+   for(i=0;i<d.x.length;i++){
+     s+='<circle cx="'+sxc(d.x[i])+'" cy="'+syc(d.y[i],ym)+'" r="4.4" fill="#22243a" stroke="#fff" stroke-width="1.5"/>';
+   }
+   return s;
+ }
+
+ function fmt(v,dp){ return (Math.round(v*Math.pow(10,dp))/Math.pow(10,dp)).toFixed(dp); }
+
+ function interpret(a,b){
+   var d=D();
+   if(mode==='lin'){
+     var slope=(b>=0?'adds ':'subtracts ')+fmt(Math.abs(b),1)+' '+d.yl+' every hour';
+     return '<span class="n">Reading a line</span>In <b>y = a + bx</b>, <b>a = '+fmt(a,1)+'</b> is the value at <i>x</i> = 0 and <b>b = '+fmt(b,1)+'</b> is the <b>constant</b> change &mdash; the model '+slope+
+       '.<div class="dd">But a line <b>adds</b> the same amount each step. Look at the residuals: they miss high, then low, then high &mdash; a tell-tale <b>curve</b> the line can never follow. That pattern is your signal to switch models.</div>';
+   }
+   var pct=(b-1)*100;
+   var word = b>1 ? 'grows by <b>'+fmt(pct,0)+'%</b> each hour' : 'keeps <b>'+fmt(b*100,0)+'%</b> (loses '+fmt((1-b)*100,0)+'%) each hour';
+   var half='';
+   if(b<1){ half='<div class="dd">Since <i>b</i> &lt; 1 this is <b>decay</b>. Half is gone after ln(0.5)/ln('+fmt(b,2)+') &approx; <b>'+fmt(Math.log(0.5)/Math.log(b),1)+' hours</b>.</div>'; }
+   else { half='<div class="dd">Since <i>b</i> &gt; 1 this is <b>growth</b>. It doubles every ln(2)/ln('+fmt(b,2)+') &approx; <b>'+fmt(Math.log(2)/Math.log(b),1)+' hours</b>.</div>'; }
+   return '<span class="n">Reading the parameters</span>In <b>y = a·b<sup>x</sup></b>, <b>a = '+fmt(a,1)+'</b> is the <b>starting amount</b> (the value at <i>x</i> = 0). <b>b = '+fmt(b,2)+'</b> is the <b>growth factor</b>: every hour the amount is <b>multiplied</b> by '+fmt(b,2)+', so it '+word+'.'+half;
+ }
+
+ function ratios(){
+   var d=D(), rs='', df='', i;
+   for(i=1;i<d.x.length;i++){
+     var r=d.y[i]/d.y[i-1], g=d.y[i]-d.y[i-1];
+     rs+='<div class="p">'+fmt(r,2)+'<small>×</small></div>';
+     df+='<div class="p">'+(g>=0?'+':'&minus;')+Math.abs(g)+'<small>Δ</small></div>';
+   }
+   $("ratios").innerHTML=rs; $("diffs").innerHTML=df;
+   $("clue").innerHTML='<b>The clue:</b> the ratios stay almost the same, but the differences keep changing. Equal steps that <b>multiply</b> by a near-constant factor &rarr; the data is <b>exponential</b>, not linear.';
+ }
+
+ function refresh(){
+   var a=parseFloat($("sa").value), b=parseFloat($("sb").value);
+   $("art").innerHTML=draw(a,b);
+   var bt=(b>=0?'+ ':'&minus; ');
+   if(mode==='exp') $("eq").innerHTML='y = <b>'+fmt(a,1)+'</b> · <b>'+fmt(b,2)+'</b><sup>x</sup>';
+   else $("eq").innerHTML='y = <b>'+fmt(a,1)+'</b> '+bt+'<b>'+fmt(Math.abs(b),1)+'</b>x';
+   $("va").innerHTML=mode==='exp'?fmt(a,1):fmt(a,1);
+   $("vb").innerHTML=mode==='exp'?fmt(b,2):fmt(b,1);
+   var e=sse(a,b), r2=Math.max(0,1-e/sstot());
+   $("sse").innerHTML=fmt(e,0);
+   $("fitpct").innerHTML=fmt(r2*100,1)+'%';
+   var bar=$("fitbar"); bar.style.width=(r2*100)+'%';
+   bar.style.background = r2>0.98?'#2f9e5b':(r2>0.85?'#b8862f':'#d1495b');
+   $("info").innerHTML=interpret(a,b);
+ }
+
+ function loadSliders(keepClose){
+   var p=P();
+   $("sa").min=p.amin; $("sa").max=p.amax; $("sa").step=p.astep;
+   $("sb").min=p.bmin; $("sb").max=p.bmax; $("sb").step=p.bstep;
+   $("sa").value=p.a0; $("sb").value=p.b0;
+   $("laba").innerHTML = mode==='exp' ? 'a &mdash; starting value' : 'a &mdash; value at x = 0';
+   $("labb").innerHTML = mode==='exp' ? 'b &mdash; growth factor (×)' : 'b &mdash; slope (change per step)';
+   refresh();
+ }
+
+ function loadData(){
+   var d=D();
+   $("stage").style.background = d.k==='grow' ? '#2f9e5b' : '#d1495b';
+   $("stage").innerHTML=d.nm+'<small>'+d.sub+'</small>';
+   $("plotTitle").innerHTML=d.nm+' &mdash; your model vs. the data';
+   ratios();
+   loadSliders();
+ }
+
+ function clampSet(el,v){ v=Math.max(parseFloat(el.min),Math.min(parseFloat(el.max),v)); el.value=v; }
+
+ // ---- wire up ----
+ $("dataSeg").innerHTML=DATA.map(function(d,ix){
+   return '<button data-i="'+ix+'"'+(ix===0?' class="on"':'')+'>'+d.nm+'<small>'+(d.k==='grow'?'growth · b>1':'decay · b<1')+'</small></button>';
+ }).join('');
+ Array.prototype.forEach.call($("dataSeg").children,function(btn){
+   btn.onclick=function(){ di=parseInt(btn.dataset.i);
+     Array.prototype.forEach.call($("dataSeg").children,function(x){x.className='';}); btn.className='on';
+     loadData();
+   };
+ });
+ Array.prototype.forEach.call($("modelSeg").children,function(btn){
+   btn.onclick=function(){ mode=btn.dataset.m;
+     Array.prototype.forEach.call($("modelSeg").children,function(x){x.className='';}); btn.className='on';
+     loadSliders();
+   };
+ });
+ $("sa").oninput=refresh; $("sb").oninput=refresh;
+ $("snap").onclick=function(){ var bf=bestFit(); clampSet($("sa"),bf.a); clampSet($("sb"),bf.b); refresh(); };
+
+ loadData();
+})();
+</script>
+</body>
+</html>

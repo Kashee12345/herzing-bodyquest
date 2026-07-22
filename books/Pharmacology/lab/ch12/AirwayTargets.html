@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Two Targets in the Airway</title>
+<meta name="description" content="Interactive airway cross-section: how asthma and COPD narrow the airway two ways — bronchoconstriction and inflammation — and which drug classes target each. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>
+.wrap{grid-template-columns:0.95fr 1.05fr;}
+.flow{margin-top:12px;font-size:12px;color:var(--muted);}
+.flow .w{float:right;font-weight:700;color:var(--teal-dk);}
+.flowbar{height:12px;border-radius:6px;background:#e3ebf5;overflow:hidden;margin-top:6px;}
+.flowbar i{display:block;height:100%;background:var(--teal);transition:width .45s;}
+.legend{display:flex;flex-wrap:wrap;gap:7px 15px;margin-top:13px;font-size:11.5px;color:var(--soft);}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.legend b{width:11px;height:11px;border-radius:3px;display:inline-block;}
+.modeseg button small{display:block;font-weight:500;font-size:10px;color:var(--muted);margin-top:2px;}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+.ct2{font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:-2px 0 6px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 12</div>
+  <h1>Two Targets in the Airway</h1>
+  <div class="intro">Asthma and COPD choke off airflow in two different ways &mdash; a muscle ring that <b>tightens</b> and an airway wall that <b>inflames</b>. Almost every inhaler you'll give attacks one of these two targets. Pick a target, then tap a drug class to see the airway respond.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Airway cross-section</h2>
+    <svg viewBox="0 0 220 200" aria-label="airway cross-section"><g id="art"></g></svg>
+    <div class="flow">Airflow through the lumen <span class="w" id="flowtxt"></span></div>
+    <div class="flowbar"><i id="flowbar" style="width:0"></i></div>
+    <div class="legend">
+      <span><b style="background:#7a5a8a"></b>Smooth muscle</span>
+      <span><b style="background:#d1495b"></b>Airway wall</span>
+      <span><b style="background:#c9bf4a"></b>Mucus</span>
+      <span><b style="background:#2f5f9e"></b>Airflow</span>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">The two drug targets<small>choose one to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="modes">
+        <button data-m="constrict" class="on">① Bronchoconstriction<small>smooth muscle tightens</small></button>
+        <button data-m="inflame">② Inflammation<small>wall swells + mucus</small></button>
+      </div>
+      <div class="list" id="list"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var TARGETS={
+  constrict:{
+    nm:'Bronchoconstriction', col:'#7a5a8a',
+    path:{m:0.92,inf:0.12,mucus:0.1}, relieved:{m:0.2,inf:0.12,mucus:0.1},
+    ov:{title:'Target 1 · Bronchoconstriction',
+      body:'A ring of <b>smooth muscle</b> wraps every airway. During an attack it <b>contracts and squeezes the lumen shut</b> &mdash; the patient wheezes and cannot move air out. <b>Bronchodilators</b> relax that muscle and reopen the airway, often within minutes.',
+      tip:'Bronchodilators are for <b>fast relief</b>. They relax muscle but do nothing for the underlying inflammation.'},
+    drugs:[
+      {ic:'💨',nm:'Short-acting beta-2 agonists',ct:'Rescue · inhaled',
+       mech:'Stimulate <b>beta-2 receptors</b> on airway smooth muscle → rapid relaxation. Onset within minutes.',
+       ex:'albuterol, levalbuterol',
+       nurse:'This is the <b>rescue</b> inhaler for an acute attack. Needing it more than 2 days a week signals poorly controlled asthma.',
+       warn:'Beta stimulation causes tachycardia, tremor, and palpitations &mdash; monitor heart rate. If a scheduled inhaled corticosteroid is also due, give this <b>first</b> to open the airway.'},
+      {ic:'⏳',nm:'Long-acting beta-2 agonists',ct:'Maintenance · inhaled',
+       mech:'Same beta-2 relaxation, but the effect lasts ~12 hours. A daily <b>controller</b>, not a rescue drug.',
+       ex:'salmeterol, formoterol',
+       nurse:'Teach that it will <b>not</b> stop an acute attack &mdash; the patient must keep a short-acting rescue inhaler on hand.',
+       warn:'Boxed warning: a long-acting beta agonist used <b>alone</b> in asthma raises the risk of asthma death. It must always be combined with an inhaled corticosteroid.'},
+      {ic:'🚫',nm:'Anticholinergics (muscarinic antagonists)',ct:'COPD mainstay · inhaled',
+       mech:'Block <b>acetylcholine at M3 receptors</b> → prevent bronchoconstriction and dry airway secretions. A first-line maintenance choice in COPD.',
+       ex:'ipratropium, tiotropium',
+       nurse:'Offer sips of water or hard candy for dry mouth. Tiotropium is a once-daily maintenance inhaler, not a rescue drug.',
+       warn:'Caution in narrow-angle glaucoma and BPH. Report eye pain, blurred vision, or trouble urinating.'},
+      {ic:'⚗️',nm:'Methylxanthines',ct:'Third-line · oral / IV',
+       mech:'Produce bronchodilation with a mild anti-inflammatory effect. Largely replaced by inhaled therapy today.',
+       ex:'theophylline',
+       nurse:'Watch closely for toxicity; smoking, caffeine, and cimetidine all shift the level. Avoid extra caffeine.',
+       warn:'Narrow therapeutic index &mdash; monitor serum levels. Toxicity: nausea, tachycardia, seizures, and arrhythmias.'}
+    ]},
+  inflame:{
+    nm:'Inflammation', col:'#d1495b',
+    path:{m:0.3,inf:0.9,mucus:0.85}, relieved:{m:0.3,inf:0.2,mucus:0.15},
+    ov:{title:'Target 2 · Inflammation',
+      body:'The airway <b>wall swells</b> with inflammation while <b>mucus</b> and immune cells clog the lumen from the inside. This builds over hours to days. <b>Anti-inflammatory controllers</b> shrink the swelling and are taken <b>every day to prevent attacks</b> &mdash; they will not rescue one in progress.',
+      tip:'Controllers work by <b>prevention</b>. They calm the wall over days but are useless during an acute attack.'},
+    drugs:[
+      {ic:'🛡️',nm:'Inhaled corticosteroids',ct:'Controller cornerstone · inhaled',
+       mech:'Suppress airway inflammation over days to weeks &mdash; the <b>cornerstone of daily asthma control</b>.',
+       ex:'fluticasone, budesonide, beclomethasone',
+       nurse:'<b>Rinse the mouth and use a spacer</b> after every dose to prevent oral thrush. Take daily even when feeling well.',
+       warn:'Not for acute attacks &mdash; too slow. Local effects: oral candidiasis (thrush) and hoarseness.'},
+      {ic:'🧩',nm:'Leukotriene modifiers',ct:'Controller · oral',
+       mech:'Block <b>leukotrienes</b> → less bronchoconstriction and inflammation. Useful for allergic and exercise-induced asthma.',
+       ex:'montelukast, zafirlukast',
+       nurse:'Given once daily in the evening. Teach the family to watch for changes in mood or behavior.',
+       warn:'Boxed warning (montelukast): neuropsychiatric effects &mdash; agitation, depression, and suicidal thoughts.'},
+      {ic:'🧱',nm:'Mast cell stabilizers',ct:'Prophylaxis · inhaled',
+       mech:'Prevent <b>mast cells from degranulating</b>, blocking release of histamine and inflammatory mediators.',
+       ex:'cromolyn',
+       nurse:'Very safe, with few side effects. Teach it must be used regularly, and <b>ahead of</b> a known trigger such as exercise or an allergen.',
+       warn:'Prevention only &mdash; it does nothing during an active attack.'},
+      {ic:'💊',nm:'Systemic corticosteroids',ct:'Exacerbation burst · oral / IV',
+       mech:'Powerful whole-body anti-inflammatory for acute flares &mdash; a short oral "burst," or IV when severe.',
+       ex:'prednisone, methylprednisolone',
+       nurse:'Monitor blood glucose and give with food. Teach the patient to <b>taper</b>, never stop suddenly.',
+       warn:'Prolonged use causes hyperglycemia, immunosuppression, osteoporosis, and adrenal suppression. Abrupt withdrawal can trigger an adrenal crisis.'}
+    ]}
+ };
+
+ var mode='constrict', sel=-1;
+
+ function h2(c){return [parseInt(c.substr(1,2),16),parseInt(c.substr(3,2),16),parseInt(c.substr(5,2),16)];}
+ function mix(c1,c2,t){var a=h2(c1),b=h2(c2);return 'rgb('+Math.round(a[0]+(b[0]-a[0])*t)+','+Math.round(a[1]+(b[1]-a[1])*t)+','+Math.round(a[2]+(b[2]-a[2])*t)+')';}
+
+ function lumOf(m,inf){var Rmus=Math.max(30,88-(9+m*36));var Rmuc=Math.max(14,Rmus-(7+inf*20));return Math.max(6,Rmuc-3);}
+ var HL=lumOf(0.2,0.12);
+ function airflow(s){var l=lumOf(s.m,s.inf);var a=(l/HL)*(l/HL)*100*(1-s.mucus*0.4);return Math.max(3,Math.min(100,Math.round(a)));}
+
+ function draw(s){
+   var cx=110,cy=100,Rout=88;
+   var Rmus=Math.max(30,Rout-(9+s.m*36));
+   var Rmuc=Math.max(14,Rmus-(7+s.inf*20));
+   var lum=Math.max(6,Rmuc-3);
+   var wall=mix('#f0d6db','#c9384b',s.inf);
+   var out='';
+   out+='<circle cx="110" cy="100" r="'+Rout+'" fill="#7a5a8a"/>';
+   for(var i=0;i<30;i++){var a=i/30*6.2832,c=Math.cos(a),sn=Math.sin(a);
+     out+='<line x1="'+(cx+Rmus*c).toFixed(1)+'" y1="'+(cy+Rmus*sn).toFixed(1)+'" x2="'+(cx+Rout*c).toFixed(1)+'" y2="'+(cy+Rout*sn).toFixed(1)+'" stroke="rgba(255,255,255,'+(0.16+s.m*0.26).toFixed(2)+')" stroke-width="'+(1+s.m*2).toFixed(1)+'"/>';}
+   out+='<circle cx="110" cy="100" r="'+Rmus.toFixed(1)+'" fill="'+wall+'"/>';
+   if(s.inf>0.35){var n=Math.round(s.inf*18),span=Math.max(4,Rmus-lum-8);
+     for(var j=0;j<n;j++){var a2=j*2.399963,rr=lum+4+((j*13)%span);
+       out+='<circle cx="'+(cx+rr*Math.cos(a2)).toFixed(1)+'" cy="'+(cy+rr*Math.sin(a2)).toFixed(1)+'" r="2.4" fill="#a11f34" opacity="0.72"/>';}}
+   out+='<circle cx="110" cy="100" r="'+lum.toFixed(1)+'" fill="#e7f0fb"/>';
+   if(s.mucus>0.3){var mn=Math.round(s.mucus*5);
+     for(var k=0;k<mn;k++){var a3=k*2.399963+0.5;
+       out+='<ellipse cx="'+(cx+lum*0.42*Math.cos(a3)).toFixed(1)+'" cy="'+(cy+lum*0.42*Math.sin(a3)).toFixed(1)+'" rx="'+(6+s.mucus*4).toFixed(1)+'" ry="'+(4+s.mucus*3).toFixed(1)+'" fill="#c9bf4a" opacity="0.7"/>';}}
+   var af=airflow(s)/100, al=Math.min(lum*0.62,34);
+   out+='<g opacity="'+(0.2+0.65*af).toFixed(2)+'" stroke="#2f5f9e" stroke-width="'+(2+3*af).toFixed(1)+'" fill="none" stroke-linecap="round" stroke-linejoin="round">';
+   out+='<line x1="110" y1="'+(cy-al).toFixed(1)+'" x2="110" y2="'+(cy+al).toFixed(1)+'"/>';
+   out+='<polyline points="104,'+(cy-al+8).toFixed(1)+' 110,'+(cy-al).toFixed(1)+' 116,'+(cy-al+8).toFixed(1)+'"/>';
+   out+='<polyline points="104,'+(cy+al-8).toFixed(1)+' 110,'+(cy+al).toFixed(1)+' 116,'+(cy+al-8).toFixed(1)+'"/>';
+   out+='</g>';
+   return out;
+ }
+
+ function renderList(T){
+   $("list").innerHTML=T.drugs.map(function(d,idx){
+     return '<button class="it'+(idx===sel?' on':'')+'" data-i="'+idx+'"><span class="ic">'+d.ic+'</span><span><span class="nm">'+d.nm+'</span><br><span class="ct">'+d.ct+'</span></span></button>';
+   }).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){
+     b.onclick=function(){var i=+b.dataset.i; sel=(sel===i?-1:i); render();};
+   });
+ }
+
+ function render(){
+   var T=TARGETS[mode];
+   var st = sel>=0 ? T.relieved : T.path;
+   $("art").innerHTML=draw(st);
+   var af=airflow(st);
+   var word = af>=85?'Normal':af>=60?'Restored':af>=40?'Reduced':'Severely blocked';
+   $("flowbar").style.width=af+'%';
+   $("flowbar").style.background = af>=60?'var(--green)':(af>=40?'var(--gold)':'var(--coral)');
+   $("flowtxt").innerHTML=word+' · '+af+'%';
+
+   document.querySelectorAll('#modes button').forEach(function(b){b.classList.toggle('on',b.dataset.m===mode);});
+   renderList(T);
+
+   if(sel>=0){
+     var d=T.drugs[sel];
+     $("cardTitle").innerHTML='Treated airway · '+d.nm;
+     $("stage").style.background='var(--green)';
+     $("stage").innerHTML=T.nm+'<small>'+d.nm+' applied &mdash; airflow restoring</small>';
+     $("info").innerHTML='<span class="n">'+d.nm+'</span><div class="ct2">'+d.ct+'</div>'+d.mech
+       +'<div class="ex"><span>'+d.ex.split(', ').join('</span><span>')+'</span></div>'
+       +'<div class="loc"><b>Nurse:</b> '+d.nurse+'</div>'
+       +'<div class="note">'+d.warn+'</div>';
+   } else {
+     $("cardTitle").innerHTML = mode==='constrict' ? 'Constricted airway (untreated)' : 'Inflamed, mucus-filled airway (untreated)';
+     $("stage").style.background=T.col;
+     $("stage").innerHTML=T.nm+'<small>untreated &mdash; tap a drug class below</small>';
+     $("info").innerHTML='<span class="n">'+T.ov.title+'</span>'+T.ov.body+'<div class="mnem">'+T.ov.tip+'</div>';
+   }
+ }
+
+ document.querySelectorAll('#modes button').forEach(function(b){
+   b.onclick=function(){mode=b.dataset.m; sel=-1; render();};
+ });
+
+ render();
+})();
+</script>
+</body>
+</html>

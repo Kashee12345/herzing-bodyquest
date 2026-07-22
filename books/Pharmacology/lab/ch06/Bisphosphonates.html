@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Bisphosphonates: How They Work, How They're Given</title>
+<meta name="description" content="Interactive: the osteoclast mechanism of bisphosphonates, plus a build-the-dose simulator for the strict oral administration rules. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>@media (min-width:881px){.wrap{grid-template-columns:0.92fr 1.08fr;}}
+.grp{font-size:10.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:11px 0 5px;}
+.grp:first-child{margin-top:2px;}
+.list .it{padding:8px 11px;}
+.it.bad{background:#fae5e8;border-color:#e79aa6;} .it.bad .nm{color:#8a2a3a;}
+.it.good{background:#e5f3ea;border-color:#8ccaa5;} .it.good .nm{color:#1c6b3c;}
+.verdict{display:flex;align-items:center;gap:9px;border-radius:10px;padding:9px 12px;margin-top:12px;font-size:12.5px;font-weight:700;line-height:1.4;}
+.verdict .em{font-size:20px;line-height:1;flex:none;}
+.verdict.win{background:#e5f3ea;color:#1c6b3c;border:1px solid #8ccaa5;}
+.verdict.fail{background:#fae5e8;color:#8a2a3a;border:1px solid #e79aa6;}
+.verdict.wait{background:#eff4fb;color:var(--soft);border:1px solid var(--line);}
+#info ul{margin:7px 0 0 17px;} #info li{margin-bottom:5px;}
+.dots{display:flex;gap:4px;justify-content:center;margin-top:11px;}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:.2s;}
+.dots i.on{background:var(--teal);transform:scale(1.35);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 6</div>
+  <h1>Bisphosphonates: How They Work, How They're Given</h1>
+  <div class="intro">These drugs shut down the cell that dissolves bone &mdash; but less than <b>1%</b> of an oral dose is ever absorbed, and the tablet can burn a hole in the esophagus. That is why the <b>administration rules are the nursing care</b>. Learn the mechanism, then set up a patient's morning dose.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="cardTitle">Bone remodeling</h2>
+      <svg viewBox="0 0 220 230" aria-label="bisphosphonate illustration"><g id="art"></g></svg>
+    </div>
+    <div class="card"><h2>Red flags to teach &amp; report</h2>
+      <div class="note"><b>Esophagitis / erosion</b> &mdash; new heartburn, painful or difficult swallowing, chest pain. Hold the drug and notify the prescriber. Do not chew or suck the tablet (oral ulcers).<br><br>
+      <b>Osteonecrosis of the jaw</b> &mdash; rare; jaw pain, loose teeth, non-healing socket. Dental exam and needed work <i>before</i> starting.<br><br>
+      <b>Atypical femoral fracture</b> &mdash; new dull thigh or groin ache after long-term use. Report before it completes.</div>
+      <div class="mnem"><b>Check before the first dose:</b> correct <b>hypocalcemia</b> and vitamin D deficiency first (the drug drives calcium into bone and can worsen a low level). Check renal function &mdash; oral agents are avoided at CrCl below about 30&ndash;35 mL/min. Baseline DEXA to follow response.</div>
+    </div>
+  </div>
+  <div>
+    <div class="modeseg">
+      <button id="mMech" class="on">How it works</button><button id="mGive">Give the dose</button>
+    </div>
+    <div id="stage">Bone is never finished<small>step 1 of 5</small></div>
+    <div class="card">
+      <div id="panel"></div>
+      <div id="info"></div>
+      <div class="row" id="navrow"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div class="dots" id="dots"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var TEAL='#2f5f9e', GREEN='#2f9e5b', CORAL='#d1495b', GOLD='#b8862f', BONE='#efe7d6', BONE_DK='#d8cbb0';
+
+ /* ---------------- MECHANISM STEPS ---------------- */
+ var S=[
+  {t:'Bone is never finished',col:TEAL,
+   d:'Bone constantly turns over. <b>Osteoclasts</b> tunnel in and dissolve old bone; <b>osteoblasts</b> follow and lay down new. After menopause &mdash; or on long-term glucocorticoids &mdash; resorption outruns formation and the skeleton thins. Bisphosphonates act on the <b>osteoclast</b> side of that equation only.'},
+  {t:'The drug goes where the damage is',col:TEAL,
+   d:'A bisphosphonate is a synthetic analog of <b>pyrophosphate</b>. It binds <b>hydroxyapatite</b> &mdash; bone mineral &mdash; with high affinity and concentrates at sites of <b>active resorption</b>. Almost nothing stays in the blood: what is not taken up within hours is cleared by the kidneys. What <i>is</i> bound stays for <b>years</b>, which is why a planned drug holiday is even possible.'},
+  {t:'The osteoclast eats it',col:GOLD,
+   d:'The osteoclast seals onto the surface, acidifies the pit, and dissolves the mineral &mdash; releasing the drug it was bound to and <b>taking it up into itself</b>. The delivery is self-targeting: the only cell that gets a dose is the one doing the digging.'},
+  {t:'The switch is thrown',col:CORAL,
+   d:'Nitrogen-containing bisphosphonates (<b>alendronate, risedronate, ibandronate, zoledronic acid</b>) inhibit <b>farnesyl pyrophosphate synthase</b> in the mevalonate pathway. Without prenylated signaling proteins the osteoclast cannot hold its ruffled border or cytoskeleton together &mdash; it stops resorbing and undergoes <b>apoptosis</b>.'},
+  {t:'Net effect: resorption falls',col:GREEN,
+   d:'Resorption drops, formation keeps filling the deficit, and <b>bone density rises over 6&ndash;12 months</b> &mdash; lowering vertebral and hip fracture risk. Note what this is <i>not</i>: bisphosphonates are <b>antiresorptive, not anabolic</b>. They slow the loss; they do not build new bone. And they only work on a foundation of <b>adequate calcium and vitamin D</b>.'}
+ ];
+
+ function drawBone(step){
+  var s='';
+  s+='<rect x="0" y="0" width="220" height="230" fill="#f7f9fd" rx="10"/>';
+  var pit = (step<=2) ? 1 : (step===3 ? 1 : 0);
+  /* bone slab */
+  s+='<rect x="16" y="140" width="188" height="66" rx="7" fill="'+BONE+'" stroke="'+BONE_DK+'" stroke-width="2"/>';
+  /* trabecular texture — denser at final step */
+  var n = (step===4)? 16 : 8;
+  for(var i=0;i<n;i++){ var tx=26+((i*29)%172), ty=156+((i*19)%42);
+    s+='<circle cx="'+tx+'" cy="'+ty+'" r="3.2" fill="'+BONE_DK+'" opacity=".65"/>'; }
+  /* resorption pit */
+  if(step<=3){ s+='<path d="M78 140 q12 26 32 26 q20 0 32 -26 Z" fill="#f7f9fd"/>'; }
+  else { s+='<path d="M84 140 q10 12 26 12 q16 0 26 -12 Z" fill="'+GREEN+'" opacity=".18"/>'; }
+  s+='<text x="110" y="222" font-size="9.5" fill="#78828f" text-anchor="middle" font-weight="700">BONE MINERAL (hydroxyapatite)</text>';
+
+  /* drug particles bound to surface */
+  if(step>=1){
+    var pts=[[40,137],[62,137],[86,143],[110,164],[134,143],[158,137],[184,137]];
+    for(var p=0;p<pts.length;p++){
+      var inPit = (p>=2&&p<=4);
+      if(step===1 || (step>=2&&!inPit)){
+        s+='<circle cx="'+pts[p][0]+'" cy="'+pts[p][1]+'" r="4.5" fill="'+GREEN+'"/>';
+      }
+    }
+    if(step===1){ s+='<text x="110" y="128" font-size="9.5" fill="'+GREEN+'" text-anchor="middle" font-weight="700">drug binds the mineral</text>'; }
+  }
+
+  /* osteoblast (step 0 and 4) */
+  if(step===0||step===4){
+    s+='<circle cx="176" cy="120" r="13" fill="'+TEAL+'" opacity=".9"/>';
+    s+='<circle cx="172" cy="117" r="2.4" fill="#fff"/><circle cx="181" cy="117" r="2.4" fill="#fff"/>';
+    s+='<text x="176" y="100" font-size="8.5" fill="'+TEAL+'" text-anchor="middle" font-weight="700">osteoblast</text>';
+    s+='<text x="176" y="91" font-size="8" fill="#78828f" text-anchor="middle">builds</text>';
+  }
+
+  /* osteoclast */
+  if(step<=3){
+    var oc = (step===3)? CORAL : GOLD;
+    var opa = (step===3)? '.45' : '.95';
+    var w = (step===3)? 26 : 34;
+    s+='<ellipse cx="110" cy="'+((step===3)?122:118)+'" rx="'+w+'" ry="'+((step===3)?17:22)+'" fill="'+oc+'" opacity="'+opa+'"/>';
+    /* multinucleated */
+    var nu=[[98,112],[112,110],[122,118]];
+    for(var q=0;q<nu.length;q++){ s+='<circle cx="'+nu[q][0]+'" cy="'+nu[q][1]+'" r="3.6" fill="#fff" opacity=".8"/>'; }
+    /* ruffled border */
+    if(step<3){
+      var rb='M84 138';
+      for(var r=0;r<7;r++){ rb+=' l3 -6 l3 6'; }
+      s+='<path d="'+rb+'" stroke="'+oc+'" stroke-width="2.4" fill="none"/>';
+      s+='<text x="110" y="92" font-size="8.5" fill="'+GOLD+'" text-anchor="middle" font-weight="700">osteoclast</text>';
+      s+='<text x="110" y="83" font-size="8" fill="#78828f" text-anchor="middle">dissolves &amp; digs</text>';
+    }
+    /* step 2: drug taken INSIDE the osteoclast */
+    if(step===2){
+      s+='<circle cx="103" cy="124" r="4" fill="'+GREEN+'"/><circle cx="117" cy="126" r="4" fill="'+GREEN+'"/><circle cx="110" cy="132" r="4" fill="'+GREEN+'"/>';
+      s+='<path d="M110 146 L110 138" stroke="'+GREEN+'" stroke-width="2.4" marker-end="url(#ah)"/>';
+      s+='<text x="110" y="70" font-size="9" fill="'+GOLD+'" text-anchor="middle" font-weight="700">endocytosed with the mineral</text>';
+    }
+    /* step 3: apoptosis */
+    if(step===3){
+      s+='<text x="110" y="86" font-size="10" fill="'+CORAL+'" text-anchor="middle" font-weight="700">FPPS blocked → apoptosis</text>';
+      s+='<text x="110" y="74" font-size="8.5" fill="#78828f" text-anchor="middle">ruffled border collapses</text>';
+      for(var z=0;z<5;z++){ var an=z/5*6.28;
+        s+='<circle cx="'+(110+34*Math.cos(an)).toFixed(1)+'" cy="'+(122+22*Math.sin(an)).toFixed(1)+'" r="2.6" fill="'+CORAL+'" opacity=".7"/>'; }
+    }
+  } else {
+    s+='<text x="110" y="118" font-size="10.5" fill="'+GREEN+'" text-anchor="middle" font-weight="700">↓ resorption · ↑ bone density</text>';
+    s+='<text x="110" y="104" font-size="8.5" fill="#78828f" text-anchor="middle">antiresorptive — it slows loss,</text>';
+    s+='<text x="110" y="94" font-size="8.5" fill="#78828f" text-anchor="middle">it does not build new bone</text>';
+  }
+  s+='<defs><marker id="ah" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="'+GREEN+'"/></marker></defs>';
+  return s;
+ }
+
+ /* ---------------- DOSE BUILDER ---------------- */
+ var OPT=[
+  {k:'time',lab:'1 · When does she take it?',o:[
+    {v:'am',t:'On waking, before any food',s:'first thing in the morning',ok:1},
+    {v:'bfast',t:'With breakfast',s:'easier to remember',ok:0,cat:'block',
+     why:'<b>Food destroys the dose.</b> Oral bioavailability is already under 1%; anything in the stomach drops absorption to essentially zero. Nothing reaches bone.'},
+    {v:'hs',t:'At bedtime',s:'part of the nightly meds',ok:0,cat:'burn',
+     why:'<b>Lying down after the dose is the classic cause of esophageal erosion.</b> The tablet rests against the mucosa and burns it.'}
+  ]},
+  {k:'fluid',lab:'2 · With what fluid?',o:[
+    {v:'water',t:'Full glass of plain water',s:'6–8 oz (about 180–240 mL)',ok:1},
+    {v:'sip',t:'A small sip of water',s:'just enough to swallow',ok:0,cat:'burn',
+     why:'<b>Too little fluid to carry the tablet through.</b> It lodges in the esophagus and dissolves against the wall.'},
+    {v:'coffee',t:'Coffee or orange juice',s:'with her usual morning cup',ok:0,cat:'block',
+     why:'<b>Plain water only.</b> Coffee and juice measurably reduce absorption of an already tiny dose.'},
+    {v:'milk',t:'Milk or mineral water',s:'"it is still a drink"',ok:0,cat:'block',
+     why:'<b>Calcium and magnesium chelate the drug in the gut.</b> Milk, mineral water, and hard water all bind it — nothing is absorbed.'}
+  ]},
+  {k:'pos',lab:'3 · What does she do next?',o:[
+    {v:'up',t:'Stay upright at least 30 minutes',s:'sit or stand — and no food yet',ok:1},
+    {v:'lie',t:'Go back to bed',s:'it is early',ok:0,cat:'burn',
+     why:'<b>Upright is not optional.</b> Reclining lets the tablet reflux into the esophagus. Inability to sit or stand for 30 minutes is a <b>contraindication</b> to the oral drug.'}
+  ]},
+  {k:'co',lab:'4 · Her calcium + antacid are due. Now?',o:[
+    {v:'wait',t:'Hold them — give after the 30 minutes',s:'separate from the dose',ok:1},
+    {v:'now',t:'Give them together',s:'save her a step',ok:0,cat:'block',
+     why:'<b>Calcium, antacids, and iron bind the drug directly.</b> She needs calcium and vitamin D — just never at the same time as the bisphosphonate.'}
+  ]}
+ ];
+ var pick={time:null,fluid:null,pos:null,co:null};
+
+ function drawGive(){
+  var chosen = pick.time&&pick.fluid&&pick.pos&&pick.co;
+  var st = state();
+  var s='';
+  s+='<rect x="0" y="0" width="220" height="230" fill="#f7f9fd" rx="10"/>';
+  var burn = st.burn, block = st.block;
+
+  /* mouth */
+  s+='<circle cx="104" cy="20" r="9" fill="#e8b79c"/>';
+  s+='<text x="126" y="24" font-size="8.5" fill="#78828f" font-weight="700">mouth</text>';
+  /* esophagus */
+  var esC = burn ? CORAL : '#e8b79c';
+  s+='<rect x="94" y="26" width="20" height="86" rx="10" fill="'+esC+'" opacity="'+(burn?'.9':'.65')+'"/>';
+  if(burn){
+    for(var b=0;b<4;b++){ s+='<circle cx="'+(99+(b%2)*10)+'" cy="'+(48+b*15)+'" r="3" fill="#8a2a3a" opacity=".8"/>'; }
+    s+='<text x="128" y="70" font-size="9" fill="'+CORAL+'" font-weight="700">esophagitis</text>';
+    s+='<text x="128" y="80" font-size="8" fill="#8a2a3a">erosion · ulcer</text>';
+  }
+  /* stomach */
+  s+='<path d="M94 112 q-24 6 -22 32 q2 26 30 28 q30 2 34 -26 q4 -26 -18 -34 Z" fill="#f3d9c9" stroke="#e8b79c" stroke-width="2"/>';
+  s+='<text x="150" y="150" font-size="8.5" fill="#78828f" font-weight="700">stomach</text>';
+  /* food / calcium in stomach */
+  if(pick.time==='bfast'||pick.fluid==='coffee'||pick.fluid==='milk'){
+    for(var f=0;f<5;f++){ s+='<circle cx="'+(88+f*11)+'" cy="'+(148+(f%2)*12)+'" r="4" fill="'+GOLD+'" opacity=".75"/>'; }
+  }
+  if(pick.co==='now'){
+    for(var c=0;c<3;c++){ s+='<rect x="'+(92+c*13)+'" y="164" width="9" height="9" rx="2" fill="#7a5a8a" opacity=".8"/>'; }
+  }
+  /* bone target */
+  s+='<rect x="18" y="196" width="184" height="24" rx="6" fill="'+(st.win?GREEN:BONE)+'" opacity="'+(st.win?'.9':'1')+'" stroke="'+BONE_DK+'" stroke-width="2"/>';
+  s+='<text x="110" y="212" font-size="9.5" fill="'+(st.win?'#fff':'#78828f')+'" text-anchor="middle" font-weight="700">BONE</text>';
+  /* absorption arrow */
+  if(st.win){
+    s+='<path d="M60 168 Q34 184 40 194" stroke="'+GREEN+'" stroke-width="2.6" fill="none" marker-end="url(#ag)"/>';
+    s+='<text x="150" y="186" font-size="9" fill="'+GREEN+'" text-anchor="middle" font-weight="700">absorbed → bone</text>';
+  } else if(block){
+    s+='<path d="M60 168 Q34 184 40 192" stroke="'+GOLD+'" stroke-width="2.6" fill="none" stroke-dasharray="4 4"/>';
+    s+='<text x="40" y="186" font-size="14" fill="'+CORAL+'" text-anchor="middle" font-weight="800">✕</text>';
+    s+='<text x="150" y="186" font-size="9" fill="'+GOLD+'" text-anchor="middle" font-weight="700">not absorbed</text>';
+  }
+  /* the tablet */
+  var tx=104, ty=20, tc='#fff', ts=TEAL;
+  if(!chosen){ ty=20; }
+  else if(burn){ ty=64; ts=CORAL; }
+  else if(block){ tx=106; ty=150; ts=GOLD; tc='#e9edf3'; }
+  else { tx=40; ty=208; ts='#fff'; tc=GREEN; }
+  s+='<circle cx="'+tx+'" cy="'+ty+'" r="7" fill="'+tc+'" stroke="'+ts+'" stroke-width="2.4"/>';
+  if(!chosen){ s+='<text x="110" y="118" font-size="10" fill="#78828f" text-anchor="middle" font-weight="700">make all four choices →</text>'; }
+  s+='<defs><marker id="ag" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="'+GREEN+'"/></marker></defs>';
+  return s;
+ }
+
+ function state(){
+  var errs=[], burn=0, block=0, done=1;
+  for(var i=0;i<OPT.length;i++){
+    var g=OPT[i], v=pick[g.k];
+    if(!v){ done=0; continue; }
+    var o=g.o.filter(function(x){return x.v===v;})[0];
+    if(!o.ok){ errs.push(o); if(o.cat==='burn')burn=1; else block=1; }
+  }
+  return {done:done,errs:errs,burn:done&&burn,block:done&&block,win:done&&errs.length===0};
+ }
+
+ /* ---------------- RENDER ---------------- */
+ var mode='mech', i=0;
+
+ function renderMech(){
+  var s=S[i];
+  $("art").innerHTML=drawBone(i);
+  $("cardTitle").innerHTML=s.t;
+  $("stage").style.background=s.col;
+  $("stage").innerHTML=s.t+'<small>step '+(i+1)+' of '+S.length+'</small>';
+  $("panel").innerHTML='';
+  $("info").innerHTML='<span class="n">'+s.t+'</span>'+s.d;
+  $("navrow").style.display='flex';
+  $("dots").style.display='flex';
+  $("dots").innerHTML=S.map(function(_,k){return '<i class="'+(k===i?'on':'')+'"></i>';}).join('');
+  $("prev").disabled=(i===0); $("next").disabled=(i===S.length-1);
+ }
+
+ function renderGive(){
+  var st=state();
+  $("art").innerHTML=drawGive();
+  $("cardTitle").innerHTML='The morning dose';
+  $("panel").innerHTML=OPT.map(function(g){
+    return '<div class="grp">'+g.lab+'</div><div class="list">'+g.o.map(function(o){
+      var cls='it';
+      if(pick[g.k]===o.v) cls+= o.ok?' good':' bad';
+      return '<button class="'+cls+'" data-k="'+g.k+'" data-v="'+o.v+'"><span><span class="nm">'+o.t+'</span><br><span class="ct">'+o.s+'</span></span></button>';
+    }).join('')+'</div>';
+  }).join('');
+  document.querySelectorAll('#panel .it').forEach(function(b){
+    b.onclick=function(){ pick[b.dataset.k]=b.dataset.v; renderGive(); };
+  });
+  $("navrow").style.display='flex';
+  $("dots").style.display='none';
+  $("prev").style.display='none';
+  $("next").innerHTML='Reset'; $("next").className='btn'; $("next").disabled=false;
+
+  if(!st.done){
+    $("stage").style.background=TEAL;
+    $("stage").innerHTML='Alendronate 70 mg PO weekly<small>a 68-year-old woman with osteoporosis — set up her dose</small>';
+    $("info").innerHTML='<span class="n">Why the fuss?</span>An oral bisphosphonate is <b>less than 1% bioavailable</b> and <b>directly caustic to the esophagus</b>. Those two facts generate every rule below. Choose one option in each group.'+
+      '<div class="verdict wait"><span class="em">⏳</span><span>Waiting on all four choices…</span></div>';
+    return;
+  }
+  if(st.win){
+    $("stage").style.background=GREEN;
+    $("stage").innerHTML='Correct — the dose works<small>absorbed, and the esophagus is safe</small>';
+    $("info").innerHTML='<span class="n">This is the whole ritual</span>'+
+      '<b>On waking · full glass of plain water · upright 30 minutes · nothing else by mouth</b> until that half hour is up — then breakfast, calcium, and vitamin D.'+
+      '<div class="loc">Timing by drug: <b>alendronate</b> and <b>risedronate</b> need <b>30 minutes</b> upright and fasting. <b>Ibandronate</b> needs a full <b>60 minutes</b>. Delayed-release risedronate is the one exception — it is taken <i>immediately after</i> breakfast, still with plain water and still upright.</div>'+
+      '<div class="mnem"><b>Teach it as a sentence:</b> "Wake up, whole glass of water, stay up, wait 30." If she cannot sit or stand for 30 minutes, the oral drug is contraindicated — IV <b>zoledronic acid</b> once yearly is the alternative (hydrate well; a flu-like acute phase reaction in the first 24–72 hours is common and responds to acetaminophen).</div>'+
+      '<div class="verdict win"><span class="em">✓</span><span>Drug reaches bone. Osteoclasts get the message.</span></div>';
+    return;
+  }
+  $("stage").style.background = st.burn ? CORAL : GOLD;
+  $("stage").innerHTML = (st.burn?'Harm — the esophagus takes the dose':'Wasted — nothing reaches bone')+
+    '<small>'+st.errs.length+' rule'+(st.errs.length>1?'s':'')+' broken</small>';
+  $("info").innerHTML='<span class="n">What went wrong</span><ul>'+
+    st.errs.map(function(o){return '<li>'+o.why+'</li>';}).join('')+'</ul>'+
+    '<div class="verdict fail"><span class="em">'+(st.burn?'🔥':'🚫')+'</span><span>'+
+    (st.burn?'Esophagitis risk — this is the injury that lands patients in the ED with chest pain.'
+            :'The tablet is swallowed and excreted. She thinks she is protected; her bones are not.')+
+    '</span></div>';
+ }
+
+ function render(){ if(mode==='mech') renderMech(); else renderGive(); }
+
+ $("prev").onclick=function(){ if(mode==='mech'&&i>0){i--;render();} };
+ $("next").onclick=function(){
+   if(mode==='mech'){ if(i<S.length-1){i++;render();} }
+   else { pick={time:null,fluid:null,pos:null,co:null}; render(); }
+ };
+ $("mMech").onclick=function(){ mode='mech'; i=0; $("mMech").className='on'; $("mGive").className='';
+   $("prev").style.display='block'; $("next").innerHTML='Next ›'; $("next").className='btn solid'; render(); };
+ $("mGive").onclick=function(){ mode='give'; $("mGive").className='on'; $("mMech").className=''; render(); };
+
+ render();
+})();
+</script>
+</body>
+</html>

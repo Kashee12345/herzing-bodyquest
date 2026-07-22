@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>The Forgetting Curve</title>
+<meta name="description" content="Interactive plot of Ebbinghaus's forgetting curve — drag through time and add spaced reviews to watch the curve flatten. For psychology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:1.1fr .9fr;}
+.leg{display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:11.5px;font-weight:700;color:var(--muted);flex-wrap:wrap;}
+.leg span{display:inline-flex;align-items:center;gap:6px;}
+.leg i{width:20px;height:0;border-top:3px solid var(--muted);display:inline-block;}
+.leg i.act{border-top:3px solid var(--teal);} .leg i.base{border-top:3px dashed #b7a6ae;} .leg i.rev{border-top:3px dotted var(--gold);}
+.slab{font-size:12.5px;font-weight:700;color:var(--soft);display:flex;justify-content:space-between;margin:2px 0 6px;}
+.slab b{color:var(--teal-dk);font-family:var(--disp);font-size:15px;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;background:var(--line);outline:none;margin:4px 0 12px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);cursor:pointer;border:3px solid #fff;box-shadow:0 1px 5px rgba(70,30,45,.35);}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal);cursor:pointer;border:3px solid #fff;}
+.sub{font-size:12px;font-weight:700;color:var(--muted);margin:4px 0 6px;}
+.two{display:flex;gap:8px;margin-top:10px;}
+.two div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 4px;background:#fff;}
+.two div .lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.two div .v{display:block;font-family:var(--disp);font-size:20px;font-weight:700;margin-top:2px;}
+.two div.act .v{color:var(--teal-dk);} .two div.base .v{color:#a08d95;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 7</div>
+  <h1>The Forgetting Curve</h1>
+  <div class="intro">In 1885 <b>Hermann Ebbinghaus</b> memorized lists of nonsense syllables and tracked how fast he lost them. Memory decays steeply at first, then levels off &mdash; but each <b>review</b> resets the curve and makes forgetting slower. Drag the day marker and build a review schedule to see it.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Retention over time</h2>
+    <svg viewBox="0 0 360 236" aria-label="forgetting curve chart"><g id="art"></g></svg>
+    <div class="leg">
+      <span><i class="act"></i>With review</span>
+      <span><i class="base"></i>No review</span>
+      <span><i class="rev"></i>Review point</span>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">Ebbinghaus, 1885<small>drag the marker &amp; add reviews</small></div>
+    <div class="card">
+      <div class="slab"><span>Day marker</span><b id="dayval">Day 7</b></div>
+      <input id="slider" type="range" min="0" max="30" step="1" value="7">
+      <div class="sub">Review schedule &mdash; tap a day to study the list again:</div>
+      <div class="grid" id="reviews"></div>
+      <div class="two">
+        <div class="act"><span class="lbl">With review</span><span class="v" id="vAct">—</span></div>
+        <div class="base"><span class="lbl">No review</span><span class="v" id="vBase">—</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>Spacing effect:</b> Ebbinghaus found that <b>distributed</b> practice (spread out) beats <b>massed</b> practice (crammed) &mdash; the backbone of every flashcard and spaced-repetition app today.</div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var S0=2.0, MULT=2.0, DAYS=30;
+ var PX={x0:44,x1:340,yTop:20,yBot:196};
+ var CHECKS=[1,3,7,14];
+ var picked={};            // review days that are toggled on
+ var day=7;
+
+ function dx(d){ return PX.x0 + d/DAYS*(PX.x1-PX.x0); }
+ function dy(r){ return PX.yBot - r*(PX.yBot-PX.yTop); }
+
+ // retention at time t given a sorted list of review days
+ function retAt(t,revs){
+   var a=0, S=S0;
+   for(var i=0;i<revs.length;i++){
+     if(revs[i]<=t){ a=revs[i]; S=S0*Math.pow(MULT,i+1); } else break;
+   }
+   return Math.exp(-(t-a)/S);
+ }
+ function curvePts(revs){
+   var p='';
+   for(var t=0;t<=DAYS+0.001;t+=0.3){
+     p+=(p?' ':'')+dx(t).toFixed(1)+','+dy(retAt(t,revs)).toFixed(1);
+   }
+   return p;
+ }
+ function revList(){
+   return CHECKS.filter(function(d){return picked[d];}).sort(function(a,b){return a-b;});
+ }
+
+ function drawChart(){
+   var revs=revList(), s='';
+   // horizontal gridlines + y labels
+   [0,.25,.5,.75,1].forEach(function(r){
+     var y=dy(r);
+     s+='<line x1="'+PX.x0+'" y1="'+y+'" x2="'+PX.x1+'" y2="'+y+'" stroke="#eee0e6" stroke-width="1"/>';
+     s+='<text x="'+(PX.x0-6)+'" y="'+(y+3.5)+'" font-size="9" fill="#94818b" text-anchor="end" font-weight="600">'+Math.round(r*100)+'%</text>';
+   });
+   // x axis labels
+   [0,10,20,30].forEach(function(d){
+     s+='<text x="'+dx(d)+'" y="'+(PX.yBot+16)+'" font-size="9" fill="#94818b" text-anchor="middle" font-weight="600">'+(d===0?'0':d)+'</text>';
+   });
+   s+='<text x="'+((PX.x0+PX.x1)/2)+'" y="'+(PX.yBot+30)+'" font-size="9.5" fill="#63505a" text-anchor="middle" font-weight="700">Days since learning</text>';
+   // baseline (no review) dashed
+   s+='<polyline points="'+curvePts([])+'" fill="none" stroke="#b7a6ae" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round"/>';
+   // active area fill + line
+   var pts=curvePts(revs);
+   s+='<polyline points="'+PX.x0+','+PX.yBot+' '+pts+' '+PX.x1+','+PX.yBot+'" fill="rgba(161,70,107,.10)" stroke="none"/>';
+   s+='<polyline points="'+pts+'" fill="none" stroke="#a1466b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+   // review markers (vertical dotted + gold dot at reset)
+   revs.forEach(function(d){
+     s+='<line x1="'+dx(d)+'" y1="'+PX.yTop+'" x2="'+dx(d)+'" y2="'+PX.yBot+'" stroke="#b8862f" stroke-width="1.4" stroke-dasharray="2 3" opacity=".7"/>';
+     s+='<circle cx="'+dx(d)+'" cy="'+dy(1)+'" r="4" fill="#b8862f" stroke="#fff" stroke-width="1.5"/>';
+   });
+   // day marker
+   var rA=retAt(day,revs);
+   s+='<line x1="'+dx(day)+'" y1="'+PX.yTop+'" x2="'+dx(day)+'" y2="'+PX.yBot+'" stroke="#5e2846" stroke-width="1.5"/>';
+   s+='<circle cx="'+dx(day)+'" cy="'+dy(rA)+'" r="5.5" fill="#5e2846" stroke="#fff" stroke-width="2"/>';
+   $("art").innerHTML=s;
+ }
+
+ function drawReviews(){
+   $("reviews").innerHTML=CHECKS.map(function(d){
+     return '<button class="it'+(picked[d]?' on':'')+'" data-d="'+d+'">Review · Day '+d+'</button>';
+   }).join('');
+   document.querySelectorAll('#reviews .it').forEach(function(b){
+     b.onclick=function(){ var d=+b.dataset.d; picked[d]=!picked[d]; update(); };
+   });
+ }
+
+ function update(){
+   var revs=revList(), n=revs.length;
+   var rA=retAt(day,revs), rB=retAt(day,[]);
+   $("dayval").innerHTML='Day '+day;
+   $("vAct").innerHTML=Math.round(rA*100)+'%';
+   $("vBase").innerHTML=Math.round(rB*100)+'%';
+   // stage
+   var end=retAt(DAYS,revs);
+   $("stage").style.background=n?'var(--teal)':'var(--gold)';
+   $("stage").innerHTML=(n?n+' review'+(n>1?'s':'')+' scheduled':'No reviews yet')+
+     '<small>At day 30 you keep '+Math.round(end*100)+'% of the material</small>';
+   // info text
+   var msg;
+   if(n===0){
+     msg='<span class="n">Pure decay</span>With a single study session, retention falls off <b>exponentially</b> &mdash; roughly half is gone within a day, and by day 10 almost nothing remains. This is the curve Ebbinghaus measured on himself using his <b>savings method</b> (how much faster a forgotten list relearns).';
+   } else {
+     msg='<span class="n">The curve flattens</span>Each review <b>resets retention toward 100%</b> and the next drop is <b>slower</b> &mdash; the curve gets shallower every time. That is why '+n+' well-spaced review'+(n>1?'s'+
+       ' leave':' leaves')+' you at <b>'+Math.round(end*100)+'%</b> on day 30 instead of near zero. Reviewing just <b>before</b> you would forget is the most efficient timing.';
+   }
+   msg+='<div class="loc">At <b>day '+day+'</b>: '+Math.round(rA*100)+'% with review vs '+Math.round(rB*100)+'% without.</div>';
+   $("info").innerHTML=msg;
+   drawChart();
+ }
+
+ $("slider").oninput=function(){ day=+this.value; update(); };
+ drawReviews();
+ update();
+})();
+</script>
+</body>
+</html>

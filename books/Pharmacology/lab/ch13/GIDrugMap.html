@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>The GI Drug Map</title>
+<meta name="description" content="Interactive map of IBD agents and other GI drugs — tap a class to light up where it acts along the tract, with the mechanism, generic drugs, and nursing focus for each. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>
+.wrap{grid-template-columns:0.96fr 1.04fr;}
+.site{margin-top:12px;font-size:12.5px;color:var(--muted);}
+.site b{color:var(--teal-dk);}
+.legend{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:11px;font-size:11.5px;color:var(--soft);}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.legend b{width:12px;height:12px;border-radius:3px;display:inline-block;}
+.hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:9px;}
+.dvh{font-size:10.5px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--gold);margin:9px 2px 2px;}
+.dvh:first-child{margin-top:0;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 13</div>
+  <h1>The GI Drug Map</h1>
+  <div class="intro">Past the stomach, two more jobs fall to GI drugs: <b>calming inflammation</b> in inflammatory bowel disease, and <b>fixing how fast the gut moves</b>. IBD therapy climbs a <b>ladder</b> &mdash; the least-toxic drug that controls the disease. Tap a class to light up <b>where it acts</b> along the tract and the nursing focus that goes with it.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The GI tract</h2>
+    <svg viewBox="0 0 240 262" aria-label="GI tract with drug sites of action"><g id="art"></g></svg>
+    <div class="site">Acts on <b id="siteReg">&mdash; pick a class</b></div>
+    <div class="legend">
+      <span><b style="background:#cdd9ec"></b>small intestine</span>
+      <span><b style="background:#c3d2e8"></b>colon</span>
+      <span><b style="background:#e4edf8;border:1px solid #bcccE4"></b>context</span>
+      <span>lit region = where it acts</span>
+    </div>
+    <div class="hint">Tip: pick a class at right to see its site light up.</div>
+  </div></div>
+  <div>
+    <div id="stage">Two jobs beyond acid<small>tap a drug class to begin</small></div>
+    <div class="card">
+      <div class="list" id="list"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var D=[
+  {k:'asa', ic:'🧯', nm:'Aminosalicylates (5-ASA)', ct:'"-salazine / mesalamine"', cat:'IBD agents', col:'#2f9e5b',
+   reg:['colon'], sys:false, fx:80, fy:164, fr:16, mark:'↓ inflammation', siteReg:'the colon lining',
+   pill:'first-line (mild UC)', pillc:'normal',
+   site:'directly on the inflamed colon lining',
+   mech:'Act <b>locally on the bowel mucosa</b> to damp inflammation (they inhibit prostaglandins and leukotrienes). Sulfasalazine is split by colonic bacteria into <b>5-ASA</b> (the active drug) plus a sulfa carrier that causes most of the side effects. First-line for <b>mild-to-moderate ulcerative colitis</b>; works better in the colon than in Crohn’s.',
+   drugs:'mesalamine, sulfasalazine, balsalazide, olsalazine',
+   nurse:'Sulfasalazine can turn urine and skin <b>orange-yellow</b> (harmless) and stain soft contact lenses. Give <b>folic acid</b> &mdash; it impairs folate absorption. Ask about <b>sulfa allergy</b>. Encourage fluids; take with food.',
+   warn:'Headache, nausea, rash; rare <b>blood dyscrasias</b> (agranulocytosis) and reversible low sperm count with sulfasalazine. Report sore throat, fever, or unusual bruising.',
+   mnem:'&ldquo;5-ASA&rdquo; calms the <b>colon</b>; sulfa needs <b>folic acid</b>.'},
+
+  {k:'steroid', ic:'⚡', nm:'Corticosteroids', ct:'prednisone · budesonide', cat:'IBD agents', col:'#d1495b',
+   reg:[], sys:true, ileum:true, siteReg:'the whole body (budesonide targets the ileum)',
+   pill:'flares only', pillc:'high',
+   site:'the whole body &mdash; budesonide is engineered to act mostly in the ileum / right colon',
+   mech:'Powerful anti-inflammatory drugs used to <b>induce remission during a flare</b> &mdash; <b>not for long-term maintenance</b> because of body-wide toxicity. <b>Budesonide</b> has heavy first-pass metabolism, so it works largely in the ileum and right colon with fewer systemic effects.',
+   drugs:'prednisone, methylprednisolone, budesonide, hydrocortisone (enema)',
+   nurse:'<b>Never stop abruptly</b> &mdash; taper to avoid adrenal crisis. Monitor <b>blood glucose</b> and BP, watch for infection (steroids mask fever), give with food. Rectal foam or enema is used for distal disease.',
+   warn:'Long-term: <b>hyperglycemia</b>, osteoporosis, weight gain / moon face, cataracts, <b>adrenal suppression</b>, mood changes, poor wound healing, immunosuppression.',
+   mnem:'Steroids <b>induce</b> remission &mdash; they don’t <b>maintain</b> it.'},
+
+  {k:'immuno', ic:'🧬', nm:'Immunomodulators', ct:'azathioprine · methotrexate', cat:'IBD agents', col:'#7a5a8a',
+   reg:[], sys:true, siteReg:'the immune system, body-wide',
+   pill:'maintenance · slow', pillc:'low',
+   site:'the immune system body-wide',
+   mech:'Suppress the overactive immune response to <b>maintain remission and spare steroids</b>. <b>Slow onset</b> &mdash; weeks to months. Azathioprine and 6-mercaptopurine are purine antimetabolites; methotrexate is a folate antagonist.',
+   drugs:'azathioprine, 6-mercaptopurine, methotrexate',
+   nurse:'Monitor <b>CBC</b> (bone-marrow suppression) and <b>LFTs</b> regularly. Check <b>TPMT</b> enzyme before azathioprine / 6-MP (deficiency causes severe myelosuppression). Report infection, sore throat, or bruising.',
+   warn:'<b>Methotrexate is teratogenic</b> &mdash; contraindicated in pregnancy; dose <b>WEEKLY, never daily</b>, and give folic acid; it is hepatotoxic. All raise infection and lymphoma risk.',
+   mnem:'Methotrexate = <b>weekly</b>, with <b>folic acid</b> &mdash; never daily.'},
+
+  {k:'biologic', ic:'🎯', nm:'Biologics', ct:'infliximab · adalimumab', cat:'IBD agents', col:'#2f6f9f',
+   reg:[], sys:true, siteReg:'specific inflammatory signals (systemic)',
+   pill:'severe / refractory', pillc:'normal',
+   site:'specific inflammatory signals in the blood and gut',
+   mech:'Monoclonal antibodies that <b>neutralize one inflammatory target</b>: TNF-alpha (infliximab, adalimumab), gut integrin (vedolizumab), or IL-12/23 (ustekinumab). Reserved for <b>moderate-to-severe or refractory</b> IBD.',
+   drugs:'infliximab, adalimumab, vedolizumab, ustekinumab',
+   nurse:'<b>Screen for latent TB and hepatitis B BEFORE the first dose</b> &mdash; anti-TNF drugs can reactivate them. Watch for <b>infusion reactions</b> with IV infliximab. <b>No live vaccines.</b> Report fever, cough, or night sweats.',
+   warn:'Serious infections (TB, fungal, sepsis), <b>hepatitis B reactivation</b>, infusion / injection reactions, and a small increase in lymphoma risk.',
+   mnem:'Before a biologic: <b>rule out TB &amp; hep B</b>.'},
+
+  {k:'bulk', ic:'🌾', nm:'Bulk-forming laxatives', ct:'psyllium · methylcellulose', cat:'Other GI drugs', col:'#b8862f',
+   reg:['colon'], sys:false, fx:160, fy:162, fr:16, mark:'+ bulk', siteReg:'the colon',
+   pill:'safest long-term', pillc:'normal',
+   site:'inside the colon',
+   mech:'Soluble <b>fiber that absorbs water and swells</b>, adding bulk that triggers normal peristalsis. The most physiologic laxative &mdash; closest to natural stool &mdash; and <b>safe for long-term use</b>. Onset 12&ndash;72 hours.',
+   drugs:'psyllium, methylcellulose, polycarbophil',
+   nurse:'Give with a <b>full glass of water</b> (at least 240 mL) &mdash; too little fluid can cause <b>esophageal or bowel obstruction</b>. Separate from other oral meds. Good choice in pregnancy and chronic constipation.',
+   warn:'Bloating and gas; <b>obstruction risk</b> if fluid intake is poor or there is a bowel stricture. Not for acute relief &mdash; it works slowly.',
+   mnem:'Bulk-forming fiber needs a <b>full glass of water</b>.'},
+
+  {k:'osmotic', ic:'💧', nm:'Osmotic laxatives', ct:'PEG · lactulose · Mg', cat:'Other GI drugs', col:'#2f5f9e',
+   reg:['sbowel','colon'], sys:false, fx:120, fy:150, fr:15, mark:'+ water', siteReg:'the small intestine &amp; colon',
+   pill:'prep &amp; constipation', pillc:'low',
+   site:'the small intestine and colon lumen',
+   mech:'<b>Pull water into the bowel lumen</b>, softening stool and increasing volume. Polyethylene glycol (PEG) is a mainstay for constipation and bowel prep. <b>Lactulose</b> additionally traps ammonia in the gut &mdash; it is used to <b>lower ammonia in hepatic encephalopathy</b>.',
+   drugs:'polyethylene glycol (PEG), lactulose, magnesium hydroxide, magnesium citrate',
+   nurse:'Monitor <b>fluids and electrolytes</b>, especially with high-volume prep or in older adults. For hepatic encephalopathy, <b>titrate lactulose to 2&ndash;3 soft stools/day</b>. Avoid magnesium products in <b>renal failure</b> (hypermagnesemia).',
+   warn:'Dehydration, electrolyte imbalance, cramping and bloating; <b>magnesium toxicity</b> in kidney impairment.',
+   mnem:'Lactulose also dumps <b>ammonia</b> (hepatic encephalopathy).'},
+
+  {k:'stim', ic:'⏩', nm:'Stimulant laxatives', ct:'bisacodyl · senna', cat:'Other GI drugs', col:'#c8632e',
+   reg:['colon'], sys:false, fx:80, fy:150, fr:16, mark:'↑ peristalsis', siteReg:'the colon wall',
+   pill:'short-term only', pillc:'high',
+   site:'the colon wall',
+   mech:'Directly <b>stimulate the intestinal wall and enteric nerves</b> to speed peristalsis and cut water reabsorption. Fast (6&ndash;12 hours) and effective &mdash; but <b>for short-term use only</b>. Common for opioid-induced constipation and pre-procedure.',
+   drugs:'bisacodyl, senna',
+   nurse:'<b>Short-term use</b> &mdash; chronic use causes dependence and loss of bowel tone. Do <b>not crush</b> enteric bisacodyl or give it with milk / antacids (the coating dissolves early and cramps). Expect harmless urine or stool color change with senna.',
+   warn:'Abdominal <b>cramping</b>, fluid and electrolyte loss (<b>hypokalemia</b>) with overuse, and <b>laxative dependence</b>.',
+   mnem:'Stimulants: <b>strong but short-term</b>.'},
+
+  {k:'antidia', ic:'🛑', nm:'Antidiarrheals', ct:'loperamide · bismuth', cat:'Other GI drugs', col:'#455a7a',
+   reg:['sbowel','colon'], sys:false, fx:120, fy:172, fr:16, mark:'↓ motility', siteReg:'gut motility (small bowel &amp; colon)',
+   pill:'symptom control', pillc:'low',
+   site:'the smooth muscle of the small bowel and colon',
+   mech:'<b>Loperamide</b> and diphenoxylate are opioid-receptor agonists that act on the gut wall to <b>slow motility</b>, letting more water be reabsorbed so stool firms up (they don’t enter the brain at normal doses). <b>Bismuth subsalicylate</b> is antisecretory and mildly antimicrobial.',
+   drugs:'loperamide, diphenoxylate-atropine, bismuth subsalicylate',
+   nurse:'<b>Do NOT use in bloody or high-fever diarrhea</b> (C. difficile, invasive bacteria) &mdash; slowing the gut traps the toxin and can cause <b>toxic megacolon</b>. Monitor hydration. Bismuth turns stool and tongue <b>black</b> (harmless).',
+   warn:'Bismuth contains <b>salicylate</b> &mdash; avoid in children (Reye syndrome) and aspirin allergy. <b>High-dose loperamide abuse</b> causes dangerous QT prolongation and arrhythmia; watch for constipation.',
+   mnem:'Bloody or febrile diarrhea? <b>Don’t slow the gut.</b>'}
+ ];
+
+ var sel=null;
+ function byk(k){ return D.filter(function(d){return d.k===k;})[0]; }
+
+ function ring(x,y,r,c){
+   return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="none" stroke="'+c+'" stroke-width="3"><animate attributeName="r" values="'+r+';'+(r+5)+';'+r+'" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.4;1" dur="1.5s" repeatCount="indefinite"/></circle>';
+ }
+
+ function draw(cur){
+   var d = cur ? byk(cur) : null;
+   var col = d ? d.col : '#7a8aa3';
+   var active = d ? d.reg : [];
+   var sys = d ? d.sys : false;
+   function on(r){ return active.indexOf(r)>=0; }
+   var s='';
+
+   // systemic body-wide glow
+   if(sys){ s+='<ellipse cx="120" cy="150" rx="122" ry="132" fill="'+col+'" opacity=".08"/>'; }
+
+   // esophagus (context)
+   s+='<rect x="114" y="6" width="12" height="40" rx="6" fill="#e4edf8" stroke="#bcccE4" stroke-width="2"/>';
+
+   // stomach (context, always neutral)
+   s+='<path d="M118 44 C150 42 176 60 174 86 C172 108 148 116 126 112 C112 109 102 100 102 88 C102 78 110 76 108 66 C107 58 110 50 118 44 Z" fill="#e4edf8" stroke="#bcccE4" stroke-width="2"/>';
+   s+='<text x="150" y="82" font-size="8" fill="#7a8aa3" font-weight="700" text-anchor="middle">stomach</text>';
+
+   // colon frame
+   var colS = on('colon') ? col : '#c3d2e8';
+   s+='<path d="M162 206 L162 128 Q162 110 144 110 L96 110 Q78 110 78 128 L78 208 Q78 230 98 234 L114 238 Q120 240 120 250" fill="none" stroke="'+colS+'" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>';
+   s+='<text x="56" y="168" font-size="8" fill="'+(on('colon')?col:'#7a8aa3')+'" font-weight="800" text-anchor="middle" transform="rotate(-90 56 168)">colon</text>';
+
+   // small intestine
+   var sbS = on('sbowel') ? col : '#cdd9ec';
+   s+='<path d="M120 118 C120 132 100 132 100 146 C100 160 146 158 146 172 C146 186 100 184 104 198 C106 206 116 206 122 202" fill="none" stroke="'+sbS+'" stroke-width="10" stroke-linecap="round"/>';
+   s+='<text x="120" y="224" font-size="7.5" fill="'+(on('sbowel')?col:'#7a8aa3')+'" font-weight="700" text-anchor="middle">small intestine</text>';
+
+   // budesonide ileum marker
+   if(d && d.ileum){
+     s+='<circle cx="150" cy="176" r="6" fill="'+col+'"/>';
+     s+='<text x="150" y="150" font-size="8" fill="'+col+'" font-weight="800" text-anchor="middle">ileum</text>';
+     s+=ring(150,176,12,col);
+   }
+
+   // systemic markers
+   if(sys){
+     for(var i=0;i<6;i++){ var yy=34+i*36; s+='<circle cx="'+(i%2?206:34)+'" cy="'+yy+'" r="5" fill="'+col+'"><animate attributeName="opacity" values=".2;.9;.2" dur="1.6s" begin="'+(i*0.2)+'s" repeatCount="indefinite"/></circle>'; }
+     s+='<text x="120" y="20" font-size="9" fill="'+col+'" font-weight="800" text-anchor="middle">SYSTEMIC — whole-body immune effect</text>';
+   }
+
+   // focal ring + mark for site-of-action classes
+   if(d && !sys && d.fx){
+     s+=ring(d.fx,d.fy,d.fr,col);
+     if(d.mark){ s+='<text x="'+d.fx+'" y="'+(d.fy-d.fr-6)+'" font-size="8.5" fill="'+col+'" font-weight="800" text-anchor="middle">'+d.mark+'</text>'; }
+   }
+   return s;
+ }
+
+ function renderList(){
+   var html='', lastCat='';
+   D.forEach(function(d){
+     if(d.cat!==lastCat){ html+='<div class="dvh">'+d.cat+'</div>'; lastCat=d.cat; }
+     html+='<button class="it'+(d.k===sel?' on':'')+'" data-k="'+d.k+'"><span class="ic">'+d.ic+'</span><span><span class="nm">'+d.nm+'</span><br><span class="ct">'+d.ct+'</span></span></button>';
+   });
+   $("list").innerHTML=html;
+   document.querySelectorAll('#list .it').forEach(function(b){ b.onclick=function(){ pick(b.dataset.k); }; });
+ }
+
+ function pick(k){ sel=(sel===k?null:k); render(); }
+
+ function render(){
+   $("art").innerHTML=draw(sel);
+   renderList();
+   if(sel){
+     var d=byk(sel);
+     $("cardTitle").innerHTML=d.nm;
+     $("siteReg").innerHTML=d.siteReg;
+     $("stage").style.background=d.col;
+     $("stage").innerHTML=d.nm+'<small>'+d.cat+'</small>';
+     $("info").innerHTML='<span class="n">'+d.nm+' <span class="pill '+d.pillc+'">'+d.pill+'</span></span>'
+       +'<b>Where it acts:</b> '+d.site+'. '+d.mech
+       +'<div class="ex"><span>'+d.drugs.split(', ').join('</span><span>')+'</span></div>'
+       +'<div class="loc"><b>Nurse:</b> '+d.nurse+'</div>'
+       +'<div class="note"><b>Watch:</b> '+d.warn+'</div>'
+       +'<div class="mnem">'+d.mnem+'</div>';
+   } else {
+     $("cardTitle").innerHTML='The GI tract';
+     $("siteReg").innerHTML='&mdash; pick a class';
+     $("stage").style.background='var(--teal)';
+     $("stage").innerHTML='Two jobs beyond acid<small>tap a drug class to begin</small>';
+     $("info").innerHTML='<span class="n">Two jobs, one tract</span>'
+       +'IBD drugs <b>calm inflammation</b> in the bowel; the other GI drugs <b>change how fast things move</b>. IBD therapy climbs a <b>ladder</b> &mdash; 5-ASA &rarr; steroids for flares &rarr; immunomodulators &rarr; biologics &mdash; always reaching for the <b>least-toxic drug</b> that controls the disease.'
+       +'<div class="loc">Laxatives speed the gut up and soften stool; antidiarrheals slow it down. Match the drug to the problem &mdash; and know <b>when NOT to slow a gut</b>.</div>'
+       +'<div class="mnem">Pick a class to see <b>where it acts</b> and the <b>nursing focus</b>.</div>';
+   }
+ }
+
+ render();
+})();
+</script>
+</body>
+</html>

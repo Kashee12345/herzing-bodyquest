@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Mediterranean, DASH & Plant-Based: Compare the Patterns</title>
+<meta name="description" content="Compare the Mediterranean, DASH, and plant-based eating patterns side by side, with a live macronutrient-to-energy calculator. An interactive by Dr. Akash Garg &middot; SC 150 &middot; Herzing University.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>
+.wrap{grid-template-columns:0.95fr 1.05fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.leg{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:8px;}
+.leg span{font-size:11px;color:var(--soft);display:flex;align-items:center;gap:5px;}
+.leg i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+.cal{margin-top:2px;}
+.cal .r{display:flex;align-items:center;gap:10px;margin:9px 0;}
+.cal .r label{flex:none;width:96px;font-size:12px;font-weight:700;color:var(--soft);}
+.cal .r input[type=range]{flex:1;accent-color:var(--teal);height:4px;}
+.cal .r .g{flex:none;width:54px;text-align:right;font-size:12.5px;font-weight:800;color:var(--teal-dk);}
+.kcaltop{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;}
+.kcaltop b{font-family:var(--disp);font-size:26px;color:var(--teal-dk);}
+.kcaltop span{font-size:11.5px;color:var(--muted);font-weight:600;}
+.cmp{display:grid;grid-template-columns:1.15fr 1fr 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-top:2px;}
+.cmp div{background:#fff;padding:8px 9px;font-size:11px;line-height:1.35;color:var(--soft);}
+.cmp .h{font-weight:800;font-size:11px;color:var(--teal-dk);text-align:center;background:#f7efe0;}
+.cmp .lab{font-weight:700;color:var(--ink);background:#faf6ee;font-size:10.5px;}
+.cmp .sel{background:#f4ead8;}
+.cmp .h.sel{background:var(--teal);color:#fff;}
+.ev{font-size:10.5px;font-weight:800;border-radius:20px;padding:2px 8px;display:inline-block;margin-top:2px;}
+.ev.strong{background:#e5f3ea;color:#237a45;} .ev.prelim{background:#eef0f6;color:#4a5578;}
+.macropct{font-size:11.5px;color:var(--teal-dk);background:#f4ead8;border-radius:8px;padding:6px 10px;margin-top:9px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 12</div>
+  <h1>Three Patterns, Side by Side</h1>
+  <div class="intro">The <b>Mediterranean</b>, <b>DASH</b>, and <b>plant-based</b> patterns overlap far more than they differ &mdash; all lean on vegetables, fruit, whole grains, and legumes. What sets them apart is the <b>emphasis</b> and the <b>signature limit</b>. Tap a pattern to explore it, then use the calculator to see how any day's grams turn into energy.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="plateTitle">Relative emphasis of food groups</h2>
+      <svg viewBox="0 0 220 200" aria-label="food-group emphasis plate"><g id="pie"></g></svg>
+      <div class="leg" id="leg"></div>
+    </div>
+    <div class="card"><h2>Energy from macronutrients</h2>
+      <div class="kcaltop"><b><span id="kcal">2000</span> kcal</b><span>a day's total &mdash; drag the sliders</span></div>
+      <svg viewBox="0 0 220 34" aria-label="energy split"><g id="bar"></g></svg>
+      <div class="cal">
+        <div class="r"><label>Carbohydrate</label><input type="range" id="sC" min="0" max="400" step="5"><span class="g" id="gC">0 g</span></div>
+        <div class="r"><label>Protein</label><input type="range" id="sP" min="0" max="200" step="5"><span class="g" id="gP">0 g</span></div>
+        <div class="r"><label>Fat</label><input type="range" id="sF" min="0" max="150" step="5"><span class="g" id="gF">0 g</span></div>
+      </div>
+      <div class="mnem"><b>Energy yields:</b> carbohydrate <b>4</b>, protein <b>4</b>, fat <b>9</b>, alcohol <b>7</b> kcal per gram. Selecting a pattern loads a representative <b>2,000&nbsp;kcal</b> day (a general reference value, not an individual requirement); adjust freely.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Compare the patterns<small>tap one below to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="seg"></div>
+      <div class="cmp" id="cmp"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // Illustrative "relative emphasis" of food groups (shares sum to 100). Not prescriptive amounts.
+ var CATS=[
+  {k:'vf',nm:'Vegetables & fruit',col:'#2f9e5b'},
+  {k:'wg',nm:'Whole grains',col:'#b8862f'},
+  {k:'ln',nm:'Legumes, nuts, seeds',col:'#7a5a8a'},
+  {k:'fs',nm:'Fish & seafood',col:'#2f6f9f'},
+  {k:'da',nm:'Dairy, poultry, eggs',col:'#c98a3a'},
+  {k:'rm',nm:'Red & processed meat',col:'#d1495b'},
+  {k:'oil',nm:'Added fats (e.g. olive oil)',col:'#b07a1e'}
+ ];
+ var P=[
+  {k:'med',nm:'Mediterranean',tag:'Olive oil, fish, plants',col:'#b07a1e',
+   share:{vf:32,wg:18,ln:12,fs:12,da:8,rm:3,oil:15},
+   macro:{c:215,p:85,f:89},
+   focus:'Vegetables, fruit, whole grains, legumes and nuts, with <b>olive oil as the main fat</b> and fish/seafood several times a week.',
+   limit:'Red & processed meat; sweets.',
+   fat:'Olive oil (mono-unsaturated).',
+   evc:'strong',ev:'Strong',
+   info:'Built around the traditional foodways of the Mediterranean basin. Fat is not restricted &mdash; it runs relatively high, but comes mostly from <b>olive oil, nuts, and fish</b> rather than saturated sources. A large randomized trial (PREDIMED) found the pattern, supplemented with extra-virgin olive oil or nuts, was associated with <b>fewer major cardiovascular events</b> in adults at high cardiovascular risk. Wine appears in some descriptions but is optional and not a required part of the pattern.'},
+  {k:'dash',nm:'DASH',tag:'Blood-pressure focused',col:'#2f6f9f',
+   share:{vf:35,wg:20,ln:10,fs:6,da:20,rm:4,oil:5},
+   macro:{c:275,p:90,f:60},
+   focus:'Vegetables, fruit, whole grains, and <b>low-fat dairy</b>, with lean protein, nuts and legumes.',
+   limit:'Sodium, saturated fat, added sugars.',
+   fat:'Kept lower; emphasis on unsaturated.',
+   evc:'strong',ev:'Strong',
+   info:'DASH stands for <b>Dietary Approaches to Stop Hypertension</b> and was designed and tested specifically to <b>lower blood pressure</b>. Randomized feeding trials showed the pattern reduced blood pressure in adults, and the DASH-Sodium study showed the effect grew as <b>sodium</b> was reduced. Many guidelines suggest an upper intake near <b>2,300&nbsp;mg sodium/day for adults</b>, with a lower ~1,500&nbsp;mg/day level studied for a greater effect. Its signature is the deliberate limit on sodium and saturated fat.'},
+  {k:'plant',nm:'Plant-based',tag:'Mostly or all plants',col:'#2f9e5b',
+   share:{vf:38,wg:22,ln:25,fs:0,da:5,rm:0,oil:10},
+   macro:{c:285,p:75,f:62},
+   focus:'Vegetables, fruit, whole grains, and especially <b>legumes, nuts and seeds</b>; animal foods minimized or excluded.',
+   limit:'Animal foods (degree varies by version).',
+   fat:'Mostly plant oils, nuts, seeds.',
+   evc:'prelim',ev:'Mixed / observational',
+   info:'A spectrum &mdash; from mostly-plant with occasional animal foods, to vegetarian, to fully vegan. These patterns are typically <b>higher in fiber</b> and lower in saturated fat. <b>Observational</b> studies link plant-forward eating with lower cardiovascular risk, and diets rich in whole grains, vegetables and legumes are judged to <b>probably lower colorectal-cancer risk</b> (World Cancer Research Fund) &mdash; associations, not proof that any single food prevents disease. More restrictive versions need planning for nutrients like <b>vitamin B12, iron, and omega-3s</b>; vegan diets require a reliable B12 source.'}
+ ];
+ var cur='med';
+
+ function pie(sh){
+   var cx=110,cy=98,r=78,ang=-Math.PI/2,s='';
+   CATS.forEach(function(c){
+     var frac=(sh[c.k]||0)/100; if(frac<=0)return;
+     var a2=ang+frac*2*Math.PI;
+     var x1=cx+r*Math.cos(ang),y1=cy+r*Math.sin(ang);
+     var x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
+     var large=frac>0.5?1:0;
+     s+='<path d="M'+cx+' '+cy+' L'+x1.toFixed(1)+' '+y1.toFixed(1)+' A'+r+' '+r+' 0 '+large+' 1 '+x2.toFixed(1)+' '+y2.toFixed(1)+' Z" fill="'+c.col+'" stroke="#fffdf9" stroke-width="2"/>';
+     ang=a2;
+   });
+   s+='<circle cx="'+cx+'" cy="'+cy+'" r="30" fill="#fffdf9"/>';
+   return s;
+ }
+ function legend(sh){
+   return CATS.filter(function(c){return (sh[c.k]||0)>0;}).map(function(c){
+     return '<span><i style="background:'+c.col+'"></i>'+c.nm+'</span>';
+   }).join('');
+ }
+ function bar(c,p,f){
+   var kc=c*4,kp=p*4,kf=f*9,t=kc+kp+kf; var s='';
+   if(t<=0){ s='<rect x="0" y="8" width="220" height="18" rx="6" fill="#efe6d6"/>'; return s; }
+   var w=220, x=0;
+   var segs=[[kc,'#b8862f','C'],[kp,'#2f6f9f','P'],[kf,'#b07a1e','F']];
+   segs.forEach(function(g){
+     var gw=g[0]/t*w; if(gw<=0)return;
+     var pct=Math.round(g[0]/t*100);
+     s+='<rect x="'+x.toFixed(1)+'" y="8" width="'+gw.toFixed(1)+'" height="18" fill="'+g[1]+'"/>';
+     if(gw>28) s+='<text x="'+(x+gw/2).toFixed(1)+'" y="20.5" font-size="10" font-weight="800" fill="#fff" text-anchor="middle" font-family="Inter,sans-serif">'+g[2]+' '+pct+'%</text>';
+     x+=gw;
+   });
+   return s;
+ }
+ function calc(){
+   var c=+$("sC").value,p=+$("sP").value,f=+$("sF").value;
+   $("gC").textContent=c+' g'; $("gP").textContent=p+' g'; $("gF").textContent=f+' g';
+   var t=c*4+p*4+f*9;
+   $("kcal").textContent=Math.round(t);
+   $("bar").innerHTML=bar(c,p,f);
+ }
+ function seedMacro(m){
+   $("sC").value=m.c; $("sP").value=m.p; $("sF").value=m.f; calc();
+ }
+ function macroLine(m){
+   var t=m.c*4+m.p*4+m.f*9;
+   var pc=Math.round(m.c*4/t*100),pp=Math.round(m.p*4/t*100),pf=Math.round(m.f*9/t*100);
+   return 'Representative energy split &mdash; carbohydrate <b>~'+pc+'%</b>, protein <b>~'+pp+'%</b>, fat <b>~'+pf+'%</b> (approximate; real days vary widely).';
+ }
+ function seg(){
+   $("seg").innerHTML=P.map(function(x){
+     return '<button data-k="'+x.k+'" class="'+(x.k===cur?'on':'')+'">'+x.nm+'</button>';
+   }).join('');
+   document.querySelectorAll('#seg button').forEach(function(b){b.onclick=function(){sel(b.dataset.k);};});
+ }
+ function cmp(){
+   var rows=[
+     ['','h','nm'],
+     ['Signature focus','lab',function(x){return x.tag;}],
+     ['Notably limits','lab',function(x){return x.limit;}],
+     ['Main fat source','lab',function(x){return x.fat;}],
+     ['Evidence base','lab',function(x){return '<span class="ev '+x.evc+'">'+x.ev+'</span>';}]
+   ];
+   var html='';
+   rows.forEach(function(row){
+     var isHead=(row[1]==='h');
+     html+='<div class="'+(isHead?'h':'lab')+'">'+row[0]+'</div>';
+     P.forEach(function(x){
+       var val = row[2]==='nm' ? x.nm : row[2](x);
+       var selc=(x.k===cur?' sel':'');
+       html+='<div class="'+(isHead?'h':'')+selc+'">'+val+'</div>';
+     });
+   });
+   $("cmp").innerHTML=html;
+ }
+ function sel(k){
+   cur=k; var x=P.filter(function(y){return y.k===k;})[0];
+   $("pie").innerHTML=pie(x.share);
+   $("leg").innerHTML=legend(x.share);
+   $("plateTitle").textContent=x.nm+' — relative emphasis';
+   $("stage").style.background=x.col;
+   $("stage").innerHTML=x.nm+'<small>'+x.tag+'</small>';
+   $("info").innerHTML='<span class="n">'+x.nm+' <span class="ev '+x.evc+'">'+x.ev+' evidence</span></span>'+
+     '<div style="margin-bottom:2px">'+x.focus+'</div>'+x.info+
+     '<div class="macropct">'+macroLine(x.macro)+'</div>';
+   seedMacro(x.macro);
+   seg(); cmp();
+ }
+ $("sC").oninput=calc; $("sP").oninput=calc; $("sF").oninput=calc;
+ sel('med');
+})();
+</script>
+</body>
+</html>

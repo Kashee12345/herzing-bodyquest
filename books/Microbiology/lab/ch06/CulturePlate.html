@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Reading the Culture Plate</title>
+<meta name="description" content="Interactive culture plate: choose a growth medium (general, selective, differential, enriched) and tap colonies to read their morphology. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>
+.wrap{grid-template-columns:1.05fr 0.95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.plate-hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:7px;line-height:1.4;}
+.badges{margin:4px 0 6px;}
+.bg{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:3px 9px;margin:0 5px 5px 0;}
+.bg.gen{background:#eceaf0;color:#5a5270;}
+.bg.sel{background:#e5eef6;color:#255f8a;}
+.bg.dif{background:#fbf3e2;color:#8a6a20;}
+.bg.enr{background:#e5f3ea;color:#237a45;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;margin:6px 0 2px;font-size:12px;color:var(--soft);}
+.mg span{background:#faf6ef;border-radius:6px;padding:5px 8px;}
+.mg b{color:var(--teal-dk);font-weight:800;display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1px;}
+#read{border:1px solid var(--line);border-left:5px solid var(--gold);background:#fbf7ef;border-radius:10px;padding:11px 13px;margin-top:11px;font-size:13px;color:var(--soft);line-height:1.5;min-height:70px;}
+#read .n{font-family:var(--disp);font-weight:600;font-size:15px;color:var(--teal-dk);display:block;margin-bottom:5px;}
+#read .loc{font-size:12.5px;color:var(--teal-dk);background:#f3ecdf;border-radius:8px;padding:7px 10px;margin-top:9px;line-height:1.45;}
+.it .sw{border:1px solid rgba(40,34,58,.15);}
+.rgn:hover{stroke:#28223a !important;stroke-width:2 !important;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 6</div>
+  <h1>Reading the Culture Plate</h1>
+  <div class="intro">The <b>medium</b> you choose decides which microbes grow and what their colonies reveal. Pick a growth medium, watch the plate change, then <b>tap a colony</b> to read it.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Streak plate</h2>
+      <svg viewBox="0 0 220 220" aria-label="Petri dish with bacterial colonies"><g id="art"></g></svg>
+      <div class="plate-hint">Heavy confluent growth where streaking began · isolated colonies to read further out</div>
+      <div id="read"></div>
+      <div class="mnem"><b>Reading a colony:</b> note its <b>form</b> (circular · irregular · punctate), <b>margin</b> (entire · undulate · lobate), <b>elevation</b> (flat · raised · convex), plus size, surface, and colour.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Culturing microbes<small>pick a medium</small></div>
+    <div class="card">
+      <div class="list" id="list"></div>
+      <div id="info"></div>
+      <div class="mnem"><b>Four jobs a medium can do:</b> <b>General</b> grows almost anything · <b>Selective</b> suppresses unwanted microbes · <b>Differential</b> makes groups look different · <b>Enriched</b> feeds fastidious organisms.</div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ // colony positions (isolation zone, within the agar circle)
+ var A=[152,96], B=[132,140], C=[92,150], D=[68,120], E=[160,126], F=[112,80];
+
+ // reusable colony readings
+ var betaR={name:'β-hemolytic colony',form:'Circular',margin:'Entire',elev:'Convex',surf:'Smooth, grey',col:'Grey, clear halo',read:'Clear halo = complete lysis of the red cells (β). Think Group A Strep and pharyngitis.'};
+ var ecoli={name:'Lactose fermenter',form:'Circular',margin:'Entire',elev:'Convex',surf:'Smooth, moist',col:'Deep pink',read:'Pink = ferments lactose → acid lowers the pH → dye turns pink. Classic E. coli.'};
+ var nlf={name:'Non-fermenter',form:'Circular',margin:'Entire',elev:'Convex',surf:'Smooth, translucent',col:'Colourless',read:'Colourless = does NOT ferment lactose — flag for Salmonella or Shigella in stool.'};
+ var aureus={name:'Mannitol fermenter',form:'Circular',margin:'Entire',elev:'Convex',surf:'Smooth',col:'Yellow + yellow halo',read:'Yellow colony and yellow agar = ferments mannitol → acid. Suggests S. aureus (a key MRSA screen).'};
+ var sepi={name:'Non-fermenter',form:'Circular',margin:'Entire',elev:'Convex',surf:'Smooth',col:'Pink, agar unchanged',read:'Colony stays pale and the agar stays pink = does not ferment mannitol, e.g. S. epidermidis.'};
+ var choc={name:'Fastidious isolate',form:'Circular',margin:'Entire',elev:'Convex',surf:'Smooth, glistening',col:'Grey, translucent',read:'Grew thanks to NAD (factor V) and hemin (factor X) released by lysed red cells — enriched media reveal organisms plain agar would miss.'};
+
+ var MED=[
+  {k:'tsa',nm:'Tryptic Soy Agar (TSA)',catLine:'General-purpose medium',cats:['gen'],
+   stageCol:'#6d3f9c',agar:'#efe3cb',rim:'#d8c9a8',swath:'#e6dbc2',
+   desc:'A rich, non-selective medium that supports almost all <b>non-fastidious</b> bacteria. Nothing is inhibited and nothing changes colour, so every organism looks similar &mdash; you can grow and count microbes, but you <b>can\'t tell species apart</b>.',
+   read:'Judge colonies by <b>shape and texture only</b> (form, margin, elevation, colour). Use a general medium to isolate and count, then subculture onto selective or differential plates to identify.',
+   colonies:[
+     {p:A,r:7.5,fill:'#f2ead6',name:'Creamy isolate',form:'Circular',margin:'Entire',elev:'Convex',surf:'Smooth, glossy',col:'Cream',read:'On a general medium every isolate looks similar — record morphology, then subculture to identify.'},
+     {p:B,r:9.5,fill:'#eadfc0',name:'Spreading isolate',form:'Irregular',margin:'Undulate',elev:'Raised',surf:'Dull, wrinkled',col:'Off-white',read:'Note the irregular form and undulate margin — morphology is all a general medium tells you.'},
+     {p:C,r:7,fill:'#f8f4ec',name:'White isolate',form:'Circular',margin:'Entire',elev:'Convex',surf:'Smooth, glistening',col:'White',read:'Colour and shape only — no selection and no colour reaction on general media.'},
+     {p:D,r:7,fill:'#e8d24a',name:'Yellow isolate',form:'Circular',margin:'Entire',elev:'Convex',surf:'Smooth',col:'Yellow',read:'Pigment (e.g. Micrococcus) is a clue but not an ID — confirm with further testing.'},
+     {p:F,r:4,fill:'#f2ead6',name:'Punctate isolate',form:'Punctate (tiny)',margin:'Entire',elev:'Flat',surf:'Smooth',col:'Cream',read:'Very small "punctate" colonies — size is part of the morphology you record.'}
+   ]},
+  {k:'bap',nm:'Blood Agar (BAP)',catLine:'Enriched + differential',cats:['enr','dif'],
+   stageCol:'#b23145',agar:'#9c3535',rim:'#7d2828',swath:'#c8bfad',
+   desc:'A TSA base enriched with <b>5% sheep red blood cells</b>. It supports fastidious organisms <b>and</b> reveals <b>hemolysis</b> &mdash; whether an organism lyses the red cells in the agar. A cornerstone plate for throat and wound cultures.',
+   read:'Read the <b>zone around the colony</b>: <b>β-hemolysis</b> = clear halo (complete lysis, e.g. <i>S. pyogenes</i>); <b>α-hemolysis</b> = green halo (partial, e.g. <i>S. pneumoniae</i>); <b>γ</b> = no change (non-hemolytic, e.g. <i>Enterococcus</i>).',
+   colonies:[
+     {p:A,r:6.5,fill:'#d7cfc0',zone:'#efe3c6',zr:16,zop:0.95,name:betaR.name,form:betaR.form,margin:betaR.margin,elev:betaR.elev,surf:betaR.surf,col:betaR.col,read:betaR.read},
+     {p:E,r:6.5,fill:'#d7cfc0',zone:'#efe3c6',zr:15,zop:0.95,name:betaR.name,form:betaR.form,margin:betaR.margin,elev:betaR.elev,surf:betaR.surf,col:betaR.col,read:betaR.read},
+     {p:C,r:6.5,fill:'#d7cfc0',zone:'#6f8f52',zr:14,zop:0.55,name:'α-hemolytic colony',form:'Circular',margin:'Entire',elev:'Convex',surf:'Smooth',col:'Grey, green halo',read:'Green halo = partial lysis (α), e.g. S. pneumoniae or the viridans streptococci.'},
+     {p:D,r:6.5,fill:'#d7cfc0',name:'Non-hemolytic (γ)',form:'Circular',margin:'Entire',elev:'Convex',surf:'Smooth',col:'Grey, no halo',read:'No change in the agar around the colony = γ (non-hemolytic), e.g. Enterococcus.'}
+   ]},
+  {k:'mac',nm:'MacConkey Agar',catLine:'Selective + differential',cats:['sel','dif'],
+   stageCol:'#b8862f',agar:'#d99a82',rim:'#bf7d64',swath:'#c23a68',
+   desc:'Contains <b>bile salts &amp; crystal violet</b> that inhibit Gram-positive bacteria &mdash; so only <b>Gram-negatives</b> grow (selective). It also holds <b>lactose + a pH dye</b>, so lactose fermenters colour differently (differential). Used for stool and urine cultures.',
+   read:'<b>Pink/red colonies</b> = lactose fermenters (acid lowers pH, e.g. <i>E. coli</i>, <i>Klebsiella</i>). <b>Colourless / translucent</b> = non-fermenters (e.g. <i>Salmonella</i>, <i>Shigella</i>, <i>Pseudomonas</i>).',
+   note:'Gram-positive bacteria are <b>inhibited</b> and will not appear on this plate.',
+   colonies:[
+     {p:A,r:7.5,fill:'#c23a68',name:ecoli.name,form:ecoli.form,margin:ecoli.margin,elev:ecoli.elev,surf:ecoli.surf,col:ecoli.col,read:ecoli.read},
+     {p:B,r:7,fill:'#c23a68',name:ecoli.name,form:ecoli.form,margin:ecoli.margin,elev:ecoli.elev,surf:ecoli.surf,col:ecoli.col,read:ecoli.read},
+     {p:D,r:7,fill:'#e6d6c6',name:nlf.name,form:nlf.form,margin:nlf.margin,elev:nlf.elev,surf:nlf.surf,col:nlf.col,read:nlf.read},
+     {p:C,r:7,fill:'#e6d6c6',name:nlf.name,form:nlf.form,margin:nlf.margin,elev:nlf.elev,surf:nlf.surf,col:nlf.col,read:nlf.read}
+   ]},
+  {k:'msa',nm:'Mannitol Salt Agar (MSA)',catLine:'Selective + differential',cats:['sel','dif'],
+   stageCol:'#a24d78',agar:'#e07a92',rim:'#c85f79',swath:'#e6cb46',
+   desc:'Contains <b>7.5% NaCl</b>, which only salt-tolerant <b>staphylococci</b> can survive (selective). It also holds <b>mannitol + phenol red</b>: organisms that ferment mannitol make acid and turn the agar <b>yellow</b> (differential).',
+   read:'<b>Yellow colonies with a yellow halo</b> = mannitol fermenter &rarr; likely <b><i>S. aureus</i></b> (often coagulase-positive). <b>Pink/red colonies, agar unchanged</b> = non-fermenter, e.g. <i>S. epidermidis</i>.',
+   note:'Only salt-tolerant staphylococci grow; most other bacteria are <b>inhibited</b>.',
+   colonies:[
+     {p:A,r:7,fill:'#f0d24a',zone:'#e6cb46',zr:16,zop:0.85,name:aureus.name,form:aureus.form,margin:aureus.margin,elev:aureus.elev,surf:aureus.surf,col:aureus.col,read:aureus.read},
+     {p:E,r:6.5,fill:'#f0d24a',zone:'#e6cb46',zr:14,zop:0.85,name:aureus.name,form:aureus.form,margin:aureus.margin,elev:aureus.elev,surf:aureus.surf,col:aureus.col,read:aureus.read},
+     {p:D,r:6.5,fill:'#f0d8cc',name:sepi.name,form:sepi.form,margin:sepi.margin,elev:sepi.elev,surf:sepi.surf,col:sepi.col,read:sepi.read},
+     {p:C,r:6.5,fill:'#f0d8cc',name:sepi.name,form:sepi.form,margin:sepi.margin,elev:sepi.elev,surf:sepi.surf,col:sepi.col,read:sepi.read}
+   ]},
+  {k:'choc',nm:'Chocolate Agar',catLine:'Enriched (non-selective)',cats:['enr'],
+   stageCol:'#7a4a2e',agar:'#7a4a2e',rim:'#5f3a22',swath:'#c9b89c',
+   desc:'Blood agar heated until the red cells lyse (turning it chocolate-brown). Lysing the cells releases <b>factor V (NAD)</b> and <b>factor X (hemin)</b>, feeding <b>fastidious</b> organisms that won\'t grow on plain blood agar &mdash; like <i>Haemophilus influenzae</i> and <i>Neisseria</i>.',
+   read:'Not differential &mdash; there is no colour reaction. Its job is simply to <b>grow the fussy organisms</b>. Colonies are usually small, grey, and translucent; identify them with further testing.',
+   colonies:[
+     {p:A,r:6.5,fill:'#c9b89c',name:choc.name,form:choc.form,margin:choc.margin,elev:choc.elev,surf:choc.surf,col:choc.col,read:choc.read},
+     {p:B,r:6,fill:'#c9b89c',name:choc.name,form:choc.form,margin:choc.margin,elev:choc.elev,surf:choc.surf,col:choc.col,read:choc.read},
+     {p:C,r:6,fill:'#c9b89c',name:choc.name,form:choc.form,margin:choc.margin,elev:choc.elev,surf:choc.surf,col:choc.col,read:choc.read},
+     {p:D,r:6,fill:'#c9b89c',name:choc.name,form:choc.form,margin:choc.margin,elev:choc.elev,surf:choc.surf,col:choc.col,read:choc.read},
+     {p:F,r:4.5,fill:'#c9b89c',name:choc.name,form:choc.form,margin:choc.margin,elev:choc.elev,surf:choc.surf,col:choc.col,read:choc.read}
+   ]}
+ ];
+
+ var CAT={gen:['General','gen'],sel:['Selective','sel'],dif:['Differential','dif'],enr:['Enriched','enr']};
+ var defRead='<span class="n">Read the colonies</span>Each medium changes how colonies look. <b>Tap a colony</b> on the plate to read its <b>form, margin, elevation, surface,</b> and <b>colour</b> &mdash; and what that means here.';
+
+ var med=1, sel=-1;
+
+ function drawPlate(m){
+   var s='';
+   s+='<circle cx="110" cy="110" r="103" fill="'+m.rim+'"/>';
+   s+='<circle cx="110" cy="110" r="95" fill="'+m.agar+'"/>';
+   s+='<ellipse cx="86" cy="80" rx="44" ry="27" fill="#ffffff" opacity="0.06"/>';
+   // confluent growth where the streak began
+   s+='<g opacity="0.5">';
+   s+='<circle cx="70" cy="68" r="20" fill="'+m.swath+'"/>';
+   s+='<circle cx="92" cy="60" r="15" fill="'+m.swath+'"/>';
+   s+='<circle cx="58" cy="86" r="15" fill="'+m.swath+'"/>';
+   s+='<circle cx="86" cy="82" r="13" fill="'+m.swath+'"/>';
+   s+='</g>';
+   // hemolysis / colour zones behind colonies
+   m.colonies.forEach(function(c){
+     if(c.zone){ s+='<circle cx="'+c.p[0]+'" cy="'+c.p[1]+'" r="'+c.zr+'" fill="'+c.zone+'" opacity="'+c.zop+'"/>'; }
+   });
+   // colonies
+   m.colonies.forEach(function(c,i){
+     var on=(i===sel);
+     s+='<circle class="rgn" data-i="'+i+'" cx="'+c.p[0]+'" cy="'+c.p[1]+'" r="'+c.r+'" fill="'+c.fill+'" stroke="'+(on?'#28223a':'rgba(40,34,58,.30)')+'" stroke-width="'+(on?2.5:1)+'"/>';
+     if(on){ s+='<circle cx="'+c.p[0]+'" cy="'+c.p[1]+'" r="'+(c.r+5)+'" fill="none" stroke="#28223a" stroke-width="1.3" stroke-dasharray="3 3" opacity="0.7"/>'; }
+   });
+   return s;
+ }
+
+ function bindColonies(m){
+   $("art").querySelectorAll('.rgn').forEach(function(el){
+     el.onclick=function(){ sel=+el.getAttribute('data-i'); $("art").innerHTML=drawPlate(m); bindColonies(m); readColony(m.colonies[sel]); };
+   });
+ }
+
+ function badges(m){ return '<div class="badges">'+m.cats.map(function(c){return '<span class="bg '+CAT[c][1]+'">'+CAT[c][0]+'</span>';}).join('')+'</div>'; }
+
+ function readColony(c){
+   $("read").innerHTML='<span class="n">'+c.name+'</span>'+
+     '<div class="mg"><span><b>Form</b> '+c.form+'</span><span><b>Margin</b> '+c.margin+'</span><span><b>Elevation</b> '+c.elev+'</span><span><b>Surface</b> '+c.surf+'</span><span><b>Colour</b> '+c.col+'</span></div>'+
+     '<div class="loc">'+c.read+'</div>';
+ }
+
+ function renderList(){
+   $("list").innerHTML=MED.map(function(m,i){return '<button class="it'+(i===med?' on':'')+'" data-i="'+i+'"><span class="sw" style="background:'+m.agar+'"></span><span><span class="nm">'+m.nm+'</span><br><span class="ct">'+m.catLine+'</span></span></button>';}).join('');
+   $("list").querySelectorAll('.it').forEach(function(b){ b.onclick=function(){ selMed(+b.getAttribute('data-i')); }; });
+ }
+
+ function selMed(i){
+   med=i; sel=-1; var m=MED[i];
+   $("cardTitle").innerHTML=m.nm;
+   $("stage").style.background=m.stageCol;
+   $("stage").innerHTML=m.nm+'<small>'+m.catLine+'</small>';
+   $("art").innerHTML=drawPlate(m); bindColonies(m);
+   $("info").innerHTML='<span class="n">'+m.nm+'</span>'+badges(m)+m.desc+
+     (m.note?'<div class="note">'+m.note+'</div>':'')+
+     '<div class="loc"><b>How to read it &mdash;</b> '+m.read+'</div>';
+   $("read").innerHTML=defRead;
+   renderList();
+ }
+
+ renderList();
+ selMed(1);
+})();
+</script>
+</body>
+</html>

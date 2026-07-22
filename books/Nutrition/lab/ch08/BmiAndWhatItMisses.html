@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>BMI and What It Misses</title>
+<meta name="description" content="Compute BMI from height and weight, split it into fat-free mass index and fat mass index, and see exactly where a single ratio misclassifies muscle and body composition.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.modeseg button{font-size:12.4px;padding:10px 4px;line-height:1.2;}
+.modeseg button small{display:block;font-weight:600;font-size:9.6px;color:var(--muted);margin-top:2px;}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+.sl{margin-top:11px;}
+.sl .hd{display:flex;align-items:baseline;gap:8px;font-size:12.2px;font-weight:700;color:var(--soft);}
+.sl .hd b{margin-left:auto;font-weight:800;font-size:13px;color:var(--teal-dk);font-variant-numeric:tabular-nums;flex:none;}
+.sl input[type=range]{width:100%;display:block;height:20px;margin-top:4px;accent-color:var(--teal);cursor:pointer;}
+.sl .cap{font-size:10.6px;color:var(--muted);margin-top:2px;line-height:1.45;}
+.rd{margin-top:12px;border:1px dashed #ddd2ba;background:#f9f4ea;border-radius:11px;padding:9px 11px;}
+.rd .hdr{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.rd .ln{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12px;color:var(--soft);padding:3px 0;font-variant-numeric:tabular-nums;}
+.rd .ln .rt{font-weight:800;color:var(--teal-dk);white-space:nowrap;}
+.rd .ln .rt i{font-style:normal;font-weight:600;font-size:10.5px;color:var(--muted);margin-left:3px;}
+.rd .ln.tt{border-top:1px dashed #ddd2ba;margin-top:5px;padding-top:7px;font-size:12.6px;}
+.rd .ln.tt .lf{font-weight:700;color:var(--ink);}
+.rd .eqn{font-size:11.6px;color:var(--teal-dk);background:#f4ead8;border-radius:8px;padding:7px 10px;margin:2px 0 6px;line-height:1.65;font-variant-numeric:tabular-nums;}
+.cat{display:inline-block;font-size:10.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:#eadfc6;color:#6b4710;border-radius:20px;padding:4px 11px;}
+.ev{display:inline-block;font-size:9.6px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:3px 9px;vertical-align:middle;}
+.ev.s{background:#e5f3ea;color:#237a45;} .ev.p{background:#fdf0dd;color:#8a6a20;}
+.prof{display:flex;flex-direction:column;gap:5px;}
+.prof button{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;font-family:var(--sans);cursor:pointer;text-align:left;width:100%;transition:.13s;}
+.prof button:hover{border-color:var(--teal);}
+.prof button.on{border-color:var(--teal);box-shadow:0 0 0 2px rgba(176,122,30,.15);background:#fffdf9;}
+.prof .ic{font-size:17px;line-height:1;flex:none;width:20px;text-align:center;}
+.prof .nm{font-weight:700;font-size:12.4px;color:var(--ink);line-height:1.25;}
+.prof .nm small{display:block;font-weight:600;font-size:10px;color:var(--muted);margin-top:1px;}
+.prof .kc{margin-left:auto;text-align:right;flex:none;font-variant-numeric:tabular-nums;}
+.prof .kc b{display:block;font-size:13px;font-weight:800;color:var(--teal-dk);}
+.prof .kc small{display:block;font-size:9.8px;color:var(--muted);font-weight:600;}
+.seg small{display:block;font-weight:600;font-size:9.6px;color:var(--muted);margin-top:1px;}
+.seg button.on small{color:rgba(255,255,255,.9);}
+.it .ic{width:22px;text-align:center;flex:none;}
+.hint{font-size:11.4px;color:var(--muted);margin-top:11px;line-height:1.55;border-top:1px solid var(--line);padding-top:9px;}
+#info p{margin-top:7px;} #info p:first-child{margin-top:0;}
+#info .eq{font-size:11.6px;background:#f4ead8;color:var(--teal-dk);border-radius:8px;padding:7px 10px;margin-top:8px;line-height:1.6;font-variant-numeric:tabular-nums;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 8</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 8</div>
+  <h1>BMI and What It Misses</h1>
+  <div class="intro">Body mass index is one division problem: <b>mass ÷ height squared</b>. It is cheap, fast, and genuinely useful for comparing large groups. It also cannot tell muscle from fat, cannot see where tissue sits, and was never built to describe an individual. Compute it, then split it apart and watch it misclassify.</div>
+</header>
+<div class="wrap">
+  <div><div class="card">
+    <h2 id="cardTitle">One number, two hidden halves</h2>
+    <svg id="art0" viewBox="0 0 240 346" aria-label="BMI diagram"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">BMI and what it misses<small>move the sliders to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg">
+        <button data-m="0" class="on">Calculate<small>build a body</small></button><button data-m="1">Compare<small>same number, different bodies</small></button><button data-m="2">Blind spots<small>what BMI can’t see</small></button>
+      </div>
+
+      <div id="p0">
+        <div class="sl"><div class="hd"><span>Body mass</span><b id="rWt">82 kg</b></div>
+          <input type="range" id="sWt" min="35" max="180" step="0.5" value="82"></div>
+        <div class="sl"><div class="hd"><span>Height</span><b id="rHt">178 cm</b></div>
+          <input type="range" id="sHt" min="140" max="210" step="1" value="178"></div>
+        <div class="sl"><div class="hd"><span>Body fat, measured</span><b id="rBf">22%</b></div>
+          <input type="range" id="sBf" min="4" max="55" step="0.5" value="22">
+          <div class="cap">This slider is the information <b>BMI never receives</b>. It would come from a method that actually measures tissue — DXA, air-displacement plethysmography, a multi-compartment model. Move it and watch BMI refuse to budge.</div></div>
+        <div class="row">
+          <button class="btn" data-pre="0">Reset</button><button class="btn" data-pre="1">Hold mass, add muscle</button><button class="btn" data-pre="2">Hold BMI, lose muscle</button>
+        </div>
+        <div class="rd">
+          <div class="hdr">The calculation, both ways</div>
+          <div class="eqn" id="eqM">&mdash;</div>
+          <div class="eqn" id="eqU">&mdash;</div>
+          <div class="ln tt"><span class="lf">Body mass index</span><span class="rt" id="rBmi">&mdash;</span></div>
+          <div class="ln"><span class="lf">WHO band, adults 20+</span><span class="rt" id="rCat">&mdash;</span></div>
+        </div>
+        <div class="rd">
+          <div class="hdr">Splitting that number in two</div>
+          <div class="ln"><span class="lf" id="lFfm">Fat-free mass</span><span class="rt" id="rFfm">&mdash;</span></div>
+          <div class="ln"><span class="lf" id="lFm">Fat mass</span><span class="rt" id="rFm">&mdash;</span></div>
+          <div class="ln"><span class="lf">Fat-free mass index (FFMI)</span><span class="rt" id="rFfmi">&mdash;</span></div>
+          <div class="ln"><span class="lf">Fat mass index (FMI)</span><span class="rt" id="rFmi">&mdash;</span></div>
+          <div class="ln tt"><span class="lf">FFMI + FMI</span><span class="rt" id="rId">&mdash;</span></div>
+        </div>
+      </div>
+
+      <div id="p1" style="display:none">
+        <div class="seg" id="axseg" style="margin-bottom:4px;">
+          <button data-y="fmi" class="on">Plot fat mass index<small>kg of fat ÷ height²</small></button><button data-y="bf">Plot body fat<small>% of body mass</small></button>
+        </div>
+        <div class="prof" id="prof"></div>
+        <div class="rd">
+          <div class="hdr">Selected body</div>
+          <div class="ln"><span class="lf" id="pDim">&mdash;</span><span class="rt" id="pBmi">&mdash;</span></div>
+          <div class="ln"><span class="lf">WHO band it lands in</span><span class="rt" id="pCat">&mdash;</span></div>
+          <div class="ln"><span class="lf">Fat-free mass index</span><span class="rt" id="pFfmi">&mdash;</span></div>
+          <div class="ln"><span class="lf">Fat mass index</span><span class="rt" id="pFmi">&mdash;</span></div>
+          <div class="ln tt"><span class="lf" id="pRankL">Rank by BMI vs rank by fat mass</span><span class="rt" id="pRank">&mdash;</span></div>
+        </div>
+      </div>
+
+      <div id="p2" style="display:none">
+        <div class="list" id="lim"></div>
+      </div>
+
+      <div id="info"></div>
+      <div class="hint">BMI is a <b>screening ratio for populations</b>, not a diagnosis and not a description of a person. The WHO bands shown here apply to <b>adults aged 20 and over</b>; children and adolescents are assessed against age-and-sex percentile charts instead, and the bands are not interpretable during pregnancy or with limb loss, large fluid shifts, or significant edema or ascites. Nothing here is medical or dietary advice, no food is labelled good or bad, and no number on this page says anything about what a body should look like.</div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- palette: a single neutral ramp, deliberately not a traffic light ---------- */
+ var RAMP=['#f2e9db','#e6d6ba','#d9c199','#cbab78','#bc945a','#ac7f40'];
+ var CFF='#2f6f9f', CFM='#b8862f', CIN='#7a5a8a', CMU='#c2566a', CLN='#ebe3d5', CMUT='#8d8270', CDK='#6b4710', CSF='#5f5340';
+ var FI='font-family="Inter,sans-serif"';
+
+ var st={wt:82,ht:178,bf:22,mode:0,prof:0,yax:'fmi',lim:'density'};
+
+ /* ---------- arithmetic ---------- */
+ function bmiOf(w,h){return w/((h/100)*(h/100));}
+ function bmi(){return bmiOf(st.wt,st.ht);}
+ function f1(v){return (Math.round(v*10)/10).toFixed(1);}
+ function ftin(cm){var t=cm/2.54,f=Math.floor(t/12),i=Math.round(t-f*12);if(i===12){f++;i=0;}return f+' ft '+i+' in';}
+ function lbOf(kg){return Math.round(kg*2.20462*10)/10;}
+ function CAT(b){
+   if(b<18.5)return{n:'Underweight',i:0};
+   if(b<25)return{n:'Normal range',i:1};
+   if(b<30)return{n:'Overweight',i:2};
+   if(b<35)return{n:'Obesity, class I',i:3};
+   if(b<40)return{n:'Obesity, class II',i:4};
+   return{n:'Obesity, class III',i:5};
+ }
+
+ /* ---------- shared svg helpers ---------- */
+ function txt(x,y,s,o){o=o||{};
+   return '<text x="'+x+'" y="'+y+'" '+FI+' font-size="'+(o.sz||10)+'"'+
+     (o.w?' font-weight="'+o.w+'"':'')+(o.a?' text-anchor="'+o.a+'"':'')+
+     (o.ls?' letter-spacing="'+o.ls+'"':'')+' fill="'+(o.c||CMUT)+'"'+
+     (o.rot?' transform="rotate('+o.rot+' '+x+' '+y+')"':'')+'>'+s+'</text>';
+ }
+ function head(x,y,s){return txt(x,y,s,{sz:9.6,w:800,ls:'.7',c:CMUT});}
+ function strip(y,a,b){
+   var s='<rect x="12" y="'+y+'" width="216" height="'+(b?42:30)+'" rx="10" fill="#f4ead8"/>';
+   s+='<rect x="12" y="'+y+'" width="4" height="'+(b?42:30)+'" fill="#b07a1e"/>';
+   s+=txt(24,y+18,a,{sz:9.8,w:800,c:CDK});
+   if(b)s+=txt(24,y+32,b,{sz:9.8,w:600,c:CSF});
+   return s;
+ }
+
+ /* ================= PANEL 0 — the calculator ================= */
+ function bx(v){return 14+(Math.max(13,Math.min(45,v))-13)/32*212;}
+
+ function drawCalc(){
+   var b=bmi(),c=CAT(b),s='';
+   var fm=st.wt*st.bf/100, ffm=st.wt-fm, m2=(st.ht/100)*(st.ht/100);
+   var ffmi=ffm/m2, fmi=fm/m2;
+
+   s+=head(14,13,'SCHEMATIC OUTLINE');
+
+   /* --- the figure: height from the height slider, girth from BMI --- */
+   var hpx=78+(Math.max(140,Math.min(210,st.ht))-140)/70*54;
+   var footY=166,topY=footY-hpx,cx=118;
+   var w=Math.max(15,Math.min(46,17+(b-14)*0.82));
+   var hr=hpx/14.5, shY=topY+hr*2.5, hipY=topY+hpx*0.55;
+
+   s+='<line x1="58" y1="166.5" x2="200" y2="166.5" stroke="#ddd2ba" stroke-width="1.6"/>';
+   s+='<line x1="58" y1="'+topY.toFixed(1)+'" x2="200" y2="'+topY.toFixed(1)+'" stroke="#ddd2ba" stroke-width="1" stroke-dasharray="3 3"/>';
+   s+='<line x1="196" y1="'+topY.toFixed(1)+'" x2="196" y2="166.5" stroke="#b07a1e" stroke-width="1.3"/>';
+   s+='<path d="M192 '+(topY+5).toFixed(1)+' L196 '+topY.toFixed(1)+' L200 '+(topY+5).toFixed(1)+'" fill="none" stroke="#b07a1e" stroke-width="1.3"/>';
+   s+='<path d="M192 161.5 L196 166.5 L200 161.5" fill="none" stroke="#b07a1e" stroke-width="1.3"/>';
+   var mid=(topY+166)/2;
+   s+=txt(210,mid,st.ht+' cm · '+ftin(st.ht),{sz:9.4,w:800,a:'middle',c:CDK,rot:-90});
+
+   var armW=Math.max(4,w*0.20),legW=w*0.36;
+   var sk='stroke="#c9b797" stroke-width="1.4" fill="#f4ead8"';
+   var bd='stroke="#b07a1e" stroke-width="1.8" fill="#f4ead8"';
+   s+='<rect x="'+(cx-w/2-armW-1.5).toFixed(1)+'" y="'+(shY+2).toFixed(1)+'" width="'+armW.toFixed(1)+'" height="'+(hipY-shY+hpx*0.09).toFixed(1)+'" rx="'+(armW/2).toFixed(1)+'" '+sk+'/>';
+   s+='<rect x="'+(cx+w/2+1.5).toFixed(1)+'" y="'+(shY+2).toFixed(1)+'" width="'+armW.toFixed(1)+'" height="'+(hipY-shY+hpx*0.09).toFixed(1)+'" rx="'+(armW/2).toFixed(1)+'" '+sk+'/>';
+   s+='<rect x="'+(cx-w*0.40).toFixed(1)+'" y="'+(hipY-w*0.2).toFixed(1)+'" width="'+legW.toFixed(1)+'" height="'+(166-hipY+w*0.2).toFixed(1)+'" rx="'+(legW/2).toFixed(1)+'" '+bd+'/>';
+   s+='<rect x="'+(cx+w*0.40-legW).toFixed(1)+'" y="'+(hipY-w*0.2).toFixed(1)+'" width="'+legW.toFixed(1)+'" height="'+(166-hipY+w*0.2).toFixed(1)+'" rx="'+(legW/2).toFixed(1)+'" '+bd+'/>';
+   s+='<rect x="'+(cx-hr*0.42).toFixed(1)+'" y="'+(topY+hr*1.5).toFixed(1)+'" width="'+(hr*0.84).toFixed(1)+'" height="'+(hr*1.4).toFixed(1)+'" '+sk+'/>';
+   s+='<rect x="'+(cx-w/2).toFixed(1)+'" y="'+shY.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+(hipY-shY).toFixed(1)+'" rx="'+(w*0.32).toFixed(1)+'" '+bd+'/>';
+   s+='<circle cx="'+cx+'" cy="'+(topY+hr).toFixed(1)+'" r="'+hr.toFixed(1)+'" '+bd+'/>';
+
+   s+='<rect x="14" y="'+(shY-4).toFixed(1)+'" width="56" height="34" rx="9" fill="#fffdf9" stroke="#ebe3d5"/>';
+   s+=txt(42,shY+10,f1(st.wt)+' kg',{sz:12,w:800,a:'middle',c:CDK});
+   s+=txt(42,shY+22,lbOf(st.wt)+' lb',{sz:9.4,w:600,a:'middle',c:CMUT});
+
+   /* --- band ribbon --- */
+   s+=head(14,182,'WHERE BMI PUTS THIS BODY');
+   var BB=[[13,18.5],[18.5,25],[25,30],[30,35],[35,40],[40,45]],i;
+   s+='<clipPath id="cr"><rect x="14" y="213" width="212" height="20" rx="7"/></clipPath><g clip-path="url(#cr)">';
+   for(i=0;i<BB.length;i++){
+     s+='<rect x="'+bx(BB[i][0]).toFixed(1)+'" y="213" width="'+(bx(BB[i][1])-bx(BB[i][0])).toFixed(1)+'" height="20" fill="'+RAMP[i]+'"'+(i===c.i?'':' opacity=".62"')+'/>';
+   }
+   s+='</g><rect x="14" y="213" width="212" height="20" rx="7" fill="none" stroke="#ddd2ba"/>';
+   var mk=bx(b),px=Math.max(50,Math.min(190,mk));
+   s+='<rect x="'+(px-36)+'" y="186" width="72" height="20" rx="10" fill="#b07a1e"/>';
+   s+=txt(px,200,'BMI '+f1(b),{sz:11.6,w:800,a:'middle',c:'#fff'});
+   s+='<path d="M'+(mk-6).toFixed(1)+' 206 L'+mk.toFixed(1)+' 212 L'+(mk+6).toFixed(1)+' 206 Z" fill="#b07a1e"/>';
+   var TK=[18.5,25,30,35,40];
+   for(i=0;i<TK.length;i++){
+     s+='<line x1="'+bx(TK[i]).toFixed(1)+'" y1="233" x2="'+bx(TK[i]).toFixed(1)+'" y2="238" stroke="#c9b797" stroke-width="1"/>';
+     s+=txt(bx(TK[i]),248,String(TK[i]),{sz:9.2,w:700,a:'middle',c:CMUT});
+   }
+   s+=txt(120,262,'WHO band: '+c.n,{sz:10.4,w:800,a:'middle',c:CDK});
+   s+=txt(120,274,'a label for the ratio, not for a person',{sz:9.4,w:600,a:'middle',c:CMUT});
+
+   /* --- the identity bar --- */
+   s+=head(14,294,'THE TWO PARTS OF THAT NUMBER');
+   var sh=Math.max(0,Math.min(1,ffmi/b)),bw=212*sh;
+   s+='<clipPath id="cb"><rect x="14" y="301" width="212" height="24" rx="12"/></clipPath><g clip-path="url(#cb)">';
+   s+='<rect x="14" y="301" width="'+bw.toFixed(1)+'" height="24" fill="'+CFF+'"/>';
+   s+='<rect x="'+(14+bw).toFixed(1)+'" y="301" width="'+(212-bw).toFixed(1)+'" height="24" fill="'+CFM+'"/></g>';
+   if(bw>44)s+=txt(14+bw/2,317,Math.round(sh*100)+'%',{sz:10.6,w:800,a:'middle',c:'#fff'});
+   if(212-bw>44)s+=txt(14+bw+(212-bw)/2,317,Math.round((1-sh)*100)+'%',{sz:10.6,w:800,a:'middle',c:'#fff'});
+   s+='<rect x="14" y="301" width="212" height="24" rx="12" fill="none" stroke="#ddd2ba"/>';
+   s+='<rect x="14" y="333" width="9" height="9" rx="2" fill="'+CFF+'"/>';
+   s+=txt(28,341,'FFMI '+f1(ffmi),{sz:10.2,w:800,c:CSF});
+   s+=txt(226,341,f1(ffm)+' kg fat-free mass',{sz:9.6,w:600,a:'end',c:CMUT});
+   s+='<rect x="14" y="346" width="9" height="9" rx="2" fill="'+CFM+'"/>';
+   s+=txt(28,354,'FMI '+f1(fmi),{sz:10.2,w:800,c:CSF});
+   s+=txt(226,354,f1(fm)+' kg fat mass',{sz:9.6,w:600,a:'end',c:CMUT});
+   return s;
+ }
+
+ /* ================= PANEL 1 — same number, different bodies ================= */
+ var P=[
+  {ic:'🏋',nm:'Strength-trained adult',sb:'male · resistance training 5 y',ht:183,wt:92,bf:11,lab:'r',
+   d:'Ninety-two kilograms is mostly contractile tissue here. BMI reads <b>27.5</b> and files this body under <i>overweight</i>. Fat mass index is <b>3.0</b> — the lowest but one in this set. The ratio has no way to know the difference.'},
+  {ic:'🛋',nm:'Desk-based adult',sb:'male · same height and mass as above',ht:183,wt:92,bf:31,lab:'r',
+   d:'Identical height. Identical mass. Therefore an <b>identical BMI of 27.5</b> and the identical WHO band. Fat mass index is <b>8.5</b> — nearly three times the strength-trained body above, and fat-free mass is about 18 kg lower. BMI cannot separate these two people because BMI was never given the input that separates them.'},
+  {ic:'🏉',nm:'Heavyweight contact athlete',sb:'male · forward / lineman build',ht:190,wt:118,bf:20,lab:'l',
+   d:'The highest BMI in the set at <b>32.7</b>, which places this body in the class I obesity band. Fat mass index is <b>6.5</b> — real, but lower than two bodies here that BMI puts in the <i>normal</i> band. Very high fat-free mass is exactly what BMI mistakes for fat mass.'},
+  {ic:'🕰',nm:'Adult aged 78',sb:'female · low muscle mass',ht:165,wt:62,bf:40,lab:'r',
+   d:'BMI <b>22.8</b> — the middle of the WHO <i>normal</i> band, and the number most likely to end a conversation. Yet fat mass index is <b>9.1</b>, the highest in this set, and fat-free mass index is <b>13.7</b>, the lowest. Age-related loss of muscle with retained fat mass is close to invisible to BMI, because the two changes cancel in the numerator.'},
+  {ic:'💻',nm:'Younger adult, low activity',sb:'female · little resistance training',ht:170,wt:64,bf:34,lab:'l',
+   d:'BMI <b>22.1</b>, also inside the <i>normal</i> band, with a fat mass index of <b>7.5</b> — higher than the heavyweight athlete two rows up whose BMI is ten points greater. This pattern is sometimes described as normal-weight obesity, and BMI is structurally unable to detect it. <span class="ev p">definitions and prevalence estimates still vary</span>'},
+  {ic:'🏃',nm:'Distance runner',sb:'male · high weekly mileage',ht:175,wt:58,bf:9,lab:'r',
+   d:'BMI <b>18.9</b>, a hair above the underweight cutoff, on a body whose fat-free mass index of <b>17.2</b> is entirely ordinary — it is the fat mass index of <b>1.7</b>, the lowest here, that pulls the BMI down. Endurance-trained bodies sit low on the BMI scale for reasons that have nothing to do with undernutrition, and a body near this cutoff through illness or inadequate intake would return the same number. BMI cannot tell those situations apart.'}
+ ];
+ function calc(p){var m2=(p.ht/100)*(p.ht/100),fm=p.wt*p.bf/100;
+   return {b:p.wt/m2,fmi:fm/m2,ffmi:(p.wt-fm)/m2,fm:fm,ffm:p.wt-fm};}
+ function rankOf(key,idx){
+   var a=[],i;
+   for(i=0;i<P.length;i++)a.push({i:i,v:calc(P[i])[key]});
+   a.sort(function(x,y){return x.v-y.v;});
+   for(i=0;i<a.length;i++)if(a[i].i===idx)return i+1;
+   return 0;
+ }
+
+ function drawScatter(){
+   var s='',i,ymax=(st.yax==='fmi')?11:52;
+   var X0=44,X1=226,Y0=44,Y1=252;
+   function sx(b){return X0+(Math.max(16,Math.min(35,b))-16)/19*(X1-X0);}
+   function sy(v){return Y1-Math.max(0,Math.min(ymax,v))/ymax*(Y1-Y0);}
+   function yv(p){var c=calc(p);return st.yax==='fmi'?c.fmi:p.bf;}
+
+   s+=head(14,16,'BMI ACROSS · BODY COMPOSITION UP');
+   var BB=[[16,18.5],[18.5,25],[25,30],[30,35]];
+   for(i=0;i<BB.length;i++){
+     s+='<rect x="'+sx(BB[i][0]).toFixed(1)+'" y="'+Y0+'" width="'+(sx(BB[i][1])-sx(BB[i][0])).toFixed(1)+'" height="'+(Y1-Y0)+'" fill="'+RAMP[i]+'" opacity=".5"/>';
+   }
+   var TK=[18.5,25,30];
+   for(i=0;i<TK.length;i++){
+     s+='<line x1="'+sx(TK[i]).toFixed(1)+'" y1="'+Y0+'" x2="'+sx(TK[i]).toFixed(1)+'" y2="'+Y1+'" stroke="#c9b797" stroke-width="1" stroke-dasharray="3 3"/>';
+     s+=txt(sx(TK[i]),Y0-6,String(TK[i]),{sz:9,w:800,a:'middle',c:CDK});
+   }
+   var ys=(st.yax==='fmi')?[0,2,4,6,8,10]:[0,10,20,30,40,50];
+   for(i=0;i<ys.length;i++){
+     s+='<line x1="'+X0+'" y1="'+sy(ys[i]).toFixed(1)+'" x2="'+X1+'" y2="'+sy(ys[i]).toFixed(1)+'" stroke="#e6dcc8" stroke-width="1"/>';
+     s+=txt(X0-6,sy(ys[i])+3.4,String(ys[i]),{sz:9,w:700,a:'end',c:CMUT});
+   }
+   s+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#c9b797" stroke-width="1.4"/>';
+   s+='<line x1="'+X0+'" y1="'+Y0+'" x2="'+X0+'" y2="'+Y1+'" stroke="#c9b797" stroke-width="1.4"/>';
+   s+=txt(16,(Y0+Y1)/2,(st.yax==='fmi')?'fat mass index  kg/m²':'body fat  % of mass',{sz:9.6,w:800,a:'middle',c:CSF,rot:-90});
+   s+=txt(X1,Y1+16,'body mass index  kg/m² →',{sz:9.6,w:800,a:'end',c:CSF});
+
+   /* the two bodies sharing one BMI */
+   var a=calc(P[0]),c2=calc(P[1]);
+   s+='<line x1="'+sx(a.b).toFixed(1)+'" y1="'+sy(yv(P[0])).toFixed(1)+'" x2="'+sx(c2.b).toFixed(1)+'" y2="'+sy(yv(P[1])).toFixed(1)+'" stroke="'+CIN+'" stroke-width="1.6" stroke-dasharray="4 3"/>';
+   var my=(sy(yv(P[0]))+sy(yv(P[1])))/2;
+   s+='<rect x="'+(sx(a.b)-76).toFixed(1)+'" y="'+(my-8).toFixed(1)+'" width="68" height="16" rx="8" fill="#efe7f2"/>';
+   s+=txt(sx(a.b)-42,my+3.6,'same BMI',{sz:9.4,w:800,a:'middle',c:CIN});
+
+   for(i=0;i<P.length;i++){
+     var cc=calc(P[i]),X=sx(cc.b),Y=sy(yv(P[i])),on=(i===st.prof);
+     if(on)s+='<circle cx="'+X.toFixed(1)+'" cy="'+Y.toFixed(1)+'" r="11" fill="#b07a1e" opacity=".22"/>';
+     s+='<circle cx="'+X.toFixed(1)+'" cy="'+Y.toFixed(1)+'" r="'+(on?7:5.4)+'" fill="'+(on?'#b07a1e':CFF)+'" stroke="#fffdf9" stroke-width="1.6"/>';
+     var lx=(P[i].lab==='r')?X+11:X-11;
+     s+=txt(lx,Y+3.4,P[i].ic+' '+(i+1),{sz:9.6,w:800,a:(P[i].lab==='r')?'start':'end',c:on?CDK:CSF});
+   }
+   s+=strip(272,'A vertical line = identical BMI.','The dots on it still sit far apart.');
+   return s;
+ }
+
+ /* ================= PANEL 2 — the blind spots ================= */
+ var L=[
+  {k:'density',ic:'🧱',nm:'A kilogram is a kilogram — a litre is not',ct:'tissue density',
+   d:'<p>Skeletal muscle has a density near <b>1.06 g/cm³</b>; adipose tissue is nearer <b>0.90 g/cm³</b>. Five kilograms of each weigh exactly the same on a scale and occupy about <b>4.7 L</b> and <b>5.6 L</b> respectively — roughly <b>18% more volume per kilogram</b> for fat. <span class="ev s">strong evidence</span></p>'+
+     '<p>BMI reads only the scale. Two bodies of the same height and mass produce one BMI whatever the mixture inside, which is why the phrase &ldquo;muscle weighs more than fat&rdquo; is loose but points at something real: muscle weighs more <i>per unit of volume</i>.</p>'+
+     '<p>This is the mechanism behind the single most reliable BMI misclassification — bodies carrying a lot of fat-free mass are pushed into higher BMI bands by tissue that is not fat.</p>'},
+  {k:'fatloc',ic:'📍',nm:'Where the tissue sits',ct:'distribution',
+   d:'<p>Adipose tissue is not one compartment. <b>Subcutaneous</b> fat sits under the skin; <b>visceral</b> fat sits inside the abdominal cavity around the organs. Two people with the same BMI can differ several-fold in visceral fat. <span class="ev s">strong evidence</span></p>'+
+     '<p>Visceral adiposity is more strongly associated with cardiometabolic outcomes than total fat mass or BMI. Because BMI has no positional information at all, this is a dimension it cannot represent even in principle.</p>'+
+     '<p>Simple tape measurements capture some of it. Widely used adult thresholds for raised risk are a waist of <b>&ge;102 cm (40 in)</b> for men and <b>&ge;88 cm (35 in)</b> for women, with lower population-specific values in several international definitions. A <b>waist-to-height ratio above 0.5</b> is a common quick screen, and evidence that it adds information beyond BMI is reasonably good. <span class="ev s">strong evidence</span></p>'+
+     '<p>These are screening triggers for a conversation, not diagnoses, and not targets.</p>'},
+  {k:'age',ic:'🕰',nm:'The same BMI at 30 and at 78',ct:'body composition drifts',
+   d:'<p>From roughly the third decade onward, fat-free mass tends to decline while fat mass tends to rise. Because the two move in opposite directions, <b>total mass — and therefore BMI — can stay flat while the composition underneath changes substantially</b>. <span class="ev s">strong evidence</span></p>'+
+     '<p>In the drawn example both bars are BMI <b>24.5</b>. The upper body carries a fat-free mass index of 19.0; the lower carries 14.5, with the difference reappearing as fat. BMI records no change whatsoever.</p>'+
+     '<p>This is why grip strength, gait speed, and measured lean mass are used alongside BMI in older adults rather than BMI alone. It is also part of why BMI in the overweight band is not associated with higher mortality in many older cohorts — a pattern that is well documented but whose interpretation is genuinely contested, since illness, smoking, and unintentional weight loss all distort it. <span class="ev p">interpretation debated</span></p>'},
+  {k:'pop',ic:'👥',nm:'Built for populations, used on people',ct:'group vs individual',
+   d:'<p>Adolphe Quetelet described the mass-over-height-squared ratio in the 1830s while studying the <b>average</b> characteristics of populations. Ancel Keys named it the body mass index in 1972 and recommended it explicitly for <b>population studies</b>, noting it was not suited to individual diagnosis.</p>'+
+     '<p>The drawn cloud shows why. Across a group, BMI and body fat rise together — the trend is strong and BMI is a defensible population instrument. Take any single vertical slice and the individual scatter is wide: bodies at the same BMI differ substantially in fat mass. <span class="ev s">strong evidence</span></p>'+
+     '<p>Against measured fat by DXA, BMI is fairly <b>specific</b> — it rarely flags someone whose fat mass is low — but its <b>sensitivity is limited</b>, missing a large share of people with high body fat, with reported figures commonly in the region of half. Exact values vary widely with the cohort and the cutoff chosen. <span class="ev p">figures vary by study</span></p>'},
+  {k:'scale',ic:'📏',nm:'Why height is squared',ct:'a convenience, not a law',
+   d:'<p>Dividing by height <b>squared</b> was chosen because it made the ratio roughly independent of height in the populations Quetelet examined — not because bodies are known to scale that way. Mass is a volume, and geometrically similar objects scale as height <b>cubed</b>.</p>'+
+     '<p>Real human mass scales somewhere between the two. Empirical exponents typically land between about <b>2 and 3</b> and shift with sex and population, which is why alternatives using height^2.5 have been proposed. The consequence is that BMI reads slightly <b>high in tall people and slightly low in short people</b>. <span class="ev p">exponent and magnitude both debated</span></p>'+
+     '<p>The drawn curves show the size of it: the two lines are matched at 170 cm and diverge in both directions. It is a modest distortion, not a scandal — but it is one more reason a single number near a cutoff should not be read as a threshold that has been crossed.</p>'},
+  {k:'cut',ic:'🌍',nm:'Whose bodies set the cutoffs',ct:'the boundaries are conventions',
+   d:'<p>The 25 and 30 boundaries are round numbers adopted by convention, drawn largely from mortality data in European-ancestry populations. They are <b>administrative lines on a continuous variable</b>, not biological thresholds — nothing switches on at 24.9 or off at 25.1.</p>'+
+     '<p>At the same BMI, several Asian populations carry higher body fat and show raised cardiometabolic risk at lower BMI values. A 2004 WHO expert consultation reviewed this and, rather than redefine the categories, retained the existing cutoffs while adding <b>public-health action points at 23 and 27.5</b> for those populations. <span class="ev s">strong evidence for the risk difference</span></p>'+
+     '<p>Body composition at a given BMI also differs on average by sex — women generally carry a higher proportion of fat mass than men — while the BMI bands themselves are identical for both. <span class="ev s">strong evidence</span></p>'+
+     '<p>None of this makes BMI useless. It makes BMI a <b>starting screen whose bands are conventions</b>, best read alongside measurements that can see what it cannot.</p>'}
+ ];
+
+ function drawLimit(k){
+   var s='',i;
+   if(k==='density'){
+     s+=head(14,18,'FIVE KILOGRAMS OF EACH');
+     s+='<rect x="98" y="176" width="44" height="7" rx="3" fill="#ddd2ba"/>';
+     s+='<line x1="120" y1="176" x2="120" y2="72" stroke="#c9b797" stroke-width="3"/>';
+     s+='<line x1="48" y1="72" x2="192" y2="72" stroke="#b07a1e" stroke-width="3" stroke-linecap="round"/>';
+     s+='<circle cx="120" cy="72" r="5" fill="#b07a1e"/>';
+     s+='<line x1="72" y1="72" x2="72" y2="142" stroke="#c9b797" stroke-width="1.4"/>';
+     s+='<line x1="168" y1="72" x2="168" y2="142" stroke="#c9b797" stroke-width="1.4"/>';
+     s+='<rect x="55" y="110" width="34" height="32" rx="4" fill="'+CMU+'"/>';
+     s+='<rect x="148" y="110" width="40" height="32" rx="4" fill="'+CFM+'"/>';
+     s+='<line x1="50" y1="142" x2="94" y2="142" stroke="#8d8270" stroke-width="2.2" stroke-linecap="round"/>';
+     s+='<line x1="144" y1="142" x2="192" y2="142" stroke="#8d8270" stroke-width="2.2" stroke-linecap="round"/>';
+     s+=txt(72,158,'5 kg muscle',{sz:10.4,w:800,a:'middle',c:CDK});
+     s+=txt(72,170,'≈ 4.7 L · 1.06 g/cm³',{sz:9.4,w:600,a:'middle',c:CMUT});
+     s+=txt(168,158,'5 kg fat',{sz:10.4,w:800,a:'middle',c:CDK});
+     s+=txt(168,170,'≈ 5.6 L · 0.90 g/cm³',{sz:9.4,w:600,a:'middle',c:CMUT});
+     s+=txt(120,205,'The beam balances. The boxes do not.',{sz:10.4,w:700,a:'middle',c:CSF});
+     s+=strip(224,'BMI reads the balance beam only.','Same mass in → same number out.');
+   }
+   else if(k==='fatloc'){
+     s+=head(14,18,'TWO ABDOMENS · SAME BMI OF 28');
+     s+='<circle cx="68" cy="96" r="40" fill="'+CFM+'"/><circle cx="68" cy="96" r="27" fill="#f2e9db"/>';
+     s+='<circle cx="68" cy="96" r="10" fill="'+CIN+'"/>';
+     s+='<circle cx="172" cy="96" r="49" fill="'+CFM+'"/><circle cx="172" cy="96" r="42" fill="#f2e9db"/>';
+     s+='<circle cx="172" cy="96" r="28" fill="'+CIN+'"/>';
+     s+='<circle cx="68" cy="96" r="43" fill="none" stroke="#8d8270" stroke-width="1.2" stroke-dasharray="4 3"/>';
+     s+='<circle cx="172" cy="96" r="52" fill="none" stroke="#8d8270" stroke-width="1.2" stroke-dasharray="4 3"/>';
+     s+=txt(68,158,'more subcutaneous',{sz:10.2,w:800,a:'middle',c:CDK});
+     s+=txt(68,170,'waist ≈ 88 cm',{sz:9.4,w:600,a:'middle',c:CMUT});
+     s+=txt(172,158,'more visceral',{sz:10.2,w:800,a:'middle',c:CDK});
+     s+=txt(172,170,'waist ≈ 108 cm',{sz:9.4,w:600,a:'middle',c:CMUT});
+     s+='<rect x="40" y="184" width="10" height="10" rx="2" fill="'+CFM+'"/>'+txt(55,193,'subcutaneous',{sz:9.6,w:700,c:CSF});
+     s+='<rect x="132" y="184" width="10" height="10" rx="2" fill="'+CIN+'"/>'+txt(147,193,'visceral',{sz:9.6,w:700,c:CSF});
+     s+=txt(120,213,'Identical BMI. Twenty centimetres apart.',{sz:10,w:700,a:'middle',c:CSF});
+     s+=strip(230,'Same BMI, 20 cm of waist apart.','A tape measure sees what BMI cannot.');
+   }
+   else if(k==='age'){
+     s+=head(14,18,'ONE BMI OF 24.5 · TWO COMPOSITIONS');
+     var rows=[[30,19.0,5.5,60],[78,14.5,10.0,132]];
+     for(i=0;i<rows.length;i++){
+       var ff=rows[i][1],fmv=rows[i][2],y=rows[i][3],tot=ff+fmv,W=168,wf=W*ff/tot;
+       s+=txt(14,y-8,'age '+rows[i][0],{sz:10.4,w:800,c:CDK});
+       s+='<clipPath id="ca'+i+'"><rect x="42" y="'+y+'" width="'+W+'" height="30" rx="10"/></clipPath><g clip-path="url(#ca'+i+')">';
+       s+='<rect x="42" y="'+y+'" width="'+wf.toFixed(1)+'" height="30" fill="'+CFF+'"/>';
+       s+='<rect x="'+(42+wf).toFixed(1)+'" y="'+y+'" width="'+(W-wf).toFixed(1)+'" height="30" fill="'+CFM+'"/></g>';
+       s+='<rect x="42" y="'+y+'" width="'+W+'" height="30" rx="10" fill="none" stroke="#ddd2ba"/>';
+       s+=txt(42+wf/2,y+19,ff.toFixed(1),{sz:10.4,w:800,a:'middle',c:'#fff'});
+       s+=txt(42+wf+(W-wf)/2,y+19,fmv.toFixed(1),{sz:10.4,w:800,a:'middle',c:'#fff'});
+     }
+     s+='<path d="M120 100 L120 124 M114 118 L120 124 L126 118" fill="none" stroke="#8d8270" stroke-width="1.6"/>';
+     s+=txt(132,116,'≈ 48 years',{sz:9.6,w:700,c:CMUT});
+     s+='<rect x="42" y="174" width="9" height="9" rx="2" fill="'+CFF+'"/>'+txt(55,182,'fat-free mass index',{sz:9,w:700,c:CSF});
+     s+='<rect x="146" y="174" width="9" height="9" rx="2" fill="'+CFM+'"/>'+txt(159,182,'fat mass index',{sz:9,w:700,c:CSF});
+     s+=txt(120,204,'Muscle down, fat up, total mass unchanged.',{sz:10.2,w:700,a:'middle',c:CSF});
+     s+=strip(220,'The numerator held. The body did not.','Two opposite changes cancel each other.');
+   }
+   else if(k==='pop'){
+     s+=head(14,18,'A SIMULATED POPULATION');
+     var X0=42,X1=226,Y0=34,Y1=196;
+     var sx=function(b){return X0+(Math.max(16,Math.min(40,b))-16)/24*(X1-X0);};
+     var sy=function(f){return Y1-Math.max(0,Math.min(56,f))/56*(Y1-Y0);};
+     s+='<rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'" fill="#faf6ee"/>';
+     /* Lehmer generator: seed*16807 stays inside exact double range, so the cloud is reproducible */
+     var seed=20250718;
+     var rnd=function(){seed=(seed*16807)%2147483647;return seed/2147483647;};
+     var nrm=function(){return (rnd()+rnd()+rnd()+rnd()-2)*1.732;};
+     for(i=0;i<110;i++){
+       var z1=nrm(),z2=nrm();
+       var bb=26.2+z1*4.6, fv=30+(0.74*z1+0.67*z2)*8.6;
+       s+='<circle cx="'+sx(bb).toFixed(1)+'" cy="'+sy(fv).toFixed(1)+'" r="2.6" fill="'+CFF+'" opacity=".5"/>';
+     }
+     s+='<line x1="'+sx(18).toFixed(1)+'" y1="'+sy(20.6).toFixed(1)+'" x2="'+sx(38).toFixed(1)+'" y2="'+sy(48.3).toFixed(1)+'" stroke="'+CDK+'" stroke-width="1.8" stroke-dasharray="5 3"/>';
+     s+='<line x1="'+sx(27).toFixed(1)+'" y1="'+Y0+'" x2="'+sx(27).toFixed(1)+'" y2="'+Y1+'" stroke="'+CIN+'" stroke-width="1.6"/>';
+     s+='<circle cx="'+sx(27).toFixed(1)+'" cy="'+sy(15).toFixed(1)+'" r="5.4" fill="'+CIN+'" stroke="#fffdf9" stroke-width="1.6"/>';
+     s+='<circle cx="'+sx(27).toFixed(1)+'" cy="'+sy(44).toFixed(1)+'" r="5.4" fill="'+CIN+'" stroke="#fffdf9" stroke-width="1.6"/>';
+     s+=txt(sx(27)+9,sy(15)+3.4,'15% fat',{sz:9.2,w:800,c:CIN});
+     s+=txt(sx(27)+9,sy(44)+3.4,'44% fat',{sz:9.2,w:800,c:CIN});
+     s+='<rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'" fill="none" stroke="#c9b797" stroke-width="1.2"/>';
+     s+=txt(14,(Y0+Y1)/2,'body fat  %',{sz:9.4,w:800,a:'middle',c:CSF,rot:-90});
+     s+=txt(X1,Y1+15,'BMI →',{sz:9.4,w:800,a:'end',c:CSF});
+     s+=txt(X0,Y1+15,'16',{sz:9,w:700,c:CMUT});
+     s+=txt(120,Y1+31,'One BMI. 29 points of body fat apart.',{sz:9.8,w:700,a:'middle',c:CSF});
+     s+=strip(240,'The trend is real. So is the spread.','Strong for groups, weak for a person.');
+   }
+   else if(k==='scale'){
+     s+=head(14,18,'HEIGHT² vs HEIGHT^2.5');
+     var A0=40,A1=226,B0=40,B1=190;
+     var hx=function(h){return A0+(h-145)/55*(A1-A0);};
+     var wy=function(w){return B1-(w-35)/65*(B1-B0);};
+     var d1='',d2='',h,k1=22*Math.pow(1.70,2)/Math.pow(1.70,2.5);
+     for(h=145;h<=200;h+=2.5){
+       var m=h/100;
+       var w1=22*m*m, w2=k1*Math.pow(m,2.5);
+       d1+=(h===145?'M':'L')+hx(h).toFixed(1)+' '+wy(w1).toFixed(1)+' ';
+       d2+=(h===145?'M':'L')+hx(h).toFixed(1)+' '+wy(w2).toFixed(1)+' ';
+     }
+     for(i=0;i<4;i++){
+       var wv=40+i*15;
+       s+='<line x1="'+A0+'" y1="'+wy(wv).toFixed(1)+'" x2="'+A1+'" y2="'+wy(wv).toFixed(1)+'" stroke="#e6dcc8" stroke-width="1"/>';
+       s+=txt(A0-5,wy(wv)+3.4,wv+' kg',{sz:8.8,w:700,a:'end',c:CMUT});
+     }
+     s+='<path d="'+d1+'" fill="none" stroke="'+CFF+'" stroke-width="2.2"/>';
+     s+='<path d="'+d2+'" fill="none" stroke="'+CMU+'" stroke-width="2.2" stroke-dasharray="5 3"/>';
+     s+='<line x1="'+hx(170).toFixed(1)+'" y1="'+B0+'" x2="'+hx(170).toFixed(1)+'" y2="'+B1+'" stroke="#c9b797" stroke-width="1" stroke-dasharray="3 3"/>';
+     s+='<circle cx="'+hx(170).toFixed(1)+'" cy="'+wy(22*1.7*1.7).toFixed(1)+'" r="4" fill="'+CDK+'"/>';
+     s+=txt(hx(170),B1+14,'matched at 170 cm',{sz:9,w:700,a:'middle',c:CMUT});
+     s+=txt(A0,B1+14,'145',{sz:9,w:700,c:CMUT});
+     s+=txt(A1,B1+14,'200 cm',{sz:9,w:700,a:'end',c:CMUT});
+     s+='<rect x="40" y="'+(B1+24)+'" width="10" height="10" rx="2" fill="'+CFF+'"/>'+txt(55,B1+33,'height² (BMI)',{sz:9.4,w:700,c:CSF});
+     s+='<rect x="140" y="'+(B1+24)+'" width="10" height="10" rx="2" fill="'+CMU+'"/>'+txt(155,B1+33,'height^2.5',{sz:9.4,w:700,c:CSF});
+     s+=strip(238,'Squaring height was a convenience.','Reads high in tall, low in short.');
+   }
+   else {
+     s+=head(14,18,'THE BANDS ARE CONVENTIONS');
+     var cx2=function(v){return 16+(Math.max(14,Math.min(42,v))-14)/28*208;};
+     var BB2=[[14,18.5],[18.5,25],[25,30],[30,35],[35,42]];
+     s+='<clipPath id="cc"><rect x="16" y="104" width="208" height="26" rx="8"/></clipPath><g clip-path="url(#cc)">';
+     for(i=0;i<BB2.length;i++){
+       s+='<rect x="'+cx2(BB2[i][0]).toFixed(1)+'" y="104" width="'+(cx2(BB2[i][1])-cx2(BB2[i][0])).toFixed(1)+'" height="26" fill="'+RAMP[i]+'"/>';
+     }
+     s+='</g><rect x="16" y="104" width="208" height="26" rx="8" fill="none" stroke="#ddd2ba"/>';
+     var TT=[18.5,25,30,35];
+     for(i=0;i<TT.length;i++){
+       s+='<line x1="'+cx2(TT[i]).toFixed(1)+'" y1="130" x2="'+cx2(TT[i]).toFixed(1)+'" y2="136" stroke="#c9b797" stroke-width="1"/>';
+       s+=txt(cx2(TT[i]),147,String(TT[i]),{sz:9.2,w:700,a:'middle',c:CMUT});
+     }
+     s+=txt(120,163,'WHO bands · adults 20+ · both sexes',{sz:9.6,w:700,a:'middle',c:CMUT});
+     var AP=[23,27.5];
+     for(i=0;i<AP.length;i++){
+       s+='<path d="M'+cx2(AP[i]).toFixed(1)+' 100 l-5 -8 l10 0 Z" fill="'+CFF+'"/>';
+       s+='<line x1="'+cx2(AP[i]).toFixed(1)+'" y1="92" x2="'+cx2(AP[i]).toFixed(1)+'" y2="78" stroke="'+CFF+'" stroke-width="1.6"/>';
+       s+=txt(cx2(AP[i]),72,String(AP[i]),{sz:11,w:800,a:'middle',c:CFF});
+     }
+     s+=txt(120,46,'additional public-health action points',{sz:9.8,w:800,a:'middle',c:CFF});
+     s+=txt(120,58,'for several Asian populations · WHO 2004',{sz:9.2,w:600,a:'middle',c:CMUT});
+     s+=txt(120,186,'Nothing changes at 24.9 versus 25.1.',{sz:10.2,w:700,a:'middle',c:CSF});
+     s+=strip(206,'A cutoff is a decision, not a threshold.','The variable is continuous throughout.');
+   }
+   return s;
+ }
+
+ /* ================= copy for panel 0 ================= */
+ function calcInfo(){
+   var b=bmi(),fm=st.wt*st.bf/100,m2=(st.ht/100)*(st.ht/100);
+   var ffmi=(st.wt-fm)/m2,fmi=fm/m2;
+   var s='<span class="n">One division, two hidden halves</span>';
+   s+='<p>BMI is <b>mass in kilograms divided by height in metres, squared</b>. That is the whole instrument. It receives two inputs and returns one number, and the number is dimensionally a density-like ratio — <b>kg/m²</b> — not a measure of fat, health, or fitness.</p>';
+   s+='<div class="eq"><b>Metric:</b> BMI = kg ÷ m²<br><b>US customary:</b> BMI = 703 × lb ÷ in²<br>The 703 simply converts the units; both give the same answer.</div>';
+   s+='<p>Every body can be written as <b>fat mass + fat-free mass</b> — muscle, bone, organs, water. Divide each of those by height squared and you get two indices that add up to BMI exactly:</p>';
+   s+='<div class="eq">FFMI '+f1(ffmi)+' &nbsp;+&nbsp; FMI '+f1(fmi)+' &nbsp;=&nbsp; BMI '+f1(b)+' kg/m²</div>';
+   s+='<p>That identity is the point of this page. <b>BMI is a sum whose two terms it cannot report.</b> Drag the body-fat slider and watch the bar underneath swing while the BMI marker sits perfectly still — the very information that distinguishes two bodies is the information BMI discards.</p>';
+   s+='<p>For orientation, and with wide variation by measurement method: FFMI in untrained adults commonly falls near <b>16&ndash;20 kg/m² in men</b> and <b>13&ndash;16 in women</b>, with well-trained athletes often reaching the low-to-mid twenties in men. <span class="ev p">reference ranges are approximate and method-dependent</span></p>';
+   s+='<p>None of this makes BMI worthless. It is free, needs no equipment, and tracks group-level risk well enough to have carried decades of epidemiology. It is a <b>screen</b>. The rest of this page is about the cases where the screen is wrong, and why.</p>';
+   return s;
+ }
+
+ /* ================= render ================= */
+ var PRE=[{wt:82,ht:178,bf:22},{wt:82,ht:178,bf:11},{wt:66,ht:178,bf:36}];
+
+ function render(){
+   var b,c,i;
+   if(st.mode===0){
+     $('art0').setAttribute('viewBox','0 0 240 360');
+     $('art').innerHTML=drawCalc();
+     b=bmi(); c=CAT(b);
+     var fm=st.wt*st.bf/100,ffm=st.wt-fm,m2=(st.ht/100)*(st.ht/100);
+     $('rWt').innerHTML=f1(st.wt)+' kg';
+     $('rHt').innerHTML=st.ht+' cm';
+     $('rBf').innerHTML=f1(st.bf)+'%';
+     $('eqM').innerHTML='<b>'+f1(st.wt)+'</b> kg ÷ ( <b>'+(st.ht/100).toFixed(2)+'</b> m )² &nbsp;=&nbsp; <b>'+f1(b)+'</b> kg/m²';
+     $('eqU').innerHTML='703 × <b>'+lbOf(st.wt)+'</b> lb ÷ ( <b>'+(st.ht/2.54).toFixed(1)+'</b> in )² &nbsp;=&nbsp; <b>'+f1(703*lbOf(st.wt)/Math.pow(st.ht/2.54,2))+'</b>';
+     $('rBmi').innerHTML=f1(b)+'<i>kg/m²</i>';
+     $('rCat').innerHTML='<span class="cat">'+c.n+'</span>';
+     $('rFfm').innerHTML=f1(ffm)+'<i>kg</i>';
+     $('rFm').innerHTML=f1(fm)+'<i>kg</i>';
+     $('rFfmi').innerHTML=f1(ffm/m2)+'<i>kg/m²</i>';
+     $('rFmi').innerHTML=f1(fm/m2)+'<i>kg/m²</i>';
+     $('rId').innerHTML=f1(ffm/m2+fm/m2)+'<i>= BMI</i>';
+     $('stage').style.background='#b07a1e';
+     $('stage').innerHTML='BMI '+f1(b)+' &nbsp;·&nbsp; '+c.n+'<small>'+f1(ffm)+' kg fat-free &nbsp;·&nbsp; '+f1(fm)+' kg fat &mdash; BMI sees neither</small>';
+     $('cardTitle').innerHTML='One number, two hidden halves';
+     $('info').innerHTML=calcInfo();
+   }
+   else if(st.mode===1){
+     $('art0').setAttribute('viewBox','0 0 240 320');
+     $('art').innerHTML=drawScatter();
+     $('prof').innerHTML=P.map(function(p,ix){var cc=calc(p);
+       return '<button data-i="'+ix+'"'+(ix===st.prof?' class="on"':'')+'><span class="ic">'+p.ic+'</span>'+
+         '<span class="nm">'+(ix+1)+'. '+p.nm+'<small>'+p.sb+' · '+p.ht+' cm · '+p.wt+' kg</small></span>'+
+         '<span class="kc"><b>'+f1(cc.b)+'</b><small>FMI '+f1(cc.fmi)+'</small></span></button>';}).join('');
+     var pb=$('prof').getElementsByTagName('button');
+     for(i=0;i<pb.length;i++)pb[i].onclick=(function(ix){return function(){st.prof=ix;render();};})(parseInt(pb[i].getAttribute('data-i'),10));
+     var p=P[st.prof],cc=calc(p);
+     c=CAT(cc.b);
+     $('pDim').innerHTML=p.ht+' cm · '+p.wt+' kg · '+f1(p.bf)+'% fat';
+     $('pBmi').innerHTML=f1(cc.b)+'<i>BMI</i>';
+     $('pCat').innerHTML='<span class="cat">'+c.n+'</span>';
+     $('pFfmi').innerHTML=f1(cc.ffmi)+'<i>kg/m²</i>';
+     $('pFmi').innerHTML=f1(cc.fmi)+'<i>kg/m²</i>';
+     $('pRank').innerHTML='#'+rankOf('b',st.prof)+' &nbsp;vs&nbsp; #'+rankOf('fmi',st.prof)+'<i>of 6</i>';
+     $('stage').style.background='#2f6f9f';
+     $('stage').innerHTML=p.nm+'<small>BMI '+f1(cc.b)+' &mdash; '+c.n+' &nbsp;·&nbsp; FMI '+f1(cc.fmi)+' &nbsp;·&nbsp; FFMI '+f1(cc.ffmi)+'</small>';
+     $('cardTitle').innerHTML='Six bodies, one axis apiece';
+     $('info').innerHTML='<span class="n">'+p.nm+'</span>'+p.d+
+       '<p style="margin-top:9px;color:#8d8270;font-size:12px;">Ranked <b>#'+rankOf('b',st.prof)+' of 6 by BMI</b> but <b>#'+rankOf('fmi',st.prof)+' of 6 by fat mass index</b>. Across the whole set the two orderings disagree badly &mdash; which is another way of saying BMI is not a proxy for adiposity in individuals.</p>';
+   }
+   else{
+     $('art0').setAttribute('viewBox','0 0 240 '+({density:266,fatloc:272,age:262,pop:282,scale:280,cut:248}[st.lim]||280));
+     $('art').innerHTML=drawLimit(st.lim);
+     $('lim').innerHTML=L.map(function(l){
+       return '<button class="it'+(l.k===st.lim?' on':'')+'" data-k="'+l.k+'"><span class="ic">'+l.ic+'</span>'+
+         '<span><span class="nm">'+l.nm+'</span><br><span class="ct">'+l.ct+'</span></span></button>';}).join('');
+     var lb=$('lim').getElementsByTagName('button');
+     for(i=0;i<lb.length;i++)lb[i].onclick=(function(k){return function(){st.lim=k;render();};})(lb[i].getAttribute('data-k'));
+     var l=L.filter(function(x){return x.k===st.lim;})[0];
+     $('stage').style.background='#7a5a8a';
+     $('stage').innerHTML=l.nm+'<small>blind spot &mdash; '+l.ct+'</small>';
+     $('cardTitle').innerHTML='What the ratio cannot represent';
+     $('info').innerHTML='<span class="n">'+l.nm+'</span>'+l.d;
+   }
+ }
+
+ /* ================= wiring ================= */
+ var mb=$('modeseg').getElementsByTagName('button');
+ for(var j=0;j<mb.length;j++)mb[j].onclick=(function(m){return function(){
+   st.mode=m;
+   for(var q=0;q<mb.length;q++)mb[q].className=(q===m?'on':'');
+   $('p0').style.display=(m===0?'':'none');
+   $('p1').style.display=(m===1?'':'none');
+   $('p2').style.display=(m===2?'':'none');
+   render();};})(j);
+
+ var ab=$('axseg').getElementsByTagName('button');
+ for(j=0;j<ab.length;j++)ab[j].onclick=(function(btn){return function(){
+   st.yax=btn.getAttribute('data-y');
+   for(var q=0;q<ab.length;q++)ab[q].className=(ab[q]===btn?'on':'');
+   render();};})(ab[j]);
+
+ var SL=[['sWt','wt'],['sHt','ht'],['sBf','bf']];
+ for(j=0;j<SL.length;j++)(function(id,key){
+   $(id).oninput=function(){st[key]=parseFloat(this.value);render();};
+ })(SL[j][0],SL[j][1]);
+
+ var qb=document.querySelectorAll('[data-pre]');
+ for(j=0;j<qb.length;j++)qb[j].onclick=(function(pr){return function(){
+   st.wt=pr.wt; st.ht=pr.ht; st.bf=pr.bf;
+   $('sWt').value=pr.wt; $('sHt').value=pr.ht; $('sBf').value=pr.bf;
+   render();};})(PRE[parseInt(qb[j].getAttribute('data-pre'),10)]);
+
+ render();
+})();
+</script>
+</body>
+</html>

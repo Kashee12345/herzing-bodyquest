@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>The Function Machine</title>
+<meta name="description" content="Feed inputs into f(x) and watch the output get built one operation at a time — including the inputs that jam the machine and define its domain.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.modeseg{display:grid;grid-template-columns:repeat(4,1fr);}
+@media (max-width:560px){.modeseg{grid-template-columns:repeat(2,1fr);}}
+.modeseg button{font-size:12.5px;padding:9px 4px;line-height:1.25;}
+.modeseg button small{display:block;font-weight:500;font-size:10px;color:var(--muted);margin-top:2px;font-family:var(--math);}
+.modeseg button.on small{color:rgba(255,255,255,.92);}
+.seg button{font-family:var(--math);font-size:15px;padding:10px 4px;}
+.seg button small{font-family:var(--sans);font-size:9.3px;}
+.seg button.jam.on{background:var(--coral);border-color:var(--coral);}
+.rulebox{font-family:var(--math);font-size:20px;text-align:center;color:var(--teal-dk);background:#eef0f8;border:1px solid var(--line);border-radius:10px;padding:10px 6px;line-height:1.4;}
+.rulebox sup{font-size:.62em;vertical-align:super;}
+#mb{min-height:196px;display:flex;flex-direction:column;justify-content:center;margin-top:12px;}
+.dl{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:7px 2px;border-bottom:1px dashed var(--line);}
+.dl:last-child{border-bottom:none;}
+.mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.6;}
+.mx sup{font-size:.62em;vertical-align:super;}
+.dl.cur .mx{font-size:21px;color:var(--ink);font-weight:600;}
+.pl{flex:none;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);white-space:nowrap;}
+.dl.cur .pl{color:var(--gold);}
+.dl.cur.jam .pl{color:var(--coral);}
+.nv{background:#e6e8f5;border-radius:4px;padding:0 4px;color:var(--teal-dk);font-weight:700;}
+.dl:not(.cur) .nv{background:transparent;padding:0;color:var(--soft);font-weight:600;}
+.dl.cur.jam .nv{background:#fae5e8;color:#b23145;}
+.tg{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.dl:not(.cur) .tg{background:transparent;box-shadow:none;padding:0;}
+.fr{display:inline-block;vertical-align:middle;text-align:center;line-height:1.18;}
+.fr .nu{display:block;border-bottom:1.6px solid currentColor;padding:0 6px 1px;}
+.fr .de{display:block;padding:1px 6px 0;}
+.ans{text-align:center;font-family:var(--math);font-size:12.5px;color:var(--muted);margin-top:9px;}
+.ans b{font-size:17px;color:var(--teal-dk);}
+.ans.jam b{color:#b23145;}
+.pairs{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;justify-content:center;}
+.pairs span{font-family:var(--math);font-size:12.5px;font-weight:600;background:#e6e8f5;color:var(--teal-dk);border-radius:20px;padding:3px 10px;}
+.pairs span.jm{background:#fae5e8;color:#b23145;}
+.pairs span.gh{background:#f4f5fb;color:#a9adc4;font-weight:500;}
+.gaptxt{font-size:12.5px;text-align:center;color:var(--soft);margin-top:9px;line-height:1.5;}
+.gaptxt b{color:var(--teal-dk);}
+.row .btn.wide{flex:1.3;}
+#tok{transition:transform .55s cubic-bezier(.34,1.15,.5,1);}
+@keyframes gspin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes gspinb{from{transform:rotate(0deg);}to{transform:rotate(-360deg);}}
+#gears .rot{animation:gspin 3.2s linear infinite;animation-play-state:paused;}
+#gears .rot.b{animation-name:gspinb;animation-duration:2.2s;}
+#gears.run .rot{animation-play-state:running;}
+@media (prefers-reduced-motion:reduce){#tok{transition:none;} #gears .rot{animation:none;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 4</div>
+  <h1>The Function Machine</h1>
+  <div class="intro">A function is a machine with exactly one job: take an input, follow a fixed rule, hand back <b>one</b> output. Pick a machine, drop a value in, and step through the rule one operation at a time &mdash; including the two inputs that <b>jam</b> the machine completely.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="mTitle">The machine</h2>
+      <div class="rulebox" id="rule"></div>
+      <svg viewBox="0 0 240 262" aria-label="function machine with input hopper and output tray">
+        <g id="mach"></g>
+        <g id="gears"></g>
+        <g id="tok" transform="translate(120,26)">
+          <rect id="tokR" x="-30" y="-14" width="60" height="28" rx="9" fill="#43458f"></rect>
+          <text id="tokT" x="0" y="5" font-size="15" font-weight="700" text-anchor="middle" fill="#ffffff" font-family="Georgia,serif">3</text>
+        </g>
+      </svg>
+    </div>
+    <div class="card"><h2>Every run leaves a point</h2>
+      <svg viewBox="0 0 240 200" aria-label="graph of the current function with the points collected so far"><g id="gr"></g></svg>
+      <div class="pairs" id="pairs"></div>
+      <div class="gaptxt" id="dom"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Pick a machine<small>then feed it an input</small></div>
+    <div class="card">
+      <div class="modeseg" id="machs"></div>
+      <div class="seg" id="ins" style="margin-top:10px;"></div>
+      <div id="mb"></div>
+      <div class="ans" id="ansline"></div>
+      <div id="info"></div>
+      <div class="mnem"><b>f(3) is not multiplication.</b> These parentheses do not mean "times" &mdash; they mean <i>evaluated at</i>. f(3) is a single number: the one the machine named <i>f</i> hands back when 3 goes in. The letter <i>x</i> is only a placeholder marking where the input lands.</div>
+      <div class="note" id="warn" style="display:none;"></div>
+      <div class="row">
+        <button class="btn" id="prev">&lsaquo; Prev</button>
+        <button class="btn wide" id="play">&#9654; Run it</button>
+        <button class="btn solid" id="next">Next &rsaquo;</button>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var TEAL='#43458f', TEALDK='#262a5c', CORAL='#d1495b';
+ function fr(a,b){return '<span class="fr"><span class="nu">'+a+'</span><span class="de">'+b+'</span></span>';}
+
+ var M=[
+ /* ---------------- machine f ---------------- */
+ {id:'f', ltr:'f', nm:'The doubler', tag:'2x + 5',
+  rule:'f(<i>x</i>) = 2<i>x</i> + 5',
+  dom:'Domain of <i>f</i>: <b>every real number</b>. Doubling and adding never fail, so nothing is thrown out.',
+  w:{xmin:-6,xmax:6,ymin:-8,ymax:18,xt:2,yt:4},
+  f:function(x){return 2*x+5;},
+  take:'A function must return <b>exactly one</b> output for each input. Run 3 through <i>f</i> a hundred times and 11 comes back a hundred times &mdash; that predictability <i>is</i> the definition. A machine that could hand back two different values for the same input would not be a function at all.',
+  I:[
+   {k:'a',lab:'3',sub:'positive',x:3,out:'11',tok:'3',otok:'11',R:[
+    {e:'f(<span class="tg">3</span>)',op:'the input',
+     w:'The symbol f(3) is a <b>question</b>: what does the machine named <i>f</i> hand back when you feed it 3? Read it out loud as "f of 3". Nothing has been calculated yet.'},
+    {e:'= 2(<span class="tg">3</span>) + 5',op:'put 3 where x was',
+     w:'The rule 2<i>x</i> + 5 is a set of instructions with a blank in it. Substituting means dropping the input into <b>every</b> blank. Keep the parentheses &mdash; they show the 3 arrived as one whole package.'},
+    {e:'= <span class="tg"><b class="nv">6</b></span> + 5',op:'2(3) = 6',
+     w:'From here it is ordinary arithmetic, done in the usual order: multiply before you add. 2 &times; 3 = <b>6</b>.'},
+    {e:'= <b class="nv">11</b>',op:'6 + 5 = 11',
+     w:'The machine hands back <b>11</b>. Written as a pair that is (3, 11) &mdash; input first, output second &mdash; and that is exactly one point on the graph of <i>f</i>.'}
+   ]},
+   {k:'b',lab:'&minus;4',sub:'negative',x:-4,out:'&minus;3',tok:'−4',otok:'−3',R:[
+    {e:'f(<span class="tg">&minus;4</span>)',op:'the input',
+     w:'Negative inputs are welcome here &mdash; nothing in 2<i>x</i> + 5 objects to them. Feed in &minus;4.'},
+    {e:'= 2(<span class="tg">&minus;4</span>) + 5',op:'put &minus;4 where x was',
+     w:'This is where the parentheses earn their keep. Writing 2&minus;4 + 5 would be a completely different expression. The input is <b>&minus;4</b>, sign included, and it goes into the blank as one object.'},
+    {e:'= <span class="tg"><b class="nv">&minus;8</b></span> + 5',op:'2(&minus;4) = &minus;8',
+     w:'A positive times a negative is negative: 2(&minus;4) = <b>&minus;8</b>.'},
+    {e:'= <b class="nv">&minus;3</b>',op:'&minus;8 + 5 = &minus;3',
+     w:'&minus;8 + 5 = <b>&minus;3</b>: start 8 below zero, climb 5, and you are still 3 below. The pair is (&minus;4, &minus;3).'}
+   ]},
+   {k:'c',lab:'0',sub:'zero',x:0,out:'5',tok:'0',otok:'5',R:[
+    {e:'f(<span class="tg">0</span>)',op:'the input',
+     w:'Zero is an input like any other. It is worth running because of <i>where</i> its point lands.'},
+    {e:'= 2(<span class="tg">0</span>) + 5',op:'put 0 where x was',
+     w:'Same habit every time: input into the blank, parentheses on.'},
+    {e:'= <span class="tg"><b class="nv">0</b></span> + 5',op:'2(0) = 0',
+     w:'Anything times zero is zero, so the 2<i>x</i> term switches off entirely. Only the constant survives.'},
+    {e:'= <b class="nv">5</b>',op:'0 + 5 = 5',
+     w:'The output is <b>5</b>, giving the point (0, 5). Because <i>x</i> = 0 <i>is</i> the vertical axis, f(0) is always the <b>y-intercept</b> &mdash; the height at which the graph crosses.'}
+   ]},
+   {k:'d',lab:'<i>a</i> + 1',sub:'an expression',x:null,out:'2<i>a</i> + 7',tok:'a+1',otok:'2a+7',R:[
+    {e:'f(<span class="tg"><i>a</i> + 1</span>)',op:'the input',
+     w:'The machine never asks what <i>kind</i> of thing you fed it. Here the whole expression <i>a</i> + 1 is the input, and it will come out as an expression too.'},
+    {e:'= 2(<span class="tg"><i>a</i> + 1</span>) + 5',op:'put a + 1 where x was',
+     w:'Now the parentheses are not a formality &mdash; they are the whole answer. The entire input sat where the <i>x</i> was, so the entire input gets doubled.'},
+    {e:'= <span class="tg"><b class="nv">2<i>a</i> + 2</b></span> + 5',op:'distribute the 2',
+     w:'2(<i>a</i> + 1) = 2&middot;<i>a</i> + 2&middot;1 = <b>2<i>a</i> + 2</b>. Drop the parentheses first and the 1 never gets doubled &mdash; the single most common slip in this section.'},
+    {e:'= <b class="nv">2<i>a</i> + 7</b>',op:'2 + 5 = 7',
+     w:'Combine the constants: <b>2<i>a</i> + 7</b>. Compare it with f(<i>a</i>) + 1 = (2<i>a</i> + 5) + 1 = 2<i>a</i> + 6. They are <b>not</b> equal. f(<i>a</i> + 1) changes the input <i>before</i> the machine runs; f(<i>a</i>) + 1 changes the output <i>after</i>.'}
+   ]}
+  ]},
+
+ /* ---------------- machine g ---------------- */
+ {id:'g', ltr:'g', nm:'Square minus', tag:'x² &minus; 3x',
+  rule:'g(<i>x</i>) = <i>x</i><sup>2</sup> &minus; 3<i>x</i>',
+  dom:'Domain of <i>g</i>: <b>every real number</b>. Squaring and multiplying accept anything you hand them.',
+  w:{xmin:-3,xmax:6,ymin:-4,ymax:12,xt:2,yt:4},
+  f:function(x){return x*x-3*x;},
+  take:'The letter is only decoration. g(<i>x</i>) = <i>x</i><sup>2</sup> &minus; 3<i>x</i>, g(<i>t</i>) = <i>t</i><sup>2</sup> &minus; 3<i>t</i>, and g(&#9633;) = &#9633;<sup>2</sup> &minus; 3&#9633; are the <b>same machine</b>. What matters is the shape of the rule and which slots the input has to fill.',
+  I:[
+   {k:'a',lab:'4',sub:'positive',x:4,out:'4',tok:'4',otok:'4',R:[
+    {e:'g(<span class="tg">4</span>)',op:'the input',
+     w:'A new machine, so a new rule &mdash; but the identical procedure. Feed in 4.'},
+    {e:'= (<span class="tg">4</span>)<sup>2</sup> &minus; 3(<span class="tg">4</span>)',op:'put 4 in BOTH blanks',
+     w:'This rule contains <b>two</b> <i>x</i>&rsquo;s, so the input goes in twice. Filling only one of them is the same as running two different numbers through one machine.'},
+    {e:'= <span class="tg"><b class="nv">16</b></span> &minus; <span class="tg"><b class="nv">12</b></span>',op:'(4)² = 16 and 3(4) = 12',
+     w:'Exponents first, then multiplication, and only then the subtraction: (4)<sup>2</sup> = 4 &times; 4 = <b>16</b>, and 3(4) = <b>12</b>.'},
+    {e:'= <b class="nv">4</b>',op:'16 &minus; 12 = 4',
+     w:'Output <b>4</b>, the pair (4, 4). A machine is perfectly free to hand back the number you gave it &mdash; that is a coincidence of this input, not a property of the rule.'}
+   ]},
+   {k:'b',lab:'&minus;2',sub:'sign trap',x:-2,out:'10',tok:'−2',otok:'10',R:[
+    {e:'g(<span class="tg">&minus;2</span>)',op:'the input',
+     w:'This is the input that catches almost everyone. Watch both signs, one at a time.'},
+    {e:'= (<span class="tg">&minus;2</span>)<sup>2</sup> &minus; 3(<span class="tg">&minus;2</span>)',op:'put &minus;2 in both blanks',
+     w:'Parentheses again, and this time they change the answer. (&minus;2)<sup>2</sup> squares the <b>whole</b> negative number; &minus;2<sup>2</sup> would square only the 2 and then negate it, giving &minus;4 instead.'},
+    {e:'= <span class="tg"><b class="nv">4</b></span> &minus; <span class="tg"><b class="nv">(&minus;6)</b></span>',op:'(&minus;2)² = 4 · 3(&minus;2) = &minus;6',
+     w:'(&minus;2)(&minus;2) = <b>4</b>, because two negatives multiplied give a positive. And 3(&minus;2) = <b>&minus;6</b> &mdash; so the thing being subtracted is itself negative.'},
+    {e:'= 4 <span class="tg">+ 6</span>',op:'subtracting &minus;6 adds 6',
+     w:'&minus;(&minus;6) = <b>+6</b>. Removing a debt of 6 leaves you 6 better off. This is the exact step where an answer of &minus;2 usually appears by mistake.'},
+    {e:'= <b class="nv">10</b>',op:'4 + 6 = 10',
+     w:'Output <b>10</b>, the pair (&minus;2, 10). The output sits far <i>above</i> the axis even though the input was below zero: squaring erased one sign, and the &minus;3<i>x</i> term flipped from subtracting to adding.'}
+   ]},
+   {k:'c',lab:'3',sub:'lands on 0',x:3,out:'0',tok:'3',otok:'0',R:[
+    {e:'g(<span class="tg">3</span>)',op:'the input',
+     w:'Try 3, and watch where its point lands on the graph.'},
+    {e:'= (<span class="tg">3</span>)<sup>2</sup> &minus; 3(<span class="tg">3</span>)',op:'put 3 in both blanks',
+     w:'Careful: the 3 already printed in the rule is <b>not</b> the input &mdash; it is part of the machine and never moves. Only the <i>x</i>&rsquo;s get replaced.'},
+    {e:'= <span class="tg"><b class="nv">9</b></span> &minus; <span class="tg"><b class="nv">9</b></span>',op:'(3)² = 9 and 3(3) = 9',
+     w:'Both pieces happen to come out to 9.'},
+    {e:'= <b class="nv">0</b>',op:'9 &minus; 9 = 0',
+     w:'Output <b>0</b>. An output of zero is not a failure &mdash; it is a perfectly good value, and its point (3, 0) sits <b>on</b> the horizontal axis. Inputs that produce an output of zero are called the <b>zeros</b> of the function.'}
+   ]},
+   {k:'d',lab:'&minus;<i>x</i>',sub:'an expression',x:null,out:'<i>x</i><sup>2</sup> + 3<i>x</i>',tok:'−x',otok:'x²+3x',R:[
+    {e:'g(<span class="tg">&minus;<i>x</i></span>)',op:'the input',
+     w:'Now feed the machine &minus;<i>x</i>. It looks unsettling because <i>x</i> is also the letter printed inside the rule &mdash; but the machine only cares about <b>position</b>. Whatever arrives goes into the blanks.'},
+    {e:'= (<span class="tg">&minus;<i>x</i></span>)<sup>2</sup> &minus; 3(<span class="tg">&minus;<i>x</i></span>)',op:'put &minus;x in both blanks',
+     w:'Every <i>x</i> in the original rule is replaced by the whole input &minus;<i>x</i>, parentheses included.'},
+    {e:'= <span class="tg"><b class="nv"><i>x</i><sup>2</sup></b></span> &minus; 3(&minus;<i>x</i>)',op:'(&minus;x)² = x²',
+     w:'(&minus;<i>x</i>)<sup>2</sup> means (&minus;<i>x</i>)(&minus;<i>x</i>). Negative times negative is positive, so the sign vanishes and this term is simply <b><i>x</i><sup>2</sup></b>.'},
+    {e:'= <i>x</i><sup>2</sup> <span class="tg">+ 3<i>x</i></span>',op:'&minus;3(&minus;x) = +3x',
+     w:'Subtracting &minus;3<i>x</i> adds 3<i>x</i>. Same rule as the numeric case, wearing a letter.'},
+    {e:'= <b class="nv"><i>x</i><sup>2</sup> + 3<i>x</i></b>',op:'the output',
+     w:'So g(&minus;<i>x</i>) = <b><i>x</i><sup>2</sup> + 3<i>x</i></b> &mdash; which is <i>not</i> g(<i>x</i>) = <i>x</i><sup>2</sup> &minus; 3<i>x</i>, and not &minus;g(<i>x</i>) = &minus;<i>x</i><sup>2</sup> + 3<i>x</i> either. Flipping the input does not simply flip the output.'}
+   ]}
+  ]},
+
+ /* ---------------- machine h ---------------- */
+ {id:'h', ltr:'h', nm:'The divider', tag:'5 over x &minus; 2',
+  rule:'h(<i>x</i>) = '+fr('5','<i>x</i> &minus; 2'),
+  dom:'Domain of <i>h</i>: every real number <b>except</b> <i>x</i> = 2 &mdash; the one input that empties the denominator.',
+  w:{xmin:-6,xmax:8,ymin:-7,ymax:7,xt:2,yt:2},
+  asym:2,
+  f:function(x){ if(Math.abs(x-2)<1e-9) return null; return 5/(x-2); },
+  take:'Every input that jams the machine is thrown out of the <b>domain</b>. For <i>h</i> the only offender is <i>x</i> = 2, so the domain is all real numbers with <i>x</i> &ne; 2. Finding a domain is nothing more than asking which inputs the machine refuses.',
+  I:[
+   {k:'a',lab:'7',sub:'safe',x:7,out:'1',tok:'7',otok:'1',R:[
+    {e:'h(<span class="tg">7</span>)',op:'the input',
+     w:'This machine divides &mdash; and division is one of only two operations in algebra that can flatly refuse to work. Start with a safe input: 7.'},
+    {e:'= '+fr('5','<span class="tg">7</span> &minus; 2'),op:'put 7 in for x',
+     w:'Only the <i>x</i> is replaced. The 5 on top and the &minus;2 underneath are fixed parts of the machine.'},
+    {e:'= '+fr('5','<b class="nv">5</b>'),op:'7 &minus; 2 = 5',
+     w:'Finish the bottom first. A fraction bar is a grouping symbol, so everything under it must collapse to a single number before any dividing happens.'},
+    {e:'= <b class="nv">1</b>',op:'5 &divide; 5 = 1',
+     w:'5 divided by 5 is <b>1</b>, giving the pair (7, 1).'}
+   ]},
+   {k:'b',lab:'0',sub:'zero',x:0,out:'&minus;2.5',tok:'0',otok:'−2.5',R:[
+    {e:'h(<span class="tg">0</span>)',op:'the input',
+     w:'Feed in 0 and watch the sign of the denominator.'},
+    {e:'= '+fr('5','<span class="tg">0</span> &minus; 2'),op:'put 0 in for x',
+     w:'Zero replaces <i>x</i>. A zero on <b>top</b> would make the whole fraction zero, but a zero arriving as the <i>input</i> is nothing special here.'},
+    {e:'= '+fr('5','<b class="nv">&minus;2</b>'),op:'0 &minus; 2 = &minus;2',
+     w:'0 &minus; 2 = <b>&minus;2</b>. The denominator is negative, so the output will be negative too.'},
+    {e:'= <b class="nv">&minus;2.5</b>',op:'5 &divide; (&minus;2) = &minus;2.5',
+     w:'5 divided by &minus;2 is <b>&minus;2.5</b> (the same number as &minus;5/2). The pair is (0, &minus;2.5) &mdash; and since the input was 0, this is again the y-intercept.'}
+   ]},
+   {k:'c',lab:'&minus;3',sub:'negative',x:-3,out:'&minus;1',tok:'−3',otok:'−1',R:[
+    {e:'h(<span class="tg">&minus;3</span>)',op:'the input',
+     w:'A negative input this time. Two minus signs are about to sit side by side.'},
+    {e:'= '+fr('5','<span class="tg">&minus;3</span> &minus; 2'),op:'put &minus;3 in for x',
+     w:'The two signs mean different things: the first belongs to the <b>input</b>, the second is the <b>machine</b> subtracting 2. Read them separately.'},
+    {e:'= '+fr('5','<b class="nv">&minus;5</b>'),op:'&minus;3 &minus; 2 = &minus;5',
+     w:'Starting at &minus;3 and going down 2 more lands on <b>&minus;5</b>, not &minus;1. Subtracting always moves left on the number line, whether you start above zero or below it.'},
+    {e:'= <b class="nv">&minus;1</b>',op:'5 &divide; (&minus;5) = &minus;1',
+     w:'Output <b>&minus;1</b>, the pair (&minus;3, &minus;1).'}
+   ]},
+   {k:'d',lab:'2',sub:'jams',x:2,out:'undefined',jam:1,ansjam:'undefined',tok:'2',otok:'—',R:[
+    {e:'h(<span class="tg">2</span>)',op:'the input',
+     w:'Now feed in 2 and follow it all the way down. Nothing looks wrong at the start.'},
+    {e:'= '+fr('5','<span class="tg">2</span> &minus; 2'),op:'put 2 in for x',
+     w:'The substitution itself is completely legal. The trouble is one step away.'},
+    {e:'= '+fr('5','<b class="nv">0</b>'),op:'2 &minus; 2 = 0',jam:1,
+     w:'The denominator has collapsed to <b>0</b>. Division asks a question: how many 0&rsquo;s do you need to build 5? No count of zeros ever reaches 5 &mdash; not one, not a million &mdash; so there is no number to hand back.'},
+    {e:'= <b class="nv">undefined</b>',op:'the machine jams',jam:1,
+     w:'h(2) does not exist. It is not zero, and it is not infinity &mdash; there is simply <b>no output</b>. An input the machine cannot process gets thrown out of the domain, written <i>x</i> &ne; 2. Every other real number still works, which is why the graph comes in two separate pieces that lean away from the dashed line at <i>x</i> = 2 without ever touching it.'}
+   ]}
+  ]},
+
+ /* ---------------- machine k ---------------- */
+ {id:'k', ltr:'k', nm:'The root', tag:'&radic;(x &minus; 1)',
+  rule:'k(<i>x</i>) = &radic;<span style="border-top:1.4px solid;padding:1px 3px 0;">&nbsp;<i>x</i> &minus; 1&nbsp;</span>',
+  dom:'Domain of <i>k</i>: only inputs with <i>x</i> &minus; 1 &ge; 0, that is <b><i>x</i> &ge; 1</b>. Everything to the left is refused.',
+  w:{xmin:-4,xmax:12,ymin:-2,ymax:5,xt:2,yt:1},
+  shade:1, endpt:{x:1,y:0},
+  f:function(x){ if(x<1) return null; return Math.sqrt(x-1); },
+  take:'Only two operations do the refusing in algebra: <b>division</b>, which rejects a zero denominator, and the <b>even root</b>, which rejects a negative underneath. Scan any new rule for those two and you have found its domain.',
+  I:[
+   {k:'a',lab:'10',sub:'safe',x:10,out:'3',tok:'10',otok:'3',R:[
+    {e:'k(<span class="tg">10</span>)',op:'the input',
+     w:'The square root is the second operation that can refuse: among the real numbers, you cannot take the square root of a negative. Start somewhere safe with 10.'},
+    {e:'= &radic;(<span class="tg">10</span> &minus; 1)',op:'put 10 in for x',
+     w:'The bar of the radical is a grouping symbol, exactly like parentheses, so the whole subtraction happens underneath before any root is taken.'},
+    {e:'= &radic;<b class="nv">9</b>',op:'10 &minus; 1 = 9',
+     w:'Clear the inside first: <b>9</b>.'},
+    {e:'= <b class="nv">3</b>',op:'&radic;9 = 3',
+     w:'&radic;9 asks for the non-negative number that squares to 9. Since 3 &times; 3 = 9, the output is <b>3</b> and the pair is (10, 3).'}
+   ]},
+   {k:'b',lab:'5',sub:'safe',x:5,out:'2',tok:'5',otok:'2',R:[
+    {e:'k(<span class="tg">5</span>)',op:'the input',
+     w:'Feed in 5 and compare what comes out with the run above.'},
+    {e:'= &radic;(<span class="tg">5</span> &minus; 1)',op:'put 5 in for x',
+     w:'Same substitution, new number underneath the bar.'},
+    {e:'= &radic;<b class="nv">4</b>',op:'5 &minus; 1 = 4',
+     w:'Inside first: <b>4</b>.'},
+    {e:'= <b class="nv">2</b>',op:'&radic;4 = 2',
+     w:'Output <b>2</b>. Notice the inputs 5 and 10 are five apart, but their outputs 2 and 3 are only one apart &mdash; a root machine squeezes large inputs together, which is exactly why its graph flattens out as it moves right.'}
+   ]},
+   {k:'c',lab:'1',sub:'the edge',x:1,out:'0',tok:'1',otok:'0',R:[
+    {e:'k(<span class="tg">1</span>)',op:'the input',
+     w:'1 is the smallest input this machine will accept. Watch carefully at the edge.'},
+    {e:'= &radic;(<span class="tg">1</span> &minus; 1)',op:'put 1 in for x',
+     w:'Substitute exactly as before &mdash; the edge case gets no special treatment.'},
+    {e:'= &radic;<b class="nv">0</b>',op:'1 &minus; 1 = 0',
+     w:'The inside is exactly <b>0</b>: the boundary between what this machine can and cannot take.'},
+    {e:'= <b class="nv">0</b>',op:'&radic;0 = 0',
+     w:'&radic;0 = <b>0</b>, so 1 <i>is</i> in the domain &mdash; zero underneath is allowed; only negatives are not. The pair (1, 0) is the endpoint of the graph, drawn as a solid dot because that point is included.'}
+   ]},
+   {k:'d',lab:'&minus;3',sub:'jams',x:-3,out:'no real value',jam:1,ansjam:'not a real number',tok:'−3',otok:'—',R:[
+    {e:'k(<span class="tg">&minus;3</span>)',op:'the input',
+     w:'Now try &minus;3 and follow it down.'},
+    {e:'= &radic;(<span class="tg">&minus;3</span> &minus; 1)',op:'put &minus;3 in for x',
+     w:'Substituting is still perfectly legal. Nothing has gone wrong yet.'},
+    {e:'= &radic;<b class="nv">&minus;4</b>',op:'&minus;3 &minus; 1 = &minus;4',jam:1,
+     w:'The inside is <b>&minus;4</b>. Now ask the question a square root actually asks: which real number, multiplied by itself, gives &minus;4? A positive times a positive is positive &mdash; and a negative times a negative is <i>also</i> positive.'},
+    {e:'= <b class="nv">no real output</b>',op:'the machine jams',jam:1,
+     w:'No real number squares to a negative, so k(&minus;3) does not exist. This machine accepts an input only when <i>x</i> &minus; 1 &ge; 0, that is <b><i>x</i> &ge; 1</b>. That is why the graph simply <b>stops</b> at (1, 0) instead of continuing to the left &mdash; there is nothing over there to draw.'}
+   ]}
+  ]}
+ ];
+
+ var mi=0, ii=0, si=0, timer=null;
+ var runs={}; M.forEach(function(m){runs[m.id]={};});
+
+ function cm(){return M[mi];}
+ function ci(){return M[mi].I[ii];}
+ function cs(){return ci().R[si];}
+ function fmt(v){ return (v<0?'&minus;':'')+Math.abs(v); }
+ function ticks(a,b,st){ var o=[],v=Math.ceil(a/st)*st; for(;v<=b+1e-9;v+=st) o.push(Math.round(v*1000)/1000); return o; }
+
+ /* ---------- the machine drawing ---------- */
+ function gearArt(){
+   var o='', G=[{cx:70,cy:160,r:16,n:9,c:'rot'},{cx:172,cy:163,r:12,n:8,c:'rot b'}];
+   for(var i=0;i<G.length;i++){ var g=G[i], s='';
+     for(var t=0;t<g.n;t++){
+       s+='<rect x="-2.6" y="'+(-g.r-4.5)+'" width="5.2" height="6" rx="1.4" fill="#c9ccdf" transform="rotate('+(t/g.n*360).toFixed(1)+')"/>';
+     }
+     s+='<circle cx="0" cy="0" r="'+g.r+'" fill="#e6e8f5" stroke="#c9ccdf" stroke-width="1.4"/>';
+     s+='<circle cx="0" cy="0" r="'+(g.r*0.3)+'" fill="#c9ccdf"/>';
+     o+='<g transform="translate('+g.cx+','+g.cy+')"><g class="'+g.c+'">'+s+'</g></g>';
+   }
+   $('gears').innerHTML=o;
+ }
+
+ function machArt(jam,done){
+   var m=cm(), o='';
+   o+='<text x="120" y="12" font-size="8" font-weight="800" text-anchor="middle" fill="#9a9db4" font-family="Inter,sans-serif" letter-spacing="1.6">INPUT</text>';
+   o+='<polygon points="68,46 172,46 140,78 100,78" fill="#e6e8f5" stroke="#c9ccdf" stroke-width="1.5"/>';
+   o+='<rect x="44" y="78" width="152" height="104" rx="16" fill="#fffdf9" stroke="'+(jam?CORAL:TEAL)+'" stroke-width="2.4"/>';
+   o+='<rect x="52" y="86" width="136" height="20" rx="8" fill="'+(jam?'#fae5e8':'#eef0f8')+'"/>';
+   o+='<text x="120" y="100" font-size="10.5" font-weight="700" text-anchor="middle" fill="'+(jam?'#b23145':TEALDK)+'" font-family="Inter,sans-serif">'+(jam?'JAMMED':'RULE  '+m.tag)+'</text>';
+   o+='<text x="56" y="176" font-size="15" font-style="italic" font-weight="700" fill="'+(jam?CORAL:TEAL)+'" font-family="Georgia,serif" opacity=".55">'+m.ltr+'</text>';
+   o+='<polygon points="102,182 138,182 130,208 110,208" fill="#e6e8f5" stroke="#c9ccdf" stroke-width="1.5"/>';
+   o+='<rect x="56" y="208" width="128" height="34" rx="11" fill="'+(jam?'#fae5e8':'#f4f5fb')+'" stroke="'+(jam?'#f0c9d0':'#dcdfee')+'" stroke-width="1.4"/>';
+   if(jam) o+='<text x="120" y="230" font-size="11" font-weight="800" text-anchor="middle" fill="#b23145" font-family="Inter,sans-serif">NO OUTPUT</text>';
+   else if(!done) o+='<text x="120" y="230" font-size="13" text-anchor="middle" fill="#c2c5d8" font-family="Georgia,serif">?</text>';
+   o+='<text x="120" y="256" font-size="8" font-weight="800" text-anchor="middle" fill="#9a9db4" font-family="Inter,sans-serif" letter-spacing="1.6">OUTPUT</text>';
+   $('mach').innerHTML=o;
+ }
+
+ function token(){
+   var inp=ci(), s=cs(), last=(si===ci().R.length-1), jam=!!s.jam;
+   var out=(last&&!inp.jam), y = si===0?26:(out?225:130);
+   var txt = out?inp.otok:inp.tok, col = jam?CORAL:TEAL;
+   var w=Math.max(52,Math.min(132,txt.length*11+22));
+   $('tokR').setAttribute('x',(-w/2).toFixed(1)); $('tokR').setAttribute('width',w.toFixed(1));
+   $('tokR').setAttribute('fill',col);
+   $('tokT').textContent=txt;
+   $('tok').setAttribute('transform','translate(120,'+y+')');
+   $('tok').style.transform='translate(120px,'+y+'px)';
+   $('gears').setAttribute('class',(si>0&&!last)?'run':'');
+   machArt(jam,out);
+ }
+
+ /* ---------- the graph ---------- */
+ function graph(){
+   var m=cm(), w=m.w, L=30,R=232,T=10,B=176, o='', i, tv, px, py;
+   var X=function(v){return L+(v-w.xmin)/(w.xmax-w.xmin)*(R-L);};
+   var Y=function(v){return T+(w.ymax-v)/(w.ymax-w.ymin)*(B-T);};
+   o+='<defs><clipPath id="cpplot"><rect x="'+L+'" y="'+T+'" width="'+(R-L)+'" height="'+(B-T)+'"/></clipPath></defs>';
+   o+='<rect x="'+L+'" y="'+T+'" width="'+(R-L)+'" height="'+(B-T)+'" fill="#fbfbfe" stroke="#e0e2ef"/>';
+   if(m.shade!==undefined){ var xs=X(m.shade);
+     o+='<rect x="'+L+'" y="'+T+'" width="'+(xs-L)+'" height="'+(B-T)+'" fill="#fae5e8" opacity=".5"/>';
+     o+='<text x="'+((L+xs)/2)+'" y="'+(T+13)+'" font-size="7" font-weight="800" text-anchor="middle" fill="#c07b87" font-family="Inter,sans-serif">REFUSED</text>'; }
+   var xa=ticks(w.xmin,w.xmax,w.xt);
+   for(i=0;i<xa.length;i++){ tv=xa[i]; px=X(tv);
+     o+='<line x1="'+px.toFixed(1)+'" y1="'+T+'" x2="'+px.toFixed(1)+'" y2="'+B+'" stroke="#eceef7"/>';
+     o+='<text x="'+px.toFixed(1)+'" y="'+(B+13)+'" font-size="7.5" text-anchor="middle" fill="#9a9db4" font-family="Inter,sans-serif">'+fmt(tv)+'</text>'; }
+   var ya=ticks(w.ymin,w.ymax,w.yt);
+   for(i=0;i<ya.length;i++){ tv=ya[i]; py=Y(tv);
+     o+='<line x1="'+L+'" y1="'+py.toFixed(1)+'" x2="'+R+'" y2="'+py.toFixed(1)+'" stroke="#eceef7"/>';
+     o+='<text x="'+(L-4)+'" y="'+(py+2.6).toFixed(1)+'" font-size="7.5" text-anchor="end" fill="#9a9db4" font-family="Inter,sans-serif">'+fmt(tv)+'</text>'; }
+   o+='<line x1="'+L+'" y1="'+Y(0).toFixed(1)+'" x2="'+R+'" y2="'+Y(0).toFixed(1)+'" stroke="#b9bdd4" stroke-width="1.6"/>';
+   o+='<line x1="'+X(0).toFixed(1)+'" y1="'+T+'" x2="'+X(0).toFixed(1)+'" y2="'+B+'" stroke="#b9bdd4" stroke-width="1.6"/>';
+   if(m.asym!==undefined){ var xz=X(m.asym).toFixed(1);
+     o+='<line x1="'+xz+'" y1="'+T+'" x2="'+xz+'" y2="'+B+'" stroke="'+CORAL+'" stroke-width="1.4" stroke-dasharray="4 4"/>';
+     o+='<text x="'+(X(m.asym)+4)+'" y="'+(T+12)+'" font-size="7" font-weight="800" fill="'+CORAL+'" font-family="Inter,sans-serif">x = '+m.asym+'</text>'; }
+   /* curve, sampled and broken where the machine refuses or runs off the board */
+   var segs=[], cur=[], N=460, span=(w.ymax-w.ymin);
+   for(i=0;i<=N;i++){
+     var xv=w.xmin+(w.xmax-w.xmin)*i/N, yv=m.f(xv);
+     var ok=(yv!==null && isFinite(yv) && yv>w.ymin-span && yv<w.ymax+span);
+     if(ok) cur.push(X(xv).toFixed(1)+','+Y(yv).toFixed(1));
+     else { if(cur.length>1) segs.push(cur.join(' ')); cur=[]; }
+   }
+   if(cur.length>1) segs.push(cur.join(' '));
+   o+='<g clip-path="url(#cpplot)">';
+   for(i=0;i<segs.length;i++) o+='<polyline points="'+segs[i]+'" fill="none" stroke="'+TEAL+'" stroke-width="2.2" stroke-linecap="round" opacity=".85"/>';
+   o+='</g>';
+   if(m.endpt) o+='<circle cx="'+X(m.endpt.x).toFixed(1)+'" cy="'+Y(m.endpt.y).toFixed(1)+'" r="3.6" fill="'+TEAL+'"/>';
+   /* points collected so far */
+   var rec=runs[m.id], here=ci();
+   for(i=0;i<m.I.length;i++){
+     var inp=m.I[i]; if(inp.x===null) continue;
+     var isC=(inp.k===here.k), done=!!rec[inp.k];
+     var gx=X(inp.x);
+     if(inp.jam){
+       if(done){ o+='<line x1="'+(gx-4.5)+'" y1="'+(Y(0)-4.5)+'" x2="'+(gx+4.5)+'" y2="'+(Y(0)+4.5)+'" stroke="'+CORAL+'" stroke-width="2.2"/>';
+         o+='<line x1="'+(gx-4.5)+'" y1="'+(Y(0)+4.5)+'" x2="'+(gx+4.5)+'" y2="'+(Y(0)-4.5)+'" stroke="'+CORAL+'" stroke-width="2.2"/>';
+         if(isC) o+='<text x="'+gx+'" y="'+(Y(0)-11)+'" font-size="7.5" font-weight="800" text-anchor="middle" fill="'+CORAL+'" font-family="Inter,sans-serif">NO OUTPUT</text>'; }
+       else { o+='<circle cx="'+gx+'" cy="'+Y(0)+'" r="4" fill="#fff" stroke="#dba3ad" stroke-width="1.5"/>'; }
+       continue;
+     }
+     var gy=Y(m.f(inp.x));
+     if(done){
+       if(isC){
+         o+='<line x1="'+gx+'" y1="'+Y(0).toFixed(1)+'" x2="'+gx+'" y2="'+gy.toFixed(1)+'" stroke="'+TEAL+'" stroke-width="1.2" stroke-dasharray="3 3" opacity=".7"/>';
+         o+='<line x1="'+X(0).toFixed(1)+'" y1="'+gy.toFixed(1)+'" x2="'+gx+'" y2="'+gy.toFixed(1)+'" stroke="'+TEAL+'" stroke-width="1.2" stroke-dasharray="3 3" opacity=".7"/>';
+       }
+       o+='<circle cx="'+gx+'" cy="'+gy.toFixed(1)+'" r="'+(isC?5.4:3.8)+'" fill="'+TEAL+'" stroke="#fff" stroke-width="1.8"/>';
+       if(isC){ var lx=gx+9, an='start'; if(gx>R-56){ lx=gx-9; an='end'; }
+         var ly=gy-9; if(gy<T+16) ly=gy+16;
+         o+='<text x="'+lx+'" y="'+ly.toFixed(1)+'" font-size="11" font-weight="700" text-anchor="'+an+'" fill="'+TEALDK+'" font-family="Georgia,serif">('+fmt(inp.x)+', '+fmt(Math.round(m.f(inp.x)*1000)/1000)+')</text>'; }
+     } else {
+       o+='<circle cx="'+gx+'" cy="'+Y(0).toFixed(1)+'" r="4" fill="#fff" stroke="#c2c5d8" stroke-width="1.5"/>';
+       if(isC) o+='<text x="'+gx+'" y="'+(Y(0)-10)+'" font-size="10" font-weight="800" text-anchor="middle" fill="#a9adc4" font-family="Inter,sans-serif">?</text>';
+     }
+   }
+   $('gr').innerHTML=o;
+   $('pairs').innerHTML=m.I.map(function(inp){
+     if(!rec[inp.k]) return '<span class="gh">'+inp.lab+' &rarr; ?</span>';
+     return '<span'+(inp.jam?' class="jm"':'')+'>'+inp.lab+' &rarr; '+inp.out+'</span>';
+   }).join('');
+   $('dom').innerHTML=m.dom;
+ }
+
+ /* ---------- main render ---------- */
+ function render(){
+   var m=cm(), inp=ci(), s=cs(), last=(si===inp.R.length-1), jam=!!s.jam;
+   if(last) runs[m.id][inp.k]=true;
+
+   $('machs').innerHTML=M.map(function(q,i){
+     return '<button data-i="'+i+'"'+(i===mi?' class="on"':'')+'>'+q.ltr+'(<i>x</i>)<small>'+q.tag+'</small></button>';}).join('');
+   Array.prototype.forEach.call($('machs').children,function(b){
+     b.onclick=function(){ stop(); mi=+b.dataset.i; ii=0; si=0; render(); };});
+
+   $('ins').innerHTML=m.I.map(function(q,i){
+     return '<button data-i="'+i+'" class="'+(q.jam?'jam ':'')+(i===ii?'on':'')+'">'+m.ltr+'('+q.lab+')<small>'+q.sub+'</small></button>';}).join('');
+   Array.prototype.forEach.call($('ins').children,function(b){
+     b.onclick=function(){ stop(); ii=+b.dataset.i; si=0; render(); };});
+
+   var rows='';
+   for(var i=0;i<=si;i++){
+     var r=inp.R[i];
+     rows+='<div class="dl'+(i===si?' cur':'')+(r.jam?' jam':'')+'"><div class="mx">'+r.e+'</div><div class="pl">'+r.op+'</div></div>';
+   }
+   $('mb').innerHTML=rows;
+
+   $('mTitle').innerHTML='The machine &mdash; '+m.nm;
+   $('rule').innerHTML=m.rule;
+
+   $('stage').style.background = jam?CORAL:TEAL;
+   $('stage').innerHTML = m.ltr+'('+inp.lab+')<small>'+m.nm+' &middot; step '+(si+1)+' of '+inp.R.length+'</small>';
+
+   $('ansline').className='ans'+(jam?' jam':'');
+   $('ansline').innerHTML = last
+     ? (inp.jam ? m.ltr+'('+inp.lab+') is <b>'+inp.ansjam+'</b>' : m.ltr+'('+inp.lab+') = <b>'+inp.out+'</b>')
+     : '<span style="opacity:.75">'+(inp.R.length-1-si)+' step'+((inp.R.length-1-si)===1?'':'s')+' still to go</span>';
+
+   $('info').innerHTML='<span class="n">'+s.op+'</span>'+s.w+(last?'<div class="loc">'+m.take+'</div>':'');
+
+   if(jam){ $('warn').style.display='';
+     $('warn').innerHTML = m.id==='h'
+       ? '<b>Nothing may be divided by zero.</b> Not "it equals zero," not "it equals infinity" &mdash; the operation has no result at all, so the machine produces nothing and the input is removed from the domain.'
+       : '<b>No real number has a negative square.</b> Positive &times; positive is positive, and negative &times; negative is positive too, so nothing squares to a negative &mdash; and an even root of a negative has no real value.';
+   } else { $('warn').style.display='none'; }
+
+   $('prev').disabled=(si===0);
+   $('next').disabled=last;
+   $('play').disabled=last;
+   token(); graph();
+ }
+
+ function stop(){ if(timer){clearInterval(timer);timer=null;} $('play').innerHTML='&#9654; Run it'; }
+ $('prev').onclick=function(){ stop(); if(si>0){si--;render();} };
+ $('next').onclick=function(){ stop(); if(si<ci().R.length-1){si++;render();} };
+ $('play').onclick=function(){
+   if(timer){ stop(); return; }
+   $('play').innerHTML='&#10073;&#10073; Pause';
+   timer=setInterval(function(){
+     if(si<ci().R.length-1){ si++; render(); if(si===ci().R.length-1) stop(); }
+     else stop();
+   },1500);
+ };
+ gearArt();
+ render();
+})();
+</script>
+</body>
+</html>

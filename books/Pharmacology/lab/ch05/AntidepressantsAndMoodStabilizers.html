@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Antidepressants, Lithium &amp; Serotonin Syndrome</title>
+<meta name="description" content="Interactive comparison of SSRIs, SNRIs, TCAs, MAOIs and atypical antidepressants at the synapse; a draggable lithium level gauge with the interactions that push it toxic; and a serotonin syndrome regimen builder. For pharmacology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+svg text{font-family:var(--sans);}
+.cap{font-size:11.5px;color:var(--muted);text-align:center;margin-top:6px;line-height:1.45;}
+.cap b{color:var(--soft);}
+.modeseg button{font-size:12px;padding:11px 4px;line-height:1.2;}
+.chk{display:flex;gap:7px;margin-top:12px;}
+.chk div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 4px;font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);background:#fff;}
+.chk div .v{display:block;font-size:12px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--teal-dk);margin-top:3px;line-height:1.25;}
+.chk div.warn .v{color:#b23145;}
+.chk div.good .v{color:#237a45;}
+.list{max-height:392px;overflow-y:auto;padding-right:2px;}
+.list.free{max-height:none;overflow-y:visible;padding-right:0;}
+.it .nm{display:block;} .it .ct{display:block;line-height:1.3;margin-top:1px;}
+.it .rt{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);background:#eef2f8;border-radius:20px;padding:3px 8px;flex:none;white-space:nowrap;}
+.it.on .rt{background:rgba(255,255,255,.22);color:#fff;}
+.it.hi{background:#eff4fb;}
+.grp{font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:9px 0 1px;}
+.grp:first-child{margin-top:2px;}
+#info .cls{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-radius:20px;padding:3px 10px;margin-bottom:6px;color:#fff;}
+.slab{font-size:9.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);margin:2px 0 5px;}
+input[type=range]{width:100%;accent-color:#2f5f9e;height:24px;cursor:pointer;}
+.grid .it{display:block;text-align:left;font-weight:700;font-size:11.5px;padding:8px 9px;line-height:1.25;}
+.grid .it span{display:block;font-weight:500;font-size:9.6px;color:var(--muted);margin-top:1px;}
+.grid .it.on{background:var(--teal);border-color:var(--teal);color:#fff;}
+.grid .it.on span{color:rgba(255,255,255,.85);}
+.grid .it.tox.on{background:#b23145;border-color:#b23145;}
+.bar{height:9px;border-radius:5px;background:#e4eaf3;overflow:hidden;margin-top:5px;}
+.bar i{display:block;height:100%;background:var(--teal);transition:width .3s;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 5</div>
+  <h1>Antidepressants, Lithium &amp; Serotonin Syndrome</h1>
+  <div class="intro">Every antidepressant does one thing: it leaves <b>more monoamine in the synapse</b>. What separates the classes is <i>which</i> monoamine, <i>what else</i> the drug hits by accident, and <i>what kills the patient</i> when it goes wrong. Then there is <b>lithium</b>, which is not about a receptor at all &mdash; it is about a <b>number</b>. Pick a mode below.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The synapse</h2>
+    <svg id="svgEl" viewBox="0 0 300 220" aria-label="diagram"><g id="art"></g></svg>
+    <div class="cap" id="cap"></div>
+  </div></div>
+  <div>
+    <div id="stage">Antidepressants &amp; mood stabilizers<small>pick a mode</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg">
+        <button data-m="cls" class="on">The classes</button>
+        <button data-m="li">Lithium level</button>
+        <button data-m="ss">Serotonin syndrome</button>
+      </div>
+      <div class="list" id="list"></div>
+      <div class="chk">
+        <div id="k1">—<span class="v" id="v1">—</span></div>
+        <div id="k2">—<span class="v" id="v2">—</span></div>
+        <div id="k3">—<span class="v" id="v3">—</span></div>
+      </div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ============ MODE A — sites on the synapse ============ */
+ var SITE={
+  S1:{c:'#2f9e5b',nm:'SERT &mdash; the serotonin reuptake pump',
+      d:'After serotonin is released it does <b>not</b> get destroyed in the cleft &mdash; it gets <b>vacuumed back up</b> by SERT and reused. Block that pump and 5-HT lingers, so the postsynaptic neuron sees more of it. This is the single most-used target in psychiatry.<div class="dd">It also explains three things students find random. <b>Platelets</b> use SERT to load their serotonin, so blocking it impairs clotting &mdash; hence the <b>bleeding risk</b>. The <b>gut</b> holds most of the body&rsquo;s serotonin, so the first week is nausea. And 5-HT in the <b>spinal cord</b> is what causes the sexual dysfunction that makes patients quit.</div>'},
+  S2:{c:'#2f6f9f',nm:'NET &mdash; the norepinephrine reuptake pump',
+      d:'The same idea, one transmitter over. Blocking <b>NET</b> raises norepinephrine &mdash; which lifts <b>energy, drive, and concentration</b> more than 5-HT alone does, and helps neuropathic pain through the descending inhibitory tract.<div class="dd">The price is written on the vital-sign flowsheet: more NE means <b>higher blood pressure</b>, tachycardia, and sweating. Any drug that blocks NET buys you a blood-pressure check.</div>'},
+  S3:{c:'#b8862f',nm:'DAT &mdash; the dopamine reuptake pump',
+      d:'Blocking <b>DAT</b> raises dopamine &mdash; motivation, reward, drive. Only <b>bupropion</b> works here among the common antidepressants.<div class="dd">Because it leaves serotonin alone, it causes <b>no sexual dysfunction and no weight gain</b> &mdash; the two reasons patients stop taking SSRIs. That is the entire reason bupropion has a place. The trade is that dopamine and norepinephrine are <b>stimulating</b>: it lowers the seizure threshold and it will keep the patient awake if you give it at bedtime.</div>'},
+  S4:{c:'#d1495b',nm:'MAO &mdash; the enzyme that destroys them all',
+      d:'<b>Monoamine oxidase</b> sits inside the presynaptic terminal and chews up serotonin, norepinephrine, and dopamine after they are recycled. Inhibit it and <b>all three</b> pile up. It is the most powerful mechanism on this page &mdash; and the most dangerous.<div class="dd"><b>MAO-A also lives in the gut wall</b>, where its day job is destroying <b>tyramine</b> in food before it reaches the circulation. Take that enzyme away and dietary tyramine is absorbed intact, floods the nerve terminals, and <b>dumps stored norepinephrine all at once</b> &mdash; a <b>hypertensive crisis</b>. Every MAOI food rule traces to this one sentence.</div>'},
+  S5:{c:'#c76b3a',nm:'&alpha;&#8322; autoreceptor &mdash; the release brake',
+      d:'The presynaptic <b>&alpha;&#8322; autoreceptor</b> is a thermostat. When norepinephrine builds up in the cleft it feeds back onto this receptor and tells the neuron <b>&ldquo;enough &mdash; stop releasing.&rdquo;</b><div class="dd"><b>Mirtazapine blocks that brake.</b> The neuron never gets the stop signal, so it keeps releasing NE and 5-HT. Same destination as a reuptake blocker &mdash; more transmitter in the cleft &mdash; reached from the opposite direction: <b>more released</b> rather than <b>less removed</b>.</div>'},
+  S6:{c:'#7a5a8a',nm:'Off-target receptors &mdash; where the side effects live',
+      d:'The reuptake pumps give you the <b>benefit</b>. These three receptors give you the <b>side effects</b> &mdash; and they are the reason the old drugs are hard to take.<div class="dd"><b>Muscarinic (M)</b> blockade &rarr; dry mouth, constipation, <b>urinary retention</b>, blurred vision, confusion in older adults. <b>Histamine (H&#8321;)</b> blockade &rarr; <b>sedation and weight gain</b>. <b>&alpha;&#8321;-adrenergic</b> blockade &rarr; <b>orthostatic hypotension</b> and falls.</div><div class="loc">This is the whole story of the TCAs in one line: <b>they work like an SNRI and feel like an antihistamine.</b> The SSRIs are &ldquo;selective&rdquo; precisely because they skip this row.</div>'}
+ };
+
+ var AD=[
+  {k:'sertraline',nm:'Sertraline',ct:'SSRI',cls:'SSRI',col:'#2f9e5b',rt:'SERT',g:'SSRI — first-line',
+   sites:['S1'],ht:2,ne:0,da:0,blk:{sert:1},off:[],
+   f1:'5-HT',f2:'4&ndash;6 weeks',f3:'Sexual dysfunction · GI',w2:1,
+   moa:'Selectively blocks <b>SERT</b>, the serotonin reuptake pump, so 5-HT stays in the cleft longer. It leaves norepinephrine, dopamine, and the muscarinic/histamine/&alpha;&#8321; receptors essentially alone &mdash; <b>that selectivity is the whole point</b>, and it is why an SSRI is first-line while a TCA is not.',
+   use:['Major depression','Generalized anxiety, panic, OCD','PTSD','Premenstrual dysphoric disorder'],
+   ae:'Nausea and GI upset in the first 1&ndash;2 weeks (usually settles), headache, insomnia or somnolence, diaphoresis, and <b>sexual dysfunction</b> &mdash; which does <b>not</b> settle and is the leading reason patients quit. Also <b>hyponatremia/SIADH</b> and <b>increased bleeding risk</b>.',
+   nu:'Teach the timeline before the first dose: <b>sleep and appetite improve in 1&ndash;2 weeks, mood takes 4&ndash;6</b>. Patients who are not told this quit at week two and call the drug a failure. <b>Ask about sexual side effects directly</b> &mdash; nobody volunteers them, and they are fixable by switching. Give with food for nausea. <b>Never stop abruptly</b>: taper, or you get discontinuation syndrome. Check <b>sodium</b> in older adults with new confusion, and watch for <b>bruising or bleeding</b> when an NSAID or anticoagulant is on the same MAR.',
+   no:'<b>Boxed warning: increased suicidal thinking and behavior in patients under 25.</b> The danger window is the <b>first few weeks and after any dose change</b> &mdash; energy and initiative return <i>before</i> mood does, so a patient who was too paralyzed to act may now be able to. <b>Assess suicide risk at every contact early on.</b> Requires a <b>14-day gap</b> from any MAOI in either direction. Serotonin syndrome risk with any other serotonergic drug.',
+   mn:'Energy comes back before mood does &mdash; that is the risky window.'},
+  {k:'fluoxetine',nm:'Fluoxetine',ct:'SSRI · very long half-life',cls:'SSRI',col:'#2f9e5b',rt:'SERT',
+   sites:['S1'],ht:2,ne:0,da:0,blk:{sert:1},off:[],
+   f1:'5-HT',f2:'4&ndash;6 weeks',f3:'5-week MAOI washout',w2:1,
+   moa:'The same <b>SERT</b> blockade, but fluoxetine and its active metabolite <b>norfluoxetine</b> hang around for <b>weeks</b> rather than hours &mdash; by far the longest half-life in the class.',
+   use:['Major depression (approved down to age 8)','OCD, panic, bulimia nervosa'],
+   ae:'More <b>activating</b> than the other SSRIs &mdash; insomnia, jitteriness, anorexia &mdash; plus the class effects: nausea, sexual dysfunction, hyponatremia, bleeding risk.',
+   nu:'<b>Dose it in the morning</b>; an evening dose costs the patient their sleep. The long half-life cuts both ways: a missed dose barely matters and <b>discontinuation syndrome is mild or absent</b>, but <b>a mistake takes weeks to undo</b>.',
+   no:'<b>The washout is 5 weeks, not 14 days.</b> Because norfluoxetine persists so long, you must wait <b>5 weeks after stopping fluoxetine before starting an MAOI</b> &mdash; every other SSRI needs only 14 days. Going the other way (MAOI &rarr; fluoxetine) is still 14 days. Carries the same under-25 suicidality boxed warning. A potent <b>CYP2D6 inhibitor</b>, so it raises levels of many drugs.',
+   mn:'Every other SSRI waits 14 days for an MAOI. Fluoxetine waits <b>5 weeks</b>.'},
+  {k:'paroxetine',nm:'Paroxetine',ct:'SSRI · short half-life',cls:'SSRI',col:'#2f9e5b',rt:'SERT',
+   sites:['S1','S6'],ht:2,ne:0,da:0,blk:{sert:1},off:['M'],
+   f1:'5-HT',f2:'4&ndash;6 weeks',f3:'Discontinuation · pregnancy',w2:1,
+   moa:'The same <b>SERT</b> blockade, but paroxetine is the <b>most anticholinergic and most sedating</b> SSRI and has the <b>shortest half-life</b> with no active metabolite. Those two facts generate everything below.',
+   use:['Major depression','Social anxiety disorder, panic, OCD, PTSD'],
+   ae:'The worst <b>discontinuation syndrome</b> in the class, more sedation, more weight gain, and anticholinergic effects (dry mouth, constipation) the other SSRIs largely skip.',
+   nu:'<b>Do not let this one be missed or stopped cold.</b> Discontinuation syndrome &mdash; flu-like aching, insomnia, nausea, imbalance, &ldquo;<b>brain zaps</b>,&rdquo; irritability &mdash; can start within a day or two and is frightening if nobody warned the patient. <b>Taper slowly</b>, and teach that these symptoms mean withdrawal, <b>not addiction and not relapse</b>.',
+   no:'<b>Avoid in pregnancy</b> &mdash; paroxetine is associated with <b>fetal cardiac defects</b> when taken in the first trimester, and is the one SSRI singled out for this. Confirm pregnancy status before starting in a person of childbearing potential. A potent <b>CYP2D6 inhibitor</b>. Same under-25 boxed warning; 14-day MAOI rule.',
+   mn:'Shortest half-life &rarr; worst withdrawal. Taper paroxetine, always.'},
+  {k:'citalopram',nm:'Citalopram',ct:'SSRI · dose-capped',cls:'SSRI',col:'#2f9e5b',rt:'SERT',
+   sites:['S1'],ht:2,ne:0,da:0,blk:{sert:1},off:[],
+   f1:'5-HT',f2:'4&ndash;6 weeks',f3:'QT — 40 mg ceiling',w2:1,
+   moa:'A clean, highly selective <b>SERT</b> blocker with few drug interactions &mdash; which is why it and escitalopram are favored in medically complicated patients. Its one liability is <b>dose-dependent QT prolongation</b>.',
+   use:['Major depression','Anxiety disorders'],
+   ae:'The class effects &mdash; nausea, sexual dysfunction, insomnia, hyponatremia &mdash; plus <b>QT prolongation</b> that grows with the dose.',
+   nu:'Know the ceilings, because they are exam-ready and they are patient-safety numbers. <b>Maximum 40 mg/day.</b> Drop to a <b>maximum of 20 mg/day</b> if the patient is <b>over 60</b>, has <b>hepatic impairment</b>, is a <b>CYP2C19 poor metabolizer</b>, or is taking a <b>CYP2C19 inhibitor</b> such as cimetidine or omeprazole. Get a <b>baseline ECG and potassium/magnesium</b> in anyone with cardiac disease, and <b>correct hypokalemia and hypomagnesemia</b> &mdash; low electrolytes are what turn a long QT into torsades.',
+   no:'Doses above 40 mg offer <b>no added benefit and measurable added risk</b>, so a higher dose is never the answer. Avoid stacking other QT-prolonging drugs (ondansetron, haloperidol, methadone, macrolides, fluoroquinolones). Same under-25 boxed warning; 14-day MAOI rule. <b>Escitalopram</b> is the single active enantiomer &mdash; same drug family, less QT effect, max 20 mg/day (10 mg in older adults).',
+   mn:'Citalopram: 40 is the cap, <b>20 if over 60</b>.'},
+  {k:'venlafaxine',nm:'Venlafaxine',ct:'SNRI · dose-dependent',cls:'SNRI',col:'#2f6f9f',rt:'SERT+NET',g:'SNRI — 5-HT plus NE',
+   sites:['S1','S2'],ht:2,ne:2,da:0,blk:{sert:1,net:1},off:[],
+   f1:'5-HT + NE',f2:'4&ndash;6 weeks',f3:'Blood pressure',w2:1,
+   moa:'Blocks <b>both SERT and NET</b> &mdash; but not equally, and not at every dose. At low doses venlafaxine is essentially an <b>SSRI</b>; the <b>norepinephrine</b> blockade only arrives as the dose climbs. That single fact explains why the blood pressure rises with the dose and not before it.',
+   use:['Major depression','Generalized anxiety, social anxiety, panic'],
+   ae:'Nausea, headache, insomnia, sexual dysfunction, diaphoresis &mdash; and <b>dose-dependent hypertension</b>, the one that belongs to this drug.',
+   nu:'<b>Check the blood pressure at baseline and at every dose increase</b>, and teach home monitoring. A sustained rise means the dose comes down or the drug changes &mdash; do not simply add an antihypertensive to a drug-induced problem. Venlafaxine has a <b>short half-life</b>, so it shares paroxetine&rsquo;s brutal <b>discontinuation syndrome</b>: never stop abruptly, taper, and teach the patient not to run out of refills over a weekend.',
+   no:'Same under-25 suicidality boxed warning as every antidepressant. <b>14-day MAOI rule.</b> Strongly serotonergic &mdash; a real serotonin syndrome risk with tramadol, triptans, linezolid, or St. John&rsquo;s wort. Use caution in uncontrolled hypertension. <b>Desvenlafaxine</b> is its active metabolite; <b>levomilnacipran</b> is the most NE-weighted of the SNRIs.',
+   mn:'Venlafaxine is an SSRI at low doses and an SNRI at high ones &mdash; <b>the blood pressure follows the dose</b>.'},
+  {k:'duloxetine',nm:'Duloxetine',ct:'SNRI · also an analgesic',cls:'SNRI',col:'#2f6f9f',rt:'SERT+NET',
+   sites:['S1','S2'],ht:2,ne:2,da:0,blk:{sert:1,net:1},off:[],
+   f1:'5-HT + NE',f2:'4&ndash;6 weeks',f3:'BP · liver',w2:1,
+   moa:'Balanced <b>SERT and NET</b> blockade from the first dose. The <b>norepinephrine</b> half also strengthens the brain&rsquo;s <b>descending pain inhibition</b> onto the dorsal horn &mdash; which is why the same drug treats depression <i>and</i> neuropathic pain, and why the pain relief is not simply &ldquo;the patient is less sad.&rdquo;',
+   use:['Major depression','Generalized anxiety disorder','Diabetic peripheral neuropathy','Fibromyalgia, chronic musculoskeletal pain'],
+   ae:'Nausea (most common, usually settles), dry mouth, insomnia, sexual dysfunction, <b>rising blood pressure</b>, and <b>hepatotoxicity</b>.',
+   nu:'<b>Swallow the capsule whole</b> &mdash; do not crush, chew, open, or sprinkle it. Check the <b>blood pressure</b> and the <b>LFTs</b>, and tell the patient to <b>avoid heavy alcohol use</b> (additive liver injury). Take with food if nausea is a problem. <b>Taper to stop.</b> When it is prescribed for neuropathic pain, teach that relief builds over <b>1&ndash;4 weeks</b> and it is a <b>scheduled drug, never a PRN</b>.',
+   no:'Avoid in significant <b>hepatic impairment</b> and in <b>CrCl &lt;30 mL/min</b>. Same under-25 boxed warning; <b>14-day MAOI rule</b>; serotonin syndrome risk with tramadol, triptans, or linezolid.',
+   mn:'Swallow it whole. Watch the pressure and the liver.'},
+  {k:'amitriptyline',nm:'Amitriptyline',ct:'TCA · tertiary amine',cls:'TCA',col:'#7a5a8a',rt:'SERT+NET+M/H/α',g:'TCA — effective and dangerous',
+   sites:['S1','S2','S6'],ht:2,ne:2,da:0,blk:{sert:1,net:1},off:['M','H1','a1'],
+   f1:'5-HT + NE',f2:'2&ndash;6 weeks',f3:'Overdose is lethal',w2:1,
+   moa:'Blocks <b>SERT and NET</b> just as an SNRI does &mdash; it is every bit as effective an antidepressant. But it also blocks <b>muscarinic, histamine H&#8321;, and &alpha;&#8321;</b> receptors it was never aimed at, and it blocks <b>cardiac sodium channels</b>. The first list is why it is unpleasant. The last item is why it is lethal.',
+   use:['Depression (rarely first-line now)','Neuropathic pain, at doses far below the antidepressant dose','Migraine prevention'],
+   ae:'<b>Anticholinergic</b> &mdash; dry mouth, constipation, urinary retention, blurred vision, confusion. <b>Sedation</b> (H&#8321;), <b>orthostatic hypotension</b> (&alpha;&#8321;), weight gain, and <b>QT prolongation</b>.',
+   nu:'<b>Count the pills.</b> This is the teaching point that matters most: a TCA has a <b>narrow therapeutic index and a roughly one-week supply is a lethal dose</b>. In a depressed, potentially suicidal patient you are handing them the means. <b>Dispense small quantities and reassess</b>. Give at <b>bedtime</b> (the sedation becomes useful), teach the patient to <b>rise slowly</b>, get a <b>baseline ECG</b> in older or cardiac patients, and manage the constipation and retention before someone blames the disease.',
+   no:'<b>Overdose is a true emergency &mdash; remember the three C&rsquo;s: Coma, Convulsions, Cardiotoxicity.</b> The killer is sodium-channel blockade producing a <b>widening QRS</b>, then dysrhythmia and arrest. <b>The antidote is IV sodium bicarbonate</b> (for QRS &gt;100 ms), not activated charcoal alone &mdash; along with continuous cardiac monitoring and airway support. Avoid in <b>older adults</b> (Beers criteria: anticholinergic burden, falls, confusion). <b>14-day MAOI rule.</b> Same under-25 boxed warning.',
+   mn:'TCA overdose = <b>coma, convulsions, cardiotoxicity</b> &rarr; wide QRS &rarr; <b>sodium bicarbonate</b>.'},
+  {k:'nortriptyline',nm:'Nortriptyline',ct:'TCA · secondary amine',cls:'TCA',col:'#7a5a8a',rt:'NET&gt;SERT',
+   sites:['S2','S1','S6'],ht:1,ne:2,da:0,blk:{sert:1,net:1},off:['a1'],
+   f1:'NE &gt; 5-HT',f2:'2&ndash;6 weeks',f3:'ECG · serum levels',w2:1,
+   moa:'A <b>secondary amine</b> and the active metabolite of amitriptyline. It is more <b>NE-weighted</b> and, critically, <b>far less anticholinergic, less sedating, and least likely of the TCAs to cause orthostatic hypotension</b> &mdash; so when a TCA is genuinely needed, this is usually the one.',
+   use:['Depression when a TCA is warranted','Neuropathic pain','Older adults who need a TCA'],
+   ae:'The same class effects but <b>milder</b>: less dry mouth and constipation, less sedation, less orthostasis &mdash; though still real. <b>QT prolongation and overdose lethality remain unchanged.</b>',
+   nu:'Nortriptyline has a genuine <b>therapeutic serum range (roughly 50&ndash;150 ng/mL)</b> with a <b>therapeutic window</b> &mdash; unusual among antidepressants, and it means going <i>above</i> the range can make the patient <b>worse</b>, not better. <b>Draw the level as a trough</b>, about 12 hours after the dose. Baseline <b>ECG</b> over age 40 or with cardiac history.',
+   no:'&ldquo;Less anticholinergic&rdquo; is not &ldquo;safe&rdquo; &mdash; <b>overdose is still lethal by the same three C&rsquo;s and still treated with sodium bicarbonate</b>, and it is still on the Beers list. <b>14-day MAOI rule</b>; same under-25 boxed warning.',
+   mn:'The one TCA with a real level &mdash; and a window you can overshoot.'},
+  {k:'phenelzine',nm:'Phenelzine',ct:'MAOI · irreversible, non-selective',cls:'MAOI',col:'#d1495b',rt:'MAO',g:'MAOI — most powerful, most dangerous',
+   sites:['S4'],ht:2,ne:2,da:2,blk:{mao:1},off:[],
+   f1:'5-HT, NE, DA',f2:'2&ndash;6 weeks',f3:'Tyramine → HTN crisis',w2:1,
+   moa:'<b>Irreversibly</b> inhibits <b>monoamine oxidase</b>, the enzyme that destroys serotonin, norepinephrine, and dopamine inside the nerve terminal. All three transmitters rise. Because the block is irreversible, the effect persists until the body <b>makes new enzyme &mdash; about 2 weeks</b>. That number is the source of every &ldquo;14-day&rdquo; rule on this page.',
+   use:['Treatment-resistant depression','Atypical depression','Reserved for when better-tolerated drugs have failed'],
+   ae:'Orthostatic hypotension (common and a real fall risk), insomnia, weight gain, edema, sexual dysfunction, anticholinergic effects.',
+   nu:'<b>The diet is the nursing care.</b> MAO-A in the gut normally destroys <b>tyramine</b>; inhibit it and tyramine is absorbed, floods nerve terminals, and dumps stored norepinephrine &rarr; <b>hypertensive crisis</b>. Teach the patient to <b>avoid aged cheeses, cured/smoked/aged meats (salami, pepperoni), tap and draft beer, red wine, fermented soy (soy sauce, miso), sauerkraut and kimchi, fava beans, yeast extracts (Marmite), and overripe or leftover food</b>. Fresh food is fine &mdash; <b>tyramine is a product of aging and fermentation</b>. Teach the warning sign by name: a <b>sudden, severe, throbbing occipital headache</b> with a stiff neck, palpitations, nausea, and sweating. <b>That headache means stop, take the blood pressure, and get help now.</b>',
+   no:'<b>Hypertensive crisis is treated with IV phentolamine</b> (an &alpha;-blocker) and blood-pressure control &mdash; it can cause intracranial hemorrhage. Also avoid <b>sympathomimetics</b>: pseudoephedrine, phenylephrine, and amphetamines all trigger the same crisis, and they are sold over the counter. <b>Serotonin syndrome</b> is the other lethal interaction &mdash; never combine with an SSRI, SNRI, TCA, <b>meperidine</b>, tramadol, dextromethorphan, triptans, linezolid, or St. John&rsquo;s wort. <b>14 days off in either direction &mdash; 5 weeks after fluoxetine.</b>',
+   mn:'Aged, cured, fermented, or old = tyramine. <b>A crushing headache on an MAOI is an emergency.</b>'},
+  {k:'selegiline',nm:'Selegiline (transdermal)',ct:'MAOI · patch',cls:'MAOI',col:'#d1495b',rt:'MAO-B→A',
+   sites:['S4'],ht:2,ne:2,da:2,blk:{mao:1},off:[],
+   f1:'5-HT, NE, DA',f2:'2&ndash;6 weeks',f3:'6 mg: no diet limits',w2:2,
+   moa:'Delivered <b>through the skin</b>, so it largely <b>bypasses the gut</b>. At the lowest dose it inhibits brain MAO enough to treat depression while <b>leaving gut MAO-A mostly intact</b> &mdash; so tyramine is still destroyed before it is absorbed. The patch was designed around the tyramine problem.',
+   use:['Major depression, for a patient who needs an MAOI without the diet'],
+   ae:'<b>Application-site reactions</b> are the most common complaint. Insomnia, headache, orthostatic hypotension.',
+   nu:'The dose decides the diet, and this is the fact worth carrying: <b>at 6 mg/24 h no tyramine restriction is required</b>; at <b>9 or 12 mg/24 h the full MAOI diet comes back</b>. <b>Apply to clean, dry, intact skin</b> on the upper torso, thigh, or outer upper arm &mdash; <b>rotate sites daily</b>, one patch every 24 hours, and remove the old one first. Avoid <b>external heat</b> over the patch (heating pads, hot tubs, prolonged sun): heat increases absorption and can push the dose up.',
+   no:'<b>Every drug interaction still applies at every dose</b> &mdash; the patch changes the <i>diet</i>, not the pharmacology. No SSRIs, SNRIs, TCAs, meperidine, tramadol, dextromethorphan, or sympathomimetics. Same <b>14-day washout</b> in both directions; same under-25 boxed warning.',
+   mn:'6 mg: eat normally. 9 or 12: the diet is back.'},
+  {k:'bupropion',nm:'Bupropion',ct:'NDRI · atypical',cls:'Atypical',col:'#b8862f',rt:'NET+DAT',g:'Atypical — chosen for what they don\'t do',
+   sites:['S2','S3'],ht:0,ne:2,da:2,blk:{net:1,dat:1},off:[],
+   f1:'NE + DA',f2:'2&ndash;6 weeks',f3:'Seizure threshold',w2:1,
+   moa:'A <b>norepinephrine&ndash;dopamine reuptake inhibitor</b>. It is the one common antidepressant that <b>does not touch serotonin at all</b>, and that single absence is the reason it gets prescribed: <b>no sexual dysfunction, no weight gain</b> (patients often lose weight), and a very low serotonin syndrome risk.',
+   use:['Major depression','Depression where sexual side effects or weight gain caused the patient to quit','Adjunct to an SSRI','Smoking cessation','Seasonal affective disorder'],
+   ae:'<b>Activating</b> &mdash; insomnia, agitation, anxiety, tremor &mdash; plus headache, dry mouth, and <b>dose-dependent seizure risk</b>.',
+   nu:'<b>Give it in the morning</b>, and the second dose no later than late afternoon &mdash; bedtime dosing guarantees insomnia. Do not exceed the labeled single-dose and daily maximums, and <b>use the extended-release form</b>: keeping the peak level down is what keeps the seizure risk low. Warn smoking-cessation patients that <b>it is the same drug</b> &mdash; people have doubled up without realizing.',
+   no:'<b>Contraindicated in seizure disorder</b>, and in <b>bulimia or anorexia nervosa</b> &mdash; the electrolyte disturbances of purging drop the seizure threshold and these patients had a strikingly high seizure rate. Also contraindicated in <b>abrupt alcohol or benzodiazepine withdrawal</b>, and within <b>14 days of an MAOI</b>. Same under-25 boxed warning.',
+   mn:'No serotonin &rarr; no sexual side effects, no weight gain. The price is <b>seizures</b>.'},
+  {k:'mirtazapine',nm:'Mirtazapine',ct:'α₂ antagonist · atypical',cls:'Atypical',col:'#b8862f',rt:'α₂ + H₁',
+   sites:['S5','S6'],ht:1,ne:1,da:0,blk:{},off:['H1'],
+   f1:'5-HT + NE (release)',f2:'Sleep in days · mood 4 wk',f3:'Sedation · weight gain',w2:1,
+   moa:'Blocks the presynaptic <b>&alpha;&#8322; autoreceptor</b> &mdash; the brake that tells the neuron to stop releasing. With the brake off, the neuron keeps releasing <b>norepinephrine and serotonin</b>. It gets to the same place as a reuptake blocker by the opposite route: <b>more released</b> instead of <b>less removed</b>. It also blocks <b>H&#8321;</b> hard, which is where the sedation and appetite come from.',
+   use:['Depression with insomnia and weight loss','The older adult who is not eating and cannot sleep','Depression where nausea or sexual dysfunction blocked an SSRI'],
+   ae:'<b>Sedation, increased appetite, and weight gain</b> &mdash; and here they are usually the <b>reason for the prescription, not a complaint</b>. Dry mouth, dizziness, raised cholesterol.',
+   nu:'<b>Give it at bedtime</b> and let the side effects do the work. Note the useful paradox: <b>lower doses are more sedating</b> than higher ones, because at higher doses the noradrenergic effect starts to offset the antihistamine one &mdash; so a patient complaining of daytime grogginess may need the dose <i>raised</i>, not lowered. Weigh the patient regularly, and know that in a frail, depressed, anorexic older adult the weight gain is a <b>therapeutic goal</b>. The orally disintegrating tablet helps a patient who will not swallow pills.',
+   no:'Additive sedation with alcohol, benzodiazepines, and opioids &mdash; a fall risk in older adults. Rare <b>agranulocytosis</b>: report fever, chills, sore throat, or mouth ulcers. Same under-25 boxed warning; <b>14-day MAOI rule</b>.',
+   mn:'Mirtazapine: it makes them <b>sleep and eat</b> &mdash; pick it when that is what you want.'},
+  {k:'trazodone',nm:'Trazodone',ct:'SARI · atypical',cls:'Atypical',col:'#b8862f',rt:'5-HT₂ + α₁',
+   sites:['S1','S6'],ht:1,ne:0,da:0,blk:{sert:1},off:['a1','H1'],
+   f1:'5-HT',f2:'Sleep the first night',f3:'Priapism',w2:1,
+   moa:'A <b>serotonin antagonist and reuptake inhibitor</b>: weak SERT blockade plus <b>5-HT&#8322; receptor antagonism</b>, with strong <b>H&#8321;</b> and <b>&alpha;&#8321;</b> blockade. Antidepressant doses are high and sedating enough that almost nobody tolerates them &mdash; so in practice it is used at <b>low doses as a hypnotic</b>, very often alongside an SSRI.',
+   use:['Insomnia, especially insomnia caused by an SSRI','Adjunct to another antidepressant','Depression (rarely, as monotherapy)'],
+   ae:'<b>Sedation</b> (the reason it is used), <b>orthostatic hypotension</b> and dizziness from &alpha;&#8321; blockade, dry mouth, headache, and next-morning grogginess.',
+   nu:'Give at <b>bedtime</b>, and teach the patient to <b>get up slowly</b> &mdash; it is a genuine fall risk in older adults on the way to the bathroom at 3 a.m. Because it is serotonergic, it <b>still counts toward serotonin syndrome risk</b> when it is layered on top of an SSRI, which is exactly how it is usually prescribed.',
+   no:'<b>Priapism</b> &mdash; a persistent, painful erection unrelated to arousal &mdash; is rare but is a <b>urologic emergency</b>. Teach it explicitly and without embarrassment: <b>an erection lasting more than 4 hours requires immediate emergency care</b>, because untreated it causes permanent impotence. Same under-25 boxed warning; <b>14-day MAOI rule</b>.',
+   mn:'Trazodone is used for sleep &mdash; and <b>priapism is the one you must say out loud</b>.'}
+ ];
+
+ /* ============ MODE B — lithium ============ */
+ var ZONE=[
+  {k:0,nm:'Subtherapeutic',col:'#8fa0b5',sh:'Below 0.6',act:'Not working yet',
+   d:'Below <b>0.6 mEq/L</b> lithium is simply not doing its job &mdash; the patient carries every side effect and gets no mood stabilization. Do not read this as &ldquo;the drug failed&rdquo;; read it as a <b>level, an adherence question, or a dosing question</b>.<div class="dd">And remember lithium is <b>slow</b>: even at a therapeutic level the antimanic effect takes <b>5&ndash;7 days to begin and up to 2&ndash;3 weeks</b> to arrive. That is why an antipsychotic or a benzodiazepine is usually the bridge through acute mania while the lithium catches up.</div>'},
+  {k:1,nm:'Therapeutic',col:'#237a45',sh:'0.6 – 1.2',act:'Continue · monitor',
+   d:'<b>0.6&ndash;1.2 mEq/L is the maintenance range</b> (acute mania is often pushed to <b>1.0&ndash;1.5</b>). This is where lithium works &mdash; and it is a <b>narrow therapeutic index drug</b>, meaning the toxic level sits barely above the useful one. There is no comfortable margin here.<div class="dd"><b>Expected at this level &mdash; and not toxicity:</b> a <b>fine hand tremor</b>, mild thirst and polyuria, mild nausea, and a benign leukocytosis. Coarse tremor is a different animal entirely.</div><div class="loc"><b>How the level is drawn:</b> a <b>trough, 12 hours after the last dose</b> &mdash; in practice, the morning draw before the morning dose. A level drawn at any other time is not interpretable. Check <b>weekly</b> when starting or after a dose change, then about <b>every 3 months</b>. Also monitor <b>TSH and renal function (creatinine, BUN)</b> at baseline and every 6&ndash;12 months: the long-run enemies are <b>hypothyroidism</b> and <b>nephrogenic diabetes insipidus</b>.</div>'},
+  {k:2,nm:'Above range',col:'#b8862f',sh:'1.2 – 1.5',act:'Recheck · look for a cause',
+   d:'Not yet toxic &mdash; but <b>the margin is gone</b>. A patient sitting here has no room for a stomach bug, a hot day, a new ibuprofen, or a skipped meal. Any one of those pushes them over.<div class="dd"><b>Do not just watch it.</b> Recheck the level, and <b>hunt for the reason it moved</b> &mdash; a new drug, a diet change, dehydration, or declining renal function. A level that drifted up has a cause, and the cause is usually still there.</div>'},
+  {k:3,nm:'Early toxicity',col:'#d97a3a',sh:'1.5 – 2.0',act:'HOLD the dose · call the provider',
+   d:'<b>Toxicity begins above 1.5 mEq/L.</b> The early signs are easy to dismiss as a stomach bug &mdash; which is exactly the trap.<div class="dd"><b>Signs:</b> nausea, vomiting, diarrhea; a <b>coarse hand tremor</b> (not the fine one); drowsiness; muscle weakness; slurred speech; lack of coordination.</div><div class="loc"><b>What the nurse does:</b> <b>hold the next dose and notify the provider</b> &mdash; do not give it and document later. Draw a <b>stat lithium level</b> and electrolytes. Assess hydration and get fluids and sodium in. There is <b>no antidote</b>: the treatment is stopping the drug, restoring volume and sodium, and letting the kidney excrete it.</div><div class="dd">Notice the vicious circle: <b>toxicity causes vomiting and diarrhea, which dehydrates the patient, which raises the level further.</b> It accelerates on its own.</div>'},
+  {k:4,nm:'Moderate toxicity',col:'#c94a5c',sh:'2.0 – 2.5',act:'Hold · stat level · escalate',
+   d:'<b>2.0&ndash;2.5 mEq/L.</b> The signs are now neurologic and unmistakable.<div class="dd"><b>Signs:</b> ataxia and giddiness; confusion; blurred vision; <b>tinnitus</b>; coarse tremor and muscle twitching; large volumes of <b>dilute urine</b>; hypotension; developing ECG changes.</div><div class="loc"><b>What the nurse does:</b> <b>hold the drug and escalate now.</b> Stat level, electrolytes, and renal function. <b>Cardiac monitoring.</b> IV normal saline to restore volume and sodium and promote excretion. Protect the airway and institute <b>seizure and fall precautions</b> &mdash; this patient is ataxic and confused. Anticipate a nephrology consult: <b>dialysis is on the table above 2.5</b>, or lower if the patient is symptomatic or cannot clear it.</div>'},
+  {k:5,nm:'Severe — emergency',col:'#b23145',sh:'Above 2.5',act:'Emergency · hemodialysis',
+   d:'<b>Above 2.5 mEq/L is life-threatening.</b><div class="dd"><b>Signs:</b> seizures, <b>cardiac dysrhythmias</b>, profound hypotension, myoclonus, coma, circulatory collapse, death. Survivors may be left with permanent neurologic injury.</div><div class="loc"><b>Treatment: hemodialysis</b> &mdash; it is the definitive therapy and the only way to clear lithium quickly. There is <b>no antidote</b>, and activated charcoal does <b>not</b> bind lithium. Meanwhile: airway, IV normal saline, continuous cardiac monitoring, seizure precautions.</div><div class="dd">Dialyze based on the <b>level plus the patient</b>, not the number alone &mdash; a symptomatic patient at 2.2 who cannot excrete may need it before an asymptomatic one at 2.6.</div>'}
+ ];
+ /* at = level at which the row lights;  go = mid-zone level a tap on the row jumps to
+    (go must sit inside the zone the row names, never on the boundary) */
+ var SIGNS=[
+  {at:0.6,go:0.8,c:'#237a45',t:'THERAPEUTIC 0.6–1.2',u:'fine tremor · thirst · polyuria · mild nausea — expected, not toxicity'},
+  {at:1.2,go:1.35,c:'#b8862f',t:'ABOVE 1.2 — no margin left',u:'one hot day, one stomach bug, one ibuprofen away from toxic'},
+  {at:1.5,go:1.8,c:'#d97a3a',t:'EARLY TOXICITY 1.5–2.0',u:'N/V/diarrhea · COARSE tremor · drowsy · slurred speech · weakness'},
+  {at:2.0,go:2.3,c:'#c94a5c',t:'MODERATE 2.0–2.5',u:'ataxia · confusion · blurred vision · tinnitus · dilute polyuria'},
+  {at:2.5,go:2.8,c:'#b23145',t:'SEVERE >2.5 — HEMODIALYSIS',u:'seizures · dysrhythmias · hypotension · coma · death'}
+ ];
+ var FACT=[
+  {k:'thiaz',nm:'Thiazide diuretic',s:'hydrochlorothiazide',d:0.6,
+   w:'<b>The classic pair.</b> A thiazide makes the kidney dump sodium. The proximal tubule compensates by reabsorbing more sodium &mdash; and <b>it cannot tell lithium from sodium</b>, so it reabsorbs the lithium too. Levels climb roughly 25&ndash;40%.'},
+  {k:'nsaid',nm:'NSAID',s:'ibuprofen, naproxen',d:0.5,
+   w:'NSAIDs block renal prostaglandins, dropping renal blood flow and lithium clearance. <b>This is the one patients do to themselves</b> &mdash; ibuprofen is over the counter and nobody thinks to mention it. Teach that <b>acetaminophen and aspirin are the safer choices</b> on lithium, and that &ldquo;over the counter&rdquo; does not mean &ldquo;doesn&rsquo;t count.&rdquo;'},
+  {k:'acei',nm:'ACE inhibitor / ARB',s:'lisinopril, losartan',d:0.5,
+   w:'ACE inhibitors and ARBs reduce lithium clearance and promote sodium loss. The rise can be large and it often appears <b>weeks after the drug was added</b>, so nobody connects it. Recheck the level after any new antihypertensive.'},
+  {k:'lowna',nm:'Low-sodium diet',s:'or a new crash diet',d:0.4,
+   w:'Lithium is reabsorbed <i>in place of</i> sodium. <b>Less sodium in, more lithium held on to.</b> A new low-salt diet &mdash; often started for blood pressure by a different prescriber &mdash; is a common and invisible cause of toxicity. Teach a <b>consistent</b> sodium intake, not a low one, and no crash dieting.'},
+  {k:'dehyd',nm:'Vomiting / diarrhea',s:'any GI illness',d:0.6,
+   w:'Fluid and sodium out the GI tract means the kidney holds on to both sodium and lithium. And the circle closes: <b>lithium toxicity itself causes vomiting and diarrhea, which raises the level further.</b> Rule: <b>any GI illness on lithium gets a level drawn.</b>'},
+  {k:'sweat',nm:'Fever / heavy sweating',s:'exercise, heat, sauna',d:0.4,
+   w:'Fever, hard exercise, a heat wave, a sauna, or a hot tub all cost fluid and sodium. Teach <b>2&ndash;3 L of fluid a day</b>, with extra during heat or exertion &mdash; and teach it before summer, not after the admission.'},
+  {k:'renal',nm:'Declining renal function',s:'aging kidney, CKD',d:0.5,
+   w:'Lithium is excreted <b>unchanged by the kidney</b> &mdash; there is no hepatic escape route, no metabolism, no alternative exit. Less kidney means less lithium out. Check <b>creatinine and BUN at baseline and every 6&ndash;12 months</b>, and remember the older adult&rsquo;s kidney is already smaller than their creatinine suggests.'},
+  {k:'double',nm:'Doubled a missed dose',s:'"I took two this morning"',d:0.3,
+   w:'&ldquo;I forgot last night, so I took two this morning.&rdquo; With a narrow therapeutic index, doubling up is how a stable patient becomes a toxic one. Teach it as a rule: <b>skip the missed dose and take the next one on time &mdash; never double up.</b>'},
+  {k:'caff',nm:'Stopped caffeine',s:'quit coffee',d:0.2,
+   w:'Caffeine <i>increases</i> lithium excretion &mdash; so a patient who suddenly <b>quits coffee</b> can watch their level <b>rise</b>. It is a small effect, but it is real, and it is exactly the kind of change no patient thinks to report. Consistency is the theme of this entire drug.'}
+ ];
+
+ /* ============ MODE C — serotonin syndrome ============ */
+ var SER=[
+  {k:'sert',nm:'Sertraline',s:'SSRI',w:2,
+   w2:'Blocks <b>SERT</b>. The most common single starting point &mdash; usually harmless alone, dangerous when something is layered on top of it.'},
+  {k:'venl',nm:'Venlafaxine',s:'SNRI',w:2,
+   w2:'Blocks <b>SERT and NET</b>. Strongly serotonergic.'},
+  {k:'amit',nm:'Amitriptyline',s:'TCA',w:1,
+   w2:'Blocks serotonin reuptake along with everything else it hits.'},
+  {k:'phen',nm:'Phenelzine',s:'MAOI',w:3,maoi:1,
+   w2:'<b>Prevents serotonin from being broken down at all.</b> Combined with anything that raises serotonin, this is the single most dangerous pairing in psychiatry &mdash; and it stays dangerous for <b>14 days after the last dose</b>.'},
+  {k:'line',nm:'Linezolid',s:'antibiotic',w:2,maoi:1,
+   w2:'<b>The hidden MAOI.</b> Linezolid is an antibiotic &mdash; nobody thinks of it as a psychiatric drug &mdash; but it is a <b>reversible MAO inhibitor</b>. A patient on a stable SSRI who is started on linezolid for a resistant infection is a classic, and genuinely missed, case.'},
+  {k:'tram',nm:'Tramadol',s:'opioid analgesic',w:2,
+   w2:'An opioid that <b>also inhibits serotonin and norepinephrine reuptake</b>. Prescribed casually as &ldquo;a weak painkiller&rdquo; to patients already on an SSRI. It also lowers the seizure threshold.'},
+  {k:'mepe',nm:'Meperidine',s:'opioid analgesic',w:2,
+   w2:'Blocks serotonin reuptake. <b>Meperidine plus an MAOI is a textbook fatal combination</b> &mdash; it is the interaction that made this drug&rsquo;s reputation.'},
+  {k:'suma',nm:'Sumatriptan',s:'triptan',w:1,
+   w2:'A <b>5-HT&#8321;<sub>B/D</sub> agonist</b> &mdash; it stimulates serotonin receptors directly. Migraine and depression travel together, so this combination is common.'},
+  {k:'dxm',nm:'Dextromethorphan',s:'OTC cough syrup',w:1,
+   w2:'<b>Over the counter, in half the cold medicines on the shelf</b>, and a weak serotonin reuptake inhibitor. The patient does not consider it a drug, so it never makes the medication list unless you ask about it by name.'},
+  {k:'sjw',nm:"St. John's wort",s:'herbal supplement',w:1,
+   w2:'An <b>herbal</b> product taken for low mood &mdash; frequently by patients who are already on a prescribed antidepressant and never mention it because &ldquo;it&rsquo;s natural.&rdquo; It is serotonergic <i>and</i> a potent <b>CYP3A4 inducer</b>. <b>Ask about supplements by name.</b>'},
+  {k:'onda',nm:'Ondansetron',s:'antiemetic',w:1,
+   w2:'A <b>5-HT&#8323; antagonist</b> &mdash; it still acts on the serotonin system and contributes. Given reflexively for nausea, including the nausea an SSRI just caused.'},
+  {k:'lith',nm:'Lithium',s:'mood stabilizer',w:1,
+   w2:'Enhances serotonergic transmission and contributes to the load. Bipolar depression means lithium and an antidepressant are often on the same list.'}
+ ];
+ var SEV=[
+  {nm:'No syndrome',col:'#2f9e5b',ms:'Alert, calm',au:'Stable',nm2:'Normal',
+   t:'37.0 °C',hr:'78',bp:'122/76',rf:'Normal',pu:'Normal'},
+  {nm:'Mild',col:'#b8862f',ms:'Restless, anxious',au:'Mild tachycardia',nm2:'Tremor',
+   t:'37.4 °C',hr:'96',bp:'138/84',rf:'Brisk',pu:'Normal'},
+  {nm:'Moderate',col:'#d97a3a',ms:'Agitated, confused',au:'Fever, diaphoresis',nm2:'Clonus, hyperreflexia',
+   t:'38.6 °C',hr:'124',bp:'158/96',rf:'Clonus',pu:'Dilated'},
+  {nm:'Severe',col:'#b23145',ms:'Delirium',au:'Labile BP · hyperthermia',nm2:'Rigidity + clonus',
+   t:'41.2 °C',hr:'148',bp:'Labile',rf:'Sustained clonus',pu:'Dilated'}
+ ];
+
+ var DEF={
+  cls:'<span class="n">Every antidepressant ends in the same place</span>They all leave <b>more monoamine in the synaptic cleft</b>. They differ in <i>which</i> one, and <i>how</i> they get there: an <b>SSRI</b> blocks the serotonin pump, an <b>SNRI</b> blocks serotonin and norepinephrine, a <b>TCA</b> blocks the same two <i>plus</i> three receptors it never meant to touch, an <b>MAOI</b> destroys the enzyme that clears all three, and <b>mirtazapine</b> takes the brake off release instead.<div class="dd">Three things are true of <b>every</b> drug in this list, and they are the ones that get tested. It takes <b>4&ndash;6 weeks</b> for the mood to lift, though sleep and appetite improve sooner. <b>None</b> of them may be stopped abruptly. And <b>all</b> of them carry the boxed warning for <b>suicidality in patients under 25</b> &mdash; because <b>energy and initiative return before mood does</b>, which briefly gives a patient the means to act on feelings they still have.</div><div class="loc">Tap a drug to compare it &mdash; or tap a <b>pump, the enzyme, or a receptor</b> on the diagram to see what happens there. Watch the transmitter dots in the cleft change.</div>',
+  li:'<span class="n">Lithium is a number, not a receptor</span>Nobody can tell you exactly how lithium works &mdash; it modulates second-messenger systems and it moves through the neuron in place of sodium, and beyond that the honest answer is that <b>the mechanism is still not settled</b>. It does not matter much clinically, because <b>lithium is not managed by mechanism. It is managed by a level.</b><div class="dd">It has a <b>narrow therapeutic index</b>: therapeutic <b>0.6&ndash;1.2 mEq/L</b>, toxic above <b>1.5</b>. That is a smaller gap than almost any drug a nurse handles. And it is excreted <b>unchanged by the kidney</b>, where it is <b>handled exactly like sodium</b> &mdash; which is why <b>anything that costs the patient sodium or water raises the lithium level</b>.</div><div class="loc"><b>Set the prescribed dose with the slider, then tap the things that happen to real patients.</b> Watch how a correct dose becomes a toxic level without anybody changing the prescription.</div>',
+  ss:'<span class="n">Serotonin syndrome: too much of a good thing</span>It is not an allergy and not an idiosyncrasy &mdash; it is <b>an overdose of serotonin</b>, and it is almost always <b>iatrogenic</b>: a second serotonergic drug was added, or a dose was raised.<div class="dd">Learn the <b>triad</b>, because it is how you recognize it at the bedside: <b>altered mental status</b> (agitation, confusion, delirium) + <b>autonomic instability</b> (hyperthermia, tachycardia, hypertension, diaphoresis, dilated pupils, diarrhea) + <b>neuromuscular hyperactivity</b> (tremor, <b>hyperreflexia</b>, and <b>clonus &mdash; the single most useful sign, and it is worst in the legs</b>).</div><div class="loc"><b>The timing is the giveaway: serotonin syndrome comes on within 24 hours</b> &mdash; most cases within 6 &mdash; of the new drug or the dose change. That speed is what separates it from <b>neuroleptic malignant syndrome</b>, which builds over <b>days to weeks</b>, comes from <b>dopamine blockade</b> by an antipsychotic, and looks different: <b>lead-pipe rigidity with <i>hypo</i>reflexia</b> and bradykinesia, not clonus and hyperreflexia.</div><div class="dd"><b>Build a regimen below.</b> Tap drugs to add them and watch the load, the vital signs, and the triad.</div>'
+ };
+
+ var LAB={cls:['Raises','Full effect','Watch'],li:['Serum level','Zone','What you do'],ss:['Mental status','Autonomic','Neuromuscular']};
+
+ var mode='cls', sel='', siteSel='';
+ var base=0.8, fon={}, flast='';
+ var son={};
+
+ function find(k){var a=AD.filter(function(x){return x.k===k;});return a[0]||null;}
+ function lvl(){var L=base;FACT.forEach(function(f){if(fon[f.k])L+=f.d;});return Math.min(3,Math.round(L*100)/100);}
+ function zoneOf(L){if(L<0.6)return ZONE[0];if(L<=1.2)return ZONE[1];if(L<1.5)return ZONE[2];if(L<2)return ZONE[3];if(L<=2.5)return ZONE[4];return ZONE[5];}
+ /* Land exactly on a target level: fill from the slider first, then choose the
+    largest real factors that sum to the remainder — so the number shown is one
+    an actual patient could arrive at, not a clamp to the ceiling. */
+ function jumpTo(go){
+  fon={};flast='';
+  if(go<=1.4){base=Math.max(0.4,go);return;}
+  base=1.4;
+  var rem=go-1.4, sum=0;
+  FACT.slice().sort(function(a,b){return b.d-a.d;}).forEach(function(f){
+   if(sum+f.d<=rem+0.001){fon[f.k]=true;sum+=f.d;}
+  });
+ }
+ function score(){var s=0;SER.forEach(function(d){if(son[d.k])s+=d.w;});return s;}
+ function combo(){
+  var m=SER.filter(function(d){return son[d.k]&&d.maoi;}).length;
+  var o=SER.filter(function(d){return son[d.k]&&!d.maoi;}).length;
+  var mm=SER.filter(function(d){return son[d.k]&&d.maoi;}).length>1;
+  return (m>0&&o>0)||mm;
+ }
+ function nsel(){return SER.filter(function(d){return son[d.k];}).length;}
+ /* One serotonergic drug at a therapeutic dose essentially never produces the syndrome —
+    it takes a second agent (or an MAOI). Severity must never say otherwise. */
+ function sevOf(){
+  var n=nsel();
+  if(n===0)return 0;
+  if(combo())return 3;
+  if(n===1)return 0;
+  var s=score();
+  if(s<=3)return 1;
+  if(s<=5)return 2;
+  return 3;
+ }
+
+ /* ---------- MODE A diagram ---------- */
+ var PUMP={S1:{cx:50,lab:'SERT'},S2:{cx:150,lab:'NET'},S3:{cx:230,lab:'DAT'}};
+ var COLD={S1:'#2f9e5b',S2:'#2f6f9f',S3:'#b8862f'};
+ var OFFR=[{k:'M',cx:55,t:'M · dry mouth'},{k:'H1',cx:150,t:'H₁ · sedation'},{k:'a1',cx:245,t:'α₁ · orthostasis'}];
+
+ function dots(cx,n,col){
+  var o='';
+  for(var i=0;i<n;i++){
+   var x=cx-27+(i%4)*18, y=122+Math.floor(i/4)*26;
+   o+='<circle cx="'+x+'" cy="'+y+'" r="4" fill="'+col+'"/>';
+  }
+  return o;
+ }
+ function pump(s,blocked,on){
+  var p=PUMP[s], c=COLD[s], cx=p.cx;
+  var o='<g class="rgn" data-site="'+s+'">';
+  o+='<rect x="'+(cx-14)+'" y="77" width="28" height="30" rx="6" fill="'+(on?c:'#ffffff')+'" stroke="'+c+'" stroke-width="'+(on?2.4:1.6)+'"/>';
+  var ac=blocked?'#c3ccd9':c;
+  o+='<path d="M'+cx+',103 L'+cx+',83 M'+(cx-5)+',88 L'+cx+',83 L'+(cx+5)+',88" fill="none" stroke="'+(on?'#ffffff':ac)+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
+  if(blocked){
+   o+='<path d="M'+(cx-9)+',83 L'+(cx+9)+',101 M'+(cx+9)+',83 L'+(cx-9)+',101" stroke="#d1495b" stroke-width="3" stroke-linecap="round"/>';
+  }
+  o+='<text x="'+cx+'" y="116" font-size="7.4" font-weight="800" text-anchor="middle" fill="'+(on?c:'#78828f')+'">'+p.lab+'</text>';
+  o+='</g>';
+  return o;
+ }
+ function drawSyn(d,hi){
+  var o='';
+  var blk=d?(d.blk||{}):{};
+  var ht=d?d.ht:0, ne=d?d.ne:0, da=d?d.da:0;
+  var off=d?(d.off||[]):[];
+  var nOf=function(v){return [2,5,8][v];};
+
+  /* presynaptic terminal */
+  o+='<rect x="6" y="6" width="288" height="86" rx="13" fill="#eef2f8" stroke="#dfe4ee" stroke-width="1"/>';
+  o+='<text x="14" y="20" font-size="7.6" font-weight="800" letter-spacing=".7" fill="#78828f">PRESYNAPTIC NEURON</text>';
+  /* vesicles */
+  [[120,42],[146,32],[170,44],[196,34]].forEach(function(v){
+   o+='<circle cx="'+v[0]+'" cy="'+v[1]+'" r="7" fill="none" stroke="#a9b6c9" stroke-width="1.6"/>';
+   o+='<circle cx="'+v[0]+'" cy="'+v[1]+'" r="2.4" fill="#a9b6c9"/>';
+  });
+
+  /* MAO */
+  var on4=hi.indexOf('S4')>=0, c4=SITE.S4.c, maoBlk=!!blk.mao;
+  o+='<g class="rgn" data-site="S4">';
+  o+='<circle cx="256" cy="46" r="18" fill="'+(on4?c4:'#ffffff')+'" fill-opacity="'+(on4?1:.9)+'" stroke="'+(maoBlk?'#c3ccd9':c4)+'" stroke-width="'+(on4?2.4:1.6)+'"/>';
+  o+='<text x="256" y="49.5" font-size="8" font-weight="800" text-anchor="middle" fill="'+(on4?'#ffffff':(maoBlk?'#a9b6c9':c4))+'">MAO</text>';
+  if(maoBlk){
+   o+='<path d="M243,33 L269,59 M269,33 L243,59" stroke="#d1495b" stroke-width="3.2" stroke-linecap="round"/>';
+   o+='<text x="256" y="74" font-size="6.8" font-weight="800" text-anchor="middle" fill="#b23145">INHIBITED</text>';
+  } else {
+   o+='<text x="256" y="74" font-size="6.6" font-weight="700" text-anchor="middle" fill="#78828f">breaks them down</text>';
+  }
+  o+='</g>';
+
+  /* alpha-2 autoreceptor */
+  var on5=hi.indexOf('S5')>=0, c5=SITE.S5.c, a2Blk=(d&&d.k==='mirtazapine');
+  o+='<g class="rgn" data-site="S5">';
+  o+='<rect x="86" y="79" width="26" height="26" rx="6" fill="'+(on5?c5:'#ffffff')+'" stroke="'+c5+'" stroke-width="'+(on5?2.4:1.6)+'"/>';
+  o+='<path d="M93,99 L93,91 A6,6 0 0 1 105,91 L105,99" fill="none" stroke="'+(on5?'#ffffff':c5)+'" stroke-width="2"/>';
+  if(a2Blk)o+='<path d="M91,83 L107,101 M107,83 L91,101" stroke="#d1495b" stroke-width="2.8" stroke-linecap="round"/>';
+  o+='<text x="99" y="116" font-size="7.4" font-weight="800" text-anchor="middle" fill="'+(on5?c5:'#78828f')+'">α₂</text>';
+  o+='</g>';
+
+  /* pumps */
+  o+=pump('S1',!!blk.sert,hi.indexOf('S1')>=0);
+  o+=pump('S2',!!blk.net,hi.indexOf('S2')>=0);
+  o+=pump('S3',!!blk.dat,hi.indexOf('S3')>=0);
+
+  /* cleft dots */
+  o+=dots(50,nOf(ht),'#2f9e5b');
+  o+=dots(150,nOf(ne),'#2f6f9f');
+  o+=dots(230,nOf(da),'#b8862f');
+  var ar=function(v){return v>=2?' ↑↑':(v===1?' ↑':'');};
+  var lc=function(v,c){return v>0?c:'#a9b6c9';};
+  o+='<text x="50" y="167" font-size="7.6" font-weight="800" text-anchor="middle" fill="'+lc(ht,'#237a45')+'">5-HT'+ar(ht)+'</text>';
+  o+='<text x="150" y="167" font-size="7.6" font-weight="800" text-anchor="middle" fill="'+lc(ne,'#255f8a')+'">NE'+ar(ne)+'</text>';
+  o+='<text x="230" y="167" font-size="7.6" font-weight="800" text-anchor="middle" fill="'+lc(da,'#8a6a20')+'">DA'+ar(da)+'</text>';
+
+  /* postsynaptic + off-target receptors */
+  var on6=hi.indexOf('S6')>=0, c6=SITE.S6.c;
+  o+='<g class="rgn" data-site="S6">';
+  o+='<rect x="6" y="172" width="288" height="42" rx="13" fill="'+(on6?c6:'#eef2f8')+'" fill-opacity="'+(on6?.14:1)+'" stroke="'+(on6?c6:'#dfe4ee')+'" stroke-width="'+(on6?2:1)+'"/>';
+  o+='<text x="14" y="184" font-size="7.2" font-weight="800" letter-spacing=".6" fill="'+(on6?c6:'#78828f')+'">POSTSYNAPTIC · OFF-TARGET RECEPTORS</text>';
+  OFFR.forEach(function(r){
+   var hit=off.indexOf(r.k)>=0, rc=hit?'#d1495b':(on6?c6:'#a9b6c9');
+   o+='<path d="M'+(r.cx-7)+',201 L'+(r.cx-7)+',196 A7,7 0 0 1 '+(r.cx+7)+',196 L'+(r.cx+7)+',201" fill="none" stroke="'+rc+'" stroke-width="2.2"/>';
+   if(hit)o+='<path d="M'+(r.cx-8)+',192 L'+(r.cx+8)+',204 M'+(r.cx+8)+',192 L'+(r.cx-8)+',204" stroke="#d1495b" stroke-width="2.2" stroke-linecap="round"/>';
+   o+='<text x="'+r.cx+'" y="211" font-size="6.7" font-weight="'+(hit?'800':'600')+'" text-anchor="middle" fill="'+(hit?'#b23145':'#78828f')+'">'+r.t+'</text>';
+  });
+  o+='</g>';
+  return o;
+ }
+
+ /* ---------- MODE B diagram ---------- */
+ function drawLi(L,z){
+  var o='';
+  var X=function(v){return 20+v/3*260;};
+  o+='<text x="6" y="20" font-size="8" font-weight="800" letter-spacing=".7" fill="#78828f">SERUM LITHIUM</text>';
+  o+='<text x="6" y="38" font-family="Fraunces,Georgia,serif" font-size="19" font-weight="700" fill="'+z.col+'">'+L.toFixed(2)+' mEq/L</text>';
+  o+='<rect x="'+(294-96)+'" y="14" width="96" height="18" rx="9" fill="'+z.col+'"/>';
+  o+='<text x="246" y="26.5" font-size="8" font-weight="800" letter-spacing=".5" text-anchor="middle" fill="#ffffff">'+z.nm.toUpperCase()+'</text>';
+
+  /* bar segments */
+  var SEG=[[0,0.6,'#cfd7e4'],[0.6,1.2,'#8ed4a8'],[1.2,1.5,'#f0d9a0'],[1.5,2,'#f6c3a4'],[2,2.5,'#f2a8b1'],[2.5,3,'#d1495b']];
+  SEG.forEach(function(s){
+   o+='<rect x="'+X(s[0])+'" y="46" width="'+(X(s[1])-X(s[0]))+'" height="22" fill="'+s[2]+'"/>';
+  });
+  o+='<rect x="20" y="46" width="260" height="22" rx="4" fill="none" stroke="#c3ccd9" stroke-width="1"/>';
+  /* ticks */
+  [0,0.6,1.2,1.5,2,2.5,3].forEach(function(t){
+   o+='<line x1="'+X(t)+'" y1="68" x2="'+X(t)+'" y2="72" stroke="#a9b6c9" stroke-width="1"/>';
+   o+='<text x="'+X(t)+'" y="81" font-size="6.6" font-weight="700" text-anchor="middle" fill="#78828f">'+t.toFixed(1)+'</text>';
+  });
+  /* marker */
+  var mx=X(L);
+  o+='<path d="M'+(mx-6)+',38 L'+(mx+6)+',38 L'+mx+',46 Z" fill="'+z.col+'"/>';
+  o+='<line x1="'+mx+'" y1="46" x2="'+mx+'" y2="68" stroke="#232a36" stroke-width="2"/>';
+
+  /* sign rows */
+  SIGNS.forEach(function(s,i){
+   var y=98+i*23, lit=L>=s.at;
+   o+='<rect x="6" y="'+y+'" width="288" height="20" rx="6" class="rgn" data-go="'+s.go+'" fill="'+(lit?s.c:'#ffffff')+'" fill-opacity="'+(lit?.16:1)+'" stroke="'+(lit?s.c:'#e4eaf3')+'" stroke-width="'+(lit?1.8:1)+'"/>';
+   o+='<circle cx="18" cy="'+(y+10)+'" r="4" fill="'+(lit?s.c:'#e4eaf3')+'"/>';
+   o+='<text x="28" y="'+(y+8.5)+'" font-size="7.2" font-weight="800" fill="'+(lit?s.c:'#a9b6c9')+'">'+s.t+'</text>';
+   o+='<text x="28" y="'+(y+17)+'" font-size="6.6" fill="'+(lit?'#4b5563':'#c3ccd9')+'">'+s.u+'</text>';
+  });
+  return o;
+ }
+
+ /* ---------- MODE C diagram ---------- */
+ function drawSS(sev,cb){
+  var o='', S=SEV[sev], C=S.col;
+  if(cb){
+   o+='<rect x="6" y="4" width="288" height="15" rx="7" fill="#b23145"/>';
+   o+='<text x="150" y="14.6" font-size="7.6" font-weight="800" letter-spacing=".8" text-anchor="middle" fill="#ffffff">MAOI + SEROTONERGIC DRUG — CONTRAINDICATED</text>';
+  }
+  /* sweat */
+  if(sev>=2){
+   [[52,40],[116,40],[46,64],[122,64]].forEach(function(p){
+    o+='<path d="M'+p[0]+','+(p[1]-5)+' q4,6 0,8 q-4,-2 0,-8" fill="#5ec8ff"/>';
+   });
+  }
+  /* head */
+  o+='<circle cx="84" cy="58" r="24" fill="'+(sev>=2?'#f6cfc4':'#f3d9c9')+'" stroke="'+C+'" stroke-width="'+(sev?2.4:1.6)+'"/>';
+  var er=sev>=2?6:5, pr=[2.2,2.6,4,4.6][sev];
+  [75,93].forEach(function(ex){
+   o+='<circle cx="'+ex+'" cy="53" r="'+er+'" fill="#ffffff" stroke="#a9b6c9" stroke-width="1"/>';
+   o+='<circle cx="'+ex+'" cy="53" r="'+pr+'" fill="#232a36"/>';
+  });
+  if(sev===0)o+='<path d="M76,70 q8,5 16,0" fill="none" stroke="#232a36" stroke-width="1.8" stroke-linecap="round"/>';
+  else if(sev===1)o+='<line x1="76" y1="70" x2="92" y2="70" stroke="#232a36" stroke-width="1.8" stroke-linecap="round"/>';
+  else o+='<ellipse cx="84" cy="70" rx="6" ry="'+(sev===3?5.5:4)+'" fill="#232a36"/>';
+  /* body */
+  o+='<rect x="64" y="84" width="40" height="58" rx="11" fill="'+C+'" fill-opacity="'+(0.16+sev*0.16)+'" stroke="'+C+'" stroke-width="1.8"/>';
+  /* arms */
+  o+='<line x1="64" y1="96" x2="38" y2="124" stroke="'+C+'" stroke-width="4" stroke-linecap="round"/>';
+  o+='<line x1="104" y1="96" x2="130" y2="124" stroke="'+C+'" stroke-width="4" stroke-linecap="round"/>';
+  if(sev>=1){
+   [[38,124],[130,124]].forEach(function(h){
+    o+='<path d="M'+(h[0]-7)+','+(h[1]+8)+' l4,-5 l4,5 l4,-5 l4,5" fill="none" stroke="'+C+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>';
+   });
+   o+='<text x="84" y="'+(sev>=2?214:214)+'" font-size="6.6" font-weight="700" text-anchor="middle" fill="#78828f">'+(sev>=2?'clonus — worst in the legs':'tremor')+'</text>';
+  }
+  /* legs */
+  o+='<line x1="74" y1="142" x2="68" y2="196" stroke="'+C+'" stroke-width="4.5" stroke-linecap="round"/>';
+  o+='<line x1="94" y1="142" x2="100" y2="196" stroke="'+C+'" stroke-width="4.5" stroke-linecap="round"/>';
+  if(sev>=2){
+   [68,100].forEach(function(fx){
+    for(var j=0;j<3;j++){
+     o+='<path d="M'+(fx-11-j*4)+','+(190-j*3)+' q5,5 0,10" fill="none" stroke="#d1495b" stroke-width="1.6" stroke-linecap="round" opacity="'+(0.85-j*0.22)+'"/>';
+     o+='<path d="M'+(fx+11+j*4)+','+(190-j*3)+' q-5,5 0,10" fill="none" stroke="#d1495b" stroke-width="1.6" stroke-linecap="round" opacity="'+(0.85-j*0.22)+'"/>';
+    }
+   });
+  }
+  /* vitals */
+  o+='<rect x="160" y="24" width="134" height="168" rx="11" fill="#ffffff" stroke="'+(sev>=2?C:'#dfe4ee')+'" stroke-width="'+(sev>=2?2:1)+'"/>';
+  var V=[['TEMPERATURE',S.t,sev>=2],['HEART RATE',S.hr,sev>=1],['BLOOD PRESSURE',S.bp,sev>=2],['REFLEXES',S.rf,sev>=1],['PUPILS',S.pu,sev>=2]];
+  V.forEach(function(r,i){
+   var y=44+i*32;
+   o+='<text x="172" y="'+y+'" font-size="6.6" font-weight="800" letter-spacing=".7" fill="#a9b6c9">'+r[0]+'</text>';
+   o+='<text x="172" y="'+(y+14)+'" font-size="11" font-weight="800" fill="'+(r[2]?'#b23145':'#232a36')+'">'+r[1]+'</text>';
+  });
+  /* load bar */
+  var sc=score(), pct=Math.min(100,sc/8*100);
+  o+='<text x="6" y="205" font-size="6.8" font-weight="800" letter-spacing=".6" fill="#78828f">SEROTONERGIC LOAD</text>';
+  o+='<rect x="160" y="199" width="134" height="10" rx="5" fill="#e4eaf3"/>';
+  o+='<rect x="160" y="199" width="'+(134*pct/100)+'" height="10" rx="5" fill="'+C+'"/>';
+  return o;
+ }
+
+ /* ---------- builders ---------- */
+ function buildCls(){
+  var html='', lastG='';
+  AD.forEach(function(x){
+   if(x.g&&x.g!==lastG){html+='<div class="grp">'+x.g+'</div>';lastG=x.g;}
+   var on=x.k===sel, hl=(!sel&&siteSel&&x.sites.indexOf(siteSel)>=0);
+   html+='<button class="it'+(on?' on':'')+(hl?' hi':'')+'" data-k="'+x.k+'"'+(on?' style="background:'+x.col+';border-color:'+x.col+'"':(hl?' style="border-color:'+x.col+'"':''))+'>'+
+     '<span class="sw" style="background:'+(on?'#fff':x.col)+'"></span>'+
+     '<span><span class="nm">'+x.nm+'</span><span class="ct">'+x.ct+'</span></span>'+
+     '<span class="rt">'+x.rt+'</span></button>';
+  });
+  $("list").innerHTML=html;
+  Array.prototype.forEach.call(document.querySelectorAll('#list .it'),function(b){
+   b.onclick=function(){sel=b.getAttribute('data-k');siteSel='';paint();};
+  });
+ }
+ function buildLi(){
+  var h='<div class="slab">Prescribed dose → baseline level</div>';
+  h+='<input type="range" id="sl" min="0.4" max="1.4" step="0.05" value="'+base+'">';
+  h+='<div class="slab" style="margin-top:9px">Then life happens — tap what changed</div>';
+  h+='<div class="grid" id="fg">'+FACT.map(function(f){
+   return '<button class="it tox'+(fon[f.k]?' on':'')+'" data-k="'+f.k+'">'+f.nm+'<span>'+f.s+' · +'+f.d.toFixed(1)+'</span></button>';
+  }).join('')+'</div>';
+  h+='<div class="row"><button class="btn" id="rst">Reset the patient</button></div>';
+  $("list").innerHTML=h;
+  $("sl").oninput=function(){base=parseFloat(this.value);flast='';paint();};
+  Array.prototype.forEach.call(document.querySelectorAll('#fg .it'),function(b){
+   b.onclick=function(){var k=b.getAttribute('data-k');fon[k]=!fon[k];flast=fon[k]?k:'';paint();};
+  });
+  $("rst").onclick=function(){fon={};flast='';base=0.8;$("sl").value=0.8;paint();};
+ }
+ function buildSS(){
+  var h='<div class="slab">Tap every drug on the patient&rsquo;s list</div>';
+  h+='<div class="grid" id="sg">'+SER.map(function(d){
+   return '<button class="it tox'+(son[d.k]?' on':'')+'" data-k="'+d.k+'">'+d.nm+'<span>'+d.s+' · +'+d.w+'</span></button>';
+  }).join('')+'</div>';
+  h+='<div class="row"><button class="btn" id="rst2">Clear the list</button></div>';
+  $("list").innerHTML=h;
+  Array.prototype.forEach.call(document.querySelectorAll('#sg .it'),function(b){
+   b.onclick=function(){var k=b.getAttribute('data-k');son[k]=!son[k];paint();};
+  });
+  $("rst2").onclick=function(){son={};paint();};
+ }
+
+ function setChk(id,vid,lab,val,cl){
+  $(id).className=cl||'';
+  $(id).innerHTML=lab+'<span class="v" id="'+vid+'">'+val+'</span>';
+ }
+
+ /* ---------- paint ---------- */
+ function paint(){
+  var L=LAB[mode];
+
+  if(mode==='cls'){
+   buildCls();
+   var d=sel?find(sel):null;
+   var hi=d?d.sites.slice():(siteSel?[siteSel]:[]);
+   $("art").innerHTML=drawSyn(d,hi);
+   Array.prototype.forEach.call(document.querySelectorAll('#art .rgn'),function(g){
+    g.onclick=function(){siteSel=g.getAttribute('data-site');sel='';paint();};
+   });
+   if(d){
+    setChk('k1','v1',L[0],d.f1,'');
+    setChk('k2','v2',L[1],d.f2,'');
+    setChk('k3','v3',L[2],d.f3,d.w2===1?'warn':(d.w2===2?'good':''));
+    $("cardTitle").innerHTML=d.nm+' &mdash; at the synapse';
+    $("stage").style.background=d.col;
+    $("stage").innerHTML=d.nm+'<small>'+d.cls+'</small>';
+    var s='<span class="cls" style="background:'+d.col+'">'+d.cls+'</span><br>'+d.moa;
+    s+='<div class="ex">'+d.use.map(function(u){return '<span>'+u+'</span>';}).join('')+'</div>';
+    s+='<div class="dd"><b>Adverse effects.</b> '+d.ae+'</div>';
+    s+='<div class="loc"><b>What the nurse does.</b> '+d.nu+'</div>';
+    if(d.no)s+='<div class="note"><b>Warnings &amp; contraindications.</b> '+d.no+'</div>';
+    if(d.mn)s+='<div class="mnem"><b>Remember.</b> '+d.mn+'</div>';
+    $("info").innerHTML='<span class="n">'+d.nm+'</span>'+s;
+    $("cap").innerHTML='<b>'+d.nm+'</b> &mdash; '+d.sites.map(function(x){return SITE[x].nm.replace(/&mdash;.*/,'').trim();}).join(' + ')+'.';
+   } else if(siteSel){
+    var st=SITE[siteSel];
+    setChk('k1','v1',L[0],'&mdash;','');setChk('k2','v2',L[1],'&mdash;','');setChk('k3','v3',L[2],'&mdash;','');
+    $("cardTitle").innerHTML=st.nm;
+    $("stage").style.background=st.c;
+    $("stage").innerHTML=st.nm+'<small>a target &mdash; tap a drug that works here</small>';
+    var here=AD.filter(function(x){return x.sites.indexOf(siteSel)>=0;});
+    var body='<span class="n">'+st.nm+'</span>'+st.d;
+    if(here.length)body+='<div class="ex">'+here.map(function(x){return '<span>'+x.nm+'</span>';}).join('')+'</div>';
+    $("info").innerHTML=body;
+    $("cap").innerHTML='<b>'+here.length+'</b> drug'+(here.length===1?'':'s')+' in this list act'+(here.length===1?'s':'')+' here.';
+   } else {
+    setChk('k1','v1',L[0],'&mdash;','');setChk('k2','v2',L[1],'&mdash;','');setChk('k3','v3',L[2],'&mdash;','');
+    $("cardTitle").innerHTML='The synapse';
+    $("stage").style.background='var(--teal)';
+    $("stage").innerHTML='Antidepressant classes<small>tap a drug, or a pump on the diagram</small>';
+    $("info").innerHTML=DEF.cls;
+    $("cap").innerHTML='<b>Tap a pump, the enzyme, or a receptor.</b> Green = serotonin, blue = norepinephrine, gold = dopamine.';
+   }
+   return;
+  }
+
+  if(mode==='li'){
+   var lv=lvl(), z=zoneOf(lv);
+   $("art").innerHTML=drawLi(lv,z);
+   Array.prototype.forEach.call(document.querySelectorAll('#art .rgn'),function(g){
+    g.onclick=function(){jumpTo(parseFloat(g.getAttribute('data-go')));buildLi();paint();};
+   });
+   Array.prototype.forEach.call(document.querySelectorAll('#fg .it'),function(b){
+    var k=b.getAttribute('data-k');
+    b.className='it tox'+(fon[k]?' on':'');
+   });
+   if($("sl"))$("sl").value=base;
+   setChk('k1','v1',L[0],lv.toFixed(2)+' mEq/L',lv>1.5?'warn':(lv>=0.6&&lv<=1.2?'good':''));
+   setChk('k2','v2',L[1],z.nm,z.k>=3?'warn':(z.k===1?'good':''));
+   setChk('k3','v3',L[2],z.act,z.k>=3?'warn':(z.k===1?'good':''));
+   $("cardTitle").innerHTML='Serum lithium &mdash; ' + z.nm.toLowerCase();
+   $("stage").style.background=z.col;
+   $("stage").innerHTML='Lithium '+lv.toFixed(2)+' mEq/L<small>'+z.nm+' &mdash; '+z.sh+' mEq/L</small>';
+   var body='<span class="n">'+z.nm+' &mdash; '+z.sh+'</span>'+z.d;
+   var act=FACT.filter(function(f){return fon[f.k];});
+   if(act.length){
+    var f=flast?FACT.filter(function(x){return x.k===flast;})[0]:act[act.length-1];
+    body+='<div class="note"><b>'+f.nm+' &mdash; why the level moved.</b> '+f.w+'</div>';
+    if(act.length>1){
+     body+='<div class="dd"><b>Stacked on this patient:</b> '+act.map(function(x){return x.nm;}).join(' + ')+'. Each one alone might be survivable. <b>They add.</b> This is why a lithium patient&rsquo;s medication list gets read every single time, and why &ldquo;I only took some ibuprofen&rdquo; is never a small answer.</div>';
+    }
+   } else if(mode==='li'){
+    body+='<div class="dd"><b>The prescription has not changed.</b> Tap a factor and watch a correct dose become a toxic level &mdash; that is how lithium toxicity almost always happens. It is rarely the dose. It is the sodium, the water, or a new drug.</div>';
+   }
+   $("info").innerHTML=body;
+   $("cap").innerHTML=act.length?'<b>Baseline '+base.toFixed(2)+'</b> + '+act.length+' factor'+(act.length===1?'':'s')+' = <b>'+lv.toFixed(2)+' mEq/L</b>. Deltas here are illustrative &mdash; the lesson is the <b>direction</b>, and that they <b>stack</b>.':'<b>Tap a row</b> to jump to that level, or drag the slider and add a factor.';
+   return;
+  }
+
+  /* mode ss */
+  var sv=sevOf(), cb=combo(), sc=score(), S=SEV[sv];
+  $("art").innerHTML=drawSS(sv,cb);
+  Array.prototype.forEach.call(document.querySelectorAll('#sg .it'),function(b){
+   var k=b.getAttribute('data-k');
+   b.className='it tox'+(son[k]?' on':'');
+  });
+  setChk('k1','v1',L[0],S.ms,sv>=2?'warn':(sv===0?'good':''));
+  setChk('k2','v2',L[1],S.au,sv>=2?'warn':(sv===0?'good':''));
+  setChk('k3','v3',L[2],S.nm2,sv>=2?'warn':(sv===0?'good':''));
+  $("cardTitle").innerHTML=sv===0?'The patient':'The patient &mdash; '+S.nm.toLowerCase()+' serotonin syndrome';
+  $("stage").style.background=S.col;
+  $("stage").innerHTML=(sv===0?'No serotonin syndrome':S.nm+' serotonin syndrome')+'<small>serotonergic load '+sc+(cb?' · contraindicated combination':'')+'</small>';
+
+  var on=SER.filter(function(d){return son[d.k];});
+  var b2='';
+  if(sv===0){
+   if(on.length===0){
+    $("info").innerHTML=DEF.ss;
+    $("cap").innerHTML='<b>Tap drugs to build a regimen.</b> Watch the temperature, the reflexes, and the legs.';
+    return;
+   }
+   /* exactly one agent — a risk, not a syndrome */
+   var one=on[0];
+   var b1='<span class="n">One serotonergic drug &mdash; a risk, not a syndrome</span>';
+   b1+='<div class="dd"><b>'+one.nm+'.</b> '+one.w2+'</div>';
+   b1+='<b>The patient looks well because they are well.</b> A single serotonergic drug at a <b>therapeutic dose</b> essentially never produces serotonin syndrome &mdash; and this is worth being clear about, because students often leave this topic frightened of starting an SSRI. Mild nausea, jitteriness, or a fine tremor in the first week is <b>the drug settling in</b>, not toxicity.';
+   b1+='<div class="dd">The syndrome is <b>additive and iatrogenic</b>. It appears when a <b>second</b> serotonergic agent is layered on &mdash; usually by someone who never saw the first one. (The rare exception is a <b>massive overdose</b> of a single agent.)</div>';
+   b1+='<div class="loc"><b>What the nurse does now.</b> This is the moment to establish the <b>baseline</b> &mdash; temperature, heart rate, and <b>reflexes</b>. Reflexes move first and are the thing nobody documents, so there is nothing to compare against later. Then reconcile the <b>whole</b> list: prescriptions, <b>OTC cough and cold products</b>, and <b>herbals</b>. Ask by name &mdash; patients do not count dextromethorphan or St. John&rsquo;s wort as &ldquo;drugs.&rdquo;</div>';
+   b1+='<div class="mnem"><b>Now add a second drug</b> and watch the temperature, the reflexes, and the legs.</div>';
+   $("info").innerHTML=b1;
+   $("cap").innerHTML='<b>1 agent · load '+sc+'.</b> No syndrome &mdash; tap a second drug.';
+   return;
+  }
+  b2='<span class="n">'+S.nm+' &mdash; serotonergic load '+sc+'</span>';
+  if(cb){
+   b2+='<div class="note"><b>This combination is contraindicated.</b> An <b>MAOI</b> plus any serotonergic drug removes the only exit serotonin has while something else keeps pushing more in. This is the pairing that kills, and the reason for the <b>14-day washout in both directions &mdash; 5 weeks after fluoxetine</b>. The washout is not caution. It is the time the body needs to <b>make new MAO enzyme</b>.</div>';
+  }
+  var last=on[on.length-1];
+  b2+='<div class="dd"><b>'+last.nm+'.</b> '+last.w2+'</div>';
+  b2+='<div class="ex">'+on.map(function(d){return '<span>'+d.nm+'</span>';}).join('')+'</div>';
+
+  if(sv===1){
+   b2+='<div class="dd"><b>Two serotonergic agents are now on the same patient.</b> This is where the syndrome becomes possible &mdash; and where it is still easy to miss, because the findings are subtle: restlessness, a fine tremor, mildly brisk reflexes, a heart rate that drifted up. Nothing here forces anyone to act, which is exactly why cases are caught late.</div>';
+   b2+='<div class="loc"><b>What the nurse does.</b> <b>Check reflexes and clonus now, and document them</b> &mdash; hyperreflexia is the earliest objective sign, and without a baseline you cannot tell later whether it moved. Take a temperature. Then ask the question that actually finds these cases: <b>was anything started or increased in the last 24 hours?</b> Flag the combination to the provider rather than waiting for it to declare itself.</div>';
+  } else if(sv===2){
+   b2+='<div class="dd">The triad is now present: <b>altered mental status + autonomic instability + neuromuscular hyperactivity</b>. <b>Clonus is the most specific sign</b> &mdash; dorsiflex the foot and it beats against your hand &mdash; and it is <b>worst in the lower extremities</b>. Look for it before you look for anything else.</div>';
+   b2+='<div class="loc"><b>What the nurse does.</b> <b>Stop every serotonergic drug and notify the provider now</b> &mdash; that single action is the treatment, and it is a nursing action. Continuous cardiac monitoring. Vital signs, especially <b>temperature</b>, every 15 minutes. IV access and fluids. <b>Benzodiazepines</b> for agitation and rigidity &mdash; they also lower the temperature by quieting the muscles. Expect <b>cyproheptadine</b>, a 5-HT&#8322; antagonist, as the antidote if it does not settle.</div>';
+   b2+='<div class="note"><b>Two traps.</b> <b>Antipyretics do not work</b> &mdash; the heat is generated by muscle activity, not by a raised hypothalamic set point, so acetaminophen treats nothing. And <b>do not use physical restraints</b>: a struggling patient contracting against them generates more heat and more lactic acid, and restraints have contributed to deaths. <b>Sedate, do not restrain.</b></div>';
+  } else {
+   b2+='<div class="dd"><b>This is now life-threatening.</b> Temperature above <b>41 °C</b>, muscular rigidity, and delirium. The complications are what kill: <b>rhabdomyolysis</b> &rarr; acute kidney injury, <b>DIC</b>, seizures, metabolic acidosis, and cardiovascular collapse.</div>';
+   b2+='<div class="loc"><b>What the nurse does.</b> <b>Stop every serotonergic agent.</b> Rapid response. Airway &mdash; anticipate <b>intubation and paralysis with a non-depolarizing agent</b> (<b>succinylcholine is avoided</b>: rhabdomyolysis means hyperkalemia, and depolarizing it further can arrest the heart). <b>Aggressive external cooling</b>, IV benzodiazepines, <b>cyproheptadine</b>, large-volume IV fluids to protect the kidneys from myoglobin, and continuous cardiac monitoring. Send <b>CK, potassium, creatinine, and coagulation studies</b>.</div>';
+   b2+='<div class="note"><b>Do not mistake this for NMS.</b> Serotonin syndrome arrives <b>within 24 hours</b> of a serotonergic drug or dose change and shows <b>clonus, hyperreflexia, dilated pupils, and hyperactive bowel sounds</b>. <b>Neuroleptic malignant syndrome</b> builds over <b>days to weeks</b> after a <b>dopamine blocker</b>, and shows <b>lead-pipe rigidity with <i>hypo</i>reflexia</b> and bradykinesia. Both are hot and confused. <b>The reflexes and the clock tell them apart</b> &mdash; and the treatments differ (benzodiazepines and cyproheptadine here; <b>dantrolene and bromocriptine</b> for NMS).</div>';
+  }
+  b2+='<div class="mnem"><b>Remember.</b> Serotonin syndrome is <b>fast</b> (&lt;24 h), <b>hyper</b>reflexic, and <b>iatrogenic</b>. The first and best treatment is the one the nurse can start: <b>stop the drugs.</b></div>';
+  $("info").innerHTML=b2;
+  $("cap").innerHTML='<b>'+on.length+'</b> serotonergic agent'+(on.length===1?'':'s')+' · load <b>'+sc+'</b>'+(cb?' · <b style="color:#b23145">MAOI combination</b>':'');
+ }
+
+ function build(){
+  $("list").className=(mode==='cls')?'list':'list free';
+  if(mode==='cls')buildCls();
+  else if(mode==='li')buildLi();
+  else buildSS();
+  paint();
+ }
+
+ Array.prototype.forEach.call(document.querySelectorAll('#modeseg button'),function(b){
+  b.onclick=function(){
+   mode=b.getAttribute('data-m'); sel=''; siteSel='';
+   Array.prototype.forEach.call(document.querySelectorAll('#modeseg button'),function(x){x.className=(x===b?'on':'');});
+   $("list").scrollTop=0;
+   build();
+  };
+ });
+ build();
+})();
+</script>
+</body>
+</html>

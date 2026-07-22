@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Glaucoma Drops &amp; Instillation Technique</title>
+<meta name="description" content="Interactive on glaucoma eye-drop classes — how each lowers intraocular pressure by cutting aqueous production or boosting outflow — plus correct drop instillation technique. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>
+.wrap{grid-template-columns:0.95fr 1.05fr;}
+#wlvl{transition:y .5s ease,height .5s ease;}
+.iopbar{height:13px;border-radius:7px;background:#e3ebf5;overflow:hidden;margin-top:7px;border:1px solid var(--line);}
+.iopbar i{display:block;height:100%;background:var(--coral);transition:width .5s ease,background .5s ease;}
+.iophead{display:flex;justify-content:space-between;align-items:center;margin-top:11px;font-size:12px;color:var(--muted);}
+.iopscale{display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);margin-top:3px;}
+.cap{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.45;}
+#info .dd b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 12</div>
+  <h1>Glaucoma Drops &amp; Instillation Technique</h1>
+  <div class="intro">Glaucoma is high pressure inside the eye. Every drop lowers that pressure in one of two ways &mdash; by making <b>less</b> aqueous fluid or by draining <b>more</b> of it out. Explore the drug classes, then step through how to put a drop in <b>correctly</b>.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Aqueous humor balance</h2>
+    <svg viewBox="0 0 220 214" aria-label="eye pressure diagram">
+      <defs><clipPath id="eyeclip"><path d="M16,108 Q110,34 204,108 Q110,182 16,108 Z"/></clipPath></defs>
+      <g id="art"></g>
+    </svg>
+    <div id="iopwrap">
+      <div class="iophead"><span>Intraocular pressure <span style="opacity:.7">(illustrative)</span></span><span id="ioptxt" style="font-weight:800;color:var(--coral);">26 mmHg</span></div>
+      <div class="iopbar"><i id="iopbar" style="width:81%"></i></div>
+      <div class="iopscale"><span>0</span><span>normal 10&ndash;21</span><span>32 mmHg</span></div>
+    </div>
+    <div class="cap" id="cap">Blue faucet on top = fluid made at the ciliary body. Green drain below = fluid leaving through the trabecular meshwork. Tap a drug class to watch it act.</div>
+  </div></div>
+  <div>
+    <div class="modeseg">
+      <button id="mA" class="on">Glaucoma drugs</button>
+      <button id="mB">Instillation steps</button>
+    </div>
+    <div id="stage">Pressure is too high<small>tap a drug class to lower it</small></div>
+    <div class="card">
+      <div class="list" id="list"></div>
+      <div id="info"></div>
+      <div class="row" id="steprow" style="display:none;"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var COL={prod:'#2f6f9f',outflow:'#2f9e5b',both:'#7a5a8a'};
+
+ /* ---------- Glaucoma drug classes (generic names) ---------- */
+ var D=[
+  {k:'pga',nm:'Prostaglandin analogs',ct:'Increases outflow · first-line',act:'outflow',iop:16,firstline:1,pupil:0,
+   ex:'latanoprost · travoprost · bimatoprost',
+   mech:'Open the <b>uveoscleral outflow</b> pathway so more aqueous humor drains away. The most effective single agent and usual <b>first-line</b> choice.',
+   ae:'Permanent <b>brown iris pigmentation</b>, longer &amp; darker eyelashes, darkening of the eyelid skin, and red eye.',
+   nur:'Give <b>once daily at bedtime</b>. Warn the patient the iris color change is <b>permanent</b> and that extra lash growth is expected.'},
+  {k:'bb',nm:'Beta-blockers',ct:'Decreases production',act:'prod',iop:18,firstline:0,pupil:0,
+   ex:'timolol · betaxolol',
+   mech:'Block beta receptors on the ciliary body so it makes <b>less aqueous humor</b> (turns the faucet down).',
+   ae:'Enough is absorbed into the bloodstream to cause <b>bradycardia, bronchospasm,</b> and hypotension.',
+   nur:'Contraindicated in <b>asthma/COPD, bradycardia, and heart block</b>. Assess heart rate &amp; lung history, and teach <b>punctal occlusion</b> to limit systemic absorption.'},
+  {k:'a2',nm:'Alpha-2 agonists',ct:'Both mechanisms',act:'both',iop:18,firstline:0,pupil:0,
+   ex:'brimonidine · apraclonidine',
+   mech:'Do <b>both</b> jobs at once &mdash; decrease aqueous production <i>and</i> increase uveoscleral outflow.',
+   ae:'Dry mouth, <b>drowsiness/fatigue</b>, and ocular allergy (red, itchy eyes).',
+   nur:'<b>Contraindicated in neonates and infants</b> &mdash; it can cross into the brain and cause sedation and apnea. Caution the patient about driving until effects are known.'},
+  {k:'cai',nm:'Carbonic anhydrase inhibitors',ct:'Decreases production',act:'prod',iop:19,firstline:0,pupil:0,
+   ex:'dorzolamide · brinzolamide (drops) · acetazolamide (oral)',
+   mech:'Block the enzyme carbonic anhydrase in the ciliary body, cutting aqueous <b>production</b>.',
+   ae:'These are <b>sulfonamides</b> &mdash; watch for sulfa allergy. Oral acetazolamide adds paresthesias, <b>hypokalemia,</b> metabolic acidosis, and kidney stones.',
+   nur:'Ask about <b>sulfa allergy</b>. <b>Shake</b> brinzolamide (a suspension). With the oral form, monitor <b>potassium</b> and encourage fluids.'},
+  {k:'chol',nm:'Cholinergic miotics',ct:'Increases outflow · constricts pupil',act:'outflow',iop:18,firstline:0,pupil:1,
+   ex:'pilocarpine',
+   mech:'Contract the ciliary muscle to pull open the trabecular meshwork &rarr; more <b>outflow</b>. This also constricts the pupil (<b>miosis</b>).',
+   ae:'Brow ache, <b>dim and blurred vision</b> (worse at night from the tiny pupil), and eye watering.',
+   nur:'A key drug in <b>acute angle-closure glaucoma</b>. Warn about poor night vision and caution driving after dark.'},
+  {k:'rho',nm:'Rho kinase inhibitor',ct:'Increases outflow',act:'outflow',iop:18,firstline:0,pupil:0,
+   ex:'netarsudil',
+   mech:'Relax the trabecular meshwork to boost the eye’s main <b>outflow</b> channel (and lowers production a little).',
+   ae:'<b>Conjunctival hyperemia</b> (red eye) is very common, plus small whorl-shaped corneal deposits.',
+   nur:'Give <b>once daily in the evening</b>. Reassure the patient that the redness is common and usually harmless.'}
+ ];
+
+ function pillFor(act){
+   var t = act==='prod' ? '&darr; production' : act==='outflow' ? '&uarr; outflow' : '&darr; production &middot; &uarr; outflow';
+   return '<span class="pill" style="background:#e4eefa;color:'+COL[act]+'">'+t+'</span>';
+ }
+
+ /* draw the eye "tank": faucet in (production), drain out (outflow), water level = IOP */
+ function drawEye(d){
+   var act=d?d.act:'', iop=d?d.iop:26;
+   var prod = act==='prod'||act==='both';
+   var out  = act==='outflow'||act==='both';
+   var wtop = Math.max(72, Math.min(140, 145-(iop/28)*74));
+   var s='';
+   /* water clipped to eye */
+   s+='<g clip-path="url(#eyeclip)"><rect id="wlvl" x="14" y="'+wtop+'" width="192" height="150" fill="#bfe0f2"/></g>';
+   /* eye outline */
+   s+='<path d="M16,108 Q110,34 204,108 Q110,182 16,108 Z" fill="none" stroke="#1e3a63" stroke-width="3"/>';
+   /* iris + pupil (pupil shrinks for miotics) */
+   var pr = (d&&d.pupil)?6:13;
+   s+='<circle cx="110" cy="108" r="27" fill="#e7f1fb" stroke="#1e3a63" stroke-width="2"/>';
+   s+='<circle cx="110" cy="108" r="'+pr+'" fill="#12213a"/>';
+   if(d&&d.pupil){ s+='<text x="110" y="150" font-size="9" fill="#7a5a8a" text-anchor="middle" font-weight="800">miosis</text>'; }
+   /* faucet = production (top) */
+   var fCol = prod ? COL.prod : '#93a6b8';
+   s+='<rect x="104" y="18" width="12" height="15" rx="3" fill="'+fCol+'"/><rect x="96" y="14" width="28" height="8" rx="4" fill="'+fCol+'"/>';
+   var nd = prod ? 1 : 3;
+   for(var i=0;i<nd;i++){ s+='<circle cx="110" cy="'+(40+i*11)+'" r="3.4" fill="'+fCol+'"/>'; }
+   s+='<text x="110" y="10" font-size="9.5" fill="'+(prod?COL.prod:'#78828f')+'" text-anchor="middle" font-weight="800">PRODUCTION'+(prod?' &darr;':'')+'</text>';
+   /* drain = outflow (bottom) */
+   var dCol = out ? COL.outflow : '#93a6b8';
+   var dw = out ? 22 : 11;
+   s+='<rect x="'+(110-dw/2)+'" y="150" width="'+dw+'" height="15" rx="3" fill="'+dCol+'"/>';
+   var aw = out ? 11 : 7;
+   s+='<path d="M110,'+(184+(out?4:0))+' l-'+aw+',-12 h'+(aw*2)+' z" fill="'+dCol+'"/>';
+   s+='<text x="110" y="209" font-size="9.5" fill="'+(out?COL.outflow:'#78828f')+'" text-anchor="middle" font-weight="800">OUTFLOW'+(out?' &uarr;':'')+'</text>';
+   return s;
+ }
+
+ function selDrug(k){
+   var d = k ? D.filter(function(x){return x.k===k;})[0] : null;
+   $("art").innerHTML=drawEye(d);
+   var iop = d?d.iop:26;
+   var pct = Math.round(iop/32*100);
+   $("iopbar").style.width=pct+'%';
+   var high = iop>21;
+   $("iopbar").style.background = high ? 'var(--coral)' : 'var(--green)';
+   $("ioptxt").style.color = high ? 'var(--coral)' : 'var(--green)';
+   $("ioptxt").innerHTML = iop+' mmHg';
+   if(!d){
+     $("cardTitle").innerHTML='Aqueous humor balance';
+     $("stage").style.background='var(--coral)';
+     $("stage").innerHTML='Pressure is too high<small>tap a drug class to lower it</small>';
+     $("info").style.borderLeftColor='var(--teal)';
+     $("info").innerHTML='<span class="n">Why pressure rises</span>Aqueous humor is made behind the iris and drains at the angle of the eye. In glaucoma it drains too slowly, pressure climbs, and the optic nerve is damaged. <b>Every drug here either makes less fluid or drains more of it.</b>';
+   } else {
+     $("cardTitle").innerHTML=d.nm;
+     $("stage").style.background=COL[d.act];
+     $("stage").innerHTML=d.nm+'<small>'+(d.firstline?'first-line · ':'')+(d.act==='prod'?'lowers fluid production':d.act==='outflow'?'increases fluid drainage':'less production + more drainage')+'</small>';
+     $("info").style.borderLeftColor=COL[d.act];
+     $("info").innerHTML='<span class="n">'+d.nm+' '+pillFor(d.act)+'</span>'+
+       '<div class="ex"><span>'+d.ex.split(' · ').join('</span><span>')+'</span></div>'+
+       '<div class="dd"><b>How it lowers pressure:</b> '+d.mech+'</div>'+
+       '<div class="note"><b>Adverse:</b> '+d.ae+'</div>'+
+       '<div class="loc"><b>Nurse:</b> '+d.nur+'</div>';
+   }
+   renderList(k);
+ }
+ function renderList(cur){
+   $("list").innerHTML=D.map(function(d){
+     return '<button class="it'+(d.k===cur?' on':'')+'" data-k="'+d.k+'"><span class="sw" style="background:'+COL[d.act]+'"></span><span><span class="nm">'+d.nm+'</span><br><span class="ct">'+d.ct+'</span></span></button>';
+   }).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){b.onclick=function(){selDrug(b.dataset.k);};});
+ }
+
+ /* ---------- Instillation technique steps ---------- */
+ var ST=[
+  {t:'Prepare',
+   d:'<b>Wash your hands.</b> Confirm the right drug, right strength, right patient, and <b>which eye</b>. <b>Shake</b> the bottle if it is a suspension (e.g., brinzolamide). Never let the <b>dropper tip touch</b> the eye, the lashes, or any surface &mdash; that contaminates the whole bottle.',
+   tip:'<b>Right patient, right drug, right eye.</b> Eye drops are still a medication &mdash; the same checks apply.'},
+  {t:'Make a pocket',
+   d:'Have the patient <b>tilt the head back and look up</b>. Gently <b>pull the lower lid down</b> with a finger to form a small pocket &mdash; the conjunctival sac. This is where the drop goes.'},
+  {t:'Instill ONE drop',
+   d:'Hold the dropper about 1&ndash;2 cm above the eye and release <b>one single drop into the pocket</b> &mdash; not straight onto the cornea, which makes the patient blink it away.',
+   tip:'<b>One drop is enough.</b> The eye can only hold about one drop; a second just spills onto the cheek and wastes medication.'},
+  {t:'Close &amp; press the corner',
+   d:'Have the patient <b>close the eye gently</b> (no squeezing or hard blinking) and <b>press the inner corner</b> of the eye &mdash; punctal / nasolacrimal occlusion &mdash; for <b>1&ndash;2 minutes</b>.',
+   warn:'<b>This is the key nursing step.</b> Pressing the inner corner blocks the tear duct so the drug stays on the eye instead of draining into the nose and bloodstream &mdash; it prevents <b>bradycardia and bronchospasm from timolol.</b>'},
+  {t:'Space out multiple drops',
+   d:'If more than one eye drop is due, <b>wait at least 5 minutes</b> between them so the first drop is not washed out by the second. When a drop and an <b>ointment</b> are both ordered, give the <b>drop first</b> and the ointment last.',
+   tip:'<b>Drops before ointment.</b> Ointment leaves an oily film that would block a drop that comes after it.'},
+  {t:'Finish &amp; document',
+   d:'Blot any excess from the lid with a clean tissue. Have the patient wait <b>10&ndash;15 minutes before putting in contact lenses.</b> Recap without touching the tip, store as directed, then <b>document</b> the dose and which eye was treated.'}
+ ];
+ var si=0;
+
+ function eyeShape(pull,closed,pupilR){
+   var s='';
+   if(closed){
+     s+='<path d="M64,104 Q110,116 156,104" fill="none" stroke="#1e3a63" stroke-width="4" stroke-linecap="round"/>';
+     s+='<path d="M76,108 l-4,7 M96,112 l-2,8 M110,113 l0,8 M124,112 l2,8 M144,108 l4,7" stroke="#1e3a63" stroke-width="2" stroke-linecap="round" fill="none"/>';
+   } else {
+     var lidY = pull?132:118;
+     s+='<path d="M62,102 Q110,74 158,102 Q110,'+lidY+' 62,102 Z" fill="#fff" stroke="#1e3a63" stroke-width="3"/>';
+     s+='<circle cx="110" cy="102" r="18" fill="#4a6b9a"/>';
+     s+='<circle cx="110" cy="102" r="'+(pupilR||8)+'" fill="#12213a"/>';
+     s+='<circle cx="104" cy="96" r="3" fill="#fff" opacity=".7"/>';
+     if(pull){
+       s+='<path d="M74,120 Q110,146 146,120" fill="#f3d3c0" stroke="#d98f6b" stroke-width="2"/>';
+       s+='<text x="110" y="140" font-size="9" fill="#b23145" text-anchor="middle" font-weight="700">conjunctival sac</text>';
+     }
+   }
+   return s;
+ }
+ function drawStep(i){
+   var s='';
+   if(i===0){
+     s+=eyeShape(false,false,8);
+     s+='<rect x="150" y="150" width="26" height="40" rx="5" fill="#2f6f9f"/><rect x="156" y="142" width="14" height="12" rx="3" fill="#1e3a63"/>';
+     s+='<path d="M120,176 q-16 -2 -22 8" fill="none" stroke="#78828f" stroke-width="2" stroke-dasharray="3 3"/>';
+     s+='<text x="163" y="205" font-size="8.5" fill="#255f8a" text-anchor="middle" font-weight="700">shake if suspension</text>';
+     s+='<text x="60" y="176" font-size="26" text-anchor="middle">&#128110;</text>';
+     s+='<text x="60" y="198" font-size="8.5" fill="#78828f" text-anchor="middle">clean hands</text>';
+   } else if(i===1){
+     s+=eyeShape(true,false,8);
+     s+='<path d="M110,150 l-7,-11 h14 z" fill="#2f5f9e"/><text x="110" y="172" font-size="9" fill="#1e3a63" text-anchor="middle" font-weight="700">pull lower lid down</text>';
+     s+='<text x="150" y="128" font-size="20" text-anchor="middle">&#128072;</text>';
+   } else if(i===2){
+     s+=eyeShape(true,false,8);
+     s+='<rect x="100" y="26" width="20" height="34" rx="6" fill="#2f6f9f"/><path d="M104,60 h12 l-6,10 z" fill="#2f6f9f"/>';
+     s+='<circle cx="110" cy="80" r="5" fill="#5aa0d6"/>';
+     s+='<text x="150" y="52" font-size="12" fill="#237a45" text-anchor="middle" font-weight="800">ONE drop</text>';
+   } else if(i===3){
+     s+=eyeShape(false,true,0);
+     s+='<circle cx="66" cy="104" r="9" fill="#f3d3c0" stroke="#d98f6b" stroke-width="2"/>';
+     s+='<text x="66" y="86" font-size="9" fill="#b23145" text-anchor="middle" font-weight="800">press here</text>';
+     s+='<text x="66" y="128" font-size="8.5" fill="#b23145" text-anchor="middle">inner corner</text>';
+     s+='<rect x="128" y="150" width="70" height="30" rx="8" fill="#eff4fb" stroke="#2f5f9e" stroke-width="1.5"/>';
+     s+='<text x="163" y="170" font-size="12" fill="#1e3a63" text-anchor="middle" font-weight="800">&#9201; 1&#8211;2 min</text>';
+   } else if(i===4){
+     s+='<circle cx="70" cy="96" r="34" fill="#fff" stroke="#2f5f9e" stroke-width="3"/>';
+     s+='<line x1="70" y1="96" x2="70" y2="70" stroke="#1e3a63" stroke-width="3" stroke-linecap="round"/>';
+     s+='<line x1="70" y1="96" x2="90" y2="104" stroke="#d1495b" stroke-width="3" stroke-linecap="round"/>';
+     s+='<text x="70" y="150" font-size="13" fill="#1e3a63" text-anchor="middle" font-weight="800">wait 5 min</text>';
+     s+='<text x="70" y="167" font-size="9" fill="#78828f" text-anchor="middle">between drops</text>';
+     s+='<rect x="140" y="60" width="20" height="34" rx="5" fill="#2f6f9f"/><text x="150" y="112" font-size="8.5" fill="#255f8a" text-anchor="middle" font-weight="700">drop 1</text>';
+     s+='<rect x="170" y="60" width="20" height="34" rx="5" fill="#7a5a8a"/><text x="180" y="112" font-size="8.5" fill="#7a5a8a" text-anchor="middle" font-weight="700">then 2</text>';
+     s+='<text x="165" y="150" font-size="10" fill="#237a45" text-anchor="middle" font-weight="800">drops before</text><text x="165" y="164" font-size="10" fill="#237a45" text-anchor="middle" font-weight="800">ointment</text>';
+   } else {
+     s+='<circle cx="110" cy="86" r="36" fill="#e5f3ea" stroke="#2f9e5b" stroke-width="3"/>';
+     s+='<path d="M92,86 l12,13 24,-26" fill="none" stroke="#2f9e5b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>';
+     s+='<text x="110" y="150" font-size="12" fill="#1e3a63" text-anchor="middle" font-weight="800">document dose &amp; eye</text>';
+     s+='<text x="110" y="172" font-size="9" fill="#78828f" text-anchor="middle">contacts: wait 10&#8211;15 min</text>';
+   }
+   return s;
+ }
+ function renderStep(){
+   var st=ST[si];
+   $("art").innerHTML=drawStep(si);
+   $("cardTitle").innerHTML='Step '+(si+1)+': '+st.t;
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML=st.t+'<small>step '+(si+1)+' of '+ST.length+'</small>';
+   $("info").style.borderLeftColor='var(--teal)';
+   var html='<span class="n">'+st.t+'</span>'+st.d;
+   if(st.warn) html+='<div class="note">'+st.warn+'</div>';
+   if(st.tip) html+='<div class="mnem">'+st.tip+'</div>';
+   $("info").innerHTML=html;
+   $("prev").disabled=(si===0);
+   $("next").disabled=(si===ST.length-1);
+ }
+
+ /* ---------- mode switching ---------- */
+ function setMode(m){
+   var a=(m==='A');
+   $("mA").className=a?'on':''; $("mB").className=a?'':'on';
+   $("list").style.display=a?'flex':'none';
+   $("steprow").style.display=a?'none':'flex';
+   $("iopwrap").style.display=a?'block':'none';
+   $("cap").innerHTML=a
+     ? 'Blue faucet on top = fluid made at the ciliary body. Green drain below = fluid leaving through the trabecular meshwork. Tap a drug class to watch it act.'
+     : 'One drop, in the pocket, then press the inner corner. Use Prev / Next to walk each step.';
+   if(a){ selDrug(null); } else { si=0; renderStep(); }
+ }
+ $("mA").onclick=function(){setMode('A');};
+ $("mB").onclick=function(){setMode('B');};
+ $("prev").onclick=function(){ if(si>0){si--;renderStep();} };
+ $("next").onclick=function(){ if(si<ST.length-1){si++;renderStep();} };
+
+ setMode('A');
+})();
+</script>
+</body>
+</html>

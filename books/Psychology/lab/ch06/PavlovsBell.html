@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Pavlov's Bell</title>
+<meta name="description" content="Build Pavlov's experiment yourself — pair a bell with food until the dog salivates to the bell alone (the conditioned response), then ring the bell without food and watch the response extinguish. For psychology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:0.95fr 1.05fr;}
+#art text{pointer-events:none;}
+.meter{margin-top:13px;}
+.meter .lab{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--soft);margin-bottom:5px;}
+.meter .lab b{color:var(--teal-dk);font-weight:800;}
+.bar{height:13px;border-radius:7px;background:#f2e2ea;overflow:hidden;}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--coral));transition:width .45s;}
+.chk{display:flex;gap:8px;margin-top:12px;}
+.chk div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 4px;font-size:10.5px;font-weight:700;color:var(--muted);background:#fff;transition:.2s;}
+.chk div .v{display:block;font-size:12px;margin-top:3px;font-weight:800;line-height:1.15;}
+.chk div.ns{border-color:var(--blue);color:var(--blue);}
+.chk div.cs{border-color:var(--teal);color:var(--teal-dk);background:#f8e2ec;}
+.chk div.ucr{border-color:var(--gold);color:var(--gold);background:#fbf3e2;}
+.chk div.cr{border-color:var(--green);color:#237a45;background:#eef7f0;}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+.acts .btn{margin:0;font-size:12.5px;padding:11px 8px;}
+.acts .btn.wide{grid-column:1 / -1;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 6</div>
+  <h1>Pavlov's Bell</h1>
+  <div class="intro">Step into <b>Ivan Pavlov</b>&rsquo;s laboratory and build the experiment yourself. First meet the reflex, then <b>pair the bell with food</b> over and over until the dog drools at the bell <i>alone</i> &mdash; a brand-new <b>conditioned response</b>. Finally, ring the bell without food and watch that response <b>extinguish</b>. Every stimulus and response is labeled as you go.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Pavlov's laboratory</h2>
+    <svg viewBox="0 0 220 200" aria-label="Pavlov conditioning diagram"><g id="art"></g></svg>
+    <div class="meter">
+      <div class="lab"><span>Bell → food association</span><b id="apct">0%</b></div>
+      <div class="bar"><i id="abar"></i></div>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">Pavlov's laboratory<small>press a button below to begin</small></div>
+    <div class="card">
+      <div class="chk">
+        <div id="c1">The bell<span class="v" id="v1">Neutral · NS</span></div>
+        <div id="c2">Salivation<span class="v" id="v2">—</span></div>
+        <div id="c3">Learning<span class="v" id="v3">0%</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="acts">
+        <button class="btn" id="bFood">🍖 Food alone</button>
+        <button class="btn solid" id="bPair">🔔 + 🍖 Bell, then food</button>
+        <button class="btn" id="bBell">🔔 Bell alone</button>
+        <button class="btn" id="bReset">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var TEAL='#a1466b',BLUE='#2f6f9f',GOLD='#b8862f',GREEN='#2f9e5b',CORAL='#d1495b';
+ var CSMIN=40;            // association at/above which the bell first works as a conditioned stimulus
+ var assoc=0;            // 0..100 strength of the bell->food link (the meter)
+ var saliv=0;            // 0..100 salivation shown this frame
+ var pairs=0;            // number of acquisition (bell+food) trials
+ var everCS=false;       // has the bell ever reached conditioned-stimulus strength?
+ var bellRing=false, foodShow=false, frameCS=false, respType='none';
+
+ function draw(){
+   var s='';
+   // --- the bell (left) ---
+   var bellCS=frameCS;
+   s+='<text x="46" y="54" font-size="32" text-anchor="middle">🔔</text>';
+   if(bellRing){
+     s+='<path d="M22 36 q-7 14 0 28" fill="none" stroke="'+GOLD+'" stroke-width="2"/>';
+     s+='<path d="M14 30 q-11 22 0 44" fill="none" stroke="'+GOLD+'" stroke-width="1.6" opacity=".6"/>';
+     s+='<path d="M70 36 q7 14 0 28" fill="none" stroke="'+GOLD+'" stroke-width="2"/>';
+     s+='<path d="M78 30 q11 22 0 44" fill="none" stroke="'+GOLD+'" stroke-width="1.6" opacity=".6"/>';
+   }
+   s+='<text x="46" y="78" font-size="10" text-anchor="middle" font-weight="800" fill="'+(bellCS?TEAL:BLUE)+'">bell &middot; '+(bellCS?'CS':'NS')+'</text>';
+   // --- the food (right) ---
+   if(foodShow){
+     s+='<text x="174" y="54" font-size="30" text-anchor="middle">🍖</text>';
+     s+='<text x="174" y="78" font-size="10" text-anchor="middle" font-weight="800" fill="'+CORAL+'">food &middot; UCS</text>';
+   }else{
+     s+='<text x="174" y="54" font-size="26" text-anchor="middle" opacity=".28">🍖</text>';
+     s+='<text x="174" y="78" font-size="10" text-anchor="middle" font-weight="700" fill="#b7a4ad">no food</text>';
+   }
+   // --- pathway arrows toward the dog's head (~110,116) ---
+   if(foodShow){
+     s+='<path d="M166 84 Q150 104 126 116" fill="none" stroke="'+CORAL+'" stroke-width="2.6"/>';
+     s+='<polygon points="126,116 133,110 133,120" fill="'+CORAL+'"/>';
+   }
+   if(bellRing){
+     var col=bellCS?GREEN:'#c2aeb8';
+     s+='<path d="M54 84 Q70 104 94 116" fill="none" stroke="'+col+'" stroke-width="2.4" stroke-dasharray="4 3"/>';
+     if(bellCS){s+='<polygon points="94,116 87,110 87,120" fill="'+col+'"/>';}
+     else{s+='<text x="70" y="106" font-size="13" fill="#b7a4ad" font-weight="800">?</text>';}
+   }
+   // --- the dog ---
+   s+='<text x="110" y="150" font-size="50" text-anchor="middle">🐶</text>';
+   // --- salivation drops (proportional to saliv) ---
+   var slots=[[97,176],[123,176],[110,184],[104,192],[117,192]];
+   var n=Math.round(saliv/20);
+   for(var i=0;i<n && i<slots.length;i++){ s+='<text x="'+slots[i][0]+'" y="'+slots[i][1]+'" font-size="14" text-anchor="middle">💧</text>'; }
+   return s;
+ }
+
+ function setCell(el,cls,txt){ el.className=cls; el.querySelector('.v').innerHTML=txt; }
+
+ function paint(msg,stageTxt,stageSub,stageCol){
+   $("art").innerHTML=draw();
+   $("abar").style.width=assoc+'%'; $("apct").innerHTML=Math.round(assoc)+'%';
+   $("stage").style.background=stageCol; $("stage").innerHTML=stageTxt+'<small>'+stageSub+'</small>';
+   // readout: the bell, the salivation, the learning meter
+   setCell($("c1"), frameCS?'cs':'ns', frameCS?'Conditioned · CS':'Neutral · NS');
+   if(respType==='ucr'){ setCell($("c2"),'ucr','Salivation · UCR'); }
+   else if(respType==='cr'){ setCell($("c2"),'cr','Salivation · CR'); }
+   else { setCell($("c2"),'','—'); }
+   $("c3").className=''; $("v3").innerHTML=Math.round(assoc)+'%';
+   $("info").innerHTML=msg;
+ }
+
+ function foodOnly(){
+   bellRing=false; foodShow=true; saliv=100; respType='ucr'; frameCS=(assoc>=CSMIN);
+   paint('<span class="n">The reflex</span>Food is an <b>unconditioned stimulus (UCS)</b> &mdash; it triggers salivation with no learning at all. That drooling is the <b>unconditioned response (UCR)</b>: an automatic, built-in reflex present from birth. Notice the bell plays no part here. This is the baseline <b>before any conditioning</b>.',
+     'The reflex','food (UCS) → salivation (UCR)',GOLD);
+ }
+
+ function pair(){
+   pairs++; bellRing=true; foodShow=true; saliv=100; respType='ucr';
+   assoc=Math.min(100,assoc+20);
+   if(assoc>=CSMIN){ everCS=true; }
+   frameCS=(assoc>=CSMIN);
+   var msg;
+   if(pairs===1){
+     msg='<span class="n">Acquisition begins</span>You rang the <b>bell just before the food</b> &mdash; the order that makes conditioning work. The dog salivates, but for now that is still the <b>UCR to the food</b>. The neutral bell is only <i>starting</i> to borrow the food&rsquo;s power. One pairing is not enough &mdash; <b>keep pairing them.</b>';
+   } else if(assoc<100){
+     msg='<span class="n">Acquisition &middot; pairing '+pairs+'</span>Each time the <b>bell reliably predicts food (UCS)</b>, the link grows stronger &mdash; now <b>'+Math.round(assoc)+'%</b>. The bell is becoming a <b>conditioned stimulus (CS)</b>. Ring the <b>bell alone</b> to test what the dog has learned.';
+   } else {
+     msg='<span class="n">Fully conditioned</span>After '+pairs+' pairings the bell&rsquo;s link to food is <b>maxed out</b>. The bell is now a full <b>conditioned stimulus (CS)</b>. Ring the <b>bell alone</b> and watch the dog salivate with no food in sight.';
+   }
+   paint(msg,'Acquisition','pairing bell + food · '+Math.round(assoc)+'%',BLUE);
+ }
+
+ function bellOnly(){
+   bellRing=true; foodShow=false;
+   var cr=assoc;                 // the conditioned response is as strong as the current link
+   var msg,st,sub,col;
+   if(!everCS){
+     // the bell was never conditioned strongly enough — still neutral
+     frameCS=false; respType='none'; saliv=0;
+     msg='<span class="n">Still neutral</span>The bell rings, and&hellip; nothing. It has not yet been paired with food often enough to mean anything, so it is still a plain <b>neutral stimulus (NS)</b>. Go tap <b>Bell, then food</b> a couple more times, then test again.';
+     st='Neutral stimulus'; sub='the bell means nothing yet'; col=BLUE;
+   } else if(cr<=0){
+     // already fully extinguished
+     frameCS=false; respType='none'; saliv=0;
+     msg='<span class="n">Extinguished</span>The bell rings and the dog <b>no longer responds</b> &mdash; the conditioned response has been <b>extinguished</b> by ringing the CS without the UCS. The bell is effectively neutral again. (After a rest a weak CR can briefly return on its own &mdash; Pavlov called that <b>spontaneous recovery</b>.) Re&ndash;pair bell + food to <b>recondition</b> it.';
+     st='Extinguished'; sub='no conditioned response'; col=CORAL;
+   } else {
+     // a genuine conditioned response; unreinforced, so it extinguishes a little
+     frameCS=true; respType='cr'; saliv=cr;
+     assoc=Math.max(0,assoc-20);
+     if(cr>=CSMIN){
+       msg='<span class="n">The conditioned response!</span>No food &mdash; yet the dog <b>salivates to the bell alone</b>. That is the <b>conditioned response (CR)</b>, and the bell is now proven to be a <b>conditioned stimulus (CS)</b>. But because <b>no food followed</b>, the link weakened to <b>'+Math.round(assoc)+'%</b>. Ring it again without food to keep <b>extinguishing</b> it.';
+       st='Conditioned response'; sub='bell (CS) → salivation (CR)'; col=GREEN;
+     } else {
+       msg='<span class="n">Extinction</span>The bell still triggers a <b>trace of drool</b>, but it is fading fast. Repeatedly presenting the <b>CS without the UCS</b> weakens the CR &mdash; this is <b>extinction</b>. Down to <b>'+Math.round(assoc)+'%</b>; one more ring and it is gone.';
+       st='Extinction'; sub='CR fading · '+Math.round(assoc)+'%'; col=CORAL;
+     }
+   }
+   paint(msg,st,sub,col);
+ }
+
+ function reset(){
+   assoc=0; saliv=0; pairs=0; everCS=false; bellRing=false; foodShow=false; frameCS=false; respType='none';
+   paint('<span class="n">How to build a reflex</span>Follow Pavlov&rsquo;s recipe:<br>&nbsp;&nbsp;<b>1.</b> Tap <b>Food alone</b> to see the natural reflex (UCS &rarr; UCR).<br>&nbsp;&nbsp;<b>2.</b> Tap <b>Bell, then food</b> several times to <b>condition</b> the dog.<br>&nbsp;&nbsp;<b>3.</b> Tap <b>Bell alone</b> to reveal the <b>conditioned response</b> &mdash; then keep tapping it to <b>extinguish</b> the reflex.',
+     'Pavlov\'s laboratory','press a button below to begin',TEAL);
+ }
+
+ $("bFood").onclick=foodOnly;
+ $("bPair").onclick=pair;
+ $("bBell").onclick=bellOnly;
+ $("bReset").onclick=reset;
+ reset();
+})();
+</script>
+</body>
+</html>

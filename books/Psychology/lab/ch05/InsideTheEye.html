@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Inside the Eye &mdash; Light &amp; Color</title>
+<meta name="description" content="Trace light from the cornea to the retina, then mix red, green, and blue light additively to see how the eye and the brain build color. Young-Helmholtz trichromatic theory, interactive.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>
+.wrap{grid-template-columns:0.98fr 1.02fr;}
+#svg{background:#fdf7fa;border-radius:12px;}
+.mixbg{background:#0b0b0f;border-radius:12px;}
+.sld{display:flex;align-items:center;gap:11px;margin:11px 0;}
+.sld .lab{width:58px;font-weight:800;font-size:12.5px;flex:none;}
+.sld .val{width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;font-size:12.5px;color:var(--soft);flex:none;}
+.sld input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:9px;border-radius:6px;outline:none;}
+.sld input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:#fffcfa;border:3px solid #5e2846;box-shadow:0 2px 6px rgba(70,30,45,.32);cursor:pointer;}
+.sld input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fffcfa;border:3px solid #5e2846;cursor:pointer;}
+.swatch{height:56px;border-radius:11px;margin:14px 0 4px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;letter-spacing:.3px;border:1px solid var(--line);transition:background .18s;}
+.grid .it{display:flex;align-items:center;gap:8px;}
+.grid .it .dot{width:15px;height:15px;border-radius:4px;flex:none;border:1px solid rgba(0,0,0,.15);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">&larr; Chapter 5</a></div>
+<header>
+  <div class="kick">Psychology &middot; Chapter 5</div>
+  <h1>Inside the Eye</h1>
+  <div class="intro">Vision begins as light bends its way to the retina, and ends as your brain builds every color from just three signals. First <b>trace light's path</b> through the eye; then <b>mix red, green, and blue light</b> to see how color is made.</div>
+</header>
+<div class="wrap">
+  <div><div class="card">
+    <h2 id="cardTitle">The path of light</h2>
+    <svg id="svg" viewBox="0 0 300 210" aria-label="diagram"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">Two ways to see<small>choose a mode below</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg">
+        <button data-m="0" class="on">Light's journey</button>
+        <button data-m="1">Mixing light</button>
+      </div>
+
+      <div id="m0">
+        <div class="list" id="list"></div>
+        <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+      </div>
+
+      <div id="m1" style="display:none">
+        <div class="sld"><span class="lab" style="color:#c0392b">Red</span><input type="range" id="sR" min="0" max="255" value="0"><span class="val" id="vR">0</span></div>
+        <div class="sld"><span class="lab" style="color:#1f8a4c">Green</span><input type="range" id="sG" min="0" max="255" value="0"><span class="val" id="vG">0</span></div>
+        <div class="sld"><span class="lab" style="color:#2f6f9f">Blue</span><input type="range" id="sB" min="0" max="255" value="0"><span class="val" id="vB">0</span></div>
+        <div class="swatch" id="swatch">no light</div>
+        <div class="grid" id="presets"></div>
+      </div>
+
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology &middot; an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ============ MODE 0 : trace light through the eye ============ */
+ var EYE=[
+  {k:'cornea',ic:'🪟',nm:'Cornea',ct:'Clear front dome',bx:94,
+   an:'start',lx:14,ly:36,t1x:18,t1y:40,t2x:73,t2y:96,
+   info:'The clear front window of the eye. Because it is curved and sits where air meets tissue, the cornea does most of the <b>bending (refraction)</b> of incoming light &mdash; roughly two-thirds of the eye’s focusing power &mdash; before the light even reaches the lens.'},
+  {k:'pupil',ic:'⚫',nm:'Pupil &amp; iris',ct:'Adjustable opening',bx:104,
+   an:'start',lx:114,ly:22,t1x:116,t1y:28,t2x:101,t2y:93,
+   info:'The <b>pupil</b> is simply the opening that lets light in. The colored <b>iris</b> around it is a ring of muscle that widens the pupil in dim light and shrinks it in bright light, controlling how much light enters &mdash; the eye’s automatic aperture.'},
+  {k:'lens',ic:'🔍',nm:'Lens',ct:'Fine-focuses the image',bx:120,
+   an:'middle',lx:126,ly:201,t1x:126,t1y:191,t2x:112,t2y:125,
+   info:'A flexible, transparent disc that fine-tunes the focus the cornea began. It changes shape &mdash; a process called <b>accommodation</b> &mdash; thickening to focus on near objects and flattening for distant ones, so the image lands sharply on the back wall.'},
+  {k:'vitreous',ic:'🌫️',nm:'Vitreous humor',ct:'Clear inner gel',bx:176,
+   an:'middle',lx:176,ly:22,t1x:176,t1y:30,t2x:176,t2y:120,
+   info:'The clear jelly that fills the eyeball and holds its round shape. Light travels straight through it to the retina, where the focused image arrives <b>upside-down and reversed</b> &mdash; the brain later flips it right-side up.'},
+  {k:'retina',ic:'🌈',nm:'Retina',ct:'Rods &amp; cones',bx:209,
+   an:'end',lx:298,ly:164,t1x:292,t1y:150,t2x:214,t2y:140,
+   info:'The light-sensitive layer lining the back of the eye, packed with photoreceptors: <b>rods</b> (very sensitive, work in dim light, no color) and <b>cones</b> (need bright light, give color and detail). Here light energy is converted into neural signals &mdash; a step called <b>transduction</b>.'},
+  {k:'fovea',ic:'🎯',nm:'Fovea',ct:'Sharpest vision',bx:213,
+   an:'end',lx:298,ly:96,t1x:292,t1y:100,t2x:217,t2y:104,
+   info:'A tiny central pit in the retina crammed with <b>cones</b> and almost no rods &mdash; the point of sharpest, most detailed vision. You constantly aim your eyes so that whatever you look at directly falls right onto the fovea.'},
+  {k:'optic',ic:'🧠',nm:'Optic nerve',ct:'Signals to the brain',bx:213,
+   an:'end',lx:268,ly:203,t1x:262,t1y:193,t2x:213,t2y:129,
+   info:'The cable of over a million fibers that carries the retina’s signals to the brain. Where it leaves the eye there are no photoreceptors at all, creating a natural <b>blind spot</b> in each eye that the brain quietly fills in so you never notice it.'}
+ ];
+
+ var BASE=
+   '<circle cx="150" cy="105" r="72" fill="#fbeef3" stroke="#e6c2cf" stroke-width="2"/>'
+  +'<path d="M88 69 Q58 105 88 141" fill="#e8f6fb" fill-opacity=".6" stroke="#bfe3ef" stroke-width="2"/>'
+  +'<path d="M88 71 L101 76 L101 94 L95 94 Z" fill="#6f86b8"/>'
+  +'<path d="M88 139 L101 134 L101 116 L95 116 Z" fill="#6f86b8"/>'
+  +'<ellipse cx="101" cy="105" rx="4.4" ry="13" fill="#241019"/>'
+  +'<ellipse cx="110" cy="105" rx="8" ry="20" fill="#d8ecf5" fill-opacity=".85" stroke="#a9d4e6" stroke-width="1.5"/>'
+  +'<path d="M169 45 A63 63 0 0 1 169 165" fill="none" stroke="#d98aa6" stroke-width="6" stroke-linecap="round"/>'
+  +'<circle cx="213" cy="105" r="3.2" fill="#a8446a"/>'
+  +'<path d="M204 126 q20 9 34 22" fill="none" stroke="#e8cf9a" stroke-width="9" stroke-linecap="round"/>';
+
+ var HL={
+   cornea:'<path d="M88 69 Q58 105 88 141" fill="none" stroke="#e0a020" stroke-width="4" opacity=".9"/>',
+   pupil:'<ellipse cx="101" cy="105" rx="8" ry="17" fill="none" stroke="#e0a020" stroke-width="3"/>',
+   lens:'<ellipse cx="110" cy="105" rx="11" ry="23" fill="none" stroke="#e0a020" stroke-width="3"/>',
+   vitreous:'<circle cx="150" cy="105" r="56" fill="#e0a020" opacity=".13"/>',
+   retina:'<path d="M169 45 A63 63 0 0 1 169 165" fill="none" stroke="#e0a020" stroke-width="9" opacity=".5" stroke-linecap="round"/>',
+   fovea:'<circle cx="213" cy="105" r="8" fill="none" stroke="#e0a020" stroke-width="3"/>',
+   optic:'<path d="M204 126 q20 9 34 22" fill="none" stroke="#e0a020" stroke-width="6" opacity=".85" stroke-linecap="round"/>'
+ };
+
+ function seg(x1,y1,x2,y2){
+   return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#f4c430" stroke-width="7" opacity=".2" stroke-linecap="round"/>'
+        +'<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#f6c623" stroke-width="2.6" stroke-linecap="round"/>';
+ }
+ function beam(bx){
+   var s='',pe=Math.min(bx,104);
+   s+=seg(14,88,pe,88);
+   s+=seg(14,122,pe,122);
+   if(bx>104){
+     var cx=Math.min(bx,213);
+     var yt=(88+17*(cx-104)/109).toFixed(1);
+     var yb=(122-17*(cx-104)/109).toFixed(1);
+     s+=seg(104,88,cx,yt);
+     s+=seg(104,122,cx,yb);
+   }
+   return s;
+ }
+ function drawEye(i){
+   var e=EYE[i],s=BASE;
+   s+=beam(e.bx);
+   if(e.bx>=213){ s+='<circle cx="213" cy="105" r="4.6" fill="#fff6c0" stroke="#f4c430" stroke-width="2"/>'; }
+   s+=HL[e.k];
+   if(e.k==='optic'){
+     s+='<path d="M213 106 Q244 122 268 133" stroke="#7a5a8a" stroke-width="2.4" fill="none" stroke-dasharray="4 3"/>'
+       +'<path d="M268 133 l-9 -2 l3 7 z" fill="#7a5a8a"/>';
+   }
+   s+='<line x1="'+e.t1x+'" y1="'+e.t1y+'" x2="'+e.t2x+'" y2="'+e.t2y+'" stroke="#b8862f" stroke-width="1.3" stroke-dasharray="2 2"/>';
+   s+='<circle cx="'+e.t2x+'" cy="'+e.t2y+'" r="2.4" fill="#b8862f"/>';
+   s+='<text x="'+e.lx+'" y="'+e.ly+'" text-anchor="'+e.an+'" font-size="10.5" font-weight="800" fill="#5e2846" font-family="Inter,sans-serif">'+e.nm+'</text>';
+   return s;
+ }
+ function renderList(cur){
+   $("list").innerHTML=EYE.map(function(e,idx){
+     return '<button class="it'+(idx===cur?' on':'')+'" data-i="'+idx+'"><span class="ic">'+e.ic+'</span><span><span class="nm">'+e.nm+'</span><br><span class="ct">'+e.ct+'</span></span></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#list .it'),function(b){
+     b.onclick=function(){ i0=+b.dataset.i; renderEye(); };
+   });
+ }
+ var i0=0;
+ function renderEye(){
+   var e=EYE[i0];
+   $("art").innerHTML=drawEye(i0);
+   $("svg").setAttribute('class','');
+   $("cardTitle").innerHTML='The path of light';
+   $("stage").style.background='var(--teal)';
+   $("stage").style.color='#fff';
+   $("stage").innerHTML=e.nm+'<small>step '+(i0+1)+' of 7 &middot; light’s journey to the brain</small>';
+   $("info").innerHTML='<span class="n">'+e.nm+'</span>'+e.info;
+   $("prev").disabled=(i0===0);
+   $("next").disabled=(i0===EYE.length-1);
+   renderList(i0);
+ }
+ $("prev").onclick=function(){ if(i0>0){i0--;renderEye();} };
+ $("next").onclick=function(){ if(i0<EYE.length-1){i0++;renderEye();} };
+
+ /* ============ MODE 1 : additive color mixing ============ */
+ var PRE=[
+  {n:'All off',r:0,g:0,b:0},{n:'Red',r:255,g:0,b:0},
+  {n:'Green',r:0,g:255,b:0},{n:'Blue',r:0,g:0,b:255},
+  {n:'Yellow',r:255,g:255,b:0},{n:'Cyan',r:0,g:255,b:255},
+  {n:'Magenta',r:255,g:0,b:255},{n:'White',r:255,g:255,b:255}
+ ];
+ function hi(v){return v>=150;} function lo(v){return v<=70;}
+ function colorName(r,g,b){
+   if(lo(r)&&lo(g)&&lo(b)) return 'Black';
+   if(hi(r)&&hi(g)&&hi(b)) return 'White';
+   if(hi(r)&&hi(g)&&lo(b)) return 'Yellow';
+   if(lo(r)&&hi(g)&&hi(b)) return 'Cyan';
+   if(hi(r)&&lo(g)&&hi(b)) return 'Magenta';
+   if(hi(r)&&lo(g)&&lo(b)) return 'Red';
+   if(lo(r)&&hi(g)&&lo(b)) return 'Green';
+   if(lo(r)&&lo(g)&&hi(b)) return 'Blue';
+   return 'A blend';
+ }
+ function recipe(r,g,b){
+   if(lo(r)&&lo(g)&&lo(b)) return 'No light reaches the retina &mdash; the cones stay silent, and you see <b>black</b>.';
+   if(hi(r)&&hi(g)&&hi(b)) return 'All three cone types fire at once. The brain reads that as <b>white</b> &mdash; every wavelength together.';
+   if(hi(r)&&hi(g)&&lo(b)) return '<b>Red + green</b> light adds up to <b>yellow</b> &mdash; no yellow light needed, just two lights overlapping.';
+   if(lo(r)&&hi(g)&&hi(b)) return '<b>Green + blue</b> light adds up to <b>cyan</b>.';
+   if(hi(r)&&lo(g)&&hi(b)) return '<b>Red + blue</b> light adds up to <b>magenta</b> &mdash; a color with no single wavelength of its own.';
+   if(hi(r)&&lo(g)&&lo(b)) return 'Only the long-wavelength (<b>red</b>) cones are strongly stimulated.';
+   if(lo(r)&&hi(g)&&lo(b)) return 'Only the medium-wavelength (<b>green</b>) cones are strongly stimulated.';
+   if(lo(r)&&lo(g)&&hi(b)) return 'Only the short-wavelength (<b>blue</b>) cones are strongly stimulated.';
+   return 'The three lights combine in between the primaries &mdash; try pushing two channels high and one low.';
+ }
+ function drawMix(r,g,b){
+   return '<g style="isolation:isolate">'
+     +'<rect x="24" y="6" width="252" height="198" rx="12" fill="#0b0b0f"/>'
+     +'<g style="mix-blend-mode:screen">'
+     +'<circle cx="150" cy="80" r="60" fill="rgb('+r+',0,0)"/>'
+     +'<circle cx="118" cy="136" r="60" fill="rgb(0,'+g+',0)"/>'
+     +'<circle cx="182" cy="136" r="60" fill="rgb(0,0,'+b+')"/>'
+     +'</g>'
+     +'<text x="150" y="28" text-anchor="middle" font-size="11" font-weight="800" fill="rgba(255,255,255,.82)" font-family="Inter,sans-serif">RED</text>'
+     +'<text x="86" y="192" text-anchor="middle" font-size="11" font-weight="800" fill="rgba(255,255,255,.82)" font-family="Inter,sans-serif">GREEN</text>'
+     +'<text x="214" y="192" text-anchor="middle" font-size="11" font-weight="800" fill="rgba(255,255,255,.82)" font-family="Inter,sans-serif">BLUE</text>'
+     +'</g>';
+ }
+ function renderMix(){
+   var r=+$("sR").value,g=+$("sG").value,b=+$("sB").value;
+   $("vR").textContent=r; $("vG").textContent=g; $("vB").textContent=b;
+   $("sR").style.background='linear-gradient(90deg,#3a1520,#e23b3b)';
+   $("sG").style.background='linear-gradient(90deg,#14331f,#2ecc71)';
+   $("sB").style.background='linear-gradient(90deg,#15243a,#3d8fd6)';
+   $("art").innerHTML=drawMix(r,g,b);
+   $("svg").setAttribute('class','mixbg');
+   var css='rgb('+r+','+g+','+b+')';
+   var lum=0.299*r+0.587*g+0.114*b;
+   var txt=lum<140?'#fff':'#241019';
+   var nm=colorName(r,g,b);
+   $("swatch").style.background=css;
+   $("swatch").style.color=txt;
+   $("swatch").textContent=nm+'  ·  rgb('+r+', '+g+', '+b+')';
+   $("cardTitle").innerHTML='Adding light on a black screen';
+   $("stage").style.background=css;
+   $("stage").style.color=txt;
+   $("stage").innerHTML='Additive color<small>drag the red · green · blue lights</small>';
+   $("info").innerHTML='<span class="n">'+nm+'</span>'
+     +'Light <b>adds up</b>. Screens and the eye build every color from three primaries &mdash; <b>red</b>, <b>green</b>, and <b>blue</b> light. Overlap red and green and you get yellow; all three at full strength give white. This is <b>additive</b> mixing, the opposite of mixing paints, where more pigment gives a darker result. Your retina works the same way: <b>Young</b> and <b>Helmholtz</b>’s trichromatic theory holds that three cone types &mdash; tuned to short (blue), medium (green), and long (red) wavelengths &mdash; send the brain three signals it reads as the whole spectrum of color.'
+     +'<div class="loc">'+recipe(r,g,b)+'</div>';
+ }
+ function renderPresets(){
+   $("presets").innerHTML=PRE.map(function(p,idx){
+     return '<button class="it" data-p="'+idx+'"><span class="dot" style="background:rgb('+p.r+','+p.g+','+p.b+')"></span><span class="nm">'+p.n+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#presets .it'),function(b){
+     b.onclick=function(){ var p=PRE[+b.dataset.p];
+       $("sR").value=p.r; $("sG").value=p.g; $("sB").value=p.b; renderMix(); };
+   });
+ }
+ $("sR").oninput=renderMix; $("sG").oninput=renderMix; $("sB").oninput=renderMix;
+
+ /* ============ mode switch ============ */
+ function setMode(m){
+   Array.prototype.forEach.call(document.querySelectorAll('#modeseg button'),function(b){
+     b.className=(+b.dataset.m===m)?'on':'';
+   });
+   if(m===0){ $("m0").style.display=''; $("m1").style.display='none'; renderEye(); }
+   else{ $("m0").style.display='none'; $("m1").style.display=''; renderMix(); }
+ }
+ Array.prototype.forEach.call(document.querySelectorAll('#modeseg button'),function(b){
+   b.onclick=function(){ setMode(+b.dataset.m); };
+ });
+
+ renderPresets();
+ setMode(0);
+})();
+</script>
+</body>
+</html>

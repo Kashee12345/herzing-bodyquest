@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Antiarrhythmics on the Action Potential</title>
+<meta name="description" content="Interactive Vaughan Williams map — tap a class of antiarrhythmic and watch it reshape the cardiac action potential. Class I (Na+), II (beta), III (K+), IV (Ca2+), plus adenosine and digoxin. Phase targeted, ECG interval changes, adverse effects, and nursing priorities. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.it{align-items:center;}
+.it .s{display:block;margin-top:1px;line-height:1.25;}
+.tgt{flex:none;font-size:9.5px;font-weight:800;min-width:56px;text-align:right;color:var(--muted);letter-spacing:-.1px;line-height:1.2;}
+.it.on .tgt{color:rgba(255,255,255,.9);}
+.ecg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.ecg div{border:1px solid var(--line);border-radius:10px;padding:7px 3px;text-align:center;background:#fff;transition:.2s;}
+.ecg .lb{font-size:9.5px;font-weight:800;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;}
+.ecg .v{font-size:13.5px;font-weight:800;margin-top:2px;color:var(--muted);line-height:1.15;}
+.ecg div.u{border-color:#f0c9d0;background:#fdf1f3;} .ecg div.u .v{color:#b23145;}
+.ecg div.d{border-color:#c9dcf0;background:#f0f6fd;} .ecg div.d .v{color:#255f8a;}
+.ecg div.w{border-color:#ecd9ac;background:#fbf3e2;} .ecg div.w .v{color:#8a6a20;}
+.hint{font-size:9.8px;color:var(--muted);margin-top:10px;text-align:center;line-height:1.45;padding-top:9px;border-top:1px dashed var(--line);}
+#info .dd b{color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 10</div>
+  <h1>Antiarrhythmics on the Action Potential</h1>
+  <div class="intro">Every antiarrhythmic is named for <b>the one ion channel it blocks</b> &mdash; and the channel tells you which phase of the action potential bends, which ECG interval stretches, and what you watch for. The catch: the heart has <b>two different action potentials</b>. Tap a class to see which one it touches.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Two action potentials</h2>
+    <svg viewBox="0 0 262 300" aria-label="cardiac action potential curves showing drug class effects"><g id="art"></g></svg>
+    <div class="hint">Dashed grey = the untreated curve, for comparison.</div>
+  </div></div>
+  <div>
+    <div id="stage">Some Block Potassium Channels<small>tap a class to begin</small></div>
+    <div class="card">
+      <div class="list" id="list"></div>
+      <div class="ecg">
+        <div id="e0"><span class="lb">Rate</span><span class="v" id="v0">&mdash;</span></div>
+        <div id="e1"><span class="lb">PR</span><span class="v" id="v1">&mdash;</span></div>
+        <div id="e2"><span class="lb">QRS</span><span class="v" id="v2">&mdash;</span></div>
+        <div id="e3"><span class="lb">QT</span><span class="v" id="v3">&mdash;</span></div>
+      </div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ // ---- geometry -------------------------------------------------------
+ // Panel 1: ventricular myocyte (fast response). mV -> y : y = 42 + (30-mV)*0.75
+ var V0=132, VPK=49.5, VN=60.75, VPL=72, VX=52;
+ // Panel 2: SA/AV node (slow response). mV -> y : y = 182 + (10-mV)*1.3714
+ var NB=278, NT=182, NTH=250.6;
+
+ function ventPath(o){
+   var p='M30,'+V0+' L'+VX+','+V0;
+   p+=' L'+(VX+o.rise)+','+VPK;
+   p+=' L'+(VX+o.rise+7)+','+VN;
+   p+=' L'+o.pe+','+VPL;
+   var e=o.pe+o.rw;
+   p+=' Q'+(o.pe+o.rw*0.45)+',80 '+e+','+V0;
+   p+=' L252,'+V0;
+   return p;
+ }
+ function nodePath(o){
+   var x=32, p='M32,'+NB, n=0;
+   while(x<250 && n<14){
+     if(o.pause && n>=1){ p+=' L256,'+NB; break; }
+     var p4=x+o.cycle*o.p4, pk=p4+o.riseN, end=x+o.cycle;
+     p+=' L'+p4+','+NTH;
+     p+=' L'+pk+','+NT;
+     p+=' Q'+(pk+(end-pk)*0.45)+','+(NT+34)+' '+end+','+NB;
+     x=end; n++;
+   }
+   return p;
+ }
+
+ var NORM={ v:{rise:4,pe:150,rw:40}, n:{cycle:66,p4:0.42,riseN:11} };
+
+ // ---- drug data ------------------------------------------------------
+ var D=[
+ {k:'base',nm:'No drug',ct:'Baseline conduction',tgt:'&mdash;',col:'#78828f',
+  v:NORM.v, n:NORM.n, dv:0, dn:0, ph:[],
+  iv:[['&mdash;','f'],['&mdash;','f'],['&mdash;','f'],['&mdash;','f']],
+  ti:'The two action potentials',
+  d:'The heart runs on <b>two different action potentials</b>, and that single fact organizes this entire drug section.<div class="dd"><b>Fast-response cells</b> &mdash; atrial and ventricular muscle, His&ndash;Purkinje &mdash; open <b>fast Na<sup>+</sup> channels</b> for phase 0. They sit quietly at &minus;90 mV until something tells them to fire.</div><div class="dd"><b>Slow-response cells</b> &mdash; the <b>SA and AV nodes</b> &mdash; have no fast Na<sup>+</sup> channels at all. Their phase 0 is carried by <b>Ca<sup>2+</sup></b>, and their phase 4 drifts spontaneously upward to threshold. That drift is automaticity &mdash; it is why the heart beats without being told.</div>',
+  loc:'A drug that blocks Na<sup>+</sup> cannot slow a node. A drug that blocks Ca<sup>2+</sup> barely touches ventricular muscle. Match the channel to the tissue and the whole class falls into place.',
+  mnem:'<b>Some Block Potassium Channels</b> &mdash; Class <b>I</b> = <b>S</b>odium, <b>II</b> = <b>B</b>eta, <b>III</b> = <b>P</b>otassium, <b>IV</b> = <b>C</b>alcium.'},
+
+ {k:'1a',nm:'Class IA',ct:'Na<sup>+</sup> block (moderate) + K<sup>+</sup> block',tgt:'PHASE 0<br>PHASE 3',col:'#d1495b',
+  v:{rise:11,pe:172,rw:46}, n:NORM.n, dv:0, dn:1, ph:['0','3'],
+  iv:[['&mdash;','f'],['↑','u'],['↑','u'],['↑','u']],
+  ti:'Class IA — the double blocker',
+  d:'Blocks fast Na<sup>+</sup> channels <b>moderately</b>, so phase 0 climbs more slowly &mdash; the <b>QRS widens</b>. But IA agents <b>also block K<sup>+</sup></b>, so phase 3 drags out and the action potential gets longer &mdash; the <b>QT prolongs</b>. Two channels, two intervals.<div class="dd">Because they hit fast Na<sup>+</sup> channels, they work on <b>atrial and ventricular muscle</b> &mdash; not on the nodes, which have no fast Na<sup>+</sup> channels to block.</div>',
+  ex:['procainamide','quinidine','disopyramide'],
+  loc:'Continuous ECG. <b>Stop a procainamide infusion</b> if the QRS widens more than 50% beyond baseline, the QT prolongs sharply, hypotension develops, or the arrhythmia resolves.',
+  note:'<b>Procainamide</b> &rarr; drug-induced <b>lupus-like syndrome</b> (arthralgia, rash, fever, positive ANA) and <b>agranulocytosis</b> &mdash; monitor CBC weekly in the first 3 months and report sore throat or fever. <b>Quinidine</b> &rarr; <b>cinchonism</b> (tinnitus, headache, blurred vision, vertigo), thrombocytopenia, and it <b>raises the digoxin level</b>. <b>Disopyramide</b> is strongly anticholinergic (dry mouth, urinary retention, constipation) and a negative inotrope &mdash; avoid in heart failure. All three prolong QT and can cause <b>torsades</b>.'},
+
+ {k:'1b',nm:'Class IB',ct:'Na<sup>+</sup> block (weak, fast off-rate)',tgt:'PHASE 0<br>SHORTENS 3',col:'#2f6f9f',
+  v:{rise:6,pe:130,rw:34}, n:NORM.n, dv:0, dn:1, ph:['0','3'],
+  iv:[['&mdash;','f'],['&mdash;','f'],['&mdash;','f'],['↓','d']],
+  ti:'Class IB — the ischemia seeker',
+  d:'The <b>weakest</b> Na<sup>+</sup> blockade of the three. IB agents attach and release so quickly that healthy tissue barely notices them &mdash; the QRS stays normal. Uniquely, they <b>shorten</b> phase 3, so the action potential gets <b>shorter</b> and the QT shortens or stays flat.<div class="dd">They bind Na<sup>+</sup> channels in the <b>inactivated</b> state, which is where channels sit in <b>ischemic, depolarized</b> tissue. That is why IB drugs find damaged myocardium and leave the rest alone.</div>',
+  ex:['lidocaine','mexiletine'],
+  loc:'<b>Ventricular arrhythmias only</b> &mdash; IB agents have no role in atrial fibrillation or flutter. Lidocaine for arrhythmia must be the <b>cardiac preparation</b>: no epinephrine, no preservatives. Reduce the dose in <b>heart failure, hepatic impairment, and older adults</b> &mdash; lidocaine is cleared by hepatic blood flow.',
+  note:'Lidocaine toxicity is <b>neurologic before it is cardiac</b>. Assess neuro status hourly on a drip and stop the infusion for <b>perioral or tongue numbness, metallic taste, tinnitus, drowsiness, confusion, slurred speech, or muscle twitching</b> &mdash; twitching is the warning that a <b>seizure</b> is next.'},
+
+ {k:'1c',nm:'Class IC',ct:'Na<sup>+</sup> block (strong, slow off-rate)',tgt:'PHASE 0',col:'#7a5a8a',
+  v:{rise:15,pe:150,rw:40}, n:NORM.n, dv:0, dn:1, ph:['0'],
+  iv:[['&mdash;','f'],['↑','u'],['↑↑','u'],['&mdash;','f']],
+  ti:'Class IC — the pure phase-0 brake',
+  d:'The <b>strongest</b> Na<sup>+</sup> blockade. Phase 0 crawls, so the <b>QRS widens markedly</b> and the PR lengthens &mdash; but IC agents leave K<sup>+</sup> alone, so the action potential duration and the <b>QT are essentially unchanged</b>. Purest illustration in the chapter that <b>phase 0 is the QRS</b>.<div class="dd">Reserved for atrial fibrillation and SVT in <b>structurally normal hearts</b>, including "pill-in-the-pocket" self-dosing.</div>',
+  ex:['flecainide','propafenone'],
+  loc:'Nearly always paired with an <b>AV nodal blocker</b> (a beta blocker or diltiazem). Alone, flecainide can organize atrial fibrillation into a <b>slow atrial flutter that conducts 1:1</b> through the AV node &mdash; the ventricular rate then skyrockets. Monitor the QRS; propafenone has beta-blocking activity, so use caution in asthma.',
+  note:'<b>Contraindicated in structural heart disease</b> &mdash; prior MI, coronary artery disease, or heart failure. The CAST trial found IC agents <b>increased mortality</b> in post-MI patients. These are proarrhythmic drugs, and a normal heart is the price of admission.'},
+
+ {k:'2',nm:'Class II',ct:'Beta-adrenergic blockers',tgt:'PHASE 4<br>NODAL',col:'#2f9e5b',
+  v:NORM.v, n:{cycle:100,p4:0.56,riseN:11}, dv:1, dn:0, ph:['n4'],
+  iv:[['↓','d'],['↑','u'],['&mdash;','f'],['&mdash;','f']],
+  ti:'Class II — flattening the drift',
+  d:'Beta blockers never touch the ventricular curve &mdash; watch it sit unchanged and greyed out. They work on the <b>node</b>, where catecholamines drive the <b>phase 4 drift</b> toward threshold. Block beta<sub>1</sub> and the drift <b>flattens</b>: the cell takes longer to reach threshold, so the <b>rate slows</b>. They also slow AV nodal conduction, which <b>lengthens the PR</b>.<div class="dd">No Na<sup>+</sup> effect means no QRS change. No K<sup>+</sup> effect means no QT change. Rate control in atrial fibrillation and flutter, SVT, and post-MI &mdash; where they carry a genuine <b>mortality benefit</b>.</div>',
+  ex:['metoprolol','esmolol','atenolol','propranolol','carvedilol'],
+  loc:'Take an <b>apical pulse for one full minute</b> before each dose. Hold and call the prescriber for <b>HR under 60</b> or <b>SBP under 90</b> &mdash; confirm your patient\'s specific parameters. <b>Esmolol</b> has a half-life near 9 minutes, which makes it the drip of choice when you are not sure the patient will tolerate beta blockade.',
+  note:'<b>Never stop abruptly</b> &mdash; receptor upregulation causes <b>rebound tachycardia, hypertension, angina, and MI</b>. Taper over 1&ndash;2 weeks. Beta blockers also <b>mask hypoglycemia</b>: tachycardia and tremor disappear, though <b>diaphoresis remains</b> &mdash; teach patients with diabetes to check a glucose rather than trust symptoms. Nonselective agents (propranolol) can trigger <b>bronchospasm</b> in asthma. Do not push an IV beta blocker alongside IV verapamil or diltiazem.'},
+
+ {k:'3',nm:'Class III',ct:'K<sup>+</sup> channel blockers',tgt:'PHASE 3',col:'#b8862f',
+  v:{rise:4,pe:196,rw:52}, n:NORM.n, dv:0, dn:1, ph:['3'],
+  iv:[['~','w'],['&mdash;','f'],['&mdash;','f'],['↑↑','u']],
+  ti:'Class III — stretching repolarization',
+  d:'K<sup>+</sup> efflux is what <b>ends</b> the action potential. Block it and phase 3 stretches: the action potential and the <b>effective refractory period</b> both lengthen, so re-entry circuits run out of excitable tissue. On the ECG this is the <b>QT interval</b>, and it is the whole story of this class &mdash; therapeutic and toxic at once.<div class="dd">Rate is marked <b>~</b> because it depends on the agent: <b>amiodarone and sotalol also carry beta-blocking activity</b> and do slow the rate, while pure K<sup>+</sup> blockers like dofetilide and ibutilide do not. <b>Amiodarone actually has all four class effects.</b></div>',
+  ex:['amiodarone','sotalol','dofetilide','ibutilide','dronedarone'],
+  loc:'<b>The QTc is your vital sign.</b> Hold the drug and call for a <b>QTc over 500 ms</b> or a rise over 60 ms from baseline. <b>Replace K<sup>+</sup> and Mg<sup>2+</sup></b> &mdash; hypokalemia and hypomagnesemia are what turn a long QT into <b>torsades de pointes</b>. Treat torsades with <b>IV magnesium sulfate</b>. <b>Sotalol and dofetilide must be started in the hospital on continuous telemetry</b> (3 days for dofetilide), and both are renally cleared &mdash; dose by CrCl.',
+  note:'<b>Amiodarone</b> is an organ-toxicity drug in every direction: <b>lungs</b> (pulmonary fibrosis &mdash; baseline CXR and PFTs; report any new dry cough or dyspnea), <b>thyroid</b> (it is iodine-based &mdash; TSH at baseline then every 6 months; hypo- or hyperthyroidism), <b>liver</b> (LFTs), <b>eyes</b> (corneal microdeposits &mdash; annual exam), and <b>skin</b> (blue-grey discoloration and photosensitivity &mdash; sunscreen and cover up). It <b>doubles the digoxin level</b> (halve the digoxin dose) and <b>potentiates warfarin</b> (reduce the dose, watch the INR). IV amiodarone needs an <b>in-line filter</b> and a central line for concentrations above 2 mg/mL; watch for hypotension and bradycardia while loading.'},
+
+ {k:'4',nm:'Class IV',ct:'Non-dihydropyridine Ca<sup>2+</sup> blockers',tgt:'NODAL<br>PHASE 0',col:'#2f5f9e',
+  v:{rise:4,pe:138,rw:40}, n:{cycle:96,p4:0.50,riseN:23}, dv:1, dn:0, ph:['n0','n4'],
+  iv:[['↓','d'],['↑↑','u'],['&mdash;','f'],['&mdash;','f']],
+  ti:'Class IV — blocking the node’s only upstroke',
+  d:'In ventricular muscle, Ca<sup>2+</sup> only builds the phase 2 plateau &mdash; block it and little of consequence happens. But in the <b>SA and AV nodes, Ca<sup>2+</sup> <em>is</em> phase 0</b>. There are no fast Na<sup>+</sup> channels there to fall back on, so blocking Ca<sup>2+</sup> blunts the nodal upstroke itself.<div class="dd">The result is a slower rate and markedly <b>slowed AV conduction</b> &mdash; a long PR. QRS and QT are untouched. This is rate control in atrial fibrillation and flutter, and termination of SVT.</div><div class="dd">Only the <b>non-dihydropyridines</b> do this. Amlodipine and nifedipine act on vessels, not the node, and are <b>not antiarrhythmics</b>.</div>',
+  ex:['verapamil','diltiazem'],
+  loc:'Check <b>BP and apical pulse before every dose</b>. These are <b>negative inotropes</b> &mdash; avoid in heart failure with reduced ejection fraction, where they can precipitate decompensation. <b>Verapamil</b> causes marked <b>constipation</b> (fluids, fiber, stool softener) and <b>raises the digoxin level</b>.',
+  note:'<b>Contraindicated in atrial fibrillation with WPW.</b> Blocking the AV node forces conduction down the accessory pathway and can degenerate into <b>ventricular fibrillation</b>. Also contraindicated in 2nd- or 3rd-degree AV block and in sick sinus syndrome without a pacemaker. <b>Do not give IV verapamil or diltiazem together with an IV beta blocker</b> &mdash; the combination causes profound bradycardia, heart block, or asystole.'},
+
+ {k:'aden',nm:'Adenosine',ct:'Unclassified · nodal',tgt:'NODAL<br>PAUSE',col:'#0d9488',
+  v:NORM.v, n:{cycle:66,p4:0.42,riseN:11,pause:1}, dv:1, dn:0, ph:['n0','n4'],
+  iv:[['pause','w'],['block','w'],['&mdash;','f'],['&mdash;','f']],
+  ti:'Adenosine — the deliberate pause',
+  d:'Outside the Vaughan Williams scheme. Adenosine opens K<sup>+</sup> channels (hyperpolarizing the node <b>away</b> from threshold) and blocks Ca<sup>2+</sup> entry &mdash; together producing a few seconds of <b>complete AV block</b>. Watch the nodal curve simply <b>stop</b>.<div class="dd">That pause breaks the re-entry circuit of <b>AV nodal reentrant SVT</b> and lets the sinus node resume. Half-life is <b>under 10 seconds</b>, so the drug is gone almost as fast as it acts.</div>',
+  ex:['adenosine'],
+  loc:'<b>6 mg rapid IV push over 1&ndash;2 seconds</b> into the <b>most proximal port</b> of an antecubital IV, <b>immediately</b> followed by a <b>20 mL saline flush</b> with the arm elevated &mdash; push it slowly and it is metabolized before it ever reaches the heart. May repeat at <b>12 mg</b>. Run a <b>continuous ECG strip</b> through the push: a brief asystolic pause is expected, not an emergency.',
+  note:'<b>Warn the patient before you push.</b> Flushing, chest tightness, dyspnea, and a <b>sense of impending doom</b> are near-universal and last only seconds &mdash; an unwarned patient is a terrified one. Keep the crash cart nearby. <b>Caffeine and theophylline blunt</b> the effect (higher dose may be needed); <b>dipyridamole and carbamazepine potentiate</b> it (reduce the dose). Use caution in asthma &mdash; it can provoke bronchospasm. It will not convert atrial fibrillation or flutter, though the pause it creates <b>unmasks the underlying rhythm</b>.'},
+
+ {k:'dig',nm:'Digoxin',ct:'Unclassified · vagal',tgt:'NODAL<br>PHASE 4',col:'#9a3412',
+  v:NORM.v, n:{cycle:98,p4:0.58,riseN:11}, dv:1, dn:0, ph:['n4'],
+  iv:[['↓','d'],['↑','u'],['&mdash;','f'],['&mdash;','f']],
+  ti:'Digoxin — slowing the node by nerve, not channel',
+  d:'Also outside the scheme, and it reaches the node <b>indirectly</b>: digoxin raises <b>vagal (parasympathetic) tone</b>, which flattens phase 4 in the SA node and slows AV conduction &mdash; a slower rate and a longer PR. Separately, by inhibiting the Na<sup>+</sup>/K<sup>+</sup>-ATPase in myocytes, it is a <b>positive inotrope</b>: it slows the rate <b>and</b> strengthens the beat, which is why it appears in both heart failure and rate control.<div class="dd">The down-sloping "scooped" ST segment on the ECG is <b>digoxin effect</b> &mdash; expected at therapeutic levels, and not the same thing as toxicity.</div>',
+  ex:['digoxin'],
+  loc:'<b>Narrow therapeutic index: 0.5&ndash;2.0 ng/mL</b> (target 0.5&ndash;0.9 in heart failure). Take an <b>apical pulse for one full minute</b> before every dose; hold and call for a rate <b>under 60</b>. Draw levels at least <b>6&ndash;8 hours after a dose</b>. <b>Amiodarone, verapamil, and quinidine all raise the digoxin level</b> &mdash; expect the dose to be cut when any of them is started.',
+  note:'<b>Hypokalemia is what makes digoxin toxic.</b> Digoxin and K<sup>+</sup> compete for the same site on the Na<sup>+</sup>/K<sup>+</sup>-ATPase &mdash; when K<sup>+</sup> falls, digoxin binds more freely and the patient can be <b>toxic at a "normal" reported level</b>. Watch anyone on a loop diuretic. Toxicity begins as <b>anorexia, nausea, and vomiting</b>, then <b>visual changes (yellow-green halos)</b>, confusion, bradycardia, and almost any new arrhythmia. Antidote: <b>digoxin immune Fab</b>.'}
+ ];
+
+ // ---- drawing --------------------------------------------------------
+ function lab(x,y,t,on,col){
+   return '<circle cx="'+x+'" cy="'+y+'" r="7.6" fill="'+(on?col:'#eef1f6')+'"'+(on?' opacity=".95"':'')+'/>'+
+          '<text x="'+x+'" y="'+(y+3.4)+'" font-size="9" font-weight="800" text-anchor="middle" fill="'+(on?'#fff':'#9aa3b0')+'">'+t+'</text>';
+ }
+ function has(m,p){ return m.ph.indexOf(p)>=0; }
+
+ function draw(m){
+   var c=m.col, s='';
+   s+='<defs><clipPath id="cp2"><rect x="29" y="172" width="224" height="118"/></clipPath></defs>';
+
+   // ---- panel 1 : ventricular myocyte
+   s+='<rect x="6" y="12" width="250" height="130" rx="11" fill="'+(m.dv?'#f5f6f9':'#fbfcfe')+'" stroke="#e6ebf3"/>';
+   s+='<text x="16" y="28" font-size="9.3" font-weight="800" fill="'+(m.dv?'#a8b0bc':'#1e3a63')+'">VENTRICULAR MYOCYTE &mdash; fast response (Na<tspan font-size="7" dy="-2.5">+</tspan><tspan dy="2.5"></tspan>)</text>';
+   s+='<g opacity="'+(m.dv?0.34:1)+'">';
+   s+='<line x1="30" y1="'+V0+'" x2="252" y2="'+V0+'" stroke="#dfe4ee" stroke-width="1"/>';
+   s+='<text x="26" y="'+(V0+3)+'" font-size="7" fill="#9aa3b0" text-anchor="end">&minus;90</text>';
+   s+='<text x="26" y="47" font-size="7" fill="#9aa3b0" text-anchor="end">+20</text>';
+   if(m.k!=='base'){ s+='<path d="'+ventPath(NORM.v)+'" fill="none" stroke="#b9c2cf" stroke-width="1.6" stroke-dasharray="3 3"/>'; }
+   s+='<path d="'+ventPath(m.v)+'" fill="none" stroke="'+(m.dv?'#8d97a5':c)+'" stroke-width="2.9" stroke-linejoin="round" stroke-linecap="round"/>';
+   s+='</g>';
+   // phase labels (positioned clear of the live curve)
+   var p0x=VX+m.v.rise/2, mid=(VX+m.v.rise+7+m.v.pe)/2;
+   s+=lab(p0x-12, 98, '0', has(m,'0'), c);
+   s+=lab(VX+m.v.rise+13, 38, '1', false, c);
+   s+=lab(mid, 52, '2', has(m,'2'), c);
+   s+=lab(m.v.pe+m.v.rw*0.25, 100, '3', has(m,'3'), c);
+   s+=lab(36, V0-9, '4', false, c);
+
+   // ---- panel 2 : nodal cell
+   s+='<rect x="6" y="152" width="250" height="140" rx="11" fill="'+(m.dn?'#f5f6f9':'#fbfcfe')+'" stroke="#e6ebf3"/>';
+   s+='<text x="16" y="168" font-size="9.3" font-weight="800" fill="'+(m.dn?'#a8b0bc':'#1e3a63')+'">SA / AV NODE &mdash; slow response (Ca<tspan font-size="7" dy="-2.5">2+</tspan><tspan dy="2.5"></tspan>)</text>';
+   s+='<g opacity="'+(m.dn?0.34:1)+'">';
+   s+='<line x1="30" y1="'+NTH+'" x2="252" y2="'+NTH+'" stroke="#e3b9bf" stroke-width="1" stroke-dasharray="4 3"/>';
+   s+='<text x="26" y="'+(NTH+3)+'" font-size="7" fill="#c08b93" text-anchor="end">&minus;40</text>';
+   s+='<text x="26" y="'+(NB+3)+'" font-size="7" fill="#9aa3b0" text-anchor="end">&minus;60</text>';
+   s+='<g clip-path="url(#cp2)">';
+   if(m.k!=='base'){ s+='<path d="'+nodePath(NORM.n)+'" fill="none" stroke="#b9c2cf" stroke-width="1.6" stroke-dasharray="3 3"/>'; }
+   s+='<path d="'+nodePath(m.n)+'" fill="none" stroke="'+(m.dn?'#8d97a5':c)+'" stroke-width="2.9" stroke-linejoin="round" stroke-linecap="round"/>';
+   s+='</g></g>';
+   s+='<text x="252" y="'+(NTH-4)+'" font-size="6.8" fill="#c08b93" text-anchor="end" paint-order="stroke" stroke="'+(m.dn?'#f5f6f9':'#fbfcfe')+'" stroke-width="3.2" stroke-linejoin="round">threshold</text>';
+   var q4=32+m.n.cycle*m.n.p4;
+   s+=lab(q4-4, 272, '4', has(m,'n4'), c);
+   s+=lab(q4-6, 208, '0', has(m,'n0'), c);
+   if(m.n.pause){ s+='<text x="152" y="'+(NB-9)+'" font-size="8.6" font-weight="800" fill="'+c+'" text-anchor="middle">transient complete AV block</text>'; }
+   return s;
+ }
+
+ // ---- render ---------------------------------------------------------
+ function render(cur){
+   $("list").innerHTML=D.map(function(m){
+     return '<button class="it'+(m.k===cur?' on':'')+'" data-k="'+m.k+'">'+
+       '<span class="sw" style="background:'+m.col+'"></span>'+
+       '<span style="flex:1"><span class="nm">'+m.nm+'</span><span class="s">'+m.ct+'</span></span>'+
+       '<span class="tgt">'+m.tgt+'</span></button>';
+   }).join('');
+   var b=document.querySelectorAll('#list .it');
+   for(var i=0;i<b.length;i++){ (function(el){ el.onclick=function(){ sel(el.getAttribute('data-k')); }; })(b[i]); }
+ }
+
+ function sel(k){
+   var m=null;
+   for(var i=0;i<D.length;i++){ if(D[i].k===k) m=D[i]; }
+   if(!m) return;
+
+   $("art").innerHTML=draw(m);
+   $("cardTitle").innerHTML=(m.k==='base')?'Two action potentials':m.nm+' &mdash; '+m.ct;
+   $("stage").style.background=m.col;
+   $("stage").innerHTML=(m.k==='base'?'Some Block Potassium Channels':m.nm)+'<small>'+(m.k==='base'?'tap a class to begin':m.tgt.replace(/<br>/g,' · ').toLowerCase())+'</small>';
+
+   for(var j=0;j<4;j++){
+     $("e"+j).className=m.iv[j][1];
+     $("v"+j).innerHTML=m.iv[j][0];
+   }
+
+   var h='<span class="n">'+m.ti+'</span>'+m.d;
+   if(m.ex){ h+='<div class="ex">'+m.ex.map(function(x){return '<span>'+x+'</span>';}).join('')+'</div>'; }
+   if(m.loc){ h+='<div class="loc">'+m.loc+'</div>'; }
+   if(m.note){ h+='<div class="note">'+m.note+'</div>'; }
+   if(m.mnem){ h+='<div class="mnem">'+m.mnem+'</div>'; }
+   $("info").innerHTML=h;
+
+   render(k);
+ }
+
+ render('base');
+ sel('base');
+})();
+</script>
+</body>
+</html>

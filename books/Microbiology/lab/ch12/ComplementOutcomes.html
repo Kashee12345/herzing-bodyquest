@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>The Three Outcomes of Complement</title>
+<meta name="description" content="Interactive explorer of the three defensive outcomes of the complement system — lysis, opsonization, and inflammation. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:0.98fr 1.02fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.it .ic{font-size:19px;}
+.hub{display:flex;gap:6px;margin:2px 0 2px;}
+.hub div{flex:1;text-align:center;border:1px solid var(--line);border-radius:9px;padding:6px 3px;font-size:10.5px;font-weight:800;color:var(--muted);background:#fff;line-height:1.2;transition:.16s;}
+.hub div.on{color:#fff;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 12</div>
+  <h1>The Three Outcomes of Complement</h1>
+  <div class="intro">Dozens of blood proteins make up the <b>complement system</b> &mdash; but no matter which pathway switches it on, it converges on one molecule, <b>C3</b>, and delivers just three weapons against a microbe. Tap each outcome to see how it works.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The complement hub: C3</h2>
+    <svg viewBox="0 0 240 210" aria-label="complement outcome diagram"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">Three outcomes of complement<small>tap one to explore</small></div>
+    <div class="card">
+      <div class="hub">
+        <div id="h_lysis">💥 Lysis</div>
+        <div id="h_opson">🏷️ Opsonization</div>
+        <div id="h_inflam">🔥 Inflammation</div>
+      </div>
+      <div class="list" id="list"></div>
+      <div id="info"></div>
+      <div class="mnem"><b>Keep the fragments straight:</b> C3b <b>binds</b> and coats (opsonization) &middot; C3a &amp; C5a <b>call in the crowd</b> (inflammation) &middot; C5b&ndash;C9 build the <b>MAC</b> that punches holes (lysis).</div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var M=[
+  {k:'lysis',ic:'💥',nm:'Lysis',ct:'MAC · C5b–C9',col:'#d1495b',
+   frags:['C5b','C6','C7','C8','C9'],
+   feat:'The terminal complement proteins <b>C5b&ndash;C9</b> stack into a ring called the <b>membrane attack complex (MAC)</b>. The ring drills a pore straight through the microbe&rsquo;s membrane. Water and ions pour in, the cell swells, and it bursts &mdash; <b>osmotic lysis</b>.',
+   loc:'Most effective against thin-walled <b>gram-negative</b> bacteria such as <i>Neisseria</i>; thick gram-positive walls and capsules resist the MAC.',
+   note:'<b>Clinical:</b> patients missing terminal components (C5&ndash;C9) suffer recurrent <b>Neisseria</b> infections (meningococcal &amp; gonococcal) &mdash; the MAC is their main defense against it.'},
+  {k:'opson',ic:'🏷️',nm:'Opsonization',ct:'C3b coats the microbe',col:'#2f6f9f',
+   frags:['C3b'],
+   feat:'<b>C3b</b> fragments settle onto and <b>coat the microbe&rsquo;s surface</b> &mdash; opsonization. Phagocytes carry <b>complement receptors</b> that grip C3b like handles, so the microbe is bound and engulfed far more efficiently.',
+   loc:'&ldquo;Opson&rdquo; is Greek for a <i>relish</i> that makes food tastier &mdash; C3b makes the microbe tastier to phagocytes. This is complement&rsquo;s most important job for clearing bacteria.',
+   note:''},
+  {k:'inflam',ic:'🔥',nm:'Inflammation',ct:'C3a · C5a anaphylatoxins',col:'#b8862f',
+   frags:['C3a','C5a'],
+   feat:'The small fragments <b>C3a</b> and <b>C5a</b> are <b>anaphylatoxins</b>. They trigger <b>mast cells</b> to release histamine &mdash; causing vasodilation and leaky capillaries &mdash; and <b>C5a</b> also acts as a powerful <b>chemotactic</b> signal that pulls neutrophils to the site.',
+   loc:'The net effect: more blood flow, more fluid, and more phagocytes recruited to the invasion. Complement <b>amplifies</b> the inflammatory response.',
+   note:''}
+ ];
+
+ // ---- reusable SVG pieces ----
+ function phago(x,y,r){
+   var o='<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="#efe6f6" stroke="#6d3f9c" stroke-width="3"/>';
+   o+='<circle cx="'+(x-r*0.28)+'" cy="'+(y-r*0.18)+'" r="'+(r*0.24)+'" fill="#8a6aa8"/>';
+   o+='<circle cx="'+(x+r*0.30)+'" cy="'+(y-r*0.08)+'" r="'+(r*0.24)+'" fill="#8a6aa8"/>';
+   o+='<circle cx="'+x+'" cy="'+(y+r*0.32)+'" r="'+(r*0.24)+'" fill="#8a6aa8"/>';
+   return o;
+ }
+ function mast(x,y,deg){
+   var o='<circle cx="'+x+'" cy="'+y+'" r="15" fill="#8a6aa8"/><circle cx="'+x+'" cy="'+y+'" r="5.5" fill="#4a3560"/>', k;
+   if(!deg){
+     o+='<g fill="#4a3560">';
+     for(k=0;k<5;k++){ var ga=k/5*Math.PI*2; o+='<circle cx="'+(x+7*Math.cos(ga))+'" cy="'+(y+7*Math.sin(ga))+'" r="1.8"/>'; }
+     o+='</g>';
+   } else {
+     o+='<g fill="#c98adf">';
+     for(k=0;k<7;k++){ var a=k/7*Math.PI*2, d=22+(k%2)*6; o+='<circle cx="'+(x+d*Math.cos(a))+'" cy="'+(y+d*Math.sin(a))+'" r="2.6"/>'; }
+     o+='</g>';
+   }
+   return o;
+ }
+ function microbe(cx,cy,rx,ry,col,fill){
+   var o='<rect x="'+(cx-rx)+'" y="'+(cy-ry)+'" width="'+(2*rx)+'" height="'+(2*ry)+'" rx="'+ry+'" fill="'+fill+'" stroke="'+col+'" stroke-width="4"/>';
+   o+='<path d="M'+(cx-ry*0.7)+' '+cy+' q'+(ry*0.35)+' -'+(ry*0.45)+' '+(ry*0.7)+' 0 q'+(ry*0.35)+' '+(ry*0.45)+' '+(ry*0.7)+' 0" stroke="'+col+'" stroke-width="3.4" fill="none" stroke-linecap="round" opacity="0.5"/>';
+   return o;
+ }
+
+ // ---- per-outcome scenes ----
+ function drawDefault(){
+   var o='', k, cx=120, cy=132;
+   o+=microbe(cx,cy,50,33,'#7a5a8a','#efe9f4');
+   // orbiting complement proteins
+   o+='<g fill="#b6a6cc">';
+   for(k=0;k<8;k++){ var a=k/8*Math.PI*2; o+='<circle cx="'+(cx+66*Math.cos(a))+'" cy="'+(cy+46*Math.sin(a))+'" r="4.5"/>'; }
+   o+='</g>';
+   // C3 hub at top
+   o+='<circle cx="120" cy="34" r="17" fill="#6d3f9c"/>';
+   o+='<text x="120" y="39" font-size="13" fill="#fff" text-anchor="middle" font-weight="800">C3</text>';
+   // split arrows fanning down
+   o+='<g stroke="#b6a6cc" stroke-width="2.5" stroke-dasharray="4 4" fill="none" stroke-linecap="round">';
+   o+='<path d="M108 44 L74 88"/><path d="M120 51 L120 96"/><path d="M132 44 L166 88"/>';
+   o+='</g>';
+   o+='<text x="120" y="200" font-size="10.5" fill="#6d3f9c" text-anchor="middle" font-weight="700">one hub → three outcomes</text>';
+   return o;
+ }
+
+ function drawLysis(){
+   var o='', k, cx=110, cy=124, mx=cx, my=cy-36;
+   // osmotic swelling halo
+   o+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="76" ry="60" fill="#d1495b" opacity="0.10"/>';
+   // bacterium
+   o+='<rect x="'+(cx-52)+'" y="'+(cy-36)+'" width="104" height="72" rx="36" fill="#f6dfe3" stroke="#d1495b" stroke-width="4"/>';
+   o+='<rect x="'+(cx-44)+'" y="'+(cy-28)+'" width="88" height="56" rx="28" fill="#fbeef0"/>';
+   o+='<path d="M'+(cx-26)+' '+cy+' q13 -15 26 0 q13 15 26 0" stroke="#c98a95" stroke-width="4" fill="none" stroke-linecap="round"/>';
+   // MAC barrel straddling the top membrane
+   o+='<rect x="'+(mx-11)+'" y="'+(my-13)+'" width="22" height="33" rx="3" fill="#7a1f2c"/>';
+   for(k=0;k<7;k++){ var sx=mx-11+k*3.4; o+='<rect x="'+sx+'" y="'+(my-13)+'" width="2.4" height="33" fill="#b23145"/>'; }
+   // water rushing in
+   o+='<line x1="'+mx+'" y1="'+(my-42)+'" x2="'+mx+'" y2="'+(my-19)+'" stroke="#3f8fd0" stroke-width="3" stroke-linecap="round"/>';
+   o+='<polygon points="'+(mx-5)+','+(my-25)+' '+(mx+5)+','+(my-25)+' '+mx+','+(my-15)+'" fill="#3f8fd0"/>';
+   o+='<g fill="#7dbbe6">';
+   o+='<circle cx="'+(mx-15)+'" cy="'+(my-36)+'" r="4"/><circle cx="'+(mx+16)+'" cy="'+(my-31)+'" r="3.5"/><circle cx="'+(mx-1)+'" cy="'+(my-49)+'" r="3"/>';
+   o+='</g>';
+   // rupture + leaking contents (lower right)
+   o+='<polyline points="'+(cx+42)+','+(cy+10)+' '+(cx+60)+','+(cy+4)+' '+(cx+52)+','+(cy+18)+' '+(cx+70)+','+(cy+16)+'" fill="none" stroke="#d1495b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+   o+='<g fill="#c98a95">';
+   o+='<circle cx="'+(cx+66)+'" cy="'+(cy+27)+'" r="4"/><circle cx="'+(cx+78)+'" cy="'+(cy+9)+'" r="3.4"/><circle cx="'+(cx+76)+'" cy="'+(cy+34)+'" r="3"/>';
+   o+='</g>';
+   o+='<text x="'+mx+'" y="'+(my-56)+'" font-size="10.5" fill="#7a1f2c" text-anchor="middle" font-weight="800">MAC pore</text>';
+   o+='<text x="'+(cx+66)+'" y="'+(cy+48)+'" font-size="10" fill="#b23145" text-anchor="middle" font-weight="700">cell bursts</text>';
+   return o;
+ }
+
+ function c3btag(x,y,ang){
+   var rad=ang*Math.PI/180, ex=x+13*Math.cos(rad), ey=y+13*Math.sin(rad);
+   var o='<line x1="'+x+'" y1="'+y+'" x2="'+ex+'" y2="'+ey+'" stroke="#2f6f9f" stroke-width="2.5"/>';
+   o+='<circle cx="'+ex+'" cy="'+ey+'" r="5.5" fill="#2f6f9f"/>';
+   return o;
+ }
+ function drawOpson(){
+   var o='', bx=82, by=124, px=196, py=120, k;
+   // pseudopods reaching around the microbe (drawn first, behind)
+   o+='<path d="M'+(px-20)+' '+(py-30)+' Q'+(bx+20)+' '+(by-46)+' '+(bx-8)+' '+(by-34)+'" fill="none" stroke="#6d3f9c" stroke-width="12" stroke-linecap="round" opacity="0.35"/>';
+   o+='<path d="M'+(px-20)+' '+(py+30)+' Q'+(bx+20)+' '+(by+46)+' '+(bx-8)+' '+(by+34)+'" fill="none" stroke="#6d3f9c" stroke-width="12" stroke-linecap="round" opacity="0.35"/>';
+   // bacterium
+   o+='<rect x="'+(bx-38)+'" y="'+(by-34)+'" width="76" height="68" rx="34" fill="#e3eef6" stroke="#2f6f9f" stroke-width="4"/>';
+   o+='<path d="M'+(bx-18)+' '+by+' q9 -12 18 0 q9 12 18 0" stroke="#2f6f9f" stroke-width="3.4" fill="none" stroke-linecap="round" opacity="0.5"/>';
+   // C3b tags coating the surface
+   o+=c3btag(bx,by-34,-90)+c3btag(bx-27,by-22,-142)+c3btag(bx+27,by-22,-38);
+   o+=c3btag(bx-38,by,180)+c3btag(bx-27,by+22,142)+c3btag(bx,by+34,90)+c3btag(bx+27,by+22,38);
+   // phagocyte on the right
+   o+=phago(px,py,32);
+   // receptor grabbing nearest C3b
+   o+='<text x="'+bx+'" y="'+(by+56)+'" font-size="10.5" fill="#255f8a" text-anchor="middle" font-weight="800">coated in C3b</text>';
+   o+='<text x="'+px+'" y="'+(py+48)+'" font-size="10" fill="#4a3560" text-anchor="middle" font-weight="700">phagocyte</text>';
+   return o;
+ }
+
+ function drawInflam(){
+   var o='', k, sx=126, sy=96;
+   // blood vessel strip along the bottom
+   o+='<rect x="10" y="168" width="220" height="30" rx="14" fill="#f2c0ca" stroke="#d97f8e" stroke-width="2"/>';
+   o+='<g fill="#c0392b">';
+   for(k=0;k<6;k++){ o+='<ellipse cx="'+(28+k*36)+'" cy="'+(183+((k%2)?-4:4))+'" rx="5.5" ry="4" fill="#c0392b"/>'; }
+   o+='</g>';
+   // mast cell degranulating near the vessel
+   o+=mast(58,120,1);
+   o+='<text x="58" y="150" font-size="10" fill="#4a3560" text-anchor="middle" font-weight="700">mast cell →</text>';
+   o+='<text x="58" y="162" font-size="9.5" fill="#8a6a20" text-anchor="middle" font-weight="700">histamine</text>';
+   // anaphylatoxin fragments radiating from the source
+   o+='<g fill="#b8862f">';
+   for(k=0;k<7;k++){ var a=k/7*Math.PI*2, d=24+(k%3)*9; o+='<circle cx="'+(sx+d*Math.cos(a))+'" cy="'+(sy+d*Math.sin(a)*0.8)+'" r="3.2"/>'; }
+   o+='</g>';
+   o+='<circle cx="'+sx+'" cy="'+sy+'" r="12" fill="#e0a800"/>';
+   o+='<text x="'+sx+'" y="'+(sy-30)+'" font-size="11" fill="#8a6a20" text-anchor="middle" font-weight="800">C3a · C5a</text>';
+   o+='<text x="'+sx+'" y="'+(sy+4)+'" font-size="9" fill="#fff" text-anchor="middle" font-weight="800">C3</text>';
+   // neutrophil emigrating from vessel, following the C5a gradient (chemotaxis)
+   o+=phago(198,150,20);
+   o+='<path d="M180 146 Q158 128 142 108" fill="none" stroke="#b8862f" stroke-width="2.5" stroke-dasharray="5 4" stroke-linecap="round"/>';
+   o+='<polygon points="146,114 138,104 150,104" fill="#b8862f"/>';
+   o+='<text x="196" y="182" font-size="9.5" fill="#8a6a20" text-anchor="middle" font-weight="700">chemotaxis</text>';
+   return o;
+ }
+
+ var DRAW={lysis:drawLysis,opson:drawOpson,inflam:drawInflam};
+
+ function render(cur){
+   $("list").innerHTML=M.map(function(m){
+     return '<button class="it'+(m.k===cur?' on':'')+'" data-k="'+m.k+'"><span class="ic">'+m.ic+'</span><span><span class="nm">'+m.nm+'</span><br><span class="ct">'+m.ct+'</span></span></button>';
+   }).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){ b.onclick=function(){ sel(b.dataset.k); }; });
+ }
+
+ function sel(k){
+   var m=M.filter(function(x){return x.k===k;})[0];
+   $("art").innerHTML=DRAW[k]();
+   $("cardTitle").innerHTML=m.ic+' '+m.nm;
+   $("stage").style.background=m.col;
+   $("stage").innerHTML=m.nm+'<small>'+m.ct+'</small>';
+   ['lysis','opson','inflam'].forEach(function(h){
+     var el=$("h_"+h);
+     el.className=(h===k)?'on':'';
+     el.style.background=(h===k)?m.col:'';
+     el.style.borderColor=(h===k)?m.col:'';
+   });
+   $("info").innerHTML='<span class="n">'+m.nm+'</span>'+m.feat+
+     '<div class="ex">'+m.frags.map(function(f){return '<span>'+f+'</span>';}).join('')+'</div>'+
+     '<div class="loc">'+m.loc+'</div>'+
+     (m.note?'<div class="note">'+m.note+'</div>':'');
+   render(k);
+ }
+
+ function start(){
+   $("art").innerHTML=drawDefault();
+   $("info").innerHTML='<span class="n">The C3 convergence point</span>Every activation route &mdash; the <b>classical</b>, <b>lectin</b>, and <b>alternative</b> pathways &mdash; funnels down to one molecule: <b>C3</b>. Splitting C3 (and, downstream, C5) unleashes three defensive outcomes. <b>Tap one</b> above to explore it.';
+   render('');
+ }
+ start();
+})();
+</script>
+</body>
+</html>

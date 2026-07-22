@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Which Groups Actually Differ?</title>
+<meta name="description" content="A significant ANOVA says the arms are not all alike, but not which ones. Run the follow-up comparisons live, watch the confidence intervals, and simulate how uncorrected pairwise testing inflates the false-alarm rate.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:9px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:150px;line-height:1.3;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.g input[type=range]::-webkit-slider-thumb{background:#b8862f;} .sl.g input[type=range]::-moz-range-thumb{background:#b8862f;}
+.sl.r input[type=range]::-webkit-slider-thumb{background:#d1495b;} .sl.r input[type=range]::-moz-range-thumb{background:#d1495b;}
+.sl .nv{font-size:15px;font-weight:800;color:var(--teal-dk);min-width:62px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;line-height:1.3;}
+.tiles div.warn{border-color:#e2adb7;background:#fdf1f3;} .tiles div.warn .vv{color:#b23145;}
+.tiles div.good{border-color:#b6d8c4;background:#f0f8f3;} .tiles div.good .vv{color:#237a45;}
+.tiles div.gold{border-color:#ecd9ac;background:#fbf3e2;} .tiles div.gold .vv{color:#8a6a20;}
+.cap{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.55;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.sent{border:1px solid #bcd6e2;border-left:5px solid var(--teal);background:#eef6f9;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:13.2px;line-height:1.6;color:var(--soft);}
+.sent b{color:var(--teal-dk);}
+.sent .big{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.sent.warn{border-color:#e2adb7;border-left-color:#d1495b;background:#fdf1f3;} .sent.warn .big{color:#b23145;}
+.sent.good{border-color:#b6d8c4;border-left-color:#2f9e5b;background:#f0f8f3;} .sent.good .big{color:#237a45;}
+.sent.gold{border-color:#ecd9ac;border-left-color:#b8862f;background:#fbf3e2;} .sent.gold .big{color:#8a6a20;}
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:11px;}
+.strip div{border:1px solid var(--line);border-radius:10px;padding:7px 8px;background:#fff;text-align:center;}
+.strip .lb{display:block;font-size:9.1px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.strip .vv{display:block;font-size:14.5px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.strip div.warn{border-color:#e2adb7;background:#fdf1f3;} .strip div.warn .vv{color:#b23145;}
+.strip div.good{border-color:#b6d8c4;background:#f0f8f3;} .strip div.good .vv{color:#237a45;}
+table.tv{width:100%;border-collapse:collapse;margin-top:9px;font-variant-numeric:tabular-nums;}
+table.tv th,table.tv td{padding:6px 5px;font-size:11.8px;text-align:right;border-bottom:1px solid var(--line);color:var(--soft);font-weight:600;}
+table.tv th{font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.3;}
+table.tv td:first-child,table.tv th:first-child{text-align:left;font-weight:800;color:var(--teal-dk);}
+table.tv tr.hit td{background:#f0f8f3;} table.tv tr.hit td:last-child{color:#237a45;font-weight:800;}
+table.tv tr.miss td:last-child{color:#9aa9b1;font-weight:700;}
+table.tv .ch{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.mnem,.note{font-size:12px;border-radius:8px;padding:9px 12px;margin-top:10px;line-height:1.6;}
+.mnem{color:#8a6a20;background:#fbf3e2;border:1px solid #ecd9ac;} .mnem b{color:#5a4212;}
+.note{color:#8a2a3a;background:#fae5e8;border:1px solid #f0c9d0;} .note b{color:#7a1f2c;}
+.list .it .nm{line-height:1.4;}
+.wrap > div{min-width:0;}
+.tw{overflow-x:auto;}
+@media (max-width:560px){
+  .tiles{grid-template-columns:repeat(2,1fr);}
+  .sl label{min-width:0;flex:0 0 104px;white-space:normal;}
+  .sl .nv{min-width:50px;font-size:13.5px;}
+  .seg{flex-wrap:wrap;} .seg button{flex:1 0 46%;}
+  .modeseg{flex-wrap:wrap;}
+  table.tv th,table.tv td{padding:5px 3px;font-size:11px;}
+}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 13</div>
+  <h1>Which Groups Actually Differ?</h1>
+  <div class="intro">The ANOVA has come back significant. That is a real result &mdash; the arms of this trial are <b>not all alike</b> &mdash; but read it carefully, because it says less than it seems to. F is a single number built from every group at once, and a single number cannot point at a pair. It tells you <i>something</i> is going on among the means; it is silent on <i>what</i>. So the temptation is to glance at the chart, find the highest arm and the lowest, and announce that <i>those two</i> differ. That glance is exactly the trap. The most extreme pair in any sample is the one most flattered by chance, and testing every pair of arms at the ordinary 5% each quietly stacks the odds of a false alarm far above 5%. Below you can run a study whose F is genuinely significant, then work through the follow&#8209;up comparisons two ways &mdash; <b>one test at a time</b>, and with a <b>correction that keeps the whole family of tests honest</b> &mdash; and simulate a thousand studies where nothing differs at all to watch the two approaches part ways.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The arms, with their means</h2>
+      <div class="cap" style="margin-top:2px;">Each dot is one person's outcome (a symptom score, lower is better); the heavy tick is the arm's <b>sample mean</b> and the thin whisker is a 95% interval for that mean built from the pooled within&#8209;arm scatter. The dashed line is the grand mean of everyone. The ANOVA verdict for <i>this</i> sample is stamped on the banner to the right &mdash; but notice that the picture alone will not tell you, reliably, which specific arms are truly apart. Press <b>Draw a new sample</b> to feel how much the ordering of the middle arms jitters run to run even when the truth is fixed.</div>
+      <svg viewBox="0 0 480 300" id="dots" aria-label="dot plot of every observation by arm with each arm's mean and a confidence interval, and the grand mean marked"></svg>
+      <div class="lgd">
+        <span><i style="background:#1c4454"></i>arm mean</span>
+        <span><i style="background:#9fb3bd"></i>95% interval for the mean</span>
+        <span><i style="background:#8fa8b4"></i>grand mean</span>
+      </div>
+      <div class="row"><button class="btn solid" id="bnew">Draw a new sample</button><button class="btn" id="brst">Reset everything</button></div>
+      <div class="sent" id="omni"></div>
+    </div>
+
+    <div class="card">
+      <h2>Every pair, compared</h2>
+      <div class="cap" style="margin-top:2px;">Now the follow&#8209;up. Each row below is one <b>pair</b> of arms; the dot is the observed difference between their means and the bar is a confidence interval for that difference, using the pooled within&#8209;arm variance from the ANOVA as the yardstick. When a bar clears the dashed zero line, that pair is declared different. The switch decides <b>how wide</b> each bar is drawn.</div>
+      <div class="modeseg" id="methSeg">
+        <button data-v="un">One test at a time<small>each pair at &alpha; = .05</small></button>
+        <button data-v="bon">Corrected for the family<small>Bonferroni: each at &alpha; &divide; m</small></button>
+      </div>
+      <div class="cap" id="methcap"></div>
+      <svg viewBox="0 0 480 300" id="forest" aria-label="forest plot of every pairwise mean difference with a confidence interval, colored by whether it clears zero under the chosen method"></svg>
+      <div class="lgd">
+        <span><i style="background:#2f9e5b"></i>interval clears zero &mdash; pair declared different</span>
+        <span><i style="background:#b7c4cc"></i>interval straddles zero &mdash; not shown to differ</span>
+      </div>
+      <div class="sent" id="fsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Run a thousand studies where nothing differs</h2>
+      <div class="cap" style="margin-top:2px;">Here is the argument that settles it. Set every arm to the <b>same</b> true mean &mdash; so any pair we flag is a mistake &mdash; and draw study after study. For each one, first check the omnibus F, then run all <b>m = k(k&minus;1)/2</b> pairwise tests both ways. A study is a <b>family&#8209;wise error</b> if it flags even one pair. Testing one at a time, that rate climbs well past 5% and keeps climbing as arms are added. The Bonferroni bars hold near 5% no matter how many arms there are &mdash; that is the whole point of dividing &alpha; by m.</div>
+      <svg viewBox="0 0 480 210" id="fwer" aria-label="bar chart comparing the family-wise false-alarm rate of uncorrected versus Bonferroni-corrected pairwise testing, against a 5 percent reference line"></svg>
+      <div class="strip">
+        <div><span class="lb">Studies<br>run</span><span class="vv" id="rN">0</span></div>
+        <div><span class="lb">Comparisons<br>each study, m</span><span class="vv" id="rM">&mdash;</span></div>
+        <div><span class="lb">Omnibus F<br>false alarms</span><span class="vv" id="rF">&mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="run1">Run 1,000 studies</button><button class="btn" id="run2">Add 4,000 more</button><button class="btn" id="rrs">Reset</button></div>
+      <div class="cap" id="fwercap"></div>
+    </div>
+  </div>
+
+  <div>
+    <div id="stage">A trial with several arms<small>an ANOVA that has already come back significant</small></div>
+
+    <div class="card">
+      <h2>The study you are running</h2>
+      <div class="cap" style="margin-top:2px;">A trial with <b>k</b> arms and <b>n</b> people in each. Set the true separation and scatter, or jump to a situation worth seeing. Everything on the left recomputes from the sample you draw.</div>
+      <div class="hd">The design</div>
+      <div class="sl"><label>arms in the trial, k</label><input type="range" id="sK" min="3" max="6" step="1" value="4" aria-label="number of arms"><span class="nv" id="vK">4</span></div>
+      <div class="sl"><label>people per arm, n</label><input type="range" id="sN" min="4" max="30" step="1" value="12" aria-label="sample size per arm"><span class="nv" id="vN">12</span></div>
+      <div class="hd">The truth behind the arms</div>
+      <div class="sl g"><label>spread the true means apart</label><input type="range" id="sD" min="0" max="24" step="0.5" value="13" aria-label="separation between the extreme true means"><span class="nv" id="vD">13.0</span></div>
+      <div class="sl r"><label>true scatter inside each arm, &sigma;</label><input type="range" id="sS" min="3" max="16" step="0.5" value="8" aria-label="within-arm standard deviation"><span class="nv" id="vS">8.0</span></div>
+      <div class="hd">Jump to a situation worth seeing</div>
+      <div class="seg" id="preSeg">
+        <button data-v="0">All arms equal<small>every flag is a false alarm</small></button>
+        <button data-v="1">One arm apart<small>only the last truly differs</small></button>
+        <button data-v="2">A clean staircase<small>each arm above the last</small></button>
+        <button data-v="3">Two clusters<small>a low pair and a high pair</small></button>
+        <button data-v="4">Real gaps, buried in noise<small>true but hard to resolve</small></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>The omnibus test, computed live</h2>
+      <div class="tiles">
+        <div><span class="lb">People<br>total N</span><span class="vv" id="tN">&mdash;</span><span class="sub" id="tNs">&nbsp;</span></div>
+        <div><span class="lb">F<br>statistic</span><span class="vv" id="tF">&mdash;</span><span class="sub">MS<sub>b</sub> &divide; MS<sub>w</sub></span></div>
+        <div id="bxP"><span class="lb">ANOVA<br>p&#8209;value</span><span class="vv" id="tP">&mdash;</span><span class="sub" id="tPs">&nbsp;</span></div>
+        <div><span class="lb">Pooled SD<br>&radic;MS<sub>within</sub></span><span class="vv" id="tSD">&mdash;</span><span class="sub">the common scatter</span></div>
+        <div><span class="lb">Pairs to<br>compare, m</span><span class="vv" id="tM">&mdash;</span><span class="sub">k(k&minus;1) &divide; 2</span></div>
+        <div class="gold"><span class="lb">Per&#8209;test &alpha;<br>Bonferroni</span><span class="vv" id="tA">&mdash;</span><span class="sub">.05 &divide; m</span></div>
+        <div><span class="lb">Pairs flagged<br>one at a time</span><span class="vv" id="tU">&mdash;</span><span class="sub" id="tUs">of m</span></div>
+        <div><span class="lb">Pairs flagged<br>corrected</span><span class="vv" id="tB">&mdash;</span><span class="sub" id="tBs">of m</span></div>
+      </div>
+      <div class="sent" id="sent"></div>
+      <div class="hd">The pairwise comparisons in full</div>
+      <div class="tw"><table class="tv"><thead><tr><th>Pair</th><th>Difference</th><th>SE</th><th>t</th><th>p (raw)</th><th id="thV">Verdict</th></tr></thead><tbody id="ptab"></tbody></table></div>
+      <div class="cap" id="tabcap"></div>
+    </div>
+
+    <div class="card">
+      <h2>Say it right</h2>
+      <div class="cap" style="margin-top:2px;">Nine things people say once the ANOVA turns up significant. Four of them are safe to write down. Tap each one.</div>
+      <div class="list" id="claims"></div>
+      <div id="info"><span class="n">Pick a statement</span>Each one is either a fair reading of a significant F or a habit worth breaking. The four correct ones are the sentences you can defend.</div>
+    </div>
+
+    <div class="card">
+      <h2>What to carry out of this section</h2>
+      <div class="mnem"><b>ANOVA is an omnibus test: one question, one answer.</b> Its hypothesis is that every population mean is equal, and rejecting it means only that <i>they are not all equal</i>. Which ones, and by how much, is a separate question the F statistic never addresses. Treating a significant F as if it named a winning arm is reading a headline as though it were the whole article.</div>
+      <div class="mnem"><b>The follow&#8209;up is where "which" gets answered &mdash; and it must pay for asking.</b> Post&#8209;hoc procedures (Bonferroni, Tukey's HSD, Scheffe) compare the pairs while widening every interval to account for how many pairs are being inspected. Bonferroni is the plainest: split the 5% budget evenly, testing each of the m pairs at .05 &divide; m. The intervals get wider, fewer pairs clear zero, and the price of that caution is missing some real but small differences &mdash; a trade every correction makes.</div>
+      <div class="note"><b>Testing every pair at .05 apiece is not a shortcut &mdash; it is a leak.</b> Each test carries its own 5% chance of a false alarm, and with several arms there are many tests: three arms give three pairs, six arms give fifteen. Under a true null the chance that <i>at least one</i> pair looks significant climbs far above 5%, as the simulation on the left shows directly. The single omnibus F, and the corrected follow&#8209;ups after it, exist precisely to cap that overall rate.</div>
+      <div class="note"><b>The p&#8209;value is not the probability the arms are equal, and a significant F is not proof of cause.</b> The ANOVA p is computed <i>assuming</i> the means are equal, so it cannot also be the probability of that assumption. And F compares variances; it knows nothing about how people landed in their arms. A causal reading is earned by random assignment at the design stage, never by the size of F.</div>
+      <div class="cap">A closing exercise. Load <i>All arms equal</i> and run five thousand studies. The Bonferroni bar sits near 5% the way it was built to; the one&#8209;at&#8209;a&#8209;time bar sits far higher, and climbs further every time you add an arm. Both are drawing from a world with no difference in it whatsoever. That gap between the bars is the entire reason "which groups differ?" is a question you answer with a correction, not with your eyes.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ================= seeded PRNG (mulberry32) — reproducible every session ================= */
+ var SEED0=20260720, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ function nrm(){                                  /* standard normal, Box–Muller */
+   var u=rnd(); if(u<1e-12) u=1e-12;
+   var v=rnd();
+   return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);
+ }
+
+ /* ================= special functions ================= */
+ function lgam(xx){
+   var cof=[76.18009172947146,-86.50532032941677,24.01409824083091,
+            -1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+   var x=xx,y=xx,tmp=x+5.5,ser=1.000000000190015,j;
+   tmp-=(x+0.5)*Math.log(tmp);
+   for(j=0;j<6;j++){ y+=1; ser+=cof[j]/y; }
+   return -tmp+Math.log(2.5066282746310005*ser/x);
+ }
+ function betacf(a,b,x){                           /* continued fraction, Lentz */
+   var MAXIT=400, EPS=3e-16, FPMIN=1e-300;
+   var qab=a+b, qap=a+1, qam=a-1;
+   var c=1, d=1-qab*x/qap;
+   if(Math.abs(d)<FPMIN) d=FPMIN;
+   d=1/d;
+   var h=d,m,m2,aa,del;
+   for(m=1;m<=MAXIT;m++){
+     m2=2*m;
+     aa=m*(b-m)*x/((qam+m2)*(a+m2));
+     d=1+aa*d; if(Math.abs(d)<FPMIN) d=FPMIN;
+     c=1+aa/c; if(Math.abs(c)<FPMIN) c=FPMIN;
+     d=1/d; h*=d*c;
+     aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+     d=1+aa*d; if(Math.abs(d)<FPMIN) d=FPMIN;
+     c=1+aa/c; if(Math.abs(c)<FPMIN) c=FPMIN;
+     d=1/d; del=d*c; h*=del;
+     if(Math.abs(del-1)<EPS) break;
+   }
+   return h;
+ }
+ function betai(a,b,x){                            /* regularised I_x(a,b) */
+   if(x<=0) return 0;
+   if(x>=1) return 1;
+   var bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));
+   if(x<(a+1)/(a+b+2)) return bt*betacf(a,b,x)/a;
+   return 1-bt*betacf(b,a,1-x)/b;
+ }
+ /* F upper tail */
+ function fsf(f,d1,d2){ if(f<=0) return 1; return betai(d2/2,d1/2,d2/(d1*f+d2)); }
+ /* Student t: two-sided tail P(|T|>t), and critical value */
+ function tsf2(t,df){ if(t<=0) return 1; return betai(df/2,0.5,df/(df+t*t)); }
+ function tcrit(df,al){
+   var lo=0, hi=1000, i, mid;
+   for(i=0;i<170;i++){ mid=(lo+hi)/2; if(tsf2(mid,df)>al) lo=mid; else hi=mid; }
+   return (lo+hi)/2;
+ }
+
+ /* ================= formatting ================= */
+ function f1(x){ return (Math.round(x*10)/10).toFixed(1); }
+ function f2(x){ return (Math.round(x*100)/100).toFixed(2); }
+ function f3(x){ return (Math.round(x*1000)/1000).toFixed(3); }
+ function sgn(x){ return (x>=0?'+':'&minus;')+f1(Math.abs(x)); }
+ function pTxt(p){
+   if(p<0.0001) return '&lt; 0.0001';
+   if(p<0.001)  return p.toFixed(5);
+   return p.toFixed(4);
+ }
+ function niceStep(x){
+   var e=Math.pow(10,Math.floor(Math.log(x)/Math.LN10)), m=x/e;
+   var s=m<1.5?1:(m<3?2:(m<7?5:10));
+   return s*e;
+ }
+
+ /* ================= state ================= */
+ var BASE=50, ALPHA=0.05;
+ var COL=['#2f6f8a','#b8862f','#2f9e5b','#7a5a8a','#d1495b','#2f6f9f'];
+ var NAME=['A','B','C','D','E','F'];
+ var K=4, N=12, SEP=13, SD=8;
+ var TRUE=[], DATA=[], METHOD='un', MODE='fan';
+ var simN=0, simM=0, simUn=0, simBon=0, simFo=0;
+
+ /* build the vector of true means for the current mode */
+ function buildTrue(){
+   TRUE=[]; var j;
+   if(MODE==='equal'){ for(j=0;j<K;j++) TRUE.push(BASE); }
+   else if(MODE==='one'){ for(j=0;j<K;j++) TRUE.push(BASE); TRUE[K-1]=BASE+SEP; }
+   else if(MODE==='two'){ var h=Math.floor(K/2); for(j=0;j<K;j++) TRUE.push(j<h?BASE-SEP/2:BASE+SEP/2); }
+   else { for(j=0;j<K;j++){ var t=(K===1)?0:(j-(K-1)/2)/((K-1)/2); TRUE.push(BASE+(SEP/2)*t); } }
+ }
+ /* draw one fresh sample of n people per arm from the true means */
+ function newSample(){
+   DATA=[]; var j,i,a;
+   for(j=0;j<K;j++){ a=[]; for(i=0;i<N;i++) a.push(TRUE[j]+SD*nrm()); DATA.push(a); }
+ }
+
+ /* ================= the whole computation from the sampled data ================= */
+ function calc(){
+   var j,i,mean=[],grand=0,Ntot=K*N;
+   for(j=0;j<K;j++){ var s=0; for(i=0;i<N;i++) s+=DATA[j][i]; mean.push(s/N); grand+=s; }
+   grand/=Ntot;
+   var ssb=0; for(j=0;j<K;j++) ssb+=N*(mean[j]-grand)*(mean[j]-grand);
+   var ssw=0; for(j=0;j<K;j++){ for(i=0;i<N;i++){ var d=DATA[j][i]-mean[j]; ssw+=d*d; } }
+   var d1=K-1, d2=Ntot-K;
+   var msb=ssb/d1, msw=ssw/d2;
+   var F=msw>0?msb/msw:0;
+   var p=fsf(F,d1,d2);
+   var msd=Math.sqrt(msw>0?msw:0);                 /* pooled SD */
+   var seMean=Math.sqrt(msw/N);                     /* SE of one arm mean, pooled */
+   var m=K*(K-1)/2;
+   var tcMean=tcrit(d2,ALPHA);                       /* for the per-arm CI whisker */
+   /* pairwise comparisons, both methods, using pooled MS_within */
+   var sePair=Math.sqrt(msw*2/N);
+   var tcUn=tcrit(d2,ALPHA);
+   var tcBon=tcrit(d2,ALPHA/m);
+   var pairs=[], nUn=0, nBon=0;
+   for(j=0;j<K;j++) for(i=j+1;i<K;i++){
+     var diff=mean[i]-mean[j];
+     var tt=sePair>0?diff/sePair:0;
+     var praw=tsf2(Math.abs(tt),d2);
+     var hu=Math.abs(tt)>tcUn, hb=Math.abs(tt)>tcBon;
+     if(hu) nUn++; if(hb) nBon++;
+     pairs.push({a:j,b:i,diff:diff,se:sePair,t:tt,p:praw,hu:hu,hb:hb,
+                 loU:diff-tcUn*sePair,hiU:diff+tcUn*sePair,
+                 loB:diff-tcBon*sePair,hiB:diff+tcBon*sePair});
+   }
+   return { mean:mean,grand:grand,ssb:ssb,ssw:ssw,d1:d1,d2:d2,msb:msb,msw:msw,
+            F:F,p:p,msd:msd,seMean:seMean,tcMean:tcMean,m:m,
+            pairs:pairs,nUn:nUn,nBon:nBon,Ntot:Ntot };
+ }
+
+ /* ================= panel 1 — dot plot with means and CIs ================= */
+ var VBW=480, PX0=58, PX1=464, PY0=18, PY1=250;
+ var dom={lo:0,hi:1};
+ function setDomain(C){
+   var lo=DATA[0][0], hi=DATA[0][0], j,i;
+   for(j=0;j<K;j++) for(i=0;i<N;i++){ var v=DATA[j][i]; if(v<lo) lo=v; if(v>hi) hi=v; }
+   var pad=(hi-lo)*0.10+2;
+   var R=Math.ceil((Math.max(hi-BASE,BASE-lo)+pad)/5)*5;
+   dom.lo=BASE-R; dom.hi=BASE+R;
+ }
+ function yOf(v){ return PY1-(v-dom.lo)/(dom.hi-dom.lo)*(PY1-PY0); }
+
+ function drawDots(C){
+   var s='',j,i,bw=(PX1-PX0)/K, cx, step=niceStep((dom.hi-dom.lo)/5), t;
+   var gy=yOf(C.grand);
+   for(t=Math.ceil(dom.lo/step)*step; t<=dom.hi+1e-9; t+=step){
+     var yy=yOf(t);
+     if(yy<PY0-0.5||yy>PY1+0.5) continue;
+     s+='<line x1="'+PX0+'" y1="'+f1(yy)+'" x2="'+PX1+'" y2="'+f1(yy)+'" stroke="#eef4f7" stroke-width="1"/>';
+     s+='<text x="'+(PX0-8)+'" y="'+f1(yy+3.4)+'" font-size="9.4" fill="#9aa9b1" text-anchor="end" font-weight="700">'+Math.round(t)+'</text>';
+   }
+   s+='<text x="13" y="'+((PY0+PY1)/2)+'" font-size="9.4" fill="#9aa9b1" font-weight="800" text-anchor="middle" transform="rotate(-90 13 '+((PY0+PY1)/2)+')">SYMPTOM SCORE</text>';
+   s+='<line x1="'+PX0+'" y1="'+PY1+'" x2="'+PX1+'" y2="'+PY1+'" stroke="#cfe0e8" stroke-width="1.4"/>';
+   /* grand mean */
+   s+='<line x1="'+PX0+'" y1="'+f1(gy)+'" x2="'+PX1+'" y2="'+f1(gy)+'" stroke="#8fa8b4" stroke-width="1.6" stroke-dasharray="7 5"/>';
+   s+='<text x="'+(PX1-2)+'" y="'+f1(gy-6)+'" font-size="9.4" fill="#6f858f" text-anchor="end" font-weight="800">grand mean '+f1(C.grand)+'</text>';
+   /* per-arm dots, CI, mean */
+   for(j=0;j<K;j++){
+     cx=PX0+bw*(j+0.5);
+     var my=yOf(C.mean[j]);
+     var half=C.tcMean*C.seMean;
+     var yhi=yOf(C.mean[j]+half), ylo=yOf(C.mean[j]-half);
+     for(i=0;i<N;i++){
+       var jt=((i*2654435761>>>0)%1000)/1000-0.5;   /* deterministic jitter per index */
+       var px=cx+jt*bw*0.52, py=yOf(DATA[j][i]);
+       if(py<PY0-4||py>PY1+4) continue;
+       s+='<circle cx="'+f1(px)+'" cy="'+f1(py)+'" r="3.1" fill="'+COL[j]+'" opacity=".55"/>';
+     }
+     /* CI whisker */
+     s+='<line x1="'+f1(cx)+'" y1="'+f1(yhi)+'" x2="'+f1(cx)+'" y2="'+f1(ylo)+'" stroke="#9fb3bd" stroke-width="2"/>';
+     s+='<line x1="'+f1(cx-6)+'" y1="'+f1(yhi)+'" x2="'+f1(cx+6)+'" y2="'+f1(yhi)+'" stroke="#9fb3bd" stroke-width="2"/>';
+     s+='<line x1="'+f1(cx-6)+'" y1="'+f1(ylo)+'" x2="'+f1(cx+6)+'" y2="'+f1(ylo)+'" stroke="#9fb3bd" stroke-width="2"/>';
+     /* mean tick */
+     s+='<line x1="'+f1(cx-15)+'" y1="'+f1(my)+'" x2="'+f1(cx+15)+'" y2="'+f1(my)+'" stroke="'+COL[j]+'" stroke-width="3.4" stroke-linecap="round"/>';
+     s+='<text x="'+f1(cx)+'" y="268" font-size="11" fill="'+COL[j]+'" text-anchor="middle" font-weight="800">Arm '+NAME[j]+'</text>';
+     s+='<text x="'+f1(cx)+'" y="282" font-size="9.6" fill="#8b99a1" text-anchor="middle" font-weight="700">mean '+f1(C.mean[j])+'</text>';
+   }
+   $("dots").innerHTML=s;
+ }
+
+ /* ================= panel 2 — forest plot of pairwise differences ================= */
+ function drawForest(C){
+   var s='', X0=92, X1=452, Y0=14, Y1=286;
+   var m=C.pairs.length;
+   /* symmetric x domain around 0 covering the widest interval shown */
+   var mx=1, k;
+   for(k=0;k<m;k++){
+     var P=C.pairs[k];
+     var lo=(METHOD==='un')?P.loU:P.loB, hi=(METHOD==='un')?P.hiU:P.hiB;
+     if(Math.abs(lo)>mx) mx=Math.abs(lo);
+     if(Math.abs(hi)>mx) mx=Math.abs(hi);
+   }
+   mx=Math.ceil(mx/2)*2;
+   var xs=function(v){ return (X0+X1)/2 + (v/mx)*((X1-X0)/2); };
+   /* zero line */
+   var zx=xs(0);
+   s+='<line x1="'+f1(zx)+'" y1="'+Y0+'" x2="'+f1(zx)+'" y2="'+Y1+'" stroke="#c2ccd2" stroke-width="1.3" stroke-dasharray="5 4"/>';
+   s+='<text x="'+f1(zx)+'" y="'+(Y1+15)+'" font-size="9.2" fill="#9aa9b1" text-anchor="middle" font-weight="800">0 &mdash; no difference</text>';
+   /* x ticks */
+   var st=niceStep(mx/2), t;
+   for(t=-mx; t<=mx+1e-9; t+=st){
+     if(Math.abs(t)<1e-9) continue;
+     s+='<text x="'+f1(xs(t))+'" y="'+(Y1+15)+'" font-size="8.8" fill="#b3bec4" text-anchor="middle" font-weight="700">'+(t>0?'+':'&minus;')+Math.abs(Math.round(t))+'</text>';
+   }
+   var rh=(Y1-Y0)/m, r;
+   for(k=0;k<m;k++){
+     var Q=C.pairs[k], cy=Y0+rh*(k+0.5);
+     var lo=(METHOD==='un')?Q.loU:Q.loB, hi=(METHOD==='un')?Q.hiU:Q.hiB;
+     var hit=(METHOD==='un')?Q.hu:Q.hb;
+     var col=hit?'#2f9e5b':'#b7c4cc';
+     s+='<text x="'+(X0-8)+'" y="'+f1(cy+3.4)+'" font-size="10" fill="'+(hit?'#237a45':'#8b99a1')+'" text-anchor="end" font-weight="800">'+NAME[Q.a]+'&ndash;'+NAME[Q.b]+'</text>';
+     s+='<line x1="'+f1(xs(lo))+'" y1="'+f1(cy)+'" x2="'+f1(xs(hi))+'" y2="'+f1(cy)+'" stroke="'+col+'" stroke-width="'+(hit?3:2.2)+'" stroke-linecap="round"/>';
+     s+='<line x1="'+f1(xs(lo))+'" y1="'+f1(cy-4)+'" x2="'+f1(xs(lo))+'" y2="'+f1(cy+4)+'" stroke="'+col+'" stroke-width="1.6"/>';
+     s+='<line x1="'+f1(xs(hi))+'" y1="'+f1(cy-4)+'" x2="'+f1(xs(hi))+'" y2="'+f1(cy+4)+'" stroke="'+col+'" stroke-width="1.6"/>';
+     s+='<circle cx="'+f1(xs(Q.diff))+'" cy="'+f1(cy)+'" r="3.4" fill="'+(hit?'#1c6b3e':'#8b99a1')+'"/>';
+   }
+   $("forest").innerHTML=s;
+ }
+
+ /* ================= panel 3 — the family-wise error simulation ================= */
+ function simOne(){
+   /* draw k arms of n people, ALL at the same true mean (0), fixed SD; return flags */
+   var j,i,mean=[],grand=0,Ntot=K*N;
+   var data=[];
+   for(j=0;j<K;j++){ var a=[],s=0; for(i=0;i<N;i++){ var x=SD*nrm(); a.push(x); s+=x; } data.push(a); mean.push(s/N); grand+=s; }
+   grand/=Ntot;
+   var ssb=0; for(j=0;j<K;j++) ssb+=N*(mean[j]-grand)*(mean[j]-grand);
+   var ssw=0; for(j=0;j<K;j++){ for(i=0;i<N;i++){ var d=data[j][i]-mean[j]; ssw+=d*d; } }
+   var d2=Ntot-K, msw=ssw/d2;
+   var F=(ssb/(K-1))/(msw>0?msw:1e-9);
+   var m=K*(K-1)/2;
+   var se=Math.sqrt(msw*2/N);
+   var tcUn=SIMTC.un, tcBon=SIMTC.bon;
+   var anyUn=false, anyBon=false;
+   for(j=0;j<K;j++) for(i=j+1;i<K;i++){
+     var tt=se>0?Math.abs(mean[i]-mean[j])/se:0;
+     if(tt>tcUn) anyUn=true;
+     if(tt>tcBon) anyBon=true;
+   }
+   var fSig=F>SIMTC.Fc;
+   return {un:anyUn,bon:anyBon,fo:fSig};
+ }
+ var SIMTC={un:2,bon:3,Fc:3,ready:false};
+ function primeSim(){
+   var d2=K*N-K, m=K*(K-1)/2;
+   SIMTC.un=tcrit(d2,ALPHA);
+   SIMTC.bon=tcrit(d2,ALPHA/m);
+   /* F critical for the omnibus false-alarm tally */
+   var lo=1e-4,hi=200,i,mid;
+   for(i=0;i<140;i++){ mid=(lo+hi)/2; if(fsf(mid,K-1,d2)>ALPHA) lo=mid; else hi=mid; }
+   SIMTC.Fc=(lo+hi)/2;
+ }
+ function runSim(times){
+   primeSim();
+   var i,o;
+   for(i=0;i<times;i++){ o=simOne(); simN++; if(o.un) simUn++; if(o.bon) simBon++; if(o.fo) simFo++; }
+   simM=K*(K-1)/2;
+ }
+ function drawFwer(){
+   var s='', X0=54, X1=452, Y0=16, Y1=168;
+   var top=Math.max(0.55, (simN? (simUn/simN)*1.25 : 0.55));
+   top=Math.min(top,1);
+   var ys=function(p){ return Y1-Math.min(p,top)/top*(Y1-Y0); };
+   /* y grid */
+   var g;
+   for(g=0;g<=top+1e-9;g+=0.1){
+     var yy=ys(g);
+     s+='<line x1="'+X0+'" y1="'+f1(yy)+'" x2="'+X1+'" y2="'+f1(yy)+'" stroke="#eef4f7" stroke-width="1"/>';
+     s+='<text x="'+(X0-6)+'" y="'+f1(yy+3.2)+'" font-size="9" fill="#9aa9b1" text-anchor="end" font-weight="700">'+Math.round(g*100)+'%</text>';
+   }
+   /* 5% reference */
+   var y5=ys(0.05);
+   s+='<line x1="'+X0+'" y1="'+f1(y5)+'" x2="'+X1+'" y2="'+f1(y5)+'" stroke="#b8862f" stroke-width="1.6" stroke-dasharray="6 4"/>';
+   s+='<text x="'+(X1)+'" y="'+f1(y5-4)+'" font-size="9.2" fill="#8a6a20" text-anchor="end" font-weight="800">target 5%</text>';
+   /* two bars */
+   var bars=[
+     {lb:'One test at a time',val:simN?simUn/simN:0,col:'#d1495b'},
+     {lb:'Bonferroni corrected',val:simN?simBon/simN:0,col:'#2f9e5b'}
+   ];
+   var slot=(X1-X0)/2, bwid=86, k;
+   for(k=0;k<2;k++){
+     var cx=X0+slot*(k+0.5), bx=cx-bwid/2;
+     var by=ys(bars[k].val), h=Y1-by;
+     if(simN){
+       s+='<rect x="'+f1(bx)+'" y="'+f1(by)+'" width="'+bwid+'" height="'+f1(h)+'" rx="4" fill="'+bars[k].col+'" opacity=".85"/>';
+       s+='<text x="'+f1(cx)+'" y="'+f1(by-5)+'" font-size="12.5" fill="'+bars[k].col+'" text-anchor="middle" font-weight="800">'+(bars[k].val*100).toFixed(1)+'%</text>';
+     } else {
+       s+='<rect x="'+f1(bx)+'" y="'+f1(Y1-2)+'" width="'+bwid+'" height="2" rx="1" fill="#dfe8ed"/>';
+     }
+     s+='<text x="'+f1(cx)+'" y="'+(Y1+15)+'" font-size="10" fill="#4a585f" text-anchor="middle" font-weight="800">'+bars[k].lb+'</text>';
+   }
+   s+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#cfe0e8" stroke-width="1.4"/>';
+   s+='<text x="'+((X0+X1)/2)+'" y="'+(Y1+30)+'" font-size="9.4" fill="#9aa9b1" text-anchor="middle" font-weight="800" letter-spacing="1">SHARE OF STUDIES FLAGGING AT LEAST ONE PAIR &mdash; WHEN NO ARM TRULY DIFFERS</text>';
+   if(simN===0) s+='<text x="'+((X0+X1)/2)+'" y="96" font-size="12" fill="#9aa9b1" text-anchor="middle" font-weight="700">Press &ldquo;Run 1,000 studies&rdquo; to fill this in.</text>';
+   $("fwer").innerHTML=s;
+
+   $("rN").innerHTML=simN?simN.toLocaleString():'0';
+   $("rM").innerHTML=simN?simM:'&mdash;';
+   $("rF").innerHTML=simN?((simFo/simN*100).toFixed(1)+'%'):'&mdash;';
+
+   var cap='';
+   if(simN===0){
+     cap='Nothing simulated yet. Every arm is set to the same population mean, k = '+K+' and n = '+N+', so any pair a study flags is a false alarm. Each run also records whether the omnibus F alone raises a false alarm &mdash; that stays near 5% by design.';
+   } else {
+     var uu=(simUn/simN*100).toFixed(1), bb=(simBon/simN*100).toFixed(1);
+     cap='Across <b>'+simN.toLocaleString()+'</b> null studies, testing one pair at a time flagged something in <b>'+uu+'%</b> of them &mdash; well above the 5% you intended, because '+simM+' separate 5% tests each get their own chance to misfire. Bonferroni flagged something in <b>'+bb+'%</b>, holding the line near 5%. The single omnibus F, meanwhile, false-alarmed <b>'+(simFo/simN*100).toFixed(1)+'%</b> of the time &mdash; that is what one honest 5% test looks like, and it is the rate the correction restores to the family of follow-ups.';
+   }
+   $("fwercap").innerHTML=cap;
+ }
+
+ /* ================= readouts ================= */
+ function drawTiles(C){
+   $("tN").innerHTML=C.Ntot; $("tNs").innerHTML='k = '+K+' &times; n = '+N;
+   $("tF").innerHTML=f2(C.F);
+   $("tP").innerHTML=pTxt(C.p);
+   $("tPs").innerHTML=(C.p<0.05)?'significant':'not significant';
+   $("bxP").className=(C.p<0.05)?'good':'warn';
+   $("tSD").innerHTML=f1(C.msd);
+   $("tM").innerHTML=C.m;
+   $("tA").innerHTML=f3(ALPHA/C.m);
+   $("tU").innerHTML=C.nUn; $("tUs").innerHTML='of '+C.m;
+   $("tB").innerHTML=C.nBon; $("tBs").innerHTML='of '+C.m;
+
+   /* pairwise table */
+   var tcUn=tcrit(C.d2,ALPHA), tcBon=tcrit(C.d2,ALPHA/C.m);
+   var rows='', k;
+   for(k=0;k<C.pairs.length;k++){
+     var P=C.pairs[k];
+     var hit=(METHOD==='un')?P.hu:P.hb;
+     var verdict=hit?'differ':'&mdash;';
+     rows+='<tr class="'+(hit?'hit':'miss')+'"><td>'+NAME[P.a]+'&ndash;'+NAME[P.b]+
+       '</td><td>'+sgn(P.diff)+'</td><td>'+f1(P.se)+'</td><td>'+f2(P.t)+
+       '</td><td>'+pTxt(P.p)+'</td><td>'+verdict+'</td></tr>';
+   }
+   $("ptab").innerHTML=rows;
+   $("thV").innerHTML=(METHOD==='un')?'One at a time':'Corrected';
+   $("tabcap").innerHTML=(METHOD==='un')
+     ? 'A pair is flagged when its raw p falls below .05. With <b>'+C.m+'</b> pairs each given a full 5% chance, this column over-declares differences whenever the arms are close.'
+     : 'A pair is flagged only when its raw p falls below <b>.05 &divide; '+C.m+' = '+f3(ALPHA/C.m)+'</b>. Same data, a stricter bar: fewer pairs clear it, and the whole family of tests keeps a 5% error rate.';
+
+   /* stage */
+   var st=$("stage");
+   if(C.p<0.05){
+     st.style.background='#2f9e5b';
+     st.innerHTML='Omnibus F = '+f2(C.F)+', p = '+pTxt(C.p)+'  &mdash;  significant<small>the arms are not all alike; now find out which ones</small>';
+   } else {
+     st.style.background='#b8862f';
+     st.innerHTML='Omnibus F = '+f2(C.F)+', p = '+pTxt(C.p)+'  &mdash;  not significant<small>with no omnibus signal, follow-up comparisons are not yet warranted</small>';
+   }
+
+   /* omnibus sentence (left panel 1) */
+   var om=$("omni");
+   if(C.p<0.05){
+     om.className='sent good';
+     om.innerHTML='<span class="big">Significant &mdash; but at which pair?</span>This sample gives F = '+f2(C.F)+' on '+C.d1+' and '+C.d2+' degrees of freedom, p = '+pTxt(C.p)+'. That is real evidence the population means are <b>not all equal</b>. It is <b>not</b> evidence that any particular pair differs, and it is not the probability the arms are equal. The follow-up below is what turns this one verdict into named comparisons.';
+   } else {
+     om.className='sent warn';
+     om.innerHTML='<span class="big">This draw came back non-significant</span>F = '+f2(C.F)+', p = '+pTxt(C.p)+'. Strictly, the classic sequence stops here: without a significant omnibus test there is no green light to hunt through pairs. Draw again, or widen the true separation on the right, to land the significant result this section is about.';
+   }
+
+   /* forest sentence (left panel 2) */
+   var fs=$("fsent");
+   var nHit=(METHOD==='un')?C.nUn:C.nBon;
+   var other=(METHOD==='un')?C.nBon:C.nUn;
+   if(METHOD==='un'){
+     fs.className='sent';
+     fs.innerHTML='<span class="big">'+nHit+' of '+C.m+' pairs clear zero, one test at a time</span>Every interval here is a plain 95% CI &mdash; each carries its own 5% risk. Switch to the corrected view and the count drops to <b>'+other+'</b>: the intervals widen, and the pairs that only just cleared zero fall back across it. Those borderline pairs are exactly the ones most likely to be noise dressed as a finding.';
+   } else {
+     fs.className='sent gold';
+     fs.innerHTML='<span class="big">'+nHit+' of '+C.m+' pairs survive the correction</span>Each interval is stretched by using &alpha; &divide; '+C.m+' instead of &alpha;, so that all '+C.m+' of them together carry a 5% error rate rather than 5% apiece. One test at a time flagged <b>'+other+'</b>; the '+(other-nHit>=0?(other-nHit):0)+' that dropped out were the fragile ones. What remains you can report with a straight face.';
+   }
+ }
+
+ /* ================= claims ================= */
+ var CL=[
+  {t:'A significant F is evidence that the population means are not all equal.',ok:1,
+   d:'Correct, and this is exactly what the omnibus test delivers &mdash; no more, no less. Its null hypothesis is that every arm shares one mean, and a small p makes that joint statement implausible. It stops short of saying which arm is the odd one out.'},
+  {t:'To learn which arms differ, I need follow-up comparisons, not the F test by itself.',ok:1,
+   d:'Correct. F answers one question for the whole set of arms. Naming the pairs that differ is a separate task, handled by post-hoc procedures &mdash; Tukey&rsquo;s HSD, Bonferroni, Scheffe &mdash; each of which compares pairs while accounting for how many pairs are inspected.'},
+  {t:'Testing every pair at .05 apiece pushes the chance of at least one false alarm well above 5%.',ok:1,
+   d:'Correct, and the simulation on the left shows it directly. With k arms there are k(k&minus;1)/2 pairs; give each its own 5% and the family-wise error rate climbs &mdash; past 25% for six arms under a true null. That inflation is the whole reason corrections exist.'},
+  {t:'A correction such as Bonferroni or Tukey holds the family-wise error rate near 5%.',ok:1,
+   d:'Correct. Bonferroni splits the 5% budget across the m comparisons, testing each at .05 &divide; m; the guarantee is that the chance of <i>any</i> false alarm stays at or below 5%. The cost is wider intervals and less power to catch small real differences &mdash; a trade every method of this kind makes.'},
+  {t:'Because the ANOVA was significant, arm A must differ from arm C.',ok:0,
+   d:'No. The omnibus F produces a single number for all arms at once and cannot single out a pair. Some specific pair differs, but F does not say which, and a significant result is fully compatible with A and C being identical while some other pair carries the signal.'},
+  {t:'The ANOVA p-value is the probability that all the arms are truly equal.',ok:0,
+   d:'No &mdash; the classic misreading. The p-value is computed <i>assuming</i> the arms are equal, then asks how unusual this data would be under that assumption. A probability conditioned on equal means cannot also be the probability of equal means.'},
+  {t:'Since F is significant, every pair of arms must be different from every other.',ok:0,
+   d:'No. Rejecting &ldquo;all means equal&rdquo; only requires that they are <i>not all</i> equal &mdash; one arm standing apart from the rest is enough. Load &ldquo;One arm apart&rdquo; on the right: the F is significant, yet most pairs of the identical arms show no difference at all.'},
+  {t:'The highest and lowest sample means are the pair that truly differs.',ok:0,
+   d:'No. The most extreme pair in a sample is the one most flattered by chance, precisely because it was chosen for being extreme after the data were seen. That is why a valid comparison of it must widen its interval to account for the picking &mdash; the correction is not optional book-keeping.'},
+  {t:'Once the ANOVA is significant, I can skip corrections and just report each pairwise t-test.',ok:0,
+   d:'No, and the simulation makes the cost visible. Reporting raw pairwise tests re-opens every leak the omnibus test sealed; the family-wise false-alarm rate balloons above 5%. A significant F licenses follow-up, but the follow-up still has to pay for the multiplicity.'}
+ ];
+ function renderClaims(sel){
+   $("claims").innerHTML=CL.map(function(c,i){
+     return '<button class="it'+(i===sel?' on':'')+'" data-i="'+i+'"><span class="sw" style="background:'+(i===sel?(c.ok?'#7ee0a5':'#ffb3bf'):'#dfe8ed')+'"></span><span><span class="nm">'+c.t+'</span></span></button>';
+   }).join('');
+   var bs=$("claims").querySelectorAll('.it'), z;
+   for(z=0;z<bs.length;z++){
+     bs[z].onclick=(function(el){ return function(){ pickClaim(+el.getAttribute('data-i')); }; })(bs[z]);
+   }
+ }
+ function pickClaim(i){
+   var c=CL[i]; renderClaims(i);
+   $("info").innerHTML='<span class="n">'+(c.ok?'✓ Fair to say':'✕ Not so')+'</span><b>&ldquo;'+c.t+'&rdquo;</b><div class="dd">'+c.d+'</div>';
+ }
+
+ /* ================= master render ================= */
+ var C=null;
+ function render(){
+   C=calc();
+   setDomain(C);
+   drawDots(C);
+   drawForest(C);
+   drawTiles(C);
+ }
+ function resetSim(){ simN=0; simUn=0; simBon=0; simFo=0; }
+ function full(){ resetSim(); render(); drawFwer(); }
+
+ /* ================= controls ================= */
+ function syncLabels(){
+   $("vK").innerHTML=K; $("vN").innerHTML=N;
+   $("vD").innerHTML=f1(SEP); $("vS").innerHTML=f1(SD);
+ }
+ function clearPre(){ var bs=$("preSeg").querySelectorAll('button'),z; for(z=0;z<bs.length;z++) bs[z].className=''; }
+
+ $("sK").oninput=function(){ K=+this.value; MODE='fan'; clearPre(); buildTrue(); newSample(); syncLabels(); full(); };
+ $("sN").oninput=function(){ N=+this.value; buildTrue(); newSample(); syncLabels(); full(); };
+ $("sD").oninput=function(){ SEP=+this.value; if(MODE==='equal') MODE='fan'; clearPre(); buildTrue(); newSample(); syncLabels(); full(); };
+ $("sS").oninput=function(){ SD=+this.value; buildTrue(); newSample(); syncLabels(); full(); };
+
+ $("bnew").onclick=function(){ newSample(); resetSim(); render(); drawFwer(); };
+ $("brst").onclick=function(){
+   seed=SEED0; K=4; N=12; SEP=13; SD=8; MODE='fan'; METHOD='un';
+   $("sK").value=4; $("sN").value=12; $("sD").value=13; $("sS").value=8;
+   clearPre(); setMethod('un'); buildTrue(); newSample(); syncLabels(); full();
+ };
+
+ function setMethod(v){
+   METHOD=v;
+   var bs=$("methSeg").querySelectorAll('button'), z;
+   for(z=0;z<bs.length;z++) bs[z].className=(bs[z].getAttribute('data-v')===v)?'on':'';
+   $("methcap").innerHTML=(v==='un')
+     ? 'Each interval below is an ordinary 95% CI for one pair, computed in isolation. Fine for a single pre-planned comparison &mdash; but you are about to draw all of them.'
+     : 'Every interval is widened so that all m of them share one 5% error budget. This is the honest way to inspect every pair at once after a significant F.';
+   if(C){ drawForest(C); drawTiles(C); }
+ }
+ (function(){
+   var bs=$("methSeg").querySelectorAll('button'), z;
+   for(z=0;z<bs.length;z++){
+     bs[z].onclick=(function(el){ return function(){ setMethod(el.getAttribute('data-v')); }; })(bs[z]);
+   }
+ })();
+
+ /* presets: [k, n, sep, sd, mode] */
+ var PRE=[
+  {k:4,n:12,d:0, s:8, mode:'equal'},
+  {k:5,n:12,d:16,s:7, mode:'one'},
+  {k:4,n:14,d:18,s:6, mode:'fan'},
+  {k:4,n:12,d:14,s:6, mode:'two'},
+  {k:5,n:10,d:9, s:11,mode:'fan'}
+ ];
+ function applyPreset(i){
+   var P=PRE[i];
+   K=P.k; N=P.n; SEP=P.d; SD=P.s; MODE=P.mode;
+   $("sK").value=K; $("sN").value=N; $("sD").value=SEP; $("sS").value=SD;
+   var bs=$("preSeg").querySelectorAll('button'), z;
+   for(z=0;z<bs.length;z++) bs[z].className=(+bs[z].getAttribute('data-v')===i)?'on':'';
+   buildTrue(); newSample(); syncLabels(); full();
+ }
+ (function(){
+   var bs=$("preSeg").querySelectorAll('button'), z;
+   for(z=0;z<bs.length;z++){
+     bs[z].onclick=(function(el){ return function(){ applyPreset(+el.getAttribute('data-v')); }; })(bs[z]);
+   }
+ })();
+
+ $("run1").onclick=function(){ runSim(1000); drawFwer(); };
+ $("run2").onclick=function(){ runSim(4000); drawFwer(); };
+ $("rrs").onclick=function(){ resetSim(); drawFwer(); };
+
+ /* ================= go ================= */
+ buildTrue();
+ newSample();
+ syncLabels();
+ setMethod('un');
+ renderClaims(-1);
+ render();
+ drawFwer();
+})();
+</script>
+</body>
+</html>

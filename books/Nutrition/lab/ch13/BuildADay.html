@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Build a Day</title>
+<meta name="description" content="Assemble a day of meals and watch the energy and nutrient targets fill in live — calories, macronutrients, and fiber recompute with every food you add.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.grid .it{position:relative;padding:8px 10px;}
+.grid .it .nm{font-size:12.5px;}
+.grid .it .s{display:block;font-size:10.5px;color:var(--muted);font-weight:600;margin-top:1px;}
+.grid .it.on{background:#fff;border-color:var(--teal);}
+.grid .it.on .nm{color:var(--teal-dk);} .grid .it.on .s{color:var(--muted);}
+.badge{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;border-radius:11px;background:var(--teal);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 6px rgba(70,50,20,.25);}
+.daylist{display:flex;flex-direction:column;gap:5px;margin-top:2px;min-height:34px;}
+.drow{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:6px 9px;font-size:12.5px;}
+.drow .dn{flex:1;font-weight:700;color:var(--ink);} .drow .dk{font-weight:700;color:var(--teal-dk);font-size:11.5px;}
+.drow .dm{width:22px;height:22px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--soft);font-weight:800;font-size:14px;line-height:1;cursor:pointer;}
+.drow .dm:hover{border-color:var(--coral);color:var(--coral);}
+.empty{font-size:12.5px;color:var(--muted);font-style:italic;padding:8px 2px;}
+.mealtabs{display:flex;gap:5px;margin-bottom:9px;}
+.mealtabs button{flex:1;border:1px solid var(--line);background:#fff;color:var(--soft);font-weight:700;font-size:11.5px;padding:7px 3px;border-radius:9px;cursor:pointer;font-family:var(--sans);line-height:1.1;}
+.mealtabs button small{display:block;font-size:9px;color:var(--muted);font-weight:600;margin-top:1px;}
+.mealtabs button.on{background:var(--teal);color:#fff;border-color:var(--teal);} .mealtabs button.on small{color:rgba(255,255,255,.85);}
+.leg{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+.leg span{font-size:10.5px;font-weight:700;border-radius:20px;padding:3px 9px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 13</div>
+  <h1>Build a Day</h1>
+  <div class="intro">Diet planning starts with a simple idea: a day is the sum of its meals. Tap foods into breakfast, lunch, dinner, and snacks, and watch the <b>energy and nutrient targets</b> fill in as you go. There is no winning plate here &mdash; the goal is to <b>see how the numbers add up</b>.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="cardTitle">Your day so far</h2>
+      <svg viewBox="0 0 280 322" aria-label="nutrient targets"><g id="art"></g></svg>
+      <div class="leg">
+        <span style="background:#f4ead8;color:var(--teal-dk);">bar = your total</span>
+        <span style="background:#e5f3ea;color:#237a45;">shaded = target range</span>
+      </div>
+    </div>
+    <div class="card">
+      <div id="info"><span class="n">Energy comes from four things</span>Every kilocalorie in food comes from carbohydrate (<b>4&nbsp;kcal/g</b>), protein (<b>4&nbsp;kcal/g</b>), fat (<b>9&nbsp;kcal/g</b>), or alcohol (<b>7&nbsp;kcal/g</b>). Add foods on the right and this panel tracks how your day is filling in.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Nothing on the plate yet<small>tap foods to build your day</small></div>
+    <div class="card">
+      <div class="mealtabs" id="mealtabs"></div>
+      <div class="grid" id="foods"></div>
+    </div>
+    <div class="card"><h2 id="dayHd">Your day</h2>
+      <div class="daylist" id="daylist"></div>
+      <div class="row"><button class="btn" id="clear">Clear the day</button></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // Per-serving values. c=carb g, p=protein g, f=fat g, fb=fiber g.
+ // kcal computed live from macros: carb 4, protein 4, fat 9 kcal/g.
+ var FOODS=[
+  {id:'oats', nm:'Oatmeal',      s:'1 cup cooked', meal:'b', c:27,p:6, f:3, fb:4},
+  {id:'eggs', nm:'Eggs',         s:'2 large',      meal:'b', c:1, p:12,f:10,fb:0},
+  {id:'yog',  nm:'Plain yogurt', s:'1 cup',        meal:'b', c:9, p:17,f:4, fb:0},
+  {id:'ban',  nm:'Banana',       s:'1 medium',     meal:'b', c:27,p:1, f:0, fb:3},
+  {id:'bread',nm:'Whole-wheat toast',s:'2 slices', meal:'b', c:24,p:8, f:2, fb:6},
+  {id:'chix', nm:'Chicken breast',s:'4 oz',        meal:'l', c:0, p:35,f:4, fb:0},
+  {id:'beans',nm:'Black beans',  s:'1 cup',        meal:'l', c:40,p:15,f:1, fb:15},
+  {id:'rice', nm:'Brown rice',   s:'1 cup',        meal:'l', c:45,p:5, f:2, fb:4},
+  {id:'avo',  nm:'Avocado',      s:'1/2 fruit',    meal:'l', c:9, p:2, f:15,fb:7},
+  {id:'salad',nm:'Leafy salad',  s:'2 cups',       meal:'l', c:4, p:2, f:0, fb:2},
+  {id:'salmon',nm:'Salmon',      s:'4 oz',         meal:'d', c:0, p:25,f:12,fb:0},
+  {id:'broc', nm:'Broccoli',     s:'1 cup',        meal:'d', c:6, p:4, f:0, fb:5},
+  {id:'sweet',nm:'Sweet potato', s:'1 medium',     meal:'d', c:26,p:2, f:0, fb:4},
+  {id:'oil',  nm:'Olive oil',    s:'1 tbsp',       meal:'d', c:0, p:0, f:14,fb:0},
+  {id:'alm',  nm:'Almonds',      s:'1 oz',         meal:'s', c:6, p:6, f:14,fb:4},
+  {id:'apple',nm:'Apple',        s:'1 medium',     meal:'s', c:25,p:0, f:0, fb:4},
+  {id:'cheese',nm:'Cheddar',     s:'1 oz',         meal:'s', c:1, p:7, f:9, fb:0},
+  {id:'milk', nm:'Milk',         s:'1 cup',        meal:'s', c:12,p:8, f:8, fb:0}
+ ];
+ var MEALS=[{k:'b',nm:'Breakfast',ic:'🌅'},{k:'l',nm:'Lunch',ic:'☀️'},{k:'d',nm:'Dinner',ic:'🌙'},{k:'s',nm:'Snacks',ic:'🍎'}];
+ // Reference targets. Energy DV = 2,000 kcal (FDA Daily Value, general adult reference; real needs vary).
+ // Fiber DV = 28 g (FDA Daily Value, adults). Macro bands = AMDR (DRI, adults, % of energy).
+ var ENERGY=2000, FIBER=28;
+ var AMDR={c:[45,65],p:[10,35],f:[20,35]};
+ var counts={}; var meal='b';
+ function kcalOf(x){ return x.c*4 + x.p*4 + x.f*9; }
+ function totals(){
+   var t={c:0,p:0,f:0,fb:0,k:0,n:0};
+   FOODS.forEach(function(x){ var n=counts[x.id]||0; if(!n)return;
+     t.c+=x.c*n; t.p+=x.p*n; t.f+=x.f*n; t.fb+=x.fb*n; t.k+=kcalOf(x)*n; t.n+=n; });
+   return t;
+ }
+ // ---- SVG drawing ----
+ function bar(y,label,valTxt,frac,over,col){
+   var x=14,w=252,h=15;
+   var fw=Math.max(0,Math.min(1,frac))*w;
+   var s='';
+   s+='<text x="'+x+'" y="'+(y-5)+'" font-size="11.5" font-weight="700" fill="#5f5340">'+label+'</text>';
+   s+='<text x="'+(x+w)+'" y="'+(y-5)+'" font-size="11" font-weight="800" fill="#6b4710" text-anchor="end">'+valTxt+'</text>';
+   s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="7.5" fill="#efe6d6"/>';
+   if(fw>0) s+='<rect x="'+x+'" y="'+y+'" width="'+fw+'" height="'+h+'" rx="7.5" fill="'+(over?'#c46a2e':col)+'"/>';
+   // target tick at 100%
+   s+='<rect x="'+(x+w-1.5)+'" y="'+(y-2)+'" width="2.5" height="'+(h+4)+'" rx="1" fill="#b07a1e" opacity=".55"/>';
+   return s;
+ }
+ function macroBar(y,label,pct,band){
+   // track maps 0..70% of energy to full width so bands sit mid-track
+   var x=14,w=252,h=15,scale=70;
+   var toX=function(v){ return x + Math.min(v,scale)/scale*w; };
+   var lo=band[0],hi=band[1];
+   var inBand=(pct>=lo && pct<=hi);
+   var s='';
+   s+='<text x="'+x+'" y="'+(y-5)+'" font-size="11.5" font-weight="700" fill="#5f5340">'+label+'</text>';
+   s+='<text x="'+(x+w)+'" y="'+(y-5)+'" font-size="11" font-weight="800" fill="'+(inBand?'#237a45':'#6b4710')+'" text-anchor="end">'+(pct?Math.round(pct):0)+'% of energy</text>';
+   s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="7.5" fill="#efe6d6"/>';
+   // AMDR target band
+   s+='<rect x="'+toX(lo)+'" y="'+y+'" width="'+(toX(hi)-toX(lo))+'" height="'+h+'" fill="#cdebd7"/>';
+   // actual fill
+   var fw=toX(pct)-x;
+   if(fw>0) s+='<rect x="'+x+'" y="'+y+'" width="'+fw+'" height="'+h+'" rx="7.5" fill="'+(inBand?'#2f9e5b':'#b07a1e')+'" opacity=".8"/>';
+   // band edge ticks
+   s+='<rect x="'+(toX(lo)-1)+'" y="'+(y-2)+'" width="2" height="'+(h+4)+'" fill="#237a45" opacity=".5"/>';
+   s+='<rect x="'+(toX(hi)-1)+'" y="'+(y-2)+'" width="2" height="'+(h+4)+'" fill="#237a45" opacity=".5"/>';
+   if(inBand) s+='<text x="'+(x+w)+'" y="'+(y+h+11)+'" font-size="9.5" font-weight="700" fill="#237a45" text-anchor="end">within range</text>';
+   return s;
+ }
+ function draw(){
+   var t=totals();
+   var s='';
+   s+=bar(24,'Energy', t.k.toLocaleString()+' / '+ENERGY.toLocaleString()+' kcal', t.k/ENERGY, t.k>ENERGY, '#b07a1e');
+   s+=bar(70,'Fiber',  t.fb+' / '+FIBER+' g', t.fb/FIBER, t.fb>FIBER*1.5, '#2f9e5b');
+   // macro percents of energy
+   var pc = t.k? (t.c*4)/t.k*100 : 0;
+   var pp = t.k? (t.p*4)/t.k*100 : 0;
+   var pf = t.k? (t.f*9)/t.k*100 : 0;
+   s+='<line x1="14" y1="102" x2="266" y2="102" stroke="#ebe3d5" stroke-width="1"/>';
+   s+='<text x="14" y="120" font-size="10.5" font-weight="800" fill="#8d8270" letter-spacing=".5">MACRONUTRIENT BALANCE (share of energy)</text>';
+   s+=macroBar(140,'Carbohydrate', pc, AMDR.c);
+   s+=macroBar(197,'Protein',      pp, AMDR.p);
+   s+=macroBar(254,'Fat',          pf, AMDR.f);
+   s+='<text x="14" y="308" font-size="9.5" fill="#8d8270">Green band = AMDR, the acceptable range for adults (DRI).</text>';
+   $("art").innerHTML=s;
+ }
+ // ---- panels ----
+ function renderFoods(){
+   var list=FOODS.filter(function(x){return x.meal===meal;});
+   $("foods").innerHTML=list.map(function(x){
+     var n=counts[x.id]||0;
+     return '<button class="it'+(n?' on':'')+'" data-id="'+x.id+'">'+
+       (n?'<span class="badge">'+n+'</span>':'')+
+       '<span class="nm">'+x.nm+'</span>'+
+       '<span class="s">'+x.s+' · '+kcalOf(x)+' kcal</span></button>';
+   }).join('');
+   document.querySelectorAll('#foods .it').forEach(function(b){
+     b.onclick=function(){ add(b.dataset.id,1); };
+   });
+ }
+ function renderMeals(){
+   $("mealtabs").innerHTML=MEALS.map(function(m){
+     return '<button class="'+(m.k===meal?'on':'')+'" data-k="'+m.k+'">'+m.ic+' '+m.nm+'<small></small></button>';
+   }).join('');
+   document.querySelectorAll('#mealtabs button').forEach(function(b){
+     b.onclick=function(){ meal=b.dataset.k; renderMeals(); renderFoods(); };
+   });
+ }
+ function renderDay(){
+   var added=FOODS.filter(function(x){return counts[x.id];});
+   if(!added.length){ $("daylist").innerHTML='<div class="empty">Empty. Tap foods above to add servings.</div>'; return; }
+   $("daylist").innerHTML=added.map(function(x){
+     var n=counts[x.id];
+     return '<div class="drow"><span class="dn">'+x.nm+(n>1?' ×'+n:'')+'</span>'+
+       '<span class="dk">'+(kcalOf(x)*n)+' kcal</span>'+
+       '<button class="dm" data-id="'+x.id+'" aria-label="remove one">−</button></div>';
+   }).join('');
+   document.querySelectorAll('#daylist .dm').forEach(function(b){
+     b.onclick=function(){ add(b.dataset.id,-1); };
+   });
+ }
+ function renderStage(){
+   var t=totals();
+   if(!t.n){ $("stage").style.background='var(--teal)';
+     $("stage").innerHTML='Nothing on the plate yet<small>tap foods to build your day</small>'; return; }
+   $("stage").style.background=(t.k>ENERGY)?'#c46a2e':'var(--teal)';
+   $("stage").innerHTML=t.k.toLocaleString()+' kcal · '+t.n+' item'+(t.n>1?'s':'')+
+     '<small>C '+t.c+'g · P '+t.p+'g · F '+t.f+'g · Fiber '+t.fb+'g</small>';
+ }
+ function renderInfo(){
+   var t=totals();
+   if(!t.n){
+     $("info").innerHTML='<span class="n">Energy comes from four things</span>Every kilocalorie in food comes from carbohydrate (<b>4&nbsp;kcal/g</b>), protein (<b>4&nbsp;kcal/g</b>), fat (<b>9&nbsp;kcal/g</b>), or alcohol (<b>7&nbsp;kcal/g</b>). Add foods on the right and this panel tracks how your day is filling in.';
+     return;
+   }
+   var pc = t.k? Math.round((t.c*4)/t.k*100) : 0;
+   var pp = t.k? Math.round((t.p*4)/t.k*100) : 0;
+   var pf = t.k? Math.round((t.f*9)/t.k*100) : 0;
+   var msg='<span class="n">'+t.k.toLocaleString()+' kcal so far</span>'+
+     'Right now this day draws <b>'+pc+'%</b> of its energy from carbohydrate, <b>'+pp+'%</b> from protein, and <b>'+pf+'%</b> from fat. Fiber is at <b>'+t.fb+' g</b>.'+
+     '<div class="loc">The green bands are the <b>AMDR</b> &mdash; the Acceptable Macronutrient Distribution Ranges for adults (Dietary Reference Intakes): carbohydrate 45&ndash;65%, protein 10&ndash;35%, fat 20&ndash;35% of energy.</div>'+
+     '<div class="note"><b>These are reference points, not a scorecard.</b> The 2,000-kcal and 28-g fiber marks are FDA Daily Values for a general adult reference &mdash; individual needs differ by age, size, activity, pregnancy, and health. A day landing outside a range is not a "bad" day, and no single food makes a diet healthy or unhealthy.</div>';
+   $("info").innerHTML=msg;
+ }
+ function refresh(){ draw(); renderDay(); renderStage(); renderInfo(); renderFoods(); }
+ function add(id,d){
+   var n=(counts[id]||0)+d;
+   if(n<=0) delete counts[id]; else counts[id]=n;
+   refresh();
+ }
+ $("clear").onclick=function(){ counts={}; refresh(); };
+ renderMeals(); refresh();
+})();
+</script>
+</body>
+</html>

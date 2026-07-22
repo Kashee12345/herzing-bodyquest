@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Three Theories of Emotion</title>
+<meta name="description" content="Run one event through the James-Lange, Cannon-Bard, and Schachter-Singer theories of emotion and watch how the order of body, mind, and feeling changes. For psychology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+.lbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:2px 2px 6px;}
+.seg + .lbl{margin-top:13px;}
+#cap{margin-top:10px;font-size:12.5px;line-height:1.55;color:var(--soft);background:#fbf2f6;border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-height:40px;}
+#cap b{color:var(--teal-dk);} #cap i{color:var(--muted);}
+.legend{display:flex;justify-content:center;gap:14px;margin-top:9px;font-size:11px;color:var(--muted);font-weight:600;}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.legend i{width:14px;height:11px;border-radius:3px;display:inline-block;border:2px solid var(--teal);background:#fff;}
+.legend i.f{background:var(--teal);border-color:var(--teal);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 10</div>
+  <h1>Three Theories of Emotion</h1>
+  <div class="intro">Where does a feeling come from &mdash; the pounding heart, or the mind that reads it? Three classic theories answer differently. Pick <b>one event</b>, then run it through each theory and watch the order of <b>body</b>, <b>mind</b>, and <b>emotion</b> rearrange.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Choose a theory to compare</h2>
+    <svg viewBox="0 0 360 210" aria-label="Flow diagram of an emotion theory"><g id="art"></g></svg>
+    <div class="legend"><span><i></i> stage</span><span><i class="f"></i> active now</span></div>
+    <div id="cap"></div>
+  </div></div>
+  <div>
+    <div id="stage">The same event, three ways<small>pick an event and a theory</small></div>
+    <div class="card">
+      <div class="lbl">The same event</div>
+      <div class="seg" id="evseg"></div>
+      <div class="lbl">The theory</div>
+      <div class="seg" id="thseg"></div>
+      <div id="info"></div>
+      <div class="row"><button class="btn solid" id="playBtn">▶ Play the sequence</button></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var H=62, TC='#a1466b', boxW=72;
+
+ var E=[
+  {k:'bear', ic:'🐻', nm:'a bear on the trail', short:'Bear',  body:'heart pounds, muscles tense', label:"'I’m in danger'", emo:'FEAR', emoIc:'😱'},
+  {k:'crush',ic:'💗', nm:'your crush walks up',  short:'Crush', body:'heart races, palms sweat, cheeks flush', label:"'I really like them'", emo:'ATTRACTION', emoIc:'😍'},
+  {k:'exam', ic:'📄', nm:'your exam grade posts', short:'Exam',  body:'stomach drops, pulse quickens', label:"'this really matters'", emo:'ANXIETY', emoIc:'😰'}
+ ];
+
+ var THEORIES=[
+  {key:'jl', name:'James–Lange', yr:'1884–85', color:'#2f6f9f', boxW:72,
+   nodes:{event:{x:22,y:74}, body:{x:144,y:74}, emo:{x:266,y:74}},
+   arrows:[{x1:94,y1:105,x2:144,y2:105,from:'event',to:'body'},
+           {x1:216,y1:105,x2:266,y2:105,from:'body',to:'emo'}],
+   steps:[['event'],['body'],['emo']]},
+  {key:'cb', name:'Cannon–Bard', yr:'1920s', color:'#b8862f', boxW:72,
+   nodes:{event:{x:14,y:74}, body:{x:256,y:14}, emo:{x:256,y:134}},
+   arrows:[{x1:86,y1:105,x2:256,y2:45,from:'event',to:'body'},
+           {x1:86,y1:105,x2:256,y2:165,from:'event',to:'emo'}],
+   steps:[['event'],['body','emo']]},
+  {key:'ss', name:'Schachter–Singer', yr:'1962', color:'#a1466b', boxW:62,
+   nodes:{event:{x:14,y:74}, body:{x:100,y:74}, mind:{x:186,y:74}, emo:{x:272,y:74}},
+   arrows:[{x1:76,y1:105,x2:100,y2:105,from:'event',to:'body'},
+           {x1:162,y1:105,x2:186,y2:105,from:'body',to:'mind'},
+           {x1:248,y1:105,x2:272,y2:105,from:'mind',to:'emo'}],
+   steps:[['event'],['body'],['mind'],['emo']]}
+ ];
+
+ var ti=0, ei=0, playing=false, playToken=0;
+
+ function arrow(x1,y1,x2,y2,active){
+   var c=active?TC:'#dcccd4', w=active?3:2;
+   var ang=Math.atan2(y2-y1,x2-x1), ah=9;
+   var bx=x2-ah*Math.cos(ang), by=y2-ah*Math.sin(ang);
+   var p1x=bx-5*Math.sin(ang), p1y=by+5*Math.cos(ang);
+   var p2x=bx+5*Math.sin(ang), p2y=by-5*Math.cos(ang);
+   return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="'+w+'"'+(active?'':' stroke-dasharray="4 4"')+'/>'
+     +'<polygon points="'+x2.toFixed(1)+','+y2.toFixed(1)+' '+p1x.toFixed(1)+','+p1y.toFixed(1)+' '+p2x.toFixed(1)+','+p2y.toFixed(1)+'" fill="'+c+'"/>';
+ }
+ function node(nx,ny,ic,lab,hot){
+   var cx=nx+boxW/2, s='';
+   if(hot){ s+='<rect x="'+(nx-4)+'" y="'+(ny-4)+'" width="'+(boxW+8)+'" height="'+(H+8)+'" rx="16" fill="none" stroke="'+TC+'" stroke-width="2" opacity="0.35"/>'; }
+   s+='<rect x="'+nx+'" y="'+ny+'" width="'+boxW+'" height="'+H+'" rx="13" fill="'+(hot?TC:'#fff')+'" stroke="'+TC+'" stroke-width="2"/>';
+   s+='<text x="'+cx+'" y="'+(ny+31)+'" font-size="23" text-anchor="middle">'+ic+'</text>';
+   s+='<text x="'+cx+'" y="'+(ny+51)+'" font-size="10.5" font-weight="800" letter-spacing="0.5" text-anchor="middle" fill="'+(hot?'#fff':TC)+'" font-family="Inter,sans-serif">'+lab+'</text>';
+   return s;
+ }
+ function usedKeys(){ return Object.keys(THEORIES[ti].nodes); }
+ function svgFor(reached, curKeys){
+   var T=THEORIES[ti], e=E[ei]; TC=T.color; boxW=T.boxW;
+   var IC={event:e.ic, body:'🫀', mind:'🧠', emo:e.emoIc};
+   var LB={event:'EVENT', body:'BODY', mind:'MIND', emo:'EMOTION'};
+   var s='';
+   T.arrows.forEach(function(a){ s+=arrow(a.x1,a.y1,a.x2,a.y2, reached[a.from]&&reached[a.to]); });
+   if(T.key==='cb'){ s+='<text x="150" y="99" font-size="9.5" text-anchor="middle" fill="'+T.color+'" font-family="Inter,sans-serif" font-weight="700">at the same instant</text>'; }
+   Object.keys(T.nodes).forEach(function(k){ var n=T.nodes[k]; s+=node(n.x,n.y,IC[k],LB[k], curKeys.indexOf(k)>=0); });
+   return s;
+ }
+
+ function narr(i){
+   var e=E[ei], k=THEORIES[ti].key;
+   if(k==='jl') return ['Something happens — <b>'+e.nm+'</b>.',
+     'Your <b>body reacts first</b>: '+e.body+'.',
+     'You feel the emotion by <b>reading that bodily state</b> — <b>'+e.emo+'</b>.'][i];
+   if(k==='cb') return ['Something happens — <b>'+e.nm+'</b>.',
+     'In the <b>same instant</b>, your body arouses <b>and</b> you feel <b>'+e.emo+'</b> — one does not cause the other.'][i];
+   return ['Something happens — <b>'+e.nm+'</b>.',
+     'Your body arouses — but the arousal is <b>general and ambiguous</b>.',
+     'You read the situation and <b>label</b> it: '+e.label+'.',
+     'Arousal <b>+</b> label together become the emotion — <b>'+e.emo+'</b>.'][i];
+ }
+ function capSummary(){
+   var e=E[ei], k=THEORIES[ti].key, head='<b>Same event:</b> ';
+   if(k==='jl') return head+e.nm+' → <b>body</b> ('+e.body+') → <b>'+e.emo+'</b>';
+   if(k==='cb') return head+e.nm+' → <b>body</b> + <b>'+e.emo+'</b> <i>(both at once)</i>';
+   return head+e.nm+' → <b>arousal</b> → label '+e.label+' → <b>'+e.emo+'</b>';
+ }
+ function infoHTML(){
+   var k=THEORIES[ti].key;
+   if(k==='jl') return '<span class="n">James–Lange theory</span><b>William James</b> (1884) and <b>Carl Lange</b> (1885) argued the body leads: a stimulus triggers <b>bodily arousal</b>, and the emotion <i>is</i> your brain’s reading of those changes. As James put it, we don’t tremble because we’re afraid — <b>we’re afraid because we tremble</b>.<div class="mnem"><b>Sequence:</b> event → body → emotion.</div><div class="note">Walter <b>Cannon</b> objected that bodily changes are too slow, and too alike across emotions, to tell fear from anger — though <b>facial-feedback</b> findings (a forced smile can lift mood) offer partial support.</div>';
+   if(k==='cb') return '<span class="n">Cannon–Bard theory</span><b>Walter Cannon</b> and <b>Philip Bard</b> (1920s) proposed that the stimulus reaches the <b>thalamus</b>, which fires <b>at once</b> to the body (arousal) and to the cortex (the felt emotion). The two run in <b>parallel</b> — your heart pounds and you feel the emotion <b>simultaneously</b>, neither causing the other.<div class="mnem"><b>Sequence:</b> event → body <b>and</b> emotion, together.</div>';
+   return '<span class="n">Schachter–Singer two-factor theory</span><b>Stanley Schachter</b> and <b>Jerome Singer</b> (1962) said emotion needs <b>two factors</b>: physiological arousal <b>plus</b> a cognitive label. Arousal alone is vague, so you scan the situation for a reason — and that label decides which emotion you feel. Injected with adrenaline (epinephrine) but given no explanation, their subjects caught a nearby actor’s mood, turning the <b>same arousal</b> into euphoria or anger.<div class="mnem"><b>Sequence:</b> event → body → label → emotion.</div><div class="note"><b>Same pounding heart:</b> fear beside a bear, excitement beside a crush — the <b>label</b> decides.</div>';
+ }
+
+ function renderSegs(){
+   $("evseg").innerHTML=E.map(function(e,i){return '<button data-i="'+i+'" class="'+(i===ei?'on':'')+'"><span style="font-size:15px">'+e.ic+'</span><small>'+e.short+'</small></button>';}).join('');
+   $("thseg").innerHTML=THEORIES.map(function(t,i){return '<button data-i="'+i+'" class="'+(i===ti?'on':'')+'">'+t.name+'<small>'+t.yr+'</small></button>';}).join('');
+   $("evseg").querySelectorAll('button').forEach(function(b){ b.onclick=function(){ ei=parseInt(b.getAttribute('data-i'),10); render(); }; });
+   $("thseg").querySelectorAll('button').forEach(function(b){ b.onclick=function(){ ti=parseInt(b.getAttribute('data-i'),10); render(); }; });
+ }
+
+ function render(){
+   playToken++; playing=false; $("playBtn").disabled=false;
+   var T=THEORIES[ti]; TC=T.color; boxW=T.boxW;
+   var reached={}; usedKeys().forEach(function(k){ reached[k]=true; });
+   $("art").innerHTML=svgFor(reached, []);
+   $("cardTitle").innerHTML=T.name+' — '+E[ei].short.toLowerCase()+' event';
+   $("stage").style.background=TC;
+   $("stage").innerHTML=T.name+' theory<small>'+T.yr+' · same event, its own order</small>';
+   $("cap").innerHTML=capSummary();
+   $("info").innerHTML=infoHTML();
+   renderSegs();
+ }
+
+ function play(){
+   if(playing) return; playing=true; $("playBtn").disabled=true;
+   var T=THEORIES[ti], steps=T.steps, reached={}, i=0, tok=++playToken;
+   function step(){
+     if(tok!==playToken) return;
+     steps[i].forEach(function(k){ reached[k]=true; });
+     $("art").innerHTML=svgFor(reached, steps[i]);
+     $("cap").innerHTML='<b>Step '+(i+1)+' of '+steps.length+'.</b> '+narr(i);
+     i++;
+     if(i<steps.length){ setTimeout(step, 1200); }
+     else { setTimeout(function(){
+        if(tok!==playToken) return;
+        playing=false; $("playBtn").disabled=false;
+        var r={}; usedKeys().forEach(function(k){ r[k]=true; });
+        $("art").innerHTML=svgFor(r, []); $("cap").innerHTML=capSummary();
+     }, 1350); }
+   }
+   step();
+ }
+ $("playBtn").onclick=play;
+
+ render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>The Interval for a Difference</title>
+<meta name="description" content="Build a confidence interval for the difference between two groups from live samples, watch it widen and narrow, and work out what it really means when the interval covers zero.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:9px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:126px;line-height:1.3;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.a input[type=range]::-webkit-slider-thumb{background:#2f6f8a;} .sl.a input[type=range]::-moz-range-thumb{background:#2f6f8a;}
+.sl.b input[type=range]::-webkit-slider-thumb{background:#b8862f;} .sl.b input[type=range]::-moz-range-thumb{background:#b8862f;}
+.sl .nv{font-size:15px;font-weight:800;color:var(--teal-dk);min-width:58px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;line-height:1.3;}
+.tiles div.warn{border-color:#e2adb7;background:#fdf1f3;} .tiles div.warn .vv{color:#b23145;}
+.tiles div.good{border-color:#b6d8c4;background:#f0f8f3;} .tiles div.good .vv{color:#237a45;}
+.tiles div.wide{grid-column:span 4;}
+.tiles div.wide .vv{font-size:18px;}
+.cap{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.55;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.sent{border:1px solid #bcd6e2;border-left:5px solid var(--teal);background:#eef6f9;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:13.2px;line-height:1.6;color:var(--soft);}
+.sent b{color:var(--teal-dk);}
+.sent .big{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);display:block;margin-bottom:3px;line-height:1.15;}
+.sent.warn{border-color:#e2adb7;border-left-color:#d1495b;background:#fdf1f3;} .sent.warn .big{color:#b23145;}
+.sent.good{border-color:#b6d8c4;border-left-color:#2f9e5b;background:#f0f8f3;} .sent.good .big{color:#237a45;}
+.sent.plum{border-color:#d4c4de;border-left-color:#7a5a8a;background:#f6f1f9;} .sent.plum .big{color:#5e4270;}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.strip div{border:1px solid var(--line);border-radius:10px;padding:7px 6px;background:#fff;text-align:center;}
+.strip .lb{display:block;font-size:8.8px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.strip .vv{display:block;font-size:14px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.frm{font-family:var(--disp);font-size:15.5px;color:var(--teal-dk);text-align:center;margin:10px 0 2px;line-height:1.5;font-weight:600;}
+.frm .n{font-variant-numeric:tabular-nums;background:#e2eff5;border-radius:6px;padding:1px 6px;}
+.mnem,.note{font-size:12px;border-radius:8px;padding:9px 12px;margin-top:10px;line-height:1.6;}
+.mnem{color:#8a6a20;background:#fbf3e2;border:1px solid #ecd9ac;} .mnem b{color:#5a4212;}
+.note{color:#8a2a3a;background:#fae5e8;border:1px solid #f0c9d0;} .note b{color:#7a1f2c;}
+.list .it .nm{line-height:1.42;font-weight:600;font-size:12.4px;}
+.list .it .nm b{font-weight:800;}
+.list .it.done{border-color:#cfe0e8;}
+.list .it .sw{width:16px;height:16px;border-radius:5px;align-self:flex-start;margin-top:2px;}
+.score{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;margin-top:10px;text-align:right;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 12</div>
+  <h1>The Interval for a Difference</h1>
+  <div class="intro">A test hands back a verdict. An <b>interval</b> hands back a list of the differences the data can live with &mdash; which is nearly always the more useful object. Build one here from two live samples, stretch it and shrink it, and then face the question the whole section turns on: what does it mean when the interval happens to cover <b>zero</b>? A good deal less than most people assume, and occasionally a good deal more.</div>
+</header>
+<div class="wrap">
+
+  <div>
+    <div class="card">
+      <h2>One study, one interval</h2>
+      <div class="cap" style="margin-top:2px;">Two groups get two treatments; the outcome is the drop in systolic pressure, in mmHg. Every dot below is one patient, freshly sampled from the truth you set on the right. The heavy tick in each band is that group&rsquo;s sample mean. Subtract the two and you get a single number &mdash; and underneath, the interval built around it. Draw again and again: the dots move, the means move, and the interval slides along with them. <b>The truth never moves.</b></div>
+      <svg viewBox="0 0 480 300" id="one" aria-label="dot plots of two treatment groups above a difference axis showing the confidence interval for the difference in means with zero and the true difference marked"></svg>
+      <div class="lgd">
+        <span><i style="background:#2f6f8a"></i>treatment A</span>
+        <span><i style="background:#b8862f"></i>treatment B</span>
+        <span><i style="background:#1c4454"></i>the interval</span>
+        <span><i style="background:#d1495b"></i>zero &mdash; no difference</span>
+        <span><i style="background:#2f9e5b"></i>the true difference</span>
+      </div>
+      <div class="row"><button class="btn solid" id="bdraw">Draw another study</button><button class="btn" id="bcov">Hunt for one that covers zero</button><button class="btn" id="bmiss">&hellip;one that misses zero</button></div>
+      <div class="cap" id="huntcap" style="min-height:0"></div>
+      <div class="sent" id="onesent"></div>
+    </div>
+
+    <div class="card">
+      <h2>How the interval is built</h2>
+      <div class="cap" style="margin-top:2px;">Three ingredients and nothing else. The <b>point estimate</b> is the difference in sample means &mdash; that is where the interval is centred. The <b>standard error</b> says how far that estimate typically wanders from the truth. The <b>critical value</b> t* converts &ldquo;typically&rdquo; into the confidence you asked for. Multiply the last two, step that far in each direction, and you are done.</div>
+      <div class="frm" id="frm"></div>
+      <svg viewBox="0 0 480 155" id="anat" aria-label="the confidence interval drawn as a point estimate with equal arms of length t star times the standard error extending to the lower and upper limits"></svg>
+      <div class="mnem">Notice the two levers. The centre is set by the <b>data you happened to get</b>; the arms are set by <b>how much data you got and how confident you insisted on being</b>. Sampling error moves the whole thing sideways. Sample size and confidence level change only the arms.</div>
+    </div>
+
+    <div class="card">
+      <h2>The same study at six confidence levels</h2>
+      <div class="cap" style="margin-top:2px;">Same patients, same means, same standard error &mdash; only t* changes. Ask for more confidence and the interval must widen to deliver it, because the only way to be surer of catching the truth is to cast a wider net. Watch the bars turn colour: on many settings there is a level at which the interval stops missing zero and starts covering it. <b>That is worth sitting with.</b> Whether a difference is &ldquo;significant&rdquo; is not a fact about the data alone; it is a fact about the data <i>and</i> the level someone chose before looking.</div>
+      <svg viewBox="0 0 480 240" id="lad" aria-label="six confidence intervals from the same sample at confidence levels from eighty to ninety nine point nine percent, shown on a shared axis with zero marked"></svg>
+      <div class="lgd">
+        <span><i style="background:#1c4454"></i>misses zero</span>
+        <span><i style="background:#7a5a8a"></i>covers zero</span>
+        <span><i style="background:#d1495b"></i>zero</span>
+      </div>
+      <div class="sent" id="ladsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>One hundred studies, one hundred intervals</h2>
+      <div class="cap" style="margin-top:2px;">The confidence level is a promise about the <b>procedure</b>, not about any one interval, and the only way to see a promise about a procedure is to run the procedure many times. Each thin bar below is one complete study &mdash; new patients in both groups, new means, new interval. Bars that catch the true difference are dark; the ones that miss it are red. You cannot tell which is which from inside a single study. That is precisely the difficulty the word &ldquo;confidence&rdquo; is built to describe.</div>
+      <svg viewBox="0 0 480 300" id="many" aria-label="one hundred stacked confidence intervals from repeated simulated studies, coloured by whether each one contains the true difference"></svg>
+      <div class="lgd">
+        <span><i style="background:#1c4454"></i>caught the truth</span>
+        <span><i style="background:#d1495b"></i>missed it</span>
+        <span><i style="background:#2f9e5b"></i>the true difference</span>
+        <span><i style="background:#c6a8d8"></i>zero</span>
+      </div>
+      <div class="strip">
+        <div><span class="lb">Studies<br>run</span><span class="vv" id="rN">0</span></div>
+        <div><span class="lb">Caught the<br>true difference</span><span class="vv" id="rC">&mdash;</span></div>
+        <div><span class="lb" id="rXl">Missed<br>zero</span><span class="vv" id="rX">&mdash;</span></div>
+        <div><span class="lb">Average<br>width</span><span class="vv" id="rW">&mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="run1">Run 100 studies</button><button class="btn" id="run2">Add 1,000 more</button><button class="btn" id="rrs">Reset</button></div>
+      <div class="cap" id="manycap"></div>
+    </div>
+  </div>
+
+  <div>
+    <div id="stage">Two treatments<small>set the truth, then draw a study</small></div>
+
+    <div class="card">
+      <h2>The truth you are sampling from</h2>
+      <div class="cap" style="margin-top:2px;">In a real study not one of these numbers is knowable &mdash; that is the whole reason intervals exist. Here you set them, so you can grade the interval against an answer you already hold.</div>
+      <div class="hd">Treatment A</div>
+      <div class="sl a"><label>true mean &mu;<sub>A</sub></label><input type="range" id="ma" min="0" max="24" step="0.2" value="12" aria-label="true mean drop in group A"><span class="nv" id="mav">12.0</span></div>
+      <div class="sl a"><label>spread &sigma;<sub>A</sub></label><input type="range" id="sa" min="1" max="20" step="0.5" value="8" aria-label="true standard deviation in group A"><span class="nv" id="sav">8.0</span></div>
+      <div class="sl a"><label>patients n<sub>A</sub></label><input type="range" id="ia" min="0" max="21" step="1" value="10" aria-label="number of patients in group A"><span class="nv" id="iav">40</span></div>
+      <div class="hd">Treatment B</div>
+      <div class="sl b"><label>true mean &mu;<sub>B</sub></label><input type="range" id="mb" min="0" max="24" step="0.2" value="6" aria-label="true mean drop in group B"><span class="nv" id="mbv">6.0</span></div>
+      <div class="sl b"><label>spread &sigma;<sub>B</sub></label><input type="range" id="sb" min="1" max="20" step="0.5" value="8" aria-label="true standard deviation in group B"><span class="nv" id="sbv">8.0</span></div>
+      <div class="sl b"><label>patients n<sub>B</sub></label><input type="range" id="ib" min="0" max="21" step="1" value="10" aria-label="number of patients in group B"><span class="nv" id="ibv">40</span></div>
+      <div class="hd">Confidence level</div>
+      <div class="sl"><label>how sure the net is</label><input type="range" id="ic" min="0" max="5" step="1" value="2" aria-label="confidence level"><span class="nv" id="icv">95%</span></div>
+      <div class="hd">Jump to a situation worth seeing</div>
+      <div class="seg" id="preSeg">
+        <button data-v="0">A real gap, found<small>12 vs 6, n = 40</small></button>
+        <button data-v="1">No gap at all<small>&mu;<sub>A</sub> = &mu;<sub>B</sub></small></button>
+        <button data-v="2">Real, study tiny<small>12 vs 6, n = 8</small></button>
+        <button data-v="3">Trivial, study huge<small>10 vs 9, n = 2000</small></button>
+        <button data-v="4">Emptiness, proved<small>&mu;<sub>A</sub> = &mu;<sub>B</sub>, n = 1200</small></button>
+      </div>
+      <div class="row"><button class="btn" id="brst">Reset everything</button></div>
+    </div>
+
+    <div class="card">
+      <h2>This study, computed live</h2>
+      <div class="tiles">
+        <div><span class="lb">Mean A<br>x&#772;<sub>A</sub></span><span class="vv" id="tMA">&mdash;</span><span class="sub" id="tMAs">&nbsp;</span></div>
+        <div><span class="lb">Mean B<br>x&#772;<sub>B</sub></span><span class="vv" id="tMB">&mdash;</span><span class="sub" id="tMBs">&nbsp;</span></div>
+        <div><span class="lb">Point<br>estimate</span><span class="vv" id="tD">&mdash;</span><span class="sub">x&#772;<sub>A</sub> &minus; x&#772;<sub>B</sub></span></div>
+        <div><span class="lb">True<br>difference</span><span class="vv" id="tT">&mdash;</span><span class="sub">you set this</span></div>
+        <div><span class="lb">Sample SD<br>s<sub>A</sub></span><span class="vv" id="tSA">&mdash;</span><span class="sub" id="tSAs">&nbsp;</span></div>
+        <div><span class="lb">Sample SD<br>s<sub>B</sub></span><span class="vv" id="tSB">&mdash;</span><span class="sub" id="tSBs">&nbsp;</span></div>
+        <div><span class="lb">Standard<br>error</span><span class="vv" id="tSE">&mdash;</span><span class="sub">&radic;(s<sub>A</sub>&sup2;/n<sub>A</sub> + s<sub>B</sub>&sup2;/n<sub>B</sub>)</span></div>
+        <div><span class="lb">Degrees of<br>freedom</span><span class="vv" id="tDF">&mdash;</span><span class="sub">Welch</span></div>
+        <div><span class="lb">Critical<br>value t*</span><span class="vv" id="tTS">&mdash;</span><span class="sub" id="tTSs">&nbsp;</span></div>
+        <div><span class="lb">Margin of<br>error</span><span class="vv" id="tME">&mdash;</span><span class="sub">t* &times; SE</span></div>
+        <div><span class="lb">Interval<br>width</span><span class="vv" id="tW">&mdash;</span><span class="sub">2 &times; margin</span></div>
+        <div id="bxT"><span class="lb">Caught the<br>truth?</span><span class="vv" id="tCT">&mdash;</span><span class="sub" id="tCTs">&nbsp;</span></div>
+        <div class="wide" id="bxCI"><span class="lb" id="tCIl">95% confidence interval for &mu;<sub>A</sub> &minus; &mu;<sub>B</sub></span><span class="vv" id="tCI">&mdash;</span><span class="sub" id="tCIs">&nbsp;</span></div>
+      </div>
+      <div class="sent" id="sent"></div>
+      <div class="cap">The same three numbers also run the <b>test</b>. Divide the point estimate by the standard error and you have t; the two&#8209;sided p&#8209;value follows from the same t distribution with the same degrees of freedom. Because the interval and the test are built from identical parts, they can never contradict each other: <b>the interval misses zero exactly when p &lt; &alpha;</b>. Two reports of one calculation.</div>
+      <div class="tiles" style="grid-template-columns:repeat(3,1fr);">
+        <div><span class="lb">t statistic</span><span class="vv" id="tT2">&mdash;</span><span class="sub">estimate &divide; SE</span></div>
+        <div><span class="lb">p&#8209;value<br>two&#8209;sided</span><span class="vv" id="tP">&mdash;</span><span class="sub" id="tPs">&nbsp;</span></div>
+        <div id="bxAG"><span class="lb">Do they<br>agree?</span><span class="vv" id="tAG">&mdash;</span><span class="sub" id="tAGs">&nbsp;</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Does the difference matter?</h2>
+      <div class="cap" style="margin-top:2px;">&ldquo;Covers zero&rdquo; and &ldquo;misses zero&rdquo; are only two of the five things an interval can tell you, and on their own they are the least interesting two. Decide first &mdash; before looking &mdash; how big a difference would actually change what you do. Everything smaller than that is noise you would ignore even if it were real. Set that threshold below and the interval sorts itself into one of five verdicts.</div>
+      <div class="sl"><label>smallest gap worth acting on</label><input type="range" id="dl" min="0" max="12" step="0.25" value="3" aria-label="smallest difference worth acting on"><span class="nv" id="dlv">3.0</span></div>
+      <svg viewBox="0 0 480 300" id="prac" aria-label="the current interval drawn against a band of differences too small to matter, above a field guide of the five possible verdicts"></svg>
+      <div class="sent" id="pracsent"></div>
+      <div class="note">The pair that gets confused most often is the bottom two. Both intervals cover zero; they mean opposite things. A <b>narrow</b> interval hugging zero has ruled out every difference big enough to care about &mdash; that is a real, publishable, useful finding of no meaningful effect. A <b>wide</b> interval covering zero has ruled out almost nothing; it is consistent with no effect and with a large effect at the same time. Reporting the second as &ldquo;no difference&rdquo; is one of the most common errors in applied statistics.</div>
+    </div>
+
+    <div class="card">
+      <h2>Say it right</h2>
+      <div class="cap" style="margin-top:2px;">Ten things people say after building an interval for a difference. Four of them are sound. Tap each one.</div>
+      <div class="list" id="claims"></div>
+      <div class="score" id="score">0 of 10 tried</div>
+      <div id="info"><span class="n">Start anywhere</span>Tap a statement to see whether it survives scrutiny. Several of these are things you will hear said out loud with total confidence.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ============ seeded PRNG (mulberry32) — reproducible from page load ============ */
+ var SEED0=20260719, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ var spare=null;
+ function gauss(){
+   if(spare!==null){ var s=spare; spare=null; return s; }
+   var u=1-rnd(), v=rnd(), r=Math.sqrt(-2*Math.log(u));
+   spare=r*Math.sin(2*Math.PI*v);
+   return r*Math.cos(2*Math.PI*v);
+ }
+
+ /* ============ special functions ============ */
+ function lgam(xx){
+   var cof=[76.18009172947146,-86.50532032941677,24.01409824083091,
+            -1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+   var x=xx,y=xx,tmp=x+5.5,ser=1.000000000190015,j;
+   tmp-=(x+0.5)*Math.log(tmp);
+   for(j=0;j<6;j++){ y+=1; ser+=cof[j]/y; }
+   return -tmp+Math.log(2.5066282746310005*ser/x);
+ }
+ function betacf(a,b,x){
+   var MAXIT=400, EPS=3e-14, FPMIN=1e-300;
+   var qab=a+b, qap=a+1, qam=a-1;
+   var c=1, d=1-qab*x/qap, m, m2, aa, del, h;
+   if(Math.abs(d)<FPMIN) d=FPMIN;
+   d=1/d; h=d;
+   for(m=1;m<=MAXIT;m++){
+     m2=2*m;
+     aa=m*(b-m)*x/((qam+m2)*(a+m2));
+     d=1+aa*d; if(Math.abs(d)<FPMIN) d=FPMIN;
+     c=1+aa/c; if(Math.abs(c)<FPMIN) c=FPMIN;
+     d=1/d; h*=d*c;
+     aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+     d=1+aa*d; if(Math.abs(d)<FPMIN) d=FPMIN;
+     c=1+aa/c; if(Math.abs(c)<FPMIN) c=FPMIN;
+     d=1/d; del=d*c; h*=del;
+     if(Math.abs(del-1)<EPS) break;
+   }
+   return h;
+ }
+ function betai(a,b,x){
+   if(x<=0) return 0;
+   if(x>=1) return 1;
+   var bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));
+   if(x<(a+1)/(a+b+2)) return bt*betacf(a,b,x)/a;
+   return 1-bt*betacf(b,a,1-x)/b;
+ }
+ /* P(|T_v| > |t|) */
+ function tTail(t,v){ return betai(v/2,0.5,v/(v+t*t)); }
+ /* quantile: p in (0.5,1) -> the t with CDF(t) = p */
+ function invT(p,v){
+   var lo=0, hi=2000, mid, i;
+   for(i=0;i<70;i++){ mid=(lo+hi)/2; if(1-tTail(mid,v)/2<p) lo=mid; else hi=mid; }
+   return (lo+hi)/2;
+ }
+
+ /* ============ formatting ============ */
+ function nf(x,k){
+   if(!isFinite(x)) return '—';
+   if(Math.abs(x)<Math.pow(10,-k)/2) x=0;
+   return (x<0?'−':'')+Math.abs(x).toFixed(k);
+ }
+ function pf(p){ return p<0.0001?'&lt;0.0001':p.toFixed(4); }
+
+ /* ============ colours ============ */
+ var CA='#2f6f8a', CB='#b8862f', CIC='#1c4454', ZC='#d1495b', TC='#2f9e5b', PC='#7a5a8a';
+
+ /* ============ dials ============ */
+ var NS=[4,5,6,8,10,12,15,20,25,30,40,50,60,80,100,150,200,300,500,800,1200,2000];
+ var CL=[0.80,0.90,0.95,0.98,0.99,0.999];
+ var CLL=['80%','90%','95%','98%','99%','99.9%'];
+ var P={ma:12,sa:8,ia:10, mb:6,sb:8,ib:10, ic:2, dl:3};
+ var D0={ma:12,sa:8,ia:10, mb:6,sb:8,ib:10, ic:2, dl:3};
+
+ function nA(){ return NS[P.ia]; }
+ function nB(){ return NS[P.ib]; }
+ function conf(){ return CL[P.ic]; }
+ function trueDiff(){ return P.ma-P.mb; }
+ function trueSE(){ return Math.sqrt(P.sa*P.sa/nA()+P.sb*P.sb/nB()); }
+
+ /* ============ sampling ============ */
+ var SHOWMAX=90;
+ function sampleGroup(n,mu,sg){
+   var i,k=0,m=0,M2=0,d,x,shown=[];
+   for(i=0;i<n;i++){
+     x=mu+sg*gauss(); k++;
+     d=x-m; m+=d/k; M2+=d*(x-m);
+     if(shown.length<SHOWMAX) shown.push(x);
+   }
+   return {m:m, s2:(k>1?M2/(k-1):0), shown:shown};
+ }
+ function ciOf(mA,s2A,na,mB,s2B,nb,c){
+   var a=s2A/na, b=s2B/nb, se=Math.sqrt(a+b);
+   var df=(a+b)*(a+b)/(a*a/(na-1)+b*b/(nb-1));
+   var ts=invT((1+c)/2,df);
+   var d=mA-mB, me=ts*se, t=se>0?d/se:0;
+   return {d:d,se:se,df:df,ts:ts,me:me,lo:d-me,hi:d+me,t:t,p:tTail(t,df),
+           s2A:s2A,s2B:s2B,mA:mA,mB:mB};
+ }
+ var cur=null, GA=null, GB=null;
+ function newStudy(){
+   GA=sampleGroup(nA(),P.ma,P.sa);
+   GB=sampleGroup(nB(),P.mb,P.sb);
+   cur=ciOf(GA.m,GA.s2,nA(),GB.m,GB.s2,nB(),conf());
+ }
+ function covers0(c){ return c.lo<=0 && c.hi>=0; }
+
+ /* ============ small svg helpers ============ */
+ function X(v,lo,hi,x0,x1){ return x0+(v-lo)/(hi-lo)*(x1-x0); }
+ function ticksOf(lo,hi,n){
+   var span=hi-lo; if(!(span>0)) return {vals:[lo],dec:1};
+   var raw=span/n, mag=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10)), nm=raw/mag, step;
+   if(nm<1.5) step=1; else if(nm<3) step=2; else if(nm<7) step=5; else step=10;
+   step*=mag;
+   var out=[], t=Math.ceil(lo/step-1e-9)*step, g=0;
+   for(; t<=hi+step*1e-9 && g<40; t+=step, g++){ out.push(Math.abs(t)<step*1e-6?0:t); }
+   var dec=Math.max(0,Math.min(3,-Math.floor(Math.log(step)/Math.LN10+1e-9)));
+   return {vals:out,dec:dec};
+ }
+ function axisSVG(x0,x1,y,lo,hi,n){
+   var t=ticksOf(lo,hi,n), s='', i, px;
+   s+='<line x1="'+x0+'" y1="'+y+'" x2="'+x1+'" y2="'+y+'" stroke="#c6d6de" stroke-width="1.2"/>';
+   for(i=0;i<t.vals.length;i++){
+     px=X(t.vals[i],lo,hi,x0,x1);
+     if(px<x0-2||px>x1+2) continue;
+     s+='<line x1="'+px.toFixed(1)+'" y1="'+y+'" x2="'+px.toFixed(1)+'" y2="'+(y+5)+'" stroke="#c6d6de" stroke-width="1.2"/>';
+     s+='<text x="'+px.toFixed(1)+'" y="'+(y+16)+'" font-size="9.6" fill="#78868d" text-anchor="middle" font-weight="600">'+nf(t.vals[i],t.dec)+'</text>';
+   }
+   return s;
+ }
+ function vline(x,y0,y1,col,dash,w){
+   return '<line x1="'+x.toFixed(1)+'" y1="'+y0+'" x2="'+x.toFixed(1)+'" y2="'+y1+'" stroke="'+col+'" stroke-width="'+(w||1.6)+'"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+ }
+
+ /* ============ chart 1: one study ============ */
+ function drawOne(){
+   var s='', i, px, py, j;
+   var L=48,R=464;
+   var ctr=(P.ma+P.mb)/2, hw=Math.abs(P.ma-P.mb)/2+3.0*Math.max(P.sa,P.sb);
+   var mlo=ctr-hw, mhi=ctr+hw;
+
+   function band(g,cy,col,nm,n){
+     var o='', v=g.shown;
+     o+='<text x="'+L+'" y="'+(cy-22)+'" font-size="10" font-weight="800" fill="'+col+'">'+nm+
+        ' <tspan fill="#78868d" font-weight="700">n = '+n+(n>SHOWMAX?' ('+SHOWMAX+' shown)':'')+'</tspan></text>';
+     for(var q=0;q<v.length;q++){
+       px=X(v[q],mlo,mhi,L,R);
+       if(px<L-4||px>R+4) continue;
+       j=((q*37)%89)/89;
+       py=cy-13+j*26;
+       o+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="3" fill="'+col+'" opacity="0.32"/>';
+     }
+     px=X(g.m,mlo,mhi,L,R);
+     o+=vline(px,cy-19,cy+19,col,0,3);
+     var lft=(px>R-72);
+     o+='<text x="'+(lft?px-8:px+8).toFixed(1)+'" y="'+(cy+4)+'" font-size="10.5" font-weight="800" fill="'+col+
+        '" text-anchor="'+(lft?'end':'start')+'" stroke="#fffdf9" stroke-width="3.2" paint-order="stroke">x&#772; = '+nf(g.m,1)+'</text>';
+     return o;
+   }
+   s+=band(GA,46,CA,'Treatment A',nA());
+   s+=band(GB,108,CB,'Treatment B',nB());
+   s+=axisSVG(L,R,140,mlo,mhi,6);
+   s+='<text x="256" y="172" font-size="9.6" fill="#78868d" text-anchor="middle" font-weight="700">drop in systolic pressure (mmHg)</text>';
+   s+='<line x1="20" y1="186" x2="460" y2="186" stroke="#e6eef2" stroke-width="1.2"/>';
+   s+='<text x="20" y="206" font-size="10.5" font-weight="800" fill="'+CIC+'">THE DIFFERENCE, A &minus; B</text>';
+
+   var DL=58, DR=442;
+   var td=trueDiff();
+   var half=Math.max(Math.abs(cur.lo),Math.abs(cur.hi),Math.abs(td),3.2*trueSE(),0.5)*1.16;
+   var dlo=-half, dhi=half;
+   s+=vline(X(0,dlo,dhi,DL,DR),214,282,ZC,'4 3',1.8);
+   s+=vline(X(td,dlo,dhi,DL,DR),214,282,TC,'4 3',1.8);
+   var x0=X(cur.lo,dlo,dhi,DL,DR), x1=X(cur.hi,dlo,dhi,DL,DR), xd=X(cur.d,dlo,dhi,DL,DR);
+   s+='<rect x="'+x0.toFixed(1)+'" y="'+230+'" width="'+Math.max(2,x1-x0).toFixed(1)+'" height="16" rx="8" fill="'+CIC+'" opacity="0.9"/>';
+   s+='<circle cx="'+xd.toFixed(1)+'" cy="238" r="6" fill="#fff" stroke="'+CIC+'" stroke-width="2.5"/>';
+   s+='<text x="'+xd.toFixed(1)+'" y="222" font-size="11" font-weight="800" fill="'+CIC+'" text-anchor="middle">'+nf(cur.d,2)+'</text>';
+   s+='<text x="'+(x0-7).toFixed(1)+'" y="242" font-size="10.5" font-weight="800" fill="'+CIC+'" text-anchor="end">'+nf(cur.lo,2)+'</text>';
+   s+='<text x="'+(x1+7).toFixed(1)+'" y="242" font-size="10.5" font-weight="800" fill="'+CIC+'" text-anchor="start">'+nf(cur.hi,2)+'</text>';
+   s+=axisSVG(DL,DR,268,dlo,dhi,6);
+   s+='<text x="250" y="298" font-size="9.6" fill="#78868d" text-anchor="middle" font-weight="700">difference in mean drop (mmHg)</text>';
+   $("one").innerHTML=s;
+
+   /* live readout: how far this study's estimate strayed from the truth it was drawn from */
+   var err=cur.d-td, tse=trueSE(), z=tse>0?Math.abs(err)/tse:0, caught=(cur.lo<=td&&cur.hi>=td);
+   var msg='<span class="big">This study landed '+nf(Math.abs(err),2)+' mmHg '+(err>=0?'above':'below')+' the truth</span>'+
+     'You set the true difference to <b>'+nf(td,2)+'</b>, and this sample produced <b>'+nf(cur.d,2)+
+     '</b> — a miss of '+nf(z,2)+' standard errors, which is entirely ordinary. Nothing went wrong; this is simply what sampling does. ';
+   if(caught){
+     msg+='The interval built around that off-centre estimate still <b>reached back far enough to cover the truth</b> — which is the whole point of adding arms to a point estimate.';
+     $("onesent").className='sent good';
+   } else {
+     msg+='This time the arms were <b>not long enough</b>: the interval missed the true difference entirely. Roughly '+
+       nf(100*(1-conf()),1)+'% of intervals at this level do, and from inside a real study you would have no way of knowing you were holding one of them.';
+     $("onesent").className='sent warn';
+   }
+   $("onesent").innerHTML=msg;
+ }
+
+ /* ============ chart 2: anatomy ============ */
+ function drawAnat(){
+   var s='';
+   var AL=48, AR=452;
+   var lo=Math.min(cur.lo,0), hi=Math.max(cur.hi,0), pad=(hi-lo)*0.14+1e-6;
+   lo-=pad; hi+=pad;
+   var x0=X(cur.lo,lo,hi,AL,AR), x1=X(cur.hi,lo,hi,AL,AR), xd=X(cur.d,lo,hi,AL,AR), xz=X(0,lo,hi,AL,AR);
+   s+='<line x1="'+AL+'" y1="90" x2="'+AR+'" y2="90" stroke="#e0eaef" stroke-width="1.4"/>';
+   s+=vline(xz,58,116,ZC,'4 3',1.8);
+   s+='<text x="'+xz.toFixed(1)+'" y="50" font-size="9.5" font-weight="800" fill="'+ZC+'" text-anchor="middle">ZERO</text>';
+   s+='<rect x="'+x0.toFixed(1)+'" y="84" width="'+Math.max(2,x1-x0).toFixed(1)+'" height="12" rx="6" fill="'+CIC+'" opacity="0.16"/>';
+   s+='<line x1="'+x0.toFixed(1)+'" y1="90" x2="'+x1.toFixed(1)+'" y2="90" stroke="'+CIC+'" stroke-width="2.2"/>';
+   s+=vline(x0,79,101,CIC,0,2.6);
+   s+=vline(x1,79,101,CIC,0,2.6);
+   s+='<circle cx="'+xd.toFixed(1)+'" cy="90" r="6.5" fill="'+CIC+'"/>';
+   s+='<text x="'+xd.toFixed(1)+'" y="72" font-size="11" font-weight="800" fill="'+CIC+'" text-anchor="middle">'+nf(cur.d,2)+'</text>';
+   s+='<text x="240" y="26" font-size="10" font-weight="700" fill="#78868d" text-anchor="middle">each arm is t* &times; SE = '+nf(cur.ts,3)+' &times; '+nf(cur.se,3)+' = '+nf(cur.me,3)+' mmHg</text>';
+   s+='<text x="'+x0.toFixed(1)+'" y="121" font-size="11.5" font-weight="800" fill="'+CIC+'" text-anchor="middle">'+nf(cur.lo,2)+'</text>';
+   s+='<text x="'+x1.toFixed(1)+'" y="121" font-size="11.5" font-weight="800" fill="'+CIC+'" text-anchor="middle">'+nf(cur.hi,2)+'</text>';
+   s+='<text x="'+x0.toFixed(1)+'" y="137" font-size="9" font-weight="700" fill="#78868d" text-anchor="middle">LOWER LIMIT</text>';
+   s+='<text x="'+x1.toFixed(1)+'" y="137" font-size="9" font-weight="700" fill="#78868d" text-anchor="middle">UPPER LIMIT</text>';
+   $("anat").innerHTML=s;
+   $("frm").innerHTML='( x&#772;<sub>A</sub> &minus; x&#772;<sub>B</sub> ) &plusmn; t* &times; SE &nbsp;=&nbsp; <span class="n">'+nf(cur.d,2)+'</span> &plusmn; <span class="n">'+
+     nf(cur.ts,3)+'</span> &times; <span class="n">'+nf(cur.se,3)+'</span> &nbsp;=&nbsp; <span class="n">'+nf(cur.lo,2)+' to '+nf(cur.hi,2)+'</span>';
+ }
+
+ /* ============ chart 3: confidence ladder ============ */
+ function drawLad(){
+   var s='', i, L=70, R=436, cs=[], c;
+   for(i=0;i<CL.length;i++){ cs.push(ciOf(GA.m,GA.s2,nA(),GB.m,GB.s2,nB(),CL[i])); }
+   var half=Math.max(Math.abs(cs[CL.length-1].lo),Math.abs(cs[CL.length-1].hi),0.5)*1.10;
+   var lo=-half, hi=half;
+   s+=vline(X(0,lo,hi,L,R),22,214,ZC,'4 3',1.8);
+   var flip=-1;
+   for(i=0;i<CL.length;i++){
+     c=cs[i];
+     var y=34+i*30, cz=covers0(c), col=cz?PC:CIC;
+     if(i>0 && !covers0(cs[i-1]) && cz) flip=i;
+     if(i===P.ic) s+='<rect x="8" y="'+(y-13)+'" width="464" height="26" rx="7" fill="#e2eff5"/>';
+     s+='<text x="60" y="'+(y+4)+'" font-size="10.5" font-weight="800" fill="'+(i===P.ic?CIC:'#78868d')+'" text-anchor="end">'+CLL[i]+'</text>';
+     var x0=X(c.lo,lo,hi,L,R), x1=X(c.hi,lo,hi,L,R);
+     s+='<rect x="'+x0.toFixed(1)+'" y="'+(y-6)+'" width="'+Math.max(2,x1-x0).toFixed(1)+'" height="12" rx="6" fill="'+col+'" opacity="'+(i===P.ic?1:0.72)+'"/>';
+     s+='<circle cx="'+X(c.d,lo,hi,L,R).toFixed(1)+'" cy="'+y+'" r="3.4" fill="#fff"/>';
+   }
+   s+=axisSVG(L,R,208,lo,hi,6);
+   s+='<text x="253" y="238" font-size="9.6" fill="#78868d" text-anchor="middle" font-weight="700">difference in mean drop (mmHg)</text>';
+   $("lad").innerHTML=s;
+
+   var anyC=covers0(cs[0]), allC=true, k;
+   for(k=0;k<cs.length;k++){ if(!covers0(cs[k])) allC=false; }
+   var t;
+   if(flip>0){
+     t='<span class="big">The verdict flips between '+CLL[flip-1]+' and '+CLL[flip]+'</span>At '+CLL[flip-1]+
+       ' this study misses zero; at '+CLL[flip]+' it covers it. <b>Not one number in the data changed.</b> The only thing that moved was how large a net someone decided to cast beforehand — which is why the level has to be chosen before the analysis, not after seeing which choice gives the nicer answer.';
+     $("ladsent").className='sent plum';
+   } else if(allC){
+     t='<span class="big">Zero survives at every level</span>Even the narrowest net here — the 80% interval, which fails one time in five — still cannot separate these two treatments from each other. That is a statement about how little this study managed to pin down, not proof that the treatments are alike.';
+     $("ladsent").className='sent';
+   } else if(!anyC){
+     t='<span class="big">Zero is excluded at every level</span>Even the 99.9% interval — a net so wide it fails only one time in a thousand — keeps zero outside. The evidence against &ldquo;no difference&rdquo; here does not depend on where anyone drew the line.';
+     $("ladsent").className='sent good';
+   } else {
+     t='<span class="big">More confidence, more width</span>Each step down the ladder buys a higher long-run success rate and pays for it in precision. There is no setting that gives you both.';
+     $("ladsent").className='sent';
+   }
+   $("ladsent").innerHTML=t;
+ }
+
+ /* ============ chart 4: many studies ============ */
+ var R100=[], tally={n:0,cov:0,exc:0,wsum:0};
+ function runStudies(k,keep){
+   var i,c,td=trueDiff(),ga,gb,out=[];
+   for(i=0;i<k;i++){
+     ga=sampleGroup(nA(),P.ma,P.sa); gb=sampleGroup(nB(),P.mb,P.sb);
+     c=ciOf(ga.m,ga.s2,nA(),gb.m,gb.s2,nB(),conf());
+     tally.n++; tally.wsum+=(c.hi-c.lo);
+     if(c.lo<=td && c.hi>=td) tally.cov++;
+     if(!covers0(c)) tally.exc++;
+     if(keep) out.push({lo:c.lo,hi:c.hi,d:c.d,ok:(c.lo<=td&&c.hi>=td)});
+   }
+   if(keep) R100=out;
+ }
+ function drawMany(){
+   var s='', i, L=44, R=466, td=trueDiff();
+   if(!R100.length){
+     s+='<rect x="0" y="0" width="480" height="300" fill="#f6fafb" rx="12"/>';
+     s+='<text x="240" y="150" font-size="12" fill="#8fa0a9" text-anchor="middle" font-weight="700">press &ldquo;Run 100 studies&rdquo; to fill this in</text>';
+     $("many").innerHTML=s;
+   } else {
+     var lo=0, hi=0;
+     for(i=0;i<R100.length;i++){ if(R100[i].lo<lo) lo=R100[i].lo; if(R100[i].hi>hi) hi=R100[i].hi; }
+     if(td<lo) lo=td; if(td>hi) hi=td;
+     var pad=(hi-lo)*0.05+1e-6; lo-=pad; hi+=pad;
+     s+=vline(X(0,lo,hi,L,R),12,264,'#c6a8d8','4 3',1.8);
+     s+=vline(X(td,lo,hi,L,R),12,264,TC,0,2);
+     for(i=0;i<R100.length;i++){
+       var y=(16+i*2.42).toFixed(1);
+       var x0=X(R100[i].lo,lo,hi,L,R), x1=X(R100[i].hi,lo,hi,L,R);
+       s+='<line x1="'+x0.toFixed(1)+'" y1="'+y+'" x2="'+x1.toFixed(1)+'" y2="'+y+'" stroke="'+(R100[i].ok?CIC:ZC)+'" stroke-width="1.5" opacity="'+(R100[i].ok?0.62:1)+'"/>';
+     }
+     s+=axisSVG(L,R,274,lo,hi,6);
+     $("many").innerHTML=s;
+   }
+   $("rN").innerHTML=tally.n?tally.n.toLocaleString():'0';
+   $("rC").innerHTML=tally.n?(100*tally.cov/tally.n).toFixed(1)+'%':'—';
+   $("rX").innerHTML=tally.n?(100*tally.exc/tally.n).toFixed(1)+'%':'—';
+   $("rW").innerHTML=tally.n?nf(tally.wsum/tally.n,2):'—';
+   var zero=Math.abs(td)<1e-9;
+   $("rXl").innerHTML=zero?'False<br>alarms':'Detected a<br>difference';
+   var cap;
+   if(!tally.n){
+     cap='Nothing run yet. The advertised level is <b>'+CLL[P.ic]+'</b> — see how close the catch rate lands.';
+   } else {
+     cap='Across '+tally.n.toLocaleString()+' studies, <b>'+(100*tally.cov/tally.n).toFixed(1)+'%</b> of the intervals contained the true difference of '+nf(td,2)+
+       ' mmHg, against an advertised <b>'+CLL[P.ic]+'</b>. That figure is what the confidence level actually promises: not that this interval is right, but that a procedure repeated forever succeeds that often. ';
+     if(zero){
+       cap+='Because the two treatments are genuinely identical here, every interval that misses zero is a <b>false alarm</b>, and that rate should settle near &alpha; = '+nf(1-conf(),3)+'.';
+     } else {
+       cap+='Because a real gap of '+nf(td,2)+' mmHg exists, the share missing zero is this design&rsquo;s <b>power</b> to detect a gap of that size — currently '+(100*tally.exc/tally.n).toFixed(1)+'%. Notice it is a property of the design, not of the truth.';
+     }
+     cap+=' <span style="color:#9aa8af">Welch&rsquo;s interval is an approximation; with normal data its true catch rate sits very close to the label, drifting a little when the two groups differ sharply in both spread and size.</span>';
+   }
+   $("manycap").innerHTML=cap;
+ }
+
+ /* ============ chart 5: does it matter ============ */
+ function verdict(c,d){
+   var excl=(c.lo>0||c.hi<0);
+   var beyond=(c.lo>=d||c.hi<=-d);
+   var inside=(c.lo>-d&&c.hi<d);
+   if(excl&&beyond) return 'matters';
+   if(excl&&inside) return 'trivial';
+   if(excl) return 'unclear';
+   if(inside) return 'empty';
+   return 'weak';
+ }
+ var VD={
+  matters:{t:'A difference that matters',cls:'good',
+    x:'Every value in the interval is at least as big as the threshold you set. Whatever the exact size, it clears the bar — this is the one case where you get both a real difference and a useful one.'},
+  trivial:{t:'Real, but too small to chase',cls:'warn',
+    x:'The interval misses zero, so something is there. But the whole interval sits below the threshold, which means the effect is almost certainly too small to change any decision. This is what a very large study does to a very small difference: it makes it detectable without making it important.'},
+  unclear:{t:'Real; size still unsettled',cls:'',
+    x:'Zero is ruled out, so a difference exists. The interval straddles your threshold, though, so this study cannot say whether the difference is big enough to act on. The honest report says exactly that, and asks for more data rather than rounding up to the interesting end.'},
+  empty:{t:'A useful finding of no meaningful effect',cls:'good',
+    x:'The interval covers zero — but it is narrow enough that it sits entirely inside the range you already called too small to matter. You have not proved the difference is exactly zero; you have ruled out every difference large enough to care about, which is the strongest negative result data can give.'},
+  weak:{t:'The study could not tell',cls:'warn',
+    x:'The interval covers zero and also reaches well past your threshold. It is consistent with no difference and with a difference that would matter a great deal. Nothing has been established in either direction. Calling this &ldquo;no difference&rdquo; is the single most common misreading of an interval.'}
+ };
+ var GUIDE=[
+  {k:'matters',lb:'A difference that matters',x0:342,x1:434},
+  {k:'unclear',lb:'Real; size unsettled',x0:258,x1:404},
+  {k:'trivial',lb:'Real, too small to chase',x0:262,x1:302},
+  {k:'empty', lb:'Meaningfully empty',x0:222,x1:292},
+  {k:'weak',  lb:'Could not tell',x0:166,x1:442}
+ ];
+ function drawPrac(){
+   var s='', i, L=52, R=440, d=P.dl, v=verdict(cur,d);
+   var half=Math.max(Math.abs(cur.lo),Math.abs(cur.hi),d*1.35,0.5)*1.10;
+   var lo=-half, hi=half;
+   var bx0=X(-d,lo,hi,L,R), bx1=X(d,lo,hi,L,R);
+   s+='<rect x="'+bx0.toFixed(1)+'" y="30" width="'+Math.max(1,bx1-bx0).toFixed(1)+'" height="90" fill="#eef2f5" stroke="#dbe6ec" stroke-width="1"/>';
+   s+='<text x="'+((bx0+bx1)/2).toFixed(1)+'" y="44" font-size="9.2" fill="#8fa0a9" text-anchor="middle" font-weight="800">TOO SMALL TO MATTER</text>';
+   s+=vline(X(0,lo,hi,L,R),26,126,ZC,'4 3',1.8);
+   var x0=X(cur.lo,lo,hi,L,R), x1=X(cur.hi,lo,hi,L,R), xd=X(cur.d,lo,hi,L,R);
+   var col=(v==='matters'||v==='empty')?TC:((v==='weak'||v==='trivial')?ZC:CIC);
+   s+='<rect x="'+x0.toFixed(1)+'" y="72" width="'+Math.max(2,x1-x0).toFixed(1)+'" height="16" rx="8" fill="'+col+'" opacity="0.9"/>';
+   s+='<circle cx="'+xd.toFixed(1)+'" cy="80" r="5.5" fill="#fff" stroke="'+col+'" stroke-width="2.4"/>';
+   s+='<text x="'+(x0-7).toFixed(1)+'" y="84" font-size="10.5" font-weight="800" fill="'+CIC+'" text-anchor="end">'+nf(cur.lo,2)+'</text>';
+   s+='<text x="'+(x1+7).toFixed(1)+'" y="84" font-size="10.5" font-weight="800" fill="'+CIC+'" text-anchor="start">'+nf(cur.hi,2)+'</text>';
+   s+='<text x="20" y="22" font-size="10" font-weight="800" fill="'+CIC+'">YOUR INTERVAL</text>';
+   s+=axisSVG(L,R,126,lo,hi,6);
+   s+='<text x="246" y="156" font-size="9.6" fill="#78868d" text-anchor="middle" font-weight="700">difference in mean drop (mmHg) · threshold &plusmn;'+nf(d,2)+'</text>';
+
+   s+='<line x1="20" y1="172" x2="460" y2="172" stroke="#e6eef2" stroke-width="1.2"/>';
+   s+='<text x="20" y="190" font-size="10" font-weight="800" fill="'+CIC+'">THE FIVE SHAPES</text>';
+   s+='<rect x="182" y="200" width="140" height="94" fill="#eef2f5" stroke="#dbe6ec" stroke-width="1"/>';
+   s+=vline(252,200,294,ZC,'3 3',1.4);
+   for(i=0;i<GUIDE.length;i++){
+     var g=GUIDE[i], y=210+i*20, on=(g.k===v);
+     s+='<text x="172" y="'+(y+3.5)+'" font-size="9.2" font-weight="'+(on?'800':'700')+'" fill="'+(on?CIC:'#9aa8af')+'" text-anchor="end">'+g.lb+'</text>';
+     s+='<rect x="'+g.x0+'" y="'+(y-4)+'" width="'+(g.x1-g.x0)+'" height="8" rx="4" fill="'+(on?CIC:'#c2d2da')+'"/>';
+     if(on) s+='<text x="472" y="'+(y+3.5)+'" font-size="10" font-weight="800" fill="'+CIC+'" text-anchor="end">&#9664;</text>';
+   }
+   $("prac").innerHTML=s;
+
+   var V=VD[v];
+   $("pracsent").className='sent'+(V.cls?' '+V.cls:'');
+   $("pracsent").innerHTML='<span class="big">'+V.t+'</span>'+V.x+' <b>Your interval runs '+nf(cur.lo,2)+' to '+nf(cur.hi,2)+
+     ' mmHg</b> against a threshold of '+nf(d,2)+'.';
+ }
+
+ /* ============ claims ============ */
+ var CLAIMS=[
+  {ok:1,t:'We are 95% confident that the true difference in means lies between the two limits.',
+   n:'Sound — but only because &ldquo;confident&rdquo; is a term of art',
+   x:'This is the standard phrasing, and it is acceptable precisely because <b>confidence</b> is not a synonym for probability. It is shorthand for &ldquo;this interval came out of a method that captures the truth 95% of the time.&rdquo; Say it if you like; just never upgrade it into a probability about this one interval, which is the next claim.'},
+  {ok:0,t:'There is a 95% probability that the true difference lies between these two limits.',
+   n:'No — the truth is not the thing that varies',
+   x:'The true difference is a fixed number. Your interval either contains it or it does not; there is no coin left to flip. What is random is <b>which interval you got</b>. Ninety-five percent describes how often the procedure lands on the truth across endless repetitions, not the standing of the one interval in front of you.'},
+  {ok:0,t:'About 95% of individual patients have a difference in this range.',
+   n:'No — that is a statement about people, not about a mean',
+   x:'This interval is about a <b>parameter</b>: the difference between two population means. Individual patients scatter far more widely than group means do, which is exactly why the standard error carries a &divide;n inside it. An interval meant to cover individuals is a different object entirely, and it is always much wider.'},
+  {ok:1,t:'Because the interval misses zero, we can rule out &ldquo;no difference&rdquo; at the 5% level.',
+   n:'Sound — and exactly equivalent to the test',
+   x:'The interval and the two-sided t test are built from the same estimate, the same standard error and the same degrees of freedom. So the interval excludes zero <b>precisely when</b> p &lt; &alpha;. They cannot disagree. Reporting both is not double evidence; it is one calculation stated twice.'},
+  {ok:0,t:'Because the interval misses zero, the difference must be an important one.',
+   n:'No — detectable and important are separate questions',
+   x:'Missing zero says only that the data can rule out &ldquo;exactly nothing.&rdquo; A large enough study will miss zero around a difference of a fraction of a mmHg. Whether a difference matters is settled by comparing the interval to a threshold you set on clinical grounds, before the analysis — never by whether it clears zero.'},
+  {ok:0,t:'If the interval had contained zero, that would show the two treatments are identical.',
+   n:'No — covering zero is not proof of sameness',
+   x:'Covering zero means zero is <b>among</b> the values the data can live with — alongside every other value in the interval, some of which may be enormous. Failing to rule something out is not evidence for it. The only case where a covering interval says something strong is when it is narrow enough to exclude everything that would matter.'},
+  {ok:1,t:'If the whole study were repeated many times, about 95% of the intervals produced would contain the true difference.',
+   n:'Sound — this is the actual definition',
+   x:'This is what the confidence level means, stated without disguise: it is a long-run property of the <b>procedure</b>. Every claim about confidence that is true reduces to this sentence, and every claim that is false is one that tries to say something more about the single interval you happen to hold.'},
+  {ok:0,t:'A 99% interval built from these same data would be narrower.',
+   n:'No — confidence and precision pull against each other',
+   x:'Raising the confidence level raises t*, and the arms lengthen. The only way to be surer of catching the truth from fixed data is to cast a wider net. Narrowing an interval without giving up confidence requires more data or less variable data — nothing else is available.'},
+  {ok:0,t:'Every value inside the interval is equally plausible as the true difference.',
+   n:'No — the edges are far weaker than the centre',
+   x:'The interval is a cut-off, not a flat distribution. Values near the point estimate are much better supported by the data than values sitting at the limits, which are only just compatible with what was observed. Treating an endpoint as if it were as likely as the centre overstates the case at whichever end suits the argument.'},
+  {ok:1,t:'Quadrupling both sample sizes would roughly halve the width.',
+   n:'Sound — the &radic;n rule, restated',
+   x:'The standard error carries n under a square root, so four times the data gives half the standard error and therefore roughly half the width. Slightly better than half, in fact, since the extra degrees of freedom also pull t* down a little. It is also the reason precision gets expensive fast: the next halving costs four times as much again.'}
+ ];
+ var seen=[];
+ function renderClaims(){
+   var h='',i;
+   for(i=0;i<CLAIMS.length;i++){
+     var st=seen[i];
+     var sw=st===undefined?'#dfe8ed':(CLAIMS[i].ok?'#2f9e5b':'#d1495b');
+     h+='<button class="it'+(st!==undefined?' done':'')+'" data-i="'+i+'"><span class="sw" style="background:'+sw+'"></span>'+
+        '<span><span class="nm">'+(st!==undefined?(CLAIMS[i].ok?'<b>✓</b> ':'<b>✕</b> '):'')+CLAIMS[i].t+'</span></span></button>';
+   }
+   $("claims").innerHTML=h;
+   var els=$("claims").getElementsByClassName('it'), k;
+   for(k=0;k<els.length;k++){
+     els[k].onclick=(function(el){ return function(){
+       var i=+el.getAttribute('data-i');
+       seen[i]=1;
+       $("info").innerHTML='<span class="n">'+CLAIMS[i].n+'</span>'+CLAIMS[i].x;
+       renderClaims();
+     };})(els[k]);
+   }
+   var c=0; for(i=0;i<CLAIMS.length;i++){ if(seen[i]!==undefined) c++; }
+   $("score").innerHTML=c+' of '+CLAIMS.length+' tried';
+ }
+
+ /* ============ tiles + stage + sentence ============ */
+ function renderNums(){
+   var td=trueDiff(), c=cur, cz=covers0(c), caught=(c.lo<=td&&c.hi>=td), al=1-conf();
+   $("tMA").innerHTML=nf(c.mA,2); $("tMAs").innerHTML='&mu;<sub>A</sub> = '+nf(P.ma,1);
+   $("tMB").innerHTML=nf(c.mB,2); $("tMBs").innerHTML='&mu;<sub>B</sub> = '+nf(P.mb,1);
+   $("tD").innerHTML=nf(c.d,2);
+   $("tT").innerHTML=nf(td,2);
+   $("tSA").innerHTML=nf(Math.sqrt(c.s2A),2); $("tSAs").innerHTML='&sigma;<sub>A</sub> = '+nf(P.sa,1);
+   $("tSB").innerHTML=nf(Math.sqrt(c.s2B),2); $("tSBs").innerHTML='&sigma;<sub>B</sub> = '+nf(P.sb,1);
+   $("tSE").innerHTML=nf(c.se,3);
+   $("tDF").innerHTML=c.df>=100?c.df.toFixed(0):c.df.toFixed(1);
+   $("tTS").innerHTML=nf(c.ts,3); $("tTSs").innerHTML='for '+CLL[P.ic];
+   $("tME").innerHTML=nf(c.me,3);
+   $("tW").innerHTML=nf(c.hi-c.lo,2);
+   $("tCT").innerHTML=caught?'yes':'no';
+   $("bxT").className=caught?'good':'warn';
+   $("tCTs").innerHTML=caught?'truth is inside':'this one missed';
+   $("tCIl").innerHTML=CLL[P.ic]+' confidence interval for &mu;<sub>A</sub> &minus; &mu;<sub>B</sub>';
+   $("tCI").innerHTML=nf(c.lo,2)+' &nbsp;to&nbsp; '+nf(c.hi,2)+' mmHg';
+   $("bxCI").className='wide '+(cz?'warn':'good');
+   $("tCIs").innerHTML=cz?'covers zero — no difference is among the values the data allow':'misses zero — zero is not among the values the data allow';
+   $("tT2").innerHTML=nf(c.t,3);
+   $("tP").innerHTML=pf(c.p); $("tPs").innerHTML='&alpha; = '+nf(al,3);
+   var agree=((c.p<al)===(!cz));
+   $("tAG").innerHTML=agree?'✓ always':'—';
+   $("bxAG").className=agree?'good':'warn';
+   $("tAGs").innerHTML=cz?'covers zero, p &ge; &alpha;':'misses zero, p &lt; &alpha;';
+
+   $("stage").style.background=cz?PC:CIC;
+   $("stage").innerHTML=(cz?'The interval covers zero':'The interval misses zero')+
+     '<small>'+CLL[P.ic]+' CI for &mu;<sub>A</sub> &minus; &mu;<sub>B</sub> &nbsp;·&nbsp; '+nf(c.lo,2)+' to '+nf(c.hi,2)+' mmHg</small>';
+
+   var t;
+   if(cz){
+     t='<span class="big">Zero is inside</span>The data are consistent with the two treatments being equal — and equally consistent with A beating B by as much as <b>'+
+       nf(Math.max(c.hi,-c.lo),2)+' mmHg</b>, and with B beating A. That is not a finding of no effect. It is a finding that <b>this study could not separate the two</b>, which is a statement about the study.';
+     $("sent").className='sent warn';
+   } else {
+     t='<span class="big">Zero is outside</span>At the '+CLL[P.ic]+' level the data rule out &ldquo;no difference&rdquo; and point to <b>'+
+       (c.d>0?'A':'B')+'</b>. But look at the width: '+nf(c.hi-c.lo,2)+' mmHg separates the two limits, so the <b>size</b> of the advantage is pinned down only as far as somewhere between '+
+       nf(Math.abs(c.d>0?c.lo:c.hi),2)+' and '+nf(Math.abs(c.d>0?c.hi:c.lo),2)+' mmHg.';
+     $("sent").className='sent good';
+   }
+   t+=' You set the true difference to '+nf(td,2)+' mmHg, so you can see something no real analyst ever can: this particular interval <b>'+
+     (caught?'did':'did not')+'</b> catch it.';
+   $("sent").innerHTML=t;
+ }
+
+ /* ============ render ============ */
+ function renderAll(){
+   drawOne(); drawAnat(); drawLad(); drawPrac(); drawMany(); renderNums();
+ }
+ function syncLabels(){
+   $("mav").innerHTML=nf(P.ma,1); $("sav").innerHTML=nf(P.sa,1); $("iav").innerHTML=nA();
+   $("mbv").innerHTML=nf(P.mb,1); $("sbv").innerHTML=nf(P.sb,1); $("ibv").innerHTML=nB();
+   $("icv").innerHTML=CLL[P.ic]; $("dlv").innerHTML=nf(P.dl,1);
+   $("ma").value=P.ma; $("sa").value=P.sa; $("ia").value=P.ia;
+   $("mb").value=P.mb; $("sb").value=P.sb; $("ib").value=P.ib;
+   $("ic").value=P.ic; $("dl").value=P.dl;
+   var b=$("preSeg").getElementsByTagName('button'),k;
+   for(k=0;k<b.length;k++) b[k].className='';
+ }
+ function resetTally(){ R100=[]; tally={n:0,cov:0,exc:0,wsum:0}; }
+ function onTruth(){ syncLabels(); resetTally(); $("huntcap").innerHTML=''; newStudy(); renderAll(); }
+ function onView(){ syncLabels(); cur=ciOf(GA.m,GA.s2,nA(),GB.m,GB.s2,nB(),conf()); renderAll(); }
+
+ /* ============ wiring ============ */
+ $("ma").oninput=function(){ P.ma=+this.value; onTruth(); };
+ $("sa").oninput=function(){ P.sa=+this.value; onTruth(); };
+ $("ia").oninput=function(){ P.ia=+this.value; onTruth(); };
+ $("mb").oninput=function(){ P.mb=+this.value; onTruth(); };
+ $("sb").oninput=function(){ P.sb=+this.value; onTruth(); };
+ $("ib").oninput=function(){ P.ib=+this.value; onTruth(); };
+ $("ic").oninput=function(){ P.ic=+this.value; resetTally(); onView(); };
+ $("dl").oninput=function(){ P.dl=+this.value; $("dlv").innerHTML=nf(P.dl,1); drawPrac(); };
+
+ $("bdraw").onclick=function(){ $("huntcap").innerHTML=''; newStudy(); renderAll(); };
+ function hunt(want){
+   var lim=Math.max(60,Math.min(4000,Math.floor(500000/(nA()+nB())))), i, found=-1;
+   for(i=0;i<lim;i++){ newStudy(); if(covers0(cur)===want){ found=i+1; break; } }
+   renderAll();
+   $("huntcap").innerHTML = found>0
+     ? 'Found one after <b>'+found+'</b> draw'+(found===1?'':'s')+'. '+(found>25?'Rare, but the machinery allows it.':'')
+     : 'Gave up after <b>'+lim+'</b> draws — with this design that outcome is close to impossible.';
+ }
+ $("bcov").onclick=function(){ hunt(true); };
+ $("bmiss").onclick=function(){ hunt(false); };
+ $("run1").onclick=function(){ runStudies(100,true); drawMany(); };
+ $("run2").onclick=function(){ runStudies(1000,false); drawMany(); };
+ $("rrs").onclick=function(){ resetTally(); drawMany(); };
+ $("brst").onclick=function(){ var k; for(k in D0){ if(D0.hasOwnProperty(k)) P[k]=D0[k]; } seed=SEED0; spare=null; onTruth(); };
+
+ var PRE=[
+  {ma:12,sa:8,ia:10, mb:6, sb:8,ib:10, ic:2,dl:3},
+  {ma:9, sa:8,ia:10, mb:9, sb:8,ib:10, ic:2,dl:3},
+  {ma:12,sa:8,ia:3,  mb:6, sb:8,ib:3,  ic:2,dl:3},
+  {ma:10,sa:8,ia:21, mb:9, sb:8,ib:21, ic:2,dl:3},
+  {ma:9, sa:8,ia:20, mb:9, sb:8,ib:20, ic:2,dl:3}
+ ];
+ (function(){
+   var b=$("preSeg").getElementsByTagName('button'), k;
+   for(k=0;k<b.length;k++){
+     b[k].onclick=(function(el){ return function(){
+       var v=PRE[+el.getAttribute('data-v')], q;
+       for(q in v){ if(v.hasOwnProperty(q)) P[q]=v[q]; }
+       onTruth();
+       el.className='on';
+     };})(b[k]);
+   }
+ })();
+
+ renderClaims();
+ syncLabels();
+ newStudy();
+ renderAll();
+})();
+</script>
+</body>
+</html>

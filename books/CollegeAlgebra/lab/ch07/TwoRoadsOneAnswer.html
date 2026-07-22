@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Two Roads, One Answer: Simplifying Complex Fractions</title>
+<meta name="description" content="The two standard methods for simplifying a complex fraction — combine-then-divide and multiply-by-the-LCD — run side by side on the same expression, one step at a time, with a live numeric check.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* example picker */
+#pick{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:11px;}
+#pick button{display:block;text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 9px;cursor:pointer;font-family:var(--sans);transition:.12s;}
+#pick button:hover{border-color:var(--teal);}
+#pick button .nm{display:block;font-weight:700;font-size:11.6px;color:var(--ink);line-height:1.15;}
+#pick button .ct{display:block;font-family:var(--math);font-size:11.4px;color:var(--muted);margin-top:3px;line-height:1.3;}
+#pick button.on{background:var(--teal);border-color:var(--teal);}
+#pick button.on .nm{color:#fff;} #pick button.on .ct{color:rgba(255,255,255,.9);}
+.modeseg button small{display:block;font-weight:500;font-size:9.6px;color:var(--muted);margin-top:1px;}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+/* the worked-step machine */
+.work{margin-top:2px;}
+.wr{display:flex;gap:9px;align-items:baseline;padding:7px 8px;border-radius:9px;border-left:4px solid transparent;transition:.18s;}
+.wr + .wr{margin-top:2px;}
+.wr .pl{flex:none;width:76px;font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.wr .mx{font-family:var(--math);font-size:14px;color:var(--muted);line-height:1.7;flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;}
+.wr.on{background:#eef0fa;border-left-color:var(--teal);}
+.wr.on .mx{font-size:16px;color:var(--ink);font-weight:600;}
+.wr.on .pl{color:var(--teal);}
+.wr.done .mx{color:var(--soft);}
+.wr .ex{font-family:var(--math);font-size:13px;color:var(--soft);line-height:1.65;margin-top:8px;display:block;font-weight:400;}
+.wr:not(.on) .ex{display:none;}
+.wr .ex u{font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;display:block;margin-bottom:1px;}
+.wr .ex b{color:var(--ink);}
+/* HTML-only stacked fractions */
+.fr{display:inline-block;vertical-align:middle;text-align:center;line-height:1.25;margin:0 2px;}
+.fr .nu{display:block;padding:0 7px 2px;border-bottom:1.5px solid currentColor;}
+.fr .de{display:block;padding:2px 7px 0;}
+.fr.big{margin:0 4px;}
+.fr.big > .nu{border-bottom-width:2.6px;padding:0 11px 5px;}
+.fr.big > .de{padding:5px 11px 0;}
+.wh{display:inline-block;vertical-align:middle;}
+.pm{padding:0 4px;}
+.opw{font-family:var(--sans);font-size:.72em;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);padding:0 6px;}
+.wr.on .opw{color:var(--teal);}
+/* highlights */
+.hl{border-radius:4px;padding:1px 4px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.wr:not(.on) .hl{background:transparent;box-shadow:none;padding:0;}
+.gl{border-radius:4px;padding:1px 4px;background:#dbe9f5;box-shadow:inset 0 0 0 1.5px #9dc0dc;}
+.wr:not(.on) .gl{background:transparent;box-shadow:none;padding:0;}
+.ca{text-decoration:line-through;text-decoration-color:#d1495b;-webkit-text-decoration-color:#d1495b;text-decoration-thickness:2px;color:var(--muted);}
+/* compare view */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:2px;}
+@media (max-width:640px){.cmp{grid-template-columns:1fr;}}
+.cmp .col{border:1px solid var(--line);border-radius:11px;padding:9px 10px 11px;background:#fff;}
+.cmp .ch{font-family:var(--disp);font-weight:600;font-size:13px;color:var(--teal-dk);line-height:1.2;}
+.cmp .cs{font-size:9.6px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:3px 0 8px;}
+.cmp .cr{font-family:var(--math);font-size:12.6px;color:var(--soft);line-height:1.65;padding:4px 0;border-top:1px dashed #e6e8f3;overflow-x:auto;}
+.cmp .cr:first-of-type{border-top:none;}
+.cmp .cr b.k{font-family:var(--sans);font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;}
+.verd{margin-top:11px;border:1px solid #bfe0cb;background:#eaf6ee;border-radius:11px;padding:11px 13px;font-size:13px;color:#25603c;line-height:1.55;text-align:center;}
+.verd .big{display:block;font-family:var(--math);font-size:19px;color:#1d5232;margin:5px 0 3px;font-weight:700;}
+.verd b{color:#1d5232;}
+/* left column */
+.dom{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:9px;border:1px solid var(--line);background:#f7f6fc;border-radius:9px;padding:7px 11px;}
+.dom b{font-size:9.4px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;flex:none;}
+.dom span{font-family:var(--math);font-size:13.5px;color:var(--teal-dk);font-weight:700;text-align:right;}
+.dom span.none{color:var(--muted);font-weight:400;}
+.dom.excl span{color:#b23145;}
+.cap{font-size:12px;color:var(--soft);line-height:1.55;margin-top:11px;border-top:1px solid var(--line);padding-top:10px;min-height:52px;}
+.cap b{color:var(--ink);} .cap i{font-family:var(--math);}
+/* numeric check */
+.sl{display:flex;align-items:center;gap:10px;margin-top:9px;}
+.sl label{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);flex:none;}
+.sl label b{font-family:var(--math);font-size:14px;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+.sl input[type=range]{flex:1;accent-color:#43458f;height:20px;min-width:0;}
+.vals{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;}
+.vals div{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 9px;text-align:center;}
+.vals div span{display:block;font-size:9.2px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+.vals div b{display:block;font-family:var(--math);font-size:16px;color:var(--teal-dk);margin-top:2px;}
+.vals div.bad b{color:#b23145;font-size:13px;}
+.vrd{margin-top:8px;font-size:12px;line-height:1.55;color:var(--soft);border-radius:9px;padding:8px 11px;}
+.vrd b{color:var(--ink);} .vrd i{font-family:var(--math);}
+.vrd.ok{background:#eaf6ee;border:1px solid #bfe0cb;color:#2c6244;} .vrd.ok b{color:#1d5232;}
+.vrd.no{background:#fae5e8;border:1px solid #f0c9d0;color:#8a2a3a;} .vrd.no b{color:#7a1f2c;}
+.vrd.nu{background:#f1f2f9;border:1px solid var(--line);}
+/* plan chips */
+.plan{display:flex;flex-wrap:wrap;gap:4px;margin-top:11px;}
+.plan span{font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:#eceefa;color:var(--muted);border-radius:20px;padding:4px 9px;}
+.plan span.on{background:var(--teal);color:#fff;}
+.plan span.done{background:#dfe2f4;color:var(--teal-dk);}
+#info .n{margin-bottom:4px;}
+#info i,.mnem i,.note i,.cap i{font-family:var(--math);}
+.pulse{animation:pl 1.3s ease-in-out infinite;}
+@keyframes pl{0%,100%{opacity:1;}50%{opacity:.45;}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 7</div>
+  <h1>Two Roads, One Answer</h1>
+  <div class="intro">A <b>complex fraction</b> is a fraction with fractions living inside it, and there are exactly two standard ways to clean one up. Most students are taught one of them and quietly wonder whether the other is cheating. It is not. Here both methods run on the <b>same expression</b>, one line at a time, so you can watch two very different-looking routes arrive at the identical answer &mdash; and see for yourself which one gets there with less work.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The shape of the expression</h2>
+      <svg id="pic" viewBox="0 0 250 172" aria-label="diagram of the complex fraction as the current step transforms it"><g id="art"></g></svg>
+      <div class="dom"><b>Answer</b><span id="ansv" class="none">&mdash;</span></div>
+      <div class="dom excl"><b>Excluded values</b><span id="domv" class="none">&mdash;</span></div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>Check it with a number</h2>
+      <svg id="gr" viewBox="0 0 250 172" aria-label="graph of the simplified expression with open holes at the excluded values"><g id="grt"></g></svg>
+      <div class="sl"><label>slide <i>x</i> = <b id="xv">&mdash;</b></label><input type="range" id="xs" min="-50" max="50" step="1" value="10"></div>
+      <div class="vals">
+        <div id="ob"><span>original</span><b id="ov">&mdash;</b></div>
+        <div id="sb"><span>simplified</span><b id="sv">&mdash;</b></div>
+      </div>
+      <div class="vrd" id="vrd"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Simplify a complex fraction<small>pick an example, then pick a road</small></div>
+    <div class="card">
+      <div id="pick"></div>
+      <div class="modeseg" id="mode">
+        <button data-m="0">Method 1<small>combine, then divide</small></button>
+        <button data-m="1">Method 2<small>multiply by the LCD</small></button>
+        <button data-m="2">Compare<small>both, side by side</small></button>
+      </div>
+      <div class="work" id="work"></div>
+      <div class="plan" id="plan"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"></div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* =====================================================================
+    HTML math helpers. No renderer, no LaTeX — just spans and borders.
+    Token strings are plain text; H() italicises the variable.
+    ===================================================================== */
+ function H(s){ return String(s).replace(/x/g,'<i>x</i>'); }
+ function frH(n,d,cls){ return '<span class="fr'+(cls?' '+cls:'')+'"><span class="nu">'+n+'</span><span class="de">'+d+'</span></span>'; }
+ function fr(n,d){ return frH(H(n),H(d)); }
+ function cf(t,b){ return frH(t,b,'big'); }
+ function hl(s){ return '<span class="hl">'+H(s)+'</span>'; }
+ function hlH(s){ return '<span class="hl">'+s+'</span>'; }
+ function gl(s){ return '<span class="gl">'+H(s)+'</span>'; }
+ function ca(s){ return '<span class="ca">'+H(s)+'</span>'; }
+ function hlfr(n,d){ return hlH(fr(n,d)); }
+ function op(w){ return '<span class="opw">'+w+'</span>'; }
+ var DOT=' &middot; ', DIV=' &divide; ';
+
+ /* build the raw top / bottom of a complex fraction from a term list */
+ function terms(A){
+  var s='',i,t;
+  for(i=0;i<A.length;i++){ t=A[i];
+   if(t.op!==undefined) s+='<span class="pm">'+t.op+'</span>';
+   else if(t.w!==undefined) s+='<span class="wh">'+H(t.w)+'</span>';
+   else s+=fr(t.n,t.d);
+  }
+  return s;
+ }
+
+ /* =====================================================================
+    Step metadata — the same for every example, because the METHOD is
+    what is being taught. The "why" blocks carry the reasoning.
+    ===================================================================== */
+ var M1=[
+  {pl:'the complex fraction',chip:'set up',t:'A fraction inside a fraction',
+   u:'why the long bar is just a division sign',
+   w:'The long middle bar means exactly what a short one means: <b>divide</b>. Reading it that way is the whole idea behind Method 1. Everything above the bar is one quantity, everything below it is a second quantity, and you are dividing the first by the second. Nothing in this method is new &mdash; it is arithmetic you already own, wearing algebra.'},
+  {pl:'combine the top',chip:'one top',t:'Make the numerator a single fraction',
+   u:'why you must combine before you can divide',
+   w:'Division wants <i>one</i> thing divided by <i>one</i> thing. While the top is still a <b>sum of fractions</b> it is not yet a single quantity, so give the top its own LCD and add. This is ordinary Section-3 work, aimed only at the material above the bar; the bottom is not touched on this line.'},
+  {pl:'combine the bottom',chip:'one bottom',t:'Make the denominator a single fraction',
+   u:'why the bottom gets its own separate LCD',
+   w:'The bottom is a second, unrelated addition problem, and it gets its own LCD. You are <b>not</b> trying to make the top and the bottom match &mdash; you are only collapsing each half to a single fraction. When this line is done the expression reads "one fraction divided by one fraction," which you have known how to handle since arithmetic.'},
+  {pl:'flip and multiply',chip:'reciprocal',t:'Divide by multiplying the reciprocal',
+   u:'why turning the bottom upside down is legal',
+   w:'Dividing by 2/3 and multiplying by 3/2 give the same result, because 2/3 &middot; 3/2 = 1 &mdash; flipping undoes the fraction exactly. In general <i>a</i> &divide; <i>b</i>/<i>c</i> = <i>a</i> &middot; <i>c</i>/<i>b</i>. <b>Only the bottom fraction flips.</b> The top rides along unchanged, and this is the single most common place to slip.'},
+  {pl:'cancel and finish',chip:'simplify',t:'Cancel, then read off the answer',
+   u:'why the leftovers collapse so dramatically',
+   w:'The two LCDs you built are often the very same expression, so a whole factor cancels in one stroke and the answer is far smaller than the line above it. Cancel only <b>factors</b> &mdash; things being multiplied. Nothing may be crossed out across a plus or minus sign.'}
+ ];
+ var M2=[
+  {pl:'the complex fraction',chip:'set up',t:'The same expression again',
+   u:'why a second method exists at all',
+   w:'Method 1 works every time, but it makes you solve <b>two</b> separate addition problems and then perform a reciprocal before anything simplifies. Method 2 refuses to play along: it attacks the little fractions directly and deletes every one of them in a single multiplication.'},
+  {pl:'one LCD for all',chip:'the big LCD',t:'One LCD for every little denominator',
+   u:'why one LCD, and not two',
+   w:'Ignore the long bar for a moment and list every denominator that appears anywhere <b>inside</b> the expression &mdash; above the bar and below it, all in one list. Build the LCD of that whole list. This single expression is the smallest thing that every little fraction divides into evenly, which is precisely what makes the next line work.'},
+  {pl:'multiply through',chip:'&times; LCD/LCD',t:'Multiply the top and the bottom by it',
+   u:'why this cannot change the value',
+   w:'You are multiplying the whole complex fraction by LCD/LCD, which is <b>1</b>. A quantity multiplied by 1 is unchanged, so the value is safe; only the appearance moves. Distribute the LCD into every term above the bar and every term below it. Because the LCD was built to be divisible by all the little denominators, each little fraction is wiped out as it is hit.'},
+  {pl:'simplify',chip:'simplify',t:'No little fractions left',
+   u:'why this is usually the shorter road',
+   w:'One multiplication removed every inner fraction at once, so there is no reciprocal step and no second LCD to invent. All that remains is to combine like terms and, if the result factors, to cancel. Method 2 tends to win whenever there are several little fractions; Method 1 is pleasant when the top and bottom are already single fractions.'}
+ ];
+
+ /* =====================================================================
+    Four worked examples, verified by hand and by exact arithmetic.
+    ===================================================================== */
+ var EX=[
+  {k:'A',nm:'Numbers first',ct:'(1/2 + 1/3) over (5/6 &minus; 1/2)',c:'#2f6f9f',
+   T:[{n:'1',d:'2'},{op:'+'},{n:'1',d:'3'}],
+   B:[{n:'5',d:'6'},{op:'&minus;'},{n:'1',d:'2'}],
+   topC:{n:'5',d:'6'}, botC:{n:'1',d:'3'}, ans:{n:'5',d:'2'},
+   lcd:'6', dens:'2, 3, 6, 2',
+   m1prod: fr('5 · 3','6 · 1')+' = '+fr('15','6'),
+   m2num:'3 + 2', m2den:'5 − 3', m2tail:' = '+hlfr('5','2'),
+   exclTxt:'none &mdash; no letters here', excl:[],
+   xr:[-5,5], x0:1, f:function(){return (1/2+1/3)/(5/6-1/2);}, g:function(){return 2.5;},
+   d1:[
+    'Start with pure arithmetic, where nothing can hide behind a letter. The long bar is an instruction: take <b>1/2 + 1/3</b> and divide it by <b>5/6 &minus; 1/2</b>.',
+    'Work above the bar only. The LCD of 2 and 3 is 6, so 1/2 becomes 3/6 and 1/3 becomes 2/6. Adding the tops: 3 + 2 = 5, giving <b>5/6</b>.',
+    'Now below the bar, with a completely fresh LCD. Here it is again 6, so 5/6 &minus; 3/6 = 2/6, which reduces to <b>1/3</b>. That the two LCDs matched is a happy accident of this example, not a rule you may count on.',
+    'The expression now reads 5/6 &divide; 1/3. Turn the <b>bottom</b> fraction upside down and multiply: 5/6 &middot; 3/1. The top fraction is untouched.',
+    '5 &middot; 3 = 15 over 6 &middot; 1 = 6, and 15/6 reduces to <b>5/2</b>, or 2.5. Remember that number &mdash; Method 2 has to land on it too, or one of the two methods is broken.'
+   ],
+   d2:[
+    'The same expression, approached from the opposite direction. Method 2 never asks what the long bar means; it goes straight for the little fractions.',
+    'List every denominator hiding inside: <b>2, 3, 6</b> and <b>2</b>. The smallest number all of them divide into is <b>6</b>. One LCD for the entire expression, top and bottom together.',
+    'Multiply the whole top and the whole bottom by 6 &mdash; that is multiplying by 6/6 = 1, so the value cannot move. Distribute: 6 &middot; 1/2 = <b>3</b>, 6 &middot; 1/3 = <b>2</b>, 6 &middot; 5/6 = <b>5</b>, 6 &middot; 1/2 = <b>3</b>. Every little fraction is gone.',
+    'The top is 3 + 2 = 5, the bottom is 5 &minus; 3 = 2, so the answer is <b>5/2</b> = 2.5 &mdash; the same value Method 1 produced, reached in one line fewer and with no reciprocal to remember.'
+   ]},
+
+  {k:'B',nm:'A letter appears',ct:'(1/x + 1/2) over (1/x &minus; 1/2)',c:'#43458f',
+   T:[{n:'1',d:'x'},{op:'+'},{n:'1',d:'2'}],
+   B:[{n:'1',d:'x'},{op:'&minus;'},{n:'1',d:'2'}],
+   topC:{n:'2 + x',d:'2x'}, botC:{n:'2 − x',d:'2x'}, ans:{n:'2 + x',d:'2 − x'},
+   lcd:'2x', dens:'x, 2, x, 2',
+   m1prod: frH('(2 + <i>x</i>)'+DOT+ca('2x'), ca('2x')+DOT+'(2 &minus; <i>x</i>)'),
+   m2num:'2 + x', m2den:'2 − x', m2tail:'',
+   exclTxt:'<i>x</i> &ne; 0, <i>x</i> &ne; 2',
+   excl:[{v:0,kind:'little',why:'the little denominator <i>x</i> is zero there'},
+         {v:2,kind:'main',why:'the entire bottom, 1/<i>x</i> &minus; 1/2, equals zero there'}],
+   xr:[-6,8], x0:4,
+   f:function(x){return (1/x+1/2)/(1/x-1/2);}, g:function(x){return (2+x)/(2-x);},
+   d1:[
+    'A letter has arrived, but the long bar still means divide. Before touching anything, notice <b><i>x</i> &ne; 0</b>: the little fraction 1/<i>x</i> forbids it, and that ban is permanent no matter what the expression turns into later.',
+    'Top only. The LCD of <i>x</i> and 2 is <b>2<i>x</i></b>, so 1/<i>x</i> = 2/(2<i>x</i>) and 1/2 = <i>x</i>/(2<i>x</i>). Adding the tops gives <b>(2 + <i>x</i>)/(2<i>x</i>)</b>.',
+    'Bottom only. The same LCD appears, so 2/(2<i>x</i>) &minus; <i>x</i>/(2<i>x</i>) = <b>(2 &minus; <i>x</i>)/(2<i>x</i>)</b>. Watch the order carefully: it is 2 &minus; <i>x</i>, not <i>x</i> &minus; 2. Those two differ by a factor of &minus;1 and reversing them flips the sign of the entire answer.',
+    'One fraction divided by one fraction. Flip the bottom and multiply: (2 + <i>x</i>)/(2<i>x</i>) &middot; (2<i>x</i>)/(2 &minus; <i>x</i>).',
+    'The 2<i>x</i> is a <b>factor</b> of the top and of the bottom, so it cancels completely, leaving <b>(2 + <i>x</i>)/(2 &minus; <i>x</i>)</b>. That answer bans <i>x</i> = 2 on its face, but says nothing about <i>x</i> = 0 &mdash; you must carry that restriction forward yourself.'
+   ],
+   d2:[
+    'Same expression, second road. Four little fractions to destroy.',
+    'The denominators inside are <b><i>x</i>, 2, <i>x</i>, 2</b>. Their LCD is <b>2<i>x</i></b> &mdash; one copy of each distinct factor, to the highest power it reaches.',
+    'Multiply the entire top and the entire bottom by 2<i>x</i>. Distributing: 2<i>x</i> &middot; 1/<i>x</i> = <b>2</b> and 2<i>x</i> &middot; 1/2 = <b><i>x</i></b>, above and below alike. Each little denominator cancels against the piece of the LCD that was built for it.',
+    'What is left is <b>(2 + <i>x</i>)/(2 &minus; <i>x</i>)</b> &mdash; the finished answer, identical to Method 1&rsquo;s, but with no LCD computed twice and no fraction turned upside down.'
+   ]},
+
+  {k:'C',nm:'A whole number joins in',ct:'(x/(x+3) &minus; 1) over (2/(x+3) + 1)',c:'#7a5a8a',
+   T:[{n:'x',d:'x + 3'},{op:'&minus;'},{w:'1'}],
+   B:[{n:'2',d:'x + 3'},{op:'+'},{w:'1'}],
+   topC:{n:'−3',d:'x + 3'}, botC:{n:'x + 5',d:'x + 3'}, ans:{n:'−3',d:'x + 5'},
+   lcd:'x + 3', dens:'x + 3, x + 3',
+   m1prod: frH('&minus;3'+DOT+ca('(x + 3)'), ca('(x + 3)')+DOT+'(<i>x</i> + 5)'),
+   m2num:'x − (x + 3)', m2den:'2 + (x + 3)', m2tail:' = '+hlfr('−3','x + 5'),
+   exclTxt:'<i>x</i> &ne; &minus;3, <i>x</i> &ne; &minus;5',
+   excl:[{v:-3,kind:'little',why:'the little denominator <i>x</i> + 3 is zero there'},
+         {v:-5,kind:'main',why:'the entire bottom, 2/(<i>x</i> + 3) + 1, equals zero there'}],
+   xr:[-10,4], x0:1,
+   f:function(x){return (x/(x+3)-1)/(2/(x+3)+1);}, g:function(x){return -3/(x+5);},
+   d1:[
+    'Only one little denominator appears here, (<i>x</i> + 3), but each half also carries a bare <b>1</b>. Straight away <b><i>x</i> &ne; &minus;3</b>.',
+    'A whole number cannot join an addition of fractions until it wears the same denominator, so rewrite 1 as (<i>x</i> + 3)/(<i>x</i> + 3). Then <i>x</i> &minus; (<i>x</i> + 3) = <i>x</i> &minus; <i>x</i> &minus; 3 = <b>&minus;3</b>. The <i>x</i> terms destroy each other &mdash; but only because the minus sign was distributed across <b>both</b> terms in the parentheses.',
+    'Below the bar, the same rewrite: 2/(<i>x</i> + 3) + (<i>x</i> + 3)/(<i>x</i> + 3) = (2 + <i>x</i> + 3)/(<i>x</i> + 3) = <b>(<i>x</i> + 5)/(<i>x</i> + 3)</b>.',
+    'Flip the bottom fraction and multiply: &minus;3/(<i>x</i> + 3) &middot; (<i>x</i> + 3)/(<i>x</i> + 5).',
+    'The (<i>x</i> + 3) cancels top against bottom, leaving <b>&minus;3/(<i>x</i> + 5)</b>. The new-looking restriction <b><i>x</i> &ne; &minus;5</b> is not new at all: at <i>x</i> = &minus;5 the original bottom, 2/(<i>x</i> + 3) + 1, was already zero.'
+   ],
+   d2:[
+    'Method 2 does not care that a whole number is sitting in there; the LCD will multiply it just like anything else.',
+    'The only denominator inside is <b><i>x</i> + 3</b> (the two 1s have an invisible denominator of 1, which changes nothing). So the LCD is simply <b><i>x</i> + 3</b>.',
+    'Multiply the whole top and the whole bottom by (<i>x</i> + 3). Above: (<i>x</i> + 3) &middot; <i>x</i>/(<i>x</i> + 3) = <b><i>x</i></b> and (<i>x</i> + 3) &middot; 1 = <b>(<i>x</i> + 3)</b>. Below: (<i>x</i> + 3) &middot; 2/(<i>x</i> + 3) = <b>2</b> and (<i>x</i> + 3) &middot; 1 = <b>(<i>x</i> + 3)</b>.',
+    'Combine: <i>x</i> &minus; (<i>x</i> + 3) = <b>&minus;3</b> on top, and 2 + (<i>x</i> + 3) = <b><i>x</i> + 5</b> below. The answer <b>&minus;3/(<i>x</i> + 5)</b> matches Method 1 exactly, and the parentheses did all the sign work in one place instead of two.'
+   ]},
+
+  {k:'D',nm:'Two different bottoms',ct:'(1/(x&minus;1) &minus; 1/(x+1)) over (1/(x&minus;1) + 1/(x+1))',c:'#2f9e5b',
+   T:[{n:'1',d:'x − 1'},{op:'&minus;'},{n:'1',d:'x + 1'}],
+   B:[{n:'1',d:'x − 1'},{op:'+'},{n:'1',d:'x + 1'}],
+   topC:{n:'2',d:'(x − 1)(x + 1)'}, botC:{n:'2x',d:'(x − 1)(x + 1)'}, ans:{n:'1',d:'x'},
+   lcd:'(x − 1)(x + 1)', dens:'x − 1, x + 1, x − 1, x + 1',
+   m1prod: frH('2'+DOT+ca('(x − 1)(x + 1)'), ca('(x − 1)(x + 1)')+DOT+'2<i>x</i>')+' = '+fr('2','2x'),
+   m2num:'(x + 1) − (x − 1)', m2den:'(x + 1) + (x − 1)', m2tail:' = '+fr('2','2x')+' = '+hlfr('1','x'),
+   exclTxt:'<i>x</i> &ne; &minus;1, <i>x</i> &ne; 0, <i>x</i> &ne; 1',
+   excl:[{v:1,kind:'little',why:'the little denominator <i>x</i> &minus; 1 is zero there'},
+         {v:-1,kind:'little',why:'the little denominator <i>x</i> + 1 is zero there'},
+         {v:0,kind:'main',why:'the entire bottom, 1/(<i>x</i>&minus;1) + 1/(<i>x</i>+1), equals zero there'}],
+   xr:[-5,5], x0:2,
+   f:function(x){return (1/(x-1)-1/(x+1))/(1/(x-1)+1/(x+1));}, g:function(x){return 1/x;},
+   d1:[
+    'Now two genuinely different little denominators, (<i>x</i> &minus; 1) and (<i>x</i> + 1). Before a single step: <b><i>x</i> &ne; 1</b> and <b><i>x</i> &ne; &minus;1</b>.',
+    'Top only. The two denominators share nothing, so the LCD is their product, <b>(<i>x</i> &minus; 1)(<i>x</i> + 1)</b>. The tops become (<i>x</i> + 1) and (<i>x</i> &minus; 1), and subtracting gives (<i>x</i> + 1) &minus; (<i>x</i> &minus; 1) = <i>x</i> + 1 &minus; <i>x</i> + 1 = <b>2</b>. Both signs inside the second parentheses flip.',
+    'Bottom only, same LCD, but now an addition: (<i>x</i> + 1) + (<i>x</i> &minus; 1) = <b>2<i>x</i></b>. One sign change is the entire difference between the two halves.',
+    'Flip and multiply: 2/[(<i>x</i>&minus;1)(<i>x</i>+1)] &middot; [(<i>x</i>&minus;1)(<i>x</i>+1)]/(2<i>x</i>). The identical LCD is about to disappear from both places at once.',
+    'The whole (<i>x</i> &minus; 1)(<i>x</i> + 1) cancels, and 2/(2<i>x</i>) reduces to <b>1/<i>x</i></b>. Look how much the answer hides: it announces <i>x</i> &ne; 0 but has erased every trace of <i>x</i> &ne; &plusmn;1, which is exactly why those must be recorded from the original.'
+   ],
+   d2:[
+    'Four little fractions, two distinct denominators &mdash; this is the case where Method 2 pulls decisively ahead.',
+    'The denominators inside are <b><i>x</i> &minus; 1, <i>x</i> + 1, <i>x</i> &minus; 1, <i>x</i> + 1</b>. Two distinct factors, neither repeated, so the LCD is <b>(<i>x</i> &minus; 1)(<i>x</i> + 1)</b>.',
+    'Multiply top and bottom by it. Each product cancels one factor and leaves the other: (<i>x</i>&minus;1)(<i>x</i>+1) &middot; 1/(<i>x</i>&minus;1) = <b>(<i>x</i> + 1)</b>, and (<i>x</i>&minus;1)(<i>x</i>+1) &middot; 1/(<i>x</i>+1) = <b>(<i>x</i> &minus; 1)</b>.',
+    'Above: (<i>x</i> + 1) &minus; (<i>x</i> &minus; 1) = <b>2</b>. Below: (<i>x</i> + 1) + (<i>x</i> &minus; 1) = <b>2<i>x</i></b>. So 2/(2<i>x</i>) = <b>1/<i>x</i></b> &mdash; the same answer, with the (<i>x</i>&minus;1)(<i>x</i>+1) written down once instead of three times.'
+   ]}
+ ];
+
+ /* =====================================================================
+    Line builders
+    ===================================================================== */
+ function mk1(x){
+  var rt=terms(x.T), rb=terms(x.B);
+  return [
+   cf(rt,rb),
+   cf(hlH(fr(x.topC.n,x.topC.d)), rb),
+   cf(fr(x.topC.n,x.topC.d), hlH(fr(x.botC.n,x.botC.d))),
+   fr(x.topC.n,x.topC.d)+DIV+fr(x.botC.n,x.botC.d)+op('becomes')+fr(x.topC.n,x.topC.d)+DOT+hlfr(x.botC.d,x.botC.n),
+   op('=')+x.m1prod+op('=')+hlfr(x.ans.n,x.ans.d)
+  ];
+ }
+ function mk2(x){
+  var rt=terms(x.T), rb=terms(x.B);
+  return [
+   cf(rt,rb),
+   'little denominators: '+H(x.dens)+op('so')+'LCD = '+hl(x.lcd),
+   cf(gl(x.lcd)+'&thinsp;('+rt+')', gl(x.lcd)+'&thinsp;('+rb+')'),
+   cf(hl(x.m2num), hl(x.m2den))+x.m2tail
+  ];
+ }
+ var i0; for(i0=0;i0<EX.length;i0++){ EX[i0].L1=mk1(EX[i0]); EX[i0].L2=mk2(EX[i0]); }
+
+ /* =====================================================================
+    The structure diagram (inline SVG, drawn from computed coordinates)
+    ===================================================================== */
+ var GC=125, TOPY=46, BARY=88, BOTY=126, INK='#22243a', SER='Georgia,serif';
+ function ital(t){ return /x/.test(t)?' font-style="italic"':''; }
+ function tx(cx,cy,t,col,fs,wt){
+  return '<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" text-anchor="middle" font-family="'+SER+'" font-size="'+fs+'" fill="'+col+'" font-weight="'+(wt||600)+'"'+ital(t)+'>'+t+'</text>';
+ }
+ function fw(n,d,fs){ return Math.max(n.length,d.length)*fs*0.54+10; }
+ function pw(t,fs){ return t.length*fs*0.58+9; }
+ function sfrac(cx,cy,n,d,col,fs){
+  var w=fw(n,d,fs)-6, s='';
+  s+=tx(cx,cy-4,n,col,fs);
+  s+='<line x1="'+(cx-w/2).toFixed(1)+'" y1="'+cy+'" x2="'+(cx+w/2).toFixed(1)+'" y2="'+cy+'" stroke="'+col+'" stroke-width="1.6"/>';
+  s+=tx(cx,cy+fs+1.5,d,col,fs);
+  return s;
+ }
+ function halfW(A,fs){
+  var t=0,i; for(i=0;i<A.length;i++){ var e=A[i];
+   t+= (e.op!==undefined)?12:((e.w!==undefined)?pw(e.w,fs):fw(e.n,e.d,fs)); }
+  return t;
+ }
+ function drawHalf(A,cy,denHi){
+  var fs=11.5, x=GC-halfW(A,fs)/2, s='', i, e, w, cx, dw;
+  for(i=0;i<A.length;i++){ e=A[i];
+   w=(e.op!==undefined)?12:((e.w!==undefined)?pw(e.w,fs):fw(e.n,e.d,fs));
+   cx=x+w/2;
+   if(e.op!==undefined) s+=tx(cx,cy+4,(e.op==='+'?'+':'−'),INK,13);
+   else if(e.w!==undefined) s+=tx(cx,cy+4,e.w,INK,13);
+   else {
+    if(denHi){ dw=e.d.length*fs*0.54+9;
+     s+='<rect class="pulse" x="'+(cx-dw/2).toFixed(1)+'" y="'+(cy+3)+'" width="'+dw.toFixed(1)+'" height="15" rx="4" fill="#fbf3e2" stroke="#b8862f" stroke-width="1.4" stroke-dasharray="4 3"/>';
+    }
+    s+=sfrac(cx,cy,e.n,e.d,INK,fs);
+   }
+   x+=w;
+  }
+  return s;
+ }
+ function boxAround(cx,cy,w,h,col){
+  return '<rect x="'+(cx-w/2).toFixed(1)+'" y="'+(cy-h/2).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="9" fill="#fffaec" stroke="'+col+'" stroke-width="1.6" stroke-dasharray="5 3"/>';
+ }
+ function pill(cy,label,col){
+  var fs=11, w=pw(label,fs)+18, s='';
+  s+='<rect x="'+(GC-w/2).toFixed(1)+'" y="'+(cy-9)+'" width="'+w.toFixed(1)+'" height="18" rx="9" fill="#fbf3e2" stroke="'+col+'" stroke-width="1.5"/>';
+  s+=tx(GC,cy+4,label,'#8a6a20',fs,700);
+  return s;
+ }
+ function mainBar(){ return '<line x1="20" y1="'+BARY+'" x2="230" y2="'+BARY+'" stroke="'+INK+'" stroke-width="3.2" stroke-linecap="round"/>'; }
+
+ function drawPic(x,state){
+  var s='', fs=11.5, w1, w2, tot, sx, cx1, cx2;
+  if(state==='raw'||state==='lcdHi'||state==='times'){
+   s+=drawHalf(x.T,TOPY,state==='lcdHi')+mainBar()+drawHalf(x.B,BOTY,state==='lcdHi');
+   if(state==='raw'){ s+='<text x="238" y="'+(BARY+4)+'" text-anchor="middle" font-family="'+SER+'" font-size="15" fill="#b0b3c9">&#247;</text>'; }
+   if(state==='lcdHi'){ s+=pill(160,'LCD = '+x.lcd,'#b8862f'); }
+   if(state==='times'){ s+=pill(11,'× '+x.lcd,'#b8862f')+pill(161,'× '+x.lcd,'#b8862f');
+    s+='<path d="M'+GC+' 22 L'+GC+' 28" stroke="#b8862f" stroke-width="1.6"/><path d="M'+(GC-3.5)+' 27 L'+(GC+3.5)+' 27 L'+GC+' 32 Z" fill="#b8862f"/>';
+    s+='<path d="M'+GC+' 150 L'+GC+' 144" stroke="#b8862f" stroke-width="1.6"/><path d="M'+(GC-3.5)+' 145 L'+(GC+3.5)+' 145 L'+GC+' 140 Z" fill="#b8862f"/>';
+   }
+  }
+  else if(state==='topC'||state==='bothC'){
+   var hiTop=(state==='topC'), hiBot=(state==='bothC');
+   w1=fw(x.topC.n,x.topC.d,fs);
+   if(hiTop) s+=boxAround(GC,TOPY+4,w1+14,38,'#b8862f');
+   s+=sfrac(GC,TOPY,x.topC.n,x.topC.d,INK,fs);
+   s+=mainBar();
+   if(state==='topC'){ s+=drawHalf(x.B,BOTY,false); }
+   else {
+    w2=fw(x.botC.n,x.botC.d,fs);
+    if(hiBot) s+=boxAround(GC,BOTY+4,w2+14,38,'#b8862f');
+    s+=sfrac(GC,BOTY,x.botC.n,x.botC.d,INK,fs);
+   }
+  }
+  else if(state==='flip'){
+   w1=fw(x.topC.n,x.topC.d,fs); w2=fw(x.botC.d,x.botC.n,fs);
+   tot=w1+26+w2; sx=GC-tot/2; cx1=sx+w1/2; cx2=sx+w1+26+w2/2;
+   s+=sfrac(cx1,BARY,x.topC.n,x.topC.d,INK,fs);
+   s+=tx(sx+w1+13,BARY+5,'×',INK,15,700);
+   s+=boxAround(cx2,BARY+4,w2+14,38,'#b8862f');
+   s+=sfrac(cx2,BARY,x.botC.d,x.botC.n,INK,fs);
+   s+='<path d="M'+(cx2-14)+' 52 A 16 16 0 1 1 '+(cx2+14)+' 52" fill="none" stroke="#b8862f" stroke-width="1.8"/>';
+   s+='<path d="M'+(cx2+9)+' 50 L'+(cx2+19)+' 51 L'+(cx2+13)+' 59 Z" fill="#b8862f"/>';
+   s+=tx(cx2,30,'turned over','#8a6a20',10,700);
+   s+=tx(cx1,30,'unchanged','#a8aabb',10,700);
+  }
+  else { /* ans */
+   var fs2=17, w=fw(x.ans.n,x.ans.d,fs2);
+   s+='<rect x="'+(GC-(w+40)/2)+'" y="'+(BARY-34)+'" width="'+(w+40)+'" height="68" rx="14" fill="#eef0fa" stroke="'+x.c+'" stroke-width="1.6"/>';
+   s+=sfrac(GC,BARY,x.ans.n,x.ans.d,INK,fs2);
+   s+=tx(GC,BARY-42,'one simple fraction','#7d7f94',10,700);
+   if(x.exclTxt.indexOf('none')<0){ s+=tx(GC,BARY+56,'still carrying its exclusions','#b23145',10,700); }
+  }
+  return s;
+ }
+
+ var CAP={
+  raw:'A long bar with fractions above it and fractions below it. That long bar is nothing more exotic than a <b>divide</b> sign.',
+  topC:'Everything above the bar has collapsed into <b>one</b> fraction. The bottom has not been touched yet.',
+  bothC:'Both halves are single fractions now. The picture reads exactly <i>one fraction &divide; one fraction</i>.',
+  flip:'The division became a multiplication, and the <b>bottom</b> fraction turned over. The top rode along unchanged.',
+  lcdHi:'Every little denominator is flagged in gold. Their LCD is the one expression all of them divide into evenly.',
+  times:'The gold tags multiply the whole top and the whole bottom by the same thing &mdash; that is multiplying by 1, so the value cannot move.',
+  ans:'One fraction, with no fractions inside it. Both roads arrive at this same place.'
+ };
+ var ST1=['raw','topC','bothC','flip','ans'], ST2=['raw','lcdHi','times','ans'];
+
+ /* =====================================================================
+    The numeric check graph
+    ===================================================================== */
+ var X0=30, X1=244, YR=6;
+ function gxp(t,x){ return X0+(t-x.xr[0])/(x.xr[1]-x.xr[0])*(X1-X0); }
+ function gyp(v){ return 80-(v/YR)*72; }
+ function poly(pts,col,wd,dash){
+  return '<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+col+'" stroke-width="'+wd+'" stroke-linecap="round" stroke-linejoin="round"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+ }
+ function drawGraph(x,xv){
+  var s='', k, a=x.xr[0], b=x.xr[1], i, N=560, t, v, seg=[], last=null, ok;
+  /* grid */
+  for(k=Math.ceil(a);k<=Math.floor(b);k++){
+   s+='<line x1="'+gxp(k,x).toFixed(1)+'" y1="8" x2="'+gxp(k,x).toFixed(1)+'" y2="152" stroke="#e8eaf4" stroke-width="1"/>';
+  }
+  for(k=-4;k<=4;k+=2){ if(k===0) continue;
+   s+='<line x1="'+X0+'" y1="'+gyp(k).toFixed(1)+'" x2="'+X1+'" y2="'+gyp(k).toFixed(1)+'" stroke="#e8eaf4" stroke-width="1"/>';
+   s+='<text x="'+(X0-4)+'" y="'+(gyp(k)+3).toFixed(1)+'" text-anchor="end" font-size="7.5" fill="#b0b3c9" font-family="Inter,sans-serif">'+k+'</text>';
+  }
+  /* axes */
+  s+='<line x1="'+X0+'" y1="'+gyp(0)+'" x2="'+X1+'" y2="'+gyp(0)+'" stroke="#b0b3c9" stroke-width="1.3"/>';
+  if(a<0&&b>0) s+='<line x1="'+gxp(0,x).toFixed(1)+'" y1="8" x2="'+gxp(0,x).toFixed(1)+'" y2="152" stroke="#b0b3c9" stroke-width="1.3"/>';
+  for(k=Math.ceil(a);k<=Math.floor(b);k++){ if(k%2!==0||k===0) continue;
+   s+='<text x="'+gxp(k,x).toFixed(1)+'" y="'+(gyp(0)+10)+'" text-anchor="middle" font-size="7.5" fill="#b0b3c9" font-family="Inter,sans-serif">'+k+'</text>';
+  }
+  /* vertical asymptotes at the values that kill the whole bottom */
+  for(k=0;k<x.excl.length;k++){ if(x.excl[k].kind!=='main') continue;
+   var ax=gxp(x.excl[k].v,x).toFixed(1);
+   s+='<line x1="'+ax+'" y1="8" x2="'+ax+'" y2="152" stroke="#d1495b" stroke-width="1.3" stroke-dasharray="4 4" opacity=".55"/>';
+  }
+  /* the simplified curve, broken wherever it leaves the window */
+  for(i=0;i<=N;i++){
+   t=a+(b-a)*i/N; v=x.g(t);
+   ok=isFinite(v)&&Math.abs(v)<=YR*1.01;
+   if(ok&&last!==null&&Math.abs(v-last)>YR) ok=false;
+   if(ok){ seg.push(gxp(t,x).toFixed(1)+','+gyp(v).toFixed(1)); }
+   else { if(seg.length>1) s+=poly(seg,x.c,2.6); seg=[]; }
+   last=isFinite(v)?v:null;
+  }
+  if(seg.length>1) s+=poly(seg,x.c,2.6);
+  /* the slider guide and its point */
+  var gv=x.g(xv), bad=badAt(x,xv);
+  s+='<line x1="'+gxp(xv,x).toFixed(1)+'" y1="8" x2="'+gxp(xv,x).toFixed(1)+'" y2="152" stroke="'+x.c+'" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>';
+  /* open holes: simplified is fine there, the original never was */
+  for(k=0;k<x.excl.length;k++){ if(x.excl[k].kind!=='little') continue;
+   var hv=x.g(x.excl[k].v);
+   if(!isFinite(hv)||Math.abs(hv)>YR) continue;
+   var hx=gxp(x.excl[k].v,x), hy=gyp(hv);
+   s+='<circle cx="'+hx.toFixed(1)+'" cy="'+hy.toFixed(1)+'" r="4.2" fill="#fffdf9" stroke="'+x.c+'" stroke-width="2.2"/>';
+  }
+  if(isFinite(gv)&&Math.abs(gv)<=YR&&(!bad||bad.kind!=='main')){
+   s+='<circle cx="'+gxp(xv,x).toFixed(1)+'" cy="'+gyp(gv).toFixed(1)+'" r="'+(bad?5.4:4)+'" fill="'+(bad?'#fffdf9':x.c)+'" stroke="'+(bad?'#d1495b':'#fffdf9')+'" stroke-width="2.2"/>';
+  }
+  s+='<text x="'+X1+'" y="167" text-anchor="end" font-size="8.5" fill="#a8aabb" font-family="Inter,sans-serif">value of the expression, plotted against <tspan font-style="italic">x</tspan></text>';
+  return s;
+ }
+ function badAt(x,v){
+  var k; for(k=0;k<x.excl.length;k++){ if(Math.abs(v-x.excl[k].v)<1e-9) return x.excl[k]; }
+  return null;
+ }
+ function fmt(v){
+  if(!isFinite(v)) return 'undefined';
+  if(Math.abs(v)>=99999) return 'enormous';
+  var r=Math.round(v*1000)/1000;
+  return (Math.abs(r-Math.round(r))<1e-9)? String(Math.round(r)) : r.toFixed(3);
+ }
+
+ /* =====================================================================
+    State and rendering
+    ===================================================================== */
+ var e=0, m=0, st=0;
+ function steps(){ return m===0?M1:M2; }
+ function lines(){ return m===0?EX[e].L1:EX[e].L2; }
+ function detail(){ return m===0?EX[e].d1:EX[e].d2; }
+ function stateName(){ return m===0?ST1[st]:ST2[st]; }
+
+ function drawPick(){
+  $("pick").innerHTML=EX.map(function(x,i){
+   return '<button class="'+(i===e?'on':'')+'" data-i="'+i+'"><span class="nm">'+x.nm+'</span><span class="ct">'+x.ct+'</span></button>';
+  }).join('');
+  var bs=$("pick").getElementsByTagName('button'), i;
+  for(i=0;i<bs.length;i++){ bs[i].onclick=(function(k){ return function(){ e=k; st=0; render(); }; })(i); }
+ }
+ function drawMode(){
+  var bs=$("mode").getElementsByTagName('button'), i;
+  for(i=0;i<bs.length;i++){ bs[i].className=(i===m?'on':''); }
+ }
+
+ function compareView(x){
+  var s='<div class="cmp">', i;
+  s+='<div class="col"><div class="ch">Method 1</div><div class="cs">combine, then divide &middot; 5 lines &middot; 2 separate LCDs &middot; 1 flip</div>';
+  for(i=0;i<x.L1.length;i++){ s+='<div class="cr"><b class="k">'+M1[i].pl+'</b>'+x.L1[i]+'</div>'; }
+  s+='</div><div class="col"><div class="ch">Method 2</div><div class="cs">multiply by the LCD &middot; 4 lines &middot; 1 LCD &middot; no flip</div>';
+  for(i=0;i<x.L2.length;i++){ s+='<div class="cr"><b class="k">'+M2[i].pl+'</b>'+x.L2[i]+'</div>'; }
+  s+='</div></div>';
+  s+='<div class="verd">Two different-looking roads, and they meet here:<span class="big">'+fr(x.ans.n,x.ans.d)+'</span>'+
+     'Same answer, same restrictions &mdash; <b>'+(x.exclTxt.indexOf('none')<0?x.exclTxt:'no restrictions, since no letter appears')+'</b>. Neither method is more correct than the other; pick whichever leaves you less to keep track of.</div>';
+  return s;
+ }
+
+ function render(){
+  var x=EX[e], S, L, D, i, s='';
+  drawPick(); drawMode();
+
+  if(m===2){
+   $("work").innerHTML=compareView(x);
+   $("plan").innerHTML='';
+   $("prev").disabled=true; $("next").disabled=true;
+   $("art").innerHTML=drawPic(x,'ans');
+   $("cardTitle").innerHTML='Where both roads end';
+   $("cap").innerHTML=CAP.ans;
+   $("stage").style.background=x.c;
+   $("stage").innerHTML=x.nm+'<small>both methods, side by side</small>';
+   $("info").innerHTML='<span class="n">Why bother with two methods?</span>Because they are good at different things. <b>Method 1</b> is the natural one when the top and the bottom are <i>already</i> single fractions &mdash; there is nothing to combine, so it is just a flip. <b>Method 2</b> pulls ahead the moment several little fractions appear, because one multiplication destroys all of them at once and you never build a second LCD or turn anything upside down. Fluency means recognising, at a glance, which shape you are looking at.';
+  } else {
+   S=steps(); L=lines(); D=detail();
+   for(i=0;i<L.length;i++){
+    var cls=(i===st)?'wr on':((i<st)?'wr done':'wr');
+    s+='<div class="'+cls+'"><div class="pl">'+S[i].pl+'</div><div class="mx">'+L[i];
+    if(i===st){ s+='<span class="ex"><u>'+S[i].u+'</u>'+S[i].w+'</span>'; }
+    s+='</div></div>';
+    if(i>st) break;
+   }
+   $("work").innerHTML=s;
+   $("plan").innerHTML=S.map(function(p,i){
+    return '<span class="'+(i===st?'on':(i<st?'done':''))+'">'+p.chip+'</span>';
+   }).join('');
+   $("art").innerHTML=drawPic(x,stateName());
+   $("cardTitle").innerHTML=(stateName()==='ans')?'Where the road ends':'The shape of the expression';
+   $("cap").innerHTML=CAP[stateName()];
+   $("stage").style.background=x.c;
+   $("stage").innerHTML=x.nm+'<small>'+(m===0?'Method 1':'Method 2')+' &middot; step '+(st+1)+' of '+S.length+' &middot; '+S[st].t+'</small>';
+   $("info").innerHTML='<span class="n">'+S[st].t+'</span>'+D[st];
+   $("prev").disabled=(st===0);
+   $("next").disabled=(st===S.length-1);
+  }
+
+  /* answer + exclusions */
+  var reveal=(m===2)||(st===(m===0?4:3));
+  if(reveal){ $("ansv").className=''; $("ansv").innerHTML=fr(x.ans.n,x.ans.d); }
+  else { $("ansv").className='none'; $("ansv").innerHTML='&mdash; not yet'; }
+  $("domv").className=(x.excl.length?'':'none'); $("domv").innerHTML=x.exclTxt;
+
+  $("mnem").innerHTML='<b>Method 1: combine, combine, flip.</b> Collapse the top to one fraction, collapse the bottom to one fraction, then divide by multiplying the reciprocal. <b>Method 2: one LCD, multiply through.</b> Find the LCD of every little denominator and multiply the whole top and the whole bottom by it. Both are always legal, and both always give the same answer.';
+  $("note").innerHTML='<b>The restrictions come from the ORIGINAL, never from the answer.</b> Any value that made a <i>little</i> denominator zero is banned forever, even after that denominator has cancelled away and left no trace. On the graph below, those banned values are the <b>open circles</b>: the simplified curve sails straight through them, but the expression you started with had no value there at all.';
+
+  syncSlider(x);
+ }
+
+ /* =====================================================================
+    Slider + numeric check
+    ===================================================================== */
+ var lastEx=-1;
+ function syncSlider(x){
+  if(lastEx!==e){
+   lastEx=e;
+   $("xs").min=Math.round(x.xr[0]*10);
+   $("xs").max=Math.round(x.xr[1]*10);
+   $("xs").value=Math.round(x.x0*10);
+  }
+  updateCheck();
+ }
+ function updateCheck(){
+  var x=EX[e], xv=parseInt($("xs").value,10)/10, bad=badAt(x,xv);
+  var ov=x.f(xv), sv=x.g(xv);
+  $("xv").innerHTML=(xv<0?'&minus;':'')+Math.abs(xv).toFixed(1);
+  $("grt").innerHTML=drawGraph(x,xv);
+
+  var oTxt, sTxt;
+  if(bad){ oTxt='undefined'; } else { oTxt=fmt(ov); }
+  sTxt=(bad&&bad.kind==='main')?'undefined':fmt(sv);
+  $("ov").innerHTML=oTxt.replace(/^-/,'&minus;');
+  $("sv").innerHTML=sTxt.replace(/^-/,'&minus;');
+  $("ob").className=(oTxt==='undefined')?'bad':'';
+  $("sb").className=(sTxt==='undefined')?'bad':'';
+
+  var v=$("vrd");
+  if(x.excl.length===0){
+   v.className='vrd nu';
+   v.innerHTML='No letter appears in this example, so the value never changes and the graph is a flat line at <b>2.5</b>. The point still stands: both roads produced <b>5/2</b>, and 5/2 is 2.5.';
+  } else if(!bad){
+   v.className='vrd ok';
+   v.innerHTML='<b>&#10003; Same number.</b> The original complex fraction and the simplified answer agree here &mdash; and they agree at every legal value of <i>x</i>, which is what "simplify" is supposed to mean.';
+  } else if(bad.kind==='little'){
+   v.className='vrd no';
+   v.innerHTML='<b>&#10007; A hole, not a match.</b> The original has <b>no value</b> here because '+bad.why+', yet the simplified form cheerfully returns <b>'+fmt(sv).replace(/^-/,'&minus;')+'</b>. That is the open circle on the graph &mdash; and precisely why the restriction must be written down beside the answer.';
+  } else {
+   v.className='vrd no';
+   v.innerHTML='<b>Both undefined.</b> Here '+bad.why+', so the whole expression is a division by zero. The simplified form is undefined here too, so the graph runs off toward infinity on either side of the dashed line.';
+  }
+ }
+
+ /* =====================================================================
+    Controls
+    ===================================================================== */
+ $("prev").onclick=function(){ if(m!==2&&st>0){ st--; render(); } };
+ $("next").onclick=function(){ if(m!==2&&st<steps().length-1){ st++; render(); } };
+ (function(){ var bs=$("mode").getElementsByTagName('button'), i;
+  for(i=0;i<bs.length;i++){ bs[i].onclick=(function(k){ return function(){ m=k; st=0; render(); }; })(i); }
+ })();
+ $("xs").oninput=function(){ updateCheck(); };
+ document.addEventListener('keydown',function(ev){
+  if(document.activeElement&&document.activeElement.tagName==='INPUT') return;
+  if(m===2) return;
+  if(ev.key==='ArrowRight'&&st<steps().length-1){ st++; render(); }
+  if(ev.key==='ArrowLeft'&&st>0){ st--; render(); }
+ });
+
+ render();
+})();
+</script>
+</body>
+</html>

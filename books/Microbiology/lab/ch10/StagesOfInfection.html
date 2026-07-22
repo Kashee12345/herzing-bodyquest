@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>The Five Stages of Infection</title>
+<meta name="description" content="Interactive infection curve — the five periods of disease (incubation, prodromal, illness, decline, convalescence) plotted against pathogen number over time. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:1.05fr 0.95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.rgn rect,.rgn{transition:fill .2s,opacity .2s;}
+#art text{font-family:var(--sans);}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:11.5px;color:var(--muted);justify-content:center;}
+.legend span{display:inline-flex;align-items:center;gap:5px;font-weight:600;}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block;}
+#info .dd b{color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 10</div>
+  <h1>The Five Stages of Infection</h1>
+  <div class="intro">Every acute infection unfolds in the same five acts &mdash; the <b>periods of disease</b> &mdash; from silent invasion to full recovery. Watch the <b>number of pathogens</b> rise and fall over <b>time</b>, then tap each stage to see what the patient feels and what to watch for.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Incubation period</h2>
+    <svg viewBox="0 0 240 190" aria-label="infection curve: number of pathogens over time across five stages"><g id="art"></g></svg>
+    <div class="legend">
+      <span><i style="background:var(--teal)"></i>pathogen number</span>
+      <span><i style="background:#d1495b"></i>symptom threshold</span>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">The infection curve<small>tap a stage below</small></div>
+    <div class="card">
+      <div class="list" id="list"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div id="info"></div>
+      <div class="mnem" id="order">Order: <b>I</b>ncubation → <b>P</b>rodromal → <b>I</b>llness → <b>D</b>ecline → <b>C</b>onvalescence.</div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var ST=[
+  {k:'inc',ic:'⏳',nm:'Incubation period',ct:'Silent multiplication',
+   col:'#2f6f9f',lbg:'#e5eef6',ltx:'#255f8a',load:'low · rising',
+   sx:'none yet',dur:'hours (staph food poisoning) to years (HIV, hepatitis B)',
+   what:'The pathogen has entered and is <b>multiplying silently</b>. Numbers are still too low to trigger symptoms, so the patient feels well &mdash; and often has no idea they were even exposed.',
+   cont:'Varies. With some diseases (measles, chickenpox, COVID-19) the person is <b>already contagious before any symptoms appear</b>.',
+   nurse:'Exposure histories and contact tracing matter here &mdash; a well-looking person can already be shedding the organism.'},
+  {k:'pro',ic:'😪',nm:'Prodromal period',ct:'Vague first symptoms',
+   col:'#b8862f',lbg:'#fbf3e2',ltx:'#8a6a20',load:'climbing',
+   sx:'mild &amp; non-specific',dur:'usually 1&ndash;2 days',
+   what:'Pathogen numbers climb past the point where the <b>immune system reacts</b>. The patient develops <b>vague, non-specific</b> complaints &mdash; malaise, fatigue, low-grade fever, body aches &mdash; that don\'t yet point to a specific disease.',
+   cont:'Often <b>highly contagious</b>, while the person is still out in the community feeling only slightly unwell.',
+   nurse:'A window for early treatment, but also peak spread. These nonspecific symptoms are easy to dismiss.'},
+  {k:'ill',ic:'🤒',nm:'Period of illness',ct:'Disease at its peak',
+   col:'#d1495b',lbg:'#fae5e8',ltx:'#b23145',load:'peak',
+   sx:'most severe &amp; specific',dur:'days to weeks',
+   what:'The disease is at its <b>most severe</b>. Pathogen numbers peak and signs and symptoms are <b>most intense and specific</b> &mdash; high fever, rash, cough, diarrhea. If defenses or treatment fail, the patient is most likely to die during this period.',
+   cont:'Usually highly contagious.',
+   nurse:'Most intensive monitoring &mdash; watch for sepsis and organ dysfunction. This is when the diagnosis usually becomes clear.'},
+  {k:'dec',ic:'📉',nm:'Period of decline',ct:'Pathogens retreating',
+   col:'#7a5a8a',lbg:'#efe6f6',ltx:'#6a4d78',load:'falling',
+   sx:'fading',dur:'days to weeks',
+   what:'The immune response &mdash; helped by any treatment &mdash; gains the upper hand: <b>pathogen numbers fall</b> and symptoms subside. But the worn-down immune system leaves the patient <b>vulnerable to secondary infections</b>.',
+   cont:'Can still shed organisms and infect others.',
+   nurse:'Guard against opportunistic and hospital-acquired (secondary) infections while defenses are depleted.'},
+  {k:'con',ic:'🌿',nm:'Period of convalescence',ct:'Recovery',
+   col:'#2f9e5b',lbg:'#e5f3ea',ltx:'#237a45',load:'cleared',
+   sx:'resolving / resolved',dur:'days to months',
+   what:'The body <b>recovers and returns to normal function</b> as pathogen numbers fall to baseline. Some diseases leave lasting damage, and the patient <b>may keep shedding the organism</b> after feeling well.',
+   cont:'May stay contagious after symptoms are gone &mdash; think of a "carrier" state (e.g. Typhoid Mary).',
+   nurse:'Keep isolation precautions until clearance criteria are met, and reinforce finishing the full course of any antibiotic.'}
+ ];
+ // --- plot geometry ---
+ function X(t){return 32+t*180;}
+ function Y(l){return 158-l*126;}
+ var A=[[0,.03],[0.1,.07],[0.2,.13],[0.3,.30],[0.4,.56],[0.5,1.0],[0.6,.74],[0.7,.46],[0.8,.22],[0.9,.10],[1,.03]];
+ function cat(anch,seg){
+   var P=anch.map(function(a){return [X(a[0]),Y(a[1])];});
+   var out=[],i,s;
+   for(i=0;i<P.length-1;i++){
+     var p0=P[i-1]||P[i],p1=P[i],p2=P[i+1],p3=P[i+2]||P[i+1];
+     for(s=0;s<seg;s++){
+       var t=s/seg,t2=t*t,t3=t2*t;
+       var x=0.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3);
+       var y=0.5*((2*p1[1])+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3);
+       out.push([Math.round(x*10)/10,Math.round(y*10)/10]);
+     }
+   }
+   out.push(P[P.length-1]);
+   return out;
+ }
+ var pts=cat(A,16);
+ var lineD='M '+pts.map(function(p){return p[0]+' '+p[1];}).join(' L ');
+ var areaD='M '+pts[0][0]+' 158 L '+pts.map(function(p){return p[0]+' '+p[1];}).join(' L ')+' L '+pts[pts.length-1][0]+' 158 Z';
+ var ythr=Y(0.14);
+ function dotFor(idx){ var tx=X((idx+0.5)/5),best=pts[0],bd=1e9;
+   pts.forEach(function(p){var d=Math.abs(p[0]-tx);if(d<bd){bd=d;best=p;}}); return best; }
+ function svg(idx){
+   var s='',i;
+   // stage bands
+   for(i=0;i<5;i++){ var bx=32+i*36, on=(i===idx);
+     s+='<rect class="rgn" data-i="'+i+'" x="'+bx+'" y="30" width="36" height="128" fill="'+(on?ST[i].lbg:'#faf7fc')+'" opacity="'+(on?1:.55)+'"/>'; }
+   for(i=1;i<5;i++){ var dx=32+i*36; s+='<line x1="'+dx+'" y1="30" x2="'+dx+'" y2="158" stroke="#e6e0ee" stroke-width="1"/>'; }
+   // area + curve
+   s+='<path d="'+areaD+'" fill="#efe6f6" opacity=".6"/>';
+   s+='<path d="'+lineD+'" fill="none" stroke="var(--teal)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>';
+   // symptom threshold
+   s+='<line x1="32" y1="'+ythr+'" x2="212" y2="'+ythr+'" stroke="#d1495b" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>';
+   s+='<text x="35" y="'+(ythr-3)+'" font-size="7.5" fill="#b23145" font-weight="700">symptom threshold</text>';
+   // axes
+   s+='<line x1="32" y1="24" x2="32" y2="158" stroke="#c9bdda" stroke-width="1.4"/>';
+   s+='<line x1="32" y1="158" x2="217" y2="158" stroke="#c9bdda" stroke-width="1.4"/>';
+   s+='<path d="M32 24 l-3.2 5.5 h6.4 z" fill="#c9bdda"/>';
+   s+='<path d="M217 158 l-5.5 -3.2 v6.4 z" fill="#c9bdda"/>';
+   s+='<text x="18" y="94" font-size="8.5" fill="#837a94" font-weight="700" transform="rotate(-90 18 94)" text-anchor="middle">Number of pathogens</text>';
+   s+='<text x="126" y="176" font-size="9" fill="#837a94" font-weight="700" text-anchor="middle">Time →</text>';
+   // numbered badges
+   for(i=0;i<5;i++){ var cx=32+i*36+18, ba=(i===idx);
+     s+='<circle cx="'+cx+'" cy="19" r="8" fill="'+(ba?ST[i].col:'#e6e0ee')+'"/>';
+     s+='<text x="'+cx+'" y="22.4" font-size="9" fill="'+(ba?'#fff':'#837a94')+'" font-weight="800" text-anchor="middle">'+(i+1)+'</text>'; }
+   // selected marker
+   var d=dotFor(idx);
+   s+='<line x1="'+d[0]+'" y1="'+d[1]+'" x2="'+d[0]+'" y2="158" stroke="'+ST[idx].col+'" stroke-width="1.4" stroke-dasharray="3 3" opacity=".75"/>';
+   s+='<circle cx="'+d[0]+'" cy="'+d[1]+'" r="6.5" fill="#fff" stroke="'+ST[idx].col+'" stroke-width="3"/>';
+   return s;
+ }
+ function list(idx){
+   $("list").innerHTML=ST.map(function(x,i){return '<button class="it'+(i===idx?' on':'')+'" data-i="'+i+'"><span class="ic">'+x.ic+'</span><span><span class="nm">'+(i+1)+'. '+x.nm+'</span><br><span class="ct">'+x.ct+'</span></span></button>';}).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){b.onclick=function(){sel(+b.dataset.i);};});
+ }
+ var i=0;
+ function render(){
+   var x=ST[i];
+   $("art").innerHTML=svg(i);
+   document.querySelectorAll('#art .rgn').forEach(function(r){r.onclick=function(){sel(+r.dataset.i);};});
+   $("cardTitle").innerHTML=x.nm;
+   $("stage").style.background=x.col;
+   $("stage").innerHTML=x.nm+'<small>stage '+(i+1)+' of 5</small>';
+   list(i);
+   $("info").innerHTML='<span class="n">'+x.nm+' <span class="pill" style="background:'+x.lbg+';color:'+x.ltx+'">'+x.load+'</span></span>'+x.what+
+     '<div class="loc">Symptoms: <b>'+x.sx+'</b> &nbsp;·&nbsp; Typical length: <b>'+x.dur+'</b></div>'+
+     '<div class="dd"><b>Contagious?</b> '+x.cont+'</div>'+
+     '<div class="note" style="margin-top:10px"><b>Nursing:</b> '+x.nurse+'</div>';
+   $("prev").disabled=(i===0); $("next").disabled=(i===4);
+ }
+ function sel(n){ i=n; render(); }
+ $("prev").onclick=function(){if(i>0){i--;render();}};
+ $("next").onclick=function(){if(i<4){i++;render();}};
+ document.addEventListener('keydown',function(e){
+   if(e.key==='ArrowRight'&&i<4){i++;render();}
+   else if(e.key==='ArrowLeft'&&i>0){i--;render();}
+ });
+ render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Where Two Lines Meet</title>
+<meta name="description" content="Drag two lines around the coordinate plane and watch a system of equations land in one of exactly three endings: one solution, no solution, or infinitely many. Includes the algebra that explains why there is no fourth ending, and step-by-step worked graphings with the check.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;--l1:#43458f;--l2:#d1495b;}
+.wrap{grid-template-columns:0.96fr 1.04fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.modeseg button{font-size:12.5px;padding:10px 4px;line-height:1.25;}
+.modeseg button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:2px;}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+#plane{touch-action:none;cursor:grab;}
+#plane.locked{cursor:default;}
+#stage .big{font-family:var(--math);font-size:24px;font-weight:700;letter-spacing:.3px;}
+/* HTML-only fractions — there is no math renderer on this page */
+.fr{display:inline-flex;flex-direction:column;vertical-align:-0.52em;text-align:center;margin:0 3px;}
+.fr .fn{border-bottom:1.7px solid currentColor;padding:0 4px 1px;line-height:1.16;}
+.fr .fd{padding:1px 4px 0;line-height:1.16;}
+.why{font-family:var(--math);font-size:14.5px;color:var(--teal-dk);text-align:center;background:#f1f2f9;border:1px solid var(--line);border-radius:9px;padding:10px;margin-top:11px;line-height:1.9;}
+.why em{font-family:var(--sans);font-style:normal;font-size:10.5px;font-weight:800;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.why .sm{font-family:var(--sans);font-size:12px;color:var(--soft);line-height:1.55;display:block;margin-top:4px;}
+.sl{display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:1px dashed var(--line);}
+.sl:last-child{border-bottom:none;}
+.sl i{width:12px;height:12px;border-radius:3px;flex:none;}
+.sl .k{font-size:9.6px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);width:60px;flex:none;line-height:1.2;}
+.sl .v{font-family:var(--math);font-size:16px;color:var(--ink);font-weight:600;white-space:nowrap;}
+.sl .e{margin-left:auto;font-family:var(--math);font-size:13.5px;color:var(--soft);text-align:right;padding-left:8px;}
+.vd{display:flex;align-items:center;gap:9px;margin:12px 0 0;font-size:11.5px;font-weight:700;color:var(--muted);}
+.sldgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 15px;}
+.sld{margin-top:10px;}
+.sld .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:1px;}
+.sld .lab b{font-family:var(--math);font-size:18px;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+.eqcap{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;display:flex;align-items:center;gap:7px;}
+.eqcap i{width:11px;height:11px;border-radius:50%;flex:none;font-style:normal;}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;display:block;}
+input[type=range]:focus{outline:none;}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--l1);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);margin-top:-8px;}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--l1);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);}
+#g2 input[type=range]::-webkit-slider-thumb{background:var(--l2);}
+#g2 input[type=range]::-moz-range-thumb{background:var(--l2);}
+#g2 .lab b{color:#a33244;}
+.hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:11px;line-height:1.5;}
+#presets .it{display:block;text-align:left;}
+#presets .it .nm,#presets .it .s{display:block;}
+#presets .it .s{font-family:var(--math);margin-top:1px;}
+#picker{display:grid;grid-template-columns:repeat(4,1fr);}
+#picker button{font-size:11.5px;padding:9px 3px;}
+#picker button small{font-family:var(--math);font-size:10px;display:block;font-weight:500;color:var(--muted);margin-top:1px;}
+#picker button.on small{color:rgba(255,255,255,.9);}
+@media (max-width:600px){#picker{grid-template-columns:1fr 1fr;} .sl .e{display:none;}}
+#mb,#rb{min-height:130px;margin-top:12px;}
+.dl{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:7px 2px;border-bottom:1px dashed var(--line);}
+.dl:last-child{border-bottom:none;}
+.mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.6;}
+.mx sub{font-size:.62em;vertical-align:sub;}
+.dl.cur .mx{font-size:17.5px;color:var(--ink);font-weight:600;}
+.pl{flex:none;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);white-space:nowrap;}
+.dl.cur .pl{color:var(--gold);}
+.tg{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.dl:not(.cur) .tg{background:transparent;box-shadow:none;padding:0;}
+.ok{border-radius:4px;padding:1px 5px;background:#dff0e4;box-shadow:inset 0 0 0 1.5px #a6d3b4;}
+.bad{border-radius:4px;padding:1px 5px;background:#fae5e8;box-shadow:inset 0 0 0 1.5px #f0c9d0;}
+.exlab{font-size:12.5px;color:var(--soft);margin-top:11px;line-height:1.6;border-top:1px solid var(--line);padding-top:10px;}
+.exlab b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 5</div>
+  <h1>Where Two Lines Meet</h1>
+  <div class="intro">Every point on a line is a solution of that line&rsquo;s equation. So a point that solves <b>two</b> equations at once must sit on <b>two</b> lines at once &mdash; and there it is, the whole idea of solving a system by graphing. What makes it worth a whole section is that this leaves room for exactly <b>three</b> endings, never a fourth. Drag either line below and see which ending you land in.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="artTitle">Two lines, one plane</h2>
+      <svg id="plane" viewBox="0 0 250 250" aria-label="two draggable lines on the coordinate plane, with their crossing point marked when one exists"><g id="art"></g></svg>
+      <div class="why" id="why"></div>
+    </div>
+    <div class="card"><h2>Three endings, and nothing else</h2>
+      <svg viewBox="0 0 250 124" aria-label="three panels: two lines crossing at one point, two parallel lines, and two lines lying on top of each other">
+        <rect x="0" y="0" width="250" height="124" fill="#fbfbfe"/>
+        <line x1="83" y1="8" x2="83" y2="116" stroke="#e0e2ef" stroke-width="1"/>
+        <line x1="167" y1="8" x2="167" y2="116" stroke="#e0e2ef" stroke-width="1"/>
+        <text x="41" y="18" text-anchor="middle" font-family="Inter,sans-serif" font-size="8.5" font-weight="800" fill="#7d7f94">CROSS ONCE</text>
+        <text x="125" y="18" text-anchor="middle" font-family="Inter,sans-serif" font-size="8.5" font-weight="800" fill="#7d7f94">PARALLEL</text>
+        <text x="209" y="18" text-anchor="middle" font-family="Inter,sans-serif" font-size="8.5" font-weight="800" fill="#7d7f94">SAME LINE</text>
+        <line x1="10" y1="92" x2="74" y2="40" stroke="#43458f" stroke-width="2.6"/>
+        <line x1="10" y1="44" x2="74" y2="90" stroke="#d1495b" stroke-width="2.4" stroke-dasharray="6 4"/>
+        <circle cx="41.3" cy="66.5" r="5" fill="#b8862f" stroke="#fff" stroke-width="2"/>
+        <line x1="94" y1="92" x2="158" y2="50" stroke="#43458f" stroke-width="2.6"/>
+        <line x1="94" y1="72" x2="158" y2="30" stroke="#d1495b" stroke-width="2.4" stroke-dasharray="6 4"/>
+        <line x1="177" y1="92" x2="241" y2="50" stroke="#43458f" stroke-width="4"/>
+        <line x1="177" y1="92" x2="241" y2="50" stroke="#d1495b" stroke-width="2.2" stroke-dasharray="6 4"/>
+        <text x="41" y="106" text-anchor="middle" font-family="Georgia,serif" font-size="10" font-weight="700" fill="#262a5c">exactly one</text>
+        <text x="125" y="106" text-anchor="middle" font-family="Georgia,serif" font-size="10" font-weight="700" fill="#262a5c">none</text>
+        <text x="209" y="106" text-anchor="middle" font-family="Georgia,serif" font-size="10" font-weight="700" fill="#262a5c">infinitely many</text>
+        <text x="41" y="118" text-anchor="middle" font-family="Inter,sans-serif" font-size="7.6" font-weight="700" fill="#7d7f94">different slopes</text>
+        <text x="125" y="118" text-anchor="middle" font-family="Inter,sans-serif" font-size="7.6" font-weight="700" fill="#7d7f94">same m, different b</text>
+        <text x="209" y="118" text-anchor="middle" font-family="Inter,sans-serif" font-size="7.6" font-weight="700" fill="#7d7f94">same m, same b</text>
+      </svg>
+      <div class="mnem"><b>Compare the two slopes before you draw a single point.</b> If the slopes <b>differ</b>, the lines lean differently and must cross &mdash; exactly once, no matter how far out that crossing sits. If the slopes <b>match</b> but the intercepts do not, the lines climb in perfect lockstep at different heights and never touch. If slope <b>and</b> intercept both match, you were handed one line wearing two disguises.<br><br><b>The vocabulary that goes with the three pictures.</b> A system with at least one solution is <b>consistent</b>; one with no solution is <b>inconsistent</b>. Among the consistent ones, exactly one solution makes the equations <b>independent</b>, and infinitely many makes them <b>dependent</b> &mdash; the second equation was carrying no new information.</div>
+      <div class="note"><b>Three ways this section is misread.</b><br>
+      <b>1. &ldquo;No solution&rdquo; is not &ldquo;the solution is 0.&rdquo;</b> Zero is a perfectly good number, and (0, 0) would be a real answer. No solution means the solution set is <b>empty</b> &mdash; there is no ordered pair anywhere in the plane that satisfies both equations.<br>
+      <b>2. &ldquo;Infinitely many&rdquo; is not &ldquo;anything works.&rdquo;</b> The solutions are exactly the points on that one shared line. For <i>y</i> = &minus;<i>x</i> + 4, the pair (0, 0) is <b>not</b> a solution: &minus;0 + 4 = 4, not 0.<br>
+      <b>3. A graph is a picture, and pictures estimate.</b> If the crossing does not land on a grid corner, reading it off gives a near-miss &mdash; and two nearly-parallel lines can shove the true crossing right off the page. This is exactly why substitution and elimination exist. Always substitute your answer back into <b>both original</b> equations.<br>
+      <b>One more form to expect.</b> A vertical line such as <i>x</i> = 4 has no <i>y</i> = <i>mx</i> + <i>b</i> form at all, so the slope comparison above has nothing to compare. It still graphs perfectly well, and a system containing one is read off the picture the same way.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage"><span class="big">&nbsp;</span><small>drag a line to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="modes">
+        <button data-m="0" class="on">Drag two lines<small>find all three endings</small></button>
+        <button data-m="1">Why only three<small>the algebra behind it</small></button>
+        <button data-m="2">Worked examples<small>step by step</small></button>
+      </div>
+
+      <div id="p0">
+        <div id="rows"></div>
+        <div class="vd" id="verdict"></div>
+        <div class="eqcap"><i style="background:#43458f"></i>Equation 1 &mdash; the solid line</div>
+        <div class="sldgrid" id="g1">
+          <div class="sld">
+            <div class="lab"><span>slope <i>m</i><sub>1</sub></span><b id="o_m1">1</b></div>
+            <input type="range" id="r_m1" min="-6" max="6" step="1" value="2" aria-label="slope of the first line, in halves">
+          </div>
+          <div class="sld">
+            <div class="lab"><span>intercept <i>b</i><sub>1</sub></span><b id="o_b1">1</b></div>
+            <input type="range" id="r_b1" min="-6" max="6" step="1" value="1" aria-label="y-intercept of the first line">
+          </div>
+        </div>
+        <div class="eqcap"><i style="background:#d1495b"></i>Equation 2 &mdash; the dashed line</div>
+        <div class="sldgrid" id="g2">
+          <div class="sld">
+            <div class="lab"><span>slope <i>m</i><sub>2</sub></span><b id="o_m2">&minus;1</b></div>
+            <input type="range" id="r_m2" min="-6" max="6" step="1" value="-2" aria-label="slope of the second line, in halves">
+          </div>
+          <div class="sld">
+            <div class="lab"><span>intercept <i>b</i><sub>2</sub></span><b id="o_b2">3</b></div>
+            <input type="range" id="r_b2" min="-6" max="6" step="1" value="3" aria-label="y-intercept of the second line">
+          </div>
+        </div>
+        <div class="grid" id="presets" style="margin-top:12px"></div>
+        <div class="hint">Drag any of the four dots straight on the grid &mdash; the round dot slides a line up and down, the square dot tilts it. Or nudge a slider with the arrow keys.</div>
+      </div>
+
+      <div id="p1" style="display:none"><div id="rb"></div></div>
+
+      <div id="p2" style="display:none">
+        <div class="seg" id="picker"></div>
+        <div id="mb"></div>
+        <div class="exlab" id="exlab"></div>
+      </div>
+
+      <div id="info"></div>
+      <div class="note" id="note" style="display:none"></div>
+      <div class="row" id="nav" style="display:none"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var INK='#22243a', MUT='#7d7f94', LINE='#e0e2ef', TEAL='#43458f', TDK='#262a5c',
+     GOLD='#b8862f', CORAL='#d1495b', BLUE='#2f6f9f', GREEN='#2f9e5b', PURP='#7a5a8a',
+     PALE='#c6c9de', CARD='#fffdf9';
+ var MIN='&#8722;';
+
+ /* ---------- exact rational arithmetic: nothing displayed is ever rounded ---------- */
+ function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=a%b; a=b; b=t; } return a; }
+ function rat(n,d){ if(d<0){ n=-n; d=-d; } if(n===0) return {n:0,d:1}; var g=gcd(n,d)||1; return {n:n/g,d:d/g}; }
+ function radd(a,b){ return rat(a.n*b.d + b.n*a.d, a.d*b.d); }
+ function rsub(a,b){ return rat(a.n*b.d - b.n*a.d, a.d*b.d); }
+ function rmul(a,b){ return rat(a.n*b.n, a.d*b.d); }
+ function rdiv(a,b){ return rat(a.n*b.d, a.d*b.n); }
+ function rval(r){ return r.n/r.d; }
+ function I(n){ return {n:n,d:1}; }
+
+ /* ---------- formatting: HTML entities only, never LaTeX ---------- */
+ function h(n){ return n<0 ? '&minus;'+(-n) : ''+n; }
+ function sv(n){ return n<0 ? MIN+(-n) : ''+n; }
+ function fr(n,d){ return '<span class="fr"><span class="fn">'+n+'</span><span class="fd">'+d+'</span></span>'; }
+ function tg(s){ return '<span class="tg">'+s+'</span>'; }
+ function ok(s){ return '<span class="ok">'+s+'</span>'; }
+ function bad(s){ return '<span class="bad">'+s+'</span>'; }
+ /* rich HTML fraction, for panels */
+ function rt(r){ if(r.n===0) return '0'; if(r.d===1) return h(r.n); return (r.n<0?'&minus;':'')+fr(Math.abs(r.n), r.d); }
+ /* flat text fraction, for labels inside the SVG */
+ function rp(r){ if(r.n===0) return '0'; if(r.d===1) return sv(r.n); return (r.n<0?MIN:'')+Math.abs(r.n)+'/'+r.d; }
+ function ptT(x,y){ return '('+rt(x)+', '+rt(y)+')'; }
+ function ptP(x,y){ return '('+rp(x)+', '+rp(y)+')'; }
+ function eqT(m,b){
+   if(m.n===0) return '<i>y</i> = '+rt(b);
+   var s='<i>y</i> = ';
+   if(m.n===1&&m.d===1) s+='<i>x</i>';
+   else if(m.n===-1&&m.d===1) s+='&minus;<i>x</i>';
+   else s+=rt(m)+'<i>x</i>';
+   if(b.n!==0) s+=(b.n<0?' &minus; ':' + ')+rt({n:Math.abs(b.n),d:b.d});
+   return s;
+ }
+ function eqP(m,b){
+   if(m.n===0) return 'y = '+rp(b);
+   var s='y = ';
+   if(m.n===1&&m.d===1) s+='x';
+   else if(m.n===-1&&m.d===1) s+=MIN+'x';
+   else s+=rp(m)+'x';
+   if(b.n!==0) s+=(b.n<0?' '+MIN+' ':' + ')+rp({n:Math.abs(b.n),d:b.d});
+   return s;
+ }
+ /* signed term for showing a substitution, e.g.  m x + b  with m negative */
+ function coefT(m){
+   if(m.n===1&&m.d===1) return '<i>x</i>';
+   if(m.n===-1&&m.d===1) return '&minus;<i>x</i>';
+   return rt(m)+'<i>x</i>';
+ }
+ function sideT(m,b){
+   if(m.n===0) return rt(b);
+   var s=coefT(m);
+   if(b.n!==0) s+=(b.n<0?' &minus; ':' + ')+rt({n:Math.abs(b.n),d:b.d});
+   return s;
+ }
+
+ /* ---------- world -> screen ---------- */
+ var R=6, U=18, X0=125, Y0=125;
+ function sx(x){ return X0 + U*x; }
+ function sy(y){ return Y0 - U*y; }
+ function inView(x,y){ return x>=-R && x<=R && y>=-R && y<=R; }
+
+ function grid(){
+   var s='<rect x="17" y="17" width="216" height="216" fill="#fbfbfe"/>', i;
+   for(i=-R;i<=R;i++){
+     s+='<line x1="'+sx(i)+'" y1="17" x2="'+sx(i)+'" y2="233" stroke="'+LINE+'" stroke-width="0.8"/>';
+     s+='<line x1="17" y1="'+sy(i)+'" x2="233" y2="'+sy(i)+'" stroke="'+LINE+'" stroke-width="0.8"/>';
+   }
+   s+='<line x1="14" y1="'+Y0+'" x2="236" y2="'+Y0+'" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<line x1="'+X0+'" y1="14" x2="'+X0+'" y2="236" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<polygon points="241,125 233,121 233,129" fill="'+INK+'"/><polygon points="9,125 17,121 17,129" fill="'+INK+'"/>';
+   s+='<polygon points="125,9 121,17 129,17" fill="'+INK+'"/><polygon points="125,241 121,233 129,233" fill="'+INK+'"/>';
+   s+='<text x="237" y="116" text-anchor="end" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">x</text>';
+   s+='<text x="133" y="17" text-anchor="start" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">y</text>';
+   var T=[-6,-4,-2,2,4,6];
+   for(i=0;i<T.length;i++){
+     s+='<text x="'+sx(T[i])+'" y="'+(Y0+11.5)+'" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="'+PALE+'">'+sv(T[i])+'</text>';
+     s+='<text x="'+(X0-5)+'" y="'+(sy(T[i])+3)+'" text-anchor="end" font-family="Georgia,serif" font-size="8" fill="'+PALE+'">'+sv(T[i])+'</text>';
+   }
+   return s;
+ }
+ function halo(x,y,anch,size,col,txt){
+   return '<text x="'+x+'" y="'+y+'" text-anchor="'+anch+'" font-family="Georgia,serif" font-size="'+size+
+          '" font-weight="700" fill="'+col+'" stroke="'+CARD+'" stroke-width="3.2" paint-order="stroke" stroke-linejoin="round">'+txt+'</text>';
+ }
+ function linePath(m,b){
+   var d='', pen=false, N=400, i, x, y;
+   for(i=0;i<=N;i++){
+     x = -R + i*(2*R/N);
+     y = m*x + b;
+     if(y>=-R-1e-9 && y<=R+1e-9){ d += (pen?'L':'M') + sx(x).toFixed(2) + ' ' + sy(y).toFixed(2) + ' '; pen=true; }
+     else { pen=false; }
+   }
+   return d;
+ }
+ function drawLine(m,b,col,w,dash){
+   var da = dash ? ' stroke-dasharray="'+dash+'"' : '';
+   return '<path d="'+linePath(m,b)+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"'+da+'/>';
+ }
+ function labelLine(m,b,col,txt,cands){
+   var C = cands || [4.3, 2.3, -2.3, -4.3, 0.6], i, x, y;
+   for(i=0;i<C.length;i++){
+     x=C[i]; y=m*x+b;
+     if(y>-R+0.5 && y<R-0.5) return halo(Math.max(34,Math.min(216,sx(x))), sy(y)-8, 'middle', 9.5, col, txt);
+   }
+   return '';
+ }
+ function dot(px,py,col,lab,labdy,r){
+   var s='';
+   if(lab) s+=halo(Math.max(30,Math.min(220,px)), py+(labdy||-13), 'middle', 10.5, col, lab);
+   s+='<circle cx="'+px+'" cy="'+py+'" r="'+(r||6.5)+'" fill="'+col+'" stroke="#fff" stroke-width="2"/>';
+   return s;
+ }
+ function sq(px,py,col){
+   var a=5.6;
+   return '<rect x="'+(px-a)+'" y="'+(py-a)+'" width="'+(2*a)+'" height="'+(2*a)+'" rx="1.6" fill="'+col+'" stroke="#fff" stroke-width="2"/>';
+ }
+ function hArrow(x1,x2,y,col,w){
+   if(Math.abs(x2-x1)<1) return '';
+   var dir=(x2>x1)?1:-1, e=x2-dir*6;
+   return '<line x1="'+x1+'" y1="'+y+'" x2="'+e.toFixed(1)+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"/>'+
+          '<polygon points="'+x2.toFixed(1)+','+y+' '+e.toFixed(1)+','+(y-4.2)+' '+e.toFixed(1)+','+(y+4.2)+'" fill="'+col+'"/>';
+ }
+ function vArrow(x,y1,y2,col,w){
+   if(Math.abs(y2-y1)<1) return '';
+   var dir=(y2>y1)?1:-1, e=y2-dir*6;
+   return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+e.toFixed(1)+'" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"/>'+
+          '<polygon points="'+x+','+y2.toFixed(1)+' '+(x-4.2)+','+e.toFixed(1)+' '+(x+4.2)+','+e.toFixed(1)+'" fill="'+col+'"/>';
+ }
+ /* dashed guides from a crossing point back to each axis */
+ function drops(x,y){
+   var px=sx(x), py=sy(y);
+   return '<line x1="'+px+'" y1="'+py+'" x2="'+px+'" y2="'+Y0+'" stroke="'+GOLD+'" stroke-width="1.4" stroke-dasharray="3 3"/>'+
+          '<line x1="'+px+'" y1="'+py+'" x2="'+X0+'" y2="'+py+'" stroke="'+GOLD+'" stroke-width="1.4" stroke-dasharray="3 3"/>';
+ }
+ /* the walk that actually draws a line: start at the intercept, run d, rise n */
+ function walk(m,b,col){
+   var run=m.d, rise=m.n, bx=sx(0), by=sy(rval(b)), cx=sx(run), cy=sy(rval(b));
+   var s='';
+   if(Math.abs(rval(b))>R || Math.abs(rval(b)+rise)>R || run>R) return dot(bx,Math.max(20,Math.min(230,by)),col,'',0,5);
+   s+=hArrow(bx,cx,cy,BLUE,2.6);
+   s+=vArrow(cx,cy,sy(rval(b)+rise),CORAL,2.6);
+   s+=halo((bx+cx)/2, cy+14, 'middle', 9, BLUE, 'run '+run);
+   s+=halo(cx+7, (cy+sy(rval(b)+rise))/2+3.5, 'start', 9, CORAL, 'rise '+sv(rise));
+   s+=dot(bx,by,col,'',0,5);
+   s+=dot(sx(run),sy(rval(b)+rise),col,'',0,5);
+   return s;
+ }
+
+ /* ---------- the one solver used everywhere ---------- */
+ /* A line is {m:rational, b:rational}. Solving m1 x + b1 = m2 x + b2 gives
+    (m1 - m2) x = b2 - b1, so everything hinges on whether m1 - m2 is zero. */
+ function solve(A,B){
+   var D=rsub(A.m,B.m), C=rsub(B.b,A.b);
+   if(D.n===0) return {kind:(C.n===0?'many':'none'), D:D, C:C};
+   var x=rdiv(C,D);
+   return {kind:'one', D:D, C:C, x:x, y:radd(rmul(A.m,x),A.b), y2:radd(rmul(B.m,x),B.b)};
+ }
+
+ /* ================= MODE 0: drag two lines ================= */
+ /* Slopes are stored as halves (k/2) so every slope, crossing and check stays exact. */
+ var L={k1:2,b1:1,k2:-2,b2:3};
+ var mode=0, wstep=0, exi=0, estep=0, drag=null;
+
+ function lineOf(k,b){ return {m:rat(k,2), b:I(b)}; }
+ function handX(k,b){ return (b*k<=0)?2:-2; }          /* keeps the tilt handle on-grid */
+ function handY(k,b,hx){ return b + k*hx/2; }
+
+ function art0(){
+   var A=lineOf(L.k1,L.b1), B=lineOf(L.k2,L.b2), S=solve(A,B);
+   var m1=rval(A.m), m2=rval(B.m), s=grid();
+   s+=drawLine(m1,L.b1,TEAL,2.9,'');
+   s+=drawLine(m2,L.b2,CORAL,2.6,'6 4');
+   if(S.kind==='one' && inView(rval(S.x),rval(S.y))){
+     s+=drops(rval(S.x),rval(S.y));
+   }
+   s+=labelLine(m1,L.b1,TEAL,eqP(A.m,A.b),[-4.3,-2.3,2.3,4.3,0.6]);
+   s+=labelLine(m2,L.b2,CORAL,eqP(B.m,B.b),[4.3,2.3,-2.3,-4.3,0.6]);
+   /* the four handles */
+   var h1=handX(L.k1,L.b1), h2=handX(L.k2,L.b2);
+   s+=sq(sx(h1), sy(handY(L.k1,L.b1,h1)), TEAL);
+   s+=sq(sx(h2), sy(handY(L.k2,L.b2,h2)), CORAL);
+   s+=dot(sx(0), sy(L.b1), TEAL, '', 0, 6);
+   s+=dot(sx(0), sy(L.b2), CORAL, '', 0, 6);
+   if(S.kind==='one' && inView(rval(S.x),rval(S.y))){
+     var px=sx(rval(S.x)), py=sy(rval(S.y));
+     s+=dot(px,py,GOLD,ptP(S.x,S.y),(py>46?-14:20),7.5);
+   }
+   return {svg:s, A:A, B:B, S:S};
+ }
+
+ function render0(){
+   var Z=art0(), A=Z.A, B=Z.B, S=Z.S;
+   $("art").innerHTML=Z.svg;
+   $("artTitle").innerHTML='Two lines, one plane';
+
+   /* the two equations, side by side */
+   function row(col,name,val,eq){
+     return '<div class="sl"><i style="background:'+col+'"></i><span class="k">'+name+'</span>'+
+            '<span class="v">'+val+'</span><span class="e">'+eq+'</span></div>';
+   }
+   var rows='';
+   rows+=row(TEAL,'Equation 1','<i>m</i><sub>1</sub> = '+rt(A.m)+', <i>b</i><sub>1</sub> = '+rt(A.b), eqT(A.m,A.b));
+   rows+=row(CORAL,'Equation 2','<i>m</i><sub>2</sub> = '+rt(B.m)+', <i>b</i><sub>2</sub> = '+rt(B.b), eqT(B.m,B.b));
+   $("rows").innerHTML=rows;
+
+   var big, sub, col, pill, words, d, why, note='';
+   if(S.kind==='one'){
+     var far=!inView(rval(S.x),rval(S.y));
+     big=ptT(S.x,S.y); sub='the lines cross exactly once';
+     col=TEAL; pill='<span class="pill normal">one solution</span>'; words='consistent &middot; independent';
+     why='<em>set the two <i>y</i>&rsquo;s equal and solve for <i>x</i></em>'+
+         sideT(A.m,A.b)+' = '+sideT(B.m,B.b)+'<br>'+
+         '( '+rt(A.m)+' &minus; '+(B.m.n<0?'('+rt(B.m)+')':rt(B.m))+' )<i>x</i> = '+rt(B.b)+' &minus; '+(A.b.n<0?'('+rt(A.b)+')':rt(A.b))+
+         ' &nbsp;&rarr;&nbsp; '+rt(S.D)+'<i>x</i> = '+rt(S.C)+'<br>'+
+         '<i>x</i> = '+rt(S.x)+' &nbsp;&rarr;&nbsp; <i>y</i> = '+rt(S.y)+
+         '<span class="sm">Check in equation 2: '+rt(B.m)+'('+rt(S.x)+')'+(B.b.n<0?' &minus; '+rt({n:-B.b.n,d:B.b.d}):(B.b.n>0?' + '+rt(B.b):''))+
+         ' = '+rt(S.y2)+', the same <i>y</i>. The point really does sit on both lines.</span>';
+     d='The slopes differ ('+rt(A.m)+' against '+rt(B.m)+'), so the two lines lean differently and are forced to meet &mdash; and they can meet only once, because the coefficient of <i>x</i> in the equation above is <b>not zero</b>, and a nonzero coefficient permits exactly one value of <i>x</i>. Feed that <i>x</i> into either equation and the <i>y</i> comes back the same, which is what &ldquo;the point is on both lines&rdquo; means. Write the answer as an ordered pair: <b>'+ptT(S.x,S.y)+'</b>.';
+     if(far){
+       note='<b>The crossing has slid off the window.</b> Its exact coordinates are '+ptT(S.x,S.y)+', which is outside the &minus;6 to 6 grid you are looking at. Nothing has gone wrong &mdash; the solution exists and is unique. This is the graphing method quietly failing you: nearly-equal slopes push the crossing far away, and no reasonable sheet of graph paper would show it. Notice how small a slope difference it takes.';
+     } else if(S.x.d!==1 || S.y.d!==1){
+       note='<b>This crossing does not land on a grid corner.</b> The exact answer is '+ptT(S.x,S.y)+' &mdash; something a person reading the picture would guess at, and probably guess wrong. Graphing has told you the truth about <i>which</i> of the three endings you are in, and roughly where; for the exact ordered pair you need algebra. That is precisely the gap substitution and elimination were invented to close.';
+     }
+   } else if(S.kind==='none'){
+     big='no solution'; sub='parallel lines &mdash; they never meet';
+     col=CORAL; pill='<span class="pill high">no solution</span>'; words='inconsistent';
+     why='<em>the <i>x</i>&rsquo;s cancel and leave something false</em>'+
+         sideT(A.m,A.b)+' = '+sideT(B.m,B.b)+'<br>'+
+         '( '+rt(A.m)+' &minus; '+(B.m.n<0?'('+rt(B.m)+')':rt(B.m))+' )<i>x</i> = '+rt(B.b)+' &minus; '+(A.b.n<0?'('+rt(A.b)+')':rt(A.b))+
+         ' &nbsp;&rarr;&nbsp; 0&#183;<i>x</i> = '+rt(S.C)+'<br>'+
+         '0 = '+rt(S.C)+' &nbsp; '+bad('false')+
+         '<span class="sm">Zero times any number is zero, so no <i>x</i> can rescue this. The statement is false for every <i>x</i> &mdash; which is the algebra&rsquo;s way of saying the lines never meet.</span>';
+     d='Both lines have slope '+rt(A.m)+', so every step to the right raises them by exactly the same amount. They started at different heights ('+rt(A.b)+' and '+rt(B.b)+') and they keep that gap forever. Watch what the algebra does: subtracting '+rt(B.m)+'<i>x</i> from both sides removes <i>x</i> <b>entirely</b>, and what is left, 0 = '+rt(S.C)+', is simply untrue. When the variable vanishes and leaves a false statement, the system has <b>no solution</b> and is called <b>inconsistent</b>.';
+     note='<b>Write the answer honestly.</b> The answer is not 0, and it is not <i>x</i> = 0 &mdash; those are ordinary numbers and would be real solutions if they worked. Write &ldquo;no solution,&rdquo; or the empty set. Nudge either intercept slider by one and the gap closes; the lines still never touch until the intercepts match exactly, and at that instant the ending changes completely.';
+   } else {
+     big='infinitely many'; sub='one line, written twice';
+     col=BLUE; pill='<span class="pill low">infinitely many</span>'; words='consistent &middot; dependent';
+     why='<em>the <i>x</i>&rsquo;s cancel and leave something true</em>'+
+         sideT(A.m,A.b)+' = '+sideT(B.m,B.b)+'<br>'+
+         '( '+rt(A.m)+' &minus; '+(B.m.n<0?'('+rt(B.m)+')':rt(B.m))+' )<i>x</i> = '+rt(B.b)+' &minus; '+(A.b.n<0?'('+rt(A.b)+')':rt(A.b))+
+         ' &nbsp;&rarr;&nbsp; 0&#183;<i>x</i> = 0<br>'+
+         '0 = 0 &nbsp; '+ok('true')+
+         '<span class="sm">True no matter what <i>x</i> is. Every <i>x</i> works, so every point on the line is a solution.</span>';
+     d='Same slope <b>and</b> same intercept: the dashed line is sitting exactly on top of the solid one. There is only one line in the picture. Here the <i>x</i> disappears again, but this time it leaves 0 = 0 &mdash; a statement that is true for <b>every</b> <i>x</i>. So the solution set is the entire line: all pairs <b>('+'<i>x</i>, <i>y</i>) with '+eqT(A.m,A.b)+'</b>. The system is <b>consistent</b> (solutions exist) and <b>dependent</b> (the second equation told you nothing the first had not).';
+     note='<b>Infinitely many is not the same as anything goes.</b> Only the points <i>on this line</i> qualify. Test one: at <i>x</i> = 1 the line gives <i>y</i> = '+rt(radd(A.m,A.b))+', so (1, '+rt(radd(A.m,A.b))+') is a solution &mdash; while (1, '+rt(radd(radd(A.m,A.b),I(1)))+'), one unit higher, is not, even though there are infinitely many solutions. In a textbook the two equations will not look identical; one will be a multiple of the other, and the disguise only falls away once you solve both for <i>y</i>.';
+   }
+   $("stage").style.background=col;
+   $("stage").innerHTML='<span class="big">'+big+'</span><small>'+sub+'</small>';
+   $("verdict").innerHTML=pill+'<span>'+words+'</span>';
+   $("why").innerHTML=why;
+   $("info").innerHTML='<span class="n">'+(S.kind==='one'?'They cross':(S.kind==='none'?'They never meet':'They are the same line'))+'</span>'+d;
+   if(note){ $("note").style.display=''; $("note").innerHTML=note; } else { $("note").style.display='none'; }
+
+   $("o_m1").innerHTML=rt(A.m); $("o_b1").innerHTML=h(L.b1);
+   $("o_m2").innerHTML=rt(B.m); $("o_b2").innerHTML=h(L.b2);
+   $("r_m1").value=L.k1; $("r_b1").value=L.b1; $("r_m2").value=L.k2; $("r_b2").value=L.b2;
+   renderPresets();
+ }
+
+ var PRE=[
+  {nm:'Crossing',        s:'one solution',       v:{k1:2,b1:1,k2:-2,b2:3}},
+  {nm:'Parallel',        s:'no solution',        v:{k1:4,b1:-1,k2:4,b2:2}},
+  {nm:'Same line',       s:'infinitely many',    v:{k1:-1,b1:2,k2:-1,b2:2}},
+  {nm:'Nearly parallel', s:'crossing off-grid',  v:{k1:3,b1:-1,k2:2,b2:2}}
+ ];
+ function renderPresets(){
+   var cur=-1,i;
+   for(i=0;i<PRE.length;i++){ var q=PRE[i].v;
+     if(q.k1===L.k1&&q.b1===L.b1&&q.k2===L.k2&&q.b2===L.b2) cur=i; }
+   $("presets").innerHTML=PRE.map(function(K,j){
+     return '<button class="it'+(j===cur?' on':'')+'" data-j="'+j+'"><span class="nm">'+K.nm+'</span><span class="s">'+K.s+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#presets .it'),function(b){
+     b.onclick=function(){ var K=PRE[+b.dataset.j].v; L.k1=K.k1; L.b1=K.b1; L.k2=K.k2; L.b2=K.b2; render(); };
+   });
+ }
+
+ /* ================= MODE 1: why there are only three endings ================= */
+ /* Companion system:  y = 2x - 1  and  y = -x + 2.
+    2x - 1 = -x + 2  ->  3x = 3  ->  x = 1, y = 2(1) - 1 = 1.  Crossing (1, 1).
+    Check in the second: -(1) + 2 = 1. Same y, so (1, 1) is on both lines.      */
+ var W=[
+  {p:'a solution has to satisfy both',
+   rows:[{p:'on line 1 only', m:'(0, &minus;1): &nbsp; 2(0) &minus; 1 = &minus;1 '+ok('true')+' &nbsp; but &nbsp; &minus;(0) + 2 = 2 &ne; &minus;1 '+bad('false')},
+         {p:'on both lines',  m:'(1, 1): &nbsp; 2(1) &minus; 1 = 1 '+ok('true')+' &nbsp; and &nbsp; &minus;(1) + 2 = 1 '+ok('true')}],
+   d:'A line is the complete picture of one equation&rsquo;s solutions: every point on it satisfies that equation, and no point off it does. So a solution of the <b>system</b> must be a point that lies on line 1 <b>and</b> on line 2. The red-marked point below satisfies the first equation only &mdash; near the second line, but not on it, and near is worth nothing here. The gold point satisfies both.'},
+  {p:'at a crossing, the two <i>y</i>&rsquo;s agree',
+   rows:[{p:'line 1 at x = 1', m:'<i>y</i> = 2(1) &minus; 1 = '+tg('1')},
+         {p:'line 2 at x = 1', m:'<i>y</i> = &minus;(1) + 2 = '+tg('1')}],
+   d:'Feed the same <i>x</i> into both equations and you get two heights. Almost everywhere those heights disagree &mdash; one line is above the other. A crossing is exactly the place where the disagreement is zero: the two formulas hand back the <b>same y</b>. That sentence is the bridge from the picture to the algebra.'},
+  {p:'so set the two formulas equal',
+   rows:[{p:'the condition', m:'2<i>x</i> &minus; 1 = &minus;<i>x</i> + 2'}],
+   d:'Instead of hunting for the crossing with your eyes, write down the condition that defines it. We are no longer asking &ldquo;what does <i>y</i> equal?&rdquo; but &ldquo;at which <i>x</i> do the two expressions for <i>y</i> agree?&rdquo; That is one equation in one unknown &mdash; something you already know how to handle.'},
+  {p:'collect the <i>x</i>&rsquo;s on one side',
+   rows:[{p:'add x to both sides', m:'3<i>x</i> &minus; 1 = 2'},
+         {p:'add 1 to both sides',  m:tg('3')+'<i>x</i> = '+tg('3')},
+         {p:'divide by 3',          m:'<i>x</i> = 1 &nbsp;&rarr;&nbsp; <i>y</i> = 2(1) &minus; 1 = '+ok('1')}],
+   d:'Everything the three endings depend on is sitting in that highlighted coefficient. In general the same two moves turn <i>m</i><sub>1</sub><i>x</i> + <i>b</i><sub>1</sub> = <i>m</i><sub>2</sub><i>x</i> + <i>b</i><sub>2</sub> into <b>(<i>m</i><sub>1</sub> &minus; <i>m</i><sub>2</sub>)<i>x</i> = <i>b</i><sub>2</sub> &minus; <i>b</i><sub>1</sub></b>. Whether that coefficient is zero decides everything, and it is zero exactly when the slopes are equal.'},
+  {p:'ending one: the slopes differ',
+   rows:[{p:'the coefficient', m:'<i>m</i><sub>1</sub> &minus; <i>m</i><sub>2</sub> '+tg('&ne; 0')},
+         {p:'so you may divide', m:'<i>x</i> = '+fr('<i>b</i><sub>2</sub> &minus; <i>b</i><sub>1</sub>','<i>m</i><sub>1</sub> &minus; <i>m</i><sub>2</sub>')+' &nbsp; '+ok('exactly one x')},
+         {p:'and then', m:'<i>y</i> = <i>m</i><sub>1</sub><i>x</i> + <i>b</i><sub>1</sub> &nbsp; one <i>y</i> to match'}],
+   d:'A nonzero number can be divided by, and division gives back <b>one</b> answer &mdash; not none, not several. So there is one <i>x</i>, and that <i>x</i> pins down one <i>y</i>: one solution, one crossing point. Note that this happens no matter how nearly equal the slopes are. Slopes of 2 and 1.99 still cross; the crossing is just very far from the origin.'},
+  {p:'ending two: same slope, different intercept',
+   rows:[{p:'the coefficient', m:'<i>m</i><sub>1</sub> &minus; <i>m</i><sub>2</sub> = '+tg('0')},
+         {p:'what is left',    m:'0&#183;<i>x</i> = <i>b</i><sub>2</sub> &minus; <i>b</i><sub>1</sub> &ne; 0'},
+         {p:'with numbers',    m:'2<i>x</i> &minus; 1 = 2<i>x</i> + 3 &nbsp;&rarr;&nbsp; &minus;1 = 3 &nbsp; '+bad('impossible')}],
+   d:'Now the <i>x</i> term cancels itself out and takes the unknown with it. You are left claiming that zero equals some nonzero number, which is false &mdash; and it is false for <b>every</b> <i>x</i>, so no <i>x</i> can be rescued. Geometrically: identical slopes mean the lines rise in lockstep, and different intercepts mean they started apart, so the gap between them is a constant that never closes. <b>No solution. Inconsistent.</b>'},
+  {p:'ending three: same slope, same intercept',
+   rows:[{p:'the coefficient', m:'<i>m</i><sub>1</sub> &minus; <i>m</i><sub>2</sub> = '+tg('0')},
+         {p:'what is left',    m:'0&#183;<i>x</i> = 0'},
+         {p:'with numbers',    m:'2<i>x</i> &minus; 1 = 2<i>x</i> &minus; 1 &nbsp;&rarr;&nbsp; 0 = 0 &nbsp; '+ok('always true')}],
+   d:'Same cancellation, opposite verdict. What survives is true for every <i>x</i>, so every <i>x</i> gives a solution &mdash; and the picture agrees, because the two &ldquo;lines&rdquo; are one line drawn twice. The solution set is the whole line, written <b>{ (<i>x</i>, <i>y</i>) | <i>y</i> = 2<i>x</i> &minus; 1 }</b>. <b>Infinitely many. Consistent and dependent.</b> A textbook will hide this by scaling one equation, say 4<i>x</i> &minus; 2<i>y</i> = 2, so solve both for <i>y</i> before you judge.'},
+  {p:'why there can never be exactly two',
+   rows:[{p:'two points', m:'(&minus;3, &minus;1) and (3, 3)'},
+         {p:'the line through them', m:'<i>m</i> = '+fr('3 &minus; (&minus;1)','3 &minus; (&minus;3)')+' = '+fr(4,6)+' = '+fr(2,3)+', &nbsp;<i>y</i> = '+fr(2,3)+'<i>x</i> + 1'},
+         {p:'and there is no other', m:ok('two points determine one line')}],
+   d:'Suppose two lines crossed at two different points. Both lines would then pass through the same pair of points &mdash; but two distinct points determine <b>one and only one</b> line, so the two lines would have to be the same line, and then they share not two points but all of them. There is no way to land on exactly two, or five, or any finite number above one. <b>One, none, or all &mdash; the list is complete.</b>'}
+ ];
+ function art1(k){
+   var s=grid();
+   if(k<=4){
+     var m1,b1,m2,b2;
+     if(k===4){ m1=0.5; b1=-2; m2=-2; b2=3; } else { m1=2; b1=-1; m2=-1; b2=2; }
+     s+=drawLine(m1,b1,TEAL,2.9,'');
+     s+=drawLine(m2,b2,CORAL,2.6,'6 4');
+     if(k===0){
+       s+=halo(sx(0)-10, sy(-1)+4, 'end', 9.5, CORAL, 'not on both');
+       s+='<circle cx="'+sx(0)+'" cy="'+sy(-1)+'" r="7" fill="none" stroke="'+CORAL+'" stroke-width="2.4"/>';
+       s+='<line x1="'+(sx(0)-5)+'" y1="'+(sy(-1)-5)+'" x2="'+(sx(0)+5)+'" y2="'+(sy(-1)+5)+'" stroke="'+CORAL+'" stroke-width="2.2"/>';
+       s+='<line x1="'+(sx(0)+5)+'" y1="'+(sy(-1)-5)+'" x2="'+(sx(0)-5)+'" y2="'+(sy(-1)+5)+'" stroke="'+CORAL+'" stroke-width="2.2"/>';
+     }
+     if(k===1||k===2){ s+='<line x1="'+sx(1)+'" y1="17" x2="'+sx(1)+'" y2="233" stroke="'+GOLD+'" stroke-width="1.4" stroke-dasharray="3 3"/>';
+       s+=halo(sx(1), 27, 'middle', 9.5, GOLD, 'x = 1'); }
+     if(k===3||k===4) s+=drops(k===4?2:1, k===4?-1:1);
+     if(k>=1&&k<=3) s+=dot(sx(1),sy(1),GOLD,ptP(I(1),I(1)),-14,7.5);
+     if(k===0) s+=dot(sx(1),sy(1),GOLD,'on both',-14,7.5);
+     if(k===4) s+=dot(sx(2),sy(-1),GOLD,ptP(I(2),I(-1)),20,7.5);
+     s+=labelLine(m1,b1,TEAL,eqP(rat(m1*2,2),I(b1)),[-3.4,-4.6,3.4,1.4]);
+     s+=labelLine(m2,b2,CORAL,eqP(rat(m2*2,2),I(b2)),[4.3,2.3,-2.3,-4.3]);
+   } else if(k===5){
+     s+=drawLine(2,-1,TEAL,2.9,'');
+     s+=drawLine(2,3,CORAL,2.6,'6 4');
+     s+=labelLine(2,-1,TEAL,'y = 2x '+MIN+' 1',[1.6,0.6,-1.4]);
+     s+=labelLine(2,3,CORAL,'y = 2x + 3',[-0.4,-1.4,0.6]);
+     s+=vArrow(sx(-1),sy(-3),sy(1),GOLD,2.4);
+     s+=halo(sx(-1)-8, sy(-1)+4, 'end', 9.5, GOLD, 'gap 4, always');
+   } else if(k===6){
+     s+=drawLine(2,-1,TEAL,4.2,'');
+     s+=drawLine(2,-1,CORAL,2.4,'6 4');
+     s+=labelLine(2,-1,TEAL,'y = 2x '+MIN+' 1',[1.6,0.6,-1.4]);
+     var pts=[[-2,-5],[0,-1],[1,1],[2,3],[3,5]], i;
+     for(i=0;i<pts.length;i++) s+=dot(sx(pts[i][0]),sy(pts[i][1]),GOLD,'',0,5);
+     s+=halo(sx(-3.2), sy(2), 'middle', 9.5, GOLD, 'every point counts');
+   } else {
+     s+=drawLine(2/3,1,TEAL,2.9,'');
+     s+=dot(sx(-3),sy(-1),GOLD,ptP(I(-3),I(-1)),20,7);
+     s+=dot(sx(3),sy(3),GOLD,ptP(I(3),I(3)),-14,7);
+     s+=halo(sx(-3.6), sy(4.2), 'middle', 9.5, TEAL, 'the only line');
+     s+=halo(sx(2.6), sy(-3.4), 'middle', 9.5, MUT, 'through both dots');
+   }
+   return s;
+ }
+ function render1(){
+   var S=W[wstep];
+   $("art").innerHTML=art1(wstep);
+   $("artTitle").innerHTML='Step '+(wstep+1)+' &mdash; '+S.p.replace(/<[^>]+>/g,'');
+   var out='',i;
+   for(i=0;i<S.rows.length;i++){
+     out+='<div class="dl'+((i===S.rows.length-1)?' cur':'')+'"><span class="mx">'+S.rows[i].m+'</span><span class="pl">'+S.rows[i].p+'</span></div>';
+   }
+   $("rb").innerHTML=out;
+   $("stage").style.background=(wstep===5?CORAL:(wstep===6?BLUE:TEAL));
+   $("stage").innerHTML='<span class="big">(<i>m</i><sub>1</sub> &minus; <i>m</i><sub>2</sub>)<i>x</i> = <i>b</i><sub>2</sub> &minus; <i>b</i><sub>1</sub></span><small>step '+(wstep+1)+' of '+W.length+' &middot; '+S.p.replace(/<[^>]+>/g,'')+'</small>';
+   $("info").innerHTML='<span class="n">'+S.p.charAt(0).toUpperCase()+S.p.slice(1)+'</span>'+S.d;
+   $("why").innerHTML='<em>one equation decides all three endings</em>'+
+     '(<i>m</i><sub>1</sub> &minus; <i>m</i><sub>2</sub>)<i>x</i> = <i>b</i><sub>2</sub> &minus; <i>b</i><sub>1</sub>'+
+     '<span class="sm">Coefficient not zero &rarr; divide &rarr; one <i>x</i>. Coefficient zero with a nonzero right side &rarr; a false statement &rarr; no solution. Coefficient zero with a zero right side &rarr; a true statement &rarr; every <i>x</i>.</span>';
+   $("note").style.display='none';
+   $("prev").disabled=(wstep===0); $("next").disabled=(wstep===W.length-1);
+ }
+
+ /* ================= MODE 2: worked examples ================= */
+ /* Bits:  1 line1 · 2 line2 · 4 solution dot · 8 drop lines · 16 estimate blob
+           32 walk on line1 · 64 walk on line2 · 128 sample points on the shared line */
+ var EX=[
+  {nm:'Clean crossing', sub:'x + y = 5',
+   L1:{m:I(-1), b:I(5)}, L2:{m:I(2), b:I(-1)},
+   tail:'The solution <b>(2, 3)</b> was checked in the two equations as they were originally handed to you &mdash; 2 + 3 = 5 and 2(2) &minus; 1 = 3 &mdash; not in the rearranged versions. That habit catches a slip in the rearranging as well as a misread graph.',
+   steps:[
+    {p:'what you were handed', sh:0, m:'<i>x</i> + <i>y</i> = 5 &nbsp;&nbsp; and &nbsp;&nbsp; <i>y</i> = 2<i>x</i> &minus; 1',
+     d:'A <b>system</b> is two equations that must hold at the same time. Graphing turns that into a question about a picture: draw both lines and look for a point sitting on both at once. Before you can draw, though, each equation has to be in a form you can plot &mdash; and the first one is not.'},
+    {p:'solve the first for y', sh:0, m:'<i>x</i> + <i>y</i> = 5 &nbsp;&rarr;&nbsp; <i>y</i> = '+tg('&minus;<i>x</i> + 5'),
+     d:'Subtract <i>x</i> from both sides. Nothing about the line has changed &mdash; <i>x</i> + <i>y</i> = 5 and <i>y</i> = &minus;<i>x</i> + 5 have <b>the same graph</b>. The second version simply says the slope (&minus;1) and the <i>y</i>-intercept (5) out loud, and those two numbers are all you need to draw it.'},
+    {p:'graph the first line', sh:1|32, m:'start at (0, 5), then run 1, rise &minus;1',
+     d:'Plot the intercept first: it is the free point, no arithmetic needed. Then read the slope as a walking instruction &mdash; one step right, one step down &mdash; and mark where you land. Two points are enough to lay a ruler across.'},
+    {p:'graph the second line', sh:1|2|64, m:'start at (0, &minus;1), then run 1, rise 2',
+     d:'Same routine on <i>y</i> = 2<i>x</i> &minus; 1. Steeper slope, so the climb is faster: right one, up two. The two lines already lean in opposite directions, which guarantees a crossing before you have even found it.'},
+    {p:'read the crossing', sh:1|2|4|8, m:'they meet at '+tg('(2, 3)'),
+     d:'Drop a dashed guide from the crossing to each axis and read the coordinates off: <i>x</i> = 2, <i>y</i> = 3. This one lands squarely on a grid corner, which is the only situation in which reading a graph is trustworthy. Even so, treat it as a <b>candidate</b> answer.'},
+    {p:'check in both originals', sh:1|2|4|8, m:'2 + 3 = 5 '+ok('true')+' &nbsp;&nbsp; 2(2) &minus; 1 = 3 '+ok('true'),
+     d:'Substitute <i>x</i> = 2 and <i>y</i> = 3 into the equations you were originally given. Both statements come out true, so (2, 3) really is a solution. If only one had checked out, the point would be on one line and merely near the other &mdash; the single most common way a graphed answer goes wrong.'},
+    {p:'name the ending', sh:1|2|4, m:'solution '+ok('(2, 3)')+' &nbsp; consistent, independent',
+     d:'Different slopes (&minus;1 and 2), so the lines had to meet, and could meet only once. The system is <b>consistent</b> because a solution exists, and <b>independent</b> because the two equations carry genuinely different information. Report the answer as an ordered pair, not as two separate numbers.'}
+   ]},
+  {nm:'Picture is not enough', sub:'y = 2x + 1',
+   L1:{m:I(2), b:I(1)}, L2:{m:I(-1), b:I(3)},
+   tail:'The exact answer is <b>(<sup>2</sup>&frasl;<sub>3</sub>, <sup>7</sup>&frasl;<sub>3</sub>)</b> &mdash; roughly (0.67, 2.33). Anyone reading this crossing off graph paper would report something like (0.7, 2.3) and be wrong. Graphing is superb at telling you <i>which</i> of the three endings you are in; it is unreliable at telling you exactly <i>where</i>.',
+   steps:[
+    {p:'what you were handed', sh:0, m:'<i>y</i> = 2<i>x</i> + 1 &nbsp;&nbsp; and &nbsp;&nbsp; <i>y</i> = &minus;<i>x</i> + 3',
+     d:'Both equations arrive in slope-intercept form, so no rearranging is needed. Slopes 2 and &minus;1 are different, which already settles the ending: <b>exactly one solution</b>. All that is left is to find where.'},
+    {p:'graph both lines', sh:1|2|32|64, m:'(0, 1) with run 1, rise 2 &nbsp;&middot;&nbsp; (0, 3) with run 1, rise &minus;1',
+     d:'Intercept, then walk. One line climbs steeply, the other drifts down, and they cross in the upper-left quadrant of the first quadrant &mdash; somewhere between <i>x</i> = 0 and <i>x</i> = 1. Already you can see the difficulty coming.'},
+    {p:'estimate from the picture', sh:1|2|16, m:'about (0.7, 2.3) &nbsp; '+bad('an estimate, not an answer'),
+     d:'The crossing does not land on a grid corner. It falls inside a square, and the best an honest eye can do is guess at the fractions. Note what has <b>not</b> gone wrong: the picture is completely correct, and it correctly tells you there is exactly one solution. It just cannot report the coordinates precisely.'},
+    {p:'set the two formulas equal', sh:1|2|16, m:'2<i>x</i> + 1 = &minus;<i>x</i> + 3',
+     d:'At the crossing, the two expressions for <i>y</i> must produce the same value, so set them equal. This is the same bridge from picture to algebra as before &mdash; and it is the move that will free you from the graph paper entirely.'},
+    {p:'solve for x', sh:1|2|16, m:'3<i>x</i> = 2 &nbsp;&rarr;&nbsp; <i>x</i> = '+tg(fr(2,3)),
+     d:'Add <i>x</i> to both sides to get 3<i>x</i> + 1 = 3, then subtract 1 to get 3<i>x</i> = 2, then divide by 3. The answer is a fraction, and a fraction is a perfectly good coordinate &mdash; there is no rule that solutions must be whole numbers. It is only the <b>graph</b> that struggles with them.'},
+    {p:'back-substitute for y', sh:1|2|4|8, m:'<i>y</i> = 2('+fr(2,3)+') + 1 = '+fr(4,3)+' + '+fr(3,3)+' = '+tg(fr(7,3)),
+     d:'Put the exact <i>x</i> back into either original equation &mdash; the first is as good as the second. Write 1 as <sup>3</sup>&frasl;<sub>3</sub> so the halves of the sum share a denominator. The crossing is at (<sup>2</sup>&frasl;<sub>3</sub>, <sup>7</sup>&frasl;<sub>3</sub>).'},
+    {p:'check in the other equation', sh:1|2|4|8, m:'&minus;'+fr(2,3)+' + 3 = &minus;'+fr(2,3)+' + '+fr(9,3)+' = '+ok(fr(7,3)),
+     d:'The second equation returns the same <i>y</i>, so the point sits on both lines and the answer is confirmed. Checking in the <b>other</b> equation is what makes this a real check &mdash; substituting back into the one you used to find <i>y</i> can only ever agree with itself.'},
+    {p:'the moral of the section', sh:1|2|4, m:'graph &rarr; which ending &nbsp;&middot;&nbsp; algebra &rarr; '+ok('exact where'),
+     d:'Graphing is worth learning because it makes the three endings visible and gives you a picture to sanity-check against. But once the numbers stop being friendly, reading a point off a grid is estimating. That gap is exactly what substitution and elimination close, and it is why they come next.'}
+   ]},
+  {nm:'No solution', sub:'x &minus; 2y = 4',
+   L1:{m:rat(1,2), b:I(3)}, L2:{m:rat(1,2), b:I(-2)},
+   tail:'Both lines have slope <sup>1</sup>&frasl;<sub>2</sub> and different intercepts, so they climb in lockstep exactly 5 units apart, forever. The written answer is <b>no solution</b> &mdash; not 0, and not <i>x</i> = 0.',
+   steps:[
+    {p:'what you were handed', sh:0, m:'<i>y</i> = '+fr(1,2)+'<i>x</i> + 3 &nbsp;&nbsp; and &nbsp;&nbsp; <i>x</i> &minus; 2<i>y</i> = 4',
+     d:'One equation is ready to graph; the other hides its slope inside standard form. Resist the urge to guess from the look of <i>x</i> &minus; 2<i>y</i> = 4 &mdash; the coefficients 1 and &minus;2 are not the slope. Rearrange first, then compare.'},
+    {p:'solve the second for y', sh:0, m:'&minus;2<i>y</i> = &minus;<i>x</i> + 4 &nbsp;&rarr;&nbsp; <i>y</i> = '+tg(fr(1,2)+'<i>x</i> &minus; 2'),
+     d:'Subtract <i>x</i> from both sides, then divide <b>every</b> term by &minus;2. Both signs flip: &minus;<i>x</i> divided by &minus;2 is +<sup>1</sup>&frasl;<sub>2</sub><i>x</i>, and 4 divided by &minus;2 is &minus;2. Dividing by a negative is where this problem is usually lost &mdash; a dropped sign here would fake a crossing that does not exist.'},
+    {p:'compare the two slopes', sh:1|2|32|64, m:'<i>m</i><sub>1</sub> = '+tg(fr(1,2))+' = <i>m</i><sub>2</sub>, &nbsp; but <i>b</i><sub>1</sub> = 3 &ne; &minus;2 = <i>b</i><sub>2</sub>',
+     d:'Identical slopes, different intercepts. Both walks are the same &mdash; run 2, rise 1 &mdash; started from different heights. Whatever the first line is doing, the second is doing five units below it, and it will still be five units below it a million steps to the right.'},
+    {p:'what the algebra says', sh:1|2, m:fr(1,2)+'<i>x</i> + 3 = '+fr(1,2)+'<i>x</i> &minus; 2 &nbsp;&rarr;&nbsp; 3 = &minus;2 &nbsp; '+bad('false'),
+     d:'Subtract <sup>1</sup>&frasl;<sub>2</sub><i>x</i> from both sides and the unknown vanishes entirely, leaving 3 = &minus;2. That is not an equation to be solved; it is a false claim. Since no choice of <i>x</i> was involved in making it false, no choice of <i>x</i> can repair it. <b>When the variable disappears and leaves a falsehood, there is no solution.</b>'},
+    {p:'write the answer', sh:1|2, m:ok('no solution')+' &nbsp; the empty set &nbsp;&middot;&nbsp; inconsistent',
+     d:'Say it plainly: <b>no solution</b>, or the solution set is empty. Do not write 0 &mdash; zero is a number, and if (0, 0) satisfied both equations that would be a genuine solution. A system with no solution is called <b>inconsistent</b>, and parallel lines are the only way a two-line system can be inconsistent.'}
+   ]},
+  {nm:'Infinitely many', sub:'3x + 3y = 12',
+   L1:{m:I(-1), b:I(4)}, L2:{m:I(-1), b:I(4)},
+   pts:[[0,4],[1,3],[4,0],[-2,6],[6,-2]],
+   tail:'Both equations describe the single line <i>y</i> = &minus;<i>x</i> + 4, because 3<i>x</i> + 3<i>y</i> = 12 is just <i>x</i> + <i>y</i> = 4 with every term tripled. Multiplying an equation through by a nonzero number never changes its graph &mdash; which is precisely how this case hides in plain sight.',
+   steps:[
+    {p:'what you were handed', sh:0, m:'<i>y</i> = &minus;<i>x</i> + 4 &nbsp;&nbsp; and &nbsp;&nbsp; 3<i>x</i> + 3<i>y</i> = 12',
+     d:'These look like two different equations, and that is the trap. Nothing on the surface says they are related. As always, the only reliable move is to put both into slope-intercept form and then compare the two slopes and the two intercepts.'},
+    {p:'solve the second for y', sh:0, m:'3<i>y</i> = &minus;3<i>x</i> + 12 &nbsp;&rarr;&nbsp; <i>y</i> = '+tg('&minus;<i>x</i> + 4'),
+     d:'Subtract 3<i>x</i>, then divide every term by 3. Out comes <i>y</i> = &minus;<i>x</i> + 4 &mdash; letter for letter the first equation. The disguise was a factor of 3 applied to all three terms, and scaling an equation by a nonzero number leaves its graph untouched.'},
+    {p:'one line, drawn twice', sh:1|2|32, m:'<i>m</i><sub>1</sub> = <i>m</i><sub>2</sub> = '+tg('&minus;1')+', &nbsp; <i>b</i><sub>1</sub> = <i>b</i><sub>2</sub> = '+tg('4'),
+     d:'Slope and intercept both match, so the dashed line lies exactly on top of the solid one. There is only one line in this picture. Every one of its infinitely many points satisfies both equations at once, so every one of them is a solution of the system.'},
+    {p:'what the algebra says', sh:1|2, m:'&minus;<i>x</i> + 4 = &minus;<i>x</i> + 4 &nbsp;&rarr;&nbsp; 0 = 0 &nbsp; '+ok('always true'),
+     d:'The <i>x</i> cancels again, but this time what is left is true &mdash; and true regardless of <i>x</i>. Compare the two cancellations carefully: <b>a false leftover means no solution, a true leftover means infinitely many.</b> Both look alike for the first two lines of work, and the last line is the whole verdict.'},
+    {p:'write the answer', sh:1|2|128, m:'{ (<i>x</i>, <i>y</i>) | <i>y</i> = &minus;<i>x</i> + 4 } &nbsp; '+ok('infinitely many'),
+     d:'Name the line, do not just say &ldquo;infinitely many.&rdquo; The solutions are exactly the points on <i>y</i> = &minus;<i>x</i> + 4: (0, 4), (1, 3), (4, 0), (&minus;2, 6) and endlessly more. The system is <b>consistent</b> and <b>dependent</b>. And to be very clear, (0, 0) is <b>not</b> among them &mdash; &minus;0 + 4 = 4, not 0. Infinitely many solutions is still a long way from every point in the plane.'}
+   ]}
+ ];
+ function art2(){
+   var E=EX[exi], S=E.steps[estep], sh=S.sh, s=grid();
+   var m1=rval(E.L1.m), b1=rval(E.L1.b), m2=rval(E.L2.m), b2=rval(E.L2.b);
+   var sol=solve(E.L1,E.L2);
+   if(sh & 1) s+=drawLine(m1,b1,TEAL,(sh&2)&&E.L1.m.n===E.L2.m.n&&E.L1.m.d===E.L2.m.d&&E.L1.b.n===E.L2.b.n?4.2:2.9,'');
+   if(sh & 2) s+=drawLine(m2,b2,CORAL,2.5,'6 4');
+   if((sh & 8) && sol.kind==='one') s+=drops(rval(sol.x),rval(sol.y));
+   if(sh & 1) s+=labelLine(m1,b1,TEAL,eqP(E.L1.m,E.L1.b),[-4.3,-2.3,2.3,4.3,0.6]);
+   if((sh & 2) && !(E.L1.m.n===E.L2.m.n&&E.L1.m.d===E.L2.m.d&&E.L1.b.n===E.L2.b.n))
+     s+=labelLine(m2,b2,CORAL,eqP(E.L2.m,E.L2.b),[4.3,2.3,-2.3,-4.3,0.6]);
+   if(sh & 32) s+=walk(E.L1.m,E.L1.b,TEAL);
+   if(sh & 64) s+=walk(E.L2.m,E.L2.b,CORAL);
+   if(sh & 128){ var i; for(i=0;i<E.pts.length;i++){ if(inView(E.pts[i][0],E.pts[i][1])) s+=dot(sx(E.pts[i][0]),sy(E.pts[i][1]),GOLD,'',0,5); } }
+   if((sh & 16) && sol.kind==='one'){
+     var ex=sx(rval(sol.x)), ey=sy(rval(sol.y));
+     s+='<circle cx="'+ex.toFixed(1)+'" cy="'+ey.toFixed(1)+'" r="13" fill="'+GOLD+'" opacity=".18"/>';
+     s+='<circle cx="'+ex.toFixed(1)+'" cy="'+ey.toFixed(1)+'" r="13" fill="none" stroke="'+GOLD+'" stroke-width="1.4" stroke-dasharray="3 3"/>';
+     s+=halo(Math.min(214,ex+18), ey-14, 'start', 9.5, GOLD, 'somewhere in here');
+   }
+   if((sh & 4) && sol.kind==='one'){
+     var px=sx(rval(sol.x)), py=sy(rval(sol.y));
+     s+=dot(px,py,GOLD,ptP(sol.x,sol.y),(py>46?-14:20),7.5);
+   }
+   return s;
+ }
+ function renderPicker(){
+   $("picker").innerHTML=EX.map(function(E,j){
+     return '<button class="'+(j===exi?'on':'')+'" data-j="'+j+'">'+E.nm+'<small>'+E.sub+'</small></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#picker button'),function(b){
+     b.onclick=function(){ exi=+b.dataset.j; estep=0; render(); };
+   });
+ }
+ function render2(){
+   var E=EX[exi], S=E.steps[estep], i;
+   $("art").innerHTML=art2();
+   $("artTitle").innerHTML=E.nm+' &mdash; '+E.sub;
+   renderPicker();
+   var out='';
+   for(i=0;i<=estep;i++){
+     out+='<div class="dl'+((i===estep)?' cur':'')+'"><span class="mx">'+E.steps[i].m+'</span><span class="pl">'+E.steps[i].p+'</span></div>';
+   }
+   $("mb").innerHTML=out;
+   $("exlab").innerHTML=E.tail;
+   $("stage").style.background=(exi===2?CORAL:(exi===3?BLUE:TEAL));
+   $("stage").innerHTML='<span class="big">'+E.nm+'</span><small>step '+(estep+1)+' of '+E.steps.length+' &middot; '+S.p+'</small>';
+   $("info").innerHTML='<span class="n">'+S.p.charAt(0).toUpperCase()+S.p.slice(1)+'</span>'+S.d;
+   $("why").innerHTML='<em>the routine, every time</em>'+
+     'both into <i>y</i> = <i>mx</i> + <i>b</i> &nbsp;&rarr;&nbsp; graph &nbsp;&rarr;&nbsp; read &nbsp;&rarr;&nbsp; check'+
+     '<span class="sm">Compare slopes to predict the ending before you draw, and substitute your answer back into <b>both original</b> equations before you write it down.</span>';
+   $("note").style.display='none';
+   $("prev").disabled=(estep===0); $("next").disabled=(estep===E.steps.length-1);
+ }
+
+ /* ---------- dragging the two lines ---------- */
+ var svg=$("plane");
+ function toWorld(e){
+   var r=svg.getBoundingClientRect();
+   var vx=(e.clientX-r.left)*(250/r.width), vy=(e.clientY-r.top)*(250/r.height);
+   return {x:Math.round((vx-X0)/U), y:Math.round((Y0-vy)/U), vx:vx, vy:vy};
+ }
+ function clamp(n){ return Math.max(-R,Math.min(R,n)); }
+ svg.addEventListener('pointerdown',function(e){
+   if(mode!==0) return;
+   var w=toWorld(e), best=null, bd=1e9, i;
+   var h1=handX(L.k1,L.b1), h2=handX(L.k2,L.b2);
+   var H=[{line:1,kind:'b',px:sx(0),py:sy(L.b1),hx:0},
+          {line:2,kind:'b',px:sx(0),py:sy(L.b2),hx:0},
+          {line:1,kind:'k',px:sx(h1),py:sy(handY(L.k1,L.b1,h1)),hx:h1},
+          {line:2,kind:'k',px:sx(h2),py:sy(handY(L.k2,L.b2,h2)),hx:h2}];
+   for(i=0;i<H.length;i++){
+     var dd=Math.hypot(w.vx-H[i].px, w.vy-H[i].py);
+     if(dd<bd){ bd=dd; best=H[i]; }
+   }
+   if(bd>42) return;
+   drag=best; svg.setPointerCapture(e.pointerId); e.preventDefault(); move(w);
+ });
+ svg.addEventListener('pointermove',function(e){ if(drag){ e.preventDefault(); move(toWorld(e)); } });
+ svg.addEventListener('pointerup',function(){ drag=null; });
+ svg.addEventListener('pointercancel',function(){ drag=null; });
+ function move(w){
+   var ny=clamp(w.y);
+   if(drag.kind==='b'){
+     if(drag.line===1) L.b1=ny; else L.b2=ny;
+   } else {
+     var b=(drag.line===1)?L.b1:L.b2;
+     var k=Math.max(-6,Math.min(6, (drag.hx>0) ? (ny-b) : (b-ny) ));
+     if(drag.line===1) L.k1=k; else L.k2=k;
+   }
+   render();
+ }
+
+ /* ---------- sliders ---------- */
+ [['r_m1','k1'],['r_b1','b1'],['r_m2','k2'],['r_b2','b2']].forEach(function(p){
+   $(p[0]).addEventListener('input',function(){ L[p[1]]=parseInt(this.value,10); render(); });
+ });
+
+ /* ---------- mode switching ---------- */
+ Array.prototype.forEach.call(document.querySelectorAll('#modes button'),function(b){
+   b.onclick=function(){
+     mode=+b.dataset.m;
+     Array.prototype.forEach.call(document.querySelectorAll('#modes button'),function(x){ x.className=''; });
+     b.className='on';
+     render();
+   };
+ });
+ $("prev").onclick=function(){
+   if(mode===1 && wstep>0) wstep--;
+   else if(mode===2 && estep>0) estep--;
+   render();
+ };
+ $("next").onclick=function(){
+   if(mode===1 && wstep<W.length-1) wstep++;
+   else if(mode===2 && estep<EX[exi].steps.length-1) estep++;
+   render();
+ };
+
+ function render(){
+   $("p0").style.display=(mode===0)?'':'none';
+   $("p1").style.display=(mode===1)?'':'none';
+   $("p2").style.display=(mode===2)?'':'none';
+   $("nav").style.display=(mode===0)?'none':'';
+   svg.className.baseVal=(mode===0)?'':'locked';
+   if(mode===0) render0();
+   else if(mode===1) render1();
+   else render2();
+ }
+
+ render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Correlation Is Not Causation</title>
+<meta name="description" content="Drag points on a scatterplot to change the correlation coefficient r from −1 to +1, and learn why even a perfect correlation never proves causation.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+#plot{touch-action:none;}
+#plot circle[data-i]{cursor:grab;} #plot circle[data-i]:active{cursor:grabbing;}
+.hint{font-size:12.5px;color:var(--muted);margin-top:9px;line-height:1.5;} .hint b{color:var(--teal-dk);}
+.rrow{display:flex;align-items:center;gap:9px;margin-top:12px;font-size:11px;font-weight:800;color:var(--muted);}
+.rbar{position:relative;flex:1;height:14px;border-radius:7px;background:linear-gradient(90deg,#cfe0f0,#efe6ec,#f4cfe0);}
+.rbar:before{content:"";position:absolute;left:50%;top:-3px;width:1.5px;height:20px;background:#c9aebb;transform:translateX(-50%);}
+.rbar b{position:absolute;top:-4px;width:5px;height:22px;border-radius:3px;background:var(--teal-dk);transform:translateX(-50%);transition:left .12s,background .2s;box-shadow:0 1px 3px rgba(0,0,0,.28);}
+#stage .rnum{font-family:var(--disp);font-weight:700;font-size:22px;}
+.three{list-style:none;margin-top:4px;}
+.three li{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px;color:var(--soft);line-height:1.45;}
+.three li:first-child{border-top:none;}
+.three li b{color:var(--teal-dk);} .three .ci{font-size:17px;line-height:1.2;flex:none;}
+.lede{font-size:13px;color:var(--soft);line-height:1.55;margin-bottom:6px;} .lede b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 2</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 2</div>
+  <h1>Correlation Is Not Causation</h1>
+  <div class="intro">A <b>correlation</b> just says two measurements move together. Psychologists capture that with one number &mdash; the coefficient <b>r</b>, from <b>&minus;1</b> to <b>+1</b>. Drag the dots to reshape the cloud and watch r change, then see why even a perfect r never proves that one thing <b>causes</b> the other.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Scatterplot</h2>
+    <svg id="plot" viewBox="0 0 320 272" aria-label="draggable scatterplot">
+      <defs><clipPath id="pc"><rect x="44" y="18" width="260" height="222"/></clipPath></defs>
+      <g id="grid"></g>
+      <line id="fit" clip-path="url(#pc)" stroke-width="3" stroke-linecap="round" opacity="0"/>
+      <g id="pts"></g>
+    </svg>
+    <div class="hint">Drag any dot &#8597; to reshape the cloud and watch <b>r</b> move. The line is the best fit; the tighter the dots hug it, the closer r is to <b>&plusmn;1</b>.</div>
+    <div class="rrow"><span>&minus;1</span><div class="rbar"><b id="rmark"></b></div><span>+1</span></div>
+  </div></div>
+  <div>
+    <div id="stage">Correlation coefficient<small>drag a dot or pick a pattern</small></div>
+    <div class="card">
+      <div class="list" id="presets"></div>
+      <div id="info"></div>
+    </div>
+    <div class="card">
+      <h2>Correlation &ne; Causation</h2>
+      <div class="lede">A strong r &mdash; even <b>r = &plusmn;1</b> &mdash; never proves that X <b>causes</b> Y. Whenever two things move together, three rival explanations must be ruled out first:</div>
+      <ul class="three">
+        <li><span class="ci">&#8646;</span><span><b>Reverse causation.</b> Maybe Y drives X, not the other way around. Happier people may exercise more, rather than exercise creating the mood.</span></li>
+        <li><span class="ci">&#128269;</span><span><b>A third variable.</b> A hidden factor drives both. Ice-cream sales and drowning deaths rise together every summer &mdash; but <b>hot weather</b> causes both; neither causes the other.</span></li>
+        <li><span class="ci">&#127922;</span><span><b>Coincidence.</b> With enough measurements, some pairs line up by pure chance and mean nothing at all.</span></li>
+      </ul>
+      <div class="note">Only a controlled <b>experiment</b> &mdash; randomly assigning people to conditions &mdash; can establish that X <i>causes</i> Y. A correlation can only hint at where to look.</div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // plot geometry (data domain 0..10 on both axes)
+ var X0=44,X1=304,Y0=18,Y1=240;
+ function toPX(x){return X0+(x/10)*(X1-X0);}
+ function toPY(y){return Y1-(y/10)*(Y1-Y0);}
+ function clamp(v){return v<0?0:(v>10?10:v);}
+
+ var PRE=[
+  {k:'pp',ic:'&#8599;',nm:'Perfect positive',ct:'r = +1.00',
+   d:[[1,1],[2.3,2.3],[3.6,3.6],[4.7,4.7],[5.7,5.7],[6.9,6.9],[8.1,8.1],[9.3,9.3]]},
+  {k:'sp',ic:'&#8599;',nm:'Strong positive',ct:'r &asymp; +0.86',
+   d:[[1,2.7],[2.3,1.5],[3.6,5.0],[4.7,3.0],[5.7,4.1],[6.9,7.5],[8.1,6.0],[9.3,8.6]]},
+  {k:'no',ic:'&#8596;',nm:'No correlation',ct:'r &asymp; 0',
+   d:[[1,5.3],[2.3,2.3],[3.6,7.7],[4.7,4.1],[5.7,8.2],[6.9,2.8],[8.1,6.4],[9.3,4.5]]},
+  {k:'sn',ic:'&#8600;',nm:'Strong negative',ct:'r &asymp; &minus;0.86',
+   d:[[1,7.3],[2.3,8.5],[3.6,5.0],[4.7,7.0],[5.7,5.9],[6.9,2.5],[8.1,4.0],[9.3,1.4]]},
+  {k:'pn',ic:'&#8600;',nm:'Perfect negative',ct:'r = &minus;1.00',
+   d:[[9,1],[7.7,2.3],[6.4,3.6],[5.3,4.7],[4.3,5.7],[3.1,6.9],[1.9,8.1],[0.7,9.3]]}
+ ];
+ var P=[], curK='';
+
+ function pearson(){
+   var n=P.length,i,mx=0,my=0;
+   for(i=0;i<n;i++){mx+=P[i].x;my+=P[i].y;} mx/=n; my/=n;
+   var sxx=0,syy=0,sxy=0,dx,dy;
+   for(i=0;i<n;i++){dx=P[i].x-mx;dy=P[i].y-my;sxx+=dx*dx;syy+=dy*dy;sxy+=dx*dy;}
+   var r=(sxx<1e-9||syy<1e-9)?0:sxy/Math.sqrt(sxx*syy);
+   var b=(sxx<1e-9)?0:sxy/sxx, a=my-b*mx;
+   return {r:r,b:b,a:a,flat:(sxx<1e-9)};
+ }
+ function signCol(r){return r>0.05?'#a1466b':(r<-0.05?'#2f6f9f':'#94818b');}
+ function fmtR(r){return (Math.abs(r)<0.005)?'0.00':((r>0?'+':'−')+Math.abs(r).toFixed(2));}
+ function strength(r){
+   var a=Math.abs(r);
+   if(a<0.2) return {w:'no linear correlation',none:true};
+   var w=a>=0.99?'perfect':(a>=0.7?'strong':(a>=0.4?'moderate':'weak'));
+   return {w:w+' '+(r>0?'positive':'negative'),none:false};
+ }
+
+ function buildGrid(){
+   var g='',i,px,py;
+   for(i=0;i<=10;i+=2){
+     px=toPX(i);py=toPY(i);
+     g+='<line x1="'+px+'" y1="'+toPY(0)+'" x2="'+px+'" y2="'+toPY(10)+'" stroke="#f0e2e9" stroke-width="1"/>';
+     g+='<line x1="'+toPX(0)+'" y1="'+py+'" x2="'+toPX(10)+'" y2="'+py+'" stroke="#f0e2e9" stroke-width="1"/>';
+   }
+   g+='<line x1="'+toPX(0)+'" y1="'+toPY(0)+'" x2="'+toPX(10)+'" y2="'+toPY(0)+'" stroke="#c9aebb" stroke-width="1.6"/>';
+   g+='<line x1="'+toPX(0)+'" y1="'+toPY(0)+'" x2="'+toPX(0)+'" y2="'+toPY(10)+'" stroke="#c9aebb" stroke-width="1.6"/>';
+   g+='<text x="'+toPX(5)+'" y="266" text-anchor="middle" font-size="11" fill="#94818b" font-family="Inter,sans-serif" font-weight="700">Variable X →</text>';
+   g+='<text x="15" y="'+toPY(5)+'" text-anchor="middle" font-size="11" fill="#94818b" font-family="Inter,sans-serif" font-weight="700" transform="rotate(-90 15 '+toPY(5)+')">Variable Y →</text>';
+   $("grid").innerHTML=g;
+ }
+
+ function renderPresets(){
+   $("presets").innerHTML=PRE.map(function(p){
+     return '<button class="it'+(p.k===curK?' on':'')+'" data-k="'+p.k+'">'+
+       '<span class="ic">'+p.ic+'</span><span><span class="nm">'+p.nm+'</span><br>'+
+       '<span class="ct">'+p.ct+'</span></span></button>';
+   }).join('');
+   var b=$("presets").querySelectorAll('.it');
+   for(var i=0;i<b.length;i++){b[i].onclick=function(){setPreset(this.getAttribute('data-k'));};}
+ }
+ function setPreset(k){
+   var p=PRE.filter(function(x){return x.k===k;})[0]; if(!p)return;
+   P=p.d.map(function(c){return {x:c[0],y:c[1]};});
+   curK=k; renderPresets(); update();
+ }
+
+ function update(){
+   var st=pearson(), col=signCol(st.r);
+   // best-fit line
+   var fit=$("fit");
+   if(st.flat){ fit.setAttribute('opacity','0'); }
+   else{
+     fit.setAttribute('x1',toPX(0)); fit.setAttribute('y1',toPY(st.a));
+     fit.setAttribute('x2',toPX(10)); fit.setAttribute('y2',toPY(st.a+10*st.b));
+     fit.setAttribute('stroke',col); fit.setAttribute('opacity','0.55');
+   }
+   // points
+   $("pts").innerHTML=P.map(function(p,i){
+     return '<circle data-i="'+i+'" cx="'+toPX(p.x)+'" cy="'+toPY(p.y)+'" r="6.5" fill="'+col+'" stroke="#fff" stroke-width="2"/>';
+   }).join('');
+   // r meter marker
+   $("rmark").style.left=((st.r+1)/2*100)+'%';
+   $("rmark").style.background=col;
+   // stage
+   var s=strength(st.r);
+   $("stage").style.background=col;
+   $("stage").innerHTML='<span class="rnum">r = '+fmtR(st.r)+'</span><small>'+s.w+'</small>';
+   // info explanation
+   var tilt = s.none
+     ? 'The dots form <b>no clear line</b> &mdash; knowing a person\'s X score tells you almost nothing about their Y score.'
+     : (st.r>0
+        ? 'The cloud tilts <b>upward</b>: people higher on X tend to be higher on Y as well.'
+        : 'The cloud tilts <b>downward</b>: people higher on X tend to be <b>lower</b> on Y.');
+   var tight = s.none ? '' :
+     ' The value <b>'+fmtR(st.r)+'</b> tells you how <b>tightly</b> they line up &mdash; strength, not proof.';
+   $("info").innerHTML='<span class="n">r = '+fmtR(st.r)+' &middot; '+s.w+'</span>'+
+     tilt+tight+
+     '<div class="loc"><b>Reading r:</b> the <b>sign</b> (+/&minus;) gives the direction; the <b>size</b> (0&rarr;1) gives the strength. A big |r| still says nothing about <i>why</i> the two move together.</div>';
+ }
+
+ // dragging via pointer events + SVG coordinate transform
+ var svg=$("plot"), drag=-1;
+ function toData(evt){
+   var pt=svg.createSVGPoint(); pt.x=evt.clientX; pt.y=evt.clientY;
+   var loc=pt.matrixTransform(svg.getScreenCTM().inverse());
+   return {x:clamp((loc.x-X0)/(X1-X0)*10), y:clamp((Y1-loc.y)/(Y1-Y0)*10)};
+ }
+ svg.addEventListener('pointerdown',function(e){
+   var t=e.target;
+   if(t.tagName==='circle'&&t.hasAttribute('data-i')){
+     drag=parseInt(t.getAttribute('data-i'),10);
+     try{svg.setPointerCapture(e.pointerId);}catch(err){}
+     e.preventDefault();
+   }
+ });
+ svg.addEventListener('pointermove',function(e){
+   if(drag<0)return;
+   var d=toData(e); P[drag].x=d.x; P[drag].y=d.y;
+   curK=''; renderPresets(); update();
+ });
+ function stop(){drag=-1;}
+ svg.addEventListener('pointerup',stop);
+ svg.addEventListener('pointercancel',stop);
+
+ buildGrid();
+ setPreset('sp');
+})();
+</script>
+</body>
+</html>

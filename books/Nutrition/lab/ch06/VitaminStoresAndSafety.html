@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Vitamin Stores &amp; Safety: Fat- vs Water-Soluble</title>
+<meta name="description" content="Sort every vitamin into fat-soluble or water-soluble, then watch how solubility drives where it is stored and how quickly reserves run down — with a live depletion model and the toxicity picture for each.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:0.98fr 1.02fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr !important;}}
+.glabel{font-size:10px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin:11px 0 5px;display:flex;align-items:center;gap:7px;}
+.glabel .sw{width:11px;height:11px;border-radius:3px;flex:none;}
+.vgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.vgrid button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 4px 7px;cursor:pointer;font-family:var(--sans);text-align:center;transition:.12s;line-height:1.1;}
+.vgrid button:hover{border-color:var(--teal);}
+.vgrid button .gl{display:block;font-family:var(--disp);font-weight:700;font-size:16px;color:var(--teal-dk);}
+.vgrid button .nm2{display:block;font-size:9px;font-weight:700;color:var(--muted);margin-top:3px;}
+.vgrid button.on{background:var(--teal);border-color:var(--teal);}
+.vgrid button.on .gl{color:#fff;} .vgrid button.on .nm2{color:rgba(255,255,255,.9);}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px;}
+.df{display:flex;gap:9px;padding:7px 0;border-top:1px dashed #e3d9c6;}
+.df:first-of-type{border-top:none;padding-top:2px;}
+.df .k{flex:none;width:70px;font-size:9.2px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding-top:2px;}
+.df .v{flex:1;font-size:12.5px;line-height:1.48;color:var(--soft);}
+.df .v b{color:var(--ink);}
+.sl{border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px 12px 9px;margin-top:12px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;}
+.sl label b{color:var(--teal-dk);font-size:13px;text-transform:none;letter-spacing:0;}
+.sl input[type=range]{width:100%;margin-top:9px;accent-color:var(--teal);}
+.rd{font-size:12px;color:var(--soft);margin-top:7px;line-height:1.45;}
+.rd b{color:var(--teal-dk);}
+.evi{font-size:11px;line-height:1.5;color:var(--muted);border-top:1px dashed #ddd2ba;margin-top:10px;padding-top:8px;}
+.evi b{color:var(--soft);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 6</div>
+  <h1>Vitamin Stores &amp; Safety</h1>
+  <div class="intro">One physical property &mdash; whether a vitamin dissolves in <b>fat</b> or in <b>water</b> &mdash; decides where the body keeps it, how long reserves last, and how easily a large supplement dose can build up. Tap a vitamin to sort it, then drag the timeline to watch its stores run down.</div>
+</header>
+<div class="wrap">
+  <div><div class="card">
+    <h2 id="cardTitle">Where it dissolves</h2>
+    <svg viewBox="0 0 240 150" aria-label="solubility beaker"><g id="beaker"></g></svg>
+    <h2 style="margin-top:12px;">Body stores over time <span id="dayLbl" style="float:right;font-family:var(--sans);font-weight:700;font-size:12px;color:var(--muted);"></span></h2>
+    <svg viewBox="0 0 240 165" aria-label="store depletion curve"><g id="chart"></g></svg>
+    <div class="rd" id="readout" style="margin-top:2px;"></div>
+  </div></div>
+  <div>
+    <div id="stage">Sort the vitamins<small>tap one to begin</small></div>
+    <div class="card">
+      <div class="glabel"><span class="sw" style="background:var(--gold)"></span>Fat-soluble &mdash; stored in the body</div>
+      <div class="vgrid" id="fatGrid"></div>
+      <div class="glabel"><span class="sw" style="background:var(--blue)"></span>Water-soluble &mdash; mostly not stored</div>
+      <div class="vgrid" id="watGrid"></div>
+
+      <div id="info"></div>
+
+      <div class="sl">
+        <label>Days since last intake <b id="dayNum">0</b></label>
+        <input type="range" id="days" min="0" max="365" value="0" step="5">
+        <div class="rd" id="slRead"></div>
+      </div>
+
+      <div class="mnem"><b>Sort them fast:</b> the fat-soluble four spell <b>ADEK</b> &mdash; A, D, E, K. Everything else &mdash; the eight B vitamins and vitamin C &mdash; is water-soluble.</div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var FAT='#b8862f', WAT='#2f6f9f';
+ // reserve = illustrative timescale (days) over which stores fall toward "low" — approximate, not a clinical guideline
+ var V=[
+  {k:'A',g:'A',nm:'Retinol',cls:'fat',res:365,store:'extensive',
+   absorb:'Absorbed with dietary fat and packaged into chylomicrons that travel through lymph.',
+   stored:'Large reserves held in the <b>liver</b> and fat tissue &mdash; enough to buffer many months of low intake.',
+   tox:'Because excess is stored rather than excreted, high supplemental intake can accumulate. <b>Adult UL (preformed vitamin A): 3,000 mcg RAE/day.</b>',toxp:'high'},
+  {k:'D',g:'D',nm:'Calciferol',cls:'fat',res:75,store:'moderate',
+   absorb:'Absorbed with dietary fat; the body can also make it in skin exposed to UVB light.',
+   stored:'Stored in <b>fat tissue and the liver</b>; reserves last weeks to a few months.',
+   tox:'Stored excess can build up with high doses. <b>Adult UL: 100 mcg (4,000 IU)/day.</b>',toxp:'high'},
+  {k:'E',g:'E',nm:'Tocopherol',cls:'fat',res:110,store:'moderate',
+   absorb:'Absorbed with dietary fat into chylomicrons.',
+   stored:'Held mainly in <b>adipose (fat) tissue</b>, with a slow turnover.',
+   tox:'High supplemental doses may interfere with clotting. <b>Adult UL (supplemental alpha-tocopherol): 1,000 mg/day.</b>',toxp:'high'},
+  {k:'K',g:'K',nm:'Phylloquinone',cls:'fat',res:24,store:'minimal',
+   absorb:'Absorbed with dietary fat; gut bacteria also make a share of it.',
+   stored:'Fat-soluble, yet the body keeps only <b>small reserves</b> &mdash; the exception among the ADEK group.',
+   tox:'No UL has been set; toxicity from food or supplements is rare. Vitamin K interacts with anticoagulant medications &mdash; a drug interaction, not a toxicity.',toxp:'normal'},
+  {k:'C',g:'C',nm:'Ascorbic acid',cls:'wat',res:42,store:'small',
+   absorb:'Dissolves in water and is absorbed directly into the bloodstream.',
+   stored:'Held in a modest circulating and tissue pool; not stashed in fat. Extra is excreted in urine.',
+   tox:'Water solubility keeps toxicity low; very high doses can cause GI upset. <b>Adult UL: 2,000 mg/day.</b>',toxp:'normal'},
+  {k:'B1',g:'B1',nm:'Thiamin',cls:'wat',res:20,store:'small',
+   absorb:'Water-soluble; absorbed in the small intestine.',
+   stored:'Very small reserves &mdash; among the first vitamins to run low without intake.',
+   tox:'No UL established; excess is readily excreted in urine.',toxp:'normal'},
+  {k:'B2',g:'B2',nm:'Riboflavin',cls:'wat',res:28,store:'small',
+   absorb:'Water-soluble; absorbed in the small intestine.',
+   stored:'Limited storage; the body turns it over steadily.',
+   tox:'No UL established; excess is excreted (and can tint urine bright yellow).',toxp:'normal'},
+  {k:'B3',g:'B3',nm:'Niacin',cls:'wat',res:28,store:'small',
+   absorb:'Water-soluble; absorbed in the small intestine.',
+   stored:'Limited storage; needs regular replacement.',
+   tox:'Large doses of the supplement form cause skin flushing. <b>Adult UL (added niacin): 35 mg/day.</b>',toxp:'normal'},
+  {k:'B5',g:'B5',nm:'Pantothenic acid',cls:'wat',res:35,store:'small',
+   absorb:'Water-soluble; widely available in foods.',
+   stored:'Limited storage; excess is excreted in urine.',
+   tox:'No UL established; toxicity is not a practical concern.',toxp:'normal'},
+  {k:'B6',g:'B6',nm:'Pyridoxine',cls:'wat',res:30,store:'small',
+   absorb:'Water-soluble; absorbed in the small intestine.',
+   stored:'Modest reserves, partly bound in muscle.',
+   tox:'Chronic very high supplemental doses can cause reversible sensory nerve symptoms. <b>Adult UL: 100 mg/day.</b>',toxp:'normal'},
+  {k:'B7',g:'B7',nm:'Biotin',cls:'wat',res:35,store:'small',
+   absorb:'Water-soluble; absorbed in the small intestine.',
+   stored:'Limited storage; excess is excreted in urine.',
+   tox:'No UL established. High-dose biotin supplements can distort some lab tests &mdash; an assay interference, not a toxicity.',toxp:'normal'},
+  {k:'B9',g:'B9',nm:'Folate',cls:'wat',res:110,store:'moderate',
+   absorb:'Water-soluble; absorbed in the small intestine.',
+   stored:'A modest <b>liver store</b> lasts a few months &mdash; larger than most water-soluble vitamins.',
+   tox:'The synthetic form can mask signs of B12 deficiency. <b>Adult UL (synthetic folic acid): 1,000 mcg/day.</b>',toxp:'normal'},
+  {k:'B12',g:'B12',nm:'Cobalamin',cls:'wat',res:1500,store:'extensive',
+   absorb:'Water-soluble, but needs stomach intrinsic factor to be absorbed in the ileum.',
+   stored:'<b>The exception:</b> water-soluble, yet stored in the <b>liver for years</b> &mdash; so deficiency develops slowly.',
+   tox:'No UL established; excess is excreted.',toxp:'normal'}
+ ];
+ function byKey(k){for(var j=0;j<V.length;j++){if(V[j].k===k)return V[j];}return null;}
+ var cur='A';
+
+ // ---- beaker: shows where the vitamin dissolves ----
+ function drawBeaker(v){
+   var col=v.cls==='fat'?FAT:WAT;
+   var s='';
+   // glass
+   s+='<rect x="70" y="14" width="100" height="122" rx="10" fill="#fff" stroke="#e3d9c6" stroke-width="2"/>';
+   // oil (fat) layer on top, water layer on bottom
+   s+='<rect x="72" y="52" width="96" height="42" fill="#f6e7c4"/>';           // fat/oil layer
+   s+='<rect x="72" y="94" width="96" height="40" rx="0" fill="#d7ebf6"/>';     // water layer
+   s+='<rect x="72" y="128" width="96" height="6" rx="3" fill="#c4e0f0"/>';
+   // meniscus line
+   s+='<line x1="72" y1="94" x2="168" y2="94" stroke="#b9d4e6" stroke-width="1.5"/>';
+   // labels
+   s+='<text x="66" y="76" font-size="8.5" fill="#a98a3d" text-anchor="end" font-weight="700">OIL</text>';
+   s+='<text x="66" y="116" font-size="8.5" fill="#5a86a3" text-anchor="end" font-weight="700">WATER</text>';
+   // dissolved vitamin dots settle in the layer it dissolves in
+   var ys = v.cls==='fat' ? [60,68,76,84,66,80] : [102,110,118,126,106,120];
+   var xs = [88,108,128,148,150,92];
+   for(var d=0;d<6;d++){ s+='<circle cx="'+xs[d]+'" cy="'+ys[d]+'" r="5.5" fill="'+col+'" opacity="0.9"/>'; }
+   // glyph badge
+   s+='<circle cx="120" cy="30" r="0" />';
+   s+='<text x="120" y="46" font-size="15" fill="'+col+'" text-anchor="middle" font-family="Fraunces,serif" font-weight="700">Vitamin '+v.g+'</text>';
+   s+='<text x="200" y="70" font-size="9" fill="#8d8270" text-anchor="middle">dissolves</text>';
+   s+='<text x="200" y="82" font-size="9" fill="#8d8270" text-anchor="middle">in '+(v.cls==='fat'?'FAT':'WATER')+'</text>';
+   return s;
+ }
+
+ // ---- depletion model ----
+ function frac(v,day){ return Math.exp(-2.5*day/v.res); } // ~8% remaining at day=res
+ function drawChart(v,day){
+   var x0=32,x1=232,y0=12,y1=132,W=x1-x0,H=y1-y0;
+   var col=v.cls==='fat'?FAT:WAT;
+   var s='';
+   // deficiency-risk band (bottom 15%)
+   var bandTop=y1-0.15*H;
+   s+='<rect x="'+x0+'" y="'+bandTop+'" width="'+W+'" height="'+(y1-bandTop)+'" fill="#fae5e8"/>';
+   s+='<text x="'+(x0+4)+'" y="'+(y1-4)+'" font-size="8" fill="#b23145" font-weight="700">reserves low</text>';
+   // axes
+   s+='<line x1="'+x0+'" y1="'+y1+'" x2="'+x1+'" y2="'+y1+'" stroke="#d8cdb8" stroke-width="1.5"/>';
+   s+='<line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="#d8cdb8" stroke-width="1.5"/>';
+   s+='<text x="'+x0+'" y="'+(y0-3)+'" font-size="8" fill="#8d8270">% of stores</text>';
+   s+='<text x="'+x1+'" y="'+(y1+14)+'" font-size="8" fill="#8d8270" text-anchor="end">1 year →</text>';
+   // curve
+   var pts='';
+   for(var d=0;d<=365;d+=5){ var px=x0+(d/365)*W; var py=y1-frac(v,d)*H; pts+=px.toFixed(1)+','+py.toFixed(1)+' '; }
+   s+='<polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+   // marker at current day
+   var f=frac(v,day), mx=x0+(day/365)*W, my=y1-f*H;
+   s+='<line x1="'+mx+'" y1="'+y0+'" x2="'+mx+'" y2="'+y1+'" stroke="'+col+'" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>';
+   s+='<circle cx="'+mx+'" cy="'+my+'" r="5.5" fill="#fff" stroke="'+col+'" stroke-width="3"/>';
+   var pct=Math.round(f*100);
+   var lx=mx>170?mx-6:mx+8, anc=mx>170?'end':'start';
+   s+='<text x="'+lx+'" y="'+(my-9)+'" font-size="11" fill="'+col+'" font-weight="800" text-anchor="'+anc+'">'+pct+'%</text>';
+   return s;
+ }
+
+ function pill(cls,txt){ return '<span class="pill '+cls+'">'+txt+'</span>'; }
+
+ function render(){
+   var v=byKey(cur);
+   var col=v.cls==='fat'?FAT:WAT;
+   $("beaker").innerHTML=drawBeaker(v);
+   $("cardTitle").innerHTML=(v.cls==='fat'?'Fat-soluble':'Water-soluble')+' vitamin';
+   $("stage").style.background=col;
+   $("stage").innerHTML='Vitamin '+v.g+' &middot; '+v.nm+'<small>'+(v.cls==='fat'?'fat-soluble — absorbed with fat, stored in the body':'water-soluble — dissolves in water, little storage')+'</small>';
+   // grids highlight
+   document.querySelectorAll('#fatGrid button,#watGrid button').forEach(function(b){ b.className=(b.dataset.k===cur?'on':''); });
+   // storage + toxicity pills
+   var storeTxt={extensive:'stored: extensive',moderate:'stored: moderate',small:'stored: small',minimal:'stored: minimal'}[v.store];
+   var toxTxt = v.toxp==='high'?'supplement build-up: higher risk':'supplement build-up: lower risk';
+   $("info").innerHTML=
+     '<span class="n">Vitamin '+v.g+' &mdash; '+v.nm+'</span>'+
+     '<div class="pills">'+pill(v.cls==='fat'?'high':'low', v.cls==='fat'?'fat-soluble':'water-soluble')+pill('normal',storeTxt)+pill(v.toxp==='high'?'high':'normal',toxTxt)+'</div>'+
+     '<div class="df"><div class="k">Absorb</div><div class="v">'+v.absorb+'</div></div>'+
+     '<div class="df"><div class="k">Store</div><div class="v">'+v.stored+'</div></div>'+
+     '<div class="df"><div class="k">Toxicity</div><div class="v">'+v.tox+'</div></div>'+
+     '<div class="evi"><b>Why it matters:</b> fat-soluble vitamins are held in the liver and fat, so reserves buffer low intake for a long time &mdash; but a large supplement dose can accumulate. Water-soluble vitamins are mostly excreted in urine, so reserves run down faster and toxicity from ordinary intake is uncommon. (Upper Limits shown are for <b>adults</b>; deficiency and excess are established physiology, but any concern about your own intake belongs with a clinician.)</div>';
+   updateDay();
+ }
+
+ function updateDay(){
+   var v=byKey(cur), day=parseInt($("days").value,10);
+   $("dayNum").innerHTML=day;
+   $("dayLbl").innerHTML='day '+day;
+   $("chart").innerHTML=drawChart(v,day);
+   var pct=Math.round(frac(v,day)*100);
+   var note = pct>=15 ? '' : ' Stores have fallen into the low zone — where deficiency risk begins to rise.';
+   var speed = v.res>=300?'very slowly':(v.res>=90?'gradually':'quickly');
+   $("readout").innerHTML='At <b>day '+day+'</b> with no intake, vitamin '+v.g+' stores sit near <b>'+pct+'%</b>. Its reserves fall <b>'+speed+'</b>'+(v.cls==='fat'?' because it is held in fat and liver':(v.k==='B12'?' — B12 is the water-soluble vitamin the liver stores for years':' because water-soluble vitamins are excreted, not stashed'))+'.'+note;
+   $("slRead").innerHTML='Drag to fast-forward with zero intake. <span style="color:var(--muted)">Timescale is illustrative, not a clinical schedule.</span>';
+ }
+
+ function buildGrid(id,cls){
+   $(id).innerHTML=V.filter(function(v){return v.cls===cls;}).map(function(v){
+     return '<button data-k="'+v.k+'"><span class="gl">'+v.g+'</span><span class="nm2">'+v.nm+'</span></button>';
+   }).join('');
+   document.querySelectorAll('#'+id+' button').forEach(function(b){ b.onclick=function(){ cur=b.dataset.k; $("days").value=0; render(); }; });
+ }
+
+ buildGrid('fatGrid','fat');
+ buildGrid('watGrid','wat');
+ $("days").oninput=updateDay;
+ render();
+})();
+</script>
+</body>
+</html>

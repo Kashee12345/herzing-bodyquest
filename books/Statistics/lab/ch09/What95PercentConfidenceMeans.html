@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>What 95% Confidence Actually Means</title>
+<meta name="description" content="Generate 100 samples, build 100 confidence intervals, and count how many capture the true mean &mdash; the 95% is a property of the procedure, not of the one interval in front of you.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:104px;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:46px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.gk{text-transform:none;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.lgd i.mdl{width:14px;height:0;border-top:2px dashed #2f9e5b;border-radius:0;vertical-align:3px;}
+.grid .it .nm{display:block;} .grid .it .s{display:block;margin-top:2px;font-weight:600;font-variant-numeric:tabular-nums;}
+.hit{fill:#ffffff;fill-opacity:0;cursor:pointer;pointer-events:all;}
+.vd{border-radius:10px;padding:9px 12px;margin-top:11px;font-size:12.4px;font-weight:700;line-height:1.5;}
+.vd.hit2{background:#e5f3ea;color:#237a45;border:1px solid #bfe3cd;}
+.vd.miss{background:#fae5e8;color:#b23145;border:1px solid #f0c9d0;}
+.vd .sm{display:block;font-weight:600;font-size:11.2px;margin-top:3px;opacity:.92;}
+.eq{font-size:12.4px;color:var(--soft);line-height:1.9;margin-top:9px;font-variant-numeric:tabular-nums;}
+.eq b{color:var(--teal-dk);}
+.stl{display:flex;flex-direction:column;gap:6px;}
+.st{display:flex;gap:9px;align-items:flex-start;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 11px;cursor:pointer;text-align:left;font-family:var(--sans);width:100%;transition:.12s;}
+.st:hover{border-color:var(--teal);}
+.st .mk{width:21px;height:21px;border-radius:6px;flex:none;background:#eef4f7;color:var(--muted);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+.st .tx{font-size:12.4px;font-weight:600;color:var(--ink);line-height:1.46;font-variant-numeric:tabular-nums;}
+.st.on{border-color:var(--teal);box-shadow:0 0 0 2px rgba(47,111,138,.13);}
+.st.t .mk{background:#e5f3ea;color:#237a45;} .st.f .mk{background:#fae5e8;color:#b23145;}
+#info .loc{font-variant-numeric:tabular-nums;font-size:12.2px;line-height:1.7;}
+.tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-radius:20px;padding:3px 10px;margin-left:6px;vertical-align:2px;}
+.tag.tt{background:#e5f3ea;color:#237a45;} .tag.ff{background:#fae5e8;color:#b23145;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 9</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 9</div>
+  <h1>What 95% Confidence Actually Means</h1>
+  <div class="intro">Almost everyone who reports a confidence interval says the wrong sentence about it. The tempting reading &mdash; <i>&ldquo;there is a 95% chance the true value is in here&rdquo;</i> &mdash; puts the randomness in the wrong place. Once the sample is drawn and the arithmetic is done, your interval is two fixed numbers and the parameter is one fixed number; the parameter is either inside or it is not, and no probability is left over. <b>The 95% describes the recipe, not the result.</b> Below, the recipe is run one hundred times on one hundred fresh samples from a population whose true mean we are allowed to see. Every horizontal line is a whole study someone could have run. Count the green ones. Then remember that in real work you get exactly one line, and you never learn its color.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">One hundred studies, one hundred intervals</h2>
+      <svg viewBox="0 0 480 700" id="chart" aria-label="one hundred confidence intervals stacked as horizontal lines, each drawn green if it captured the true mean and coral if it missed, with the true mean marked as a dashed vertical line"></svg>
+      <div class="lgd">
+        <span><i style="background:#2f9e5b"></i>captured &mu;</span>
+        <span><i style="background:#d1495b"></i>missed &mu;</span>
+        <span><i style="background:#1c4454;border-radius:50%"></i>x&#772; &mdash; that study&rsquo;s sample mean</span>
+        <span><i class="mdl"></i>&mu; &mdash; the true mean</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>The long run the promise is about</h2>
+      <div class="cap" style="margin-top:2px;">Coverage after every interval ever built with the current recipe, on a log scale so you can watch the early chaos settle. The first few intervals swing between 0% and 100%; a hundred of them still wobble by several points; ten thousand of them sit on the line. <b>That line is what the confidence level is a promise about</b> &mdash; and nothing else.</div>
+      <svg viewBox="0 0 460 206" id="run" aria-label="cumulative proportion of intervals that captured the true mean, plotted against the number of intervals built on a logarithmic scale, converging on the promised confidence level"></svg>
+      <div class="cap" id="runcap"></div>
+    </div>
+    <div class="card">
+      <h2>Should you have gotten exactly 95?</h2>
+      <div class="cap" style="margin-top:2px;">No &mdash; and this is the exact distribution of how many out of 100 you should expect, computed from real binomial probabilities rather than simulated. The dark bar is the batch currently drawn above. Getting 92 or 97 is not a sign of anything at all.</div>
+      <svg viewBox="0 0 460 200" id="cnt" aria-label="the exact binomial distribution of how many of one hundred intervals capture the true mean, drawn as bars, with the batch you just drew highlighted"></svg>
+      <div class="cap" id="cntcap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Resting heart rate<small>press &ldquo;Draw 100 new studies&rdquo; to begin</small></div>
+    <div class="card">
+      <h2>The recipe you are repeating</h2>
+      <div class="hd">What is being measured &mdash; &mu; is visible here only because this is a simulation</div>
+      <div class="grid" id="ctxs"></div>
+      <div class="hd">Confidence level &mdash; sets the multiplier z*</div>
+      <div class="seg" id="cseg">
+        <button data-c="80">80%<small>z* = 1.282</small></button>
+        <button data-c="90">90%<small>z* = 1.645</small></button>
+        <button data-c="95" class="on">95%<small>z* = 1.960</small></button>
+        <button data-c="99">99%<small>z* = 2.576</small></button>
+      </div>
+      <div class="hd">How each sample is collected &mdash; part of the recipe too</div>
+      <div class="modeseg" id="bseg">
+        <button data-b="0" class="on">A genuine random sample</button>
+        <button data-b="1">Only whoever volunteers</button>
+      </div>
+      <div class="sl"><label>sample size n</label><input type="range" id="nSl" min="5" max="300" step="1" value="40"><span class="nv" id="nVal">40</span></div>
+      <div class="tiles">
+        <div><span class="lb">Multiplier<br><span class="gk">z*</span></span><span class="vv" id="tZ">1.960</span></div>
+        <div><span class="lb">Std. error<br><span class="gk">&sigma;/&radic;n</span></span><span class="vv" id="tSe">&mdash;</span></div>
+        <div><span class="lb">Margin of<br>error</span><span class="vv" id="tMo">&mdash;</span></div>
+        <div><span class="lb">Interval<br>width</span><span class="vv" id="tWd">&mdash;</span></div>
+      </div>
+      <div class="eq" id="eqn"></div>
+      <div class="tiles">
+        <div><span class="lb">Captured in<br>this batch</span><span class="vv" id="tB">&mdash;</span><span class="sub">out of 100</span></div>
+        <div><span class="lb">Intervals<br>built so far</span><span class="vv" id="tT">0</span></div>
+        <div><span class="lb">Coverage<br>so far</span><span class="vv" id="tC">&mdash;</span><span class="sub" id="tCs">&nbsp;</span></div>
+        <div><span class="lb">What this recipe<br>truly delivers</span><span class="vv" id="tE">&mdash;</span><span class="sub" id="tEs">&nbsp;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="b100">Draw 100 new studies</button><button class="btn" id="b1k">Add 1,000 more</button><button class="btn" id="brs">Reset</button></div>
+      <div class="vd" id="verd"></div>
+    </div>
+    <div class="card">
+      <h2>The one study you actually run</h2>
+      <div class="cap" style="margin-top:2px;">Tap any line in the stack, or take a blind one. The pale dots are that study&rsquo;s individual measurements; the thick bar underneath is its confidence interval. Notice how small the interval is next to the spread of the data &mdash; it is estimating the <b>mean</b>, not describing the individuals.</div>
+      <svg viewBox="0 0 460 124" id="one" aria-label="one sample shown as a strip of individual measurements with its sample mean and its confidence interval drawn beneath"></svg>
+      <div class="cap" id="onecap"></div>
+      <div class="row"><button class="btn" id="bblind">Show me one, blind</button><button class="btn solid" id="brev">Reveal &mu;</button></div>
+    </div>
+    <div class="card">
+      <h2>Which of these sentences are true?</h2>
+      <div class="cap" style="margin-top:2px;">Every sentence below is about the interval currently selected. Tap each one before you read the verdict.</div>
+      <div class="stl" id="stl"></div>
+      <div id="info"></div>
+      <div class="mnem">Say it this way and you will never be wrong: <b>&ldquo;This interval came from a procedure that captures &mu; 95% of the time.&rdquo;</b> The confidence sits on the <i>procedure</i>, and the procedure is the whole thing &mdash; how the sample was drawn, how big it was, which multiplier you used, which formula produced the standard error. Run that procedure a million times and 95% of the intervals it hands you will contain &mu;. You get one of them. It is a good bet, and it is not a probability about your particular answer, in the same way that a surgeon with a 95% success rate does not give <i>your</i> completed operation a 95% chance of having gone well &mdash; it either did or it did not.</div>
+      <div class="note"><b>Five things the 95% is not.</b> <b>(1) It is not a probability about your interval.</b> After the arithmetic, nothing random remains: &mu; is a fixed number and your two endpoints are fixed numbers. Probability had its moment before the sample was drawn, and it was spent. <b>(2) It is not a statement about individuals.</b> An interval of (69.6, 75.2) beats per minute does not mean 95% of people fall in that range &mdash; it is a claim about one number, the population mean. The middle 95% of <i>individuals</i> is &radic;n times wider, and it does not shrink when you collect more data; the interval does. <b>(3) It does not cover bias.</b> The margin of error is built entirely from &sigma;/&radic;n, which describes random sampling wobble and absolutely nothing else. Switch the sampling frame above to volunteers-only and watch coverage collapse while the label still reads 95% &mdash; and watch it get <i>worse</i> as n grows, because a bigger biased sample is just a more confident wrong answer. Non-response, a leading question, a broken instrument, measuring the wrong people: none of it is anywhere in the formula. <b>(4) A miss is not a mistake.</b> Five in a hundred are supposed to miss, and the coral lines above came from exactly the same flawless recipe as the green ones. If nothing ever missed, the level would be wrong. <b>(5) Higher confidence is not higher accuracy.</b> Moving from 95% to 99% does not improve the estimate by one decimal &mdash; x&#772; does not budge. It only widens the net. Certainty and precision trade against each other, and the only way to buy both is a larger n.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- seeded PRNG (mulberry32) so every run reproduces exactly ---------- */
+ var SEED0=20260719, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ /* Box-Muller: one standard normal draw */
+ var spare=null;
+ function gauss(){
+   if(spare!==null){ var s=spare; spare=null; return s; }
+   var u=1-rnd(), v=rnd(), r=Math.sqrt(-2*Math.log(u));
+   spare=r*Math.sin(2*Math.PI*v);
+   return r*Math.cos(2*Math.PI*v);
+ }
+
+ /* ---------- inverse standard normal (Acklam), good to ~1e-9 ---------- */
+ function invNorm(p){
+   var a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+   var b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+   var c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+   var d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+   var pl=0.02425, ph=1-pl, q, r;
+   if(p<pl){
+     q=Math.sqrt(-2*Math.log(p));
+     return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+   }
+   if(p<=ph){
+     q=p-0.5; r=q*q;
+     return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+   }
+   q=Math.sqrt(-2*Math.log(1-p));
+   return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+ }
+ function zStar(C0){ return invNorm(1-(1-C0/100)/2); }
+
+ /* ---------- standard normal CDF via erfc (fractional error < 1.2e-7) ---------- */
+ function erfc(x){
+   var z=Math.abs(x), t=1/(1+0.5*z);
+   var ans=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+
+     t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+
+     t*(-0.82215223+t*0.17087277)))))))));
+   return x>=0?ans:2-ans;
+ }
+ function normCdf(x){ return 0.5*erfc(-x/Math.SQRT2); }
+
+ /* ---------- log-gamma (Lanczos) -> exact binomial probabilities ---------- */
+ var LG=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,
+         -176.61502916214059,12.507343278686905,-0.13857109526572012,
+         9.9843695780195716e-6,1.5056327351493116e-7];
+ function lgamma(zz){
+   var x=LG[0], i;
+   zz-=1;
+   for(i=1;i<9;i++) x+=LG[i]/(zz+i);
+   var t=zz+7.5;
+   return 0.5*Math.log(2*Math.PI)+(zz+0.5)*Math.log(t)-t+Math.log(x);
+ }
+ function binPmf(nn,x,pp){
+   if(x<0||x>nn) return 0;
+   if(pp<=0) return x===0?1:0;
+   if(pp>=1) return x===nn?1:0;
+   var lg=lgamma(nn+1)-lgamma(x+1)-lgamma(nn-x+1);
+   if(x>0) lg+=x*Math.log(pp);
+   if(nn-x>0) lg+=(nn-x)*Math.log(1-pp);
+   return Math.exp(lg);
+ }
+
+ /* ---------- what is being measured ---------- */
+ var BIAS=0.25;  /* volunteers-only shifts every measurement 0.25 sigma high */
+ var CTX=[
+  {t:'Resting heart rate',s:'&mu; = 72.0 &middot; &sigma; = 9.0 bpm',nm:'Resting heart rate',
+   mu:72,sigma:9,dp:1,u:'bpm',col:'#2f6f8a',unit:'adults measured',each:'heart-rate readings',
+   bias:'people who volunteer at a clinic table skew toward the anxious and the unwell, and read about 2.3 bpm high',
+   why:'A textbook-clean measurement: a numeric outcome, a roughly normal population, and a spread we will pretend to know. Because &sigma; is treated as known, the coverage of this procedure is <i>exactly</i> the advertised level &mdash; so every wobble you see in the counts is pure sampling variability and nothing else. That is what makes this the right place to learn what the number means.'},
+  {t:'Bag fill weight',s:'&mu; = 500.00 &middot; &sigma; = 4.00 g',nm:'Bag fill weight off a line',
+   mu:500,sigma:4,dp:2,u:'g',col:'#2f9e5b',unit:'bags weighed',each:'bag weights',
+   bias:'an inspector who grabs bags from the front of the run, right after the hopper is topped off, pulls about 1.00 g high',
+   why:'Quality control is where confidence intervals do their quietest work: nobody cares about one bag, they care whether the line is centered on 500 g. Watch how tightly the stack of intervals hugs &mu; here &mdash; a small &sigma; relative to the tolerance is exactly what a well-behaved process looks like. The capture rate, though, is stubbornly the same as everywhere else. It does not care that your &sigma; is small.'},
+  {t:'Commute time',s:'&mu; = 27.5 &middot; &sigma; = 8.0 min',nm:'Morning commute time',
+   mu:27.5,sigma:8,dp:1,u:'min',col:'#b8862f',unit:'trips timed',each:'commute times',
+   bias:'a survey link posted in a complaints forum reaches the people with the worst drives, adding about 2.0 min',
+   why:'A large spread relative to the mean, which makes every individual interval wide and makes the temptation to over-read one of them strong. If your single study happened to land on a line at the far left of the stack, you would report a brisk commute with total sincerity &mdash; and the recipe would still have done its job correctly.'},
+  {t:'Soil nitrate',s:'&mu; = 14.00 &middot; &sigma; = 3.20 mg/kg',nm:'Soil nitrate concentration',
+   mu:14,sigma:3.2,dp:2,u:'mg/kg',col:'#7a5a8a',unit:'plots sampled',each:'plot readings',
+   bias:'cores taken from the convenient edge of the field, near the road and the runoff, run about 0.80 mg/kg high',
+   why:'Field sampling is where the third failure on the list below bites hardest. It is easy to collect a huge n cheaply by sampling where the truck can park, and the formula will reward you with a beautifully narrow interval around the wrong number. Switch the sampling frame and push n upward to watch that happen in real time.'}
+ ];
+
+ /* ---------- state ---------- */
+ var ci=0, conf=95, n=40, biased=0;
+ var z=zStar(95);
+ var batch=[], bcap=0, total=0, capt=0;
+ var series=[], stride=1, sc=0;
+ var sel=-1, revealed=true, judged={};
+
+ function C(){ return CTX[ci]; }
+ function com(x){ return String(x).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+ function fmt(v){ return v.toFixed(C().dp); }
+ function pct(v){ return (v*100).toFixed(1)+'%'; }
+ function delta(){ return biased?BIAS*C().sigma:0; }
+ function se(){ return C().sigma/Math.sqrt(n); }
+
+ /* ---------- one real sample -> one real interval ---------- */
+ function drawSample(keep){
+   var C0=C(), d=delta(), s=0, a=keep?[]:null, i, x;
+   for(i=0;i<n;i++){ x=C0.mu+d+C0.sigma*gauss(); s+=x; if(a)a.push(x); }
+   return {xb:s/n,data:a};
+ }
+ function makeCI(xb,data){
+   var C0=C(), s=se(), m=z*s;
+   return {xb:xb,data:data,se:s,m:m,lo:xb-m,hi:xb+m,ok:(xb-m<=C0.mu&&C0.mu<=xb+m)};
+ }
+ function pushSeries(){
+   sc++;
+   if(sc%stride===0) series.push([total,capt/total]);
+   if(series.length>600){
+     var s2=[],i;
+     for(i=0;i<series.length;i+=2) s2.push(series[i]);
+     series=s2; stride*=2;
+   }
+ }
+ function account(c){ total++; if(c.ok)capt++; pushSeries(); }
+ function newBatch(){
+   batch=[]; bcap=0; sel=-1; revealed=true; judged={};
+   var i,d,c;
+   for(i=0;i<100;i++){ d=drawSample(true); c=makeCI(d.xb,d.data); batch.push(c); if(c.ok)bcap++; account(c); }
+ }
+ function addMany(k){
+   var i,d,c;
+   for(i=0;i<k;i++){ d=drawSample(false); c=makeCI(d.xb,null); account(c); }
+ }
+ function resetRun(){ total=0; capt=0; series=[]; stride=1; sc=0; }
+
+ /* ---------- exact coverage of this exact procedure ----------
+    x-bar ~ Normal(mu + d, se). The interval covers mu iff |x-bar - mu| <= z*se,
+    i.e. |Z + d/se| <= z*, so coverage = Phi(z* - d/se) - Phi(-z* - d/se).
+    With d = 0 this is exactly the nominal level.                              */
+ function exactCov(){
+   var dd=delta()/se();
+   return normCdf(z-dd)-normCdf(-z-dd);
+ }
+ /* central 95% range for "how many of 100 capture" */
+ function batchRange(q){
+   var cum=0,lo=0,hi=100,k,p,got=false;
+   for(k=0;k<=100;k++){
+     p=binPmf(100,k,q); cum+=p;
+     if(!got&&cum>=0.025){ lo=k; got=true; }
+     if(cum>=0.975){ hi=k; break; }
+   }
+   return [lo,hi];
+ }
+
+ /* ================= chart A : one hundred intervals ================= */
+ function chartA(){
+   var C0=C(), s0=se(), d=delta();
+   var cxv=C0.mu+d*0.55, hw=5.4*s0+0.6*Math.abs(d);
+   var X0=36,X1=464,W=X1-X0,Y0=34,RH=6.5;
+   function px(v){ var t=X0+(v-(cxv-hw))/(2*hw)*W; return t<X0-2?X0-2:(t>X1+2?X1+2:t); }
+   var s='',i,c,y,col,dot;
+   s+='<line x1="'+X0+'" y1="27" x2="'+X1+'" y2="27" stroke="#dfe8ed" stroke-width="1"/>';
+   s+='<text x="'+X0+'" y="20" font-size="9.6" fill="#78868d" font-weight="700">'+fmt(cxv-hw)+'</text>';
+   s+='<text x="'+X1+'" y="20" font-size="9.6" fill="#78868d" font-weight="700" text-anchor="end">'+fmt(cxv+hw)+' '+C0.u+'</text>';
+   var mx=px(C0.mu);
+   s+='<text x="'+mx.toFixed(1)+'" y="20" font-size="10.4" fill="#237a45" font-weight="800" text-anchor="middle">&mu; = '+fmt(C0.mu)+'</text>';
+   s+='<line x1="'+mx.toFixed(1)+'" y1="27" x2="'+mx.toFixed(1)+'" y2="'+(Y0+100*RH+4)+'" stroke="#2f9e5b" stroke-width="1.6" stroke-dasharray="3,3"/>';
+   for(i=0;i<batch.length;i++){
+     c=batch[i]; y=Y0+i*RH+RH/2;
+     if(i===sel) s+='<rect x="'+X0+'" y="'+(Y0+i*RH)+'" width="'+W+'" height="'+RH+'" fill="#1c4454" opacity=".12"/>';
+     col=c.ok?'#2f9e5b':'#d1495b'; dot=c.ok?'#1e6b3c':'#9c2a3a';
+     s+='<line x1="'+px(c.lo).toFixed(1)+'" y1="'+y+'" x2="'+px(c.hi).toFixed(1)+'" y2="'+y+'" stroke="'+col+'" stroke-width="2.6" stroke-linecap="round"/>';
+     s+='<circle cx="'+px(c.xb).toFixed(1)+'" cy="'+y+'" r="1.7" fill="'+dot+'"/>';
+   }
+   for(i=0;i<batch.length;i++){
+     s+='<rect class="hit" x="'+X0+'" y="'+(Y0+i*RH)+'" width="'+W+'" height="'+RH+'" data-i="'+i+'"></rect>';
+   }
+   $("chart").innerHTML=s;
+   var els=document.querySelectorAll('#chart .hit'),j;
+   for(j=0;j<els.length;j++){
+     els[j].onclick=(function(k){ return function(){ sel=k; revealed=true; judged={}; render(); }; })(parseInt(els[j].getAttribute('data-i'),10));
+   }
+   $("cap").innerHTML='Every line is a separate study of <b>n = '+n+'</b> '+C0.unit+', each one built by the same recipe from a fresh sample. All 100 intervals are the same width &mdash; '+fmt(2*z*s0)+' '+C0.u+' &mdash; because with &sigma; known the width depends only on n and the confidence level, never on the data. What varies is where each one lands. <b>'+bcap+' of these 100 captured &mu;</b>; '+(100-bcap)+' missed.';
+ }
+
+ /* ================= chart B : coverage over the long run ================= */
+ function chartB(){
+   var X0=42,X1=448,Y0=16,Y1=168,k,xx,yy;
+   var LMAX=Math.max(2,Math.ceil(Math.log(Math.max(total,100))/Math.LN10));
+   function px(t){ return X0+(Math.log(t)/Math.LN10)/LMAX*(X1-X0); }
+   function py(v){ return Y1-v*(Y1-Y0); }
+   var s='';
+   for(k=0;k<=4;k++){ yy=Y0+(Y1-Y0)*k/4; s+='<line x1="'+X0+'" y1="'+yy+'" x2="'+X1+'" y2="'+yy+'" stroke="#eef3f6" stroke-width="1"/>'; }
+   s+='<text x="'+(X0-6)+'" y="'+(Y1+3)+'" font-size="9.2" fill="#78868d" font-weight="700" text-anchor="end">0%</text>';
+   s+='<text x="'+(X0-6)+'" y="'+(py(0.5)+3)+'" font-size="9.2" fill="#78868d" font-weight="700" text-anchor="end">50%</text>';
+   s+='<text x="'+(X0-6)+'" y="'+(Y0+3)+'" font-size="9.2" fill="#78868d" font-weight="700" text-anchor="end">100%</text>';
+   var q=exactCov();
+   if(biased){
+     s+='<line x1="'+X0+'" y1="'+py(conf/100)+'" x2="'+X1+'" y2="'+py(conf/100)+'" stroke="#b8862f" stroke-width="1.4" stroke-dasharray="2,3"/>';
+     s+='<text x="'+(X1-2)+'" y="'+(py(conf/100)-4)+'" font-size="9.4" fill="#8a6a20" font-weight="800" text-anchor="end">what the label claims &mdash; '+conf+'%</text>';
+   }
+   s+='<line x1="'+X0+'" y1="'+py(q)+'" x2="'+X1+'" y2="'+py(q)+'" stroke="#2f9e5b" stroke-width="1.5" stroke-dasharray="4,3"/>';
+   s+='<text x="'+(X1-2)+'" y="'+(py(q)+(q>0.85?12:-4))+'" font-size="9.4" fill="#237a45" font-weight="800" text-anchor="end">what it truly delivers &mdash; '+pct(q)+'</text>';
+   if(series.length>1){
+     var p='';
+     for(k=0;k<series.length;k++) p+=(k?'L':'M')+px(series[k][0]).toFixed(1)+' '+py(series[k][1]).toFixed(1);
+     s+='<path d="'+p+'" fill="none" stroke="#2f6f8a" stroke-width="2" stroke-linejoin="round"/>';
+     var lastX=px(series[series.length-1][0]), lastY=py(series[series.length-1][1]);
+     s+='<circle cx="'+lastX.toFixed(1)+'" cy="'+lastY.toFixed(1)+'" r="3.2" fill="#1c4454"/>';
+   }
+   for(k=0;k<=LMAX;k++){
+     xx=px(Math.pow(10,k));
+     s+='<line x1="'+xx.toFixed(1)+'" y1="'+Y1+'" x2="'+xx.toFixed(1)+'" y2="'+(Y1+4)+'" stroke="#c9d8e0"/>';
+     s+='<text x="'+xx.toFixed(1)+'" y="'+(Y1+16)+'" font-size="9.2" fill="#78868d" font-weight="700" text-anchor="middle">'+com(Math.pow(10,k))+'</text>';
+   }
+   s+='<text x="'+((X0+X1)/2)+'" y="'+(Y1+31)+'" font-size="9.6" fill="#78868d" font-weight="700" text-anchor="middle">intervals built (log scale)</text>';
+   $("run").innerHTML=s;
+   $("runcap").innerHTML='After <b>'+com(total)+'</b> intervals, <b>'+com(capt)+'</b> have captured &mu; &mdash; a running coverage of <b>'+pct(capt/total)+'</b> against a true rate of <b>'+pct(q)+'</b>. Press &ldquo;Add 1,000 more&rdquo; a few times and watch the curve flatten onto the green line. It does not get there by correcting itself; it gets there because the early wobbles are drowned out.';
+ }
+
+ /* ================= chart C : how many out of 100 ================= */
+ function chartC(){
+   var q=exactCov(), X0=34,X1=450,Y0=18,Y1=158, pm=[],mx=0,k;
+   for(k=0;k<=100;k++){ pm[k]=binPmf(100,k,q); if(pm[k]>mx)mx=pm[k]; }
+   var kmin=0,kmax=100;
+   for(k=0;k<=100;k++){ if(pm[k]>mx*0.0015){ kmin=k; break; } }
+   for(k=100;k>=0;k--){ if(pm[k]>mx*0.0015){ kmax=k; break; } }
+   if(bcap<kmin)kmin=bcap;
+   if(bcap>kmax)kmax=bcap;
+   kmin=Math.max(0,kmin-1); kmax=Math.min(100,kmax+1);
+   var nb=kmax-kmin+1, bw=(X1-X0)/nb, rg=batchRange(q), s='', h, x, col;
+   for(k=kmin;k<=kmax;k++){
+     h=pm[k]/mx*(Y1-Y0); x=X0+(k-kmin)*bw;
+     col=(k===bcap)?'#1c4454':((k>=rg[0]&&k<=rg[1])?'#2f6f8a':'#c9dae3');
+     s+='<rect x="'+(x+bw*0.12).toFixed(1)+'" y="'+(Y1-h).toFixed(1)+'" width="'+Math.max(1.2,bw*0.76).toFixed(1)+'" height="'+Math.max(0.7,h).toFixed(1)+'" rx="1" fill="'+col+'"></rect>';
+   }
+   s+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#dfe8ed" stroke-width="1"/>';
+   var bx=X0+(bcap-kmin)*bw+bw*0.5;
+   s+='<text x="'+bx.toFixed(1)+'" y="'+(Y1-pm[bcap]/mx*(Y1-Y0)-6).toFixed(1)+'" font-size="10.4" fill="#1c4454" font-weight="800" text-anchor="middle">you got '+bcap+'</text>';
+   var ticks=[kmin,Math.round(rg[0]),Math.round(100*q),Math.round(rg[1]),kmax],seen={},ti;
+   for(ti=0;ti<ticks.length;ti++){
+     k=ticks[ti];
+     if(k<kmin||k>kmax||seen[k])continue;
+     seen[k]=1; x=X0+(k-kmin)*bw+bw*0.5;
+     s+='<text x="'+x.toFixed(1)+'" y="'+(Y1+15)+'" font-size="9.4" fill="#78868d" font-weight="700" text-anchor="middle">'+k+'</text>';
+   }
+   s+='<text x="'+((X0+X1)/2)+'" y="'+(Y1+31)+'" font-size="9.6" fill="#78868d" font-weight="700" text-anchor="middle">how many of 100 intervals capture &mu;</text>';
+   $("cnt").innerHTML=s;
+   $("cntcap").innerHTML='With a true capture rate of <b>'+pct(q)+'</b>, a batch of 100 averages <b>'+(100*q).toFixed(1)+'</b> captures with a standard deviation of <b>'+Math.sqrt(100*q*(1-q)).toFixed(2)+'</b>. About 95% of batches land between <b>'+rg[0]+'</b> and <b>'+rg[1]+'</b> (the darker bars). Your batch of '+bcap+' is '+((bcap>=rg[0]&&bcap<=rg[1])?'comfortably inside that band &mdash; entirely unremarkable, which is the point':'outside that band, which happens to about 1 batch in 20 for no reason at all')+'.';
+ }
+
+ /* ================= the one study you actually run ================= */
+ function chartOne(){
+   var C0=C(), c=(sel>=0&&batch[sel])?batch[sel]:null;
+   if(!c){
+     $("one").innerHTML='<text x="230" y="66" font-size="11.6" fill="#78868d" text-anchor="middle" font-weight="700">Tap any line in the stack, or press &ldquo;Show me one, blind&rdquo;.</text>';
+     $("onecap").innerHTML='&nbsp;';
+     $("brev").disabled=true;
+     return;
+   }
+   var X0=30,X1=450,W=X1-X0,cxv=c.xb,hw=3.4*C0.sigma;
+   function px(v){ var t=X0+(v-(cxv-hw))/(2*hw)*W; return t<X0-3?X0-3:(t>X1+3?X1+3:t); }
+   var s='',i,yy;
+   if(revealed){
+     var iL=px(C0.mu-1.96*C0.sigma), iR=px(C0.mu+1.96*C0.sigma);
+     s+='<rect x="'+iL.toFixed(1)+'" y="24" width="'+(iR-iL).toFixed(1)+'" height="46" fill="#eef4f7"></rect>';
+     s+='<text x="'+((iL+iR)/2).toFixed(1)+'" y="18" font-size="9.4" fill="#78868d" font-weight="700" text-anchor="middle">middle 95% of individual measurements</text>';
+   }
+   if(c.data){
+     for(i=0;i<c.data.length;i++){
+       yy=30+((i*37)%36);
+       s+='<circle cx="'+px(c.data[i]).toFixed(1)+'" cy="'+yy+'" r="2.3" fill="'+C0.col+'" opacity=".42"></circle>';
+     }
+   }
+   if(revealed){
+     var m0=px(C0.mu);
+     s+='<line x1="'+m0.toFixed(1)+'" y1="22" x2="'+m0.toFixed(1)+'" y2="104" stroke="#2f9e5b" stroke-width="1.6" stroke-dasharray="3,3"/>';
+     s+='<text x="'+m0.toFixed(1)+'" y="118" font-size="9.8" fill="#237a45" font-weight="800" text-anchor="middle">&mu; = '+fmt(C0.mu)+'</text>';
+   }
+   var bx2=px(c.xb);
+   s+='<line x1="'+bx2.toFixed(1)+'" y1="26" x2="'+bx2.toFixed(1)+'" y2="94" stroke="#1c4454" stroke-width="1.2"/>';
+   s+='<circle cx="'+bx2.toFixed(1)+'" cy="52" r="3.6" fill="#1c4454"></circle>';
+   var col=revealed?(c.ok?'#2f9e5b':'#d1495b'):'#2f6f8a';
+   s+='<line x1="'+px(c.lo).toFixed(1)+'" y1="90" x2="'+px(c.hi).toFixed(1)+'" y2="90" stroke="'+col+'" stroke-width="7" stroke-linecap="round"/>';
+   s+='<text x="'+bx2.toFixed(1)+'" y="107" font-size="9.8" fill="#1c4454" font-weight="800" text-anchor="middle">x&#772; = '+fmt(c.xb)+'</text>';
+   $("one").innerHTML=s;
+   $("brev").disabled=revealed;
+   var vd;
+   if(!revealed){
+     vd='<b>This is all a real researcher ever sees.</b> The interval is ('+fmt(c.lo)+', '+fmt(c.hi)+') '+C0.u+'. Did it capture &mu;? Nothing in the data can tell you &mdash; the sample looks exactly the same either way. All you know is that the recipe that produced it works '+pct(exactCov())+' of the time. Press <b>Reveal &mu;</b> when you have committed to an answer.';
+   } else {
+     vd='Study #'+(sel+1)+' of the 100 above. Its sample mean was <b>x&#772; = '+fmt(c.xb)+'</b>, so the interval is <b>('+fmt(c.lo)+', '+fmt(c.hi)+')</b> '+C0.u+' &mdash; and it '+(c.ok?'<b style="color:#237a45">captured</b>':'<b style="color:#b23145">missed</b>')+' &mu; = '+fmt(C0.mu)+'. The interval is '+fmt(2*c.m)+' '+C0.u+' wide; the middle 95% of individual measurements spans '+fmt(2*1.96*C0.sigma)+' '+C0.u+', which is &radic;n = '+Math.sqrt(n).toFixed(2)+' times wider. Those are two completely different questions.';
+   }
+   $("onecap").innerHTML=vd;
+ }
+
+ /* ================= statements ================= */
+ var STMT=[
+  {ok:0,
+   t:function(a){ return 'There is '+a.an+' '+a.C+'% probability that &mu; lies between '+a.L+' and '+a.U+'.'; },
+   e:function(a){ return 'The single most common error. Once the sample is drawn and the arithmetic is finished, '+a.L+' and '+a.U+' are two fixed numbers and &mu; is one fixed number. Either &mu; sits between them or it does not &mdash; the probability is 1 or it is 0, and you simply do not know which. The randomness lived in <i>which sample you were going to get</i>, and that was resolved the moment you collected it. Look at the stack above: every one of those 100 intervals is either green or coral. None of them is 95% green.'; }},
+  {ok:0,
+   t:function(a){ return 'About '+a.C+'% of the individual '+a.each+' fall between '+a.L+' and '+a.U+'.'; },
+   e:function(a){ return 'This confuses a claim about the <b>mean</b> with a claim about <b>individuals</b>. The middle '+a.C+'% of individual '+a.each+' actually spans '+a.iL+' to '+a.iU+' &mdash; a width of '+a.iW+' '+a.u+' against this interval&rsquo;s '+a.cW+' '+a.u+', which is &radic;n = '+a.rootN+' times narrower. The pale dots in the panel above make this obvious: most of them lie well outside the bar. Worse, the two behave in opposite ways as you collect data &mdash; raise n and the interval shrinks toward nothing, while the spread of individuals does not move at all, because it is a fact about the population.'; }},
+  {ok:1,
+   t:function(a){ return 'If this entire study were repeated over and over, about '+a.C+'% of the intervals it produced would contain &mu;.'; },
+   e:function(a){ return 'This is the definition, stated correctly. It is a claim about a <i>procedure</i> run many times, not about any one result &mdash; and the stack of 100 lines above is precisely this sentence drawn out. Note what it does <b>not</b> require: it does not require you to actually repeat the study. It is a property the recipe has whether you exercise it or not, the same way a coin is fair before you ever flip it.'; }},
+  {ok:1,
+   t:function(a){ return 'Before the sample is drawn, the interval that is about to be built has '+a.an+' '+a.C+'% chance of covering &mu;.'; },
+   e:function(a){ return 'True, and this is exactly where the probability legitimately lives. Beforehand, x&#772; is a random quantity, so the interval x&#772; &plusmn; z*&sigma;/&radic;n is a random pair of endpoints, and asking for its chance of covering the fixed &mu; is a perfectly sensible question &mdash; the answer is '+a.C+'%. Afterwards, the randomness has been spent. One caution: this holds only if the procedure is the advertised one. '+(a.biased?'Right now the sampling frame is broken, and that chance is actually <b>'+a.q+'</b>.':'Switch the sampling frame above to volunteers-only and this chance quietly drops to <b>'+a.qAlt+'</b> while the label never changes.'); }},
+  {ok:1,
+   t:function(a){ return 'We are '+a.C+'% confident that &mu; is between '+a.L+' and '+a.U+'.'; },
+   e:function(a){ return 'True &mdash; this is the standard shorthand, and the word <b>confident</b> is doing careful work in place of <b>probable</b>. It points at the track record of the method rather than at your one answer. It is fair to report exactly this sentence; just make sure that when someone asks what it means, you unpack it as statement 3 and not as statement 1.'; }},
+  {ok:0,
+   t:function(a){ return 'If '+a.an+' '+a.C+'% interval fails to capture &mu;, something went wrong with the study.'; },
+   e:function(a){ return 'No &mdash; missing is built into the price. At '+a.C+'% confidence, '+a.miss+' out of every 100 intervals are <i>supposed</i> to miss, and in the batch above exactly '+a.nmiss+' of them did. Every coral line came from the same flawless recipe as every green line: same population, same n, same formula, same care. The only difference is which sample happened to be drawn. A method that never missed would not be '+a.an+' '+a.C+'% method; it would be a wider one with the wrong label.'; }},
+  {ok:0,
+   t:function(a){ return 'Moving from '+a.C+'% to '+a.up+'% confidence would make the estimate more accurate.'; },
+   e:function(a){ return 'It would not touch the estimate. x&#772; = '+a.xb+' either way; only the multiplier changes, from z* = '+a.z+' to z* = '+a.zUp+', widening the margin from &plusmn;'+a.m+' to &plusmn;'+a.mUp+' '+a.u+'. You have bought coverage by giving up precision &mdash; a 100% interval would be (&minus;&infin;, &infin;), perfectly reliable and perfectly useless. The only honest way to raise confidence and keep the interval tight is to raise n, which shrinks &sigma;/&radic;n for every level at once.'; }}
+ ];
+
+ function stmtArgs(){
+   var C0=C(), c=(sel>=0&&batch[sel])?batch[sel]:batch[0], s0=se();
+   var up=(conf<99)?99:99.9, zUp=zStar(up);
+   return {
+     C:conf, u:C0.u, unit:C0.unit, each:C0.each, biased:biased,
+     an:(conf===80?'an':'a'), up:up, zUp:zUp.toFixed(3), mUp:fmt(zUp*s0),
+     L:fmt(c.lo), U:fmt(c.hi), xb:fmt(c.xb),
+     m:fmt(c.m), z:z.toFixed(3),
+     cW:fmt(2*c.m), iL:fmt(C0.mu-z*C0.sigma), iU:fmt(C0.mu+z*C0.sigma),
+     iW:fmt(2*z*C0.sigma), rootN:Math.sqrt(n).toFixed(2),
+     miss:(100-conf), nmiss:(100-bcap),
+     q:pct(exactCov()),
+     qAlt:pct(normCdf(z-BIAS*Math.sqrt(n))-normCdf(-z-BIAS*Math.sqrt(n)))
+   };
+ }
+ function renderStmts(){
+   var a=stmtArgs(),s='',i;
+   for(i=0;i<STMT.length;i++){
+     var j=judged[i], cls='st'+(j?(STMT[i].ok?' t':' f'):'')+(j&&judged.last===i?' on':'');
+     var mk=j?(STMT[i].ok?'&#10003;':'&#10007;'):(i+1);
+     s+='<button class="'+cls+'" data-s="'+i+'"><span class="mk">'+mk+'</span><span class="tx">'+STMT[i].t(a)+'</span></button>';
+   }
+   $("stl").innerHTML=s;
+   var els=document.querySelectorAll('#stl .st'),k;
+   for(k=0;k<els.length;k++){
+     els[k].onclick=(function(idx){ return function(){ judged[idx]=1; judged.last=idx; renderStmts(); showStmt(idx); }; })(parseInt(els[k].getAttribute('data-s'),10));
+   }
+ }
+ function showStmt(i){
+   var a=stmtArgs(), st=STMT[i];
+   $("info").innerHTML='<span class="n">Statement '+(i+1)+'<span class="tag '+(st.ok?'tt':'ff')+'">'+(st.ok?'true':'false')+'</span></span>'+st.e(a);
+ }
+ function infoDefault(){
+   $("info").innerHTML='<span class="n">Read the interval out loud</span>The selected interval is <b>('+stmtArgs().L+', '+stmtArgs().U+') '+C().u+'</b>. Before you tap anything, decide for yourself which of the seven sentences you would have been willing to write in a report. Most people find that they have said at least two of the false ones out loud in the past month.';
+ }
+
+ /* ================= panels ================= */
+ function panels(){
+   var C0=C(), s0=se(), m=z*s0, q=exactCov(), rg=batchRange(q);
+   $("cardTitle").innerHTML='One hundred studies, one hundred intervals';
+   $("stage").style.background=C0.col;
+   $("stage").innerHTML=C0.nm+'<small>'+bcap+' of the latest 100 captured &mu; &middot; '+com(total)+' intervals built in all</small>';
+   $("ctxs").innerHTML=CTX.map(function(x,i){
+     return '<button class="it'+(i===ci?' on':'')+'" data-i="'+i+'"><span class="nm">'+x.t+'</span><span class="s">'+x.s+'</span></button>';
+   }).join('');
+   var els=document.querySelectorAll('#ctxs .it'),k;
+   for(k=0;k<els.length;k++){
+     els[k].onclick=(function(idx){ return function(){ ci=idx; recipeChanged(); }; })(parseInt(els[k].getAttribute('data-i'),10));
+   }
+   $("tZ").innerHTML=z.toFixed(3);
+   $("tSe").innerHTML=fmt(s0);
+   $("tMo").innerHTML='&plusmn;'+fmt(m);
+   $("tWd").innerHTML=fmt(2*m);
+   $("tB").innerHTML=bcap;
+   $("tT").innerHTML=com(total);
+   $("tC").innerHTML=pct(capt/total);
+   $("tCs").innerHTML=com(capt)+' of '+com(total);
+   $("tE").innerHTML=pct(q);
+   $("tEs").innerHTML='label says '+conf+'%';
+   var c=(sel>=0&&batch[sel])?batch[sel]:batch[0];
+   $("eqn").innerHTML='One study&rsquo;s interval: &nbsp;<b>x&#772; &plusmn; z* &sdot; &sigma;/&radic;n</b> &nbsp;=&nbsp; '+fmt(c.xb)+' &plusmn; '+z.toFixed(3)+' &times; '+C0.sigma.toFixed(C0.dp)+'/&radic;'+n+' &nbsp;=&nbsp; '+fmt(c.xb)+' &plusmn; '+fmt(m)+' &nbsp;&rarr;&nbsp; <b>('+fmt(c.lo)+', '+fmt(c.hi)+')</b> '+C0.u+'. Every one of the 100 lines above is this same sentence with a different x&#772;.';
+   var v=$("verd");
+   if(biased){
+     v.className='vd miss';
+     v.innerHTML='The label still reads '+conf+'%. This recipe actually captures &mu; '+pct(q)+' of the time.<span class="sm">Nothing in the formula noticed: '+C0.bias+'. The margin of error is built from &sigma;/&radic;n, which measures random wobble only. Drag n upward and coverage gets <i>worse</i>, because a larger biased sample is simply a more confident wrong answer &mdash; the interval narrows around a center that was never &mu;.</span>';
+   } else {
+     v.className='vd hit2';
+     v.innerHTML='This recipe promises '+conf+'% and delivers exactly '+pct(q)+'.';
+     v.innerHTML+='<span class="sm">With &sigma; known and the sampling genuinely random, the coverage is exact at every n &mdash; so a batch of 100 averages '+(100*q).toFixed(1)+' captures and lands between '+rg[0]+' and '+rg[1]+' about 95% of the time. You got '+bcap+'. Changing n changes how <i>wide</i> the intervals are, never how often they work.</span>';
+   }
+   $("nVal").innerHTML=n;
+ }
+
+ function render(){ panels(); chartA(); chartB(); chartC(); chartOne(); renderStmts(); if(judged.last===undefined)infoDefault(); else showStmt(judged.last); }
+ function recipeChanged(){ resetRun(); newBatch(); render(); }
+
+ /* ================= wiring ================= */
+ var cs=document.querySelectorAll('#cseg button'),i;
+ for(i=0;i<cs.length;i++){
+   cs[i].onclick=(function(el){ return function(){
+     var q=document.querySelectorAll('#cseg button'),k;
+     for(k=0;k<q.length;k++) q[k].className='';
+     el.className='on';
+     conf=parseInt(el.getAttribute('data-c'),10); z=zStar(conf);
+     recipeChanged();
+   }; })(cs[i]);
+ }
+ var bs=document.querySelectorAll('#bseg button');
+ for(i=0;i<bs.length;i++){
+   bs[i].onclick=(function(el){ return function(){
+     var q=document.querySelectorAll('#bseg button'),k;
+     for(k=0;k<q.length;k++) q[k].className='';
+     el.className='on';
+     biased=parseInt(el.getAttribute('data-b'),10);
+     recipeChanged();
+   }; })(bs[i]);
+ }
+ $("nSl").oninput=function(){ n=parseInt(this.value,10); recipeChanged(); };
+ $("b100").onclick=function(){ newBatch(); render(); };
+ $("b1k").onclick=function(){ addMany(1000); render(); };
+ $("brs").onclick=function(){ seed=SEED0; spare=null; resetRun(); newBatch(); render(); };
+ $("bblind").onclick=function(){ sel=Math.floor(rnd()*batch.length); revealed=false; judged={}; render(); };
+ $("brev").onclick=function(){ revealed=true; render(); };
+
+ newBatch();
+ render();
+})();
+</script>
+</body>
+</html>

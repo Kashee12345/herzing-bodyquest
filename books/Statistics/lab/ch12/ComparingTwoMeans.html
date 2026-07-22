@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Comparing Two Means</title>
+<meta name="description" content="Draw two real samples, watch the difference between their means bounce around, and see exactly where the standard error of that difference comes from — variances add, standard errors do not.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:9px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:126px;line-height:1.3;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.a input[type=range]::-webkit-slider-thumb{background:#2f6f8a;} .sl.a input[type=range]::-moz-range-thumb{background:#2f6f8a;}
+.sl.b input[type=range]::-webkit-slider-thumb{background:#b8862f;} .sl.b input[type=range]::-moz-range-thumb{background:#b8862f;}
+.sl .nv{font-size:15px;font-weight:800;color:var(--teal-dk);min-width:66px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;line-height:1.3;}
+.tiles div.warn{border-color:#e2adb7;background:#fdf1f3;} .tiles div.warn .vv{color:#b23145;}
+.tiles div.good{border-color:#b6d8c4;background:#f0f8f3;} .tiles div.good .vv{color:#237a45;}
+.cap{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.55;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.sent{border:1px solid #bcd6e2;border-left:5px solid var(--teal);background:#eef6f9;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:13.2px;line-height:1.6;color:var(--soft);}
+.sent b{color:var(--teal-dk);}
+.sent .big{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.sent.warn{border-color:#e2adb7;border-left-color:#d1495b;background:#fdf1f3;} .sent.warn .big{color:#b23145;}
+.sent.good{border-color:#b6d8c4;border-left-color:#2f9e5b;background:#f0f8f3;} .sent.good .big{color:#237a45;}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.strip div{border:1px solid var(--line);border-radius:10px;padding:7px 8px;background:#fff;text-align:center;}
+.strip .lb{display:block;font-size:9.1px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.strip .vv{display:block;font-size:14.5px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+table.tv{width:100%;border-collapse:collapse;margin-top:9px;font-variant-numeric:tabular-nums;}
+table.tv th,table.tv td{padding:5px 4px;font-size:11.7px;text-align:right;border-bottom:1px solid var(--line);color:var(--soft);font-weight:600;}
+table.tv th{font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.3;}
+table.tv td:first-child,table.tv th:first-child{text-align:left;font-weight:800;color:var(--teal-dk);}
+table.tv tr:last-child td{border-bottom:none;}
+.mnem,.note{font-size:12px;border-radius:8px;padding:9px 12px;margin-top:10px;line-height:1.6;}
+.mnem{color:#8a6a20;background:#fbf3e2;border:1px solid #ecd9ac;} .mnem b{color:#5a4212;}
+.note{color:#8a2a3a;background:#fae5e8;border:1px solid #f0c9d0;} .note b{color:#7a1f2c;}
+.list .it .s{display:block;margin-top:2px;line-height:1.35;}
+.list .it .nm{line-height:1.4;}
+.modeseg + .cap{margin-top:2px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 12</div>
+  <h1>Comparing Two Means</h1>
+  <div class="intro">Almost every real question is a comparison. Does this route get you to work faster than that one? The honest answer never comes from a single number, because you cannot measure a route &mdash; you can only <b>sample</b> it, a few mornings at a time, and every sample lands somewhere slightly different. So the quantity you actually care about, <b>x&#772;<sub>A</sub> &minus; x&#772;<sub>B</sub></b>, is not a fixed fact about the world. It is a statistic, and like every statistic it has a distribution. Below you control two populations of commute times and then <b>draw real samples from them</b>. Watch the observed gap jump around from draw to draw &mdash; sometimes overshooting the truth, sometimes landing on the wrong side of zero entirely. Then watch where its variability comes from: <b>the two sample means each wobble, and their wobbles combine by adding variances, not standard errors.</b> That one rule is the engine of this whole chapter.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">One morning&rsquo;s worth of data from each route</h2>
+      <div class="cap" style="margin-top:2px;">Each dot is <b>one commute</b>, timed in minutes. The pale hills are the two populations you set on the right &mdash; the truth, which in real life you never get to see. The solid vertical line in each strip is that sample&rsquo;s mean; the bar beneath it is a 95% confidence interval for <i>that route alone</i>. Press <b>Draw a new pair of samples</b> repeatedly and watch how much the two means move even though the populations underneath never change.</div>
+      <svg viewBox="0 0 480 246" id="grp" aria-label="dot plots of two samples of commute times on a shared axis, each with its sample mean and its own confidence interval"></svg>
+      <div class="row"><button class="btn solid" id="bdraw">Draw a new pair of samples</button><button class="btn" id="bflip">Find a draw that reverses the true order</button></div>
+      <div class="sent" id="grpsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Collapse it to the one number you care about</h2>
+      <div class="cap" style="margin-top:2px;">Two means are two facts; the <b>difference</b> is the answer. The curve below is what x&#772;<sub>A</sub>&nbsp;&minus;&nbsp;x&#772;<sub>B</sub> would look like across endless repeats <b>if the two routes truly took the same time on average</b> &mdash; centred at zero, with width equal to the standard error you computed from these samples. The dark marker is the difference you actually got. The shaded tails are every outcome at least that far from zero in either direction; their combined area is the <b>p&#8209;value</b>. Underneath, on the same scale, is the confidence interval for the difference.</div>
+      <svg viewBox="0 0 480 216" id="dif" aria-label="the sampling distribution of the difference in means under the null hypothesis, with the observed difference marked and the confidence interval drawn below"></svg>
+      <div class="lgd">
+        <span><i style="background:#cfdde4"></i>if the two means were equal</span>
+        <span><i style="background:#e6b3bd"></i>as far out as observed, or farther</span>
+        <span><i style="background:#1c4454"></i>the difference you got</span>
+      </div>
+      <div class="sent" id="difsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Where the wobble comes from: variances add</h2>
+      <div class="cap" style="margin-top:2px;">Route A&rsquo;s mean has its own standard error. So does route B&rsquo;s. Subtracting one from the other does <b>not</b> cancel the noise &mdash; it <i>collects</i> it, because two independent sources of error never conspire to line up. But they do not simply add either. They combine the way the sides of a right triangle do: square them, add, take the root. Drag the sample sizes and watch the triangle change shape.</div>
+      <svg viewBox="0 0 480 224" id="pyth" aria-label="a right triangle whose legs are the two standard errors and whose hypotenuse is the standard error of the difference, beside a bar comparison"></svg>
+      <div class="sent" id="pythsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Do it a thousand times</h2>
+      <div class="cap" style="margin-top:2px;">One pair of samples proves nothing. So repeat the whole study: each run below draws <b>fresh</b> samples from both populations and records only the difference between their means. The <b>bars</b> are those simulated differences. The <b>dark line</b> is the theoretical curve &mdash; centred on the true difference &mu;<sub>A</sub>&nbsp;&minus;&nbsp;&mu;<sub>B</sub>, with spread &radic;(&sigma;<sub>A</sub>&sup2;/n<sub>A</sub> + &sigma;<sub>B</sub>&sup2;/n<sub>B</sub>). Nothing was fitted; it is drawn straight from the formula. The bars landing on it is the claim of this section, verified.</div>
+      <svg viewBox="0 0 480 236" id="hist" aria-label="histogram of the difference in sample means across many simulated repeats, with the theoretical sampling distribution overlaid"></svg>
+      <div class="lgd">
+        <span><i style="background:#bcd9e6"></i>simulated differences</span>
+        <span><i style="background:#1c4454"></i>theory, not fitted</span>
+        <span><i style="background:#d1495b"></i>zero &mdash; no difference</span>
+      </div>
+      <div class="strip">
+        <div><span class="lb">Studies<br>run</span><span class="vv" id="rN">0</span></div>
+        <div><span class="lb">Mean of the<br>differences</span><span class="vv" id="rM">&mdash;</span></div>
+        <div><span class="lb">SD of the<br>differences</span><span class="vv" id="rS">&mdash;</span></div>
+        <div><span class="lb" id="rPl">Share calling<br>a difference</span><span class="vv" id="rP">&mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="run1">Run 1,000 studies</button><button class="btn" id="run2">Add 5,000 more</button><button class="btn" id="rrs">Reset</button></div>
+      <div class="cap" id="histcap"></div>
+    </div>
+  </div>
+
+  <div>
+    <div id="stage">Two routes to work<small>set the truth, then go sampling</small></div>
+
+    <div class="card">
+      <h2>The truth you are sampling from</h2>
+      <div class="cap" style="margin-top:2px;">In a real study none of these six numbers is knowable &mdash; that is the entire problem. Here you get to set them, so you can check the machinery against an answer you already know.</div>
+      <div class="hd">Route A &mdash; the highway</div>
+      <div class="sl a"><label>true mean &mu;<sub>A</sub></label><input type="range" id="mA" min="20" max="50" step="0.5" value="34" aria-label="true mean of route A"><span class="nv" id="mAv">34</span></div>
+      <div class="sl a"><label>true SD &sigma;<sub>A</sub></label><input type="range" id="sA" min="1" max="16" step="0.5" value="7" aria-label="true standard deviation of route A"><span class="nv" id="sAv">7</span></div>
+      <div class="sl a"><label>sample size n<sub>A</sub></label><input type="range" id="nA" min="0" max="17" step="1" value="8" aria-label="sample size for route A"><span class="nv" id="nAv">25</span></div>
+      <div class="hd">Route B &mdash; the back roads</div>
+      <div class="sl b"><label>true mean &mu;<sub>B</sub></label><input type="range" id="mB" min="20" max="50" step="0.5" value="30" aria-label="true mean of route B"><span class="nv" id="mBv">30</span></div>
+      <div class="sl b"><label>true SD &sigma;<sub>B</sub></label><input type="range" id="sB" min="1" max="16" step="0.5" value="7" aria-label="true standard deviation of route B"><span class="nv" id="sBv">7</span></div>
+      <div class="sl b"><label>sample size n<sub>B</sub></label><input type="range" id="nB" min="0" max="17" step="1" value="8" aria-label="sample size for route B"><span class="nv" id="nBv">25</span></div>
+      <div class="hd">Jump to a situation worth seeing</div>
+      <div class="seg" id="preSeg">
+        <button data-v="0">Honest gap<small>4 min, n = 25</small></button>
+        <button data-v="1">No gap at all<small>&mu;<sub>A</sub> = &mu;<sub>B</sub></small></button>
+        <button data-v="2">Too few drives<small>n = 5</small></button>
+        <button data-v="3">Lopsided<small>n and &sigma; unequal</small></button>
+        <button data-v="4">Tiny but certain<small>0.5 min, n = 200</small></button>
+
+      </div>
+      <div class="hd">How to combine the two spreads</div>
+      <div class="modeseg" id="modeSeg">
+        <button data-v="welch">Welch &mdash; keep them separate</button>
+        <button data-v="pool">Pooled &mdash; assume &sigma;<sub>A</sub> = &sigma;<sub>B</sub></button>
+      </div>
+      <div class="cap" id="modecap"></div>
+      <div class="row"><button class="btn" id="brst">Reset everything</button></div>
+    </div>
+
+    <div class="card">
+      <h2>This study, computed live</h2>
+      <div class="tiles">
+        <div><span class="lb">Route A<br>mean x&#772;<sub>A</sub></span><span class="vv" id="tXA">&mdash;</span><span class="sub" id="tXAs">&nbsp;</span></div>
+        <div><span class="lb">Route B<br>mean x&#772;<sub>B</sub></span><span class="vv" id="tXB">&mdash;</span><span class="sub" id="tXBs">&nbsp;</span></div>
+        <div><span class="lb">Observed<br>difference</span><span class="vv" id="tD">&mdash;</span><span class="sub" id="tDs">&nbsp;</span></div>
+        <div><span class="lb">True<br>difference</span><span class="vv" id="tT0">&mdash;</span><span class="sub">you set this</span></div>
+        <div><span class="lb">SE of<br>x&#772;<sub>A</sub></span><span class="vv" id="tSA">&mdash;</span><span class="sub">s<sub>A</sub> &divide; &radic;n<sub>A</sub></span></div>
+        <div><span class="lb">SE of<br>x&#772;<sub>B</sub></span><span class="vv" id="tSB">&mdash;</span><span class="sub">s<sub>B</sub> &divide; &radic;n<sub>B</sub></span></div>
+        <div><span class="lb">SE of the<br>difference</span><span class="vv" id="tSD">&mdash;</span><span class="sub" id="tSDs">&nbsp;</span></div>
+        <div><span class="lb">Degrees of<br>freedom</span><span class="vv" id="tDF">&mdash;</span><span class="sub" id="tDFs">&nbsp;</span></div>
+        <div><span class="lb">t statistic</span><span class="vv" id="tTt">&mdash;</span><span class="sub">difference &divide; its SE</span></div>
+        <div id="bxP"><span class="lb">p&#8209;value<br>two&#8209;sided</span><span class="vv" id="tP">&mdash;</span><span class="sub" id="tPs">&nbsp;</span></div>
+        <div id="bxCI" style="grid-column:span 2;"><span class="lb">95% confidence interval for &mu;<sub>A</sub> &minus; &mu;<sub>B</sub></span><span class="vv" id="tCI">&mdash;</span><span class="sub" id="tCIs">&nbsp;</span></div>
+      </div>
+      <div class="sent" id="sent"></div>
+    </div>
+
+    <div class="card">
+      <h2>The error&#8209;bar trap, checked against your own numbers</h2>
+      <div class="cap" style="margin-top:2px;">Look back at the two confidence intervals in the first panel &mdash; one per route. It is enormously tempting to eyeball them and conclude that overlapping bars mean no real difference. That shortcut is <b>wrong</b>, and it is wrong in a specific, predictable way. Here is what your current numbers say.</div>
+      <svg viewBox="0 0 480 128" id="ovl" aria-label="the two individual confidence intervals stacked, showing whether they overlap"></svg>
+      <div class="sent" id="ovlsent"></div>
+      <div class="cap">The reason is arithmetic, not opinion. Each individual bar reaches out by t*&nbsp;&times;&nbsp;SE for its own group, so judging &ldquo;do they touch?&rdquo; effectively tests the gap against <b>SE<sub>A</sub>&nbsp;+&nbsp;SE<sub>B</sub></b>. But the difference is judged against <b>&radic;(SE<sub>A</sub>&sup2;&nbsp;+&nbsp;SE<sub>B</sub>&sup2;)</b>, which is always the smaller of the two. The eyeball test is therefore <b>too conservative</b>: bars can overlap while the difference is comfortably significant. Compare the two bars in the triangle panel above to see the size of the gap you are giving away.</div>
+    </div>
+
+    <div class="card">
+      <h2>Say it right</h2>
+      <div class="cap" style="margin-top:2px;">Nine things people say after comparing two means. Four of them are correct. Tap each one.</div>
+      <div class="list" id="claims"></div>
+      <div id="info"><span class="n">The section in one line</span>The difference between two sample means is a statistic with its own sampling distribution: <b>centred on the true difference</b>, and spread out by <b>&radic;(SE<sub>A</sub>&sup2; + SE<sub>B</sub>&sup2;)</b> &mdash; the two wobbles combined the way perpendicular sides combine, never by simple addition.</div>
+    </div>
+
+    <div class="card">
+      <h2>What to carry out of this section</h2>
+      <div class="mnem"><b>Variances add; standard errors do not.</b> If you remember one line, make it this one. For two <b>independent</b> samples, Var(x&#772;<sub>A</sub>&nbsp;&minus;&nbsp;x&#772;<sub>B</sub>) = Var(x&#772;<sub>A</sub>) + Var(x&#772;<sub>B</sub>) &mdash; note the plus sign even though the statistic has a minus sign. Independent noise cannot cancel; it can only accumulate. Taking the square root at the end is what turns that sum of variances back into a standard error, and it is why the hypotenuse in the triangle above is shorter than the two legs laid end to end.</div>
+      <div class="mnem"><b>The word <i>independent</i> is doing real work.</b> Everything on this page assumes the two samples are separate sets of observations &mdash; different mornings, different drivers, different subjects. If instead each observation in A is <b>paired</b> with a specific observation in B (the same driver on both routes, the same patient before and after), the two means are correlated, the variances no longer simply add, and this machinery gives the wrong answer. The fix is to take the difference <i>within</i> each pair first and analyse that single column of differences with one&#8209;sample methods. Deciding which design you have is a question about how the data were collected, and no amount of computation will answer it for you.</div>
+      <div class="note"><b>What a small p&#8209;value is not.</b> It is not the probability that the two population means are equal, and it is not the probability that you are wrong. It is computed <i>assuming</i> the means are equal, and it reports how often a difference at least this extreme would show up under that assumption. Turning that around &mdash; treating it as the probability of the assumption &mdash; is the single most common error in applied statistics, and no sample size protects you from it.</div>
+      <div class="note"><b>Significant is not the same as important.</b> Load the <i>Tiny but certain</i> preset. A half&#8209;minute difference in commute time is worth nothing to anybody, but with 200 tightly clustered drives on each route the standard error falls to about a fifth of a minute &mdash; easily small enough to flag a gap that size, and the interval comes back at roughly a quarter to one minute. Statistical significance answers <i>&ldquo;can we tell this gap apart from zero?&rdquo;</i> &mdash; a question about precision. Whether the gap matters is a question about minutes, dollars, or symptoms, and the confidence interval, reported in the original units, is the tool that answers it. Always read the interval, not just the verdict.</div>
+      <div class="note"><b>A difference between groups is not automatically caused by the grouping.</b> Every number on this page would be identical whether route A was assigned at random each morning or chosen deliberately on days the weather was bad. The statistics measure the size and precision of a gap; they say nothing about what produced it. Only the <b>design</b> &mdash; random assignment versus observed groups &mdash; licenses a causal reading, and a bigger t statistic never upgrades an observational comparison into a causal one.</div>
+      <div class="cap">One last thing worth noticing. Run the simulation with the <i>No gap at all</i> preset, where the true difference really is zero. The histogram centres on zero, as it must &mdash; but individual studies land as far as two or three minutes out on either side, and roughly one run in twenty declares a difference anyway. Those runs are not mistakes in arithmetic. They are the guaranteed cost of the 5% rule, showing up exactly as often as advertised.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ================= seeded PRNG (mulberry32) — reproducible every session ================= */
+ var SEED0=20260720, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ var spare=null;
+ function gauss(){
+   if(spare!==null){ var s=spare; spare=null; return s; }
+   var u=1-rnd(), v=rnd(), r=Math.sqrt(-2*Math.log(u));
+   spare=r*Math.sin(2*Math.PI*v);
+   return r*Math.cos(2*Math.PI*v);
+ }
+
+ /* ================= special functions ================= */
+ function lgam(xx){
+   var cof=[76.18009172947146,-86.50532032941677,24.01409824083091,
+            -1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+   var x=xx,y=xx,tmp=x+5.5,ser=1.000000000190015,j;
+   tmp-=(x+0.5)*Math.log(tmp);
+   for(j=0;j<6;j++){ y+=1; ser+=cof[j]/y; }
+   return -tmp+Math.log(2.5066282746310005*ser/x);
+ }
+ function betacf(a,b,x){
+   var MAXIT=300, EPS=3e-14, FPMIN=1e-300;
+   var qab=a+b, qap=a+1, qam=a-1;
+   var c=1, d=1-qab*x/qap, m, m2, aa, del, h;
+   if(Math.abs(d)<FPMIN) d=FPMIN;
+   d=1/d; h=d;
+   for(m=1;m<=MAXIT;m++){
+     m2=2*m;
+     aa=m*(b-m)*x/((qam+m2)*(a+m2));
+     d=1+aa*d; if(Math.abs(d)<FPMIN) d=FPMIN;
+     c=1+aa/c; if(Math.abs(c)<FPMIN) c=FPMIN;
+     d=1/d; h*=d*c;
+     aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+     d=1+aa*d; if(Math.abs(d)<FPMIN) d=FPMIN;
+     c=1+aa/c; if(Math.abs(c)<FPMIN) c=FPMIN;
+     d=1/d; del=d*c; h*=del;
+     if(Math.abs(del-1)<EPS) break;
+   }
+   return h;
+ }
+ function betai(a,b,x){
+   if(x<=0) return 0;
+   if(x>=1) return 1;
+   var bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));
+   if(x<(a+1)/(a+b+2)) return bt*betacf(a,b,x)/a;
+   return 1-bt*betacf(b,a,1-x)/b;
+ }
+ /* Student t: two-sided tail, density, inverse */
+ function tTail(t,v){ return betai(v/2,0.5,v/(v+t*t)); }      /* = P(|T| > |t|) */
+ function tPdf(t,v){
+   return Math.exp(lgam((v+1)/2)-lgam(v/2)-0.5*Math.log(v*Math.PI)
+                   -((v+1)/2)*Math.log(1+t*t/v));
+ }
+ function invT(p,v){                                          /* p in (0.5,1) -> quantile */
+   var lo=0, hi=2000, mid, i;
+   for(i=0;i<70;i++){ mid=(lo+hi)/2; if(1-tTail(mid,v)/2<p) lo=mid; else hi=mid; }
+   return (lo+hi)/2;
+ }
+ function normPdf(x){ return 0.3989422804014327*Math.exp(-0.5*x*x); }
+
+ /* ================= dials ================= */
+ var NS=[3,4,5,6,8,10,12,15,20,25,30,40,50,60,80,100,150,200];
+ var P={ma:34,sa:7,ia:9, mb:30,sb:7,ib:9};   /* ia/ib are indices into NS -> n = 25 */
+ var mode='welch', ci=-1, AL=0.05;
+
+ function nA(){ return NS[P.ia]; }
+ function nB(){ return NS[P.ib]; }
+ function trueDiff(){ return P.ma-P.mb; }
+ function trueSE(){ return Math.sqrt(P.sa*P.sa/nA()+P.sb*P.sb/nB()); }
+
+ /* ================= the current pair of samples ================= */
+ var A=[], B=[], xA=0, xB=0, vA=0, vB=0;      /* v = sample variance, n-1 divisor */
+
+ function drawOne(n,mu,sg){
+   var i,a=new Array(n),sum=0,ss=0;
+   for(i=0;i<n;i++){ a[i]=mu+sg*gauss(); sum+=a[i]; }
+   var m=sum/n;
+   for(i=0;i<n;i++){ ss+=(a[i]-m)*(a[i]-m); }
+   return {a:a,m:m,v:ss/(n-1)};
+ }
+ function newPair(){
+   var ra=drawOne(nA(),P.ma,P.sa), rb=drawOne(nB(),P.mb,P.sb);
+   A=ra.a; xA=ra.m; vA=ra.v;
+   B=rb.a; xB=rb.m; vB=rb.v;
+ }
+ function huntFlip(){                    /* keep drawing until the observed order reverses the truth */
+   var d0=trueDiff(), k=0;
+   if(Math.abs(d0)<1e-9){ newPair(); return; }
+   do{ newPair(); k++; }while(((xA-xB)*d0>0)&&k<600);
+ }
+
+ /* ================= the two-sample computation, done one way in one place ================= */
+ function score(d,va,vb,na,nb){
+   var se, df;
+   if(mode==='welch'){
+     var a=va/na, b=vb/nb;
+     se=Math.sqrt(a+b);
+     df=(a+b)*(a+b)/((a*a)/(na-1)+(b*b)/(nb-1));
+     if(!isFinite(df)||df<1) df=1;
+   } else {
+     var sp2=((na-1)*va+(nb-1)*vb)/(na+nb-2);
+     se=Math.sqrt(sp2*(1/na+1/nb));
+     df=na+nb-2;
+   }
+   var t=se>0?d/se:0;
+   return {se:se,df:df,t:t,p:se>0?tTail(Math.abs(t),df):1};
+ }
+ function cur(){
+   var r=score(xA-xB,vA,vB,nA(),nB());
+   r.d=xA-xB;
+   r.ts=invT(1-AL/2,r.df);
+   r.lo=r.d-r.ts*r.se; r.hi=r.d+r.ts*r.se;
+   return r;
+ }
+ /* each group's own interval */
+ function own(m,v,n){
+   var se=Math.sqrt(v/n), ts=invT(1-AL/2,n-1);
+   return {m:m,se:se,lo:m-ts*se,hi:m+ts*se};
+ }
+
+ /* ================= formatting ================= */
+ function f2(x){ return (x<0?'&minus;':'')+Math.abs(x).toFixed(2); }
+ function f3(x){ return (x<0?'&minus;':'')+Math.abs(x).toFixed(3); }
+ function com(s){ s=String(s); var p=s.split('.');
+   p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,','); return p.join('.'); }
+ function pv(p){ return p<0.0001?'&lt; 0.0001':p.toFixed(4); }
+ function pc(v,d){ return (v*100).toFixed(d===undefined?1:d)+'%'; }
+ var CA='#2f6f8a', CB='#b8862f';
+
+ /* ================= panel 1 — the two dot plots ================= */
+ var GX0=52, GX1=470;
+ function span(){
+   var s=Math.max(P.sa,P.sb);
+   var lo=Math.min(P.ma,P.mb)-3.5*s, hi=Math.max(P.ma,P.mb)+3.5*s;
+   return {lo:lo,hi:hi};
+ }
+ function gx(x){ var S=span(); return GX0+(x-S.lo)/(S.hi-S.lo)*(GX1-GX0); }
+
+ function drawGrp(){
+   var S=span(), o='', i, k;
+   var oa=own(xA,vA,nA()), ob=own(xB,vB,nB());
+   var rows=[{y:22,mu:P.ma,sg:P.sa,dat:A,st:oa,c:CA,lb:'Route A',n:nA()},
+             {y:118,mu:P.mb,sg:P.sb,dat:B,st:ob,c:CB,lb:'Route B',n:nB()}];
+
+   for(k=0;k<2;k++){
+     var R=rows[k], base=R.y+62, pk=0.4;
+     /* the population hill */
+     var pth='';
+     for(i=0;i<=180;i++){
+       var x=S.lo+(S.hi-S.lo)*i/180;
+       var d=normPdf((x-R.mu)/R.sg);
+       pth+=(i?'L':'M')+gx(x).toFixed(2)+' '+(base-d/pk*56).toFixed(2);
+     }
+     o+='<path d="M'+GX0+' '+base+'L'+pth.slice(1)+'L'+GX1+' '+base+'Z" fill="#eef3f6"/>';
+     o+='<path d="'+pth+'" fill="none" stroke="#c8d5dc" stroke-width="1.3"/>';
+     o+='<line x1="'+GX0+'" y1="'+base+'" x2="'+GX1+'" y2="'+base+'" stroke="#d7e2e8" stroke-width="1.2"/>';
+
+     /* the observations */
+     var rad=R.n>80?2.1:(R.n>30?2.8:3.6);
+     for(i=0;i<R.dat.length;i++){
+       var cx=gx(R.dat[i]);
+       if(cx<GX0-8||cx>GX1+8) continue;
+       var jy=base-5-((i*31)%46);
+       o+='<circle cx="'+cx.toFixed(1)+'" cy="'+jy+'" r="'+rad+'" fill="'+R.c+'" opacity="'+(R.n>80?0.42:0.68)+'"/>';
+     }
+
+     /* true mean, faint */
+     var tx=gx(R.mu);
+     o+='<line x1="'+tx.toFixed(1)+'" y1="'+(base-58)+'" x2="'+tx.toFixed(1)+'" y2="'+base+'" stroke="#9fb0b8" stroke-width="1.4" stroke-dasharray="4 3"/>';
+
+     /* sample mean */
+     var mx=gx(R.st.m);
+     o+='<line x1="'+mx.toFixed(1)+'" y1="'+(R.y-2)+'" x2="'+mx.toFixed(1)+'" y2="'+base+'" stroke="'+R.c+'" stroke-width="2.4"/>';
+
+     /* that group's own interval */
+     var la=Math.max(GX0,gx(R.st.lo)), lb=Math.min(GX1,gx(R.st.hi)), by=base+13;
+     o+='<line x1="'+la.toFixed(1)+'" y1="'+by+'" x2="'+lb.toFixed(1)+'" y2="'+by+'" stroke="'+R.c+'" stroke-width="3.2"/>';
+     o+='<line x1="'+la.toFixed(1)+'" y1="'+(by-5)+'" x2="'+la.toFixed(1)+'" y2="'+(by+5)+'" stroke="'+R.c+'" stroke-width="2.6"/>';
+     o+='<line x1="'+lb.toFixed(1)+'" y1="'+(by-5)+'" x2="'+lb.toFixed(1)+'" y2="'+(by+5)+'" stroke="'+R.c+'" stroke-width="2.6"/>';
+     o+='<circle cx="'+mx.toFixed(1)+'" cy="'+by+'" r="4.2" fill="'+R.c+'"/>';
+
+     /* label chip */
+     o+='<rect x="2" y="'+(R.y+16)+'" width="46" height="17" rx="8" fill="'+R.c+'"/>';
+     o+='<text x="25" y="'+(R.y+28.4)+'" font-size="9.4" fill="#fff" text-anchor="middle" font-weight="800">'+R.lb+'</text>';
+     o+='<text x="25" y="'+(R.y+45)+'" font-size="9" fill="#9aa8ae" text-anchor="middle" font-weight="700">n = '+R.n+'</text>';
+     o+='<text x="'+Math.max(GX0+2,Math.min(mx,GX1-40)).toFixed(1)+'" y="'+(R.y+9)+'" font-size="10" fill="'+R.c+'" text-anchor="middle" font-weight="800">x&#772; = '+R.st.m.toFixed(2)+'</text>';
+   }
+
+   /* shared axis */
+   var ay=222;
+   o+='<line x1="'+GX0+'" y1="'+ay+'" x2="'+GX1+'" y2="'+ay+'" stroke="#c3d2d9" stroke-width="1.3"/>';
+   var stp=S.hi-S.lo>44?10:(S.hi-S.lo>22?5:2);
+   var t0=Math.ceil(S.lo/stp)*stp;
+   for(var g=t0;g<=S.hi;g+=stp){
+     var X=gx(g);
+     o+='<line x1="'+X.toFixed(1)+'" y1="'+ay+'" x2="'+X.toFixed(1)+'" y2="'+(ay+5)+'" stroke="#c3d2d9" stroke-width="1.1"/>';
+     o+='<text x="'+X.toFixed(1)+'" y="'+(ay+17)+'" font-size="9.8" fill="#9aa8ae" text-anchor="middle" font-weight="700">'+g+'</text>';
+   }
+   o+='<text x="'+((GX0+GX1)/2)+'" y="'+(ay+31)+'" font-size="10.3" fill="#78868d" text-anchor="middle" font-weight="700">commute time, minutes &mdash; dashed line = the true mean you set</text>';
+   $("grp").innerHTML=o;
+
+   var d=xA-xB, d0=trueDiff();
+   var flipped=(d0!==0)&&(d*d0<0);
+   var err=d-d0;
+   $("grpsent").className='sent'+(flipped?' warn':'');
+   $("grpsent").innerHTML='<span class="big">x&#772;<sub>A</sub> &minus; x&#772;<sub>B</sub> = '+f2(d)+' min</span>'+
+     'This pair of samples put route A at <b>'+xA.toFixed(2)+'</b> minutes and route B at <b>'+xB.toFixed(2)+'</b>. '+
+     'The truth you set is a gap of <b>'+f2(d0)+'</b> minutes, so this particular study is off by <b>'+f2(err)+'</b> &mdash; '+
+     (flipped
+       ? 'and it is off <b>in the wrong direction entirely</b>. Route '+(d<0?'B':'A')+' really is faster on average, but these samples say the opposite. Nothing went wrong; this is ordinary sampling variability, and it happens whenever the true gap is small next to the standard error.'
+       : (Math.abs(err)<trueSE()
+          ? 'a miss of less than one standard error, which is the typical case.'
+          : 'a miss of more than one standard error, which happens on roughly a third of all studies.'))+
+     ' Draw again. The populations underneath have not moved a millimetre; only your window on them has.';
+ }
+
+ /* ================= panel 2 — the difference, under the null ================= */
+ var DX0=40, DX1=470, DYB=118, DY0=18;
+ var dRange=1;
+ function dx(x){ return DX0+(x/dRange+1)/2*(DX1-DX0); }
+
+ function drawDif(){
+   var C=cur(), o='', i;
+   var R=Math.max(3.7*C.se, Math.abs(C.d)*1.22+0.9*C.se, Math.abs(C.hi)*1.05, Math.abs(C.lo)*1.05);
+   if(!(R>0)) R=1;
+   dRange=R;
+   var pk=tPdf(0,C.df);
+
+   function ycurve(t){ return DYB-(tPdf(t,C.df)/pk)*(DYB-DY0); }
+   function seg(a,b,n){
+     var s='',k,t;
+     for(k=0;k<=n;k++){ t=a+(b-a)*k/n; s+=(k?'L':'M')+dx(t*C.se).toFixed(2)+' '+ycurve(t).toFixed(2); }
+     return s;
+   }
+   function band(a,b,n){
+     return 'M'+dx(a*C.se).toFixed(2)+' '+DYB+'L'+seg(a,b,n).slice(1)+'L'+dx(b*C.se).toFixed(2)+' '+DYB+'Z';
+   }
+   var TL=-R/C.se, TH=R/C.se;
+
+   /* the whole null curve */
+   o+='<path d="'+band(TL,TH,260)+'" fill="#cfdde4"/>';
+   /* the two tails at least as extreme as observed */
+   var a=Math.abs(C.t);
+   if(a<TH){
+     o+='<path d="'+band(a,TH,110)+'" fill="#e6b3bd"/>';
+     o+='<path d="'+band(TL,-a,110)+'" fill="#e6b3bd"/>';
+   }
+   o+='<path d="'+seg(TL,TH,260)+'" fill="none" stroke="#8fa7b3" stroke-width="1.8"/>';
+
+   /* axis */
+   o+='<line x1="'+DX0+'" y1="'+DYB+'" x2="'+DX1+'" y2="'+DYB+'" stroke="#c3d2d9" stroke-width="1.3"/>';
+   var stp=R>16?8:(R>8?4:(R>4?2:(R>1.6?1:(R>0.8?0.5:0.2))));
+   for(var g=-Math.floor(R/stp)*stp;g<=R+1e-9;g+=stp){
+     var X=dx(g);
+     if(X<DX0-1||X>DX1+1) continue;
+     o+='<line x1="'+X.toFixed(1)+'" y1="'+DYB+'" x2="'+X.toFixed(1)+'" y2="'+(DYB+5)+'" stroke="#c3d2d9" stroke-width="1.1"/>';
+     o+='<text x="'+X.toFixed(1)+'" y="'+(DYB+17)+'" font-size="9.6" fill="#9aa8ae" text-anchor="middle" font-weight="700">'+
+        (Math.abs(g)<1e-9?'0':(g<0?'−':'')+Math.abs(g).toFixed(stp<1?1:0))+'</text>';
+   }
+   o+='<text x="'+((DX0+DX1)/2)+'" y="'+(DYB+31)+'" font-size="10.3" fill="#78868d" text-anchor="middle" font-weight="700">difference in mean commute time, minutes</text>';
+
+   /* zero */
+   o+='<line x1="'+dx(0).toFixed(1)+'" y1="'+DY0+'" x2="'+dx(0).toFixed(1)+'" y2="'+DYB+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="4 3"/>';
+
+   /* the observed difference */
+   var ox=dx(C.d);
+   if(ox>DX0-2&&ox<DX1+2){
+     o+='<line x1="'+ox.toFixed(1)+'" y1="'+(DY0-6)+'" x2="'+ox.toFixed(1)+'" y2="'+DYB+'" stroke="#1c4454" stroke-width="2.4"/>';
+     o+='<circle cx="'+ox.toFixed(1)+'" cy="'+DYB+'" r="4.6" fill="#1c4454"/>';
+     var w=104, bx=Math.max(2,Math.min(ox-w/2,DX1-w));
+     o+='<rect x="'+bx.toFixed(1)+'" y="'+(DY0-16)+'" width="'+w+'" height="17" rx="8" fill="#1c4454"/>';
+     o+='<text x="'+(bx+w/2).toFixed(1)+'" y="'+(DY0-3.6)+'" font-size="9.4" fill="#fff" text-anchor="middle" font-weight="800">observed '+f2(C.d)+' min</text>';
+   }
+
+   /* the confidence interval, same scale */
+   var cy=176;
+   var la=Math.max(DX0,dx(C.lo)), lb=Math.min(DX1,dx(C.hi));
+   var excl=(C.lo>0||C.hi<0), col=excl?'#237a45':'#b23145';
+   o+='<line x1="'+dx(0).toFixed(1)+'" y1="'+(cy-24)+'" x2="'+dx(0).toFixed(1)+'" y2="'+(cy+14)+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="4 3"/>';
+   o+='<line x1="'+la.toFixed(1)+'" y1="'+cy+'" x2="'+lb.toFixed(1)+'" y2="'+cy+'" stroke="'+col+'" stroke-width="4"/>';
+   o+='<line x1="'+la.toFixed(1)+'" y1="'+(cy-7)+'" x2="'+la.toFixed(1)+'" y2="'+(cy+7)+'" stroke="'+col+'" stroke-width="2.8"/>';
+   o+='<line x1="'+lb.toFixed(1)+'" y1="'+(cy-7)+'" x2="'+lb.toFixed(1)+'" y2="'+(cy+7)+'" stroke="'+col+'" stroke-width="2.8"/>';
+   o+='<circle cx="'+Math.max(DX0,Math.min(dx(C.d),DX1)).toFixed(1)+'" cy="'+cy+'" r="4.6" fill="'+col+'"/>';
+   o+='<text x="'+DX0+'" y="'+(cy-16)+'" font-size="9.6" fill="'+col+'" font-weight="800">95% interval for &mu;<tspan font-size="7">A</tspan> &minus; &mu;<tspan font-size="7">B</tspan>: '+
+      f2(C.lo)+' to '+f2(C.hi)+' min &mdash; '+(excl?'does not reach zero':'contains zero')+'</text>';
+   o+='<text x="'+(dx(0)+5).toFixed(1)+'" y="'+(cy+25)+'" font-size="9.4" fill="#b23145" font-weight="800">no difference</text>';
+
+   $("dif").innerHTML=o;
+
+   var sig=C.p<AL;
+   $("difsent").className='sent'+(sig?' good':' warn');
+   $("difsent").innerHTML='<span class="big">t = '+f2(C.t)+' &nbsp;&middot;&nbsp; p = '+pv(C.p)+'</span>'+
+     'The difference of <b>'+f2(C.d)+'</b> minutes is <b>'+Math.abs(C.t).toFixed(2)+' standard errors</b> from zero. '+
+     'If the two routes really took the same time on average, a gap at least this large in either direction would turn up in <b>'+
+     (C.p<0.0001?'fewer than 1 study in 10,000':'about '+pc(C.p,C.p<0.01?2:1)+' of studies')+'. '+
+     (sig
+      ? 'That is rare enough under the equal&#8209;means assumption to make that assumption a poor description of these data, so we report a difference. Read the interval, not the verdict: what the data actually support is a gap somewhere between <b>'+f2(C.lo)+'</b> and <b>'+f2(C.hi)+'</b> minutes.'
+      : 'That is not rare, so these data do not let us tell this gap apart from zero. Notice what that does <i>not</i> say: it does not say the routes are equal. The interval runs from <b>'+f2(C.lo)+'</b> to <b>'+f2(C.hi)+'</b> minutes, and every value in it &mdash; including some worth caring about &mdash; is still on the table.');
+ }
+
+ /* ================= panel 3 — variances add ================= */
+ function drawPyth(){
+   var C=cur();
+   var sa=Math.sqrt(vA/nA()), sb=Math.sqrt(vB/nB());
+   var hyp=Math.sqrt(sa*sa+sb*sb);
+   var o='', sc=hyp>0?146/hyp:1;
+   var LA=sa*sc, LB=sb*sc;
+   var ox=44, oy=180;
+
+   /* the triangle */
+   o+='<path d="M'+ox+' '+oy+'L'+(ox+LA).toFixed(1)+' '+oy+'L'+(ox+LA).toFixed(1)+' '+(oy-LB).toFixed(1)+'Z" fill="#e2eff5" stroke="#9fb9c6" stroke-width="1.2"/>';
+   o+='<path d="M'+(ox+LA-11).toFixed(1)+' '+oy+'L'+(ox+LA-11).toFixed(1)+' '+(oy-11)+'L'+(ox+LA).toFixed(1)+' '+(oy-11)+'" fill="none" stroke="#9fb9c6" stroke-width="1.2"/>';
+   o+='<line x1="'+ox+'" y1="'+oy+'" x2="'+(ox+LA).toFixed(1)+'" y2="'+oy+'" stroke="'+CA+'" stroke-width="3.4"/>';
+   o+='<line x1="'+(ox+LA).toFixed(1)+'" y1="'+oy+'" x2="'+(ox+LA).toFixed(1)+'" y2="'+(oy-LB).toFixed(1)+'" stroke="'+CB+'" stroke-width="3.4"/>';
+   o+='<line x1="'+ox+'" y1="'+oy+'" x2="'+(ox+LA).toFixed(1)+'" y2="'+(oy-LB).toFixed(1)+'" stroke="#1c4454" stroke-width="3.4"/>';
+   o+='<text x="'+(ox+LA/2).toFixed(1)+'" y="'+(oy+15)+'" font-size="9.6" fill="'+CA+'" text-anchor="middle" font-weight="800">SE of x&#772;<tspan font-size="7">A</tspan> = '+sa.toFixed(3)+'</text>';
+   o+='<text x="'+(ox+LA+7).toFixed(1)+'" y="'+(oy-LB/2).toFixed(1)+'" font-size="9.6" fill="'+CB+'" font-weight="800">SE of x&#772;<tspan font-size="7">B</tspan> = '+sb.toFixed(3)+'</text>';
+   o+='<text x="'+(ox+LA/2-16).toFixed(1)+'" y="'+(oy-LB/2-6).toFixed(1)+'" font-size="10.2" fill="#1c4454" text-anchor="middle" font-weight="800" transform="rotate('+(-Math.atan2(LB,LA)*180/Math.PI).toFixed(1)+' '+(ox+LA/2-16).toFixed(1)+' '+(oy-LB/2-6).toFixed(1)+')">SE of the difference = '+hyp.toFixed(3)+'</text>';
+
+   /* the bars */
+   var bx=252, bw=214;
+   var items=[{l:'SE of x&#772;<sub>A</sub>',v:sa,c:CA},
+              {l:'SE of x&#772;<sub>B</sub>',v:sb,c:CB},
+              {l:'SE of the difference',v:hyp,c:'#1c4454'},
+              {l:'what adding them would give',v:sa+sb,c:'#c9b8cf'}];
+   var mx=sa+sb, bs=mx>0?bw/mx:1;
+   for(var i=0;i<4;i++){
+     var y=34+i*44, L=items[i].v*bs;
+     o+='<text x="'+bx+'" y="'+y+'" font-size="9.4" fill="#78868d" font-weight="800">'+items[i].l.replace(/<\/?sub>/g,'')+'</text>';
+     o+='<rect x="'+bx+'" y="'+(y+5)+'" width="'+Math.max(1,L).toFixed(1)+'" height="13" rx="4" fill="'+items[i].c+'"/>';
+     o+='<text x="'+(bx+Math.max(1,L)+6).toFixed(1)+'" y="'+(y+15.4)+'" font-size="10" fill="'+items[i].c+'" font-weight="800">'+items[i].v.toFixed(3)+'</text>';
+   }
+   o+='<text x="'+bx+'" y="212" font-size="9.4" fill="#9aa8ae" font-weight="700">minutes &mdash; the bottom bar is the mistake</text>';
+   $("pyth").innerHTML=o;
+
+   var savedPct=(sa+sb)>0?(1-hyp/(sa+sb))*100:0;
+   $("pythsent").innerHTML='<span class="big">'+sa.toFixed(3)+'&sup2; + '+sb.toFixed(3)+'&sup2; = '+hyp.toFixed(3)+'&sup2;</span>'+
+     'Squaring turns standard errors into <b>variances</b>, and variances of independent quantities add. '+
+     'So '+(sa*sa).toFixed(3)+' + '+(sb*sb).toFixed(3)+' = '+(hyp*hyp).toFixed(3)+', and the square root brings you back to a standard error of <b>'+hyp.toFixed(3)+' minutes</b>. '+
+     'Adding the standard errors instead would have given '+(sa+sb).toFixed(3)+' &mdash; <b>'+savedPct.toFixed(0)+'% too large</b>, and every interval you built from it would be that much too wide. '+
+     (Math.abs(sa-sb)/Math.max(sa,sb,1e-9)>0.45
+      ? 'Notice how lopsided the triangle is right now: one group is contributing far more uncertainty than the other. Because the legs are squared, <b>the noisier group dominates</b>, and pouring more data into the already&#8209;precise group barely shortens the hypotenuse. If you can only collect more observations somewhere, collect them where the leg is long.'
+      : 'The legs are close to equal right now, so both groups are contributing about the same uncertainty, and extra data helps roughly equally wherever you put it. Make the sample sizes lopsided and watch the longer leg take over.');
+ }
+
+ /* ================= panel 4 — repeat the whole study ================= */
+ var runs=[];              /* {d, va, vb} — re-scored on the fly when the mode changes */
+ var CAPN=20000;
+ var HX0=44, HX1=470, HY0=18, HYB=190;
+ var hLo=0, hHi=1, BINS=44;
+ function hx(x){ return HX0+(x-hLo)/(hHi-hLo)*(HX1-HX0); }
+
+ function runStudies(k){
+   if(runs.length>=CAPN) return;
+   if(runs.length+k>CAPN) k=CAPN-runs.length;
+   var na=nA(), nb=nB(), j;
+   for(j=0;j<k;j++){
+     var ra=drawOne(na,P.ma,P.sa), rb=drawOne(nb,P.mb,P.sb);
+     runs.push({d:ra.m-rb.m, va:ra.v, vb:rb.v});
+   }
+ }
+ function drawHist(){
+   var o='', i, n=runs.length;
+   var D0=trueDiff(), SD=trueSE();
+   hLo=Math.min(D0-4.1*SD,-0.6*SD); hHi=Math.max(D0+4.1*SD,0.6*SD);
+   var BW=(hHi-hLo)/BINS;
+
+   /* axis */
+   o+='<line x1="'+HX0+'" y1="'+HYB+'" x2="'+HX1+'" y2="'+HYB+'" stroke="#c3d2d9" stroke-width="1.3"/>';
+   var rg=hHi-hLo;
+   var stp=rg>40?10:(rg>20?5:(rg>8?2:(rg>4?1:(rg>1.6?0.5:0.2))));
+   var g0=Math.ceil(hLo/stp)*stp;
+   for(var g=g0;g<=hHi+1e-9;g+=stp){
+     var X=hx(g);
+     o+='<line x1="'+X.toFixed(1)+'" y1="'+HYB+'" x2="'+X.toFixed(1)+'" y2="'+(HYB+5)+'" stroke="#c3d2d9" stroke-width="1.1"/>';
+     o+='<text x="'+X.toFixed(1)+'" y="'+(HYB+17)+'" font-size="9.6" fill="#9aa8ae" text-anchor="middle" font-weight="700">'+
+        (Math.abs(g)<1e-9?'0':(g<0?'−':'')+Math.abs(g).toFixed(stp<1?1:0))+'</text>';
+   }
+   o+='<text x="'+((HX0+HX1)/2)+'" y="'+(HYB+31)+'" font-size="10.3" fill="#78868d" text-anchor="middle" font-weight="700">x&#772;<tspan font-size="7">A</tspan> &minus; x&#772;<tspan font-size="7">B</tspan> from one repeat of the whole study, minutes</text>';
+
+   var HMAX=1.32/(SD*Math.sqrt(2*Math.PI));
+   function hy(d){ var y=HYB-(d/HMAX)*(HYB-HY0); return y<HY0?HY0:y; }
+
+   /* the bars */
+   var off=0;
+   if(n>0){
+     var b=new Array(BINS), k;
+     for(k=0;k<BINS;k++) b[k]=0;
+     for(i=0;i<n;i++){
+       k=Math.floor((runs[i].d-hLo)/BW);
+       if(k<0||k>=BINS){ off++; continue; }
+       b[k]++;
+     }
+     for(k=0;k<BINS;k++){
+       if(!b[k]) continue;
+       var dens=b[k]/(n*BW), x0=hx(hLo+k*BW), x1=hx(hLo+(k+1)*BW), yy=hy(dens);
+       o+='<rect x="'+(x0+0.4).toFixed(2)+'" y="'+yy.toFixed(2)+'" width="'+(x1-x0-0.8).toFixed(2)+'" height="'+(HYB-yy).toFixed(2)+'" fill="#bcd9e6"/>';
+     }
+   }
+
+   /* the theoretical curve — exact, because averages of normals are normal */
+   var tp='';
+   for(i=0;i<=300;i++){
+     var x=hLo+(hHi-hLo)*i/300;
+     tp+=(i?'L':'M')+hx(x).toFixed(2)+' '+hy(normPdf((x-D0)/SD)/SD).toFixed(2);
+   }
+   o+='<path d="'+tp+'" fill="none" stroke="#1c4454" stroke-width="2.4"/>';
+
+   /* zero, and the truth */
+   o+='<line x1="'+hx(0).toFixed(1)+'" y1="'+HY0+'" x2="'+hx(0).toFixed(1)+'" y2="'+HYB+'" stroke="#d1495b" stroke-width="1.7" stroke-dasharray="4 3"/>';
+   var tX=hx(D0);
+   o+='<line x1="'+tX.toFixed(1)+'" y1="'+HY0+'" x2="'+tX.toFixed(1)+'" y2="'+HYB+'" stroke="#1c4454" stroke-width="1.5" stroke-dasharray="2 3"/>';
+   o+='<text x="'+Math.min(tX+5,HX1-92).toFixed(1)+'" y="'+(HY0+11)+'" font-size="9.4" fill="#1c4454" font-weight="800">truth: '+f2(D0)+' min</text>';
+
+   $("hist").innerHTML=o;
+
+   /* the numbers */
+   var sig=0, sm=0, ss=0;
+   for(i=0;i<n;i++){
+     sm+=runs[i].d;
+     if(score(runs[i].d,runs[i].va,runs[i].vb,nA(),nB()).p<AL) sig++;
+   }
+   var mean=n?sm/n:0;
+   for(i=0;i<n;i++){ ss+=(runs[i].d-mean)*(runs[i].d-mean); }
+   var sd=n>1?Math.sqrt(ss/(n-1)):0;
+   var nul=Math.abs(D0)<1e-9;
+   $("rN").innerHTML=com(n);
+   $("rM").innerHTML=n?f2(mean):'&mdash;';
+   $("rS").innerHTML=n?sd.toFixed(3):'&mdash;';
+   $("rP").innerHTML=n?pc(sig/n):'&mdash;';
+   $("rPl").innerHTML=nul?'False alarm<br>rate':'Power &mdash; share<br>that detect it';
+   $("run2").disabled=(n>=CAPN);
+
+   if(!n){
+     $("histcap").innerHTML='Press <b>Run 1,000 studies</b>. Touching any dial clears this panel, because different populations produce a different curve and the old runs no longer belong to it.';
+   } else {
+     $("histcap").innerHTML='Across <b>'+com(n)+'</b> repeats the differences averaged <b>'+f2(mean)+'</b> minutes against a true gap of <b>'+f2(D0)+
+       '</b> &mdash; the estimator is <b>unbiased</b>, so it misses in both directions about equally and the misses wash out. Their spread was <b>'+sd.toFixed(3)+
+       '</b> against the theoretical &radic;(&sigma;<sub>A</sub>&sup2;/n<sub>A</sub> + &sigma;<sub>B</sub>&sup2;/n<sub>B</sub>) = <b>'+SD.toFixed(3)+'</b>. '+
+       (off?'('+com(off)+' run'+(off===1?'':'s')+' landed off the frame and '+(off===1?'is':'are')+' not drawn.) ':'')+
+       (nul
+        ? 'Because you set the true gap to exactly zero, the share of runs declaring a difference is the <b>false alarm rate</b>, and it is sitting at '+pc(sig/n)+' against the 5% you authorised when you chose &alpha; = 0.05. Those runs are the price of the rule, not a bug in it.'
+        : 'The share of runs that detected the gap &mdash; <b>'+pc(sig/n)+'</b> &mdash; is this study design&rsquo;s <b>power</b>. Notice it is a property of the design, fixed before any data arrive: raise the sample sizes and it climbs, widen the population SDs and it falls.');
+   }
+ }
+
+ /* ================= the overlapping-error-bar panel ================= */
+ function drawOvl(){
+   var C=cur();
+   var oa=own(xA,vA,nA()), ob=own(xB,vB,nB());
+   var lo=Math.min(oa.lo,ob.lo), hi=Math.max(oa.hi,ob.hi), pad=(hi-lo)*0.14+0.001;
+   lo-=pad; hi+=pad;
+   var X0=16, X1=464;
+   function ox(x){ return X0+(x-lo)/(hi-lo)*(X1-X0); }
+   var o='', rows=[{s:oa,c:CA,l:'A',y:34},{s:ob,c:CB,l:'B',y:74}];
+   for(var i=0;i<2;i++){
+     var R=rows[i], a=ox(R.s.lo), b=ox(R.s.hi);
+     o+='<line x1="'+a.toFixed(1)+'" y1="'+R.y+'" x2="'+b.toFixed(1)+'" y2="'+R.y+'" stroke="'+R.c+'" stroke-width="4"/>';
+     o+='<line x1="'+a.toFixed(1)+'" y1="'+(R.y-8)+'" x2="'+a.toFixed(1)+'" y2="'+(R.y+8)+'" stroke="'+R.c+'" stroke-width="2.8"/>';
+     o+='<line x1="'+b.toFixed(1)+'" y1="'+(R.y-8)+'" x2="'+b.toFixed(1)+'" y2="'+(R.y+8)+'" stroke="'+R.c+'" stroke-width="2.8"/>';
+     o+='<circle cx="'+ox(R.s.m).toFixed(1)+'" cy="'+R.y+'" r="5" fill="'+R.c+'"/>';
+     o+='<text x="'+ox(R.s.m).toFixed(1)+'" y="'+(R.y-13)+'" font-size="9.6" fill="'+R.c+'" text-anchor="middle" font-weight="800">Route '+R.l+': '+R.s.m.toFixed(2)+'</text>';
+   }
+   var over=(oa.lo<=ob.hi)&&(ob.lo<=oa.hi);
+   if(over){
+     var l=ox(Math.max(oa.lo,ob.lo)), r=ox(Math.min(oa.hi,ob.hi));
+     o+='<rect x="'+l.toFixed(1)+'" y="22" width="'+Math.max(1,r-l).toFixed(1)+'" height="64" fill="#d1495b" opacity=".12"/>';
+     o+='<text x="'+((l+r)/2).toFixed(1)+'" y="106" font-size="9.6" fill="#b23145" text-anchor="middle" font-weight="800">the bars overlap here</text>';
+   } else {
+     o+='<text x="240" y="106" font-size="9.6" fill="#237a45" text-anchor="middle" font-weight="800">the bars are clear of each other</text>';
+   }
+   o+='<text x="16" y="14" font-size="9.4" fill="#9aa8ae" font-weight="700">each route&rsquo;s own 95% interval, minutes</text>';
+   $("ovl").innerHTML=o;
+
+   var sig=C.p<AL;
+   var cls, txt;
+   if(over&&sig){
+     cls=' warn';
+     txt='<span class="big">Overlapping &mdash; and still a real difference</span>'+
+       'This is the trap, live on your screen. The two bars share ground, so the eyeball test would have you shrug. But the correct interval for the <b>difference</b> runs from '+
+       f2(C.lo)+' to '+f2(C.hi)+' minutes and never reaches zero, with p = '+pv(C.p)+'. Overlap is not evidence of no difference; it is evidence that you looked at the wrong picture.';
+   } else if(over&&!sig){
+     cls='';
+     txt='<span class="big">Overlapping, and no difference detected</span>'+
+       'Here the two verdicts happen to agree: the bars overlap and the interval for the difference ('+f2(C.lo)+' to '+f2(C.hi)+
+       ' minutes) does contain zero. Do not take the agreement as proof the shortcut works &mdash; nudge the true means apart, or add sample size, and watch the two verdicts split apart.';
+   } else if(!over&&sig){
+     cls=' good';
+     txt='<span class="big">Clear of each other, and a real difference</span>'+
+       'Both readings agree, and here the shortcut is reliable in one direction only: when the bars are <b>completely clear</b> of each other, the difference is essentially always significant. That is the safe half of the rule. The unsafe half is the reverse.';
+   } else {
+     cls=' warn';
+     txt='<span class="big">Not overlapping, yet nothing detected</span>'+
+       'An extreme edge case &mdash; simulation says this state is very nearly unreachable, which is precisely why the &ldquo;clear bars&rdquo; half of the eyeball rule is the trustworthy half. It is still a reminder that the bars were never designed to answer this question &mdash; they describe each mean on its own, and the difference has its own interval, which here runs from '+
+       f2(C.lo)+' to '+f2(C.hi)+' minutes and includes zero.';
+   }
+   $("ovlsent").className='sent'+cls;
+   $("ovlsent").innerHTML=txt;
+ }
+
+ /* ================= claims ================= */
+ var CLM=[
+  {ok:1, t:'&ldquo;The difference between the two sample means is itself a statistic, with its own sampling distribution.&rdquo;',
+   s:'the idea the section is built on',
+   d:'<b>Correct.</b> x&#772;<sub>A</sub>&nbsp;&minus;&nbsp;x&#772;<sub>B</sub> is computed from data, so it changes when the data change. Run the simulation panel and you can see its distribution directly: centred on the true difference &mu;<sub>A</sub>&nbsp;&minus;&nbsp;&mu;<sub>B</sub>, and spread out by &radic;(&sigma;<sub>A</sub>&sup2;/n<sub>A</sub>&nbsp;+&nbsp;&sigma;<sub>B</sub>&sup2;/n<sub>B</sub>). Everything else in two&#8209;sample inference &mdash; the t statistic, the interval, the p&#8209;value &mdash; is bookkeeping on top of that one distribution.'},
+  {ok:0, t:'&ldquo;Since each mean has its own standard error, the standard error of the difference is the two added together.&rdquo;',
+   s:'the most common arithmetic error here',
+   d:'<b>Wrong.</b> <b>Variances</b> add, not standard errors. The correct combination is &radic;(SE<sub>A</sub>&sup2;&nbsp;+&nbsp;SE<sub>B</sub>&sup2;), which is the hypotenuse of the triangle above, and it is always <i>smaller</i> than SE<sub>A</sub>&nbsp;+&nbsp;SE<sub>B</sub> &mdash; the bottom bar in that panel shows the gap for your current numbers. Adding standard errors overstates the uncertainty, giving intervals that are too wide and tests with less power than you actually have.'},
+  {ok:0, t:'&ldquo;Subtracting cancels some of the noise, so the difference is more precise than either mean.&rdquo;',
+   s:'a minus sign that does not help',
+   d:'<b>Wrong &mdash; exactly backwards.</b> The minus sign applies to the <i>means</i>, not to their errors. Because the two samples are independent, their errors have no reason to line up and cancel; combining two noisy quantities always gives something noisier than either. Check it on the triangle: the hypotenuse is longer than both legs, every time. Precision is something you buy with sample size, never with subtraction.'},
+  {ok:1, t:'&ldquo;When both sample sizes are quadrupled, the standard error of the difference is roughly halved.&rdquo;',
+   s:'the price list for precision',
+   d:'<b>Correct.</b> Each group contributes &sigma;&sup2;/n to the variance, so multiplying both n&rsquo;s by four divides the whole variance by four and the standard error by two. Drag the sample sizes and watch the hypotenuse shrink on exactly that schedule. It is also the bad news of the section: halving your uncertainty again after that costs another fourfold increase, and the returns keep diminishing.'},
+  {ok:0, t:'&ldquo;The two groups&rsquo; error bars overlap, so there is no significant difference.&rdquo;',
+   s:'the eyeball test that fails',
+   d:'<b>Wrong.</b> Comparing individual bars effectively judges the gap against SE<sub>A</sub>&nbsp;+&nbsp;SE<sub>B</sub>, while the actual test judges it against the smaller &radic;(SE<sub>A</sub>&sup2;&nbsp;+&nbsp;SE<sub>B</sub>&sup2;). So bars can overlap while the difference is comfortably significant, and the panel above will show you that state whenever your numbers produce it. The reverse direction is safe: bars completely clear of each other essentially always mean a significant difference.'},
+  {ok:0, t:'&ldquo;p = 0.03 means there is a 3% chance the two population means are actually equal.&rdquo;',
+   s:'the classic inversion',
+   d:'<b>Wrong.</b> The p&#8209;value is computed <i>assuming</i> the means are equal &mdash; that assumption is the starting point, not the thing being assigned a probability. It answers &ldquo;how often would a gap at least this extreme appear if the means were equal?&rdquo; Reading it in reverse, as the probability of the assumption given the data, is a different quantity entirely and requires information the p&#8209;value does not contain.'},
+  {ok:1, t:'&ldquo;A 95% interval means that 95% of intervals built this way capture the true difference &mdash; this one either does or does not.&rdquo;',
+   s:'a claim about the procedure',
+   d:'<b>Correct.</b> The confidence level is a long&#8209;run property of the recipe, not a probability attached to the single interval in front of you. Once the numbers are computed, the true difference is either inside those endpoints or outside them; there is nothing left to be random about. What you can say is that the method that produced it succeeds 95% of the time, which is exactly why it is worth using.'},
+  {ok:0, t:'&ldquo;A large t statistic shows the grouping caused the difference.&rdquo;',
+   s:'a design question, not a computation',
+   d:'<b>Wrong.</b> Every calculation on this page is identical whether the groups were formed by random assignment or simply observed as they came. The statistics quantify how big the gap is and how precisely it is measured; they are blind to how the groups arose. Only random assignment rules out the possibility that some third factor differs between the groups and produced the gap, and no value of t can substitute for it.'},
+  {ok:1, t:'&ldquo;A difference can be statistically significant and still too small to care about.&rdquo;',
+   s:'precision versus importance',
+   d:'<b>Correct.</b> Significance depends on the gap <i>relative to its standard error</i>, and the standard error shrinks without limit as n grows. Load the <i>Tiny but certain</i> preset: half a minute of commuting, detected with confidence, and worth nothing. This is why the confidence interval &mdash; stated in minutes, the units of the actual decision &mdash; is the more useful report. Significance says you can see the gap; only the interval says how big it might be.'}
+ ];
+
+ function drawClaims(){
+   $("claims").innerHTML=CLM.map(function(c,i){
+     return '<button class="it'+(i===ci?' on':'')+'" data-i="'+i+'"><span class="sw" style="background:'+(i===ci?'#fff':(c.ok?'#2f9e5b':'#d1495b'))+'"></span>'+
+            '<span><span class="nm">'+c.t+'</span><span class="s">'+c.s+'</span></span></button>';
+   }).join('');
+   var b=document.querySelectorAll('#claims .it'), i;
+   for(i=0;i<b.length;i++){
+     b[i].onclick=function(){ ci=parseInt(this.getAttribute('data-i'),10); drawClaims(); };
+   }
+   if(ci>=0){
+     var c=CLM[ci];
+     $("info").innerHTML='<span class="n">'+(c.ok?'&#10003; True':'&#10007; False')+' &mdash; '+c.s+'</span>'+c.d;
+   } else {
+     $("info").innerHTML='<span class="n">The section in one line</span>The difference between two sample means is a statistic with its own sampling distribution: <b>centred on the true difference</b>, and spread out by <b>&radic;(SE<sub>A</sub>&sup2; + SE<sub>B</sub>&sup2;)</b> &mdash; the two wobbles combined the way perpendicular sides combine, never by simple addition.';
+   }
+ }
+
+ /* ================= tiles + stage ================= */
+ function drawTiles(){
+   var C=cur();
+   var sa=Math.sqrt(vA/nA()), sb=Math.sqrt(vB/nB());
+   var d0=trueDiff();
+   $("tXA").innerHTML=xA.toFixed(2);
+   $("tXAs").innerHTML='&mu;<sub>A</sub> = '+P.ma.toFixed(1)+', s<sub>A</sub> = '+Math.sqrt(vA).toFixed(2);
+   $("tXB").innerHTML=xB.toFixed(2);
+   $("tXBs").innerHTML='&mu;<sub>B</sub> = '+P.mb.toFixed(1)+', s<sub>B</sub> = '+Math.sqrt(vB).toFixed(2);
+   $("tD").innerHTML=f2(C.d);
+   $("tDs").innerHTML='off by '+f2(C.d-d0);
+   $("tT0").innerHTML=f2(d0);
+   $("tSA").innerHTML=sa.toFixed(3);
+   $("tSB").innerHTML=sb.toFixed(3);
+   $("tSD").innerHTML=C.se.toFixed(3);
+   $("tSDs").innerHTML=mode==='welch'?'&radic;(s<sub>A</sub>&sup2;/n<sub>A</sub> + s<sub>B</sub>&sup2;/n<sub>B</sub>)':'s<sub>p</sub>&radic;(1/n<sub>A</sub> + 1/n<sub>B</sub>)';
+   $("tDF").innerHTML=mode==='welch'?C.df.toFixed(1):String(C.df);
+   $("tDFs").innerHTML=mode==='welch'?'Welch approximation':'n<sub>A</sub> + n<sub>B</sub> &minus; 2';
+   $("tTt").innerHTML=f2(C.t);
+   $("tP").innerHTML=pv(C.p);
+   var sig=C.p<AL;
+   $("tPs").innerHTML=sig?'below &alpha; = 0.05':'above &alpha; = 0.05';
+   $("bxP").className=sig?'good':'warn';
+   $("tCI").innerHTML=f2(C.lo)+' &nbsp;to&nbsp; '+f2(C.hi)+' min';
+   var excl=(C.lo>0||C.hi<0);
+   $("tCIs").innerHTML=(excl?'zero is outside &mdash; ':'zero is inside &mdash; ')+'width '+(C.hi-C.lo).toFixed(2)+' min, t* = '+C.ts.toFixed(3);
+   $("bxCI").className=excl?'good':'warn';
+
+   $("stage").style.background=sig?'#2f6f8a':'#8a6f4f';
+   $("stage").innerHTML='Difference: '+f2(C.d)+' min &nbsp;&plusmn;&nbsp; SE '+C.se.toFixed(2)+
+     '<small>'+(sig?'the data can tell this gap apart from zero':'the data cannot tell this gap apart from zero')+' &middot; p = '+pv(C.p)+'</small>';
+
+   $("sent").className='sent'+(sig?' good':' warn');
+   $("sent").innerHTML='<span class="big">'+f2(C.d)+' &divide; '+C.se.toFixed(3)+' = '+f2(C.t)+'</span>'+
+     'Every two&#8209;sample comparison reduces to that one line: <b>the gap you saw, measured in units of how much the gap wobbles</b>. '+
+     'Here the two sample means differ by '+f2(C.d)+' minutes, and a difference of that kind typically wobbles by about '+C.se.toFixed(3)+
+     ' minutes from study to study, so the observed gap is '+Math.abs(C.t).toFixed(2)+' wobbles wide. '+
+     'That number is then read against a t distribution with <b>'+(mode==='welch'?C.df.toFixed(1):C.df)+'</b> degrees of freedom, which is where the p&#8209;value and the &plusmn;'+
+     (C.ts*C.se).toFixed(2)+'&#8209;minute margin of error both come from.';
+ }
+
+ /* ================= wiring ================= */
+ function drawSegs(){
+   var m=document.querySelectorAll('#modeSeg button'), i;
+   for(i=0;i<m.length;i++){ m[i].className=(m[i].getAttribute('data-v')===mode)?'on':''; }
+   $("modecap").innerHTML=mode==='welch'
+     ? '<b>Welch</b> lets each group keep its own spread and pays for the flexibility with fractional degrees of freedom. It is the safe default, and it is what statistical software reaches for unless told otherwise &mdash; it stays honest even when the two spreads and sample sizes are wildly unequal.'
+     : '<b>Pooling</b> merges the two spreads into one estimate s<sub>p</sub>, buying back a few degrees of freedom. It is correct only if the two populations really do have the same standard deviation. Set &sigma;<sub>A</sub> and &sigma;<sub>B</sub> far apart with unequal n and compare the two p&#8209;values &mdash; the pooled one drifts away from the truth.';
+ }
+ function labels(){
+   $("mAv").innerHTML=P.ma.toFixed(1); $("sAv").innerHTML=P.sa.toFixed(1); $("nAv").innerHTML=nA();
+   $("mBv").innerHTML=P.mb.toFixed(1); $("sBv").innerHTML=P.sb.toFixed(1); $("nBv").innerHTML=nB();
+ }
+ function redrawAll(){ drawGrp(); drawDif(); drawPyth(); drawOvl(); drawTiles(); drawHist(); }
+ function dialsChanged(){
+   labels();
+   seed=SEED0; spare=null; runs=[];
+   newPair();
+   redrawAll();
+ }
+
+ $("mA").oninput=function(){ P.ma=parseFloat(this.value); dialsChanged(); };
+ $("sA").oninput=function(){ P.sa=parseFloat(this.value); dialsChanged(); };
+ $("nA").oninput=function(){ P.ia=parseInt(this.value,10); dialsChanged(); };
+ $("mB").oninput=function(){ P.mb=parseFloat(this.value); dialsChanged(); };
+ $("sB").oninput=function(){ P.sb=parseFloat(this.value); dialsChanged(); };
+ $("nB").oninput=function(){ P.ib=parseInt(this.value,10); dialsChanged(); };
+
+ var PRE=[{ma:34,sa:7,ia:9, mb:30,sb:7,ib:9},
+          {ma:32,sa:7,ia:9, mb:32,sb:7,ib:9},
+          {ma:34,sa:7,ia:2, mb:30,sb:7,ib:2},
+          {ma:36,sa:12,ia:3, mb:30,sb:3,ib:13},
+          {ma:30.5,sa:2,ia:17, mb:30,sb:2,ib:17}];
+ function applyPre(k){
+   var q=PRE[k], key;
+   for(key in q){ if(Object.prototype.hasOwnProperty.call(q,key)) P[key]=q[key]; }
+   $("mA").value=P.ma; $("sA").value=P.sa; $("nA").value=P.ia;
+   $("mB").value=P.mb; $("sB").value=P.sb; $("nB").value=P.ib;
+   dialsChanged();
+ }
+ (function(){
+   var b=document.querySelectorAll('#preSeg button'), i;
+   for(i=0;i<b.length;i++){
+     b[i].onclick=function(){ applyPre(parseInt(this.getAttribute('data-v'),10)); };
+   }
+   var m=document.querySelectorAll('#modeSeg button');
+   for(i=0;i<m.length;i++){
+     m[i].onclick=function(){
+       mode=this.getAttribute('data-v');
+       drawSegs(); drawDif(); drawOvl(); drawTiles(); drawHist();
+     };
+   }
+ })();
+
+ $("bdraw").onclick=function(){ newPair(); drawGrp(); drawDif(); drawPyth(); drawOvl(); drawTiles(); };
+ $("bflip").onclick=function(){ huntFlip(); drawGrp(); drawDif(); drawPyth(); drawOvl(); drawTiles(); };
+ $("run1").onclick=function(){ runStudies(1000); drawHist(); };
+ $("run2").onclick=function(){ runStudies(5000); drawHist(); };
+ $("rrs").onclick=function(){ runs=[]; drawHist(); };
+ $("brst").onclick=function(){ mode='welch'; ci=-1; drawSegs(); drawClaims(); applyPre(0); };
+
+ /* ================= go ================= */
+ $("nA").max=NS.length-1; $("nB").max=NS.length-1;
+ $("nA").value=P.ia; $("nB").value=P.ib;
+ drawSegs();
+ drawClaims();
+ labels();
+ newPair();
+ redrawAll();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>The Memory System</title>
+<meta name="description" content="Push a piece of information through sensory, short-term/working, and long-term memory — the Atkinson–Shiffrin multi-store model. Attend, rehearse, and encode it, and watch what is kept and what decays. For psychology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:0.92fr 1.08fr;}
+#art text{pointer-events:none;}
+.meter{margin-top:13px;}
+.meter .lab{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--soft);margin-bottom:5px;}
+.meter .lab b{color:var(--teal-dk);font-weight:800;}
+.bar{height:13px;border-radius:7px;background:#f2e2ea;overflow:hidden;}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--green));transition:width .45s;}
+.chk{display:flex;gap:7px;margin-top:2px;}
+.chk div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 4px;font-size:9.8px;font-weight:700;color:var(--muted);background:#fff;transition:.2s;}
+.chk div .v{display:block;font-size:11.5px;margin-top:3px;font-weight:800;color:var(--teal-dk);line-height:1.18;}
+.chk div.on{border-color:var(--teal);background:#f8e2ec;}
+.act{margin-top:12px;}
+.act .btn{width:100%;background:#fbf3e2;border-color:#ecd9ac;color:#8a6a20;font-size:13px;}
+.act .btn.ret{background:#eef7f0;border-color:#bfe3cb;color:#237a45;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 7</div>
+  <h1>The Memory System</h1>
+  <div class="intro">Memory is not one thing but a <b>pipeline of three stores</b>, first mapped by <b>Atkinson &amp; Shiffrin</b> in 1968. Information floods in through the senses, a sliver is held for a moment, an even smaller sliver is worked on, and only the deeply encoded survives for good. Push one item through &mdash; <b>attend</b> to it, <b>rehearse</b> it, <b>encode</b> it &mdash; and watch at every gate what is kept and what decays.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The three stores</h2>
+    <svg viewBox="0 0 240 262" aria-label="Multi-store memory pipeline: sensory, short-term/working, and long-term memory"><g id="art"></g></svg>
+    <div class="meter">
+      <div class="lab"><span>Long-term encoding strength</span><b id="epct">&mdash;</b></div>
+      <div class="bar"><i id="ebar"></i></div>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">The memory system<small>press a button to send an item through</small></div>
+    <div class="card">
+      <div class="chk">
+        <div id="c1">Duration<span class="v" id="v1">&mdash;</span></div>
+        <div id="c2">Capacity<span class="v" id="v2">&mdash;</span></div>
+        <div id="c3">Encoding<span class="v" id="v3">&mdash;</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="act" id="actWrap"><button class="btn" id="act"></button></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var GOLD='#b8862f',BLUE='#2f6f9f',TEAL='#a1466b',GREEN='#2f9e5b',CORAL='#d1495b',MUTE='#b7a4ad',LINE='#e6d6de';
+ var THRESH=60;                 // encoding strength at which the item consolidates into LTM
+
+ var STAGES=[
+  {t:'Environmental input',col:GOLD,tint:'#fbf3e2',
+   dur:'Constant',cap:'Everything',enc:'Raw energy',
+   nx:'Senses register ›',
+   info:'<span class="n">Everything, all at once</span>Your eyes, ears, skin, nose and tongue are flooded with information every waking second. This raw stream has <b>no capacity limit and no lasting record</b> &mdash; it is just physical energy striking your receptors. The memory system&rsquo;s very first job is <b>ruthless selection</b>: almost all of it is discarded within a heartbeat. Press <b>Senses register</b> to capture one slice.'+
+        '<div class="note"><b>~99%</b> of sensory input is never stored. Attending to <i>everything</i> would be overwhelming &mdash; forgetting most of it is a feature, not a flaw.</div>'},
+  {t:'Sensory memory',col:BLUE,tint:'#eaf1f7',
+   dur:'0.25&ndash;4 sec',cap:'Very large',enc:'Exact sensory copy',
+   nx:'Attend ›',
+   info:'<span class="n">Sensory memory: a fading snapshot</span>For a fraction of a second the senses hold a <b>complete, literal copy</b> of what just arrived &mdash; a visual trace (<b>iconic memory</b>, ~0.25 s) and a sound trace (<b>echoic memory</b>, ~2&ndash;4 s). <b>George Sperling</b>&rsquo;s partial-report experiments (1960) showed this buffer briefly holds far more than we can report before it fades. Only what you <b>pay attention to</b> passes onward. Press <b>Attend</b> to select this item.'+
+        '<div class="note">Whatever you do <b>not</b> attend to decays in under a second and is gone. <b>Attention</b> is the gate from sensory into short-term memory.</div>'},
+  {t:'Short-term / working memory',col:TEAL,tint:'#f8e2ec',
+   dur:'~15&ndash;30 sec',cap:'7 &plusmn; 2 chunks',enc:'Mainly acoustic',
+   nx:'Encode ›',
+   info:''}, // built dynamically
+  {t:'Long-term memory',col:GREEN,tint:'#eef7f0',
+   dur:'Up to a lifetime',cap:'Essentially unlimited',enc:'Mainly semantic',
+   nx:'',
+   info:''}  // built dynamically
+ ];
+
+ var idx=0;         // which store the item is in
+ var enc=0;         // long-term encoding strength 0..100
+ var reh=false;     // showing a rehearsal pulse this frame
+ var ret=false;     // showing a retrieval pulse this frame
+
+ // ---- drawing helpers ----------------------------------------------------
+ function box(x,y,w,h,label,active,col,tint){
+   var s='';
+   s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="10" fill="'+(active?tint:'#faf4f7')+'" stroke="'+(active?col:LINE)+'" stroke-width="'+(active?2.6:1.4)+'"/>';
+   s+='<text x="'+(x+9)+'" y="'+(y+14)+'" font-size="8.4" font-weight="800" fill="'+(active?col:MUTE)+'" letter-spacing="0.5">'+label+'</text>';
+   return s;
+ }
+ function arrow(x,y1,y2,col,on){
+   var s='<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+(y2-6)+'" stroke="'+col+'" stroke-width="'+(on?3:1.8)+'"'+(on?'':' opacity=".5"')+'/>';
+   s+='<polygon points="'+x+','+y2+' '+(x-5)+','+(y2-8)+' '+(x+5)+','+(y2-8)+'" fill="'+col+'"'+(on?'':' opacity=".5"')+'/>';
+   return s;
+ }
+ function token(x,y,col,lab){
+   return '<circle cx="'+x+'" cy="'+y+'" r="13" fill="'+col+'"/>'+
+          '<circle cx="'+x+'" cy="'+y+'" r="13" fill="none" stroke="#fff" stroke-width="1.5" opacity=".7"/>'+
+          '<text x="'+x+'" y="'+(y+5)+'" font-size="15" text-anchor="middle" fill="#fff" font-weight="800">'+lab+'</text>';
+ }
+
+ function draw(){
+   var s='';
+   var SEN={x:16,y:44,w:208,h:30}, STM={x:34,y:92,w:172,h:52}, LTM={x:16,y:166,w:208,h:82};
+
+   // --- environmental input stream (top) ---
+   s+='<text x="120" y="12" font-size="8.4" font-weight="800" fill="'+(idx===0?GOLD:MUTE)+'" text-anchor="middle" letter-spacing="0.5">ENVIRONMENTAL INPUT</text>';
+   s+='<text x="30" y="30" font-size="14">&#128065;</text><text x="196" y="30" font-size="14">&#128066;</text>';
+   var seed=[52,74,96,118,140,162,184,60,132,170];
+   for(var i=0;i<seed.length;i++){ var dx=seed[i], dy=20+((i*13)%16); s+='<circle cx="'+dx+'" cy="'+dy+'" r="2.4" fill="'+GOLD+'" opacity="'+(idx===0?0.7:0.28)+'"/>'; }
+
+   // --- the three stores ---
+   s+=box(SEN.x,SEN.y,SEN.w,SEN.h,'SENSORY MEMORY',idx===1,BLUE,'#eaf1f7');
+   s+=box(STM.x,STM.y,STM.w,STM.h,'SHORT-TERM / WORKING',idx===2,TEAL,'#f8e2ec');
+   s+=box(LTM.x,LTM.y,LTM.w,LTM.h,'LONG-TERM MEMORY',idx===3,GREEN,'#eef7f0');
+
+   // 7±2 capacity slots inside the STM box
+   for(var k=0;k<7;k++){ var sx=44+k*22; s+='<circle cx="'+sx+'" cy="'+(STM.y+40)+'" r="4.6" fill="none" stroke="'+(idx===2?TEAL:LINE)+'" stroke-width="1.4" opacity="'+(idx===2?0.9:0.5)+'"/>'; }
+
+   // --- transfer arrows between stores ---
+   s+=arrow(120,SEN.y-6,SEN.y,GOLD,idx===0);                 // input -> sensory
+   s+=arrow(120,SEN.y+SEN.h,STM.y,BLUE,idx===1);             // sensory -> STM (attention)
+   s+='<text x="150" y="88" font-size="7.6" font-weight="800" fill="'+(idx===1?BLUE:MUTE)+'">attention</text>';
+   s+=arrow(120,STM.y+STM.h,LTM.y,TEAL,idx===2);             // STM -> LTM (encoding)
+   s+='<text x="150" y="161" font-size="7.6" font-weight="800" fill="'+(idx===2?TEAL:MUTE)+'">encoding</text>';
+
+   // --- retrieval loop (LTM back up to working memory) ---
+   var rcol=ret?GREEN:MUTE, rop=ret?'1':'0.45', rw=ret?2.6:1.6;
+   s+='<path d="M'+(LTM.x+LTM.w-6)+' '+(LTM.y+8)+' C 232 130, 232 96, '+(STM.x+STM.w-4)+' '+(STM.y+26)+'" fill="none" stroke="'+rcol+'" stroke-width="'+rw+'" stroke-dasharray="4 3" opacity="'+rop+'"/>';
+   s+='<polygon points="'+(STM.x+STM.w-4)+','+(STM.y+26)+' '+(STM.x+STM.w+3)+','+(STM.y+20)+' '+(STM.x+STM.w+5)+','+(STM.y+31)+'" fill="'+rcol+'" opacity="'+rop+'"/>';
+   s+='<text x="214" y="118" font-size="7.6" font-weight="800" fill="'+rcol+'" opacity="'+rop+'" transform="rotate(90 214 118)">retrieval</text>';
+
+   // --- decay particles at the active gate ---
+   if(idx===1){ // unattended sensory info drops away
+     for(var d=0;d<5;d++){ var px=40+d*36, py=SEN.y+SEN.h+8+((d*5)%10); s+='<text x="'+px+'" y="'+py+'" font-size="9" fill="'+MUTE+'" opacity=".55">&#10005;</text>'; }
+   }
+   if(idx===2 && enc<THRESH && !reh){ // weak trace starting to fade
+     s+='<text x="44" y="'+(STM.y+18)+'" font-size="9" fill="'+CORAL+'" opacity=".6">fading&hellip;</text>';
+   }
+
+   // --- rehearsal loop indicator ---
+   if(idx===2 && reh){
+     s+='<path d="M96 118 a18 18 0 1 1 -4 -12" fill="none" stroke="'+GOLD+'" stroke-width="2.4"/>';
+     s+='<polygon points="92,104 86,110 98,111" fill="'+GOLD+'"/>';
+   }
+
+   // --- the travelling item ---
+   var pos=[[120,26],[120,SEN.y+15],[120,STM.y+22],[120,LTM.y+44]][idx];
+   var icol=[GOLD,BLUE,TEAL,GREEN][idx];
+   if(idx===3 && enc<THRESH) icol=CORAL;      // weakly encoded item shown as at-risk
+   s+=token(pos[0],pos[1],icol,'&#9733;');
+
+   return s;
+ }
+
+ // ---- dynamic narration for STM and LTM ----------------------------------
+ function stmInfo(){
+   var m='<span class="n">Short-term / working memory</span>Attended information enters a small, brief workspace. <b>George Miller</b> (1956) pegged its capacity at the famous <b>&ldquo;magic number seven, plus or minus two&rdquo;</b> chunks, and it fades in about <b>15&ndash;30 seconds</b> unless you act on it (<b>Peterson &amp; Peterson</b>, 1959). It is no passive shelf: <b>Baddeley &amp; Hitch</b> (1974) recast it as <b>working memory</b> that actively juggles and manipulates information. Press <b>Rehearse</b> to deepen the trace &mdash; each repetition strengthens encoding and pushes the item toward long-term storage.';
+   if(enc>=THRESH){ m+='<div class="mnem">Encoding strength <b>'+Math.round(enc)+'%</b> &mdash; the trace is now deep enough to <b>consolidate</b>. Press <b>Encode</b> to send it to long-term memory.</div>'; }
+   else if(enc>15){ m+='<div class="mnem">Encoding strength <b>'+Math.round(enc)+'%</b> &mdash; getting stronger. Keep rehearsing to reach consolidation.</div>'; }
+   else { m+='<div class="note">Without rehearsal this item decays in seconds. <b>Chunking</b> (grouping items &mdash; a phone number, a familiar word) stretches the 7&plusmn;2 limit.</div>'; }
+   return m;
+ }
+ function ltmInfo(){
+   if(enc>=THRESH){
+     return '<span class="n">Long-term memory: consolidated</span>Because you <b>rehearsed and encoded it deeply</b>, the item has <b>consolidated</b> into long-term memory &mdash; a store of <b>essentially unlimited capacity</b> that can last <b>a lifetime</b>. Long-term memory divides into <b>explicit</b> (declarative) memories you can state &mdash; <b>episodic</b> events and <b>semantic</b> facts &mdash; and <b>implicit</b> memories such as <b>procedural</b> skills. Press <b>Retrieve</b> to pull it back into working memory when you need it.'+
+            '<div class="note">Retrieval brings long-term memories back into <b>working memory</b> to be used &mdash; the arrow runs <i>both</i> ways.</div>';
+   }
+   return '<span class="n">Long-term memory: weakly encoded</span>You advanced with little rehearsal, so the trace is <b>shallow</b>. <b>Craik &amp; Lockhart</b> (1972) showed that <b>depth of processing</b> decides what lasts: deeply, meaningfully encoded items endure; shallow ones fade. In real life a poorly encoded item often <b>never consolidates</b> &mdash; you would forget it. Press <b>‹ Prev</b> to return to working memory and <b>rehearse</b> to strengthen the trace before it slips away.'+
+          '<div class="note">Depth beats repetition: linking new information to what you already know encodes it far better than passively repeating it.</div>';
+ }
+
+ // ---- render -------------------------------------------------------------
+ function render(){
+   var s=STAGES[idx];
+   $("art").innerHTML=draw();
+   $("cardTitle").innerHTML=s.t;
+   $("stage").style.background=s.col;
+   $("stage").innerHTML=s.t+'<small>store '+(idx+1)+' of 4 &middot; '+s.dur+'</small>';
+
+   // property row
+   var on=(idx>=1);
+   $("v1").innerHTML=s.dur; $("v2").innerHTML=s.cap; $("v3").innerHTML=s.enc;
+   $("c1").className=on?'on':''; $("c2").className=on?'on':''; $("c3").className=on?'on':'';
+
+   // encoding meter
+   var showE=(idx>=2);
+   $("ebar").style.width=(showE?enc:0)+'%';
+   $("epct").innerHTML=showE?(Math.round(enc)+'%'):'&mdash;';
+
+   // narration
+   var info=s.info;
+   if(idx===2) info=stmInfo();
+   if(idx===3) info=ltmInfo();
+   $("info").innerHTML=info;
+
+   // contextual extra action button
+   var aw=$("actWrap"), a=$("act");
+   if(idx===2){ aw.style.display='block'; a.className='btn'; a.innerHTML='Rehearse &#8635;'; a.onclick=rehearse; }
+   else if(idx===3){ aw.style.display='block'; a.className='btn ret'; a.innerHTML='Retrieve &#8635;'; a.onclick=retrieve; }
+   else { aw.style.display='none'; }
+
+   // stepper
+   $("prev").disabled=(idx===0);
+   $("next").disabled=(idx===STAGES.length-1);
+   $("next").innerHTML=s.nx||'Next ›';
+ }
+
+ function rehearse(){
+   if(enc<15) enc=15;
+   enc=Math.min(100,enc+20);
+   reh=true; render(); reh=false;   // pulse shows only on this redraw
+ }
+ function retrieve(){
+   ret=true; render(); ret=false;
+ }
+ function next(){
+   if(idx>=STAGES.length-1) return;
+   idx++;
+   if(idx<2) enc=0;                 // not yet in the encoding stores
+   if(idx===2 && enc<15) enc=15;    // attended item now occupies working memory
+   ret=false; render();
+ }
+ function prev(){
+   if(idx<=0) return;
+   idx--;
+   if(idx<2) enc=0;
+   ret=false; render();
+ }
+
+ $("next").onclick=next;
+ $("prev").onclick=prev;
+ render();
+})();
+</script>
+</body>
+</html>

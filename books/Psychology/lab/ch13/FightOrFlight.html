@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Fight or Flight</title>
+<meta name="description" content="Trigger the acute stress response and watch the body mobilize organ by organ — Walter Cannon's fight-or-flight, the fast SAM axis and slower HPA axis, and Hans Selye's cortisol. For psychology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:0.95fr 1.05fr;}
+#cap{margin-top:9px;font-size:12px;line-height:1.5;color:var(--soft);text-align:center;}
+#cap b{color:var(--teal-dk);}
+.dial{margin:2px 0 4px;}
+.dial input[type=range]{width:100%;height:9px;border-radius:6px;-webkit-appearance:none;appearance:none;background:linear-gradient(90deg,#2f9e5b,#b8862f 45%,#d1495b 78%,#8a1a3a);outline:none;}
+.dial input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:23px;height:23px;border-radius:50%;background:#fffcfa;border:3px solid var(--teal-dk);cursor:pointer;box-shadow:0 2px 6px rgba(70,30,45,.35);}
+.dial input[type=range]::-moz-range-thumb{width:23px;height:23px;border-radius:50%;background:#fffcfa;border:3px solid var(--teal-dk);cursor:pointer;}
+.ticks{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+.gauges{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px;}
+.gauge{background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 4px;text-align:center;}
+.gauge .gl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);}
+.gauge .gv{font-family:var(--disp);font-weight:700;font-size:18px;color:var(--teal-dk);margin-top:2px;line-height:1;}
+.gauge .gu{font-size:9px;color:var(--muted);margin-top:1px;}
+.beat{transform-box:fill-box;transform-origin:center;animation:beat 1s ease-in-out infinite;}
+@keyframes beat{0%,100%{transform:scale(1);}42%{transform:scale(1.16);}}
+@media(prefers-reduced-motion:reduce){.beat{animation:none;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 13</div>
+  <h1>Fight or Flight</h1>
+  <div class="intro">Face a sudden threat and your body reacts in <b>seconds</b> &mdash; long before you can think it through. <b>Walter Cannon</b> named this the <b>fight-or-flight</b> response. Drag the arousal dial (or hit <b>Trigger</b>) and watch the body mobilize, organ by organ.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The mobilizing body</h2>
+    <svg viewBox="0 0 240 300" aria-label="A body diagram showing organs changing as the fight-or-flight response builds"><g id="art"></g></svg>
+    <div class="gauges" id="gauges"></div>
+    <div id="cap">Drag the dial to raise arousal &middot; tap any organ for detail.</div>
+  </div></div>
+  <div>
+    <div id="stage">The acute stress response<small>drag the dial or trigger a stressor</small></div>
+    <div class="card">
+      <div class="dial">
+        <input type="range" id="slider" min="0" max="100" value="0" aria-label="Arousal level">
+        <div class="ticks"><span>Calm</span><span>Alert</span><span>Alarm</span><span>Peak</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="trigBtn">⚡ Trigger stressor</button><button class="btn" id="recBtn">Recover</button></div>
+      <div class="list" id="list"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var C={body:'#f7ebf1',line:'#ecd6e1',lung:'#e39bb0',liver:'#a9702f',
+        gutOn:'#3f9e5b',gutOff:'#c3b3ba',adr:'#c68a2c',adrHot:'#e8a41c',
+        muscleOff:'#e7d0dc',muscleOn:'#c0405f',sweat:'#4aa3d1'};
+
+ var STAGES=[
+  {max:0.15,nm:'Rest & digest',col:'#2f9e5b',sub:'Parasympathetic dominant &mdash; the body conserves energy, digests, and repairs.'},
+  {max:0.45,nm:'Alert',col:'#b8862f',sub:'Threat detected &mdash; sympathetic nerves begin firing (the fast SAM axis).'},
+  {max:0.80,nm:'Alarm',col:'#d1495b',sub:'Adrenaline surge &mdash; full sympathetic mobilization across the body.'},
+  {max:1.01,nm:'Peak fight-or-flight',col:'#8a1a3a',sub:'Maximum mobilization &mdash; SAM adrenaline plus the slower HPA axis (cortisol).'}
+ ];
+ function stageOf(x){for(var i=0;i<STAGES.length;i++){if(x<STAGES[i].max)return STAGES[i];}return STAGES[3];}
+
+ var ORG=[
+  {k:'adrenal',ic:'⚡',nm:'Adrenal glands',ct:'Hormone command center',col:C.adr,
+   d:'The engine of the response. Sympathetic nerves strike the adrenal <b>medulla</b>, which floods the blood with <b>adrenaline (epinephrine)</b> and noradrenaline within <b>seconds</b> &mdash; the fast <b>SAM axis</b>. Minutes later the slower <b>HPA axis</b> drives the adrenal <b>cortex</b> to release <b>cortisol</b>, the hormone <b>Hans Selye</b> tied to sustained stress.',
+   note:'<b>Two speeds:</b> adrenaline is the sprinter (seconds); cortisol is the marathoner (minutes to hours).',
+   metric:function(x){return 'Hormone output: '+word(x);}},
+  {k:'heart',ic:'💓',nm:'Heart',ct:'Pumps harder & faster',col:'#d1495b',
+   d:'Sympathetic nerves and circulating adrenaline drive heart rate and force <b>up</b>, pushing oxygen-rich blood toward the muscles. This pounding heart is the signature of <b>Walter Cannon’s</b> fight-or-flight.',
+   metric:function(x){return 'Heart rate ≈ '+Math.round(70+x*100)+' bpm';}},
+  {k:'eyes',ic:'👁️',nm:'Eyes',ct:'Pupils dilate',col:'#7a5a8a',
+   d:'Sympathetic signals widen the <b>pupils (mydriasis)</b> so more light reaches the retina &mdash; sharpening vision to spot the threat and any escape route.',
+   metric:function(x){return 'Pupil diameter ≈ '+(3+x*5).toFixed(1)+' mm';}},
+  {k:'lungs',ic:'🫁',nm:'Lungs',ct:'Airways open, breathing quickens',col:'#c25f86',
+   d:'The <b>bronchioles widen</b> and breathing speeds up, pulling in extra <b>oxygen</b> to burn fuel fast. As the rate climbs you may feel breathless.',
+   metric:function(x){return 'Breathing ≈ '+Math.round(13+x*24)+' breaths/min';}},
+  {k:'liver',ic:'🍬',nm:'Liver',ct:'Releases fuel',col:C.liver,
+   d:'The liver converts stored <b>glycogen into glucose</b> and dumps it into the blood, while adrenaline mobilizes fat &mdash; <b>fuel</b> for muscles and brain during the emergency.',
+   metric:function(x){return 'Blood glucose: '+(x<0.2?'baseline':x<0.55?'↑ rising':'↑↑ high');}},
+  {k:'gut',ic:'🍽️',nm:'Stomach & gut',ct:'Digestion shuts down',col:'#2f9e5b',
+   d:'Digestion is a luxury you can’t afford mid-emergency. Blood is pulled away from the stomach and intestines &mdash; <b>rest-and-digest is suppressed</b> &mdash; which is why stress brings dry mouth and a “butterflies” feeling.',
+   note:'<b>Not urgent:</b> energy spent digesting lunch is energy not spent escaping.',
+   metric:function(x){return 'Digestion: '+(x<0.2?'active':x<0.5?'slowing':'shut down');}},
+  {k:'skin',ic:'💧',nm:'Skin',ct:'Sweats & goes pale',col:'#2f6f9f',
+   d:'Blood vessels in the skin <b>constrict</b> (you turn pale and cool) to spare blood for muscle, while <b>sweat glands</b> switch on to cool the body and improve grip.',
+   metric:function(x){return 'Sweating: '+word(x);}},
+  {k:'muscle',ic:'💪',nm:'Skeletal muscle',ct:'Primed to act',col:'#c0405f',
+   d:'Blood is <b>redirected to the large skeletal muscles</b>, now loaded with glucose and oxygen and ready to <b>fight or to flee</b> &mdash; the entire point of the response.',
+   metric:function(x){return 'Muscle blood flow: '+word(x);}}
+ ];
+ function word(x){return x<0.2?'low':x<0.5?'rising':x<0.8?'high':'maximal';}
+ function shortWord(x){return x<0.2?'low':x<0.5?'med':x<0.8?'high':'max';}
+ function byK(k){for(var i=0;i<ORG.length;i++){if(ORG[i].k===k)return ORG[i];}return ORG[0];}
+
+ function hx(h){return[parseInt(h.substr(1,2),16),parseInt(h.substr(3,2),16),parseInt(h.substr(5,2),16)];}
+ function lerp(a,b,f){var A=hx(a),B=hx(b),o='#';for(var i=0;i<3;i++){var v=Math.round(A[i]+(B[i]-A[i])*f);o+=('0'+v.toString(16)).slice(-2);}return o;}
+
+ var HALO={eyes:[[120,40,25]],lungs:[[100,112,24],[140,112,24]],heart:[[118,118,24]],
+   liver:[[151,152,22]],gut:[[104,156,20]],adrenal:[[100,186,24],[140,186,24]],muscle:[[48,150,17],[192,150,17]]};
+ var LBL={eyes:[120,80,'Pupils dilate'],heart:[152,116,'Heart'],lungs:[120,90,'Lungs'],
+   adrenal:[120,222,'Adrenal glands'],liver:[186,152,'Liver'],gut:[64,156,'Stomach & gut'],
+   skin:[120,258,'Skin'],muscle:[214,150,'Muscle']};
+
+ function drops(x){var n=Math.floor(x*4),s='',pts=[[105,30],[120,25],[135,30],[113,22]];
+   for(var i=0;i<n;i++){var p=pts[i];s+='<path d="M'+p[0]+','+p[1]+' q4,6 0,10 q-4,-4 0,-10 z" fill="'+C.sweat+'" opacity="0.85"/>';}
+   return s;}
+
+ function hit(k,cx,cy,r){return '<circle class="rgn" data-k="'+k+'" cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#000" opacity="0" pointer-events="all" style="cursor:pointer"/>';}
+
+ function draw(x,sel){
+   var s='',hr=Math.round(70+x*100),skinSel=(sel==='skin');
+   // body backdrop
+   s+='<ellipse cx="120" cy="42" rx="27" ry="29" fill="'+C.body+'" stroke="'+(skinSel?'#2f6f9f':C.line)+'" stroke-width="'+(skinSel?3:1.5)+'"/>';
+   s+='<rect x="108" y="66" width="24" height="14" fill="'+C.body+'"/>';
+   s+='<rect x="62" y="76" width="116" height="176" rx="42" fill="'+C.body+'" stroke="'+(skinSel?'#2f6f9f':C.line)+'" stroke-width="'+(skinSel?3:1.5)+'"/>';
+   // selected halo (behind organs)
+   if(HALO[sel]){var o=byK(sel);HALO[sel].forEach(function(h){s+='<circle cx="'+h[0]+'" cy="'+h[1]+'" r="'+h[2]+'" fill="'+o.col+'" opacity="0.17"/>';});}
+   // arms = skeletal muscle
+   var mCol=lerp(C.muscleOff,C.muscleOn,x),mSel=(sel==='muscle');
+   s+='<rect x="38" y="88" width="20" height="118" rx="10" fill="'+mCol+'"'+(mSel?' stroke="#fff" stroke-width="2.5"':'')+'/>';
+   s+='<rect x="182" y="88" width="20" height="118" rx="10" fill="'+mCol+'"'+(mSel?' stroke="#fff" stroke-width="2.5"':'')+'/>';
+   // lungs
+   var lo=(0.5+x*0.4);
+   s+='<path d="M110,88 C92,90 84,110 89,134 C92,148 106,150 110,138 Z" fill="'+C.lung+'" opacity="'+lo+'"/>';
+   s+='<path d="M130,88 C148,90 156,110 151,134 C148,148 134,150 130,138 Z" fill="'+C.lung+'" opacity="'+lo+'"/>';
+   // liver
+   var lvSel=(sel==='liver');
+   s+='<path d="M132,142 L173,140 C177,153 168,167 148,167 C138,167 132,158 132,150 Z" fill="'+C.liver+'" opacity="0.92"'+(lvSel?' stroke="#fff" stroke-width="2"':'')+'/>';
+   if(x>0.3){var gn=Math.floor((x-0.3)*8);for(var gi=0;gi<gn;gi++){s+='<circle cx="'+(142+((gi*11)%28))+'" cy="'+(150+((gi*9)%16))+'" r="2.3" fill="#e0a020"/>';}}
+   // stomach & gut
+   var gutSel=(sel==='gut'),gcol=lerp(C.gutOn,C.gutOff,x);
+   s+='<ellipse cx="104" cy="156" rx="17" ry="13" fill="'+gcol+'"'+(gutSel?' stroke="#fff" stroke-width="2"':'')+'/>';
+   if(x<0.5){s+='<path d="M94,156 q5,-6 10,0 q5,6 10,0" stroke="#fff" stroke-width="2" fill="none" opacity="'+(1-x*2)+'"/>';}
+   // kidneys + adrenal glands
+   var adSel=(sel==='adrenal'),acol=lerp(C.adr,C.adrHot,x);
+   [[100,192],[140,192]].forEach(function(k){s+='<ellipse cx="'+k[0]+'" cy="'+k[1]+'" rx="10" ry="14" fill="#b98a5a" opacity="0.85"/>';});
+   [[100,180],[140,180]].forEach(function(a){
+     if(x>0.2){s+='<circle cx="'+a[0]+'" cy="'+(a[1]-2)+'" r="'+(8+x*11)+'" fill="'+acol+'" opacity="'+((x-0.2)*0.5)+'"/>';}
+     s+='<path d="M'+(a[0]-11)+','+a[1]+' Q'+a[0]+','+(a[1]-14)+' '+(a[0]+11)+','+a[1]+' Z" fill="'+acol+'"'+(adSel?' stroke="#fff" stroke-width="2"':'')+'/>';
+   });
+   if(x>0.25){var hn=Math.floor((x-0.25)*10);for(var hi=0;hi<hn;hi++){var an=hi*1.7;s+='<circle cx="'+(120+Math.cos(an)*(28+hi*3)).toFixed(1)+'" cy="'+(186+Math.sin(an)*(16+hi*2)).toFixed(1)+'" r="2.1" fill="'+acol+'" opacity="0.8"/>';}}
+   // heart
+   var hSel=(sel==='heart'),hcol=lerp('#d1495b','#e11d3c',x),bd=(60/hr).toFixed(2);
+   if(x>0.45){s+='<circle cx="118" cy="116" r="'+(20+x*8)+'" fill="'+hcol+'" opacity="'+((x-0.45)*0.4)+'"/>';}
+   s+='<g transform="translate(118,116)"><g class="beat" style="animation-duration:'+bd+'s"><path d="M0,-3 C-4,-11 -17,-8 -17,1 C-17,9 -6,15 0,20 C6,15 17,9 17,1 C17,-8 4,-11 0,-3 Z" fill="'+hcol+'"'+(hSel?' stroke="#fff" stroke-width="2"':'')+'/></g></g>';
+   // eyes
+   var eSel=(sel==='eyes'),pr=(1.6+x*3.4).toFixed(1);
+   [[110,40],[130,40]].forEach(function(e){
+     s+='<ellipse cx="'+e[0]+'" cy="'+e[1]+'" rx="7" ry="5" fill="#fff" stroke="'+(eSel?'#5e2846':'#cbb3c0')+'" stroke-width="'+(eSel?2:1)+'"/>';
+     s+='<circle cx="'+e[0]+'" cy="'+e[1]+'" r="'+pr+'" fill="#3a2130"/>';
+   });
+   // sweat
+   s+=drops(x);
+   // callout label for selected organ
+   if(LBL[sel]){var L=LBL[sel];s+='<text x="'+L[0]+'" y="'+L[1]+'" text-anchor="middle" font-size="9.5" font-weight="700" font-family="Inter,sans-serif" fill="#5e2846" stroke="#fffcfa" stroke-width="3" paint-order="stroke">'+L[2]+'</text>';}
+   // invisible hit targets (top layer)
+   s+=hit('eyes',120,40,26);
+   s+=hit('lungs',97,116,18);s+=hit('lungs',143,116,18);
+   s+=hit('heart',118,118,21);
+   s+=hit('liver',153,153,19);
+   s+=hit('gut',104,156,19);
+   s+=hit('adrenal',100,187,17);s+=hit('adrenal',140,187,17);
+   s+=hit('muscle',48,150,16);s+=hit('muscle',192,150,16);
+   s+=hit('skin',120,232,24);
+   return s;
+ }
+
+ function gauge(l,v,u){return '<div class="gauge"><div class="gl">'+l+'</div><div class="gv">'+v+'</div><div class="gu">'+u+'</div></div>';}
+
+ var t=0, sel='heart', timer=null;
+
+ function renderList(){
+   $("list").innerHTML=ORG.map(function(o){return '<button class="it'+(o.k===sel?' on':'')+'" data-k="'+o.k+'"><span class="ic">'+o.ic+'</span><span><span class="nm">'+o.nm+'</span><br><span class="ct">'+o.ct+'</span></span></button>';}).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){b.onclick=function(){sel=b.getAttribute('data-k');render();};});
+ }
+ function render(){
+   $("art").innerHTML=draw(t,sel);
+   document.querySelectorAll('#art .rgn').forEach(function(r){r.onclick=function(){sel=r.getAttribute('data-k');render();};});
+   var g=stageOf(t);
+   $("stage").style.background=g.col;
+   $("stage").innerHTML=g.nm+'<small>'+g.sub+'</small>';
+   $("gauges").innerHTML=gauge('Heart rate',Math.round(70+t*100),'bpm')+gauge('Breathing',Math.round(13+t*24),'/min')+gauge('Pupils',(3+t*5).toFixed(1),'mm')+gauge('Adrenaline',shortWord(t),'level');
+   var o=byK(sel);
+   $("info").innerHTML='<span class="n">'+o.nm+'</span>'+o.d+'<div class="loc">'+o.metric(t)+'</div>'+(o.note?'<div class="note">'+o.note+'</div>':'');
+   renderList();
+ }
+
+ function setT(v){t=Math.max(0,Math.min(1,v));$("slider").value=Math.round(t*100);render();}
+
+ function rampTo(target,ms){
+   if(timer){clearInterval(timer);timer=null;}
+   var start=t,t0=Date.now();
+   timer=setInterval(function(){
+     var p=Math.min(1,(Date.now()-t0)/ms);
+     var e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+     setT(start+(target-start)*e);
+     if(p>=1){clearInterval(timer);timer=null;}
+   },30);
+ }
+
+ $("slider").oninput=function(){if(timer){clearInterval(timer);timer=null;}setT(this.value/100);};
+ $("trigBtn").onclick=function(){rampTo(0.92,1100);};
+ $("recBtn").onclick=function(){rampTo(0,2600);};
+
+ setT(0);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>The Food Security Spectrum</title>
+<meta name="description" content="Interactive USDA food-security spectrum — slide the survey score from zero to the top of the scale and watch the household move from high food security through marginal and low to very low, and see exactly what changes at each step.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.lvlbig{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 10px;border-bottom:1px solid var(--line);padding-bottom:9px;}
+.lvlbig b{font-family:var(--disp);font-size:22px;line-height:1.05;color:var(--teal-dk);transition:color .25s;}
+.lvlbig small{font-size:11.5px;font-weight:700;color:var(--muted);text-align:right;flex:none;font-variant-numeric:tabular-nums;}
+.slab{margin-top:12px;}
+.slab .hd{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:700;color:var(--soft);margin-bottom:4px;}
+.slab .hd b{color:var(--teal-dk);font-variant-numeric:tabular-nums;font-size:14px;}
+.slab input[type=range]{width:100%;height:22px;accent-color:var(--teal);cursor:pointer;display:block;}
+.slab .ends{display:flex;justify-content:space-between;font-size:10.4px;font-weight:700;color:var(--muted);margin-top:1px;}
+.chk{display:flex;gap:7px;margin-top:13px;}
+.chk div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 5px;font-size:11px;font-weight:700;color:var(--muted);background:#fff;line-height:1.25;transition:.18s;}
+.chk div .v{display:block;font-size:12.5px;margin-top:3px;font-weight:800;}
+.chk div.ab{border-color:#bfe0cb;color:#237a45;background:#f0f8f2;}
+.chk div.pr{border-color:#e7c39a;color:#9a5a12;background:#fbf1e0;}
+.chk div.pr.sev{border-color:#eeb3bd;color:#b23145;background:#fbe9ec;}
+.rng{display:inline-block;font-size:10.4px;font-weight:800;color:var(--muted);margin-left:6px;font-variant-numeric:tabular-nums;}
+.ev{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:3px 9px;vertical-align:middle;}
+.ev.s{background:#e5eef6;color:#255f8a;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 14</div>
+  <h1>The Food Security Spectrum</h1>
+  <div class="intro">Food security is not on-or-off &mdash; it is a <b>continuum</b>. The United States Department of Agriculture measures it with a household survey and sorts the answers into four levels, from <b>high</b> to <b>very low</b> food security. Slide the number of survey items a household reports and watch it move along the spectrum &mdash; and watch exactly what changes at each step.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Where the household sits</h2>
+      <div class="lvlbig"><b id="catName">High food security</b><small id="catGroup">Food secure<br>score 0 of 10</small></div>
+      <svg viewBox="0 0 300 150" aria-label="A horizontal spectrum bar split into four colored bands from high food security to very low food security, with a marker showing the current survey score and brackets grouping the bands into food-secure and food-insecure ranges"><g id="art"></g></svg>
+      <div class="mnem"><b>How it is measured.</b> This is the USDA <b>Household Food Security Survey Module</b> &mdash; 10 questions for households without children, 18 when children are present. Each score is a count of affirmative answers <b>about the household over the past 12 months</b>. It measures access to food given a household&rsquo;s resources; it is not a judgement of anyone&rsquo;s choices, cooking, or body. <span class="ev s">USDA standard measure</span></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">The four levels<small>slide the score, or step through them</small></div>
+    <div class="card">
+      <div class="seg" id="hhseg" style="margin-bottom:4px;">
+        <button data-h="no" class="on">Without children<small>10-item scale, 0&ndash;10</small></button>
+        <button data-h="yes">With children<small>18-item scale, 0&ndash;18</small></button>
+      </div>
+      <div class="slab">
+        <div class="hd"><span>Affirmative survey items</span><b id="scoreTxt">0</b></div>
+        <input type="range" id="score" min="0" max="10" step="1" value="0" aria-label="Number of affirmative survey items">
+        <div class="ends"><span>0 &mdash; no problems reported</span><span id="endMax">10 &mdash; all items</span></div>
+      </div>
+      <div class="chk">
+        <div id="c1">Worried food would run out<span class="v" id="v1">—</span></div>
+        <div id="c2">Diet quality or variety cut back<span class="v" id="v2">—</span></div>
+        <div id="c3">Amount eaten reduced, meals skipped<span class="v" id="v3">—</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="prev">‹ Less severe</button><button class="btn solid" id="next">More severe ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var LV=[
+  {nm:'High food security',grp:'Food secure',col:'#2f9e5b',dk:'#1e6b3c',
+   old:'',
+   d:'No reported indications of food-access problems. The household had <b>reliable access to enough food for an active, healthy life</b> throughout the year.',
+   loc:'A score of 0 means every survey item was answered &ldquo;no.&rdquo; This and marginal food security together make up the <b>food-secure</b> range.'},
+  {nm:'Marginal food security',grp:'Food secure',col:'#b8862f',dk:'#7a5713',
+   old:'',
+   d:'One or two problems reported &mdash; typically <b>anxiety</b> that food would run out before there was money to buy more, or that food bought did not last. There is <b>little or no change</b> in diets or in the amount of food eaten.',
+   loc:'The worry has appeared, but eating has not yet changed. Households here are still counted as <b>food secure</b> &mdash; the diet is intact even though the stress is real.'},
+  {nm:'Low food security',grp:'Food insecure',col:'#d1731e',dk:'#8a4a10',
+   old:'formerly &ldquo;food insecurity without hunger&rdquo;',
+   d:'Reports of <b>reduced quality, variety, or desirability</b> of the diet &mdash; for example, relying on a few low-cost foods or not being able to afford balanced meals. There is <b>little or no indication of reduced food intake</b>.',
+   loc:'This is where the <b>food-insecure</b> range begins. What gives way first is the <i>kind</i> of food a household can reach with its resources &mdash; not yet the amount.'},
+  {nm:'Very low food security',grp:'Food insecure',col:'#d1495b',dk:'#8f2b3a',
+   old:'formerly &ldquo;food insecurity with hunger&rdquo;',
+   d:'Multiple reports of <b>disrupted eating patterns and reduced food intake</b> &mdash; cutting the size of meals or skipping them, eating less than one felt one should, or being hungry but not eating, because there was not enough money for food.',
+   loc:'Now the <i>amount</i> of food gives way too. In households with children, adults often reduce their own intake first, so a household can reach this level while still shielding the children.'}
+ ];
+ var household='no', score=0, catShown=-1;
+
+ function maxScore(){ return household==='yes'?18:10; }
+ function lowUpper(){ return household==='yes'?7:5; }
+ function bands(){
+   var lu=lowUpper(), mx=maxScore();
+   return [
+     {lo:0,hi:0,c:0,rng:'0'},
+     {lo:1,hi:2,c:1,rng:'1&ndash;2'},
+     {lo:3,hi:lu,c:2,rng:'3&ndash;'+lu},
+     {lo:lu+1,hi:mx,c:3,rng:(lu+1)+'&ndash;'+mx}
+   ];
+ }
+ function catOf(s){ var lu=lowUpper(); return s<=0?0:(s<=2?1:(s<=lu?2:3)); }
+ function rep(cat){ var lu=lowUpper(),mx=maxScore(); return [0,2,Math.min(lu,Math.round((3+lu)/2)),Math.round((lu+1+mx)/2)][cat]; }
+
+ function draw(){
+   var mx=maxScore(), B=bands(), cat=catOf(score);
+   var X0=22,W=256,by=64,bh=26;
+   function edge(v){ return X0+v/(mx+1)*W; }
+   function cen(s){ return X0+(s+0.5)/(mx+1)*W; }
+   var out='';
+   // secure / insecure brackets
+   var secR=edge(B[1].hi+1), insL=edge(B[2].lo);
+   out+='<line x1="'+(X0+1)+'" y1="30" x2="'+(secR-2)+'" y2="30" stroke="#8ca892" stroke-width="1.4"/>';
+   out+='<line x1="'+(X0+1)+'" y1="30" x2="'+(X0+1)+'" y2="34" stroke="#8ca892" stroke-width="1.4"/>';
+   out+='<line x1="'+(secR-2)+'" y1="30" x2="'+(secR-2)+'" y2="34" stroke="#8ca892" stroke-width="1.4"/>';
+   out+='<text x="'+((X0+secR)/2)+'" y="24" font-size="8" fill="#4f7a5c" text-anchor="middle" font-weight="800" letter-spacing=".6">FOOD SECURE</text>';
+   out+='<line x1="'+(insL+2)+'" y1="30" x2="'+(X0+W-1)+'" y2="30" stroke="#c98a92" stroke-width="1.4"/>';
+   out+='<line x1="'+(insL+2)+'" y1="30" x2="'+(insL+2)+'" y2="34" stroke="#c98a92" stroke-width="1.4"/>';
+   out+='<line x1="'+(X0+W-1)+'" y1="30" x2="'+(X0+W-1)+'" y2="34" stroke="#c98a92" stroke-width="1.4"/>';
+   out+='<text x="'+((insL+X0+W)/2)+'" y="24" font-size="8" fill="#a4515c" text-anchor="middle" font-weight="800" letter-spacing=".6">FOOD INSECURE</text>';
+   // bands
+   for(var i=0;i<4;i++){ var b=B[i], x=edge(b.lo), w=edge(b.hi+1)-edge(b.lo), on=(b.c===cat);
+     out+='<rect x="'+x.toFixed(1)+'" y="'+by+'" width="'+w.toFixed(1)+'" height="'+bh+'" fill="'+LV[b.c].col+'" opacity="'+(on?1:0.34)+'"'+(on?' stroke="#33291a" stroke-width="1.4"':'')+'/>';
+     // range label below
+     out+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(by+bh+13)+'" font-size="8" fill="'+(on?LV[b.c].dk:'#a89b85')+'" text-anchor="middle" font-weight="'+(on?800:700)+'">'+b.rng+'</text>';
+   }
+   // gridline separators tint already via band edges
+   out+='<rect x="'+X0+'" y="'+by+'" width="'+W+'" height="'+bh+'" fill="none" stroke="#c9bda6" stroke-width="1"/>';
+   // marker
+   var cx=cen(score);
+   out+='<line x1="'+cx.toFixed(1)+'" y1="'+(by-4)+'" x2="'+cx.toFixed(1)+'" y2="'+(by+bh+4)+'" stroke="#33291a" stroke-width="2"/>';
+   out+='<polygon points="'+(cx-6).toFixed(1)+','+(by-6)+' '+(cx+6).toFixed(1)+','+(by-6)+' '+cx.toFixed(1)+','+(by+1)+'" fill="#33291a"/>';
+   out+='<circle cx="'+cx.toFixed(1)+'" cy="'+(by+bh+4)+'" r="3.2" fill="#33291a"/>';
+   // score chip
+   var chipW=score>9?26:20, chx=Math.max(X0+chipW/2,Math.min(X0+W-chipW/2,cx));
+   out+='<rect x="'+(chx-chipW/2).toFixed(1)+'" y="'+(by-24)+'" width="'+chipW+'" height="15" rx="7.5" fill="#33291a"/>';
+   out+='<text x="'+chx.toFixed(1)+'" y="'+(by-13)+'" font-size="9.5" fill="#fff" text-anchor="middle" font-weight="800">'+score+'</text>';
+   // category name under everything
+   out+='<text x="150" y="'+(by+bh+34)+'" font-size="11" fill="'+LV[cat].dk+'" text-anchor="middle" font-weight="800" font-family="Fraunces,serif">'+LV[cat].nm+'</text>';
+   $('art').innerHTML=out;
+ }
+
+ function setBox(el,vEl,on,sev){
+   el.className=on?('pr'+(sev?' sev':'')):'ab';
+   vEl.innerHTML=on?'✓ yes':'— no';
+ }
+
+ function render(){
+   var cat=catOf(score), L=LV[cat], mx=maxScore();
+   $('scoreTxt').innerHTML=score;
+   $('catName').innerHTML=L.nm; $('catName').style.color=L.dk;
+   $('catGroup').innerHTML=L.grp+'<br>score '+score+' of '+mx;
+   draw();
+   setBox($('c1'),$('v1'),cat>=1,false);
+   setBox($('c2'),$('v2'),cat>=2,false);
+   setBox($('c3'),$('v3'),cat>=3,true);
+   $('stage').style.background=L.col;
+   $('stage').innerHTML=L.nm+'<small>'+L.grp+' &middot; level '+(cat+1)+' of 4</small>';
+   if(cat!==catShown){
+     catShown=cat;
+     $('info').innerHTML='<span class="n" style="color:'+L.dk+'">'+L.nm+(L.old?' <span class="rng">'+L.old+'</span>':'')+'</span>'+L.d+
+       '<div class="loc">'+L.loc+'</div>';
+   }
+   $('prev').disabled=(score<=0);
+   $('next').disabled=(score>=mx);
+ }
+
+ $('score').oninput=function(){ score=+this.value; render(); };
+ $('prev').onclick=function(){ var c=catOf(score); score=(c>0)?rep(c-1):0; $('score').value=score; render(); };
+ $('next').onclick=function(){ var c=catOf(score),mx=maxScore(); score=(c<3)?rep(c+1):mx; $('score').value=score; render(); };
+
+ var hs=$('hhseg').querySelectorAll('button');
+ for(var q=0;q<hs.length;q++) hs[q].onclick=(function(b){return function(){
+   household=b.getAttribute('data-h');
+   for(var z=0;z<hs.length;z++) hs[z].className=(hs[z]===b?'on':'');
+   var mx=maxScore();
+   if(score>mx) score=mx;
+   $('score').max=mx; $('score').value=score;
+   $('endMax').innerHTML=mx+' &mdash; all items';
+   catShown=-1; render();
+ };})(hs[q]);
+
+ render();
+})();
+</script>
+</body>
+</html>

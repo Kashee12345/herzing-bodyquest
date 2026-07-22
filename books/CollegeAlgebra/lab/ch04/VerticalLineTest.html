@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>The Vertical Line Test</title>
+<meta name="description" content="Sweep a vertical line across nine graphs and count where it lands, watch the input-output diagram react, then step through why one input with two outputs breaks the definition of a function.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.96fr 1.04fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.modeseg button{font-size:12.5px;padding:10px 4px;line-height:1.25;}
+.modeseg button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:2px;}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+#stage .big{font-family:var(--math);font-size:24px;font-weight:700;letter-spacing:.4px;}
+#stage .big sup{font-size:.55em;vertical-align:super;}
+.why{font-family:var(--math);font-size:14px;color:var(--teal-dk);text-align:center;background:#f1f2f9;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-top:9px;line-height:1.55;}
+.why sup{font-size:.62em;vertical-align:super;}
+.why em{font-family:var(--sans);font-style:normal;font-size:10.5px;font-weight:800;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.sld{margin-top:4px;}
+.sld .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.sld .lab b{font-family:var(--math);font-size:20px;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+.sld .ends{display:flex;justify-content:space-between;font-family:var(--math);font-size:10.5px;color:var(--muted);margin-top:-2px;}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;display:block;}
+input[type=range]:focus{outline:none;}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);margin-top:-8px;}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);}
+.pset{margin-top:13px;}
+.pset .cap{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+#gal .it{display:block;text-align:left;padding:8px 10px;}
+#gal .it .nm{display:block;font-family:var(--math);font-size:14px;font-weight:700;}
+#gal .it .s{display:block;font-size:10.5px;margin-top:1px;}
+#gal .it:last-child:nth-child(odd){grid-column:1/-1;}
+#mb{min-height:178px;display:flex;flex-direction:column;justify-content:center;}
+.dl{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:7px 2px;border-bottom:1px dashed var(--line);}
+.dl:last-child{border-bottom:none;}
+.mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.5;}
+.mx sup{font-size:.62em;vertical-align:super;}
+.dl.cur .mx{font-size:18px;color:var(--ink);font-weight:600;}
+.pl{flex:none;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);white-space:nowrap;}
+.dl.cur .pl{color:var(--gold);}
+.tg{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.dl:not(.cur) .tg{background:transparent;box-shadow:none;padding:0;}
+.exlab{font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.55;}
+.exlab b{font-family:var(--math);font-size:13.5px;color:var(--teal-dk);}
+.cnt{display:flex;gap:8px;margin-top:12px;}
+.cnt div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 4px;font-size:9.8px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);background:#fff;line-height:1.3;}
+.cnt div .v{display:block;font-family:var(--math);font-size:17px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--teal-dk);margin-top:3px;}
+.cnt div.bad{border-color:var(--coral);background:#fae5e8;} .cnt div.bad .v{color:#b23145;}
+.cnt div.good{border-color:var(--green);background:#eaf5ee;} .cnt div.good .v{color:#237a45;}
+#ans button{font-size:13px;padding:12px 5px;}
+#ans button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:2px;}
+#ans button.on small{color:rgba(255,255,255,.9);}
+#ans button:disabled{cursor:default;}
+.verd{font-family:var(--math);font-size:15px;text-align:center;border-radius:9px;padding:9px 10px;margin-top:11px;font-weight:700;}
+.verd.ok{background:#eaf5ee;color:#237a45;border:1px solid #b8ddc6;}
+.verd.no{background:#fae5e8;color:#b23145;border:1px solid #f0c9d0;}
+.verd.wait{background:#f1f2f9;color:var(--muted);border:1px solid var(--line);font-weight:500;font-size:13px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 4</div>
+  <h1>The Vertical Line Test</h1>
+  <div class="intro">A function is a rule that gives each input <b>exactly one</b> output. That sentence is about numbers &mdash; but on a graph it turns into something you can <b>see</b>. Slide a vertical line across nine graphs, count where it lands, and watch the input&ndash;output picture react. Then step through why the test works at all.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="artTitle">Sweep the line</h2>
+      <svg viewBox="0 0 250 250" aria-label="a graph with a movable vertical line"><g id="art"></g></svg>
+      <div class="why" id="why"></div>
+    </div>
+    <div class="card"><h2 id="mapTitle">One input &rarr; how many outputs?</h2>
+      <svg viewBox="0 0 250 122" aria-label="input and output diagram"><g id="map"></g></svg>
+      <div class="mnem" id="mnem"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage"></div>
+    <div class="card">
+      <div class="modeseg" id="modes">
+        <button data-m="0" class="on">Sweep it<small>slide the line</small></button>
+        <button data-m="1">Why it works<small>step by step</small></button>
+        <button data-m="2">Your turn<small>call it yourself</small></button>
+      </div>
+
+      <div id="p0">
+        <div class="sld">
+          <div class="lab"><span>The vertical line &nbsp; <i>x</i> =</span><b id="xOut">0</b></div>
+          <input type="range" id="xRange" min="-6" max="6" step="0.5" value="0" aria-label="position of the vertical line">
+          <div class="ends"><span>&minus;6</span><span>0</span><span>6</span></div>
+        </div>
+        <div class="row"><button class="btn solid" id="play">&#9654; Auto-sweep</button><button class="btn" id="reset">Reset</button></div>
+        <div class="cnt">
+          <div id="c1">Hits right now<span class="v" id="v1">&mdash;</span></div>
+          <div id="c2">Most hits so far<span class="v" id="v2">&mdash;</span></div>
+          <div id="c3">Verdict<span class="v" id="v3">&mdash;</span></div>
+        </div>
+        <div class="pset">
+          <div class="cap">Pick a graph to test</div>
+          <div class="grid" id="gal"></div>
+        </div>
+      </div>
+
+      <div id="p1" style="display:none">
+        <div id="mb"></div>
+        <div class="exlab" id="exlab"></div>
+      </div>
+
+      <div id="p2" style="display:none">
+        <div class="seg" id="ans">
+          <button data-v="1">It <b>is</b> a function<small>every vertical line hits at most once</small></button>
+          <button data-v="0"><b>Not</b> a function<small>some vertical line hits twice</small></button>
+        </div>
+        <div class="verd wait" id="verd">Look at the graph, decide, then tap.</div>
+        <div class="row"><button class="btn solid" id="qnext">Next graph &rsaquo;</button></div>
+        <div class="exlab" id="score"></div>
+      </div>
+
+      <div id="info"></div>
+      <div class="note" id="nt"></div>
+      <div class="row" id="nav" style="display:none"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var CORAL='#d1495b', INK='#22243a', MUT='#7d7f94', LINE='#e0e2ef', TEAL='#43458f',
+     TDK='#262a5c', GOLD='#b8862f', GREEN='#2f9e5b', PALE='#c6c9de', CARD='#fffdf9';
+ var MIN='&#8722;', APX='&#8776;';
+
+ /* ---------- number printing ---------- */
+ function h(n){ return n<0 ? '&minus;'+(-n) : ''+n; }              /* HTML */
+ function sv(n){ return n<0 ? MIN+(-n) : ''+n; }                   /* SVG  */
+ function nice(y,svg){                       /* a y-value, exact when it is */
+   var m = svg?MIN:'&minus;', a = svg?APX:'&asymp;';
+   if(Math.abs(y-Math.round(y))<1e-9){ var r=Math.round(y); return r<0?m+(-r):''+r; }
+   var t=Math.abs(y).toFixed(2);
+   return a+(y<0?m:'')+t;
+ }
+ function pr(x,y,svg){ return '('+(svg?sv(x):h(x))+', '+nice(y,svg)+')'; }
+
+ /* ---------- world -> screen ---------- */
+ var R=6, U=18, X0=125, Y0=125;
+ function sx(x){ return X0 + U*x; }
+ function sy(y){ return Y0 - U*y; }
+
+ /* ================= the relations ================= */
+ /* branches:  t:'f' y=f(x) on [a,b]  (oa/ob = endpoint excluded, ea/eb = dot to draw)
+               t:'v' the vertical line x=c        t:'p' a single point            */
+ var G=[
+ {k:'line', nm:'<i>y</i> = 2<i>x</i> &minus; 1', s:'a straight line', fn:1,
+  xl:-2.5, xh:3.5, cl:1, ch:1,
+  br:[{t:'f',f:function(x){return 2*x-1;},a:-2.5,b:3.5}],
+  dom:'every real number',
+  why:'double the input, subtract one &mdash; there is no room in that instruction for a second answer',
+  d:'<span class="n">A line that is not vertical</span>Take any input, say <i>x</i> = 3. The rule says double it, then subtract one: 2(3) &minus; 1 = <b>5</b>. Nothing in that instruction could hand back two numbers, so the output is 5 and only 5. Geometrically the line climbs steadily left to right, so it never doubles back over ground it has already covered &mdash; <b>every</b> vertical line crosses it exactly once.<div class="loc">Every line except a vertical one is a function. The exception is in this gallery, and it is the reason the test is named after vertical lines.</div>'},
+
+ {k:'para', nm:'<i>y</i> = <i>x</i><sup>2</sup> &minus; 4', s:'a parabola', fn:1,
+  xl:-3, xh:3, cl:1, ch:1,
+  br:[{t:'f',f:function(x){return x*x-4;},a:-3,b:3}],
+  dom:'every real number',
+  why:'squaring a number gives one answer, so <i>x</i><sup>2</sup> &minus; 4 gives one answer',
+  d:'<span class="n">Turning around is allowed</span>The curve turns at (0, &minus;4), and that turn is what makes people hesitate. But it turns <b>sideways</b>, not back on itself. Square any input and you get one number; subtract 4 and you still have one number. So a vertical line can only ever catch it once.<div class="dd">What you <i>can</i> see here is a <b>horizontal</b> line hitting twice: <i>y</i> = 5 meets the curve at <i>x</i> = &minus;3 and <i>x</i> = 3, since (&minus;3)<sup>2</sup> &minus; 4 = 5 and 3<sup>2</sup> &minus; 4 = 5. Two different inputs sharing one output is perfectly legal. It is the reverse &mdash; one input, two outputs &mdash; that is forbidden.</div><div class="loc">Only the drawn window ends at <i>x</i> = &plusmn;3; the parabola itself keeps climbing forever in both directions.</div>'},
+
+ {k:'sqrt', nm:'<i>y</i> = &radic;<span style="text-decoration:overline">&nbsp;<i>x</i>&nbsp;</span>', s:'a square-root curve', fn:1,
+  xl:0, xh:6, cl:0, ch:1,
+  br:[{t:'f',f:function(x){return Math.sqrt(Math.max(0,x));},a:0,b:6,ea:'closed'}],
+  dom:'<i>x</i> &ge; 0',
+  why:'the radical sign means the <b>principal</b> root &mdash; one value, never two',
+  d:'<span class="n">Half a sideways parabola &mdash; on purpose</span>The radical sign does not mean &ldquo;whatever squares to <i>x</i>.&rdquo; It means the <b>principal</b> square root, the one that is <b>not negative</b>. So &radic;4 is 2, and only 2. That single convention is the whole reason this curve is a function, and it is exactly what the sideways parabola in this gallery is missing.<div class="dd"><b>Excluded values.</b> There is no real number whose square is negative, so inputs below 0 are not allowed at all: the domain is <i>x</i> &ge; 0. Park the line at <i>x</i> = &minus;3 and it meets the graph <b>zero</b> times &mdash; and the test is still passed. The rule is <b>at most</b> one hit, not exactly one.</div><div class="loc">The filled dot at (0, 0) marks the left end of the domain; the curve simply stops there.</div>'},
+
+ {k:'recip', nm:'<i>y</i> = 1 &divide; <i>x</i>', s:'a gap in the middle', fn:1,
+  xl:-6, xh:6, cl:1, ch:1,
+  br:[{t:'f',f:function(x){return 1/x;},a:-6,b:0,ob:1},
+      {t:'f',f:function(x){return 1/x;},a:0,b:6,oa:1}],
+  dom:'every real number except 0',
+  why:'one input, one reciprocal &mdash; except at 0, where there is none at all',
+  d:'<span class="n">A missing input, not a second output</span>Every nonzero number has exactly one reciprocal: 1 &divide; 4 is 0.25 and nothing else. So away from the centre the graph behaves like any other function.<div class="dd"><b>The excluded value.</b> At <i>x</i> = 0 the rule asks for 1 &divide; 0, which no number satisfies &mdash; there is no <i>y</i> with 0 &middot; <i>y</i> = 1. So <b><i>x</i> &ne; 0</b>, and slide the line to <i>x</i> = 0 and it meets the graph <b>zero</b> times. That is a hole in the <b>domain</b>, not a failure of the test.</div><div class="loc">Zero hits means &ldquo;that input is not allowed.&rdquo; Two hits means &ldquo;that input has two answers.&rdquo; Only the second one breaks a function.</div>'},
+
+ {k:'piece', nm:'two rules, one graph', s:'watch the dots at <i>x</i> = 1', fn:1,
+  xl:-5, xh:5, cl:1, ch:1,
+  br:[{t:'f',f:function(x){return x+2;},a:-5,b:1,ob:1,eb:'open'},
+      {t:'f',f:function(x){return x-3;},a:1,b:5,ea:'closed'}],
+  dom:'every real number',
+  why:'<i>y</i> = <i>x</i> + 2 when <i>x</i> &lt; 1 &nbsp;·&nbsp; <i>y</i> = <i>x</i> &minus; 3 when <i>x</i> &ge; 1',
+  d:'<span class="n">A jump is fine. A stack is not.</span>One rule runs the show below <i>x</i> = 1 and a different rule takes over at <i>x</i> = 1. The graph leaps, but a leap costs nothing &mdash; the vertical line still lands on one piece at a time.<div class="dd"><b>The whole question is at <i>x</i> = 1.</b> The upper piece ends in a <b>hollow</b> dot at (1, 3): that point is <b>not</b> on the graph, it marks where the piece stopped. The lower piece starts with a <b>filled</b> dot at (1, &minus;2), and that one <b>is</b> on the graph. So the input 1 has exactly one output, &minus;2. Fill in the hollow dot and the graph would fail on that single input.</div><div class="loc">Hollow means excluded, filled means included. On a piecewise graph those two dots carry the entire argument.</div>'},
+
+ {k:'side', nm:'<i>x</i> = <i>y</i><sup>2</sup> &minus; 4', s:'a parabola on its side', fn:0, wx:0,
+  xl:-4, xh:6, cl:0, ch:1,
+  br:[{t:'f',f:function(x){return Math.sqrt(Math.max(0,x+4));},a:-4,b:6},
+      {t:'f',f:function(x){return -Math.sqrt(Math.max(0,x+4));},a:-4,b:6}],
+  dom:'<i>x</i> &ge; &minus;4',
+  why:'solving for <i>y</i> gives <i>y</i> = &plusmn;&radic;(<i>x</i> + 4) &mdash; and that &plusmn; is two outputs',
+  d:'<span class="n">The &plusmn; is the failure</span>Solve the equation for <i>y</i>: add 4 to both sides to get <i>y</i><sup>2</sup> = <i>x</i> + 4, then take roots &mdash; <b><i>y</i> = &plusmn;&radic;(<i>x</i> + 4)</b>. The plus-or-minus is not decoration. For every input to the right of the vertex it hands back <b>two</b> different outputs.<div class="dd"><b>Check it at <i>x</i> = 0.</b> Then <i>y</i><sup>2</sup> = 4, so <i>y</i> = 2 or <i>y</i> = &minus;2. Substitute both back into the original equation: 2<sup>2</sup> &minus; 4 = 0 &#10003; and (&minus;2)<sup>2</sup> &minus; 4 = 0 &#10003;. Neither is extraneous &mdash; both really are points of the relation. One input, two outputs, so this is <b>not a function</b>.</div><div class="loc">At the vertex <i>x</i> = &minus;4 the two answers collapse into the single value <i>y</i> = 0. One good input never rescues a relation; one bad input always sinks it.</div>'},
+
+ {k:'circ', nm:'<i>x</i><sup>2</sup> + <i>y</i><sup>2</sup> = 16', s:'a circle', fn:0, wx:0,
+  xl:-4, xh:4, cl:0, ch:0,
+  br:[{t:'f',f:function(x){return Math.sqrt(Math.max(0,16-x*x));},a:-4,b:4},
+      {t:'f',f:function(x){return -Math.sqrt(Math.max(0,16-x*x));},a:-4,b:4}],
+  dom:'&minus;4 &le; <i>x</i> &le; 4',
+  why:'a top half and a bottom half sit above each other for every input strictly inside',
+  d:'<span class="n">Two halves, stacked</span>Solve for <i>y</i>: <i>y</i><sup>2</sup> = 16 &minus; <i>x</i><sup>2</sup>, so <b><i>y</i> = &plusmn;&radic;(16 &minus; <i>x</i><sup>2</sup>)</b>. The plus branch draws the top half of the circle and the minus branch draws the bottom half, and they sit one directly above the other.<div class="dd"><b>Check it at <i>x</i> = 0.</b> Then <i>y</i><sup>2</sup> = 16, so <i>y</i> = 4 or <i>y</i> = &minus;4. Both survive substitution: 0<sup>2</sup> + 4<sup>2</sup> = 16 &#10003; and 0<sup>2</sup> + (&minus;4)<sup>2</sup> = 16 &#10003;. The input 0 owns two outputs, so a circle is <b>never</b> a function.</div><div class="loc">Keep only the top half &mdash; <i>y</i> = +&radic;(16 &minus; <i>x</i><sup>2</sup>) &mdash; and you <b>do</b> have a function. Cutting a relation down until it passes is exactly how &radic;<i>x</i> was invented.</div>'},
+
+ {k:'vert', nm:'<i>x</i> = 3', s:'a vertical line', fn:0, wx:3,
+  xl:3, xh:3, cl:0, ch:0,
+  br:[{t:'v',c:3,y1:-6,y2:6}],
+  dom:'only <i>x</i> = 3',
+  why:'the test line lies exactly <b>on top of</b> the graph &mdash; infinitely many hits at once',
+  d:'<span class="n">The most literal failure there is</span>The equation <i>x</i> = 3 says nothing whatsoever about <i>y</i>. So (3, 0), (3, 1), (3, &minus;7.4) and every other pair with first coordinate 3 belongs to the graph. The single input 3 carries <b>infinitely many</b> outputs.<div class="dd">Slide the test line to <i>x</i> = 3 and it does not cross the graph &mdash; it <b>lands on it</b>, matching every point at once. That is why the whole test is named after vertical lines: they are the one family of lines that can never be a function, and they are the shape every other failure secretly contains.</div><div class="loc">Compare with <i>y</i> = 3, a flat line: that <b>is</b> a function, since every input has the one output 3. The two equations look alike and behave nothing alike.</div>'},
+
+ {k:'pts', nm:'four plotted points', s:'a relation you can list', fn:0, wx:1,
+  xl:-3, xh:4, cl:0, ch:0,
+  br:[{t:'p',x:-3,y:1},{t:'p',x:1,y:3},{t:'p',x:1,y:-2},{t:'p',x:4,y:2}],
+  dom:'only &minus;3, 1 and 4',
+  why:'the input 1 is listed twice, with two different partners',
+  d:'<span class="n">A relation can just be a list</span>No formula, no curve &mdash; the whole relation is the four pairs (&minus;3, 1), (1, 3), (1, &minus;2) and (4, 2). The definition still applies word for word: does any input carry two outputs?<div class="dd"><b>The input 1 appears twice</b>, paired once with 3 and once with &minus;2. That is a single input with two outputs, so this is <b>not a function</b>. Nothing else needs checking &mdash; one repeated input is enough to end the question.</div><div class="loc">Two points sharing a <b><i>y</i></b>-value would have been fine. When you scan a table of pairs, watch the <b>left</b> column for repeats, never the right one.</div>'}
+ ];
+ function byKey(k){ for(var i=0;i<G.length;i++) if(G[i].k===k) return G[i]; return G[0]; }
+
+ /* ================= where the line lands ================= */
+ function hitsAt(g,q){
+   var ys=[], inf=false;
+   g.br.forEach(function(b){
+     if(b.t==='v'){ if(Math.abs(q-b.c)<1e-9) inf=true; return; }
+     if(b.t==='p'){ if(Math.abs(q-b.x)<1e-9) ys.push(b.y); return; }
+     if(q<b.a-1e-9 || q>b.b+1e-9) return;
+     if(b.oa && Math.abs(q-b.a)<1e-9) return;
+     if(b.ob && Math.abs(q-b.b)<1e-9) return;
+     var y=b.f(q);
+     if(isFinite(y)) ys.push(y);
+   });
+   ys.sort(function(p,r){return r-p;});
+   var out=[];
+   ys.forEach(function(y){ if(!out.length || Math.abs(out[out.length-1]-y)>1e-7) out.push(y); });
+   return {ys:out, inf:inf};
+ }
+ /* is q outside the drawn picture, and if so, why? */
+ function outside(g,q){
+   if(q < g.xl-1e-9) return g.cl?'win':'dom';
+   if(q > g.xh+1e-9) return g.ch?'win':'dom';
+   return null;
+ }
+
+ /* ================= drawing the plane ================= */
+ function branchPath(b){
+   var d='', pen=false, N=460, i, x, y;
+   for(i=0;i<=N;i++){
+     x = b.a + (b.b-b.a)*(i/N);
+     y = b.f(x);
+     if(isFinite(y) && y>=-R-0.001 && y<=R+0.001){
+       d += (pen?'L':'M') + sx(x).toFixed(2) + ' ' + sy(y).toFixed(2) + ' ';
+       pen = true;
+     } else pen = false;
+   }
+   return d;
+ }
+ function halo(x,y,anch,size,col,txt){
+   return '<text x="'+x+'" y="'+y+'" text-anchor="'+anch+'" font-family="Georgia,serif" font-size="'+size+
+     '" font-weight="700" fill="'+col+'" stroke="'+CARD+'" stroke-width="3.2" paint-order="stroke" stroke-linejoin="round">'+txt+'</text>';
+ }
+ /* o = {g, vx, hits, dimLine} */
+ function plane(o){
+   var g=o.g, s='', i, bad=false, r=null;
+   if(o.vx!==null && o.vx!==undefined){ r=hitsAt(g,o.vx); bad=(r.inf||r.ys.length>=2); }
+
+   s+='<rect x="17" y="17" width="216" height="216" fill="#fbfbfe"/>';
+   for(i=-R;i<=R;i++){
+     s+='<line x1="'+sx(i)+'" y1="17" x2="'+sx(i)+'" y2="233" stroke="'+LINE+'" stroke-width="0.8"/>';
+     s+='<line x1="17" y1="'+sy(i)+'" x2="233" y2="'+sy(i)+'" stroke="'+LINE+'" stroke-width="0.8"/>';
+   }
+   /* the sweeping line, behind the graph */
+   if(o.vx!==null && o.vx!==undefined){
+     var VX=sx(o.vx), bc=bad?CORAL:GOLD;
+     s+='<rect x="'+(VX-5)+'" y="17" width="10" height="216" fill="'+(bad?'#fae5e8':'#fbf3e2')+'"/>';
+     s+='<line x1="'+VX+'" y1="14" x2="'+VX+'" y2="236" stroke="'+bc+'" stroke-width="'+(bad?2.6:2)+'" stroke-dasharray="'+(bad?'':'5 3')+'"/>';
+     s+=halo(VX, 244, 'middle', 11, bc, 'x = '+sv(o.vx));
+   }
+   /* axes */
+   s+='<line x1="14" y1="'+Y0+'" x2="236" y2="'+Y0+'" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<line x1="'+X0+'" y1="14" x2="'+X0+'" y2="236" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<polygon points="241,125 233,121 233,129" fill="'+INK+'"/><polygon points="9,125 17,121 17,129" fill="'+INK+'"/>';
+   s+='<polygon points="125,9 121,17 129,17" fill="'+INK+'"/><polygon points="125,241 121,233 129,233" fill="'+INK+'"/>';
+   s+='<text x="237" y="116" text-anchor="end" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">x</text>';
+   s+='<text x="133" y="17" text-anchor="start" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">y</text>';
+   for(i=-R;i<=R;i++){ if(i===0) continue;
+     s+='<line x1="'+sx(i)+'" y1="'+(Y0-3)+'" x2="'+sx(i)+'" y2="'+(Y0+3)+'" stroke="'+INK+'" stroke-width="1"/>';
+     s+='<line x1="'+(X0-3)+'" y1="'+sy(i)+'" x2="'+(X0+3)+'" y2="'+sy(i)+'" stroke="'+INK+'" stroke-width="1"/>';
+   }
+   for(i=-R;i<=R;i+=2){ if(i===0) continue;
+     s+='<text x="'+sx(i)+'" y="'+(Y0+14)+'" text-anchor="middle" font-size="8" fill="'+MUT+'">'+sv(i)+'</text>';
+     s+='<text x="'+(X0-6)+'" y="'+(sy(i)+3)+'" text-anchor="end" font-size="8" fill="'+MUT+'">'+sv(i)+'</text>';
+   }
+   s+='<text x="'+(X0-6)+'" y="'+(Y0+14)+'" text-anchor="end" font-size="8" fill="'+MUT+'">O</text>';
+
+   /* the graph itself */
+   g.br.forEach(function(b){
+     if(b.t==='f'){
+       s+='<path d="'+branchPath(b)+'" fill="none" stroke="'+TEAL+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+     } else if(b.t==='v'){
+       s+='<line x1="'+sx(b.c)+'" y1="'+sy(b.y2)+'" x2="'+sx(b.c)+'" y2="'+sy(b.y1)+'" stroke="'+TEAL+'" stroke-width="2.6" stroke-linecap="round"/>';
+     } else {
+       s+='<circle cx="'+sx(b.x)+'" cy="'+sy(b.y)+'" r="5" fill="'+TEAL+'"/>';
+     }
+   });
+   /* endpoint dots: hollow = excluded, filled = included */
+   g.br.forEach(function(b){
+     if(b.t!=='f') return;
+     if(b.ea) s+=endDot(b.a,b.f(b.a),b.ea);
+     if(b.eb) s+=endDot(b.b,b.f(b.b),b.eb);
+   });
+   /* where the line landed */
+   if(o.hits && o.hits.length){
+     o.hits.forEach(function(y,j){
+       var HX=sx(o.vx), HY=sy(y);
+       s+='<circle cx="'+HX+'" cy="'+HY+'" r="6.4" fill="'+(bad?CORAL:GREEN)+'" stroke="#ffffff" stroke-width="2"/>';
+       var an=(o.vx>=3)?'end':'start', dx=(an==='end')?-11:11;
+       s+=halo(HX+dx, HY+((j===0)?-9:16), an, 11.5, bad?CORAL:TDK, pr(o.vx,y,true));
+     });
+   }
+   if(o.vx!==null && o.vx!==undefined && r && r.inf){
+     s+=halo(sx(o.vx)+11, 40, 'start', 11.5, CORAL, 'every y at once');
+   }
+   return s;
+ }
+ function endDot(x,y,kind){
+   if(!isFinite(y)||y<-R||y>R) return '';
+   return kind==='open'
+     ? '<circle cx="'+sx(x)+'" cy="'+sy(y)+'" r="4.6" fill="'+CARD+'" stroke="'+TEAL+'" stroke-width="2.4"/>'
+     : '<circle cx="'+sx(x)+'" cy="'+sy(y)+'" r="4.6" fill="'+TEAL+'"/>';
+ }
+
+ /* ================= the input -> output diagram ================= */
+ function arw(x1,y1,x2,y2,col){
+   var dx=x2-x1, dy=y2-y1, L=Math.sqrt(dx*dx+dy*dy);
+   if(L<1) return '';
+   var ux=dx/L, uy=dy/L, ex=x2-ux*7, ey=y2-uy*7;
+   return '<line x1="'+x1+'" y1="'+y1+'" x2="'+ex.toFixed(1)+'" y2="'+ey.toFixed(1)+'" stroke="'+col+'" stroke-width="2.1"/>'+
+     '<polygon points="'+x2.toFixed(1)+','+y2.toFixed(1)+' '+(ex-uy*4.2).toFixed(1)+','+(ey+ux*4.2).toFixed(1)+
+     ' '+(ex+uy*4.2).toFixed(1)+','+(ey-ux*4.2).toFixed(1)+'" fill="'+col+'"/>';
+ }
+ function mapDiag(q,r,noLine){
+   var s='', n, col, cap;
+   if(noLine){
+     s+='<text x="125" y="62" text-anchor="middle" font-size="10.5" fill="'+MUT+'">place the vertical line to pick an input</text>';
+     return s;
+   }
+   n = r.inf ? 99 : r.ys.length;
+   col = (n>=2) ? CORAL : (n===1 ? GREEN : MUT);
+   s+='<rect x="10" y="8" width="76" height="90" rx="12" fill="#f5f6fb" stroke="'+LINE+'"/>';
+   s+='<rect x="164" y="8" width="76" height="90" rx="12" fill="#f5f6fb" stroke="'+LINE+'"/>';
+   s+='<text x="48" y="23" text-anchor="middle" font-size="8.5" font-weight="800" letter-spacing="0.6" fill="'+MUT+'">INPUT x</text>';
+   s+='<text x="202" y="23" text-anchor="middle" font-size="8.5" font-weight="800" letter-spacing="0.6" fill="'+MUT+'">OUTPUT y</text>';
+   s+='<circle cx="48" cy="60" r="18" fill="#ffffff" stroke="'+TEAL+'" stroke-width="2.2"/>';
+   s+='<text x="48" y="66" text-anchor="middle" font-family="Georgia,serif" font-size="15" font-weight="700" fill="'+TDK+'">'+sv(q)+'</text>';
+
+   if(r.inf){
+     s+='<rect x="178" y="30" width="48" height="60" rx="9" fill="#fae5e8" stroke="'+CORAL+'" stroke-width="2"/>';
+     [42,60,78].forEach(function(y){ s+=arw(70,60,174,y,CORAL); });
+     s+='<text x="202" y="55" text-anchor="middle" font-size="9" font-weight="700" fill="#b23145">every</text>';
+     s+='<text x="202" y="68" text-anchor="middle" font-size="9" font-weight="700" fill="#b23145">number</text>';
+     cap='infinitely many outputs for one input &#8212; not a function';
+   } else if(n===0){
+     s+='<text x="202" y="64" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="'+MUT+'">&#8212; none &#8212;</text>';
+     cap='no output at all &#8212; this input is not in the domain';
+   } else {
+     var span=(n===1)?[60]:(n===2?[40,80]:[36,60,84]);
+     r.ys.forEach(function(y,j){
+       var cy=span[j]||60;
+       s+=arw(70,60,178,cy,col);
+       s+='<circle cx="202" cy="'+cy+'" r="15" fill="#ffffff" stroke="'+col+'" stroke-width="2.2"/>';
+       s+='<text x="202" y="'+(cy+5)+'" text-anchor="middle" font-family="Georgia,serif" font-size="'+(n>1?11:14)+
+          '" font-weight="700" fill="'+col+'">'+nice(y,true)+'</text>';
+     });
+     cap = (n===1) ? 'one input, one output &#8212; the definition is satisfied'
+                   : 'one input, '+(n===2?'two':n+'')+' outputs &#8212; the definition is broken';
+   }
+   s+='<text x="125" y="115" text-anchor="middle" font-size="9.2" fill="'+(col===MUT?MUT:(n>=2?'#b23145':(n===1?'#237a45':MUT)))+
+      '" font-weight="700">'+cap+'</text>';
+   return s;
+ }
+
+ /* ================= MODE 0 : sweep it ================= */
+ var CUR='circ', VX=0, seen=0, timer=null;
+
+ function stopSweep(){ if(timer){ clearInterval(timer); timer=null; } $('play').innerHTML='&#9654; Auto-sweep'; }
+
+ function renderSweep(){
+   var g=byKey(CUR), r=hitsAt(g,VX), n=r.inf?99:r.ys.length, out=outside(g,VX);
+   if(n>seen) seen=n;
+
+   $('artTitle').innerHTML='Sweeping '+g.nm;
+   $('art').innerHTML=plane({g:g, vx:VX, hits:r.ys});
+   $('map').innerHTML=mapDiag(VX,r,false);
+   $('why').innerHTML='<em>the vertical line test</em>if <b>any</b> vertical line meets a graph <b>more than once</b>, the graph is <b>not</b> a function';
+   $('xOut').innerHTML=h(VX);
+
+   var hitTxt = r.inf ? 'infinitely many' : n;
+   $('v1').innerHTML=hitTxt;
+   $('v2').innerHTML=(seen>=99)?'infinitely many':seen;
+   $('c1').className=(n>=2)?'bad':(n===1?'good':'');
+   $('c2').className=(seen>=2)?'bad':(seen===1?'good':'');
+   if(seen>=2){ $('v3').innerHTML='not a function'; $('c3').className='bad'; }
+   else { $('v3').innerHTML='no failure yet'; $('c3').className=''; }
+
+   $('stage').style.background=(n>=2)?CORAL:TEAL;
+   var small;
+   if(r.inf) small='the line lies on top of the graph &#8212; infinitely many hits';
+   else if(n>=2) small=n+' hits at once &#8212; one input with '+(n===2?'two':n)+' outputs';
+   else if(n===1) small='1 hit &#8212; the input '+h(VX)+' has the single output '+nice(r.ys[0],false);
+   else if(out==='win') small='0 hits &#8212; the graph continues past the drawn window here';
+   else small='0 hits &#8212; the input '+h(VX)+' is not in the domain';
+   $('stage').innerHTML='<span class="big">'+g.nm+'</span><small>'+small+'</small>';
+
+   $('info').innerHTML=g.d;
+   $('mnem').innerHTML='<b>Domain of this relation:</b> '+g.dom+'. <b>Why it behaves this way:</b> '+g.why+'.';
+   $('nt').innerHTML='<b>The trap.</b> The test is about <b>vertical</b> lines only. A <b>horizontal</b> line may cross a function as many times as it likes &mdash; that just means two different inputs happen to share an output, which is allowed. Sweeping the wrong way is the single most common mistake in this section.';
+
+   $('gal').innerHTML=G.map(function(z){
+     return '<button class="it'+(z.k===CUR?' on':'')+'" data-k="'+z.k+'"><span class="nm">'+z.nm+'</span><span class="s">'+z.s+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call($('gal').querySelectorAll('.it'),function(b){
+     b.onclick=function(){ stopSweep(); CUR=b.getAttribute('data-k'); seen=0; VX=0; $('xRange').value=0; renderSweep(); };
+   });
+ }
+
+ /* ================= MODE 1 : why it works ================= */
+ var ST=[
+  {g:'circ', vx:null, hits:[], pl:'THE RELATION', mx:'<i>x</i><sup>2</sup> + <i>y</i><sup>2</sup> = 16',
+   nt:'<span class="n">A graph is a list of pairs</span>Every point drawn on this circle is a pair <b>(<i>x</i>, <i>y</i>)</b> that makes the equation true, and every pair that makes it true has been drawn. Nothing more is going on. The question ahead is not about circles &mdash; it is about what the picture is secretly telling you.'},
+
+  {g:'circ', vx:null, hits:[], pl:'THE DEFINITION', mx:'one input &nbsp;&rarr;&nbsp; <span class="tg">exactly one</span> output',
+   nt:'<span class="n">Say it precisely</span>A relation is a <b>function</b> when each allowed input is paired with <b>exactly one</b> output. The word doing all the work is <b>one</b>. An input may be paired with one output, or with none if it simply is not allowed &mdash; but never with two. Two different inputs sharing an output is fine and common.'},
+
+  {g:'circ', vx:null, hits:[4], pl:'WHAT A POINT MEANS', mx:'(0, <span class="tg">4</span>) &nbsp;means&nbsp; input 0 gives output 4',
+   nt:'<span class="n">Translate the picture into the definition</span>The point (0, 4) is on the circle because 0<sup>2</sup> + 4<sup>2</sup> = 0 + 16 = <b>16</b> &#10003;. Read as an input&ndash;output pair, it says: <b>feed in 0, get back 4</b>. Every dot on any graph makes a statement of exactly that shape &mdash; first coordinate in, second coordinate out.'},
+
+  {g:'circ', vx:0, hits:[], pl:'GATHER ONE INPUT', mx:'all points with input 0 lie on the line <span class="tg"><i>x</i> = 0</span>',
+   nt:'<span class="n">Here is the whole idea</span>Which points on this graph have first coordinate 0? Exactly the ones whose <i>x</i> is 0 &mdash; and the set of <b>all</b> points in the plane with <i>x</i> = 0 <b>is</b> the vertical line through 0. So a vertical line is not a measuring gadget someone invented. It is the complete collection of places where one chosen input could possibly live.'},
+
+  {g:'circ', vx:0, hits:[4,-4], pl:'COUNT THE HITS', mx:'it meets the circle at <span class="tg">(0, 4)</span> and <span class="tg">(0, &minus;4)</span>',
+   nt:'<span class="n">Two landings, one line</span>The line crosses the top half of the circle once and the bottom half once. Those are two separate points of the graph, and both of them announce an output for the very same input 0.'},
+
+  {g:'circ', vx:0, hits:[4,-4], pl:'CHECK BOTH', mx:'0<sup>2</sup> + 4<sup>2</sup> = 16 &#10003; &nbsp;&nbsp; 0<sup>2</sup> + (&minus;4)<sup>2</sup> = 16 &#10003;',
+   nt:'<span class="n">Neither one is a mirage</span>Substitute each back into the original equation. The first gives 0 + 16 = 16 &#10003;. The second gives 0 + 16 = 16 as well &#10003;, because squaring &minus;4 makes it positive. Both points genuinely satisfy the relation &mdash; there is no <b>extraneous</b> solution to throw away here, which is exactly what makes the failure real rather than a bookkeeping slip.'},
+
+  {g:'circ', vx:0, hits:[4,-4], pl:'THE CONTRADICTION', mx:'input 0 &nbsp;&rarr;&nbsp; outputs <span class="tg">4</span> <b>and</b> <span class="tg">&minus;4</span>',
+   nt:'<span class="n">The definition is broken</span>One input has produced two different outputs, so the circle is <b>not a function</b>. Notice what convicted it: not the shape, not the curvature &mdash; a single vertical line landing twice. And one bad input is enough. Every other input on the circle misbehaves the same way, but even one would have settled it.'},
+
+  {g:'circ', vx:null, hits:[], pl:'THE TEST', mx:'<span class="tg">more than one hit, anywhere</span> &nbsp;&rArr;&nbsp; not a function',
+   nt:'<span class="n">Now it is just a picture</span>Sweep a vertical line across the whole graph. If it <b>ever</b> touches the graph in two or more places, some input owns two outputs and the relation is not a function. If it never does, no input ever could, and the relation <b>is</b> a function. The geometry and the definition are now the same statement said two ways.'},
+
+  {g:'recip', vx:0, hits:[], pl:'THE FINE PRINT', mx:'<span class="tg">at most</span> one hit &mdash; not <span class="tg">exactly</span> one',
+   nt:'<span class="n">Zero hits is not a failure</span>Here is <i>y</i> = 1 &divide; <i>x</i>, and the line is parked at <i>x</i> = 0, where it meets the graph <b>zero</b> times. That is not a broken function &mdash; it is an <b>excluded value</b>. Division by zero is undefined, so 0 is simply not an allowed input, and an input that does not exist cannot have two outputs. Read the test as <b>never more than once</b>, and both this graph and &radic;<i>x</i> to the left of the origin stop being puzzling.'}
+ ];
+ var step=0;
+ function renderSteps(){
+   var S=ST[step], g=byKey(S.g), out='', k;
+   for(k=0;k<=step;k++){
+     out+='<div class="dl'+(k===step?' cur':'')+'"><span class="mx">'+ST[k].mx+'</span><span class="pl">'+ST[k].pl+'</span></div>';
+   }
+   $('mb').innerHTML=out;
+   $('exlab').innerHTML='Step '+(step+1)+' of '+ST.length+' &nbsp;·&nbsp; <b>a circle is not a function</b>';
+   $('artTitle').innerHTML='Why the test works';
+   $('art').innerHTML=plane({g:g, vx:S.vx, hits:S.hits});
+   $('map').innerHTML=(S.vx===null) ? mapDiag(0,null,true) : mapDiag(S.vx,hitsAt(g,S.vx),false);
+   $('why').innerHTML='<em>the bridge between the two</em>the vertical line <b><i>x</i> = <i>a</i></b> is the set of <b>every</b> point whose input is <i>a</i>';
+   $('stage').style.background=(S.hits.length>=2)?CORAL:TEAL;
+   $('stage').innerHTML='<span class="big">'+g.nm+'</span><small>'+S.pl.toLowerCase()+' &nbsp;·&nbsp; step '+(step+1)+' of '+ST.length+'</small>';
+   $('info').innerHTML=S.nt;
+   $('mnem').innerHTML='<b>Read it out loud.</b> &ldquo;The vertical line <i>x</i> = <i>a</i> hits the graph twice&rdquo; means exactly &ldquo;the input <i>a</i> has two outputs.&rdquo; The picture and the sentence carry the same information.';
+   $('nt').innerHTML='<b>The trap.</b> A relation is not disqualified by looking complicated, and it is not approved by looking simple. Only <b>one input with two outputs</b> disqualifies it &mdash; so a jagged, broken, scattered graph can be a perfectly good function, and a smooth elegant circle is not one.';
+   $('prev').disabled=(step===0); $('next').disabled=(step===ST.length-1);
+ }
+
+ /* ================= MODE 2 : your turn ================= */
+ var QORDER=['line','circ','sqrt','side','piece','vert','recip','pts','para'];
+ var qi=0, asked=0, right=0, answered=false;
+
+ function renderQuiz(reveal){
+   var g=byKey(QORDER[qi]);
+   var wx=(g.fn===0)?g.wx:null;
+   var r=(reveal&&wx!==null)?hitsAt(g,wx):null;
+
+   $('artTitle').innerHTML='Is this a function?';
+   $('art').innerHTML=plane({g:g, vx:(reveal&&wx!==null)?wx:null, hits:(r?r.ys:[])});
+   $('why').innerHTML='<em>the question</em>can you draw <b>one</b> vertical line that meets this graph <b>twice</b>?';
+   $('stage').style.background=answered?(g.fn?GREEN:CORAL):TEAL;
+   $('stage').innerHTML='<span class="big">'+g.nm+'</span><small>'+
+     (answered?(g.fn?'a function &#8212; no vertical line ever hits twice':'not a function &#8212; a vertical line hits twice'):'graph '+(qi+1)+' of '+QORDER.length+' &#8212; make the call')+'</small>';
+
+   if(reveal){
+     $('map').innerHTML=(wx!==null)?mapDiag(wx,r,false):mapDiag(0,{ys:[],inf:false},true);
+     $('info').innerHTML=g.d;
+     $('mnem').innerHTML='<b>Domain of this relation:</b> '+g.dom+'. <b>Why it behaves this way:</b> '+g.why+'.';
+   } else {
+     $('map').innerHTML=mapDiag(0,null,true);
+     $('info').innerHTML='<span class="n">Make the call first</span>Do not sweep yet &mdash; look. Ask whether any part of the graph sits <b>directly above</b> another part. If two pieces are ever stacked, one vertical line catches both and the relation fails. If the graph only ever moves left to right without doubling back over itself, it passes.<div class="loc">A guess you commit to teaches you more than an answer you are handed. Choose, then read the reasoning.</div>';
+     $('mnem').innerHTML='<b>The one thing to look for.</b> Is any piece of this graph <b>directly above</b> any other piece? That, and only that, is what the vertical line test detects.';
+   }
+   $('nt').innerHTML='<b>The trap.</b> Sharp corners, jumps, holes and scattered dots do <b>not</b> break a function. Only stacking does &mdash; two points sharing one <i>x</i>.';
+
+   Array.prototype.forEach.call($('ans').querySelectorAll('button'),function(b){
+     var v=+b.getAttribute('data-v');
+     b.disabled=answered;
+     b.className=(answered && v===g.fn)?'on':'';
+   });
+   $('score').innerHTML=asked?('Called correctly on <b>'+right+'</b> of <b>'+asked+'</b>'):'Nine graphs. Decide before you check.';
+ }
+ function answer(v){
+   if(answered) return;
+   var g=byKey(QORDER[qi]);
+   answered=true; asked++;
+   var ok=(v===g.fn); if(ok) right++;
+   $('verd').className='verd '+(ok?'ok':'no');
+   $('verd').innerHTML=(ok?'&#10003; Correct &#8212; ':'&#10007; Not quite &#8212; ')+
+     (g.fn ? 'this <b>is</b> a function.' : 'this is <b>not</b> a function: the line <i>x</i> = '+h(g.wx)+' is drawn in, and it lands '+
+        (g.k==='vert'?'on infinitely many points at once.':'on two points at once.'));
+   renderQuiz(true);
+ }
+
+ /* ================= wiring ================= */
+ var mode=0;
+ function setMode(m){
+   stopSweep(); mode=m;
+   Array.prototype.forEach.call($('modes').querySelectorAll('button'),function(b){
+     b.className=(+b.getAttribute('data-m')===m)?'on':'';
+   });
+   $('p0').style.display=(m===0)?'':'none';
+   $('p1').style.display=(m===1)?'':'none';
+   $('p2').style.display=(m===2)?'':'none';
+   $('nav').style.display=(m===1)?'':'none';
+   if(m===0) renderSweep(); else if(m===1) renderSteps(); else renderQuiz(answered);
+ }
+ Array.prototype.forEach.call($('modes').querySelectorAll('button'),function(b){
+   b.onclick=function(){ setMode(+b.getAttribute('data-m')); };
+ });
+
+ $('xRange').oninput=function(){ stopSweep(); VX=+this.value; renderSweep(); };
+ $('reset').onclick=function(){ stopSweep(); VX=0; seen=0; $('xRange').value=0; renderSweep(); };
+ $('play').onclick=function(){
+   if(timer){ stopSweep(); return; }
+   VX=-6; seen=0; $('xRange').value=VX; renderSweep();
+   $('play').innerHTML='&#9632; Stop';
+   timer=setInterval(function(){
+     var g=byKey(CUR), r=hitsAt(g,VX);
+     if(r.inf || r.ys.length>=2){ stopSweep(); return; }   /* caught a failure */
+     if(VX>=6){ stopSweep(); return; }                     /* swept it all */
+     VX=Math.round((VX+0.5)*10)/10;
+     $('xRange').value=VX;
+     renderSweep();
+   },150);
+ };
+
+ $('prev').onclick=function(){ if(step>0){ step--; renderSteps(); } };
+ $('next').onclick=function(){ if(step<ST.length-1){ step++; renderSteps(); } };
+ Array.prototype.forEach.call($('ans').querySelectorAll('button'),function(b){
+   b.onclick=function(){ answer(+b.getAttribute('data-v')); };
+ });
+ $('qnext').onclick=function(){
+   qi=(qi+1)%QORDER.length; answered=false;
+   $('verd').className='verd wait';
+   $('verd').innerHTML='Look at the graph, decide, then tap.';
+   renderQuiz(false);
+ };
+ document.addEventListener('keydown',function(e){
+   if(mode!==1) return;
+   if(e.key==='ArrowLeft')  $('prev').click();
+   if(e.key==='ArrowRight') $('next').click();
+ });
+
+ setMode(0);
+})();
+</script>
+</body>
+</html>

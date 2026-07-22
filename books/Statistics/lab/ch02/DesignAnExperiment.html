@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Design an Experiment</title>
+<meta name="description" content="Assemble a clinical trial one safeguard at a time — control group, randomization, blinding — and watch each one delete a specific slab of bias from the answer. Real simulated trials, drawn from computed data.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.06fr 0.94fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.tgl{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 12px;cursor:pointer;font-family:var(--sans);transition:.13s;}
+.tgl + .tgl{margin-top:7px;}
+.tgl:hover{border-color:var(--teal);}
+.tgl .tw{flex:1;min-width:0;}
+.tgl .tk{display:block;font-size:13px;font-weight:800;color:var(--ink);line-height:1.2;}
+.tgl .td{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:2px;line-height:1.35;}
+.tgl .ts{flex:none;font-size:10px;font-weight:800;letter-spacing:.6px;padding:4px 9px;border-radius:20px;background:#eef3f6;color:var(--muted);}
+.tgl.on{border-color:var(--teal);background:#f2f8fb;}
+.tgl.on .ts{background:var(--teal);color:#fff;}
+.tgl.dis{opacity:.46;cursor:default;} .tgl.dis:hover{border-color:var(--line);}
+.gate{font-size:11.5px;color:#8a6a20;background:#fbf3e2;border:1px solid #ecd9ac;border-radius:9px;padding:8px 11px;margin-top:9px;line-height:1.45;}
+.gate b{color:#5a4212;}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 8px;background:#fff;}
+.tiles .lb{display:block;font-size:8.8px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:16px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.hit{border-color:var(--green);background:#f2faf5;} .tiles div.hit .vv{color:#237a45;}
+.tiles div.far{border-color:var(--coral);background:#fdf3f4;} .tiles div.far .vv{color:#b23145;}
+.thr{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:11px;}
+.thr div{border:1px solid var(--line);border-radius:10px;padding:8px 9px;background:#fff;}
+.thr .tn{display:block;font-size:11.4px;font-weight:800;color:var(--ink);line-height:1.25;}
+.thr .tf{display:block;font-size:8.8px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin-top:3px;}
+.thr .tv{display:block;font-size:13.5px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums;color:var(--muted);}
+.thr div.ok{border-color:var(--green);background:#f2faf5;} .thr div.ok .tv{color:#237a45;}
+.thr div.leak{border-color:var(--coral);background:#fdf3f4;} .thr div.leak .tv{color:#b23145;}
+.thr div.na{opacity:.55;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:10.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);white-space:nowrap;width:118px;line-height:1.2;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;min-width:60px;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:62px;text-align:right;font-variant-numeric:tabular-nums;}
+.lgd{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.cap{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+@media (max-width:520px){.row .btn{font-size:12.5px;padding:10px 4px;}.tiles{grid-template-columns:1fr;}.sl label{font-size:9.6px;width:96px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 2</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 2</div>
+  <h1>Design an Experiment</h1>
+  <div class="intro">A clinic tests a new ointment for a painful rash. Because this is a simulation, <b>you set how well the ointment really works</b> &mdash; so you always know the right answer. Now build the study out of three parts &mdash; a <b>control group</b>, <b>randomization</b>, and <b>blinding</b> &mdash; and watch each one delete a specific slab of bias from what the study reports.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2>Where the improvement comes from</h2>
+      <svg viewBox="0 0 340 216" aria-label="stacked breakdown of average improvement in each group"><g id="stack"></g></svg>
+      <div class="lgd"><span><i style="background:#8aa8b8"></i>would have healed anyway</span><span><i style="background:#b8862f"></i>placebo response</span><span><i style="background:#d1495b"></i>expectation &amp; scoring</span><span><i style="background:#7a5a8a"></i>groups not comparable</span><span><i style="background:#2f9e5b"></i>the real drug effect</span></div>
+      <div class="cap" id="stackCap"></div>
+    </div>
+    <div class="card"><h2>Who ended up in each group</h2>
+      <svg viewBox="0 0 340 96" aria-label="composition of each group by baseline healing speed"><g id="dots"></g></svg>
+      <div class="lgd"><span><i style="background:#2f6f8a"></i>fast healer</span><span><i style="background:#d8a44a"></i>slow healer</span></div>
+      <div class="cap" id="dotsCap"></div>
+    </div>
+    <div class="card"><h2>Where 240 studies land</h2>
+      <svg viewBox="0 0 340 196" aria-label="distribution of reported effects across many simulated studies"><g id="hist"></g></svg>
+      <div class="cap" id="histCap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Build the study<small>start by adding a control group</small></div>
+    <div class="card"><h2>Assemble the design</h2>
+      <button class="tgl" id="tC"><span class="tw"><span class="tk">Control group</span><span class="td">A second group of the same patients, followed the same way, without the real ointment.</span></span><span class="ts">OFF</span></button>
+      <button class="tgl" id="tR"><span class="tw"><span class="tk">Randomization</span><span class="td">A chance device &mdash; not the patient, not the clinician &mdash; decides who lands in which group.</span></span><span class="ts">OFF</span></button>
+      <button class="tgl" id="tB"><span class="tw"><span class="tk">Blinding <span style="font-weight:600;color:var(--muted)">(+ identical dummy cream)</span></span><span class="td">Both groups get identical-looking tubes, and neither the patient nor the person scoring the rash knows which is which.</span></span><span class="ts">OFF</span></button>
+      <div class="gate" id="gate"></div>
+    </div>
+    <div class="card"><h2>Run the study</h2>
+      <div class="sl"><label>True drug effect</label><input type="range" id="sD" min="0" max="20" step="1" value="8"><span class="nv" id="vD"></span></div>
+      <div class="sl"><label>Patients per group</label><input type="range" id="sN" min="20" max="200" step="10" value="60"><span class="nv" id="vN"></span></div>
+      <div class="row"><button class="btn solid" id="bOne">Run one study</button><button class="btn" id="bMany">Re-run 240 studies</button></div>
+      <div class="tiles">
+        <div><span class="lb">Truth you set</span><span class="vv" id="kT"></span></div>
+        <div id="kRw"><span class="lb">This study reported</span><span class="vv" id="kR"></span></div>
+        <div id="kMw"><span class="lb">Missed by</span><span class="vv" id="kM"></span></div>
+      </div>
+      <div class="thr">
+        <div id="th1"><span class="tn">Would have healed anyway</span><span class="tf">fixed by control</span><span class="tv" id="tv1"></span></div>
+        <div id="th4"><span class="tn">Groups not comparable</span><span class="tf">fixed by randomization</span><span class="tv" id="tv4"></span></div>
+        <div id="th2"><span class="tn">Placebo response</span><span class="tf">fixed by blinding</span><span class="tv" id="tv2"></span></div>
+        <div id="th3"><span class="tn">Expectation &amp; scoring</span><span class="tf">fixed by blinding</span><span class="tv" id="tv3"></span></div>
+      </div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- the world we are simulating (all values are pain points, 0-10 scale) ---------- */
+ var HEAL_F=3.0;    /* a fast healer improves this much on their own                 */
+ var HEAL_S=1.0;    /* a slow healer improves this much on their own                 */
+ var PLAC  =1.0;    /* extra improvement from believing you are being treated        */
+ var EXPT  =0.8;    /* extra improvement REPORTED when patient + rater know          */
+ var SDN   =1.6;    /* residual patient-to-patient noise (SD)                        */
+ var TILT  =0.75;   /* fraction of the treated arm that is fast healers when nobody randomizes */
+ var TRIALS=240;
+ /* half the patient pool are fast healers, so the population average heal is 2.0 */
+ var HEAL_AVG=(HEAL_F+HEAL_S)/2;                       /* 2.0 */
+ var HEAL_T =TILT*HEAL_F+(1-TILT)*HEAL_S;              /* 2.5 */
+ var HEAL_C =(1-TILT)*HEAL_F+TILT*HEAL_S;              /* 1.5 */
+ var CONF   =HEAL_T-HEAL_C;                            /* 1.0 */
+
+ var COL={heal:'#8aa8b8',plac:'#b8862f',expt:'#d1495b',conf:'#7a5a8a',drug:'#2f9e5b',fast:'#2f6f8a',slow:'#d8a44a'};
+
+ var S={c:false,r:false,b:false,d:0.8,n:60};
+ var seedOne=4101, seedMany=7717;
+ var one=null, batch=[];
+
+ /* ---------- seeded PRNG (Mulberry32) + normal draws (Box-Muller) ---------- */
+ function mk(seed){var a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function nrm(rng){var u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+
+ /* effective settings: randomizing and blinding need a second group to act on */
+ function eff(){return {c:S.c, r:S.c&&S.r, b:S.c&&S.b};}
+
+ /* the bias this design leaves behind, in points, before any random noise */
+ function biasOf(){var e=eff();
+   if(!e.c) return HEAL_AVG+PLAC+EXPT;              /* 3.8 */
+   return (e.r?0:CONF)+(e.b?0:(PLAC+EXPT));         /* 0 / 1.0 / 1.8 / 2.8 */
+ }
+
+ /* ---------- one simulated study: real patients, real draws ---------- */
+ function runStudy(rng){
+   var e=eff(), d=S.d, n=S.n, k, s;
+   if(!e.c){
+     /* one group, everybody treated, everybody knows it */
+     var sum=0, nf=0;
+     for(k=0;k<n;k++){
+       var fast=(k%2===0); if(fast)nf++;
+       sum+=(fast?HEAL_F:HEAL_S)+d+PLAC+EXPT+SDN*nrm(rng);
+     }
+     return {est:sum/n, tM:sum/n, cM:null, tF:nf, cF:0, n:n};
+   }
+   /* build a pool of 2n patients: exactly n fast healers and n slow healers */
+   var tF, tS;
+   if(e.r){
+     var arr=[],i,j,t;
+     for(i=0;i<n;i++)arr.push(1);
+     for(i=0;i<n;i++)arr.push(0);
+     for(i=arr.length-1;i>0;i--){j=Math.floor(rng()*(i+1));t=arr[i];arr[i]=arr[j];arr[j]=t;}
+     tF=0; for(i=0;i<n;i++)tF+=arr[i];
+     tS=n-tF;
+   }else{
+     /* the health-engaged patients are the ones who sign up for the new ointment */
+     tF=Math.round(TILT*n); tS=n-tF;
+   }
+   var cF=n-tF, cS=n-tS;
+   var tSum=0, cSum=0;
+   for(k=0;k<tF;k++) tSum+=HEAL_F+d+PLAC+(e.b?0:EXPT)+SDN*nrm(rng);
+   for(k=0;k<tS;k++) tSum+=HEAL_S+d+PLAC+(e.b?0:EXPT)+SDN*nrm(rng);
+   for(k=0;k<cF;k++) cSum+=HEAL_F+(e.b?PLAC:0)+SDN*nrm(rng);
+   for(k=0;k<cS;k++) cSum+=HEAL_S+(e.b?PLAC:0)+SDN*nrm(rng);
+   return {est:tSum/n-cSum/n, tM:tSum/n, cM:cSum/n, tF:tF, cF:cF, n:n};
+ }
+
+ function runAll(){
+   one=runStudy(mk(seedOne));
+   var rng=mk(seedMany), out=[];
+   for(var i=0;i<TRIALS;i++) out.push(runStudy(rng).est);
+   batch=out;
+ }
+
+ /* ---------- panel 1: stacked recipe for each group ---------- */
+ function drawStack(){
+   var e=eff(), d=S.d, MAX=7, Y0=172, TOP=16, H=Y0-TOP;
+   function yv(v){return Y0-(v/MAX)*H;}
+   var o='', i;
+   for(i=0;i<=MAX;i++){
+     o+='<line x1="44" y1="'+yv(i).toFixed(1)+'" x2="300" y2="'+yv(i).toFixed(1)+'" stroke="'+(i===0?'#c4d4dc':'#e9f0f4')+'" stroke-width="1"/>';
+     o+='<text x="39" y="'+(yv(i)+3.4).toFixed(1)+'" font-size="9" fill="#78868d" text-anchor="end">'+i+'</text>';
+   }
+   /* segment recipes, bottom to top. shared parts first so the two stacks line up. */
+   var healBase=e.c?(e.r?HEAL_AVG:HEAL_C):HEAL_AVG;
+   var tSeg=[{v:healBase,c:COL.heal,l:'heals anyway'}];
+   var cSeg=[{v:healBase,c:COL.heal,l:'heals anyway'}];
+   if(e.b){ tSeg.push({v:PLAC,c:COL.plac,l:'placebo'}); cSeg.push({v:PLAC,c:COL.plac,l:'placebo'}); }
+   if(e.c&&!e.r) tSeg.push({v:CONF,c:COL.conf,l:'extra fast healers'});
+   if(!e.b){ tSeg.push({v:PLAC,c:COL.plac,l:'placebo'}); tSeg.push({v:EXPT,c:COL.expt,l:'expectation'}); }
+   tSeg.push({v:d,c:COL.drug,l:'real effect'});
+
+   function bar(segs,x,w){
+     var run=0, s='';
+     for(var k=0;k<segs.length;k++){
+       if(segs[k].v<=0.001){run+=segs[k].v;continue;}
+       var y1=yv(run), y2=yv(run+segs[k].v), hh=y1-y2;
+       s+='<rect x="'+x+'" y="'+y2.toFixed(1)+'" width="'+w+'" height="'+hh.toFixed(1)+'" fill="'+segs[k].c+'"/>';
+       s+='<line x1="'+x+'" y1="'+y2.toFixed(1)+'" x2="'+(x+w)+'" y2="'+y2.toFixed(1)+'" stroke="#fffdf9" stroke-width="1"/>';
+       if(hh>=13) s+='<text x="'+(x+w/2)+'" y="'+(y2+hh/2+3.2).toFixed(1)+'" font-size="8.4" fill="#fff" text-anchor="middle" font-weight="700">'+segs[k].l+'</text>';
+       run+=segs[k].v;
+     }
+     return {svg:s,tot:run};
+   }
+   var T=bar(tSeg,74,68);
+   var C={svg:'',tot:0};
+   if(e.c) C=bar(cSeg,178,68);
+   o+=T.svg+C.svg;
+   o+='<text x="108" y="187" font-size="9.4" fill="#1c4454" text-anchor="middle" font-weight="800">TREATMENT</text>';
+   if(e.c) o+='<text x="212" y="187" font-size="9.4" fill="#1c4454" text-anchor="middle" font-weight="800">COMPARISON</text>';
+   else{
+     o+='<rect x="178" y="164" width="68" height="8" fill="none" stroke="#c4d4dc" stroke-width="1" stroke-dasharray="3 3"/>';
+     o+='<text x="212" y="187" font-size="9.4" fill="#a4b3ba" text-anchor="middle" font-weight="800">NO COMPARISON</text>';
+   }
+   /* what this study actually measured, plotted as ticks */
+   if(one){
+     o+='<line x1="68" y1="'+yv(one.tM).toFixed(1)+'" x2="148" y2="'+yv(one.tM).toFixed(1)+'" stroke="#1c4454" stroke-width="2.4"/>';
+     if(e.c&&one.cM!==null) o+='<line x1="172" y1="'+yv(one.cM).toFixed(1)+'" x2="252" y2="'+yv(one.cM).toFixed(1)+'" stroke="#1c4454" stroke-width="2.4"/>';
+   }
+   /* the bracket: the gap between the two stack tops IS what the study reports */
+   var yT=yv(T.tot), yC=yv(C.tot), gap=T.tot-C.tot;
+   o+='<line x1="142" y1="'+yT.toFixed(1)+'" x2="264" y2="'+yT.toFixed(1)+'" stroke="#1c4454" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>';
+   o+='<line x1="'+(e.c?246:178)+'" y1="'+yC.toFixed(1)+'" x2="264" y2="'+yC.toFixed(1)+'" stroke="#1c4454" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>';
+   o+='<line x1="264" y1="'+yT.toFixed(1)+'" x2="264" y2="'+yC.toFixed(1)+'" stroke="#1c4454" stroke-width="1.8"/>';
+   o+='<line x1="260" y1="'+yT.toFixed(1)+'" x2="268" y2="'+yT.toFixed(1)+'" stroke="#1c4454" stroke-width="1.8"/>';
+   o+='<line x1="260" y1="'+yC.toFixed(1)+'" x2="268" y2="'+yC.toFixed(1)+'" stroke="#1c4454" stroke-width="1.8"/>';
+   var ym=Math.min(Math.max((yT+yC)/2,26),160);
+   o+='<text x="273" y="'+(ym-3).toFixed(1)+'" font-size="9" fill="#78868d" font-weight="700">you report</text>';
+   o+='<text x="273" y="'+(ym+9).toFixed(1)+'" font-size="12.5" fill="#1c4454" font-weight="800">+'+gap.toFixed(2)+'</text>';
+   o+='<text x="273" y="'+(ym+20).toFixed(1)+'" font-size="8.6" fill="#78868d" font-weight="700">truth '+d.toFixed(2)+'</text>';
+   o+='<text x="14" y="10" font-size="9" fill="#78868d" font-weight="700">avg improvement (pain points)</text>';
+   $('stack').innerHTML=o;
+
+   var lost=gap-d;
+   $('stackCap').innerHTML='The bars are the average <b>recipe</b> for each group; the dark ticks are what this particular study actually measured. Anything sitting at the same height in both stacks cancels when you subtract. Only what is inside the bracket reaches your answer &mdash; here that is <b>'+d.toFixed(2)+'</b> of real drug plus <b>'+lost.toFixed(2)+'</b> of leftover bias.';
+ }
+
+ /* ---------- panel 2: who landed in each group ---------- */
+ function drawDots(){
+   var e=eff(), N=34, o='';
+   function row(y,label,fastFrac){
+     var s='<text x="2" y="'+(y-11)+'" font-size="9.2" fill="#1c4454" font-weight="800">'+label+'</text>';
+     var nf=Math.round(N*fastFrac);
+     for(var i=0;i<N;i++){
+       s+='<circle cx="'+(6+i*9.7).toFixed(1)+'" cy="'+y+'" r="4.2" fill="'+(i<nf?COL.fast:COL.slow)+'"/>';
+     }
+     return s;
+   }
+   if(!e.c){
+     o+=row(52,'EVERYONE · one group · 50% fast healers',0.5);
+     $('dots').innerHTML=o;
+     $('dotsCap').innerHTML='With only one group there is nobody to be unbalanced <i>against</i>. That is not a clean bill of health &mdash; it means the question <b>"were the groups comparable?"</b> cannot even be asked.';
+     return;
+   }
+   var tf=one?one.tF/one.n:0.5, cf=one?one.cF/one.n:0.5;
+   o+=row(30,'TREATMENT · '+Math.round(tf*100)+'% fast healers',tf);
+   o+=row(76,'COMPARISON · '+Math.round(cf*100)+'% fast healers',cf);
+   $('dots').innerHTML=o;
+   if(e.r){
+     $('dotsCap').innerHTML='Chance decided who went where, so the split lands near 50/50 &mdash; <b>never exactly</b>. Randomization does not make the groups identical; it makes whatever difference remains a matter of luck, which averages away across studies instead of pushing every study the same direction.';
+   }else{
+     $('dotsCap').innerHTML='The people who <b>choose</b> the new ointment are the health-engaged ones who heal faster anyway, so the treatment group starts loaded with fast healers. Re-run it a hundred times and the tilt is there every time &mdash; that is what makes it <b>bias</b> rather than bad luck.';
+   }
+ }
+
+ /* ---------- panel 3: 240 studies ---------- */
+ function drawHist(){
+   var LO=-2, HI=7, NB=36, BW=(HI-LO)/NB, X0=26, X1=332, Y0=152, YT=34;
+   function xv(v){return X0+((v-LO)/(HI-LO))*(X1-X0);}
+   var bins=new Array(NB), i;
+   for(i=0;i<NB;i++)bins[i]=0;
+   var sum=0;
+   for(i=0;i<batch.length;i++){
+     sum+=batch[i];
+     var b=Math.floor((batch[i]-LO)/BW);
+     if(b<0)b=0; if(b>NB-1)b=NB-1;
+     bins[b]++;
+   }
+   var mean=batch.length?sum/batch.length:0, mx=1;
+   for(i=0;i<NB;i++) if(bins[i]>mx) mx=bins[i];
+   var o='', bw=(X1-X0)/NB;
+   for(i=0;i<NB;i++){
+     if(!bins[i])continue;
+     var h=(bins[i]/mx)*(Y0-YT-6);
+     o+='<rect x="'+(X0+i*bw+0.6).toFixed(1)+'" y="'+(Y0-h).toFixed(1)+'" width="'+(bw-1.2).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="#8fb6c9" rx="1"/>';
+   }
+   o+='<line x1="'+X0+'" y1="'+Y0+'" x2="'+X1+'" y2="'+Y0+'" stroke="#c4d4dc" stroke-width="1"/>';
+   for(i=LO;i<=HI;i++){
+     o+='<line x1="'+xv(i).toFixed(1)+'" y1="'+Y0+'" x2="'+xv(i).toFixed(1)+'" y2="'+(Y0+4)+'" stroke="#c4d4dc" stroke-width="1"/>';
+     o+='<text x="'+xv(i).toFixed(1)+'" y="'+(Y0+16)+'" font-size="9" fill="#78868d" text-anchor="middle">'+i+'</text>';
+   }
+   function clampx(v){return Math.max(34,Math.min(306,xv(v)));}
+   var tx=xv(S.d);
+   o+='<line x1="'+tx.toFixed(1)+'" y1="'+(YT-4)+'" x2="'+tx.toFixed(1)+'" y2="'+(Y0+4)+'" stroke="#1c4454" stroke-width="2" stroke-dasharray="5 3"/>';
+   o+='<text x="'+clampx(S.d).toFixed(1)+'" y="12" font-size="9.6" fill="#1c4454" text-anchor="middle" font-weight="800">TRUTH '+S.d.toFixed(2)+'</text>';
+   var miss=mean-S.d;
+   if(Math.abs(miss)>0.12){
+     o+='<line x1="'+xv(mean).toFixed(1)+'" y1="'+(YT-4)+'" x2="'+xv(mean).toFixed(1)+'" y2="'+(Y0+4)+'" stroke="#d1495b" stroke-width="2"/>';
+     o+='<text x="'+clampx(mean).toFixed(1)+'" y="26" font-size="9.6" fill="#b23145" text-anchor="middle" font-weight="800">STUDIES CENTER ON '+mean.toFixed(2)+'</text>';
+   }else{
+     o+='<text x="'+clampx(S.d).toFixed(1)+'" y="26" font-size="9.6" fill="#237a45" text-anchor="middle" font-weight="800">STUDIES CENTER ON THE TRUTH</text>';
+   }
+   if(one){
+     var ox=xv(Math.max(LO,Math.min(HI,one.est)));
+     o+='<polygon points="'+ox.toFixed(1)+','+(Y0-1)+' '+(ox-4.6).toFixed(1)+','+(Y0+8)+' '+(ox+4.6).toFixed(1)+','+(Y0+8)+'" fill="#1c4454"/>';
+   }
+   o+='<text x="'+((X0+X1)/2)+'" y="188" font-size="9.2" fill="#78868d" text-anchor="middle" font-weight="700">effect this study reported (pain points) — ▲ is your single study</text>';
+   $('hist').innerHTML=o;
+
+   var sd=0;
+   for(i=0;i<batch.length;i++) sd+=(batch[i]-mean)*(batch[i]-mean);
+   sd=batch.length>1?Math.sqrt(sd/(batch.length-1)):0;
+   $('histCap').innerHTML='240 studies, each one actually simulated patient by patient. Average reported effect <b>'+mean.toFixed(2)+'</b> against a truth of <b>'+S.d.toFixed(2)+'</b> &mdash; an average miss of <b>'+(miss>=0?'+':'')+miss.toFixed(2)+'</b>. Study-to-study spread is <b>'+sd.toFixed(2)+'</b>. Drag <i>patients per group</i> and watch: more patients <b>narrows</b> the cloud but never <b>moves</b> it. Bias is not a sample-size problem.';
+ }
+
+ /* ---------- the words ---------- */
+ var TXT={
+  '0':{t:'Before-and-after, one group',s:'no comparison · built-in bias +'+(HEAL_AVG+PLAC+EXPT).toFixed(1),
+    n:'Before and after, one group',
+    d:'Every patient gets the ointment and each is compared to how they started. Rashes fade on their own. People improve simply because something is being done. And everyone &mdash; patient and rater alike &mdash; knows treatment was given. All three land inside your answer with nothing to subtract them against. On average this design reports <b>+'+(HEAL_AVG+PLAC+EXPT).toFixed(1)+' points that have nothing to do with the ointment</b>. Slide the true effect to <b>0.00</b>: a drug that does literally nothing still gets a glowing report.'},
+  '100':{t:'Two groups, formed by choice',s:'control only · built-in bias +'+(CONF+PLAC+EXPT).toFixed(1),
+    n:'Control, but assembled by choice',
+    d:'A comparison group exists now, so <b>natural healing cancels</b> &mdash; it happens on both sides and drops out of the subtraction. That is the whole job of a control group. But the groups were built by who volunteered, so the treatment arm is stacked with fast healers (<b>+'+CONF.toFixed(1)+'</b>), and with nothing blinded the treated side alone gets the placebo response and the generous scoring (<b>+'+(PLAC+EXPT).toFixed(1)+'</b>).'},
+  '110':{t:'Randomized, not blinded',s:'built-in bias +'+(PLAC+EXPT).toFixed(1),
+    n:'Randomized, but everyone knows',
+    d:'Chance assigns the groups, so they are comparable at the start and the fast-healer tilt is gone. What is left is <b>knowledge</b>. The treated group knows it is being treated and gets a placebo response the comparison group never gets (<b>+'+PLAC.toFixed(1)+'</b>), and a rater who knows which arm they are scoring marks the rash a little kinder (<b>+'+EXPT.toFixed(1)+'</b>). Randomizing balanced the patients; it did nothing about what they were told.'},
+  '101':{t:'Blinded, not randomized',s:'built-in bias +'+CONF.toFixed(1),
+    n:'Blinded, but assembled by choice',
+    d:'Both groups get identical tubes and nobody knows which is which, so the placebo response now happens on <b>both</b> sides and cancels, and expectation cannot favour one arm. Beautiful &mdash; and still wrong by <b>+'+CONF.toFixed(1)+'</b>, because the groups were never comparable to begin with. <b>Blinding cannot fix who is in the room.</b> Only the assignment rule can.'},
+  '111':{t:'Randomized · blinded · controlled',s:'no built-in bias',
+    n:'A randomized, blinded, controlled trial',
+    d:'All three parts are in place, and each one is doing a different job. The <b>control group</b> makes natural healing happen on both sides so it cancels. <b>Randomization</b> makes the groups comparable at baseline, so no systematic tilt survives. <b>Blinding</b> puts the placebo response and the raters&rsquo; expectations on both sides too. What is left in the difference is the ointment &mdash; and nothing else. The cloud of studies is now centered on the truth you set, and sample size decides only how tight that cloud is.'}
+ };
+
+ /* ---------- render ---------- */
+ function key(){var e=eff(); return e.c?('1'+(e.r?'1':'0')+(e.b?'1':'0')):'0';}
+
+ function setTgl(el,on,dis){
+   el.className='tgl'+(dis?' dis':(on?' on':''));
+   el.querySelector('.ts').innerHTML=dis?'N/A':(on?'ON':'OFF');
+ }
+ function setThr(el,vEl,state,amt){
+   if(state==='na'){el.className='na';vEl.innerHTML='n/a';}
+   else if(state==='ok'){el.className='ok';vEl.innerHTML='cancels ✓';}
+   else{el.className='leak';vEl.innerHTML='+'+amt.toFixed(1)+' pts';}
+ }
+
+ function render(){
+   var e=eff(), bias=biasOf(), k=key(), T=TXT[k];
+   setTgl($('tC'),S.c,false);
+   setTgl($('tR'),S.r,!S.c);
+   setTgl($('tB'),S.b,!S.c);
+   $('gate').style.display=S.c?'none':'block';
+   $('gate').innerHTML='<b>Randomizing and blinding have nothing to work on yet.</b> You cannot assign people <i>between</i> groups, or hide <i>which</i> group they are in, until a second group exists. The control group is the part everything else is built on.';
+
+   var col=bias===0?'#2f9e5b':(bias<2?'#b8862f':'#d1495b');
+   $('stage').style.background=col;
+   $('stage').innerHTML=T.t+'<small>'+T.s+'</small>';
+
+   setThr($('th1'),$('tv1'),e.c?'ok':'leak',HEAL_AVG);
+   setThr($('th4'),$('tv4'),!e.c?'na':(e.r?'ok':'leak'),CONF);
+   setThr($('th2'),$('tv2'),(e.c&&e.b)?'ok':'leak',PLAC);
+   setThr($('th3'),$('tv3'),(e.c&&e.b)?'ok':'leak',EXPT);
+
+   $('kT').innerHTML=S.d.toFixed(2);
+   $('kR').innerHTML=(one.est>=0?'+':'')+one.est.toFixed(2);
+   var miss=one.est-S.d;
+   $('kM').innerHTML=(miss>=0?'+':'')+miss.toFixed(2);
+   $('kRw').className='';
+   $('kMw').className=Math.abs(miss)<=0.5?'hit':'far';
+
+   var extra=(bias===0)
+     ? '<div class="loc">A single study still wobbles around the truth &mdash; that is ordinary sampling noise, and it shrinks as you add patients. What it no longer does is lean.</div>'
+     : '<div class="loc">Watch the miss tile: a broken design can still land close to the truth <b>by luck</b> on any one study. That is exactly why one study is never the evidence &mdash; look at where the whole cloud sits.</div>';
+   $('info').innerHTML='<span class="n">'+T.n+'</span>'+T.d+extra;
+
+   drawStack(); drawDots(); drawHist();
+ }
+
+ function recompute(){ runAll(); render(); }
+
+ /* ---------- wiring ---------- */
+ $('tC').onclick=function(){S.c=!S.c;recompute();};
+ $('tR').onclick=function(){if(!S.c)return;S.r=!S.r;recompute();};
+ $('tB').onclick=function(){if(!S.c)return;S.b=!S.b;recompute();};
+ $('sD').oninput=function(){S.d=(+this.value)/10;$('vD').innerHTML=S.d.toFixed(2)+' pt';recompute();};
+ $('sN').oninput=function(){S.n=+this.value;$('vN').innerHTML=S.n+'/arm';recompute();};
+ $('bOne').onclick=function(){seedOne=(seedOne*1664525+1013904223)>>>0;recompute();};
+ $('bMany').onclick=function(){seedMany=(seedMany*1664525+1013904223)>>>0;recompute();};
+
+ $('vD').innerHTML=S.d.toFixed(2)+' pt';
+ $('vN').innerHTML=S.n+'/arm';
+ recompute();
+})();
+</script>
+</body>
+</html>

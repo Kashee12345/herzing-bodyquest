@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Types of Data</title>
+<meta name="description" content="Classify variables as qualitative or quantitative, discrete or continuous — using a real dataset of 120 households, a live dot plot, and a measuring-precision slider that shows which variables keep splitting.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.1px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.lock{border-color:var(--gold);background:#fbf6ea;} .tiles div.lock .vv{color:#8a6a20;}
+.tiles div.split{border-color:var(--teal);background:#eef5f9;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:12px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl input[type=range]:disabled{background:#e6edf1;} .sl.off label,.sl.off .nv{opacity:.4;}
+.sl .nv{font-size:13px;font-weight:800;color:var(--teal-dk);min-width:74px;text-align:right;font-variant-numeric:tabular-nums;}
+.grid .it .nm,.grid .it .ct{display:block;} .grid .it .ct{margin-top:1px;font-weight:500;}
+.it .ok{float:right;color:var(--green);font-weight:800;font-size:12px;} .it.on .ok{color:#fff;}
+.seg + .seg{margin-top:7px;} .seg button:disabled{opacity:.38;cursor:default;}
+.seg button.bad{background:#fae5e8;color:#b23145;} .seg button.bad small{color:#b23145;}
+.qlb{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:12px 0 5px;}
+.sumbox{font-size:12.5px;color:var(--teal-dk);background:#e2eff5;border-radius:8px;padding:8px 11px;margin-top:10px;line-height:1.55;}
+.pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+.pills span{font-size:11px;font-weight:700;background:#e2eff5;color:var(--teal-dk);border-radius:20px;padding:3px 10px;}
+.scr{font-size:11.5px;font-weight:700;color:var(--muted);text-align:center;margin-top:10px;} .scr b{color:var(--teal-dk);}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,1fr);}.grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 1</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 1</div>
+  <h1>Types of Data</h1>
+  <div class="intro">Before you compute anything, you have to know what kind of values you are holding. Here are <b>120 households</b> and eight things we recorded about each one. Some columns are <b>labels</b>; some are <b>amounts</b>; and among the amounts, some can only land on whole steps while others flow through every value in between. Pick a column, then turn up the <b>measuring precision</b> and watch which ones keep splitting.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="chTitle">Pick a column to plot</h2>
+      <svg viewBox="0 0 340 214" aria-label="dot plot of the selected variable"><g id="dots"></g></svg>
+      <div id="chNote" style="font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.45;">Each dot is one household. Dots with the same value stack up.</div>
+    </div>
+    <div class="card"><h2>What the data itself says</h2>
+      <div class="tiles">
+        <div><span class="lb">Households</span><span class="vv" id="tN">120</span></div>
+        <div id="bDist"><span class="lb">Distinct values</span><span class="vv" id="tDist">&mdash;</span></div>
+        <div id="bGap"><span class="lb">Smallest gap</span><span class="vv" id="tGap">&mdash;</span></div>
+        <div><span class="lb" id="tSumLb">Summary</span><span class="vv" id="tSum">&mdash;</span></div>
+      </div>
+      <div class="sumbox" id="sum">Choose a column on the right and these fill in from the actual 120 rows.</div>
+      <div id="sum2"></div>
+      <div class="qlb" style="margin-bottom:2px;">Which values are possible at all?</div>
+      <svg viewBox="0 0 340 66" aria-label="the set of possible values"><g id="strip"></g></svg>
+    </div>
+  </div>
+  <div>
+    <div id="stage" style="background:#5f7d8c;">The 120-household survey<small>pick one of the eight columns</small></div>
+    <div class="card"><h2>The eight columns we recorded</h2>
+      <div class="grid" id="list"></div>
+    </div>
+    <div class="card">
+      <div class="sl" id="slBox"><label for="pSl">Measuring precision</label><input type="range" id="pSl" min="0" max="3" step="1" value="0"><span class="nv" id="pVal">whole units</span></div>
+      <div class="qlb">1 · Do the values name a group, or measure an amount?</div>
+      <div class="seg" id="segQ">
+        <button data-v="1">Qualitative<small>names a group</small></button>
+        <button data-v="0">Quantitative<small>measures an amount</small></button>
+      </div>
+      <div class="qlb">2 · If it is an amount, does it step or does it flow?</div>
+      <div class="seg" id="segD">
+        <button data-v="1">Discrete<small>countable, with gaps</small></button>
+        <button data-v="0">Continuous<small>any value in a range</small></button>
+      </div>
+      <div id="info">Look at the dot plot, drag the precision slider, then classify the column with the two rows above.</div>
+      <div class="mnem"><b>Two questions, in order.</b> (1) Would averaging these values mean anything? If they are names, no &mdash; <b>qualitative</b>. If they are amounts, yes &mdash; <b>quantitative</b>. (2) Then: can you list the possible values one at a time with gaps between them (<b>discrete</b>), or does the variable pass through every value in an interval (<b>continuous</b>)?</div>
+      <div class="scr">Classified correctly: <b id="scr">0</b> of 8</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- tiny seeded PRNG so the 120 households are the same for everyone ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function pick(u,p){var c=0;for(var j=0;j<p.length;j++){c+=p[j];if(u<c)return j;}return p.length-1;}
+
+ /* ---- the dataset: 120 households, built once ---- */
+ var N=120,D=[],rp=mulberry32(20260718),i;
+ for(i=0;i<N;i++){
+   D.push({
+     home:   pick(rp(),[0.46,0.34,0.20]),
+     zip:    pick(rp(),[0.24,0.22,0.20,0.18,0.16]),
+     sat:    pick(rp(),[0.07,0.15,0.28,0.33,0.17]),
+     cars:   pick(rp(),[0.08,0.34,0.38,0.15,0.05]),
+     people: pick(rp(),[0.22,0.31,0.20,0.16,0.08,0.03])+1,
+     commute:6+62*Math.pow(rp(),1.7),          /* minutes, measured to the millisecond */
+     park:   0.15+2.6*Math.pow(rp(),1.5),      /* miles, measured by GPS */
+     age:    Math.round(21+58*Math.pow(rp(),1.35)) /* the survey wrote whole years */
+   });
+ }
+
+ var CQ='#7a5a8a',CD='#b8862f',CC='#2f6f8a',CN='#5f7d8c';
+
+ var V=[
+  {k:'home',nm:'Type of home',ct:'apartment, townhouse…',qual:1,ord:0,
+   cats:['Single-fam.','Apartment','Townhouse'],
+   ttl:'Type of home &mdash; qualitative (nominal)',
+   d:'Each household gets a <b>label</b>: apartment, townhouse, single-family. You can count how many land in each pile and report percentages, but there is nothing to add or average. Notice you could shuffle the three piles into any left-to-right order and lose no information at all &mdash; that is the signature of a <b>nominal</b> variable. There is no number line under this chart, which is why the gap tile is blank: gaps require a scale, and labels do not have one.'},
+
+  {k:'zip',nm:'ZIP code',ct:'five digits',qual:1,ord:0,
+   cats:['30306','30312','30318','30324','30331'],nums:[30306,30312,30318,30324,30331],
+   ttl:'ZIP code &mdash; qualitative, despite the digits',
+   hintQ:'It is made of digits, but ask the real question: does 30318 represent <b>more</b> of something than 30306?',
+   d:'This is the classic trap, and the reason "is it a number?" is the wrong test. A ZIP code is a <b>name spelled with digits</b>. 30318 is not more than 30306; the midpoint of two ZIP codes is not a place; the difference between them measures nothing. Your software will compute the average anyway &mdash; see the red box &mdash; and the answer will be perfectly precise and completely meaningless. A variable is quantitative only when its values measure an <b>amount</b>.'},
+
+  {k:'sat',nm:'Satisfaction with city services',ct:'very low … very high',qual:1,ord:1,
+   cats:['Very low','Low','Medium','High','Very high'],
+   ttl:'Satisfaction &mdash; qualitative (ordinal)',
+   d:'These labels have a genuine <b>order</b>: "high" really does outrank "low," so this is <b>ordinal</b> rather than nominal, and reshuffling the piles <i>would</i> destroy information. But ordering is not measuring. Nothing here says the step from Low to Medium is the same size as the step from High to Very high, so the values still are not amounts. Coding them 1&ndash;5 and averaging is extremely common and is always a <b>judgment call you are making</b>, not a fact the data handed you.'},
+
+  {k:'cars',nm:'Cars owned',ct:'0, 1, 2, 3, 4',qual:0,disc:1,unit:'cars',dec:2,alab:'cars per household',
+   ttl:'Cars owned &mdash; quantitative, discrete',
+   d:'A <b>count</b>. Two cars really is one more car than one car, so this is quantitative. And the possible values are 0, 1, 2, 3, 4 with <b>nothing in between</b>: push the precision slider all the way to 0.001 and watch the two tiles refuse to move. The smallest gap stays locked at 1.000 and the distinct-value count never budges, because 1.5 cars was never on the menu. One thing that surprises people: the <b>mean is not a possible value</b>. There is no household with the average number of cars, and that is completely normal for a count.'},
+
+  {k:'people',nm:'People in the household',ct:'1, 2, 3, …',qual:0,disc:1,unit:'people',dec:2,alab:'people per household',
+   ttl:'People in the household &mdash; quantitative, discrete',
+   d:'Another <b>count</b>, and the test behaves identically: no matter how finely you claim to measure, the values stay parked on the whole numbers and the smallest gap is stuck at 1.000. The give-away in plain language is that you can <b>list</b> the possible values &mdash; 1, 2, 3, 4, 5, 6 &mdash; and name the one that comes next after any of them. When you can do that, the variable is discrete.'},
+
+  {k:'commute',nm:'Commute time',ct:'minutes',qual:0,disc:0,unit:'min',dec:2,alab:'minutes, one way',
+   ttl:'Commute time &mdash; quantitative, continuous',
+   d:'Time <b>flows</b>. Between 23 and 24 minutes sit 23.4, 23.41, 23.417, and the list never runs out &mdash; so there is no "next" value after 23 minutes. Watch what that does here: every notch of the precision slider <b>splits the stacks apart</b> and drives the smallest gap down. Nothing stops it; if we measured to the millisecond, the gaps would shrink again. That endless splitting is what <b>continuous</b> means. One honest caveat: the distinct-value count stops climbing at 120 only because we surveyed 120 households &mdash; that is a limit of our sample, not of the variable.'},
+
+  {k:'park',nm:'Distance to nearest park',ct:'miles',qual:0,disc:0,unit:'mi',dec:3,alab:'miles',
+   ttl:'Distance to nearest park &mdash; quantitative, continuous',
+   d:'Distance flows exactly as time does, and this column shows the pattern at its cleanest. At whole-mile precision the 120 households collapse onto a handful of towers and the data <b>looks</b> like a count. Add one decimal and the towers break up; add another and almost every household has its own value. Real measurement is always rounded somewhere &mdash; a GPS stops at some decimal place &mdash; but the <b>variable</b> keeps going past wherever your instrument quit.'},
+
+  {k:'age',nm:'Age, recorded in whole years',ct:'the edge case',qual:0,disc:0,unit:'yr',dec:2,alab:'years',
+   hintD:'The survey only ever wrote down whole years, so the data cannot answer this one. Ask what age itself does between two birthdays.',
+   ttl:'Age &mdash; quantitative, continuous (the edge case)',
+   d:'Here the data test <b>fails</b>, and knowing why is the real lesson. The survey wrote down whole years, so these values are frozen: gap locked at 1.000 at every precision, distinct count unmoved &mdash; the fingerprint of a count. But age is not a count. You are 41.6 years old at this moment, and you pass through every value on the way to 42; nobody jumps. What you are seeing is <b>rounded continuous data</b>, and rounded continuous data always impersonates a discrete variable. So classify by what the variable <b>could</b> take, not by how neatly it happened to be written down.'}
+ ];
+
+ /* attach raw arrays and axis limits */
+ var v,j;
+ for(i=0;i<V.length;i++){ v=V[i];
+   if(v.qual){
+     v.counts=[]; for(j=0;j<v.cats.length;j++)v.counts.push(0);
+     for(j=0;j<N;j++)v.counts[D[j][v.k]]++;
+   } else {
+     v.raw=[]; for(j=0;j<N;j++)v.raw.push(D[j][v.k]);
+     v.lo=Math.floor(Math.min.apply(null,v.raw));
+     v.hi=Math.ceil(Math.max.apply(null,v.raw));
+   }
+ }
+
+ /* ---- state ---- */
+ var cur=null,p=0,ansQ={},ansD={},tries={},shown={},solved={},evt=false;
+ var PLAB=['whole units','to 0.1','to 0.01','to 0.001'];
+
+ function colOf(x){ if(!shown[x.k])return CN; return x.qual?CQ:(x.disc?CD:CC); }
+ function classOf(x){ return x.qual?(x.ord?'qualitative · ordinal':'qualitative · nominal'):(x.disc?'quantitative · discrete':'quantitative · continuous'); }
+
+ /* ---- statistics, computed from the rounded values ---- */
+ function rounded(x,pp){ var s=Math.pow(10,pp),a=[],m; for(m=0;m<N;m++)a.push(Math.round(x.raw[m]*s)); return {ints:a,s:s}; }
+ function mean(a){var s=0,m;for(m=0;m<a.length;m++)s+=a[m];return s/a.length;}
+ function median(a){var b=a.slice().sort(function(q,r){return q-r;}),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2;}
+ function sdev(a){var mu=mean(a),s=0,m;for(m=0;m<a.length;m++)s+=(a[m]-mu)*(a[m]-mu);return Math.sqrt(s/(a.length-1));}
+ function uniqSorted(a){var seen={},o=[],m;for(m=0;m<a.length;m++){if(!seen[a[m]]){seen[a[m]]=1;o.push(a[m]);}}o.sort(function(q,r){return q-r;});return o;}
+
+ /* ---- the dot plot ---- */
+ function drawDots(){
+   if(!cur){$("dots").innerHTML='<text x="170" y="110" text-anchor="middle" font-size="12" fill="#a7b6bd" font-weight="600">choose a column &rarr;</text>';return;}
+   var x=cur,x0=44,x1=328,base=176,top=18,col=colOf(x),s='',m,c,ct,k,cx,cy,dstep,r,mx;
+   if(x.qual){
+     k=x.cats.length; mx=Math.max.apply(null,x.counts);
+     dstep=Math.min(6.6,(base-top-12)/mx); r=Math.max(1.2,Math.min(3.1,dstep*0.44)); /* -12 leaves room for the count label */
+     var stepx=(x1-x0)/k;
+     for(c=0;c<k;c++){
+       cx=x0+stepx*(c+0.5);
+       s+='<rect x="'+(cx-stepx*0.42).toFixed(1)+'" y="'+top+'" width="'+(stepx*0.84).toFixed(1)+'" height="'+(base-top+4)+'" rx="7" fill="'+col+'" opacity=".055"/>';
+       for(m=0;m<x.counts[c];m++){
+         cy=base-4-m*dstep;
+         s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+r.toFixed(2)+'" fill="'+col+'" opacity=".85"/>';
+       }
+       s+='<text x="'+cx.toFixed(1)+'" y="'+(base-4-x.counts[c]*dstep-6).toFixed(1)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="'+col+'">'+x.counts[c]+'</text>';
+       s+='<text x="'+cx.toFixed(1)+'" y="'+(base+18)+'" text-anchor="middle" font-size="9.2" font-weight="700" fill="#78868d">'+x.cats[c]+'</text>';
+     }
+     s+='<text x="186" y="204" text-anchor="middle" font-size="9.6" fill="#a7b6bd" font-style="italic">separate piles &mdash; no number line beneath them</text>';
+   } else {
+     var R=rounded(x,p),ints=R.ints,sc=R.s;
+     var lo=x.lo,hi=x.hi,pxs=function(val){return x0+8+(val-lo)/(hi-lo)*(x1-x0-16);};
+     var cnt={},key;
+     for(m=0;m<N;m++){key=ints[m];cnt[key]=(cnt[key]||0)+1;}
+     var keys=uniqSorted(ints);
+     mx=1; for(m=0;m<keys.length;m++)if(cnt[keys[m]]>mx)mx=cnt[keys[m]];
+     dstep=Math.min(6.6,(base-top)/mx); r=Math.max(1.1,Math.min(3.1,dstep*0.44));
+     /* axis */
+     s+='<line x1="'+x0+'" y1="'+(base+2)+'" x2="'+x1+'" y2="'+(base+2)+'" stroke="#cfdbe2" stroke-width="1.4"/>';
+     var ticks=[],t;
+     if(hi-lo<=8){for(t=lo;t<=hi;t++)ticks.push(t);}
+     else{for(t=0;t<=4;t++)ticks.push(Math.round(lo+(hi-lo)*t/4));}
+     for(t=0;t<ticks.length;t++){
+       cx=pxs(ticks[t]);
+       s+='<line x1="'+cx.toFixed(1)+'" y1="'+(base+2)+'" x2="'+cx.toFixed(1)+'" y2="'+(base+7)+'" stroke="#cfdbe2" stroke-width="1.4"/>';
+       s+='<text x="'+cx.toFixed(1)+'" y="'+(base+19)+'" text-anchor="middle" font-size="9.4" font-weight="700" fill="#78868d">'+ticks[t]+'</text>';
+     }
+     s+='<text x="186" y="208" text-anchor="middle" font-size="9.6" fill="#a7b6bd" font-style="italic">'+(x.alab||'')+'</text>';
+     for(m=0;m<keys.length;m++){
+       cx=pxs(keys[m]/sc); ct=cnt[keys[m]];
+       for(c=0;c<ct;c++){
+         cy=base-4-c*dstep;
+         s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+r.toFixed(2)+'" fill="'+col+'" opacity=".8"/>';
+       }
+     }
+   }
+   $("dots").innerHTML=s;
+ }
+
+ /* ---- the "possible values" strip (revealed with the answer) ---- */
+ function drawStrip(){
+   var s='',x0=22,x1=318,y=30,m,cx;
+   if(!cur||!shown[cur.k]){
+     $("strip").innerHTML='<text x="170" y="34" text-anchor="middle" font-size="11" fill="#a7b6bd" font-weight="600">classify the column to see the values it can take</text>';return;
+   }
+   var x=cur,col=colOf(x);
+   if(x.qual){
+     var k=x.cats.length,w=(x1-x0)/k;
+     for(m=0;m<k;m++){
+       s+='<rect x="'+(x0+w*m+4).toFixed(1)+'" y="16" width="'+(w-8).toFixed(1)+'" height="26" rx="8" fill="'+col+'" opacity=".13" stroke="'+col+'" stroke-width="1.2"/>';
+       s+='<text x="'+(x0+w*m+w/2).toFixed(1)+'" y="33" text-anchor="middle" font-size="9" font-weight="700" fill="#4a585f">'+x.cats[m]+'</text>';
+     }
+     s+='<text x="170" y="58" text-anchor="middle" font-size="10.2" font-weight="600" fill="#78868d">'+(x.ord?'ordered labels &mdash; but the spacing between them is never measured':'labels only &mdash; the left-to-right order carries no meaning')+'</text>';
+   } else if(x.disc){
+     s+='<line x1="'+x0+'" y1="'+y+'" x2="'+x1+'" y2="'+y+'" stroke="#e2e9ee" stroke-width="2"/>';
+     var n=x.hi-x.lo;
+     for(m=0;m<=n;m++){
+       cx=x0+(x1-x0)*m/n;
+       s+='<circle cx="'+cx.toFixed(1)+'" cy="'+y+'" r="5" fill="'+col+'"/>';
+       s+='<text x="'+cx.toFixed(1)+'" y="'+(y+19)+'" text-anchor="middle" font-size="9.4" font-weight="700" fill="#78868d">'+(x.lo+m)+'</text>';
+     }
+     s+='<text x="170" y="14" text-anchor="middle" font-size="10.2" font-weight="600" fill="#8a6a20">only these values are possible &mdash; the space between them is empty</text>';
+   } else {
+     s+='<rect x="'+x0+'" y="'+(y-7)+'" width="'+(x1-x0)+'" height="14" rx="7" fill="'+col+'" opacity=".78"/>';
+     s+='<text x="'+x0+'" y="'+(y+22)+'" text-anchor="start" font-size="9.4" font-weight="700" fill="#78868d">'+x.lo+'</text>';
+     s+='<text x="'+x1+'" y="'+(y+22)+'" text-anchor="end" font-size="9.4" font-weight="700" fill="#78868d">'+x.hi+' '+(x.unit||'')+'</text>';
+     s+='<text x="170" y="14" text-anchor="middle" font-size="10.2" font-weight="600" fill="#1c4454">every value in this interval is possible &mdash; solid, with no holes</text>';
+   }
+   $("strip").innerHTML=s;
+ }
+
+ /* ---- the computed tiles ---- */
+ function drawStats(){
+   if(!cur){return;}
+   var x=cur,m;
+   if(x.qual){
+     $("tDist").innerHTML=x.cats.length;
+     $("tGap").innerHTML='&mdash;';
+     $("bGap").className=''; $("bDist").className='';
+     var best=0; for(m=1;m<x.counts.length;m++)if(x.counts[m]>x.counts[best])best=m;
+     $("tSumLb").innerHTML='Most common';
+     $("tSum").innerHTML=x.cats[best]; $("tSum").style.fontSize='13px';
+     var pl='';
+     for(m=0;m<x.cats.length;m++)pl+='<span>'+x.cats[m]+' &middot; '+x.counts[m]+' ('+(100*x.counts[m]/N).toFixed(1)+'%)</span>';
+     $("sum").innerHTML='<b>Counts and percentages</b> are the whole toolkit here &mdash; there is no mean or standard deviation to compute, because there is nothing to add.<div class="pills">'+pl+'</div>';
+     if(x.nums){
+       var tot=0; for(m=0;m<N;m++)tot+=x.nums[D[m][x.k]];
+       $("sum2").innerHTML='<div class="note"><b>Watch what a computer will do anyway.</b> Average these 120 ZIP codes and you get <b>'+(tot/N).toFixed(1)+'</b>. It is arithmetically correct and it means nothing &mdash; there is no such place, and no household is &ldquo;above average&rdquo; in ZIP code.</div>';
+     } else { $("sum2").innerHTML=''; }
+   } else {
+     $("sum2").innerHTML='';
+     $("tSum").style.fontSize='15px';
+     var R=rounded(x,p),sc=R.s,vals=[],u;
+     for(m=0;m<N;m++)vals.push(R.ints[m]/sc);
+     u=uniqSorted(R.ints);
+     var gap=Infinity;
+     for(m=1;m<u.length;m++){ if(u[m]-u[m-1]<gap)gap=u[m]-u[m-1]; }
+     gap=(u.length>1)?gap/sc:0;
+     $("tDist").innerHTML=u.length;
+     $("tGap").innerHTML=gap.toFixed(3);
+     var locked=(gap>=0.999);
+     $("bGap").className=locked?'lock':'split';
+     $("bDist").className=locked?'lock':'split';
+     $("tSumLb").innerHTML='Mean';
+     $("tSum").innerHTML=mean(vals).toFixed(x.dec)+' <span style="font-size:10px;font-weight:700;color:#78868d">'+(x.unit||'')+'</span>';
+     var txt='At this precision: <b>mean '+mean(vals).toFixed(x.dec)+'</b>, median '+median(vals).toFixed(x.dec)+
+             ', sample standard deviation '+sdev(vals).toFixed(x.dec)+' '+(x.unit||'')+'. These are all legitimate here, because the values are amounts you can add.';
+     if(shown[x.k]){
+       if(x.disc){
+         txt+='<br><br><b>The gap will not move.</b> Slide the precision anywhere you like: the values stay on the whole numbers, so extra decimal places buy you nothing. That is the fingerprint of a discrete variable.';
+       } else if(x.k==='age'){
+         txt+='<br><br><b>The gap will not move here either</b> &mdash; but only because the survey rounded to whole years before we ever saw the data. Age itself has no smallest step.';
+       } else if(p===0){
+         txt+='<br><br><b>Right now the gap reads 1.000</b>, which makes this look like a count. That is the rounding, not the variable &mdash; turn the precision up and watch it fall.';
+       } else {
+         txt+='<br><br><b>The gap keeps shrinking.</b> Every extra decimal place splits the data into values we had not seen before &mdash; and there is no precision at which that stops.';
+       }
+     }
+     $("sum").innerHTML=txt;
+   }
+ }
+
+ /* ---- feedback ---- */
+ function judge(){
+   var x=cur; if(!x)return;
+   var q=ansQ[x.k],d=ansD[x.k];
+   var complete = (q===1) || (q===0 && (d===0||d===1));
+   if(!complete){
+     $("info").innerHTML='Look at the dot plot, drag the precision slider, then answer both questions above.';
+     return;
+   }
+   var ok = (q===x.qual) && (q===1 || d===x.disc);
+   if(ok){ solved[x.k]=1; shown[x.k]=1;
+     $("info").innerHTML='<span class="n">&#10003; '+x.ttl+'</span>'+x.d;
+   } else {
+     if(evt)tries[x.k]=(tries[x.k]||0)+1;   /* only a real answer counts as an attempt */
+     if(tries[x.k]>=2){ shown[x.k]=1;
+       $("info").innerHTML='<span class="n">Not quite &mdash; '+x.ttl+'</span>'+x.d;
+     } else {
+       var h;
+       if(q!==x.qual){ h = x.hintQ ? x.hintQ : (x.qual
+           ? 'These values are <b>names</b>, not amounts. Ask yourself whether adding two of them together would produce anything real.'
+           : 'These values do measure an <b>amount</b> &mdash; two of them add up to something meaningful, and one can be larger than another.'); }
+       else { h = x.hintD ? x.hintD : 'Drag the precision slider from whole units to 0.001 and watch the <b>smallest gap</b> tile. Is it stuck at 1.000, or does it keep shrinking?'; }
+       $("info").innerHTML='<span class="n">Not quite &mdash; try once more</span>'+h;
+     }
+   }
+   var c=0,z; for(z in solved)if(solved[z])c++;
+   $("scr").innerHTML=c;
+ }
+
+ /* ---- rendering ---- */
+ function renderList(){
+   var s='',m,x;
+   for(m=0;m<V.length;m++){ x=V[m];
+     s+='<button class="it'+(cur&&cur.k===x.k?' on':'')+'" data-k="'+x.k+'">'+(solved[x.k]?'<span class="ok">&#10003;</span>':'')+
+        '<span class="nm">'+x.nm+'</span><span class="ct">'+x.ct+'</span></button>';
+   }
+   $("list").innerHTML=s;
+   var b=document.querySelectorAll('#list .it');
+   for(m=0;m<b.length;m++){ b[m].onclick=(function(kk){return function(){select(kk);};})(b[m].getAttribute('data-k')); }
+ }
+ function renderSegs(){
+   var q=cur?ansQ[cur.k]:undefined, d=cur?ansD[cur.k]:undefined, m;
+   var bq=$("segQ").children, bd=$("segD").children;
+   for(m=0;m<bq.length;m++){
+     var vq=+bq[m].getAttribute('data-v');
+     bq[m].className = (q===vq) ? (shown[cur.k]&&vq!==cur.qual ? 'bad' : 'on') : '';
+     bq[m].disabled = !cur;
+   }
+   var qualPicked = (q===1);
+   for(m=0;m<bd.length;m++){
+     var vd=+bd[m].getAttribute('data-v');
+     bd[m].className = (!qualPicked && d===vd) ? (shown[cur.k]&&cur.qual!==1&&vd!==cur.disc ? 'bad' : 'on') : '';
+     bd[m].disabled = !cur || qualPicked;
+   }
+ }
+ function renderStage(){
+   if(!cur){ $("stage").style.background=CN; $("stage").innerHTML='The 120-household survey<small>pick one of the eight columns</small>'; return; }
+   $("stage").style.background=colOf(cur);
+   $("stage").innerHTML=cur.nm+'<small>'+(shown[cur.k]?classOf(cur):'classify it with the two questions below')+'</small>';
+ }
+ function renderSlider(){
+   var off = !cur || cur.qual;
+   $("pSl").disabled=off;
+   $("slBox").className = off?'sl off':'sl';
+   $("pVal").innerHTML = (cur&&cur.qual) ? 'not applicable' : PLAB[p];
+ }
+ function renderAll(){
+   judge();                       /* judge first: it sets solved/shown, which everything below reads */
+   renderList(); renderSegs(); renderStage(); renderSlider();
+   $("chTitle").innerHTML = cur ? ('120 households &middot; '+cur.nm) : 'Pick a column to plot';
+   $("chNote").innerHTML = !cur ? 'Each dot is one household. Dots with the same value stack up.'
+     : (cur.qual ? 'Each dot is one household. The piles are categories, so their left-to-right positions are arbitrary.'
+                 : 'Each dot is one household, placed on the number line and stacked whenever two households share a value. Values rounded to '+(p===0?'whole numbers':PLAB[p].replace('to ',''))+'.');
+   drawDots(); drawStats(); drawStrip();
+ }
+ function select(k){
+   var m; for(m=0;m<V.length;m++)if(V[m].k===k)cur=V[m];
+   p=0; $("pSl").value=0;
+   renderAll();
+ }
+
+ /* ---- events ---- */
+ (function(){
+   var m,bq=$("segQ").children,bd=$("segD").children;
+   for(m=0;m<bq.length;m++){ bq[m].onclick=(function(val){return function(){ if(!cur)return; ansQ[cur.k]=val; if(val===1)ansD[cur.k]=undefined; evt=true; renderAll(); evt=false; };})(+bq[m].getAttribute('data-v')); }
+   for(m=0;m<bd.length;m++){ bd[m].onclick=(function(val){return function(){ if(!cur||ansQ[cur.k]===1)return; ansD[cur.k]=val; evt=true; renderAll(); evt=false; };})(+bd[m].getAttribute('data-v')); }
+ })();
+ $("pSl").oninput=function(){ p=+this.value; renderAll(); };
+
+ renderAll();
+})();
+</script>
+</body>
+</html>

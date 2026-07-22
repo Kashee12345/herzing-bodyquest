@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>The Ceiling and the Limit: Acetaminophen vs NSAIDs</title>
+<meta name="description" content="Interactive dose explorer for the non-opioid analgesics — acetaminophen, ibuprofen, naproxen, ketorolac, celecoxib. Drag the dose to find each drug's analgesic ceiling, set the frequency to test the maximum daily dose, and see the toxicity, antidote, and nursing priorities. For pharmacology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+svg text{font-family:var(--sans);}
+.cap{font-size:11.5px;color:var(--muted);text-align:center;margin-top:4px;line-height:1.45;}
+.mk{display:flex;gap:7px;align-items:flex-start;font-size:11.5px;color:var(--soft);line-height:1.42;margin-top:6px;}
+.mk i{width:9px;height:9px;border-radius:3px;flex:none;margin-top:3.5px;}
+.mk b{color:var(--ink);white-space:nowrap;}
+.dose{display:flex;align-items:baseline;justify-content:space-between;margin-top:13px;}
+.dose span{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:800;}
+.dose b{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;cursor:pointer;margin-top:2px;}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:5px;background:#e4eaf3;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--dc,var(--teal));border:3px solid #fff;box-shadow:0 1px 5px rgba(30,45,70,.35);margin-top:-7px;}
+input[type=range]::-moz-range-track{height:8px;border-radius:5px;background:#e4eaf3;}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--dc,var(--teal));border:3px solid #fff;box-shadow:0 1px 5px rgba(30,45,70,.35);}
+.ends{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);font-weight:600;margin-top:-4px;}
+.flab{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:12px 0 5px;}
+#info .verd{font-size:12.5px;color:var(--teal-dk);background:#e4eefa;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.45;}
+#info .verd.bad{color:#8a2a3a;background:#fae5e8;}
+.it .rt{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);background:#eef2f8;border-radius:20px;padding:3px 8px;flex:none;}
+.it.on .rt{background:rgba(255,255,255,.22);color:#fff;}
+.it .nm{display:block;} .it .ct{display:block;line-height:1.3;margin-top:1px;}
+#hit{cursor:crosshair;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 4</div>
+  <h1>The Ceiling and the Limit</h1>
+  <div class="intro">Every non-opioid analgesic has an <b>analgesic ceiling</b> &mdash; a dose above which relief stops climbing but harm keeps going. It also has a <b>maximum daily dose</b>, which the frequency can blow past even when each single dose looks safe. Drag the dose to find the ceiling; change the frequency to test the limit.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Pick a drug</h2>
+    <svg id="svgEl" viewBox="0 0 300 218" aria-label="dose-response curve and daily dose bar"><g id="art"></g></svg>
+    <div class="cap">Relief curves are conceptual, drawn to show the <b>shape</b> of the ceiling &mdash; the dose values and daily limits are real.</div>
+    <div id="marks"></div>
+  </div></div>
+  <div>
+    <div id="stage">Five non-opioid analgesics<small>pick one, then drag the dose</small></div>
+    <div class="card">
+      <div class="list" id="list"></div>
+      <div class="dose"><span>Single dose</span><b id="doseTxt">—</b></div>
+      <input type="range" id="slider" min="0" max="100" step="1" value="0" aria-label="single dose">
+      <div class="ends"><span>0</span><span id="endMax">—</span></div>
+      <div class="flab">Frequency</div>
+      <div class="seg" id="freq"></div>
+      <div class="row"><button class="btn" id="ghost">+ Compare a pure opioid agonist</button></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var X0=40,X1=288,Y0=20,Y1=118,BY=178,BH=17;
+
+ var D=[
+  {k:'apap',nm:'Acetaminophen',ct:'Non-opioid analgesic · antipyretic',rt:'PO/IV',col:'#2f6f9f',
+   smax:2000,step:125,def:1000,ceil:1000,maxd:4000,caut:3000,toxd:7500,bmax:8000,
+   fr:[{h:4,n:6},{h:6,n:4},{h:8,n:3}],fd:1,
+   ceilN:'1000 mg per dose',
+   cautPill:'above facility cap',
+   cautTxt:'This total is above the <b>3 g/day</b> cap most manufacturers and facilities now use, though it remains within the <b>4 g/day</b> absolute adult maximum. Confirm what your facility allows &mdash; and that nothing else on the record is adding more.',
+   mech:'Works mainly in the <b>CNS</b>, where it blocks prostaglandin production. That buys <b>analgesia and fever reduction but essentially no anti-inflammatory effect</b>, and <b>no antiplatelet effect</b>. It does not erode gastric mucosa and does not constrict renal arterioles.',
+   why:'The first choice when NSAIDs are risky: peptic ulcer disease, anticoagulation, chronic kidney disease, and pregnancy.',
+   ceilX:'Above <b>1000 mg per dose</b> the analgesia stops improving. A 1500 mg dose does not relieve pain better than 1000 mg &mdash; it just spends 500 mg of the day\'s 4000 mg budget for nothing.',
+   tox:'<b>Hepatotoxicity.</b> Drug beyond the liver\'s usual pathways is shunted to <b>NAPQI</b>, which depletes glutathione and kills centrilobular hepatocytes. The first 24 hours are often <b>silent or only nausea</b> &mdash; AST/ALT and INR climb long before the patient looks sick. Antidote: <b>acetylcysteine</b>, most effective given within <b>8 hours</b> of ingestion. Cap the day at <b>2 g</b> in liver disease, chronic alcohol use, malnutrition, or frailty.',
+   pearl:'<b>Add up every source.</b> Acetaminophen hides inside combination products &mdash; oxycodone/acetaminophen, hydrocodone/acetaminophen, cold &amp; flu remedies, other PRNs. Most overdoses are <b>unintentional stacking</b>, not intent. Before you hand over a PRN, total the last 24 hours from <i>all</i> of them.',
+   ln:[{v:2000,l:'cap for liver disease, chronic alcohol use, malnutrition, frailty',k:'c'},
+       {v:3000,l:'common manufacturer / facility cap',k:'c'},
+       {v:4000,l:'absolute adult maximum &mdash; from ALL sources combined',k:'m'},
+       {v:7500,l:'acute ingestion in the toxic range (about 150 mg/kg)',k:'t'}]},
+
+  {k:'ibu',nm:'Ibuprofen',ct:'NSAID · nonselective COX-1 &amp; COX-2',rt:'PO',col:'#d1495b',
+   smax:1200,step:50,def:400,ceil:400,maxd:3200,caut:1200,toxd:0,bmax:5000,
+   fr:[{h:4,n:6},{h:6,n:4},{h:8,n:3}],fd:1,
+   ceilN:'about 400 mg per dose',
+   cautPill:'prescription range',
+   cautTxt:'This total is above the <b>1.2 g/day</b> over-the-counter cap &mdash; prescription range, appropriate only with a prescriber directing it and the GI and renal risks accounted for.',
+   mech:'Blocks <b>COX-1 and COX-2</b>, so prostaglandin falls everywhere: pain and fever drop, <b>inflammation drops too</b> (unlike acetaminophen), and platelets are inhibited &mdash; <b>reversibly</b>, unlike aspirin.',
+   why:'The better choice when the pain is inflammatory: sprains, dental pain, dysmenorrhea, gout, arthritis flares.',
+   ceilX:'About <b>400 mg</b> is the <i>analgesic</i> ceiling. The familiar 600 and 800 mg doses are given for their extra <b>anti-inflammatory</b> effect &mdash; they do not relieve pain any better, but they do raise GI and renal risk. If 400 mg is not holding the pain, the answer is rarely a bigger NSAID dose.',
+   tox:'<b>GI bleeding</b> (no prostaglandin means no protective mucus or bicarbonate) and <b>acute kidney injury</b> (the afferent arteriole constricts &mdash; worst alongside an <b>ACE inhibitor/ARB plus a diuretic</b>, the "triple whammy"). Also fluid retention, rising BP, and heart failure exacerbation, plus the class <b>boxed warning for thrombotic cardiovascular events</b>. <b>There is no antidote</b> &mdash; management is supportive.',
+   pearl:'Give <b>with food or milk</b>. Teach the patient to report <b>black tarry stools or coffee-ground emesis</b>. Monitor BUN/creatinine, BP, and daily weight. <b>Never stack two NSAIDs.</b> Avoid from <b>20 weeks</b> of pregnancy onward (oligohydramnios; premature closure of the ductus arteriosus). If the patient takes low-dose aspirin for the heart, ibuprofen taken first <b>blocks aspirin\'s cardioprotection</b> &mdash; give the aspirin at least 30 minutes before.',
+   ln:[{v:1200,l:'over-the-counter daily cap for self-treatment',k:'c'},
+       {v:3200,l:'prescription maximum per day',k:'m'}]},
+
+  {k:'nap',nm:'Naproxen',ct:'NSAID · long-acting propionic acid',rt:'PO',col:'#b8862f',
+   smax:750,step:25,def:500,ceil:500,maxd:1000,caut:660,toxd:0,bmax:2000,
+   fr:[{h:8,n:3},{h:12,n:2}],fd:1,
+   ceilN:'about 500 mg per dose',
+   cautPill:'prescription range',
+   cautTxt:'This total is above the <b>660 mg/day</b> over-the-counter cap &mdash; prescription range, and only with a prescriber directing it.',
+   mech:'The same nonselective COX blockade as ibuprofen, but a <b>long half-life (roughly 12&ndash;17 hours)</b> allows <b>q12h</b> dosing &mdash; steadier relief through the night and fewer missed doses.',
+   why:'Chosen for chronic inflammatory pain where twice-daily dosing keeps a patient adherent.',
+   ceilX:'Analgesia plateaus around <b>500 mg per dose</b>. Beyond it you are buying half-life and risk, not relief &mdash; and with a 12&ndash;17 hour half-life, an excess dose does not simply wear off.',
+   tox:'The full NSAID class picture: <b>GI bleeding, acute kidney injury, fluid retention and raised BP</b>, and the <b>boxed warning for thrombotic cardiovascular events</b>. Among the nonselective NSAIDs, naproxen appears to carry the <b>lowest cardiovascular thrombotic risk</b>, which is why it is often preferred when a patient with cardiac disease genuinely needs an NSAID &mdash; but the GI and renal risks are unchanged. <b>No antidote.</b>',
+   pearl:'Over-the-counter naproxen sodium is <b>220 mg</b> a tablet, so patients double up and quietly slide past the <b>660 mg/day</b> OTC cap without thinking of it as a drug problem. Ask specifically about it &mdash; and check for a second NSAID hiding in a "back pain" or "menstrual" product.',
+   ln:[{v:660,l:'over-the-counter daily cap for self-treatment',k:'c'},
+       {v:1000,l:'usual prescription maximum per day',k:'m'}]},
+
+  {k:'ket',nm:'Ketorolac',ct:'NSAID · parenteral, short-term only',rt:'IV/IM',col:'#7a5a8a',
+   smax:60,step:5,def:15,ceil:10,maxd:120,caut:60,toxd:0,bmax:250,
+   fr:[{h:6,n:4},{h:8,n:3}],fd:0,
+   ceilN:'about 10 mg per IV dose',
+   cautPill:'over the reduced max',
+   cautTxt:'This total is over the <b>60 mg/day</b> ceiling that applies to anyone <b>65 or older, under 50 kg, or with renal impairment</b>. It is acceptable only for a younger adult with normal renal function &mdash; so check the age, the weight, and the creatinine before you hang it.',
+   mech:'A potent injectable NSAID whose analgesia in acute pain can rival a dose of opioid &mdash; which makes it a valuable <b>opioid-sparing</b> agent in the emergency department and after surgery.',
+   why:'Short, severe, acute pain in a patient who has intact kidneys, no bleeding risk, and no ulcer history.',
+   ceilX:'Ketorolac has the most famous ceiling in the class: <b>about 10 mg IV relieves pain as well as 30 mg does</b>. The bigger dose buys adverse effects, not relief. This is the cleanest example on the unit of a ceiling that dosing habit ignores.',
+   tox:'The same class dangers, concentrated: <b>GI bleeding and acute kidney injury</b>. That is why therapy is capped at <b>5 days total</b>, counting <b>every route combined</b>. Contraindicated with active bleeding or peptic ulcer disease, advanced renal impairment, before major surgery, for pain in the CABG peri-operative setting, and in labor and delivery. <b>Maximum 60 mg/day if the patient is 65 or older, under 50 kg, or has renal impairment.</b> <b>No antidote.</b>',
+   pearl:'Find the <b>date of the first dose</b> &mdash; the 5-day clock starts at the first dose by <b>any</b> route, not when the oral form began. Check urine output and creatinine daily, verify weight and age against the reduced 60 mg/day cap, and confirm no other NSAID is on the record.',
+   ln:[{v:60,l:'maximum per day if 65 or older, under 50 kg, or renal impairment',k:'c'},
+       {v:120,l:'maximum per day, and no more than 5 days total (all routes)',k:'m'}]},
+
+  {k:'cel',nm:'Celecoxib',ct:'NSAID · COX-2 selective',rt:'PO',col:'#2f9e5b',
+   smax:400,step:50,def:200,ceil:200,maxd:400,caut:0,toxd:0,bmax:900,
+   fr:[{h:12,n:2},{h:24,n:1}],fd:0,
+   ceilN:'about 200 mg per dose',
+   mech:'Selectively blocks <b>COX-2</b>, the enzyme of inflammation, and largely spares <b>COX-1</b> in gastric mucosa and platelets &mdash; hence <b>less GI bleeding</b> and <b>no antiplatelet effect</b>.',
+   why:'Inflammatory pain in a patient who needs an NSAID but cannot tolerate the GI risk of a nonselective one.',
+   ceilX:'Relief plateaus around <b>200 mg per dose</b>; the 200 mg twice-daily regimen exists for sustained coverage in rheumatoid arthritis, not for stronger analgesia.',
+   tox:'Sparing platelets means it offers <b>no cardioprotection</b>, and it still carries the class <b>boxed warning for thrombotic cardiovascular events</b> and the renal risk &mdash; COX-2 drives renal prostaglandin too. It is a <b>sulfonamide</b>: contraindicated in sulfonamide allergy. <b>No antidote.</b>',
+   pearl:'Patients hear "easier on the stomach" and translate it to "safer." Correct that gently, then monitor <b>BP, creatinine, and edema</b> anyway &mdash; and make sure they understand it does <b>not</b> replace their low-dose aspirin.',
+   ln:[{v:400,l:'maximum per day',k:'m'}]}
+ ];
+
+ var KC={c:'#b8862f',m:'#d1495b',t:'#7a1f2c'};
+ var SC={none:'#78828f',ok:'#237a45',rx:'#255f8a',over:'#b23145',tox:'#7a1f2c'};
+ var i=-1,dose=0,fi=0,gh=0;
+
+ function fmt(v){ return v>=1000 ? (v/1000).toFixed(v%1000?1:0)+' g' : v+' mg'; }
+ function tick(v){ return v>=1000 ? (v/1000).toFixed(v%1000?1:0)+'g' : ''+v; }
+ function relief(d,c){ var e=Math.min(d,c)/c; return 100*(1-Math.exp(-2.6*e))/(1-Math.exp(-2.6)); }
+ function px(v,d){ return X0+(v/d.smax)*(X1-X0); }
+ function py(r){ return Y1-(r/100)*(Y1-Y0); }
+ function bx(v,d){ return X0+(Math.min(v,d.bmax)/d.bmax)*(X1-X0); }
+ function daily(d){ return dose*d.fr[fi].n; }
+ function stat(d){ var t=daily(d);
+   if(!t) return 'none';
+   if(d.toxd && t>=d.toxd) return 'tox';
+   if(t>d.maxd) return 'over';
+   if(d.caut && t>d.caut) return 'rx';
+   return 'ok'; }
+
+ function draw(d){
+   var s='',k,x,y,st=stat(d),cx=px(d.ceil,d),r=relief(dose,d.ceil);
+   s+='<clipPath id="bc"><rect x="'+X0+'" y="'+BY+'" width="'+(X1-X0)+'" height="'+BH+'" rx="5"/></clipPath>';
+   s+='<rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'" rx="6" fill="#fbfcfe" stroke="#e6ebf4"/>';
+   for(k=25;k<100;k+=25){ y=py(k); s+='<line x1="'+X0+'" y1="'+y+'" x2="'+X1+'" y2="'+y+'" stroke="#eef2f8" stroke-width="1"/>'; }
+   s+='<rect x="'+cx+'" y="'+Y0+'" width="'+(X1-cx)+'" height="'+(Y1-Y0)+'" fill="#d1495b" opacity=".055"/>';
+   if(gh){ var g='';
+     for(k=0;k<=60;k++){ var f=k/60; g+=(k?' ':'')+(X0+f*(X1-X0)).toFixed(1)+','+py(100*Math.pow(f,.62)).toFixed(1); }
+     s+='<polyline points="'+g+'" fill="none" stroke="#9aa5b4" stroke-width="2" stroke-dasharray="5 4"/>';
+     s+='<text x="'+(X1-4)+'" y="'+(py(100)+11)+'" text-anchor="end" font-size="7.5" font-weight="700" fill="#78828f">opioid: no plateau</text>'; }
+   var p='';
+   for(k=0;k<=60;k++){ var dv=k/60*d.smax; p+=(k?' ':'')+px(dv,d).toFixed(1)+','+py(relief(dv,d.ceil)).toFixed(1); }
+   s+='<polyline points="'+p+'" fill="none" stroke="'+d.col+'" stroke-width="2.6" stroke-linejoin="round"/>';
+   s+='<line x1="'+cx+'" y1="'+Y0+'" x2="'+cx+'" y2="'+Y1+'" stroke="#d1495b" stroke-width="1.4" stroke-dasharray="4 3"/>';
+   s+='<text x="'+cx+'" y="'+(Y0-4)+'" text-anchor="middle" font-size="8" font-weight="800" fill="#b23145" letter-spacing=".6">CEILING</text>';
+   s+='<text x="'+((cx+X1)/2)+'" y="'+(Y0+16)+'" text-anchor="middle" font-size="7.5" font-weight="700" fill="#b23145">no more relief</text>';
+   s+='<text x="'+((cx+X1)/2)+'" y="'+(Y0+26)+'" text-anchor="middle" font-size="7.5" font-weight="700" fill="#b23145">only more risk</text>';
+   if(dose>0){ x=px(dose,d); y=py(r);
+     s+='<line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="'+Y1+'" stroke="'+d.col+'" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>';
+     s+='<circle cx="'+x+'" cy="'+y+'" r="5" fill="'+d.col+'" stroke="#fff" stroke-width="2"/>';
+     s+='<text x="'+(x+(dose>d.smax*.72?-9:9))+'" y="'+(y-7)+'" text-anchor="'+(dose>d.smax*.72?'end':'start')+'" font-size="8.5" font-weight="800" fill="'+d.col+'">'+Math.round(r)+'% relief</text>'; }
+   s+='<text x="'+(X0-4)+'" y="'+(Y0+4)+'" text-anchor="end" font-size="7.5" fill="#78828f">max</text>';
+   s+='<text x="'+(X0-4)+'" y="'+(Y1+3)+'" text-anchor="end" font-size="7.5" fill="#78828f">none</text>';
+   s+='<text transform="translate(11,'+((Y0+Y1)/2)+') rotate(-90)" text-anchor="middle" font-size="8" font-weight="700" fill="#78828f">pain relief</text>';
+   s+='<text x="'+X0+'" y="'+(Y1+12)+'" font-size="7.5" fill="#78828f">0</text>';
+   s+='<text x="'+X1+'" y="'+(Y1+12)+'" text-anchor="end" font-size="7.5" fill="#78828f">'+d.smax+' mg</text>';
+   s+='<text x="'+((X0+X1)/2)+'" y="'+(Y1+26)+'" text-anchor="middle" font-size="8.5" font-weight="700" fill="#4b5563">single dose ('+d.rt+')</text>';
+   s+='<rect id="hit" x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'" fill="transparent"/>';
+   s+='<text x="'+X0+'" y="163" font-size="8.5" font-weight="800" fill="#78828f" letter-spacing=".8">TOTAL DAILY DOSE</text>';
+   s+='<text x="'+X1+'" y="163" text-anchor="end" font-size="9.5" font-weight="800" fill="'+SC[st]+'">'+(dose?fmt(daily(d))+' / day':'—')+'</text>';
+   s+='<g clip-path="url(#bc)">';
+   s+='<rect x="'+X0+'" y="'+BY+'" width="'+(bx(d.maxd,d)-X0)+'" height="'+BH+'" fill="#e9f4ed"/>';
+   s+='<rect x="'+bx(d.maxd,d)+'" y="'+BY+'" width="'+(X1-bx(d.maxd,d))+'" height="'+BH+'" fill="#fbe7ea"/>';
+   if(dose) s+='<rect x="'+X0+'" y="'+BY+'" width="'+(bx(daily(d),d)-X0)+'" height="'+BH+'" fill="'+(st==='over'||st==='tox'?'#c9394d':d.col)+'" opacity=".88"/>';
+   s+='</g>';
+   s+='<rect x="'+X0+'" y="'+BY+'" width="'+(X1-X0)+'" height="'+BH+'" rx="5" fill="none" stroke="#dfe4ee"/>';
+   for(k=0;k<d.ln.length;k++){ var L=d.ln[k],lx=bx(L.v,d);
+     s+='<line x1="'+lx+'" y1="'+(BY-4)+'" x2="'+lx+'" y2="'+(BY+BH+5)+'" stroke="'+KC[L.k]+'" stroke-width="1.6"/>';
+     s+='<text x="'+lx+'" y="'+(BY+BH+16)+'" text-anchor="middle" font-size="7.5" font-weight="800" fill="'+KC[L.k]+'">'+tick(L.v)+'</text>'; }
+   if(dose){ var mx=bx(daily(d),d);
+     s+='<path d="M '+mx+','+(BY-1)+' l -4.5,-7 l 9,0 z" fill="#232a36"/>'; }
+   return s;
+ }
+
+ function verdict(d){
+   var st=stat(d),t=daily(d),o='';
+   if(!dose) return '<div class="verd">Drag the dose to begin.</div>';
+   var c=' &times; '+d.fr[fi].n+' dose'+(d.fr[fi].n>1?'s':'')+'/day = <b>'+fmt(t)+'/day</b>';
+   var hd='<b>'+fmt(dose)+' q'+d.fr[fi].h+'h</b>'+c+'. ';
+   if(dose<d.ceil) o+='Relief is still climbing &mdash; this dose sits <b>below the analgesic ceiling</b> of '+d.ceilN+'.';
+   else if(dose===d.ceil) o+='You are <b>exactly at the analgesic ceiling</b> ('+d.ceilN+') &mdash; the most relief this drug can give.';
+   else o+='<b>Past the ceiling.</b> '+fmt(dose)+' gives no more relief than '+fmt(d.ceil)+' &mdash; the extra '+fmt(dose-d.ceil)+' per dose buys only risk.';
+   if(st==='ok') return '<div class="verd">'+hd+o+' The daily total is <b>within limits</b>.</div>';
+   if(st==='rx') return '<div class="verd">'+hd+o+' '+d.cautTxt+'</div>';
+   if(st==='over') return '<div class="verd bad">'+hd+o+' <b>This exceeds the maximum of '+fmt(d.maxd)+'/day.</b> Do not give it &mdash; hold the dose, and call the prescriber to clarify the order.</div>';
+   return '<div class="verd bad">'+hd+o+' <b>This is a toxic ingestion, not a dose.</b> Treat it as an emergency: acetylcysteine, a 4-hour post-ingestion level plotted on the Rumack-Matthew nomogram, and do not wait for symptoms.</div>';
+ }
+
+ function paint(){
+   var d=D[i],st=stat(d);
+   $("art").innerHTML=draw(d);
+   $("doseTxt").innerHTML=fmt(dose);
+   $("slider").value=dose;
+   $("stage").style.background=(st==='over'||st==='tox')?'#b23145':d.col;
+   $("stage").innerHTML=d.nm+'<small>'+(dose?fmt(dose)+' q'+d.fr[fi].h+'h &middot; '+fmt(daily(d))+'/day':'drag the dose')+'</small>';
+   $("freq").innerHTML=d.fr.map(function(f,n){return '<button data-n="'+n+'"'+(n===fi?' class="on"':'')+'>q'+f.h+'h<small>'+f.n+' dose'+(f.n>1?'s':'')+'/day</small></button>';}).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#freq button'),function(b){ b.onclick=function(){ fi=+b.dataset.n; paint(); }; });
+   var pl=st==='ok'?'<span class="pill normal">within limits</span>':st==='rx'?'<span class="pill low">'+d.cautPill+'</span>':st==='over'?'<span class="pill high">over maximum</span>':st==='tox'?'<span class="pill high">toxic range</span>':'';
+   $("info").innerHTML='<span class="n">'+d.nm+' '+pl+'</span>'+d.mech+
+     '<div class="loc">'+d.why+'</div>'+verdict(d)+
+     '<div class="dd"><b>The ceiling:</b> '+d.ceilX+'</div>'+
+     '<div class="note"><b>Toxicity &amp; what you watch.</b> '+d.tox+'</div>'+
+     '<div class="mnem">'+d.pearl+'</div>';
+   var h=$("hit");
+   if(h) h.onclick=function(e){ var r=$("svgEl").getBoundingClientRect();
+     var v=((e.clientX-r.left)/r.width*300-X0)/(X1-X0)*d.smax;
+     v=Math.round(v/d.step)*d.step;
+     dose=Math.max(0,Math.min(d.smax,v)); paint(); };
+ }
+
+ function list(){
+   $("list").innerHTML=D.map(function(d,n){return '<button class="it'+(n===i?' on':'')+'" data-n="'+n+'"><span class="sw" style="background:'+d.col+'"></span><span><span class="nm">'+d.nm+'</span><span class="ct">'+d.ct+'</span></span><span class="rt">'+d.rt+'</span></button>';}).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#list .it'),function(b){ b.onclick=function(){ sel(+b.dataset.n); }; });
+ }
+
+ function sel(n){
+   i=n; var d=D[i]; dose=d.def; fi=d.fd;
+   var s=$("slider"); s.min=0; s.max=d.smax; s.step=d.step; s.value=dose;
+   s.style.setProperty('--dc',d.col);
+   $("endMax").innerHTML=d.smax+' mg';
+   $("cardTitle").innerHTML=d.nm+' &mdash; relief vs dose';
+   $("marks").innerHTML=d.ln.map(function(L){return '<div class="mk"><i style="background:'+KC[L.k]+'"></i><span><b>'+fmt(L.v)+'/day</b> &mdash; '+L.l+'</span></div>';}).join('');
+   list(); paint();
+ }
+
+ $("slider").oninput=function(){ if(i<0){ sel(0); return; } dose=+this.value; paint(); };
+ $("ghost").onclick=function(){ gh=!gh; this.className='btn'+(gh?' solid':'');
+   this.innerHTML=(gh?'−':'+')+' Compare a pure opioid agonist'; if(i>=0) paint(); };
+ list(); sel(0);
+})();
+</script>
+</body>
+</html>

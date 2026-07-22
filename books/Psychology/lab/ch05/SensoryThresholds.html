@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Sensory Thresholds</title>
+<meta name="description" content="Strengthen a stimulus and find both the absolute threshold and the difference threshold (JND) — an interactive on psychophysics, Fechner, and Weber's law.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>
+.wrap{grid-template-columns:0.94fr 1.06fr;}
+#scene{background:#1c1524;border-radius:12px;} #scene text{font-family:var(--sans);}
+.slab{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;margin-bottom:5px;}
+.slab .l{font-size:13px;font-weight:700;color:var(--soft);} .slab .v{font-family:var(--disp);font-weight:600;font-size:15px;color:var(--teal-dk);}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:9px;border-radius:6px;background:linear-gradient(90deg,#5e2846,#e0a8c1);outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:23px;height:23px;border-radius:50%;background:#fffcfa;border:3px solid #a1466b;box-shadow:0 2px 6px rgba(70,30,45,.32);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:23px;height:23px;border-radius:50%;background:#fffcfa;border:3px solid #a1466b;cursor:pointer;}
+#refWrap{margin-top:13px;} #refWrap .rl{font-size:12px;font-weight:700;color:var(--soft);margin-bottom:5px;}
+.rdg{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fbf2f6;border:1px solid var(--line);border-radius:12px;padding:12px 15px;margin-top:12px;}
+.rdg .lab{font-size:12.5px;font-weight:700;color:var(--soft);line-height:1.35;}
+.rdg .rr{text-align:right;flex:none;}
+.rdg .big{font-family:var(--disp);font-weight:700;font-size:31px;color:var(--teal-dk);line-height:1;}
+.pill.det{background:#e5f3ea;color:#237a45;} .pill.thr{background:#fbf3e2;color:#8a6a20;} .pill.sub{background:#efe6f0;color:#6d5a78;}
+.curveC{margin-top:6px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 5</div>
+  <h1>Sensory Thresholds</h1>
+  <div class="intro">Your senses do not switch on all at once. A stimulus must reach a minimum strength before you notice it at all &mdash; the <b>absolute threshold</b> &mdash; and once you do, it must <i>change</i> by a certain amount before you notice the difference &mdash; the <b>difference threshold</b>. Strengthen the light below and find both.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The stimulus</h2>
+      <svg id="scene" viewBox="0 0 240 180" aria-label="A light stimulus on a dark field"><g id="sceneG"></g></svg>
+      <div class="slab"><span class="l" id="sldLab">Stimulus intensity</span><span class="v" id="sldVal">0 units</span></div>
+      <input type="range" id="sld" min="0" max="100" step="1" value="0" aria-label="Stimulus strength">
+      <div id="refWrap" style="display:none">
+        <div class="rl">Reference brightness (I)</div>
+        <div class="seg" id="refSeg">
+          <button data-i="0">Dim<small>I = 20</small></button>
+          <button data-i="1" class="on">Medium<small>I = 50</small></button>
+          <button data-i="2">Bright<small>I = 90</small></button>
+        </div>
+      </div>
+      <div class="row"><button class="btn" id="jump">Jump to threshold</button></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Turn up the stimulus<small>drag the slider to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg">
+        <button data-m="abs" class="on">Absolute threshold</button>
+        <button data-m="diff">Difference threshold</button>
+      </div>
+      <div class="curveC"><svg id="curve" viewBox="0 0 240 130" aria-label="Psychometric curve: probability of detection"><g id="curveG"></g></svg></div>
+      <div class="rdg">
+        <div class="lab" id="rdLab">Chance you detect the stimulus</div>
+        <div class="rr"><div class="big" id="rdP">0%</div><span class="pill sub" id="rdPill">Undetected</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- model constants ---- */
+ var ABS_T=30, ABS_S=5;          /* absolute threshold at 30 units, sigmoid slope 5 */
+ var K=0.08;                     /* Weber fraction for brightness ~ 8% */
+ var REFS=[{nm:'Dim',I:20},{nm:'Medium',I:50},{nm:'Bright',I:90}];
+ var LAMP='#ffe6a0';
+
+ /* ---- state ---- */
+ var mode='abs', intensity=0, delta=0, ri=1;
+
+ function sigmoid(x,c,s){return 1/(1+Math.exp(-(x-c)/s));}
+
+ function base(){
+   if(mode==='abs') return {lo:0,hi:100,u:intensity,center:ABS_T,spread:ABS_S};
+   var I=REFS[ri].I, jnd=K*I;
+   return {lo:0,hi:16,u:delta,center:jnd,spread:Math.max(0.8,jnd*0.35)};
+ }
+
+ /* ---- scene (lamps on a dark field) ---- */
+ function lamp(cx,cy,b){ b=Math.max(0,Math.min(1.25,b)); var s='';
+   s+='<circle cx="'+cx+'" cy="'+cy+'" r="13" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1"/>';
+   s+='<circle cx="'+cx+'" cy="'+cy+'" r="42" fill="'+LAMP+'" opacity="'+(b*0.13).toFixed(3)+'"/>';
+   s+='<circle cx="'+cx+'" cy="'+cy+'" r="27" fill="'+LAMP+'" opacity="'+(b*0.26).toFixed(3)+'"/>';
+   s+='<circle cx="'+cx+'" cy="'+cy+'" r="15" fill="'+LAMP+'" opacity="'+(b*0.52).toFixed(3)+'"/>';
+   s+='<circle cx="'+cx+'" cy="'+cy+'" r="8.5" fill="#fff" opacity="'+Math.min(1,b*1.15).toFixed(3)+'"/>';
+   return s; }
+ function star(x,y,o){return '<circle cx="'+x+'" cy="'+y+'" r="1" fill="#fff" opacity="'+o+'"/>';}
+ function drawScene(){ var s='';
+   s+=star(28,26,.5)+star(210,32,.4)+star(64,150,.35)+star(196,140,.5)+star(120,22,.3);
+   if(mode==='abs'){
+     s+=lamp(120,84,intensity/100);
+     s+='<text x="120" y="160" text-anchor="middle" font-size="11" fill="#d9c4d0" font-weight="700">intensity: '+intensity+' units</text>';
+   } else {
+     var I=REFS[ri].I, comp=I+delta;
+     s+=lamp(72,84,I/110);
+     s+=lamp(168,84,comp/110);
+     s+='<text x="72" y="150" text-anchor="middle" font-size="10" fill="#b8a3b3">reference</text>';
+     s+='<text x="72" y="163" text-anchor="middle" font-size="12" fill="#e8dce6" font-weight="700">'+I+'</text>';
+     s+='<text x="168" y="150" text-anchor="middle" font-size="10" fill="#b8a3b3">comparison</text>';
+     s+='<text x="168" y="163" text-anchor="middle" font-size="12" fill="#e8dce6" font-weight="700">'+comp.toFixed(1)+'</text>';
+   }
+   $("sceneG").innerHTML=s;
+ }
+
+ /* ---- psychometric curve ---- */
+ var L=30,R=234,TOP=12,BOT=104;
+ function xOf(u,lo,hi){return L+(u-lo)/(hi-lo)*(R-L);}
+ function yOf(p){return BOT-p*(BOT-TOP);}
+ function drawCurve(b){ var g='';
+   [0,.25,.5,.75,1].forEach(function(f){var x=(L+f*(R-L)).toFixed(1);
+     g+='<line x1="'+x+'" y1="'+TOP+'" x2="'+x+'" y2="'+BOT+'" stroke="#f0e4ea" stroke-width="1"/>';});
+   g+='<line x1="'+L+'" y1="'+BOT+'" x2="'+R+'" y2="'+BOT+'" stroke="#e2d0da" stroke-width="1"/>';
+   var y50=yOf(.5).toFixed(1);
+   g+='<line x1="'+L+'" y1="'+y50+'" x2="'+R+'" y2="'+y50+'" stroke="#c79a34" stroke-width="1" stroke-dasharray="3 3"/>';
+   var xc=xOf(b.center,b.lo,b.hi).toFixed(1);
+   g+='<line x1="'+xc+'" y1="'+TOP+'" x2="'+xc+'" y2="'+BOT+'" stroke="#b8862f" stroke-width="1.5"/>';
+   var pts='';
+   for(var i=0;i<=120;i++){var u=b.lo+(b.hi-b.lo)*i/120;pts+=xOf(u,b.lo,b.hi).toFixed(1)+','+yOf(sigmoid(u,b.center,b.spread)).toFixed(1)+' ';}
+   g+='<polyline points="'+pts+'" fill="none" stroke="#a1466b" stroke-width="2.4" stroke-linejoin="round"/>';
+   var xm=xOf(b.u,b.lo,b.hi).toFixed(1), pm=sigmoid(b.u,b.center,b.spread), ym=yOf(pm).toFixed(1);
+   g+='<line x1="'+xm+'" y1="'+TOP+'" x2="'+xm+'" y2="'+BOT+'" stroke="#5e2846" stroke-width="1.3" stroke-dasharray="2 3"/>';
+   g+='<circle cx="'+xm+'" cy="'+ym+'" r="5" fill="#a1466b" stroke="#fff" stroke-width="2"/>';
+   ['100%','50%','0%'].forEach(function(t,k){g+='<text x="26" y="'+(TOP+4+k*(BOT-TOP)/2).toFixed(1)+'" font-size="8" fill="#94818b" text-anchor="end" font-weight="600">'+t+'</text>';});
+   var thrLab=(mode==='abs')?'threshold':'JND';
+   g+='<text x="'+xc+'" y="'+(TOP-2)+'" font-size="8.5" fill="#8a6a20" text-anchor="middle" font-weight="700">'+thrLab+' = '+(+b.center).toFixed(mode==='abs'?0:1)+'</text>';
+   var xl=(mode==='abs')?['0','50','100']:['0','8','16'];
+   [L,(L+R)/2,R].forEach(function(x,k){g+='<text x="'+x.toFixed(1)+'" y="118" font-size="9" fill="#94818b" text-anchor="middle" font-weight="600">'+xl[k]+'</text>';});
+   var axlab=(mode==='abs')?'stimulus intensity (units)':'added brightness &Delta;I (units)';
+   g+='<text x="'+((L+R)/2).toFixed(1)+'" y="128" font-size="9" fill="#94818b" text-anchor="middle" font-weight="700">'+axlab+'</text>';
+   $("curveG").innerHTML=g;
+ }
+
+ /* ---- copy ---- */
+ function absInfo(){
+   return '<span class="n">Absolute threshold</span>The <b>absolute threshold</b> is the smallest intensity of a stimulus you can detect <b>50% of the time</b>. It comes from <b>Gustav Fechner</b>, who founded psychophysics in 1860. Detection is not all-or-nothing: as intensity rises, the chance of noticing climbs along an S-shaped <b>psychometric curve</b>, and the 50%-detection point is defined as the threshold. Weaker signals fall in the <b>subliminal</b> range.'
+   +'<div class="loc">Classic estimate: a candle flame seen from about 30 miles away on a clear, dark night.</div>';
+ }
+ function diffInfo(){ var I=REFS[ri].I, jnd=K*I;
+   return '<span class="n">Difference threshold (JND)</span>The <b>difference threshold</b>, or <b>just-noticeable difference (JND)</b>, is the smallest change you can detect 50% of the time. <b>Ernst Weber</b> found that the JND is a constant <i>proportion</i> of the original stimulus &mdash; <b>Weber\'s law</b>: &Delta;I / I = k. Against a bright light you must add far more than against a dim one to notice any change. Switch reference levels and watch the JND grow.'
+   +'<div class="loc">At <b>'+REFS[ri].nm+'</b> (I = '+I+'), the JND is k&middot;I = 0.08 &times; '+I+' = <b>'+jnd.toFixed(1)+' units</b>.</div>';
+ }
+
+ /* ---- render ---- */
+ function render(){ var b=base(); var p=sigmoid(b.u,b.center,b.spread);
+   drawScene(); drawCurve(b);
+   $("rdP").textContent=Math.round(p*100)+'%';
+   var st,pill,pc,stg,sub,bg;
+   if(p<0.35){ st='sub'; }
+   else if(p<=0.65){ st='thr'; }
+   else { st='det'; }
+   if(mode==='abs'){
+     $("sldLab").textContent='Stimulus intensity';
+     $("sldVal").textContent=intensity+' units';
+     $("rdLab").textContent='Chance you detect the stimulus';
+     if(st==='sub'){pill='Undetected';stg='Below threshold';sub='you would not notice it';bg='#6d5a78';}
+     else if(st==='thr'){pill='At threshold';stg='At the absolute threshold';sub='detected about half the time';bg='#b8862f';}
+     else{pill='Detected';stg='Clearly detected';sub='well above threshold';bg='#2f9e5b';}
+     $("info").innerHTML=absInfo();
+     $("mnem").innerHTML='Detection depends on the observer too, not just the stimulus: expectations, motivation, and willingness to say &ldquo;yes&rdquo; all shift the outcome &mdash; the core insight of <b>signal detection theory</b>.';
+   } else {
+     $("sldLab").textContent='Added brightness (ΔI)';
+     $("sldVal").textContent='+'+delta.toFixed(1)+' units';
+     $("rdLab").textContent='Chance you notice the difference';
+     if(st==='sub'){pill='Look identical';stg='The two look identical';sub='difference is below the JND';bg='#6d5a78';}
+     else if(st==='thr'){pill='Just noticeable';stg='Just-noticeable difference';sub='detected about half the time';bg='#b8862f';}
+     else{pill='Clearly different';stg='Clearly different';sub='difference is above the JND';bg='#2f9e5b';}
+     $("info").innerHTML=diffInfo();
+     $("mnem").innerHTML='Fechner built Weber\'s finding into the <b>Weber&ndash;Fechner law</b>: sensation grows with the <i>logarithm</i> of intensity. Typical Weber fractions &mdash; brightness &asymp; 8%, weight &asymp; 2%, loudness &asymp; 5%.';
+   }
+   $("rdPill").textContent=pill; $("rdPill").className='pill '+st;
+   $("stage").style.background=bg;
+   $("stage").innerHTML=stg+'<small>'+sub+'</small>';
+ }
+
+ /* ---- interaction ---- */
+ function configSlider(){
+   if(mode==='abs'){$("sld").min=0;$("sld").max=100;$("sld").step=1;$("sld").value=intensity;}
+   else{$("sld").min=0;$("sld").max=16;$("sld").step=0.5;$("sld").value=delta;}
+ }
+ $("sld").addEventListener('input',function(){
+   if(mode==='abs') intensity=Math.round(+this.value); else delta=+this.value;
+   render();
+ });
+ var mbtns=document.querySelectorAll('#modeseg button');
+ for(var a=0;a<mbtns.length;a++){ mbtns[a].addEventListener('click',function(){
+   mode=this.getAttribute('data-m');
+   for(var j=0;j<mbtns.length;j++) mbtns[j].className=(mbtns[j]===this)?'on':'';
+   $("refWrap").style.display=(mode==='diff')?'block':'none';
+   $("cardTitle").textContent=(mode==='diff')?'Two stimuli':'The stimulus';
+   configSlider(); render();
+ }); }
+ var rbtns=document.querySelectorAll('#refSeg button');
+ for(var c=0;c<rbtns.length;c++){ rbtns[c].addEventListener('click',function(){
+   ri=+this.getAttribute('data-i');
+   for(var j=0;j<rbtns.length;j++) rbtns[j].className=(rbtns[j]===this)?'on':'';
+   render();
+ }); }
+ $("jump").addEventListener('click',function(){
+   var b=base();
+   if(mode==='abs'){intensity=ABS_T;} else {delta=Math.round(b.center*2)/2;}
+   configSlider(); render();
+ });
+
+ configSlider(); render();
+})();
+</script>
+</body>
+</html>

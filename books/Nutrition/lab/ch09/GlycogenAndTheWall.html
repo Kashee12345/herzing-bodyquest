@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Glycogen and the Wall</title>
+<meta name="description" content="Interactive glycogen ledger — set training duration, intensity, in-session fuelling, and daily carbohydrate across a seven-day week, and watch muscle and liver glycogen deplete, reload, and supercompensate on a drawn chart.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.fu{border:1px solid var(--line);border-radius:11px;padding:9px 11px 7px;background:#fff;margin-top:7px;transition:.14s;}
+.fu.on{border-color:var(--teal);box-shadow:0 0 0 2px rgba(176,122,30,.13);}
+.fu .hd{display:flex;align-items:center;gap:8px;}
+.fu .sw{width:11px;height:11px;border-radius:3px;flex:none;}
+.fu .nmb{flex:1;text-align:left;border:none;background:none;font-family:var(--sans);font-weight:700;font-size:12.7px;color:var(--ink);cursor:pointer;padding:0;line-height:1.2;}
+.fu .nmb small{display:block;font-weight:600;font-size:10.2px;color:var(--muted);margin-top:1px;}
+.fu input[type=number]{width:62px;border:1px solid var(--line);border-radius:8px;padding:6px 7px;font-family:var(--sans);font-weight:800;font-size:13px;color:var(--teal-dk);text-align:right;background:#fffdf9;}
+.fu .un{font-size:9.6px;font-weight:800;color:var(--muted);flex:none;line-height:1.15;}
+.fu input[type=range]{width:100%;margin-top:6px;height:20px;accent-color:var(--teal);cursor:pointer;display:block;}
+.gl{background:#f9f4ea;border-style:dashed;}
+.math{margin-top:11px;border-top:1px solid var(--line);padding-top:8px;}
+.math .ln{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--soft);padding:3px 0;font-variant-numeric:tabular-nums;cursor:pointer;}
+.math .ln .lf b{color:var(--ink);}
+.math .ln .lf .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:-1px;}
+.math .ln .rt{font-weight:800;color:var(--teal-dk);white-space:nowrap;}
+.math .ln.tt{border-top:1px dashed #ddd2ba;margin-top:5px;padding-top:8px;font-size:12.5px;cursor:default;}
+.math .ln.tt .lf b,.math .ln.tt .rt{color:var(--teal-dk);}
+.math .hdr{font-size:10.4px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin:8px 0 2px;}
+.tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;border-top:1px solid var(--line);padding-top:9px;}
+.tot span{font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+.tot b{font-family:var(--disp);font-size:25px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.tot b i{font-style:normal;font-size:13px;color:var(--muted);margin-left:3px;}
+.ev{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:3px 9px;vertical-align:middle;}
+.ev.s{background:#e5f3ea;color:#237a45;} .ev.p{background:#fdf0dd;color:#8a6a20;}
+.dri{font-size:12.5px;color:var(--teal-dk);background:#f4ead8;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.5;}
+.hint{font-size:11.4px;color:var(--muted);margin-top:8px;line-height:1.5;}
+.seg.days button{font-size:12.5px;padding:8px 2px;}
+.seg.days button small{font-size:9.2px;}
+.seg.sm button{font-size:12px;padding:9px 4px;}
+.ex .k{margin-left:auto;font-size:11.5px;font-weight:800;color:var(--teal-dk);font-variant-numeric:tabular-nums;flex:none;}
+.it.on .k{color:#fff;}
+.flag{font-size:11.4px;font-weight:800;border-radius:8px;padding:7px 11px;margin-top:9px;line-height:1.45;}
+.flag.w{background:#fae5e8;color:#8a2a3a;border:1px solid #f0c9d0;}
+.flag.o{background:#eef6ef;color:#1e6b3c;border:1px solid #cbe4d2;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 9</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 9</div>
+  <h1>Glycogen and the Wall</h1>
+  <div class="intro">Muscle stores carbohydrate as glycogen, and that store is small &mdash; roughly <b>1,600 kcal</b> against fat stores measured in the tens of thousands. Endurance is largely a question of how fast that small tank drains and how fully it refills before the next session. Build a training week below and watch the tank move.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Seven days of glycogen</h2>
+      <svg viewBox="0 0 300 222" aria-label="Chart of muscle glycogen in the working muscles across seven training days, showing a drop during each session and a refill from dietary carbohydrate, with a shaded band marking the depletion zone where the wall occurs"><g id="art"></g></svg>
+      <div class="hint" id="weeknote"></div>
+    </div>
+    <div class="card">
+      <h2 id="sessTitle">Inside the session</h2>
+      <svg viewBox="0 0 300 214" aria-label="Chart of muscle glycogen falling minute by minute during the selected session, compared with the same session taken unfuelled, above a stacked bar showing which fuels supplied the energy"><g id="sess"></g></svg>
+      <div class="hint" id="sessnote"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Build a training week<small>pick a day, then move the sliders</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg"><button data-m="0" class="on">Build the week</button><button data-m="1">Protocols</button></div>
+      <div id="panelBuild">
+        <div class="seg days" id="dayseg"></div>
+        <div id="sliders"></div>
+        <div class="row"><button class="btn" id="copy">Copy day to whole week</button><button class="btn" id="reset">Reset</button></div>
+        <div class="hint">The carbohydrate slider is the <b>whole day&rsquo;s</b> intake. The in-session slider does not add to it &mdash; it only decides how much of that same total arrives <b>while the muscle is working</b>. Timing changes the shape of the curve without changing the daily arithmetic.</div>
+      </div>
+      <div id="panelSc" style="display:none;">
+        <div class="list" id="sclist"></div>
+        <div class="hint">Illustrative demonstrations of physiology built from round numbers and a simplified model. None of them is a plan, a target, or a recommendation for any particular person.</div>
+      </div>
+      <div class="math" id="math"></div>
+      <div class="tot"><span>End of day &mdash; working muscle</span><b><span id="btot">100</span><i>% of normal</i></b></div>
+      <div class="hint">The session block and the day ledger are deliberately separate. Glycogen burned during the session came <b>out of the stores</b>, not out of the day&rsquo;s intake &mdash; so it is not deducted twice. The surplus at the bottom of the ledger is what repays it. Every line is tappable.</div>
+      <div id="flags"></div>
+    </div>
+    <div class="card">
+      <div id="info"></div>
+      <div class="note"><b>What this page is not.</b> It is a teaching model of average physiology, not medical or dietary advice, and not a fuelling plan for any individual &mdash; requirements vary with body size, training history, sex, altitude, heat, illness, medication, and conditions such as diabetes, where carbohydrate timing interacts directly with therapy. Those decisions belong with a qualified clinician or sports dietitian. No food is categorised anywhere here: <b>glycogen is made from carbohydrate in grams</b>, and grams are a physical quantity, not a verdict on a meal or a person.</div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- constants ---------- */
+ var MWK=2.6;    /* g glycogen per kg body mass in the WORKING muscles at normal intake */
+ var MOK=3.1;    /* g/kg in the rest of the skeletal muscle (total muscle ~5.7 g/kg) */
+ var LVK=1.55;   /* g/kg liver glycogen at capacity */
+ var RESTK=1.9;  /* g/kg/day glucose oxidised outside the session (CNS, red cells, renal medulla, resting tissue) */
+ var CEIL=1.80;  /* supercompensation ceiling, multiple of normal */
+ var WALL=0.18;  /* fraction of normal at which the working muscles can no longer hold the pace */
+ var WATER=3;    /* g water stored per g glycogen */
+ var KC=4, KF=9; /* kcal per gram: carbohydrate 4, fat 9 (protein 4, alcohol 7) */
+
+ var BM=70, VO2=48, sel=0, mode=0, det='';
+
+ var COL={mw:'#b07a1e',lv:'#2f6f9f',ing:'#2f9e5b',fat:'#7a5a8a',wall:'#d1495b',mo:'#c9ae74'};
+
+ function mkDay(dur,int,fuel,cho){return {dur:dur,int:int,fuel:fuel,cho:cho};}
+ var DEF=[mkDay(55,62,0,6),mkDay(90,68,30,7),mkDay(45,55,0,6),mkDay(75,72,20,7),mkDay(0,65,0,5),mkDay(150,65,60,8),mkDay(0,65,0,6)];
+ var D=DEF.map(function(d){return mkDay(d.dur,d.int,d.fuel,d.cho);});
+
+ /* ---------- fuel mix: the crossover from fat to carbohydrate ---------- */
+ var CX=[0.25,0.40,0.50,0.60,0.70,0.80,0.90,1.00];
+ var CY=[0.20,0.40,0.50,0.62,0.755,0.86,0.94,0.99];
+ function choFrac(i){
+   if(i<=CX[0])return CY[0];
+   for(var k=1;k<CX.length;k++){
+     if(i<=CX[k]){var t=(i-CX[k-1])/(CX[k]-CX[k-1]);return CY[k-1]+t*(CY[k]-CY[k-1]);}
+   }
+   return CY[CY.length-1];
+ }
+
+ /* ---------- the week simulation ---------- */
+ function sim(){
+   var mwN=MWK*BM, moN=MOK*BM, lvN=LVK*BM, wallTh=WALL*mwN;
+   var mw=mwN, mo=moN, lv=lvN, R=[];
+   for(var d=0;d<7;d++){
+     var day=D[d], ip=day.int/100, s={};
+     s.mwN=mwN; s.moN=moN; s.lvN=lvN; s.wallTh=wallTh;
+     s.s_mw=mw; s.s_lv=lv; s.s_mo=mo;
+     if(day.dur>0){
+       var vo2=ip*VO2*BM/1000;              /* L O2 per minute */
+       s.kcalMin=vo2*5;                     /* ~5 kcal per litre of oxygen */
+       s.cf=choFrac(ip);
+       s.choMin=s.kcalMin*s.cf/KC;
+       s.fatMin=s.kcalMin*(1-s.cf)/KF;
+       var ingRate=Math.min(day.fuel,90)/60;
+       /* blood glucose can fund only part of carbohydrate oxidation; the working fibres fund the rest */
+       var bloodCap=Math.min(1.5,0.55*s.choMin+0.15);
+       var lvRateCap=0.6+0.5*ip;                     /* hepatic glucose output rises with intensity */
+       var lvAvail=Math.max(0,(lv-0.05*lvN))/day.dur/0.75;
+       var lvOut0=Math.min(bloodCap,lvRateCap,lvAvail);
+       s.muMin0=Math.max(0,s.choMin-lvOut0);         /* the same session taken unfuelled */
+       var spared=Math.min(ingRate,lvOut0);          /* ingested carbohydrate displaces liver output first */
+       var lvOut=lvOut0-spared;
+       var extra=Math.max(0,ingRate-lvOut0);
+       var extraUsed=Math.min(extra,Math.max(0,bloodCap-lvOut0));
+       var muMin=Math.max(0.15*s.choMin,s.muMin0-0.6*extraUsed);  /* muscle sparing is modest */
+       var ingUsed=spared+extraUsed;
+       s.ingRate=ingUsed; s.lvOutRate=lvOut; s.muMin=muMin;
+       if(mw<=wallTh){s.wallT=0;}
+       else{var tw=muMin>0.0005?(mw-wallTh)/muMin:1e9; s.wallT=(tw<day.dur&&tw>=0)?tw:-1;}
+       if(mw<=wallTh){s.wallT0=0;}
+       else{var tw0=s.muMin0>0.0005?(mw-wallTh)/s.muMin0:1e9; s.wallT0=(tw0<day.dur&&tw0>=0)?tw0:-1;}
+       var mwEnd=Math.max(0.05*mwN,mw-muMin*day.dur);
+       s.muOx=mw-mwEnd;
+       s.lvOx=lvOut*0.75*day.dur;      /* the rest of hepatic output is gluconeogenesis, not glycogen */
+       s.bloodOx=lvOut*day.dur;
+       s.ingOx=ingUsed*day.dur;
+       s.fatOx=s.fatMin*day.dur;
+       s.choOx=s.ingOx+s.bloodOx+s.muOx;
+       mw=mwEnd; lv=Math.max(0,lv-s.lvOx);
+     } else {
+       s.kcalMin=0;s.cf=0;s.choMin=0;s.fatMin=0;s.ingRate=0;s.lvOutRate=0;s.muMin=0;s.muMin0=0;
+       s.wallT=-1;s.wallT0=-1;s.muOx=0;s.lvOx=0;s.bloodOx=0;s.ingOx=0;s.fatOx=0;s.choOx=0;
+     }
+     s.p_mw=mw; s.p_lv=lv;
+
+     var totalIn=day.cho*BM;
+     var during=Math.min(s.ingOx,totalIn);
+     var rest=Math.max(0,totalIn-during);
+     var restUse=Math.max(110,RESTK*BM);   /* the brain's own draw sets a floor of roughly 110-130 g/day */
+     var sur=rest-restUse;
+     /* supercompensation above 100% needs the loading range, ~10-12 g/kg body mass/day */
+     var sf=Math.min(1,Math.max(0,(day.cho-7)/4));
+     s.totalIn=totalIn; s.during=during; s.restUse=restUse; s.sur=sur; s.sf=sf;
+     s.a={lv:0,mw:0,mo:0,sup:0,over:0,def:0,gng:0};
+     if(sur<0){
+       var need=-sur, take=Math.min(need,lv); lv-=take; s.a.def=take; s.a.gng=need-take;
+     } else {
+       var x=sur,g;
+       g=Math.min(x,Math.max(0,lvN-lv)); lv+=g; x-=g; s.a.lv=g;
+       g=Math.min(x,Math.max(0,mwN-mw),mwN); mw+=g; x-=g; s.a.mw=g;
+       g=Math.min(x,Math.max(0,moN-mo),moN); mo+=g; x-=g; s.a.mo=g;
+       g=Math.min(x,Math.max(0,mwN*CEIL-mw),sf*0.45*mwN); mw+=g; x-=g; s.a.sup+=g;
+       g=Math.min(x,Math.max(0,moN*CEIL-mo),sf*0.45*moN); mo+=g; x-=g; s.a.sup+=g;
+       s.a.over=x;
+     }
+     s.e_mw=mw; s.e_lv=lv; s.e_mo=mo;
+     s.tot=mw+mo+lv; s.totN=mwN+moN+lvN;
+     R.push(s);
+   }
+   return R;
+ }
+
+ /* ---------- formatting ---------- */
+ function fmt(n){n=Math.round(n);var s=Math.abs(n)+'';return (n<0?'−':'')+s.replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+ function sgn(n){n=Math.round(n);if(n===0)return '0';return (n>0?'+':'−')+(Math.abs(n)+'').replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+ function pc(v,n){return Math.round(v/n*100)+'%';}
+ function mmss(t){var m=Math.floor(t),s=Math.round((t-m)*60);if(s===60){m++;s=0;}return m+' min'+(s?' '+s+' s':'');}
+
+ /* ---------- chart 1: the week ---------- */
+ function drawWeek(R){
+   var mwN=MWK*BM, out='', x0=28, x1=292, yb=182, yt=28, TOP=2.0, W=(x1-x0)/7;
+   var Y=function(p){return yb-(Math.max(0,Math.min(TOP,p))/TOP)*(yb-yt);};
+   out+='<rect x="0" y="0" width="300" height="222" fill="#fffdf9"/>';
+   out+='<rect x="'+x0+'" y="'+Y(CEIL).toFixed(1)+'" width="'+(x1-x0)+'" height="'+(Y(1)-Y(CEIL)).toFixed(1)+'" fill="#eef6ef"/>';
+   out+='<rect x="'+x0+'" y="'+Y(WALL).toFixed(1)+'" width="'+(x1-x0)+'" height="'+(Y(0)-Y(WALL)).toFixed(1)+'" fill="#fae5e8"/>';
+
+   var gl=[0,0.5,1,1.5,2];
+   for(var g=0;g<gl.length;g++){
+     var yy=Y(gl[g]);
+     out+='<line x1="'+x0+'" y1="'+yy.toFixed(1)+'" x2="'+x1+'" y2="'+yy.toFixed(1)+'" stroke="'+(gl[g]===1?'#c9bda6':'#ece4d6')+'" stroke-width="1"'+(gl[g]===1?' stroke-dasharray="4 3"':'')+'/>';
+     out+='<text x="'+(x0-4)+'" y="'+(yy+2.8).toFixed(1)+'" font-size="7.2" fill="#a89b85" text-anchor="end" font-weight="700">'+Math.round(gl[g]*100)+'</text>';
+   }
+   out+='<text x="'+(x0-4)+'" y="'+(Y(WALL)-3).toFixed(1)+'" font-size="6.8" fill="#b23145" text-anchor="end" font-weight="800">wall</text>';
+   out+='<text x="'+x0+'" y="14" font-size="7.6" fill="#8d8270" font-weight="800" letter-spacing=".7">GLYCOGEN IN THE WORKING MUSCLES &mdash; % OF NORMAL</text>';
+   out+='<text x="'+(x1)+'" y="'+(Y(CEIL)-3).toFixed(1)+'" font-size="6.8" fill="#237a45" text-anchor="end" font-weight="800">supercompensation</text>';
+
+   out+='<rect x="'+(x0+sel*W).toFixed(1)+'" y="'+yt+'" width="'+W.toFixed(1)+'" height="'+(yb-yt+22).toFixed(1)+'" fill="'+COL.mw+'" opacity=".09"/>';
+
+   var pts=[], maxOx=1, i;
+   for(i=0;i<7;i++) maxOx=Math.max(maxOx,R[i].choOx);
+   for(i=0;i<7;i++){
+     var xs=x0+i*W, s=R[i];
+     if(i===0) pts.push([xs,s.s_mw/mwN]);
+     pts.push([xs+0.42*W,s.p_mw/mwN]);
+     pts.push([xs+W,s.e_mw/mwN]);
+   }
+   var poly=pts.map(function(p){return p[0].toFixed(1)+','+Y(p[1]).toFixed(1);}).join(' ');
+   out+='<polygon points="'+x0+','+Y(0).toFixed(1)+' '+poly+' '+x1+','+Y(0).toFixed(1)+'" fill="'+COL.mw+'" opacity=".13"/>';
+   out+='<polyline points="'+poly+'" fill="none" stroke="'+COL.mw+'" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>';
+
+   /* liver glycogen, thinner line */
+   var lp=[];
+   for(i=0;i<7;i++){
+     var xs2=x0+i*W, t=R[i];
+     if(i===0) lp.push([xs2,t.s_lv/t.lvN]);
+     lp.push([xs2+0.42*W,t.p_lv/t.lvN]);
+     lp.push([xs2+W,t.e_lv/t.lvN]);
+   }
+   out+='<polyline points="'+lp.map(function(p){return p[0].toFixed(1)+','+Y(p[1]).toFixed(1);}).join(' ')+'" fill="none" stroke="'+COL.lv+'" stroke-width="1.3" stroke-dasharray="3 2.4" stroke-linejoin="round"/>';
+
+   for(i=0;i<7;i++){
+     var xa=x0+i*W, s2=R[i], d2=D[i];
+     var h=(s2.choOx/maxOx)*15;
+     if(h>0.5) out+='<rect x="'+(xa+W*0.20).toFixed(1)+'" y="188" width="'+(W*0.60).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="1.5" fill="'+COL.mw+'" opacity=".5"/>';
+     if(s2.wallT>=0){
+       var wx=xa+0.42*W*(s2.wallT/Math.max(1,d2.dur));
+       out+='<circle cx="'+wx.toFixed(1)+'" cy="'+Y(WALL).toFixed(1)+'" r="3" fill="'+COL.wall+'"/>';
+       out+='<text x="'+wx.toFixed(1)+'" y="'+(Y(WALL)-6).toFixed(1)+'" font-size="8" fill="'+COL.wall+'" text-anchor="middle" font-weight="800">!</text>';
+     }
+     out+='<text x="'+(xa+W/2).toFixed(1)+'" y="211" font-size="7.6" fill="'+(i===sel?'#6b4710':'#a89b85')+'" text-anchor="middle" font-weight="800">D'+(i+1)+'</text>';
+     out+='<rect class="rgn" data-d="'+i+'" x="'+xa.toFixed(1)+'" y="'+yt+'" width="'+W.toFixed(1)+'" height="'+(yb-yt+34).toFixed(1)+'" fill="transparent"/>';
+   }
+   out+='<line x1="'+x0+'" y1="'+Y(0).toFixed(1)+'" x2="'+x1+'" y2="'+Y(0).toFixed(1)+'" stroke="#c9bda6" stroke-width="1"/>';
+   out+='<text x="'+x0+'" y="220" font-size="6.8" fill="#a89b85" font-weight="700">solid: working muscle &nbsp;&middot;&nbsp; dashed blue: liver &nbsp;&middot;&nbsp; bars: carbohydrate burned &nbsp;&middot;&nbsp; tap a day</text>';
+
+   $('art').innerHTML=out;
+   var ns=$('art').querySelectorAll('.rgn');
+   for(var q=0;q<ns.length;q++) ns[q].onclick=(function(k){return function(){sel=+k;render();};})(ns[q].getAttribute('data-d'));
+ }
+
+ /* ---------- chart 2: inside the session ---------- */
+ function drawSession(R){
+   var s=R[sel], day=D[sel], out='', mwN=s.mwN;
+   out+='<rect x="0" y="0" width="300" height="214" fill="#fffdf9"/>';
+   var x0=32,x1=292,yt=26,yb=118, TOP=Math.max(1.05,s.s_mw/mwN*1.08);
+   var Y=function(p){return yb-(Math.max(0,Math.min(TOP,p))/TOP)*(yb-yt);};
+
+   if(day.dur<=0){
+     out+='<text x="150" y="70" font-size="11" fill="#8d8270" text-anchor="middle" font-weight="800">No session on day '+(sel+1)+'</text>';
+     out+='<text x="150" y="88" font-size="8" fill="#a89b85" text-anchor="middle" font-weight="600">nothing drains the tank &mdash; the whole day is reload</text>';
+     out+='<rect x="32" y="112" width="260" height="16" rx="4" fill="#eef6ef"/>';
+     out+='<text x="150" y="123.5" font-size="8" fill="#237a45" text-anchor="middle" font-weight="800">carbohydrate in: '+fmt(s.totalIn)+' g &nbsp;&middot;&nbsp; resting glucose use: '+fmt(s.restUse)+' g</text>';
+     out+='<text x="150" y="150" font-size="8.2" fill="#8d8270" text-anchor="middle" font-weight="700">Working muscle ends the day at '+pc(s.e_mw,mwN)+' of normal.</text>';
+     out+='<text x="150" y="166" font-size="8.2" fill="#8d8270" text-anchor="middle" font-weight="700">Liver ends at '+pc(s.e_lv,s.lvN)+' of capacity.</text>';
+     $('sess').innerHTML=out;
+     return;
+   }
+
+   var dur=day.dur, X=function(t){return x0+(t/dur)*(x1-x0);};
+   out+='<text x="'+x0+'" y="13" font-size="7.6" fill="#8d8270" font-weight="800" letter-spacing=".7">WORKING-MUSCLE GLYCOGEN, MINUTE BY MINUTE</text>';
+   out+='<rect x="'+x0+'" y="'+Y(WALL).toFixed(1)+'" width="'+(x1-x0)+'" height="'+(Y(0)-Y(WALL)).toFixed(1)+'" fill="#fae5e8"/>';
+   out+='<line x1="'+x0+'" y1="'+Y(WALL).toFixed(1)+'" x2="'+x1+'" y2="'+Y(WALL).toFixed(1)+'" stroke="'+COL.wall+'" stroke-width="1" stroke-dasharray="4 3"/>';
+   out+='<text x="'+(x0+3)+'" y="'+(Y(WALL)+9).toFixed(1)+'" font-size="6.8" fill="#b23145" font-weight="800">THE WALL &mdash; ~'+Math.round(WALL*100)+'% OF NORMAL</text>';
+   out+='<line x1="'+x0+'" y1="'+Y(0).toFixed(1)+'" x2="'+x1+'" y2="'+Y(0).toFixed(1)+'" stroke="#c9bda6" stroke-width="1"/>';
+   for(var m=0;m<=dur;m+=Math.max(15,Math.round(dur/4/15)*15)){
+     out+='<line x1="'+X(m).toFixed(1)+'" y1="'+Y(0).toFixed(1)+'" x2="'+X(m).toFixed(1)+'" y2="'+(Y(0)+3).toFixed(1)+'" stroke="#c9bda6" stroke-width="1"/>';
+     out+='<text x="'+X(m).toFixed(1)+'" y="'+(Y(0)+12).toFixed(1)+'" font-size="7" fill="#a89b85" text-anchor="middle" font-weight="700">'+m+'</text>';
+   }
+   out+='<text x="'+x1+'" y="'+(Y(0)+12).toFixed(1)+'" font-size="7" fill="#a89b85" text-anchor="end" font-weight="700">min</text>';
+
+   function line(rate,col,w,dash){
+     var p=[];
+     for(var i=0;i<=40;i++){var t=dur*i/40; p.push(X(t).toFixed(1)+','+Y(Math.max(0.05,(s.s_mw-rate*t)/mwN)).toFixed(1));}
+     return '<polyline points="'+p.join(' ')+'" fill="none" stroke="'+col+'" stroke-width="'+w+'"'+(dash?' stroke-dasharray="'+dash+'"':'')+' stroke-linecap="round"/>';
+   }
+   var diff=(day.fuel>0&&s.muMin0-s.muMin>0.02);
+   if(diff) out+=line(s.muMin0,'#a89b85',1.6,'5 3');
+   out+=line(s.muMin,COL.mw,2.6,'');
+   if(s.wallT>=0){
+     out+='<line x1="'+X(s.wallT).toFixed(1)+'" y1="'+yt+'" x2="'+X(s.wallT).toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" stroke="'+COL.wall+'" stroke-width="1"/>';
+     out+='<circle cx="'+X(s.wallT).toFixed(1)+'" cy="'+Y(WALL).toFixed(1)+'" r="3.4" fill="'+COL.wall+'"/>';
+     out+='<text x="'+X(s.wallT).toFixed(1)+'" y="'+(yt-4)+'" font-size="7.6" fill="'+COL.wall+'" text-anchor="'+(s.wallT<=0?'start':'middle')+'" font-weight="800">'+(s.wallT<=0?'depleted from the start':Math.round(s.wallT)+' min')+'</text>';
+   } else {
+     out+='<text x="'+x1+'" y="'+(yt-4)+'" font-size="7.6" fill="#237a45" text-anchor="end" font-weight="800">tank holds for the whole session</text>';
+   }
+   if(diff&&s.wallT0>=0&&s.wallT<0)
+     out+='<text x="'+X(s.wallT0).toFixed(1)+'" y="'+(Y(WALL)-5).toFixed(1)+'" font-size="6.8" fill="#8d8270" text-anchor="middle" font-weight="700">unfuelled: '+Math.round(s.wallT0)+'&prime;</text>';
+   /* liver over the same session — the store that fuelling really protects */
+   out+='<text x="'+x0+'" y="141" font-size="6.9" fill="'+COL.lv+'" font-weight="800">LIVER '+pc(s.s_lv,s.lvN)+' &rarr; '+pc(s.p_lv,s.lvN)+
+        (day.fuel>0?' &mdash; ingested carbohydrate is replacing hepatic output':' &mdash; nothing is replacing hepatic output')+'</text>';
+
+   /* fuel-source bar, drawn by energy so the 4-versus-9 point is visible */
+   var kIng=s.ingOx*KC, kBl=s.bloodOx*KC, kMu=s.muOx*KC, kFa=s.fatOx*KF;
+   var tot=Math.max(1,kIng+kBl+kMu+kFa);
+   out+='<text x="'+x0+'" y="157" font-size="7.6" fill="#8d8270" font-weight="800" letter-spacing=".7">WHERE THE ENERGY CAME FROM &mdash; '+fmt(tot)+' kcal</text>';
+   var bx=x0, by=162, bw=x1-x0, seg=[
+     ['ingest',kIng,COL.ing,'ingested'],['liver',kBl,COL.lv,'blood glucose'],
+     ['muscle',kMu,COL.mw,'muscle glycogen'],['fuelmix',kFa,COL.fat,'fat']
+   ];
+   for(var j=0;j<seg.length;j++){
+     var w=seg[j][1]/tot*bw;
+     if(w<0.4){bx+=w;continue;}
+     out+='<rect class="rgn" data-k="'+seg[j][0]+'" x="'+bx.toFixed(1)+'" y="'+by+'" width="'+w.toFixed(1)+'" height="17" fill="'+seg[j][2]+'"'+(det===seg[j][0]?' stroke="#33291a" stroke-width="1.6"':'')+'/>';
+     if(w>26) out+='<text x="'+(bx+w/2).toFixed(1)+'" y="'+(by+11.5)+'" font-size="7.4" fill="#fff" text-anchor="middle" font-weight="800" pointer-events="none">'+Math.round(seg[j][1]/tot*100)+'%</text>';
+     bx+=w;
+   }
+   var lg=[[COL.ing,'ingested carbohydrate',s.ingOx],[COL.lv,'blood glucose (liver)',s.bloodOx],
+           [COL.mw,'working-muscle glycogen',s.muOx],[COL.fat,'fat',s.fatOx]];
+   for(j=0;j<lg.length;j++){
+     var ly=192+Math.floor(j/2)*11, lx=(j%2)?166:x0;
+     out+='<rect x="'+lx+'" y="'+(ly-6)+'" width="7" height="7" rx="1.5" fill="'+lg[j][0]+'"/>';
+     out+='<text x="'+(lx+11)+'" y="'+ly+'" font-size="6.9" fill="#8d8270" font-weight="700">'+lg[j][1]+' &mdash; '+fmt(lg[j][2])+' g</text>';
+   }
+   $('sess').innerHTML=out;
+   var ns=$('sess').querySelectorAll('.rgn');
+   for(var q=0;q<ns.length;q++) ns[q].onclick=(function(k){return function(){pick(k);};})(ns[q].getAttribute('data-k'));
+ }
+
+ /* ---------- the written detail ---------- */
+ var DETAIL={
+  muscle:{nm:'Muscle glycogen &mdash; a private tank',
+   why:'Skeletal muscle stores roughly <b>80 mmol per kg of wet muscle</b> at normal intake &mdash; about <b>400 g in total</b> for a 70 kg adult, of which the muscles actually doing the work in running or cycling hold something like <b>2.6 g per kg of body mass</b>. At <b>4 kcal per gram</b> the entire muscle store is worth around 1,600 kcal. <span class="ev s">strong evidence</span>',
+   more:'The decisive fact is anatomical: muscle has <b>no glucose-6-phosphatase</b>, the enzyme that frees glucose from its phosphate so it can cross the cell membrane. Glycogen broken down in a muscle fibre is therefore trapped in that fibre and can only be burned there. Muscle glycogen is a tank, not a bank &mdash; it cannot be lent to the brain, to the heart, or even to the muscle next door.',
+   note:'This is why the chart tracks the <b>working</b> muscles separately. A cyclist can finish a stage with legs at 15% of normal while the arms and trunk sit near 100%, and that untouched glycogen is of no use whatsoever to the legs.'},
+  liver:{nm:'Liver glycogen &mdash; the blood-glucose buffer',
+   why:'The liver holds far less &mdash; roughly <b>80&ndash;120 g</b>, about <b>1.5 g per kg of body mass</b> &mdash; but unlike muscle it <b>does</b> have glucose-6-phosphatase, so it can release free glucose into the blood. Its job is to hold blood glucose steady between meals and during exercise. <span class="ev s">strong evidence</span>',
+   more:'It empties quickly. An overnight fast alone can halve it, because the brain oxidises on the order of <b>120 g of glucose a day</b> and does not stop for sleep. During prolonged exercise hepatic glucose output rises with intensity, drawing on both glycogenolysis and gluconeogenesis; this model attributes about three-quarters of that output to stored glycogen and the rest to glucose made from lactate, glycerol, and amino acids.',
+   note:'When liver glycogen runs down and no carbohydrate is arriving, blood glucose can fall, producing a <b>different failure</b> from the muscular wall: light-headedness, blurred vision, clumsiness, confusion. Ingested carbohydrate spares liver glycogen very effectively, which is one reason it works during long events.'},
+  wall:{nm:'The wall',
+   why:'Fatigue in prolonged exercise coincides closely with glycogen in the <b>recruited fibres</b> falling to roughly <b>15&ndash;20% of normal</b> &mdash; a relationship demonstrated by muscle-biopsy studies from the 1960s onward and reproduced many times since. <span class="ev s">strong evidence</span> Without carbohydrate feeding it typically arrives somewhere around <b>90&ndash;120 minutes</b> at 65&ndash;75% of VO&#8322;max.',
+   more:'It is emphatically <b>not</b> an energy shortage. Fat stores hold, at <b>9 kcal per gram</b>, many times the energy of every gram of glycogen in the body combined, and they are nowhere near exhausted when the wall hits. The limit is a <b>rate</b> limit: fat oxidation regenerates ATP more slowly than glycolysis, so once glycogen is gone the sustainable pace drops to whatever fat can support. The legs do not stop &mdash; they slow, heavily and involuntarily.',
+   note:'The model marks where the wall begins and does not simulate the slowdown that follows, because the pace, the terrain, and the person all determine what happens next.'},
+  fuelmix:{nm:'Intensity chooses the fuel',
+   why:'At low intensities most of the energy comes from fat; as intensity rises the carbohydrate share climbs steeply &mdash; the <b>crossover</b>. Around 25% of VO&#8322;max carbohydrate supplies perhaps a fifth of the energy; by 85% it supplies nine-tenths. <span class="ev s">strong evidence</span>',
+   more:'Absolute fat oxidation is not a straight line: it rises with intensity, peaks somewhere around <b>45&ndash;65% of VO&#8322;max</b> in most people, and then falls away even as total energy demand keeps climbing. So the intensity that burns the most fat per minute is not the hardest one, and the hardest one drains glycogen fastest. Move the intensity slider and watch the purple band on the bar shrink.',
+   note:'Energy yields are fixed and worth memorising: <b>carbohydrate 4, protein 4, fat 9, alcohol 7 kcal per gram</b>. Fat is the denser store by a wide margin; carbohydrate is the faster one. Endurance is a negotiation between those two facts.'},
+  ingest:{nm:'Carbohydrate taken during the session',
+   why:'Below about <b>45&ndash;60 minutes</b> of exercise there is little to gain: stores are adequate. For sessions of roughly <b>1 to 2.5 hours</b>, intakes near <b>30&ndash;60 g per hour</b> improve endurance performance; beyond about 2.5&ndash;3 hours, rates up to roughly <b>90 g per hour</b> have been used. <span class="ev s">strong evidence</span> for the performance benefit in events over two hours.',
+   more:'The ceiling has a mechanism. Glucose crosses the intestinal wall on the <b>SGLT1</b> transporter, which saturates near <b>60 g per hour</b>. Adding fructose, which uses <b>GLUT5</b> instead, opens a second route and lifts total oxidation &mdash; hence &ldquo;multiple transportable carbohydrates&rdquo;. Above 60 g/h this slider assumes such a mix. <span class="ev p">preliminary evidence</span> for the exact upper limit, for &ldquo;gut training&rdquo;, and for the ergogenic effect of carbohydrate <i>mouth rinsing</i> in shorter events.',
+   note:'<b>Watch which store it rescues.</b> Raise this slider and the blue liver line stops falling almost immediately &mdash; ingested carbohydrate substitutes for hepatic glucose output nearly gram for gram, and that sparing is large and consistent. <span class="ev s">strong evidence</span> The effect on <b>muscle</b> glycogen is much smaller and inconsistent between studies, appearing mainly at high intake rates. So fuelling during exercise works chiefly by defending blood glucose and by supplying carbohydrate straight to the working muscle for oxidation &mdash; not by protecting the muscle&rsquo;s own tank.'},
+  reload:{nm:'Reloading between sessions',
+   why:'Given enough carbohydrate, muscle glycogen restores essentially fully in about <b>24 hours</b>. When the next session is <b>less than 8 hours away</b>, resynthesis rate becomes the constraint, and intakes near <b>1.0&ndash;1.2 g of carbohydrate per kg of body mass per hour</b> over the first few hours maximise it. <span class="ev s">strong evidence</span>',
+   more:'Daily totals used in sports nutrition scale with training load, in <b>grams per kilogram of body mass per day, for athletes in training</b>: roughly <b>3&ndash;5</b> for light activity, <b>5&ndash;7</b> for about an hour a day of moderate work, <b>6&ndash;10</b> for one to three hours of moderate-to-high intensity, and <b>8&ndash;12</b> for extreme programmes of four to five hours a day. These are performance-oriented guidance figures, not Dietary Reference Intakes, and not targets for people who are not training at those volumes.',
+   note:'Recently exercised muscle takes up glucose preferentially: contraction moves <b>GLUT4</b> transporters to the membrane without needing insulin, and insulin sensitivity in that muscle stays elevated for hours afterwards. The tank that was just emptied is the one that refills first &mdash; which is exactly the order this model fills them in.'},
+  loading:{nm:'Carbohydrate loading',
+   why:'Combining a <b>training taper</b> with roughly <b>10&ndash;12 g of carbohydrate per kg of body mass per day for 36&ndash;48 hours</b> raises muscle glycogen well above its usual level &mdash; commonly to <b>150&ndash;200% of normal</b>. <span class="ev s">strong evidence</span> that the store rises; the performance benefit is well supported for continuous events lasting more than about 90 minutes and much smaller or absent below that.',
+   more:'The gruelling depletion phase of the original 1960s protocol &mdash; an exhausting ride followed by three days of very low carbohydrate &mdash; turned out to be <b>unnecessary</b>. Trained muscle supercompensates from a normal starting point provided the training load comes down and the carbohydrate goes up. The model reproduces this: taper the last two days and push the carbohydrate slider high, and the curve climbs into the green band.',
+   note:'The ceiling is real. Stores saturate; extra carbohydrate beyond that point is simply oxidised in place of fat, with only a small amount converted to fat by de novo lipogenesis, which is quantitatively minor in humans.'},
+  water:{nm:'The mass that travels with the fuel',
+   why:'Glycogen is stored hydrated &mdash; roughly <b>3 g of water for every gram of glycogen</b>. Filling the tank therefore adds mass, and emptying it removes mass, quite apart from anything to do with body composition.',
+   more:'A full loading protocol commonly adds on the order of <b>1&ndash;2 kg</b>. In the other direction, a hard session plus a low-carbohydrate day can drop the same amount overnight. Either way the change is <b>stored fuel and its water</b>, arriving and leaving over hours &mdash; which is why a bathroom scale cannot tell you anything useful about fuel status, and why day-to-day fluctuations of a kilogram or two carry no information about body fat at all.',
+   note:'This is a statement about the physical chemistry of a polysaccharide. It is not a comment on anyone&rsquo;s body, and nothing on this page should be read as one.'},
+  trainlow:{nm:'Training with low glycogen availability',
+   why:'Deliberately performing some sessions with glycogen already low &mdash; &ldquo;train low, compete high&rdquo; &mdash; amplifies the cell-signalling that drives endurance adaptation, including <b>AMPK</b> and <b>PGC-1&alpha;</b> activity and mitochondrial biogenesis. <span class="ev p">preliminary evidence</span>',
+   more:'The molecular signal is consistent. Whether it translates into better <b>competition performance</b> is not settled: trials are small, protocols differ widely, and the same low-glycogen state reduces the quality of the session itself, raises perceived effort, and has been associated with greater immune and hormonal disturbance. It is an area of active research rather than an established practice.',
+   note:'Distinguishing signal strength like this matters more than the conclusion. A mechanism demonstrated in a muscle biopsy is not the same kind of claim as a performance benefit demonstrated in a race, and this page labels the two differently on purpose.'}
+ };
+
+ /* ---------- protocols ---------- */
+ function setWeek(a){for(var i=0;i<7;i++){D[i].dur=a[i][0];D[i].int=a[i][1];D[i].fuel=a[i][2];D[i].cho=a[i][3];}}
+ var SC=[
+  {ic:'🚶',nm:'An ordinary week',ct:'little training, moderate carbohydrate',
+   set:function(){setWeek([[0,65,0,4],[30,50,0,4],[0,65,0,4],[35,55,0,4],[0,65,0,4],[45,55,0,4.5],[0,65,0,4]]);sel=3;},
+   d:'A week with some walking and a couple of easy sessions. The tank barely moves: nothing drains it faster than the day&rsquo;s carbohydrate refills it, and the line sits flat against 100% from Monday to Sunday.',
+   loc:'This is the honest baseline. <b>The wall is a problem of endurance sport, not of everyday life.</b> Most people never approach the depletion zone, and glycogen is not something that needs managing in order to be well.'},
+  {ic:'🚴',nm:'A steady endurance week',ct:'about an hour a day, 6–7 g/kg',
+   set:function(){setWeek([[60,65,0,6],[75,70,20,6.5],[50,58,0,6],[80,70,30,6.5],[0,65,0,5.5],[95,68,40,7],[0,65,0,6]]);sel=5;},
+   d:'Sessions long enough to draw the tank down noticeably, and carbohydrate high enough to put it back each night. The line makes a sawtooth that returns to the same height every morning &mdash; the definition of a sustainable load.',
+   loc:'Steady state is not the absence of depletion. It is depletion and repletion that happen to be equal.'},
+  {ic:'📉',nm:'Three hard days on low carbohydrate',ct:'the staircase down',
+   set:function(){setWeek([[120,72,0,4],[120,72,0,4],[120,72,0,4],[60,65,0,5],[0,65,0,5],[0,65,0,6],[0,65,0,6]]);sel=2;},
+   d:'Two hours of hard work daily on about 4 g of carbohydrate per kg of body mass. Each morning starts lower than the last and each session hits the depletion zone sooner &mdash; a staircase, not a cliff. This pattern is the classic finding of the repeated-training-day biopsy studies. <span class="ev s">strong evidence</span>',
+   loc:'The interesting part is how it <b>feels</b>: no single day is catastrophic, so the athlete keeps training while the substrate quietly disappears. Then look at the tail of the week &mdash; two rest days at higher intake restore it completely.'},
+  {ic:'🍽',nm:'Carbohydrate loading',ct:'taper plus 11–12 g/kg for 48 hours',
+   set:function(){setWeek([[75,68,20,7],[60,65,20,7],[50,62,0,7],[35,58,0,8],[30,55,0,11],[20,50,0,12],[0,65,0,11]]);sel=6;},
+   d:'The training load comes down across the week while carbohydrate rises to <b>11&ndash;12 g per kg of body mass per day</b> for the last two days. The curve climbs through 100% into the supercompensation band and finishes at <b>180% of normal</b> &mdash; the modern loading protocol, with no depletion phase required. <span class="ev s">strong evidence</span>',
+   loc:'Both halves are necessary. Push the carbohydrate up without tapering and the sessions eat the surplus; taper without the carbohydrate and there is nothing to store. Watch the mass line too: that gain is glycogen plus the roughly 3 g of water bound to each gram of it.'},
+  {ic:'🏁',nm:'A three-hour event, unfuelled',ct:'nothing taken during the session',
+   set:function(){setWeek([[60,65,0,7],[45,60,0,7],[30,55,0,8],[20,50,0,10],[0,65,0,11],[180,75,0,8],[0,65,0,7]]);sel=5;},
+   d:'A loaded athlete starts a three-hour effort at 75% of VO&#8322;max and takes nothing on board. The working muscles hold until about <b>166 minutes</b> and then reach the depletion zone &mdash; short of the finish, even from 180% of normal. Liver glycogen collapses at the same time, so blood glucose is unsupported just as the legs fail.',
+   loc:'Loading buys <b>time</b>, not immunity. It moves the wall later; it cannot remove it, because the drain rate is set by intensity and the tank is finite.'},
+  {ic:'🧃',nm:'The same event, fuelled',ct:'90 g per hour during the session',
+   set:function(){setWeek([[60,65,0,7],[45,60,0,7],[30,55,0,8],[20,50,0,10],[0,65,0,11],[180,75,90,8],[0,65,0,7]]);sel=5;},
+   d:'Identical day, identical <b>daily</b> carbohydrate total &mdash; only the timing differs. At 90 g per hour (which needs a glucose-plus-fructose mix to be absorbed at all) the finish now comes before the depletion zone does.',
+   loc:'Look at <b>which</b> store was rescued. Liver glycogen ends the session at 100% instead of near empty, because ingested carbohydrate substitutes for hepatic glucose output almost gram for gram. Muscle glycogen is spared far less &mdash; it falls to 48% instead of the floor. That asymmetry is the real mechanism: fuelling during exercise works mostly by defending <b>blood glucose</b> and by supplying carbohydrate directly for oxidation, not by protecting the muscle&rsquo;s own store. <span class="ev s">strong evidence</span>'},
+  {ic:'🔬',nm:'Train low, compete high',ct:'some sessions started depleted',
+   set:function(){setWeek([[100,72,0,3.5],[70,70,0,3.5],[60,65,0,6],[100,72,0,3.5],[0,65,0,7],[60,60,0,10],[0,65,0,11]]);sel=3;},
+   d:'Sessions taken deliberately with the tank low, then a high-carbohydrate finish to the week. The molecular signalling for endurance adaptation &mdash; AMPK, PGC-1&alpha;, mitochondrial biogenesis &mdash; is amplified when glycogen is low. <span class="ev p">preliminary evidence</span>',
+   loc:'Note the cost the chart makes visible: those sessions start with the tank already low, and on the harder days the depletion zone is reached inside the session. Whether that trade favours adaptation over training quality is genuinely unresolved, which is why this protocol is labelled preliminary and the loading protocol is not.'}
+ ];
+
+ /* ---------- sliders ---------- */
+ var SL=[
+  {k:'dur',nm:'Session duration',ct:'time spent training on this day',un:'min',min:0,max:240,step:5,g:0,col:COL.mw},
+  {k:'int',nm:'Intensity',ct:'percentage of VO&#8322;max held through the session',un:'% VO&#8322;<br>max',min:40,max:95,step:1,g:0,col:COL.wall},
+  {k:'fuel',nm:'Carbohydrate during the session',ct:'part of the same daily total &mdash; only the timing changes',un:'g/h',min:0,max:90,step:5,g:0,col:COL.ing},
+  {k:'cho',nm:'Carbohydrate that day',ct:'grams per kilogram of body mass per day, all sources',un:'g/kg<br>/day',min:2,max:13,step:0.5,dec:1,g:0,col:COL.lv},
+  {k:'BM',nm:'Body mass',ct:'used only to scale grams per kilogram &mdash; applies to the whole week',un:'kg',min:45,max:110,step:1,g:1,col:COL.fat},
+  {k:'VO2',nm:'Aerobic capacity',ct:'VO&#8322;max in mL O&#8322; per kg body mass per minute',un:'mL/kg<br>/min',min:30,max:70,step:1,g:1,col:'#8d8270'}
+ ];
+ function gv(k){return k==='BM'?BM:(k==='VO2'?VO2:D[sel][k]);}
+ function sv(k,v){if(k==='BM')BM=v;else if(k==='VO2')VO2=v;else D[sel][k]=v;}
+
+ function sliders(){
+   var out='';
+   for(var i=0;i<SL.length;i++){var f=SL[i], v=gv(f.k);
+     out+='<div class="fu'+(f.g?' gl':'')+'" id="fu_'+f.k+'">'+
+       '<div class="hd"><span class="sw" style="background:'+f.col+'"></span>'+
+       '<span class="nmb">'+f.nm+'<small>'+f.ct+'</small></span>'+
+       '<input type="number" id="n_'+f.k+'" min="'+f.min+'" max="'+f.max+'" step="'+f.step+'" value="'+(f.dec?v.toFixed(f.dec):v)+'" aria-label="'+f.nm.replace(/&[^;]+;/g,'')+'"><span class="un">'+f.un+'</span></div>'+
+       '<input type="range" id="r_'+f.k+'" min="'+f.min+'" max="'+f.max+'" step="'+f.step+'" value="'+v+'" aria-label="'+f.nm.replace(/&[^;]+;/g,'')+' slider"></div>';
+   }
+   $('sliders').innerHTML=out;
+   for(i=0;i<SL.length;i++){(function(f){
+     var n=$('n_'+f.k), r=$('r_'+f.k);
+     r.oninput=function(){sv(f.k,+r.value);n.value=f.dec?(+r.value).toFixed(f.dec):r.value;render();};
+     n.oninput=function(){var x=parseFloat(n.value);if(isNaN(x))x=f.min;
+       x=Math.max(f.min,Math.min(f.max,Math.round(x/f.step)*f.step));sv(f.k,x);r.value=x;render();};
+     n.onblur=function(){n.value=f.dec?gv(f.k).toFixed(f.dec):gv(f.k);};
+   })(SL[i]);}
+ }
+ function syncSliders(){
+   for(var i=0;i<SL.length;i++){var f=SL[i], n=$('n_'+f.k), r=$('r_'+f.k), v=gv(f.k);
+     if(n&&document.activeElement!==n)n.value=f.dec?v.toFixed(f.dec):v;
+     if(r)r.value=v;}
+ }
+
+ function dayseg(R){
+   var out='';
+   for(var i=0;i<7;i++){
+     var lab=D[i].dur>0?(D[i].dur+'&prime;'):'rest';
+     out+='<button data-d="'+i+'" class="'+(i===sel?'on':'')+'">D'+(i+1)+'<small>'+lab+'</small></button>';
+   }
+   $('dayseg').innerHTML=out;
+   var bs=$('dayseg').querySelectorAll('button');
+   for(i=0;i<bs.length;i++) bs[i].onclick=(function(k){return function(){sel=+k;render();};})(bs[i].getAttribute('data-d'));
+ }
+
+ function sclist(){
+   var out='';
+   for(var i=0;i<SC.length;i++)
+     out+='<button class="it ex" data-i="'+i+'"><span class="ic">'+SC[i].ic+'</span><span><span class="nm">'+SC[i].nm+'</span><br><span class="ct">'+SC[i].ct+'</span></span></button>';
+   $('sclist').innerHTML=out;
+   var bs=$('sclist').querySelectorAll('.it');
+   for(i=0;i<bs.length;i++) bs[i].onclick=(function(n){return function(){loadSc(n);};})(bs[i].getAttribute('data-i'));
+ }
+ var scOn=-1;
+ function loadSc(n){
+   scOn=+n; SC[scOn].set(); det=''; render();
+   var R=sim(), s=R[sel];
+   $('info').innerHTML='<span class="n">'+SC[scOn].ic+' '+SC[scOn].nm+'</span>'+SC[scOn].d+
+     '<div class="loc">'+SC[scOn].loc+'</div>'+
+     '<div class="dd" style="font-weight:600;color:var(--teal-dk);">Day '+(sel+1)+' is selected. Working muscle ends that day at <b>'+pc(s.e_mw,s.mwN)+'</b> of normal; the week ends at <b>'+pc(R[6].e_mw,R[6].mwN)+'</b>.</div>';
+   var bs=$('sclist').querySelectorAll('.it');
+   for(var i=0;i<bs.length;i++) bs[i].className='it ex'+(+bs[i].getAttribute('data-i')===scOn?' on':'');
+ }
+
+ /* ---------- the ledger ---------- */
+ function drawMath(R){
+   var s=R[sel], day=D[sel], out='';
+   function ln(k,nm,rt,col){
+     return '<div class="ln'+(k?' rgn2':'')+'"'+(k?' data-k="'+k+'"':'')+'><span class="lf">'+
+       (col?'<span class="sw" style="background:'+col+'"></span>':'')+'<b>'+nm+'</b></span><span class="rt">'+rt+'</span></div>';
+   }
+   if(day.dur>0){
+     out+='<div class="hdr">The session &mdash; carbohydrate oxidised</div>';
+     out+=ln('fuelmix','Total','−'+fmt(s.choOx)+' g &nbsp;('+fmt(s.choMin*60)+' g/h)','');
+     out+=ln('muscle','&nbsp;&nbsp;from working-muscle glycogen',fmt(s.muOx)+' g',COL.mw);
+     out+=ln('liver','&nbsp;&nbsp;from blood glucose (liver)',fmt(s.bloodOx)+' g',COL.lv);
+     out+=ln('ingest','&nbsp;&nbsp;from what was ingested',fmt(s.ingOx)+' g',COL.ing);
+     out+=ln('fuelmix','Fat oxidised alongside it',fmt(s.fatOx)+' g &nbsp;('+fmt(s.fatOx*KF)+' kcal)',COL.fat);
+   }
+   out+='<div class="hdr">The day&rsquo;s carbohydrate ledger</div>';
+   out+=ln('reload','Total intake','+'+fmt(s.totalIn)+' g &nbsp;('+day.cho.toFixed(1)+' g/kg)','');
+   out+=ln('ingest','Taken during the session &mdash; burned as it arrived','−'+fmt(s.during)+' g',COL.ing);
+   out+=ln('liver','Resting glucose use &mdash; brain and the rest','−'+fmt(s.restUse)+' g',COL.lv);
+   out+='<div class="ln tt"><span class="lf"><b>Left to refill the stores</b></span><span class="rt">'+sgn(s.sur)+' g</span></div>';
+   out+='<div class="hdr">Where that went</div>';
+   if(s.sur<0){
+     out+=ln('liver','Shortfall drawn from liver glycogen','−'+fmt(s.a.def)+' g',COL.lv);
+     if(s.a.gng>0.5) out+=ln('liver','Liver empty &mdash; made from other substrates',fmt(s.a.gng)+' g',COL.lv);
+     out+=ln('muscle','Working muscle received &mdash; it cannot be refilled from a deficit','0 g',COL.mw);
+   } else {
+     out+=ln('liver','Liver refilled first',sgn(s.a.lv)+' g',COL.lv);
+     out+=ln('reload','Working muscle refilled',sgn(s.a.mw)+' g',COL.mw);
+     out+=ln('reload','Rest of the muscle mass',sgn(s.a.mo)+' g',COL.mo);
+     if(s.a.sup>0.5) out+=ln('loading','Stored above normal',sgn(s.a.sup)+' g',COL.ing);
+     if(s.a.over>0.5) out+=ln('loading','Not needed for storage &mdash; oxidised in place of fat','+'+fmt(s.a.over)+' g',COL.fat);
+   }
+   out+='<div class="hdr">End of day '+(sel+1)+'</div>';
+   out+=ln('muscle','Working muscle',fmt(s.e_mw)+' g &nbsp;'+pc(s.e_mw,s.mwN),COL.mw);
+   out+=ln('liver','Liver',fmt(s.e_lv)+' g &nbsp;'+pc(s.e_lv,s.lvN),COL.lv);
+   out+=ln('muscle','Total body glycogen',fmt(s.tot)+' g &nbsp;'+fmt(s.tot*KC)+' kcal',COL.mo);
+   var dm=(s.tot-s.totN)*(1+WATER)/1000;
+   out+=ln('water','Mass of that fuel plus its water',(dm>=0?'+':'−')+Math.abs(dm).toFixed(2)+' kg vs normal',COL.fat);
+   $('math').innerHTML=out;
+   var ns=$('math').querySelectorAll('.rgn2');
+   for(var i=0;i<ns.length;i++) ns[i].onclick=(function(k){return function(){pick(k);};})(ns[i].getAttribute('data-k'));
+   $('btot').innerHTML=Math.round(s.e_mw/s.mwN*100);
+ }
+
+ function flags(R){
+   var s=R[sel], out='';
+   if(s.wallT>0) out+='<div class="flag w">The depletion zone is reached at <b>'+mmss(s.wallT)+'</b> of this session. From here the working muscles cannot hold '+D[sel].int+'% of VO&#8322;max and the pace falls.</div>';
+   else if(s.wallT===0) out+='<div class="flag w">This session <b>starts</b> inside the depletion zone &mdash; the tank never recovered from the previous days. The intended intensity is not available from the first minute.</div>';
+   if(s.p_lv<0.25*s.lvN&&D[sel].dur>0) out+='<div class="flag w">Liver glycogen falls to <b>'+pc(s.p_lv,s.lvN)+'</b> of capacity during this session, with nothing arriving to replace it. That is the setting for the light-headed, disoriented kind of collapse &mdash; a different event from the muscular wall, and one the fuelling slider addresses directly.</div>';
+   else if(s.e_lv<0.25*s.lvN) out+='<div class="flag w">Liver glycogen ends the day at <b>'+pc(s.e_lv,s.lvN)+'</b> of capacity &mdash; the buffer that defends blood glucose overnight is low. Below this point the liver makes glucose from lactate, glycerol, and amino acids instead. Note that <b>muscle</b> glycogen stays where it is: it cannot be lent out.</div>';
+   if(s.e_mw>1.02*s.mwN) out+='<div class="flag o">Working muscle is <b>above</b> its usual level at '+pc(s.e_mw,s.mwN)+' &mdash; supercompensation. The extra fuel arrives with roughly 3 g of water per gram.</div>';
+   var hit=0;for(var i=0;i<7;i++) if(R[i].wallT>=0) hit++;
+   if(hit>1&&s.wallT<0) out+='<div class="flag w">The depletion zone is reached on <b>'+hit+' of the 7 days</b> this week. Tap the marked days on the chart above.</div>';
+   $('flags').innerHTML=out;
+ }
+
+ function stage(R){
+   var s=R[sel], day=D[sel], el=$('stage');
+   var lab=day.dur>0?(day.dur+' min at '+day.int+'% of VO&#8322;max'):'rest day';
+   if(s.wallT>0){el.style.background=COL.wall;
+     el.innerHTML='Day '+(sel+1)+' &mdash; the wall at '+Math.round(s.wallT)+' min<small>'+lab+' &middot; '+day.cho.toFixed(1)+' g/kg carbohydrate</small>';}
+   else if(s.wallT===0){el.style.background=COL.wall;
+     el.innerHTML='Day '+(sel+1)+' &mdash; starts depleted<small>'+lab+' &middot; the tank is already in the depletion zone</small>';}
+   else if(s.e_mw>1.02*s.mwN){el.style.background='#2f9e5b';
+     el.innerHTML='Day '+(sel+1)+' &mdash; loaded to '+pc(s.e_mw,s.mwN)+'<small>'+lab+' &middot; '+day.cho.toFixed(1)+' g/kg carbohydrate</small>';}
+   else if(s.e_mw<0.6*s.mwN){el.style.background=COL.lv;
+     el.innerHTML='Day '+(sel+1)+' &mdash; ends at '+pc(s.e_mw,s.mwN)+'<small>'+lab+' &middot; not fully reloaded for tomorrow</small>';}
+   else {el.style.background='var(--teal)';
+     el.innerHTML='Day '+(sel+1)+' &mdash; ends at '+pc(s.e_mw,s.mwN)+'<small>'+lab+' &middot; '+day.cho.toFixed(1)+' g/kg carbohydrate</small>';}
+ }
+
+ function weeknote(R){
+   var lo=2,hi=0,hit=0;
+   for(var i=0;i<7;i++){lo=Math.min(lo,R[i].p_mw/R[i].mwN);hi=Math.max(hi,R[i].e_mw/R[i].mwN);if(R[i].wallT>=0)hit++;}
+   var t='Across the week the working muscles range from <b>'+Math.round(lo*100)+'%</b> at their lowest to <b>'+Math.round(hi*100)+'%</b> at their highest. ';
+   t+=hit?('The depletion zone is entered on <b>'+hit+'</b> day'+(hit>1?'s':'')+' &mdash; marked in red.'):'The depletion zone is never entered.';
+   t+=' The dashed blue line is liver glycogen as a share of its own capacity; it is a much smaller store and it moves faster.';
+   $('weeknote').innerHTML=t;
+   $('cardTitle').innerHTML='Seven days of glycogen';
+ }
+
+ function sessnote(R){
+   var s=R[sel], day=D[sel];
+   $('sessTitle').innerHTML=day.dur>0?('Inside day '+(sel+1)+'&rsquo;s session'):('Day '+(sel+1)+' &mdash; no session');
+   if(day.dur<=0){$('sessnote').innerHTML='With no session, nothing draws on the working muscles. The entire day&rsquo;s carbohydrate goes to refilling the liver first, then muscle &mdash; which is why rest days are where a depleted week recovers.';return;}
+   var t='At '+day.int+'% of VO&#8322;max this athlete oxidises about <b>'+fmt(s.kcalMin)+' kcal per minute</b>, of which <b>'+Math.round(s.cf*100)+'% is carbohydrate</b> &mdash; roughly '+fmt(s.choMin*60)+' g per hour. ';
+   t+='The working muscles supply <b>'+fmt(s.muMin*60)+' g per hour</b> of that from their own glycogen';
+   if(day.fuel>0&&s.muMin0-s.muMin>0.02) t+=', down from '+fmt(s.muMin0*60)+' g per hour taken unfuelled &mdash; the grey dashed line. ';
+   else if(day.fuel>0) t+=' &mdash; almost exactly what it would supply unfuelled. What the '+day.fuel+' g per hour actually bought is on the liver line above: hepatic glucose output has been replaced rather than muscle glycogen. ';
+   else t+='. ';
+   t+='Energy yields are fixed: carbohydrate 4 kcal/g, fat 9 kcal/g. Tap a band on the bar to open it.';
+   $('sessnote').innerHTML=t;
+ }
+
+ function pick(k){
+   var Dt=DETAIL[k]; if(!Dt)return;
+   det=k;
+   $('info').innerHTML='<span class="n">'+Dt.nm+'</span>'+Dt.why+'<div class="dd">'+Dt.more+'</div><div class="dri">'+Dt.note+'</div>';
+   var R=sim(); drawSession(R);
+ }
+
+ function intro(){
+   $('info').innerHTML='<span class="n">A small tank behind a large one</span>'+
+     'Carbohydrate is stored as <b>glycogen</b> in two places that behave completely differently. <b>Muscle</b> holds the larger share &mdash; roughly 400 g in a 70 kg adult &mdash; but cannot release any of it into the blood. <b>Liver</b> holds only about 80&ndash;120 g but exists precisely in order to release it, keeping blood glucose steady for the brain. Between them, at <b>4 kcal per gram</b>, they store on the order of <b>2,000 kcal</b>.'+
+     '<div class="dd">Fat stores, at <b>9 kcal per gram</b>, hold many times that. So the wall is never a shortage of <i>energy</i> &mdash; it is a shortage of the one fuel that can be burned fast enough to hold a hard pace. Glycolysis regenerates ATP faster than fat oxidation can; when the glycogen in the recruited fibres runs out, the pace must drop to whatever fat will support. Tap any line in the ledger, any band on the fuel bar, or any day on the chart.</div>'+
+     '<div class="dri"><b>Naming the units, because two different systems are in play.</b> The <b>RDA for carbohydrate is 130 g per day for adults and children aged 1 year and over</b> (175 g/day in pregnancy, 210 g/day during lactation), and it is set to cover the average minimum glucose the brain oxidises &mdash; not to support training. The <b>AMDR is 45&ndash;65% of total energy</b> for adults. The <b>g per kg of body mass per day</b> figures on this page are something else entirely: sports-nutrition guidance for athletes in training, aimed at glycogen availability rather than at avoiding deficiency.</div>'+
+     '<div class="loc">Everything drawn here is a simplified average. Real glycogen use varies with fibre type, training status, sex, heat, altitude, prior meals, and the sport itself, and the model treats grams in and grams out as directly interchangeable, which the body only approximately does.</div>';
+ }
+
+ function render(){
+   var R=sim();
+   dayseg(R); syncSliders(); drawWeek(R); drawSession(R); drawMath(R); flags(R); stage(R); weeknote(R); sessnote(R);
+ }
+
+ $('copy').onclick=function(){
+   var s=D[sel];
+   for(var i=0;i<7;i++){D[i].dur=s.dur;D[i].int=s.int;D[i].fuel=s.fuel;D[i].cho=s.cho;}
+   scOn=-1; render();
+   var R=sim();
+   $('info').innerHTML='<span class="n">The same day, seven times</span>Day '+(sel+1)+' has been copied across the whole week: '+
+     (s.dur>0?(s.dur+' min at '+s.int+'% of VO&#8322;max'):'no session')+', '+s.cho.toFixed(1)+' g of carbohydrate per kg of body mass per day, '+s.fuel+' g/h during the session.'+
+     '<div class="dd">Repeating one day is the cleanest way to see whether a load is <b>sustainable</b>. If the line returns to the same height each morning, intake and expenditure are matched. If it steps down, the deficit compounds: by day seven the working muscles sit at <b>'+pc(R[6].e_mw,R[6].mwN)+'</b> of normal. If it steps up, the stores climb toward the supercompensation ceiling.</div>'+
+     '<div class="loc">Try a two-hour session at 70% of VO&#8322;max repeated all week. At <b>5 g/kg</b> the line steps down to about 77% and stays there; at <b>6 g/kg</b> it returns to 100% every morning. The gap between a week that holds and a week that drains can be a single gram per kilogram &mdash; which is why the guidance is expressed per kilogram of body mass and per hour of training rather than as one number for everyone.</div>';
+ };
+ $('reset').onclick=function(){
+   D=DEF.map(function(d){return mkDay(d.dur,d.int,d.fuel,d.cho);});
+   BM=70;VO2=48;sel=0;det='';scOn=-1;sliders();render();intro();
+ };
+
+ var ms=$('modeseg').querySelectorAll('button');
+ for(var q=0;q<ms.length;q++) ms[q].onclick=(function(b){return function(){
+   mode=+b.getAttribute('data-m');
+   for(var z=0;z<ms.length;z++) ms[z].className=(ms[z]===b?'on':'');
+   $('panelBuild').style.display=mode===0?'':'none';
+   $('panelSc').style.display=mode===1?'':'none';
+ };})(ms[q]);
+
+ sliders(); sclist(); intro(); render();
+})();
+</script>
+</body>
+</html>

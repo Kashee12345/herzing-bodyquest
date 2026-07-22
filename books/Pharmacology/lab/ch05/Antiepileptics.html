@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Antiepileptics: Calming the Neuron</title>
+<meta name="description" content="Interactive antiepileptic drug explorer — the four ways a drug calms a firing neuron, the key drugs by mechanism, and a draggable therapeutic-level gauge for phenytoin, carbamazepine, valproic acid, phenobarbital and ethosuximide. For pharmacology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+svg text{font-family:var(--sans);}
+.rgn{cursor:pointer;}
+.rgn:hover{opacity:.82;}
+.cap{font-size:11.5px;color:var(--muted);text-align:center;margin-top:6px;line-height:1.45;}
+.cap b{color:var(--soft);}
+.modeseg button{font-size:12.5px;padding:11px 4px;line-height:1.2;}
+.list{max-height:400px;overflow-y:auto;padding-right:3px;}
+.list.free{max-height:none;overflow-y:visible;padding-right:0;}
+.it .nm{display:block;} .it .ct{display:block;line-height:1.3;margin-top:1px;}
+.it .rt{margin-left:auto;font-size:8.6px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);background:#eef2f8;border-radius:20px;padding:3px 7px;flex:none;white-space:nowrap;}
+.it.on .rt{background:rgba(255,255,255,.22);color:#fff;}
+.grp{font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:10px 0 2px;}
+.grp:first-child{margin-top:2px;}
+#info .cls{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-radius:20px;padding:3px 10px;margin-bottom:6px;color:#fff;}
+.slab{font-size:9.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);margin:12px 0 5px;}
+input[type=range]{width:100%;accent-color:#2f5f9e;height:26px;cursor:pointer;}
+.seg button{font-size:12px;padding:11px 3px;}
+.chk{display:flex;gap:7px;margin-top:12px;}
+.chk div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 4px;font-size:9.3px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);background:#fff;}
+.chk div .v{display:block;font-size:12px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--teal-dk);margin-top:3px;line-height:1.25;}
+.chk div.warn .v{color:#b23145;} .chk div.good .v{color:#237a45;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 5</div>
+  <h1>Antiepileptics: Calming the Neuron</h1>
+  <div class="intro">A seizure is a population of neurons firing <b>too much, too fast, together</b>. Every antiepileptic drug fixes that in one of two ways &mdash; it <b>lifts off the gas</b> (block Na<sup>+</sup>, Ca<sup>2+</sup>, or glutamate) or it <b>presses the brake</b> (boost GABA). Learn the four targets, then the drugs that hit them, then the numbers you draw. Pick a mode.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The excitable neuron</h2>
+    <svg id="svgEl" viewBox="0 0 300 258" aria-label="diagram"><g id="art"></g></svg>
+    <div class="cap" id="cap"></div>
+  </div></div>
+  <div>
+    <div id="stage">Antiepileptic drugs<small>pick a mode</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg">
+        <button data-m="calm" class="on">4 ways to calm</button>
+        <button data-m="drug">The drugs</button>
+        <button data-m="lvl">Levels</button>
+      </div>
+      <div id="pane"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var C={na:'#2f5f9e',ca:'#7a5a8a',gaba:'#2f9e5b',glu:'#d1495b'};
+
+ /* ---------- 4 mechanisms ---------- */
+ var MECH=[
+  {k:'na',ic:'⚡',nm:'Block Na⁺ channels',ct:'Stop the burst · the biggest class',rate:20,
+   d:'Voltage-gated <b>sodium channels</b> fire the action potential. These drugs bind the channel in its <b>inactivated</b> state and hold it there longer, so it cannot reopen and fire again right away.',
+   why:'The trick is that this is <b>use-dependent</b>: the faster a neuron fires, the more drug binds. A seizure focus screaming at 100 Hz gets silenced while ordinary traffic at a few Hz passes through untouched &mdash; which is why these drugs stop seizures without shutting off the brain.',
+   dr:'Phenytoin · Fosphenytoin · Carbamazepine · Oxcarbazepine · Lamotrigine · Lacosamide · Valproic acid',
+   nu:'Nurse: this class covers <b>focal</b> and <b>generalized tonic-clonic</b> seizures. It does <b>not</b> cover absence &mdash; carbamazepine and phenytoin can actually <b>worsen</b> absence and myoclonic seizures.'},
+  {k:'ca',ic:'🌀',nm:'Block T-type Ca²⁺ currents',ct:'Break the thalamic 3-Hz rhythm',rate:55,
+   d:'Absence seizures are not a chaotic storm &mdash; they are a <b>rhythm</b>: a 3-per-second spike-and-wave oscillation looping between thalamus and cortex, driven by <b>T-type calcium currents</b> in thalamic neurons.',
+   why:'Damp that current and the loop cannot sustain itself. This target does nothing for focal or tonic-clonic seizures, which is why the drug that owns it is a <b>one-seizure-type drug</b>.',
+   dr:'Ethosuximide (the pure example) · Valproic acid · Zonisamide',
+   nu:'Nurse: absence looks like <b>daydreaming</b> &mdash; a 10-second blank stare, eyelid flutter, no aura, no postictal confusion, and the child resumes mid-sentence. It is usually the teacher who reports it, not the parent.'},
+  {k:'gaba',ic:'🛑',nm:'Boost GABA',ct:'Turn up the brake · fast and sedating',rate:28,
+   d:'<b>GABA-A</b> is a chloride channel. Open it and Cl⁻ flows in, the cell hyperpolarizes, and it becomes harder to reach threshold. This is the brain\'s own brake, and these drugs stand on it.',
+   why:'<b>Benzodiazepines increase the <u>frequency</u></b> of channel opening; <b>barbiturates increase the <u>duration</u></b>. Valproic acid raises GABA levels, and vigabatrin irreversibly blocks the enzyme that breaks GABA down.',
+   dr:'Lorazepam · Diazepam · Midazolam · Phenobarbital · Valproic acid · Vigabatrin',
+   nu:'Nurse: the brake is not selective. The same drug that stops the seizure suppresses the <b>drive to breathe</b> &mdash; keep suction, oxygen, and a bag-mask at the bedside, and watch respiratory rate and blood pressure after every IV dose.'},
+  {k:'glu',ic:'🔥',nm:'Cut glutamate',ct:'Lift off the gas at the synapse',rate:40,
+   d:'<b>Glutamate</b> is the brain\'s main excitatory transmitter, acting on <b>AMPA</b> and NMDA receptors. Drugs attack it from both sides of the cleft: block the receptor, or release less transmitter in the first place.',
+   why:'Perampanel blocks <b>AMPA</b> receptors directly; topiramate blocks AMPA/kainate among other actions. Levetiracetam binds <b>SV2A</b>, a protein on the synaptic vesicle, so less transmitter is released at all. Gabapentin and pregabalin bind the <b>α2δ subunit</b> of calcium channels on the terminal &mdash; less Ca²⁺ in means less vesicle release.',
+   dr:'Levetiracetam (SV2A) · Perampanel (AMPA) · Topiramate · Gabapentin · Pregabalin',
+   nu:'Nurse: this is the class that changes <b>behavior</b>. Levetiracetam causes irritability and aggression; perampanel carries a boxed warning for hostility and homicidal ideation. Ask the patient <i>and the family</i> about mood at every single visit.'}
+ ];
+
+ /* ---------- drugs ---------- */
+ var DRUGS=[
+  {g:'Sodium channel blockers'},
+  {k:'phenytoin',nm:'Phenytoin',m:'na',rt:'10–20',ct:'Prolongs Na⁺ channel inactivation',
+   use:'Focal and generalized tonic-clonic seizures; second-line loading in status epilepticus. <b>Not</b> for absence.',
+   lvl:['Total 10–20 mcg/mL','Free 1–2 mcg/mL','Draw as trough'],
+   ae:'Gingival hyperplasia · hirsutism · nystagmus then ataxia · rash progressing to <b>Stevens-Johnson syndrome</b> · fetal hydantoin syndrome',
+   nu:'<b>Zero-order kinetics</b> — the metabolizing enzymes saturate inside the therapeutic range, so a small dose increase can double the level. Doses are changed in tiny steps and rechecked. IV: mix in <b>normal saline only</b> (it precipitates in dextrose), use a filter, give <b>no faster than 50 mg/min</b>, and keep the patient on a cardiac monitor — fast infusion causes <b>hypotension and bradyarrhythmias</b>. Teach meticulous oral care, soft brushing, and regular dental visits for the gums. Strong CYP450 inducer: it lowers warfarin, oral contraceptives, and many others. If albumin is low, order a <b>free</b> level.',
+   dan:'A rash on phenytoin is not a nuisance — hold the drug and call the prescriber. Purple glove syndrome (edema, discoloration, pain distal to the IV site) also demands the infusion be stopped.'},
+  {k:'fosphenytoin',nm:'Fosphenytoin',m:'na',rt:'PE',ct:'IV prodrug of phenytoin',
+   use:'Status epilepticus and IV loading when phenytoin is too irritating or too slow.',
+   lvl:['Ordered in PE units','Converts to phenytoin','Same 10–20 target'],
+   ae:'Transient <b>paresthesia and pruritus</b>, classically in the groin, during infusion · same cardiac effects as phenytoin',
+   nu:'Always ordered and charted in <b>PE — phenytoin equivalents</b>. Reading the number as milligrams is a serious dosing error. It can be infused faster (up to 150 mg PE/min) and is compatible with saline <i>or</i> dextrose, with far less phlebitis. Cardiac monitoring and blood pressure checks still apply.',
+   dan:'Never assume mg = mg PE. Confirm the unit on the order and the pump before you start.'},
+  {k:'carbamazepine',nm:'Carbamazepine',m:'na',rt:'4–12',ct:'Na⁺ channel · also trigeminal neuralgia',
+   use:'Focal seizures; trigeminal neuralgia; bipolar disorder. Can <b>worsen</b> absence and myoclonic seizures.',
+   lvl:['4–12 mcg/mL','Trough level','Recheck after autoinduction'],
+   ae:'<b>Hyponatremia (SIADH)</b> · <b>agranulocytosis and aplastic anemia</b> · Stevens-Johnson syndrome / toxic epidermal necrolysis · diplopia and ataxia',
+   nu:'Baseline and periodic <b>CBC and serum sodium</b> — these are the two labs this drug owns. Screen for <b>HLA-B*1502</b> before starting in patients of Asian ancestry: that allele carries a high risk of SJS/TEN. It <b>autoinduces</b> its own metabolism, so levels drop after 2–4 weeks on a stable dose and the dose gets re-titrated — that falling level is expected, not nonadherence. Strong CYP3A4 inducer: oral contraceptives fail, so arrange backup contraception. Avoid grapefruit juice, which raises the level.',
+   dan:'Teach the patient to report sore throat, fever, mouth ulcers, easy bruising, or any rash immediately — those are the marrow and skin reactions announcing themselves.'},
+  {k:'oxcarbazepine',nm:'Oxcarbazepine',m:'na',rt:'—',ct:'Carbamazepine analog · cleaner',
+   use:'Focal seizures. Fewer interactions and no routine level monitoring.',
+   lvl:['No routine levels','Check sodium instead'],
+   ae:'<b>Hyponatremia — more common than with carbamazepine</b> · dizziness · diplopia · rash',
+   nu:'Monitor <b>sodium</b>, especially in older adults and anyone on a diuretic. Teach the sodium warning signs: headache, nausea, new confusion, lethargy, worsening seizures. Roughly a quarter to a third of patients with a carbamazepine rash will react to this drug too, so it is not a free pass after an SJS reaction. It still reduces oral contraceptive efficacy.',
+   dan:'New confusion or a seizure that gets worse after a dose increase should make you think hyponatremia, not undertreatment.'},
+  {k:'lamotrigine',nm:'Lamotrigine',m:'na',rt:'—',ct:'Na⁺ channel · ↓ glutamate release',
+   use:'Focal and generalized seizures; bipolar maintenance. Broad and well tolerated — if you can get it started.',
+   lvl:['No routine levels','Titration is the whole game'],
+   ae:'<b>Stevens-Johnson syndrome and toxic epidermal necrolysis</b> · dizziness · headache · diplopia',
+   nu:'The rash risk is driven almost entirely by <b>how fast you titrate</b>. Follow the starter-pack schedule exactly over weeks; never speed it up to "catch up." <b>Valproic acid roughly doubles the lamotrigine level</b>, so the starting dose is halved when the two are combined — this is the classic exam pairing. Enzyme inducers do the opposite. If the patient misses more than about 5 days of doses, the titration restarts from the beginning rather than resuming at the old dose.',
+   dan:'Any rash on lamotrigine: hold the dose and call. Rash with fever, blistering, mucous membrane or eye involvement is an emergency.'},
+  {k:'lacosamide',nm:'Lacosamide',m:'na',rt:'ECG',ct:'Enhances slow Na⁺ inactivation',
+   use:'Focal seizures; IV form available for inpatient loading.',
+   lvl:['No routine levels','Watch the PR interval'],
+   ae:'Dizziness · diplopia · <b>PR interval prolongation</b>',
+   nu:'Get a baseline <b>ECG</b> in patients with conduction disease or on other PR-prolonging drugs (beta blockers, non-dihydropyridine calcium channel blockers). It is a Schedule V controlled substance. Dizziness and gait unsteadiness make it a fall risk during titration.',
+   dan:''},
+  {g:'Calcium (T-type) blocker'},
+  {k:'ethosuximide',nm:'Ethosuximide',m:'ca',rt:'40–100',ct:'T-type Ca²⁺ · absence only',
+   use:'<b>Absence seizures — and nothing else.</b> The purest one-target, one-seizure-type drug in the chapter.',
+   lvl:['40–100 mcg/mL','Trough level'],
+   ae:'GI upset · drowsiness · hiccups · headache · rare blood dyscrasias',
+   nu:'Give <b>with food</b> to blunt the nausea. Periodic <b>CBC</b>. Because it covers only absence, a child who develops a tonic-clonic seizure on this drug has not failed the drug — the diagnosis has expanded, and the regimen usually changes to valproic acid or lamotrigine.',
+   dan:''},
+  {g:'GABA enhancers'},
+  {k:'lorazepam',nm:'Lorazepam',m:'gaba',rt:'1st line',ct:'GABA-A · ↑ frequency of Cl⁻ opening',
+   use:'<b>First-line drug for status epilepticus</b> — IV. Intramuscular midazolam when there is no IV; rectal diazepam for home rescue.',
+   lvl:['No levels','Time is the metric'],
+   ae:'<b>Respiratory depression</b> · hypotension · sedation · dependence with chronic use',
+   nu:'Status epilepticus means a seizure lasting <b>5 minutes or more</b>, or repeat seizures without recovery in between — start treating at 5 minutes, do not wait. Airway first: suction, oxygen, bag-mask at the bedside, side-lying position, nothing in the mouth, no restraints, and <b>time the seizure</b>. Check a glucose. The benzodiazepine buys minutes but will not hold — a second-line agent (fosphenytoin, valproic acid, or levetiracetam) follows immediately.',
+   dan:'Flumazenil reverses benzodiazepines but is <b>avoided</b> in a seizing patient — removing the brake can precipitate seizures that no longer respond. Support the airway instead.'},
+  {k:'phenobarbital',nm:'Phenobarbital',m:'gaba',rt:'15–40',ct:'GABA-A · ↑ duration of Cl⁻ opening',
+   use:'Neonatal seizures; refractory status epilepticus. One of the oldest antiepileptics still in use.',
+   lvl:['15–40 mcg/mL','Long half-life — slow to steady state'],
+   ae:'Sedation · <b>respiratory depression</b> · dependence and tolerance · <b>paradoxical hyperactivity in children and older adults</b>',
+   nu:'A potent <b>CYP450 inducer</b> — it lowers levels of many co-administered drugs. Monitor respiratory rate and sedation, especially alongside opioids or alcohol. Never stop it abruptly: withdrawal can trigger status epilepticus. Warn parents that the child may become <b>more</b> active, not sleepy — that is the drug, not misbehavior.',
+   dan:''},
+  {k:'vigabatrin',nm:'Vigabatrin',m:'gaba',rt:'REMS',ct:'Irreversibly blocks GABA breakdown',
+   use:'Refractory focal seizures; infantile spasms. Reserved because of what it does to the eye.',
+   lvl:['No routine levels','Vision testing is the monitor'],
+   ae:'<b>Permanent peripheral visual field loss</b> · sedation · weight gain',
+   nu:'Available only through a <b>restricted REMS program</b>. Vision testing at baseline and about every 3 months, and for a period after stopping. The field loss is <b>irreversible</b> and often silent until it is severe, so the schedule is not optional — teach the family that missed eye appointments can cost sight.',
+   dan:''},
+  {g:'Glutamate, SV2A and α2δ'},
+  {k:'levetiracetam',nm:'Levetiracetam',m:'glu',rt:'renal',ct:'Binds SV2A on the vesicle',
+   use:'Broad spectrum — focal and generalized. IV loading in status epilepticus. Popular because it plays well with everything.',
+   lvl:['No routine levels','Adjust to renal function'],
+   ae:'<b>Behavioral change — irritability, agitation, aggression, depression, suicidal ideation</b> · somnolence · dizziness',
+   nu:'<b>Renally cleared</b>, so the dose is reduced in kidney disease and after dialysis. Almost no drug interactions and no enzyme induction, which is exactly why it is chosen for patients already on complicated regimens. The trade-off is mood: screen the patient <i>and ask the family</i> about irritability and aggression at every visit.',
+   dan:'A patient whose personality changes after starting this drug is having an adverse effect, not a behavior problem. Report it.'},
+  {k:'topiramate',nm:'Topiramate',m:'glu',rt:'fluids',ct:'AMPA/kainate + Na⁺ + GABA + CA inhibition',
+   use:'Broad spectrum seizures; migraine prophylaxis. Hits several targets at once.',
+   lvl:['No routine levels','Watch bicarbonate'],
+   ae:'<b>Cognitive slowing and word-finding difficulty</b> · paresthesias · <b>weight loss</b> · <b>kidney stones</b> · <b>metabolic acidosis</b> · <b>acute angle-closure glaucoma</b> · decreased sweating with hyperthermia in children',
+   nu:'Push <b>fluids</b> to prevent stones — this is the practical teaching point. Monitor serum <b>bicarbonate</b> for the acidosis. In hot weather, watch children for <b>decreased sweating and rising temperature</b>. It is a teratogen (cleft lip and palate), so contraception counseling comes before the first dose.',
+   dan:'Sudden eye pain, blurred vision, or seeing halos means <b>acute angle-closure glaucoma</b> — stop the drug and get to the emergency department. Vision loss can follow within hours.'},
+  {k:'perampanel',nm:'Perampanel',m:'glu',rt:'boxed',ct:'Non-competitive AMPA antagonist',
+   use:'Adjunct for focal and generalized tonic-clonic seizures. The cleanest glutamate-receptor example.',
+   lvl:['No routine levels','Monitor behavior'],
+   ae:'<b>Boxed warning: serious psychiatric and behavioral reactions</b> — aggression, hostility, irritability, homicidal ideation · dizziness · somnolence',
+   nu:'Dose at <b>bedtime</b> because of dizziness and sedation. Schedule III controlled substance. The boxed warning is the whole nursing plan: document a mood and behavior assessment at every contact, and teach the family who to call if the patient becomes hostile.',
+   dan:''},
+  {k:'gabapentin',nm:'Gabapentin / Pregabalin',m:'glu',rt:'renal',ct:'Bind the α2δ Ca²⁺ channel subunit',
+   use:'Adjunct for focal seizures — but in practice these are used far more for <b>neuropathic pain</b>, fibromyalgia, and postherpetic neuralgia.',
+   lvl:['No routine levels','Adjust to renal function'],
+   ae:'Sedation · dizziness · <b>peripheral edema</b> · weight gain · ataxia',
+   nu:'Despite the name, gabapentin does <b>not</b> act on GABA receptors — it binds the <b>α2δ subunit</b> of voltage-gated calcium channels. Both are <b>renally cleared</b> and need dose reduction in kidney disease. <b>Pregabalin is a Schedule V controlled substance.</b> Antacids cut gabapentin absorption — separate them by 2 hours. Taper on discontinuation.',
+   dan:''},
+  {g:'Broad-spectrum'},
+  {k:'valproic',nm:'Valproic acid / Divalproex',m:'gaba',rt:'50–100',ct:'Na⁺ + GABA + T-type Ca²⁺ — all three',
+   use:'The broadest agent here: absence, myoclonic, generalized tonic-clonic, and focal seizures; also migraine prophylaxis and bipolar disorder.',
+   lvl:['50–100 mcg/mL','Trough level'],
+   ae:'<b>Hepatotoxicity</b> (boxed) · <b>pancreatitis</b> (boxed) · <b>teratogenicity — neural tube defects</b> (boxed) · hyperammonemia · thrombocytopenia · weight gain · tremor · alopecia',
+   nu:'Three boxed warnings drive the nursing care. Baseline and serial <b>LFTs</b>; check an <b>ammonia</b> level on any patient who becomes lethargic or confused; watch <b>platelets</b> for bruising and bleeding. Give with food and never crush the extended-release form. It raises lamotrigine levels — that combination halves the lamotrigine dose. Before starting it in anyone of childbearing potential: pregnancy test, reliable contraception, and an explicit conversation, because neural tube defects form in the first weeks, often before a pregnancy is known.',
+   dan:'Report <b>abdominal pain with vomiting</b> (pancreatitis) or <b>jaundice, dark urine, anorexia, unusual lethargy</b> (hepatotoxicity) at once. Both can appear while the level sits perfectly in range — these injuries are idiosyncratic, not level-driven.'}
+ ];
+
+ /* ---------- levels ---------- */
+ var LV=[
+  {k:'phenytoin',nm:'Phenytoin',lo:10,hi:20,max:45,u:'mcg/mL',st:0.5,
+   s:[{at:0,t:'Subtherapeutic',c:'#255f8a',
+       d:'Below 10 mcg/mL the patient is unprotected and seizures break through. Before you blame nonadherence, <b>check the albumin</b>: phenytoin is about 90% protein bound, so in hypoalbuminemia or renal failure the <b>total</b> level reads falsely low while the <b>free</b>, active level is fine. Order a free phenytoin — normal is 1–2 mcg/mL.'},
+      {at:10,t:'Therapeutic',c:'#237a45',
+       d:'10–20 mcg/mL, drawn as a <b>trough</b> immediately before the next dose. Do not relax about dose changes here: phenytoin follows <b>zero-order kinetics</b> in this range — the enzymes are saturated, so a modest dose increase can send the level far above 20. Doses are adjusted in small increments and the level rechecked.'},
+      {at:20,t:'Early toxicity',c:'#b8862f',
+       d:'<b>Nystagmus on lateral gaze is the first sign</b> — it appears before the patient feels anything. Check it deliberately when a level comes back high, and document it. Hold the dose and notify the prescriber.'},
+      {at:30,t:'Toxic',c:'#c2603a',
+       d:'<b>Ataxia, slurred speech, incoordination.</b> The patient is now a clear fall risk — bed in low position, call light in reach, assist with ambulation. Nausea and vomiting are common.'},
+      {at:40,t:'Severe toxicity',c:'#b23145',
+       d:'<b>Lethargy, confusion, and eventually coma.</b> At extreme levels phenytoin can <b>paradoxically cause seizures</b>. Protect the airway, place seizure precautions, and monitor cardiac rhythm.'}]},
+  {k:'carbamazepine',nm:'Carbamazepine',lo:4,hi:12,max:26,u:'mcg/mL',st:0.5,
+   s:[{at:0,t:'Subtherapeutic',c:'#255f8a',
+       d:'Below 4 mcg/mL, seizures break through. A level that <b>falls</b> 2–4 weeks after a stable dose is usually <b>autoinduction</b> — carbamazepine induces the enzymes that metabolize it, so it clears itself faster over time. Expect a planned dose increase; this is not nonadherence.'},
+      {at:4,t:'Therapeutic',c:'#237a45',
+       d:'4–12 mcg/mL as a trough. The level is only half the monitoring: this drug also needs a periodic <b>CBC</b> (agranulocytosis, aplastic anemia) and <b>serum sodium</b> (SIADH). A therapeutic level does not protect against either.'},
+      {at:12,t:'Toxic',c:'#b8862f',
+       d:'<b>Diplopia is often the first complaint</b>, with nystagmus, ataxia, drowsiness, and vomiting. Hold the dose, notify the prescriber, and put fall precautions in place.'},
+      {at:20,t:'Severe toxicity',c:'#b23145',
+       d:'Carbamazepine is structurally related to the tricyclic antidepressants, and it acts like one in overdose: <b>cardiac conduction block and arrhythmias</b>, hypotension, seizures, and coma. Continuous cardiac monitoring and airway support.'}]},
+  {k:'valproic',nm:'Valproic acid',lo:50,hi:100,max:200,u:'mcg/mL',st:1,
+   s:[{at:0,t:'Subtherapeutic',c:'#255f8a',
+       d:'Below 50 mcg/mL, seizure control is unreliable. Confirm adherence and timing — the level must be a <b>trough</b>, because a peak drawn 1–4 hours after a dose reads high and misleads everyone.'},
+      {at:50,t:'Therapeutic',c:'#237a45',
+       d:'50–100 mcg/mL. Understand what this number does <b>not</b> tell you: <b>hepatotoxicity and pancreatitis are idiosyncratic</b> and occur at perfectly therapeutic levels. The level tracks seizure control; the <b>LFTs, ammonia, and platelets</b> track the danger.'},
+      {at:100,t:'Toxic',c:'#b8862f',
+       d:'<b>Sedation, tremor, nausea, and worsening confusion.</b> Draw an <b>ammonia</b> level — valproate raises ammonia even when the LFTs look acceptable. Hold the dose and notify.'},
+      {at:150,t:'Severe toxicity',c:'#b23145',
+       d:'<b>Hyperammonemic encephalopathy</b> (lethargy progressing to coma), thrombocytopenia with bleeding, and CNS depression. <b>L-carnitine</b> is used for valproate-induced hyperammonemia. Protect the airway and monitor neuro status closely.'}]},
+  {k:'phenobarbital',nm:'Phenobarbital',lo:15,hi:40,max:80,u:'mcg/mL',st:1,
+   s:[{at:0,t:'Subtherapeutic',c:'#255f8a',
+       d:'Below 15 mcg/mL. Phenobarbital has a very long half-life, so it takes <b>weeks</b> to reach steady state — a low level early in therapy may simply mean it has not gotten there yet. Do not chase it with rapid dose increases.'},
+      {at:15,t:'Therapeutic',c:'#237a45',
+       d:'15–40 mcg/mL. Expect some sedation, and expect <b>paradoxical hyperactivity</b> instead in children and older adults. Because it is a potent enzyme inducer, adding or removing it changes the levels of half the other drugs on the list.'},
+      {at:40,t:'Toxic',c:'#b8862f',
+       d:'<b>Sedation, ataxia, nystagmus, slurred speech.</b> Fall precautions. Assess the respiratory rate at every check, especially if the patient is also on an opioid or a benzodiazepine.'},
+      {at:60,t:'Severe toxicity',c:'#b23145',
+       d:'<b>Stupor or coma, respiratory depression, hypotension</b>, and loss of protective reflexes. This is an airway emergency: support ventilation and circulation. There is no reversal agent for barbiturates.'}]},
+  {k:'ethosuximide',nm:'Ethosuximide',lo:40,hi:100,max:160,u:'mcg/mL',st:1,
+   s:[{at:0,t:'Subtherapeutic',c:'#255f8a',
+       d:'Below 40 mcg/mL the absence spells continue — brief blank stares that the family may not even register as seizures. Ask the <b>school</b>, not just the parents: staring spells are usually caught in a classroom.'},
+      {at:40,t:'Therapeutic',c:'#237a45',
+       d:'40–100 mcg/mL. Give <b>with food</b> for the GI upset, and check a periodic <b>CBC</b> for the rare blood dyscrasias. Remember the ceiling of this drug: it treats absence and nothing else.'},
+      {at:100,t:'Toxic',c:'#b8862f',
+       d:'<b>GI distress, drowsiness, ataxia, headache, and hiccups.</b> Mostly uncomfortable rather than dangerous, but hold the dose and notify — and reassess whether the nausea is toxicity or simply a missed dose taken on an empty stomach.'}]}
+ ];
+
+ var mode='calm', curM='', curD='', curL=0, lvI=0, phase=0, timer=null;
+
+ /* ---------- neuron scene ---------- */
+ function neuron(hl){
+   var s='', on=function(k){return hl===k;};
+   var dim='#c9d3e2', ink='#232a36';
+   s+='<text x="150" y="16" font-size="8.4" fill="#78828f" text-anchor="middle" font-weight="700" letter-spacing="1.4">PRE-SYNAPTIC  →  SYNAPSE  →  POST-SYNAPTIC</text>';
+
+   /* post-synaptic cell */
+   s+='<rect x="248" y="48" width="46" height="130" rx="7" fill="#f5f7fb" stroke="'+dim+'"/>';
+   s+='<rect x="236" y="48" width="12" height="130" rx="2" fill="#e8edf5" stroke="'+dim+'"/>';
+
+   /* soma + dendrites + T-type Ca */
+   s+='<g class="rgn" data-k="ca">';
+   s+='<line x1="24" y1="80" x2="7" y2="66" stroke="'+(on('ca')?C.ca:dim)+'" stroke-width="3" stroke-linecap="round"/>';
+   s+='<line x1="21" y1="95" x2="3" y2="95" stroke="'+(on('ca')?C.ca:dim)+'" stroke-width="3" stroke-linecap="round"/>';
+   s+='<line x1="24" y1="110" x2="7" y2="124" stroke="'+(on('ca')?C.ca:dim)+'" stroke-width="3" stroke-linecap="round"/>';
+   s+='<circle cx="44" cy="95" r="25" fill="'+(on('ca')?'#ece3f3':'#eef2f8')+'" stroke="'+(on('ca')?C.ca:dim)+'" stroke-width="'+(on('ca')?2.6:1.4)+'"/>';
+   s+='<circle cx="44" cy="95" r="8" fill="'+(on('ca')?C.ca:'#d6dfec')+'"/>';
+   var cg=[[39,68],[19,107],[58,116]];
+   for(var i=0;i<3;i++){ s+='<rect x="'+cg[i][0]+'" y="'+cg[i][1]+'" width="10" height="8" rx="2" fill="'+(on('ca')?C.ca:'#b8c3d4')+'"/>'; }
+   s+='<text x="44" y="136" font-size="8" fill="'+(on('ca')?C.ca:'#78828f')+'" text-anchor="middle" font-weight="800">Ca²⁺ T-type</text>';
+   s+='</g>';
+
+   /* axon + Na channels */
+   s+='<g class="rgn" data-k="na">';
+   s+='<rect x="69" y="87" width="106" height="16" rx="8" fill="'+(on('na')?'#dde7f5':'#eef2f8')+'" stroke="'+(on('na')?C.na:dim)+'" stroke-width="'+(on('na')?2.4:1.4)+'"/>';
+   var nx=[86,108,130,152];
+   for(var j=0;j<4;j++){ s+='<rect x="'+nx[j]+'" y="79" width="11" height="9" rx="2.5" fill="'+(on('na')?C.na:'#b8c3d4')+'"/>';
+     if(on('na')){ s+='<line x1="'+(nx[j]+5.5)+'" y1="74" x2="'+(nx[j]+5.5)+'" y2="70" stroke="'+C.na+'" stroke-width="2"/>'; } }
+   s+='<text x="121" y="65" font-size="8" fill="'+(on('na')?C.na:'#78828f')+'" text-anchor="middle" font-weight="800">Na⁺ channels</text>';
+   s+='</g>';
+
+   /* terminal, vesicles, glutamate, AMPA */
+   s+='<g class="rgn" data-k="glu">';
+   s+='<path d="M175 81 L214 66 L214 124 L175 109 Z" fill="'+(on('glu')?'#f7e2e5':'#eef2f8')+'" stroke="'+(on('glu')?C.glu:dim)+'" stroke-width="'+(on('glu')?2.4:1.4)+'"/>';
+   var vz=[[187,84],[200,96],[189,108]];
+   for(var v=0;v<3;v++){ s+='<circle cx="'+vz[v][0]+'" cy="'+vz[v][1]+'" r="6.5" fill="#fff" stroke="'+(on('glu')?C.glu:'#b8c3d4')+'" stroke-width="2"/>';
+     s+='<rect x="'+(vz[v][0]+4)+'" y="'+(vz[v][1]-2.5)+'" width="5" height="5" rx="1.5" fill="'+(on('glu')?C.glu:'#b8c3d4')+'"/>'; }
+   var gd=on('glu')?1:3;
+   for(var g=0;g<gd;g++){ s+='<circle cx="'+(219+g*6)+'" cy="'+(80+(g%2)*7)+'" r="2.8" fill="'+C.glu+'"/>'; }
+   s+='<rect x="232" y="72" width="20" height="17" rx="4" fill="'+(on('glu')?C.glu:'#cfd8e6')+'"/>';
+   s+='<text x="192" y="125" font-size="7.6" fill="'+(on('glu')?C.glu:'#78828f')+'" text-anchor="middle" font-weight="800">SV2A · vesicles</text>';
+   s+='<text x="256" y="66" font-size="8" fill="'+(on('glu')?C.glu:'#78828f')+'" font-weight="800">AMPA</text>';
+   s+='<text x="256" y="86" font-size="7.4" fill="#78828f">Na⁺ in</text>';
+   s+='<text x="256" y="95" font-size="7.4" fill="#78828f">EXCITE</text>';
+   s+='</g>';
+
+   /* GABA interneuron + GABA-A */
+   s+='<g class="rgn" data-k="gaba">';
+   s+='<circle cx="193" cy="166" r="16" fill="'+(on('gaba')?C.gaba:'#cfd8e6')+'"/>';
+   s+='<text x="193" y="169" font-size="7.4" fill="#fff" text-anchor="middle" font-weight="800">GABA</text>';
+   s+='<path d="M209 160 L226 152" stroke="'+(on('gaba')?C.gaba:'#cfd8e6')+'" stroke-width="5" stroke-linecap="round"/>';
+   var gn=on('gaba')?4:2;
+   for(var q=0;q<gn;q++){ s+='<circle cx="'+(220+q*4)+'" cy="'+(150-q*1.5)+'" r="2.6" fill="'+C.gaba+'"/>'; }
+   s+='<rect x="232" y="140" width="20" height="17" rx="4" fill="'+(on('gaba')?C.gaba:'#cfd8e6')+'"/>';
+   s+='<text x="256" y="136" font-size="8" fill="'+(on('gaba')?C.gaba:'#78828f')+'" font-weight="800">GABA-A</text>';
+   s+='<text x="256" y="152" font-size="7.4" fill="'+(on('gaba')?C.gaba:'#78828f')+'" font-weight="'+(on('gaba')?800:400)+'">Cl⁻ in</text>';
+   s+='<text x="256" y="161" font-size="7.4" fill="'+(on('gaba')?C.gaba:'#78828f')+'" font-weight="'+(on('gaba')?800:400)+'">INHIBIT</text>';
+   s+='</g>';
+   s+='<text x="271" y="192" font-size="7.2" fill="#78828f" text-anchor="middle">post-synaptic</text>';
+   return s;
+ }
+
+ function spikes(rate,col,lab){
+   var s='';
+   s+='<line x1="10" y1="252" x2="290" y2="252" stroke="#dfe4ee" stroke-width="1.5"/>';
+   s+='<text x="10" y="212" font-size="7.6" fill="#78828f" font-weight="800" letter-spacing="1">FIRING RATE</text>';
+   s+='<text x="290" y="212" font-size="8.4" fill="'+col+'" text-anchor="end" font-weight="800">'+lab+'</text>';
+   var gap=9+ (100-rate)/100*40;
+   var h=16+rate/100*20;
+   for(var x=-gap; x<292; x+=gap){
+     var px=x + (phase % gap);
+     if(px<8||px>290) continue;
+     s+='<path d="M'+px.toFixed(1)+' 252 L'+(px+2).toFixed(1)+' '+(252-h).toFixed(1)+' L'+(px+4).toFixed(1)+' 252" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round"/>';
+   }
+   return s;
+ }
+
+ function paintNeuron(hl,rate,lab,col){
+   $("svgEl").setAttribute('viewBox','0 0 300 258');
+   $("art").innerHTML=neuron(hl)+spikes(rate,col,lab);
+   var ns=document.querySelectorAll('#art .rgn');
+   for(var i=0;i<ns.length;i++){ (function(el){ el.onclick=function(){
+     if(mode==='calm'){ selM(el.getAttribute('data-k')); }
+   }; })(ns[i]); }
+ }
+
+ function tick(){
+   var rate = mechRate();
+   phase += 1 + rate/22;
+   if(phase>4000) phase=0;
+   if(mode==='calm'||mode==='drug') paintCur();
+ }
+ function mechRate(){
+   if(mode==='calm'){ var m=byK(MECH,curM); return m?m.rate:100; }
+   if(mode==='drug'){ var d=byK(DRUGS,curD); if(!d) return 100; var mm=byK(MECH,d.m); return mm?mm.rate:100; }
+   return 100;
+ }
+ function byK(arr,k){ for(var i=0;i<arr.length;i++){ if(arr[i].k===k) return arr[i]; } return null; }
+
+ function paintCur(){
+   var hl='', col='#b23145', lab='uncontrolled burst', rate=100;
+   if(mode==='calm'&&curM){ var m=byK(MECH,curM); hl=curM; col=C[curM]; rate=m.rate; lab='calmed · '+m.rate+'%'; }
+   if(mode==='drug'&&curD){ var d=byK(DRUGS,curD); hl=d.m; col=C[d.m]; rate=byK(MECH,d.m).rate; lab='calmed · '+rate+'%'; }
+   paintNeuron(hl,rate,lab,col);
+ }
+
+ /* ---------- gauge ---------- */
+ function gauge(){
+   var d=LV[lvI], v=curL, X=function(n){return 25+n/d.max*250;};
+   var sg=sign(d,v);
+   var s='';
+   s+='<text x="150" y="26" font-size="10.5" fill="#1e3a63" text-anchor="middle" font-weight="800">'+d.nm+' serum level</text>';
+   s+='<text x="150" y="40" font-size="8" fill="#78828f" text-anchor="middle" font-weight="600" letter-spacing=".6">DRAW AS A TROUGH — RIGHT BEFORE THE NEXT DOSE</text>';
+   s+='<rect x="25" y="88" width="'+(X(d.lo)-25)+'" height="30" fill="#dfe7f2"/>';
+   s+='<rect x="'+X(d.lo)+'" y="88" width="'+(X(d.hi)-X(d.lo))+'" height="30" fill="#cfead9"/>';
+   s+='<rect x="'+X(d.hi)+'" y="88" width="'+(275-X(d.hi))+'" height="30" fill="#f6d8dd"/>';
+   s+='<rect x="25" y="88" width="250" height="30" rx="4" fill="none" stroke="#c9d3e2"/>';
+   s+='<text x="'+((25+X(d.lo))/2)+'" y="107" font-size="7.4" fill="#255f8a" text-anchor="middle" font-weight="800">SUB</text>';
+   s+='<text x="'+((X(d.lo)+X(d.hi))/2)+'" y="107" font-size="7.4" fill="#237a45" text-anchor="middle" font-weight="800">THERAPEUTIC</text>';
+   s+='<text x="'+((X(d.hi)+275)/2)+'" y="107" font-size="7.4" fill="#b23145" text-anchor="middle" font-weight="800">TOXIC</text>';
+   s+='<text x="25" y="132" font-size="7.6" fill="#78828f" text-anchor="middle">0</text>';
+   s+='<text x="'+X(d.lo)+'" y="132" font-size="7.6" fill="#237a45" text-anchor="middle" font-weight="800">'+d.lo+'</text>';
+   s+='<text x="'+X(d.hi)+'" y="132" font-size="7.6" fill="#237a45" text-anchor="middle" font-weight="800">'+d.hi+'</text>';
+   s+='<text x="275" y="132" font-size="7.6" fill="#78828f" text-anchor="middle">'+d.max+'</text>';
+   var mx=X(v), tx=Math.min(268,Math.max(32,mx));
+   s+='<line x1="'+mx+'" y1="76" x2="'+mx+'" y2="124" stroke="'+sg.c+'" stroke-width="3"/>';
+   s+='<polygon points="'+(mx-6)+',66 '+(mx+6)+',66 '+mx+',77" fill="'+sg.c+'"/>';
+   s+='<text x="'+tx+'" y="60" font-size="12" fill="'+sg.c+'" text-anchor="middle" font-weight="800">'+v.toFixed(d.st<1?1:0)+'</text>';
+   s+='<text x="150" y="160" font-size="14" fill="'+sg.c+'" text-anchor="middle" font-weight="800">'+sg.t.toUpperCase()+'</text>';
+   s+='<text x="150" y="180" font-size="8.6" fill="#78828f" text-anchor="middle">Therapeutic range '+d.lo+'–'+d.hi+' '+d.u+'</text>';
+   $("svgEl").setAttribute('viewBox','0 0 300 196');
+   $("art").innerHTML=s;
+ }
+ function sign(d,v){ var r=d.s[0]; for(var i=0;i<d.s.length;i++){ if(v>=d.s[i].at) r=d.s[i]; } return r; }
+
+ /* ---------- panes ---------- */
+ function selM(k){ curM=k; renderCalm(); }
+ function renderCalm(){
+   var h='<div class="list free">';
+   for(var i=0;i<MECH.length;i++){ var m=MECH[i];
+     h+='<button class="it'+(m.k===curM?' on':'')+'" data-k="'+m.k+'"><span class="ic">'+m.ic+'</span><span><span class="nm">'+m.nm+'</span><span class="ct">'+m.ct+'</span></span></button>';
+   }
+   h+='</div>';
+   $("pane").innerHTML=h;
+   var bs=document.querySelectorAll('#pane .it');
+   for(var j=0;j<bs.length;j++){ (function(b){ b.onclick=function(){ selM(b.getAttribute('data-k')); }; })(bs[j]); }
+   if(!curM){
+     $("stage").style.background='#b23145';
+     $("stage").innerHTML='An unopposed focus<small>firing at 100% — tap a target to calm it</small>';
+     $("cardTitle").innerHTML='The excitable neuron';
+     $("cap").innerHTML='Tap a target on the neuron, or an item in the list. <b>Gas pedals:</b> Na⁺, Ca²⁺, glutamate. <b>Brake:</b> GABA.';
+     $("info").innerHTML='<span class="n">Gas and brake</span>Neurons fire because <b>excitation</b> (glutamate opening Na⁺ and Ca²⁺ channels) outruns <b>inhibition</b> (GABA opening Cl⁻ channels). A seizure is that balance tipping. Every drug in this section either <b>lifts off the gas</b> or <b>presses the brake</b> — there is no third option.'+classNote();
+   } else {
+     var m=byK(MECH,curM);
+     $("stage").style.background=C[curM];
+     $("stage").innerHTML=m.nm+'<small>firing drops to '+m.rate+'% of the unopposed burst</small>';
+     $("cardTitle").innerHTML=m.nm;
+     $("cap").innerHTML='Highlighted: the drug target. Watch the <b>firing rate</b> trace below the neuron.';
+     $("info").innerHTML='<span class="cls" style="background:'+C[curM]+'">'+m.ct+'</span><span class="n">'+m.nm+'</span>'+m.d+
+       '<div class="dd">'+m.why+'</div>'+
+       '<div class="ex"><span>'+m.dr.split(' · ').join('</span><span>')+'</span></div>'+
+       '<div class="loc">'+m.nu+'</div>';
+   }
+   paintCur();
+ }
+
+ function classNote(){
+   return '<div class="note"><b>True of every AED:</b> never stop abruptly — withdrawal can trigger <b>status epilepticus</b>; always taper. All carry an FDA warning for <b>suicidal thoughts and behavior</b> — assess mood at every visit.</div>'+
+     '<div class="mnem"><b>Benzos vs barbiturates:</b> benzodiazepines increase the <b>F</b>requency of chloride channel opening; barbi<b>DUR</b>ates increase the <b>DUR</b>ation. Both end up with the same chloride flowing in.</div>';
+ }
+
+ function selD(k){ curD=k; renderDrug(); }
+ function renderDrug(){
+   var h='<div class="list">';
+   for(var i=0;i<DRUGS.length;i++){ var d=DRUGS[i];
+     if(d.g){ h+='<div class="grp">'+d.g+'</div>'; continue; }
+     h+='<button class="it'+(d.k===curD?' on':'')+'" data-k="'+d.k+'"><span class="sw" style="background:'+C[d.m]+'"></span><span><span class="nm">'+d.nm+'</span><span class="ct">'+d.ct+'</span></span><span class="rt">'+d.rt+'</span></button>';
+   }
+   h+='</div>';
+   $("pane").innerHTML=h;
+   var bs=document.querySelectorAll('#pane .it');
+   for(var j=0;j<bs.length;j++){ (function(b){ b.onclick=function(){ selD(b.getAttribute('data-k')); }; })(bs[j]); }
+   if(!curD){
+     $("stage").style.background='#2f5f9e';
+     $("stage").innerHTML='The antiepileptic drugs<small>grouped by the target they hit — tap one</small>';
+     $("cardTitle").innerHTML='The excitable neuron';
+     $("cap").innerHTML='Pick a drug and its <b>site of action</b> lights up on the neuron.';
+     $("info").innerHTML='<span class="n">Read the color, not the name</span>The colored square on each drug is its <b>target</b>: <b style="color:#2f5f9e">blue = Na⁺ channel</b>, <b style="color:#7a5a8a">purple = T-type Ca²⁺</b>, <b style="color:#2f9e5b">green = GABA</b>, <b style="color:#d1495b">red = glutamate/release</b>. The badge on the right is the number or the monitoring that defines that drug in practice.'+classNote();
+   } else {
+     var d=byK(DRUGS,curD);
+     $("stage").style.background=C[d.m];
+     $("stage").innerHTML=d.nm+'<small>'+d.ct+'</small>';
+     $("cardTitle").innerHTML=d.nm+' — site of action';
+     $("cap").innerHTML='<b>'+byK(MECH,d.m).nm+'</b> — firing falls to '+byK(MECH,d.m).rate+'% of the unopposed burst.';
+     var h2='<span class="cls" style="background:'+C[d.m]+'">'+byK(MECH,d.m).nm+'</span><span class="n">'+d.nm+'</span>'+d.use;
+     h2+='<div class="ex"><span>'+d.lvl.join('</span><span>')+'</span></div>';
+     h2+='<div class="slab">Adverse effects</div><div class="dd" style="margin-top:0">'+d.ae+'</div>';
+     h2+='<div class="loc"><b>What the nurse does.</b> '+d.nu+'</div>';
+     if(d.dan) h2+='<div class="note"><b>Report immediately.</b> '+d.dan+'</div>';
+     $("info").innerHTML=h2;
+   }
+   paintCur();
+ }
+
+ function renderLvl(){
+   var d=LV[lvI];
+   var h='<div class="seg" id="lvseg">';
+   for(var i=0;i<LV.length;i++){ h+='<button data-i="'+i+'" class="'+(i===lvI?'on':'')+'">'+LV[i].nm.split(' ')[0]+'<small>'+LV[i].lo+'–'+LV[i].hi+'</small></button>'; }
+   h+='</div><div class="slab">Drag the level</div><input type="range" id="sl" min="0" max="'+d.max+'" step="'+d.st+'" value="'+curL+'">';
+   h+='<div class="chk"><div id="c1">Level<span class="v" id="v1">—</span></div><div id="c2">Zone<span class="v" id="v2">—</span></div><div id="c3">Action<span class="v" id="v3">—</span></div></div>';
+   $("pane").innerHTML=h;
+   var bs=document.querySelectorAll('#lvseg button');
+   for(var j=0;j<bs.length;j++){ (function(b){ b.onclick=function(){ lvI=parseInt(b.getAttribute('data-i'),10); curL=Math.round((LV[lvI].lo+LV[lvI].hi)/2); renderLvl(); }; })(bs[j]); }
+   $("sl").oninput=function(){ curL=parseFloat($("sl").value); paintLvl(); };
+   paintLvl();
+ }
+ function paintLvl(){
+   var d=LV[lvI], sg=sign(d,curL);
+   gauge();
+   $("cardTitle").innerHTML=d.nm+' level';
+   $("cap").innerHTML='Levels are <b>troughs</b>. A level drawn at the peak reads high and gets the dose cut for no reason.';
+   $("stage").style.background=sg.c;
+   $("stage").innerHTML=d.nm+' '+curL.toFixed(d.st<1?1:0)+' '+d.u+'<small>'+sg.t+' — therapeutic '+d.lo+'–'+d.hi+'</small>';
+   var tox=curL>d.hi, sub=curL<d.lo;
+   $("v1").innerHTML=curL.toFixed(d.st<1?1:0)+' '+d.u;
+   $("c1").className='';
+   $("v2").innerHTML=sg.t; $("c2").className=tox?'warn':(sub?'':'good');
+   $("v3").innerHTML=tox?'Hold + notify':(sub?'Check adherence':'Continue');
+   $("c3").className=tox?'warn':(sub?'':'good');
+   $("info").innerHTML='<span class="cls" style="background:'+sg.c+'">'+sg.t+'</span><span class="n">'+d.nm+' '+curL.toFixed(d.st<1?1:0)+' '+d.u+'</span>'+sg.d+
+     '<div class="mnem"><b>Trough, always.</b> Antiepileptic levels are drawn <b>immediately before the next dose</b> — the lowest point in the cycle. A level drawn an hour after a dose is a peak, and it will read high no matter how well the patient is managed.</div>';
+ }
+
+ /* ---------- mode switch ---------- */
+ function setMode(m){
+   mode=m;
+   var bs=document.querySelectorAll('#modeseg button');
+   for(var i=0;i<bs.length;i++){ bs[i].className = bs[i].getAttribute('data-m')===m?'on':''; }
+   if(m==='calm') renderCalm();
+   else if(m==='drug') renderDrug();
+   else { curL=Math.round((LV[lvI].lo+LV[lvI].hi)/2); renderLvl(); }
+ }
+ var ms=document.querySelectorAll('#modeseg button');
+ for(var i=0;i<ms.length;i++){ (function(b){ b.onclick=function(){ setMode(b.getAttribute('data-m')); }; })(ms[i]); }
+
+ timer=setInterval(tick,80);
+ setMode('calm');
+})();
+</script>
+</body>
+</html>

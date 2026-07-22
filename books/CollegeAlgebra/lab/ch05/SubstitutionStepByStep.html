@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Substitution, Step by Step</title>
+<meta name="description" content="Walk the substitution method one move at a time, with the changed part highlighted at every step: isolate, substitute, distribute, combine, solve, back-substitute, check. Includes the two systems where the variable vanishes.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;--l1:#43458f;--l2:#d1495b;}
+.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* example picker */
+#pick{display:grid;grid-template-columns:repeat(5,1fr);}
+#pick button{font-size:11.5px;padding:9px 3px;line-height:1.2;}
+#pick button small{display:block;font-weight:500;font-size:9.3px;color:var(--muted);margin-top:2px;line-height:1.15;}
+#pick button.on small{color:rgba(255,255,255,.9);}
+@media (max-width:600px){#pick{grid-template-columns:repeat(3,1fr);}}
+/* the work column */
+.work{margin-top:2px;}
+.wr{display:flex;gap:10px;align-items:baseline;padding:7px 8px;border-radius:9px;border-left:4px solid transparent;transition:.18s;}
+.wr + .wr{margin-top:2px;}
+.wr .pl{flex:none;width:74px;font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.wr .mx{font-family:var(--math);font-size:16px;color:var(--muted);line-height:1.75;flex:1;min-width:0;}
+.wr.on{background:#eef0fa;border-left-color:var(--teal);}
+.wr.on .mx{font-size:18.5px;color:var(--ink);font-weight:600;}
+.wr.on .pl{color:var(--teal);}
+.wr .ex{font-family:var(--math);font-size:13px;color:var(--soft);line-height:1.65;margin-top:4px;display:block;}
+.wr:not(.on) .ex{display:none;}
+.wr .ex u{font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;display:block;margin-bottom:1px;}
+/* highlighting the part that changed */
+.hl{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.wr:not(.on) .hl{background:transparent;box-shadow:none;padding:0;}
+.f1{color:var(--l1);}
+.wr:not(.on) .f1{color:inherit;}
+.chip{font-family:var(--sans);font-size:9.6px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:3px 9px;margin-left:7px;white-space:nowrap;vertical-align:2px;}
+.chip.t{background:#dff0e4;color:#237a45;} .chip.f{background:#fae5e8;color:#b23145;}
+/* HTML-only fractions — there is no math renderer on this page */
+.fr{display:inline-flex;flex-direction:column;vertical-align:-0.52em;text-align:center;margin:0 2px;}
+.fr .fn{border-bottom:1.7px solid currentColor;padding:0 4px 1px;line-height:1.16;}
+.fr .fd{padding:1px 4px 0;line-height:1.16;}
+/* graph bits */
+.leg{display:flex;flex-direction:column;gap:5px;margin-top:9px;}
+.leg div{display:flex;align-items:center;gap:8px;font-family:var(--math);font-size:14.5px;color:var(--soft);}
+.leg i{width:22px;height:0;border-top:3.5px solid;border-radius:2px;flex:none;font-style:normal;}
+.leg b{font-family:var(--sans);font-size:9.6px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);width:16px;flex:none;}
+.cap{font-size:12px;color:var(--soft);line-height:1.55;margin-top:11px;border-top:1px solid var(--line);padding-top:10px;min-height:52px;}
+.cap b{color:var(--ink);}
+.plan{display:flex;flex-wrap:wrap;gap:4px;margin-top:11px;}
+.plan span{font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:#eceefa;color:var(--muted);border-radius:20px;padding:4px 9px;}
+.plan span.on{background:var(--teal);color:#fff;}
+.plan span.done{background:#dfe2f4;color:var(--teal-dk);}
+#stage.no{background:var(--coral);} #stage.inf{background:var(--green);}
+#info .n{margin-bottom:4px;}
+.mx sub{font-size:.62em;vertical-align:sub;} .mx sup{font-size:.66em;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 5</div>
+  <h1>Substitution, Step by Step</h1>
+  <div class="intro">Graphing shows you <i>where</i> two lines meet; substitution tells you <i>exactly</i> where, no ruler required. The whole method rests on one small permission: at the crossing point both equations describe the <b>same</b> <i>x</i> and the <b>same</b> <i>y</i> &mdash; so anything one equation says <i>y</i> equals, you may write in place of <i>y</i> in the other. Below, every single move is shown, one at a time, with the part that changed lit up.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The picture</h2>
+    <svg viewBox="0 0 252 252" aria-label="coordinate plane with the two lines"><g id="art"></g></svg>
+    <div class="leg">
+      <div><b>&#9312;</b><i id="sw1" style="border-color:#43458f"></i><span id="lg1"></span></div>
+      <div><b>&#9313;</b><i id="sw2" style="border-color:#d1495b"></i><span id="lg2"></span></div>
+    </div>
+    <div class="cap" id="cap"></div>
+  </div></div>
+  <div>
+    <div id="stage">Substitution<small>pick an example</small></div>
+    <div class="card">
+      <h2>Choose a system</h2>
+      <div class="seg" id="pick"></div>
+      <div class="plan" id="plan"></div>
+    </div>
+    <div class="card">
+      <div class="work" id="work"></div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ============ exact fraction arithmetic ============ */
+ function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){var t=a%b;a=b;b=t;}return a||1;}
+ function F(n,d){ if(d===undefined)d=1; if(d<0){n=-n;d=-d;} var g=gcd(n,d); return {n:n/g,d:d/g}; }
+ function fadd(a,b){ return F(a.n*b.d+b.n*a.d, a.d*b.d); }
+ function fmul(a,b){ return F(a.n*b.n, a.d*b.d); }
+ function fnum(a){ return a.n/a.d; }
+ /* magnitude only, as HTML (stacked fraction when needed) */
+ function fmag(a){ var n=Math.abs(a.n);
+   if(a.d===1) return ''+n;
+   return '<span class="fr"><span class="fn">'+n+'</span><span class="fd">'+a.d+'</span></span>'; }
+ function fstr(a){ return (a.n<0?'&minus;':'')+fmag(a); }
+ function fmore(a){ return (a.n<0?' &minus; ':' + ')+fmag(a); }
+
+ /* ============ integer term formatting ============ */
+ function vv(v){ return '<i>'+v+'</i>'; }
+ function mag(c,v){ var a=Math.abs(c); return (a===1?'':a)+vv(v); }
+ function lead(c,v){ if(c===0) return '0'; return (c<0?'&minus;':'')+mag(c,v); }
+ function more(c,v){ if(c===0) return ''; return (c<0?' &minus; ':' + ')+mag(c,v); }
+ function moreK(k){ if(k===0) return ''; return (k<0?' &minus; ':' + ')+Math.abs(k); }
+ function nk(k){ return (k<0?'&minus;':'')+Math.abs(k); }
+ function std(a,b,c){ return lead(a,'x')+more(b,'y')+' = '+nk(c); }
+ function linexp(m,w,b){ return lead(m,w)+moreK(b); }          /* m·w + b */
+ function hl(s){ return '<span class="hl">'+s+'</span>'; }
+ function f1(s){ return '<span class="f1">'+s+'</span>'; }
+
+ /* ============ the five systems ============
+    e1 either arrives already solved for one variable, or in standard form
+    with a variable whose coefficient is 1 (so isolating costs no fractions).
+    e2 is always  p·x + q·y = r.                                            */
+ var SYS=[
+  {id:'A',lab:'&#9312; is solved',sm:'y already alone',tone:'',
+   e1:{form:'solved',v:'y',w:'x',m:2,b:-1}, p:3,q:1,r:9},
+  {id:'B',lab:'Isolate first',sm:'pick the 1',tone:'',
+   e1:{form:'std',a:1,bb:2,c:11,iso:'x'}, p:3,q:-1,r:5},
+  {id:'C',lab:'Fraction answer',sm:'nothing is wrong',tone:'',
+   e1:{form:'std',a:4,bb:1,c:7,iso:'y'}, p:2,q:3,r:6},
+  {id:'D',lab:'No solution',sm:'a false line',tone:'no',
+   e1:{form:'solved',v:'y',w:'x',m:3,b:1}, p:6,q:-2,r:5},
+  {id:'E',lab:'Infinitely many',sm:'a true line',tone:'inf',
+   e1:{form:'solved',v:'y',w:'x',m:2,b:-4}, p:4,q:-2,r:8}
+ ];
+
+ /* derive everything numerically — no hand-typed answers anywhere */
+ SYS.forEach(function(S){
+   var e=S.e1;
+   if(e.form==='solved'){
+     S.v=e.v; S.w=(e.v==='y')?'x':'y'; S.m=e.m; S.b=e.b;
+     if(e.v==='y'){ S.a1=-e.m; S.b1=1; S.c1=e.b; } else { S.a1=1; S.b1=-e.m; S.c1=e.b; }
+   } else {
+     S.a1=e.a; S.b1=e.bb; S.c1=e.c; S.v=e.iso; S.w=(e.iso==='y')?'x':'y';
+     if(e.iso==='x'){ S.m=-e.bb; S.b=e.c; }   /* a is 1 */
+     else           { S.m=-e.a;  S.b=e.c; }   /* bb is 1 */
+   }
+   S.expr=linexp(S.m,S.w,S.b);                       /* what v equals */
+   S.mult=(S.v==='y')?S.q:S.p;                        /* factor in front of the parentheses */
+   S.At=(S.v==='y')?(S.p+S.q*S.m):(S.p*S.m+S.q);      /* coefficient of w after collecting */
+   S.C0=(S.v==='y')?(S.q*S.b):(S.p*S.b);              /* the leftover constant */
+   S.solvable=(S.At!==0);
+   if(S.solvable){
+     S.wV=F(S.r-S.C0, S.At);
+     S.vV=fadd(fmul(F(S.m),S.wV), F(S.b));
+     S.xs=(S.v==='y')?fnum(S.wV):fnum(S.vV);
+     S.ys=(S.v==='y')?fnum(S.vV):fnum(S.wV);
+     S.xF=(S.v==='y')?S.wV:S.vV;
+     S.yF=(S.v==='y')?S.vV:S.wV;
+   } else {
+     S.trueStmt=(S.C0===S.r);
+   }
+   S.e1disp=(e.form==='solved')? (vv(S.v)+' = '+S.expr) : std(S.a1,S.b1,S.c1);
+   S.e2disp=std(S.p,S.q,S.r);
+ });
+
+ /* ============ step builder ============ */
+ function build(S){
+   var rows=[], steps=[], mark=0;
+   function add(pl,mx,ex,chip){ rows.push({pl:pl,mx:mx,ex:ex||'',chip:chip||''}); }
+   function snap(o){ o.rows=rows.slice(); o.from=mark; steps.push(o); mark=rows.length; }
+   var v=S.v, w=S.w, V=vv(v), W=vv(w);
+   /* substitute numbers into a term:  k(value) with signs handled outside */
+   function numT(k2,val,first){ if(k2===0) return '';
+     var sg=(k2<0)?(first?'&minus;':' &minus; '):(first?'':' + ');
+     return sg+(Math.abs(k2)===1?'':Math.abs(k2))+'('+fstr(val)+')'; }
+
+   /* --- 0. the system --- */
+   add('&#9312; given', S.e1disp);
+   add('&#9313; given', S.e2disp);
+   snap({t:'The system',s:'two equations, two unknowns',hi:0,
+     why:'A <b>solution of a system</b> is one pair (<i>x</i>, <i>y</i>) that makes <b>both</b> equations true at the same time. On the graph that is the point where the two lines cross. Substitution hunts that pair down with algebra, and it hunts well because at the crossing point the <i>x</i> in &#9312; and the <i>x</i> in &#9313; are the very same number &mdash; likewise the <i>y</i>.',
+     tip:{c:'mnem',h:'<b>The plan:</b> get one variable alone in one equation, carry that expression into the <i>other</i> equation, and watch two unknowns collapse into one. One unknown in one equation is something you already know how to solve.'},
+     cap:'Two lines. Everything that follows is a way of finding their crossing point <b>without</b> reading it off the picture &mdash; because a picture can only ever be read to the nearest eyelash.'});
+
+   /* --- 1. isolate --- */
+   if(S.e1.form==='solved'){
+     add('&#9312; ready', hl(V)+' = '+S.expr);
+     snap({t:'Step 1 &mdash; a variable is already alone',s:'nothing to do here',hi:1,
+       why:'Equation &#9312; already reads &ldquo;'+V+' is nothing but '+S.expr+'.&rdquo; That is exactly the form substitution wants: a variable by itself on one side, and no copy of it hiding on the other side.',
+       tip:{c:'mnem',h:'When neither equation is pre-solved, look for a variable with coefficient <b>1</b> and isolate that one. A coefficient of 1 means you never have to divide, so no fractions get invented.'},
+       cap:'Line &#9312; is highlighted. Every point on it obeys '+V+' = '+S.expr+' &mdash; that is what a graph <i>is</i>: the set of all pairs that satisfy the equation.'});
+   } else {
+     /* the term that has to move across: the one holding the OTHER variable */
+     var mvC=(v==='x')?S.b1:S.a1, mvV=(v==='x')?'y':'x';
+     var mvTxt=(mvC>0?'subtract ':'add ')+mag(mvC,mvV)+' on both sides';
+     add('solve &#9312; for '+v, hl(V+' = '+S.expr),
+       '<u>how</u>'+S.e1disp+' &nbsp;&rarr;&nbsp; '+mvTxt+' &nbsp;&rarr;&nbsp; '+V+' = '+S.expr);
+     snap({t:'Step 1 &mdash; isolate a variable',s:'choose the coefficient of 1',hi:1,
+       why:'Scan the four coefficients and isolate the variable whose coefficient is <b>1</b> &mdash; here that is '+V+' in &#9312;. Solving for it costs one subtraction and no division, so no fractions are created out of thin air. Subtracting the same quantity from both sides leaves the equation describing the very same line; nothing has been lost.',
+       tip:{c:'mnem',h:'Any of the four variables <i>could</i> be isolated and the final answer would be identical. Choosing the coefficient of 1 only buys you cleaner arithmetic &mdash; and most substitution mistakes are arithmetic mistakes.'},
+       cap:'Line &#9312; is highlighted. Rewriting it as '+V+' = '+S.expr+' did not move it one pixel &mdash; the same points satisfy both forms.'});
+   }
+
+   /* --- 2. substitute --- */
+   var subLHS;
+   if(v==='y'){
+     subLHS = lead(S.p,'x') + (S.q<0?' &minus; ':' + ') + (Math.abs(S.q)===1?'':Math.abs(S.q)) + hl(f1('('+S.expr+')'));
+   } else {
+     subLHS = (S.p<0?'&minus;':'') + (Math.abs(S.p)===1?'':Math.abs(S.p)) + hl(f1('('+S.expr+')')) + more(S.q,'y');
+   }
+   add('substitute', subLHS+' = '+nk(S.r),
+     '<u>why this is allowed</u>In &#9313;, '+V+' stands for the same number that &#9312; just measured. Replacing '+V+' with '+S.expr+' therefore changes nothing about what &#9313; claims &mdash; it only changes how it is written.');
+   snap({t:'Step 2 &mdash; substitute',s:'the move the method is named for',hi:1,dots:true,
+     why:'Take the expression from &#9312; and write it wherever '+V+' appears in &#9313;. Two unknowns just became <b>one</b>: the equation now contains nothing but '+W+' and numbers, and a single-variable linear equation is a solved problem.',
+     tip:{c:'note',h:'<b>Two traps here.</b> First, substitute into the <b>other</b> equation. Putting '+S.expr+' back into &#9312; gives '+S.expr+' = '+S.expr+' &mdash; true, and completely useless. Second, wrap the expression in <b>parentheses</b> every time. They keep the coefficient attached to every term inside, and forgetting them is the single most common way this method goes wrong.'},
+     cap:'Think of it as a search along line &#9312;. Each dot is a point that satisfies &#9312;; substitution asks which one of them also satisfies &#9313;.'});
+
+   /* --- 3. distribute --- */
+   var k=S.mult, ak=Math.abs(k), disLHS, exd;
+   if(v==='y'){ disLHS = lead(S.p,'x') + hl(f1(more(S.q*S.m,'x')+moreK(S.q*S.b))); }
+   else       { disLHS = hl(f1(lead(S.p*S.m,'y')+moreK(S.p*S.b))) + more(S.q,'y'); }
+   if(ak===1 && k>0){
+     exd='<u>why</u>The factor in front is 1, so the parentheses simply come off and every term keeps the sign it already had.';
+   } else if(ak===1){
+     exd='<u>why</u>A bare minus sign in front means &ldquo;multiply by &minus;1&rdquo;, so <b>every</b> sign inside flips.';
+   } else {
+     var rep=[], j;
+     for(j=0;j<ak;j++) rep.push((k<0?'&minus;':'')+'('+S.expr+')');
+     exd='<u>why it is legal &mdash; written out the long way</u>'+rep.join(k<0?' ':' + ')+
+         ' &nbsp;=&nbsp; '+((v==='y')?(lead(S.q*S.m,'x')+moreK(S.q*S.b)):(lead(S.p*S.m,'y')+moreK(S.p*S.b)))+
+         '<br><span style="font-size:12px">'+(k<0
+            ?('Multiplying by &minus;'+ak+' means taking '+ak+' copies and <b>subtracting</b> them &mdash; which is why every sign inside comes out flipped.')
+            :(ak+' copies of the same expression, added up &mdash; that is all multiplication by '+ak+' means.'))+
+         ' The rule <i>k</i>(<i>u</i> + <i>t</i>) = <i>ku</i> + <i>kt</i> is only this counting, written in one line.</span>';
+   }
+   add('distribute', disLHS+' = '+nk(S.r), exd);
+   snap({t:'Step 3 &mdash; distribute',s:(ak===1?'take the parentheses off':'multiply through the parentheses'),hi:2,
+     why:(ak===1&&k>0)
+       ?'With a 1 out front the parentheses come off unchanged. The step still deserves its own line: it is where the borrowed expression stops being a package and becomes ordinary terms you can shuffle.'
+       :'The factor outside must reach <b>every</b> term inside &mdash; '+nk(k)+' &middot; ('+lead(S.m,S.w)+') = '+((v==='y')?lead(S.q*S.m,'x'):lead(S.p*S.m,'y'))+' <b>and</b> '+nk(k)+' &middot; ('+nk(S.b)+') = '+((v==='y')?nk(S.q*S.b):nk(S.p*S.b))+'. Hitting the first term and forgetting the second is the classic wrong answer, and the expansion underneath shows why the rule is not arbitrary.',
+     cap:'Nothing has moved on the graph &mdash; steps 3 through 5 are pure bookkeeping on equation &#9313;, rewriting it without changing which points satisfy it.'});
+
+   /* --- 4. combine --- */
+   var comLHS;
+   if(S.solvable){ comLHS = hl(lead(S.At,w)) + moreK(S.C0); }
+   else { comLHS = hl(nk(S.C0)); }
+   var exc = '<u>why</u>'+((v==='y')?(lead(S.p,'x')+' and '+lead(S.q*S.m,'x')):(lead(S.p*S.m,'y')+' and '+lead(S.q,'y')))+
+     ' are both counts of the same variable, so they add: '+
+     ((v==='y')?(nk(S.p)+' + ('+nk(S.q*S.m)+') = '+nk(S.At)):(nk(S.p*S.m)+' + ('+nk(S.q)+') = '+nk(S.At)))+
+     (S.solvable?'':'. The variable term is gone entirely &mdash; 0'+W+' is just 0.');
+   add('combine', comLHS+' = '+nk(S.r), exc);
+   snap({t:'Step 4 &mdash; combine like terms',s:(S.solvable?'one variable, one equation':'watch the variable disappear'),hi:2,
+     why:'Like terms are terms with the identical variable part, and they add exactly the way ordinary counts do &mdash; three of something plus two of that same something is five of it. But a count of '+W+' and a plain number can never merge, because they are not the same kind of thing.'+
+       (S.solvable?' What is left is a single linear equation in '+W+' alone.':' Here something stranger happened: the '+W+' terms cancelled each other out completely.'),
+     cap:(S.solvable?'Still just the two lines. The algebra is closing in on their crossing point.':'The variable has vanished from the equation. The picture on the left is about to explain why.')});
+
+   if(S.solvable){
+     /* --- 5. solve for w --- */
+     var rhs1=S.r-S.C0;
+     if(S.C0!==0){
+       add((S.C0>0?'&minus;':'+')+' '+Math.abs(S.C0)+' both sides', lead(S.At,w)+' = '+hl(nk(rhs1)),
+         '<u>why</u>'+nk(S.r)+' '+(S.C0>0?'&minus; '+S.C0:'+ '+Math.abs(S.C0))+' = '+nk(rhs1)+'. Undo the addition first, so the variable term stands alone.');
+     }
+     add('&divide; '+(S.At<0?'(&minus;'+Math.abs(S.At)+')':S.At), W+' = '+hl(fstr(S.wV)),
+       '<u>why</u>'+nk(rhs1)+' &divide; '+nk(S.At)+' = '+fstr(S.wV)+
+       ((S.wV.d!==1)?'. A fraction is a perfectly ordinary answer &mdash; reduce it and move on.':'')+
+       ((rhs1<0&&S.At<0)?' A negative divided by a negative is positive.':''));
+     snap({t:'Step 5 &mdash; solve for '+w,s:'undo addition, then undo multiplication',hi:2,gw:true,
+       why:'Peel the operations off in reverse order: the constant is added on, so subtract it; then '+W+' is multiplied by '+nk(S.At)+', so divide by '+nk(S.At)+'. Each move is done to <b>both</b> sides, which is why the equality survives.'+
+         (S.wV.d!==1?' The result is a fraction. That is not a symptom of a mistake &mdash; most real systems have fractional solutions, and the crossing point simply sits between grid lines.':''),
+       cap:'Half the answer is in: '+W+' = '+fstr(S.wV)+'. The dashed guide marks every point in the plane with that '+W+'-value; the crossing point must lie somewhere on it.'});
+
+     /* --- 6. back-substitute --- */
+     var backSub = (Math.abs(S.m)===1?(S.m<0?'&minus;':''):nk(S.m))+'('+fstr(S.wV)+')'+moreK(S.b);
+     add('back-substitute', V+' = '+backSub+' = '+hl(fstr(S.vV)),
+       '<u>why</u>'+nk(S.m)+' &middot; '+fstr(S.wV)+' = '+fstr(fmul(F(S.m),S.wV))+', then '+fstr(fmul(F(S.m),S.wV))+' '+(S.b<0?'&minus; '+Math.abs(S.b):'+ '+S.b)+' = '+fstr(S.vV)+'.');
+     snap({t:'Step 6 &mdash; back-substitute',s:'get the other coordinate',hi:1,gw:true,gv:true,pt:true,
+       why:'One coordinate is known, so feed it back into the solved form from step 1 &mdash; the shortest road to '+V+'. Use that solved form, not the original messier equation; both give the same answer, but one of them takes ten seconds.',
+       tip:{c:'mnem',h:'Half an answer is not an answer. A system in two variables is solved only when you can name an ordered <b>pair</b>. Write it as (<i>x</i>, <i>y</i>) = ('+fstr(S.xF)+', '+fstr(S.yF)+') &mdash; <i>x</i> first, always.'},
+       cap:'Both guides are drawn, and they meet at the point the algebra predicted: ('+fstr(S.xF)+', '+fstr(S.yF)+').'});
+
+     /* --- 7. check --- */
+     var X=S.xF, Y=S.yF;
+     var t1a=fmul(F(S.a1),X), t2a=fmul(F(S.b1),Y), sumA=fadd(t1a,t2a);
+     var t1b=fmul(F(S.p),X),  t2b=fmul(F(S.q),Y),  sumB=fadd(t1b,t2b);
+     var okA=(sumA.n===S.c1&&sumA.d===1), okB=(sumB.n===S.r&&sumB.d===1);
+     var c1line, c1ex;
+     if(S.e1.form==='solved'){
+       var rhsSub=(Math.abs(S.m)===1?(S.m<0?'&minus;':''):nk(S.m))+'('+fstr(S.wV)+')'+moreK(S.b);
+       c1line=fstr(S.vV)+' = '+rhsSub;
+       c1ex='<u>evaluate</u>'+fstr(S.vV)+' = '+fstr(fmul(F(S.m),S.wV))+moreK(S.b)+' = '+fstr(S.vV);
+     } else {
+       c1line=numT(S.a1,X,true)+numT(S.b1,Y,false)+' = '+nk(S.c1);
+       c1ex='<u>evaluate</u>'+fstr(t1a)+fmore(t2a)+' = '+fstr(sumA);
+     }
+     add('check &#9312;', c1line, c1ex, okA?'t':'f');
+     add('check &#9313;', numT(S.p,X,true)+numT(S.q,Y,false)+' = '+nk(S.r),
+       '<u>evaluate</u>'+fstr(t1b)+fmore(t2b)+' = '+fstr(sumB), okB?'t':'f');
+     snap({t:'Step 7 &mdash; check in BOTH equations',s:'not one. both.',hi:0,gw:true,gv:true,pt:true,ring:true,
+       why:'A pair can satisfy one equation and miss the other by a mile &mdash; that pair lies on one line only, and it is not a solution of the <b>system</b>. Substituting into both originals is the only way to know, and it catches sign slips and arithmetic errors that otherwise sail straight through to the final answer.',
+       tip:{c:'note',h:'<b>About extraneous solutions.</b> Every step above is reversible &mdash; adding, subtracting, multiplying and dividing by a nonzero number &mdash; so a <i>linear</i> system can never manufacture a false solution, and no value of <i>x</i> or <i>y</i> has to be excluded. That protection disappears the moment an equation is nonlinear: squaring both sides, or multiplying away a denominator that could equal zero, can invent answers that fail the original. The habit of checking is built here so it is automatic there.'},
+       cap:'Both equations come out true at ('+fstr(S.xF)+', '+fstr(S.yF)+'). Only now is it an answer.'});
+
+     /* --- 8. the answer --- */
+     add('solution', hl('(<i>x</i>, <i>y</i>) = ('+fstr(S.xF)+', '+fstr(S.yF)+')'));
+     snap({t:'The solution',s:'one point, exactly',hi:0,gw:true,gv:true,pt:true,ring:true,label:true,
+       why:'Seven moves, always the same seven: <b>isolate</b> &rarr; <b>substitute</b> &rarr; <b>distribute</b> &rarr; <b>combine</b> &rarr; <b>solve</b> &rarr; <b>back-substitute</b> &rarr; <b>check</b>. The arithmetic changes from problem to problem; the sequence never does.',
+       tip:{c:'mnem',h:'<b>When to reach for substitution:</b> when a variable is already alone, or when some variable has a coefficient of 1. When every coefficient is awkward &mdash; 7<i>x</i> + 4<i>y</i> = 3 next to 5<i>x</i> &minus; 6<i>y</i> = 2 &mdash; isolating anything drags in fractions, and elimination is the kinder tool. Both methods always agree; they only differ in how much arithmetic they cost.'},
+       cap:'The exact crossing point: ('+fstr(S.xF)+', '+fstr(S.yF)+'). The graph agreed all along &mdash; but only the algebra could say it exactly.'});
+   } else {
+     /* --- 5. the variable vanished --- */
+     add('true or false?', hl(nk(S.C0)+' = '+nk(S.r)), '', S.trueStmt?'t':'f');
+     snap({t:'Step 5 &mdash; the variable vanished',s:'no '+w+' left to solve for',hi:0,vanish:true,
+       why:'There is no '+W+' anywhere in '+nk(S.C0)+' = '+nk(S.r)+', so there is nothing left to solve <i>for</i>. Do not write '+W+' = 0 &mdash; that is a different claim entirely, and a false one. What remains is simply a numerical statement, and its job now is to be judged <b>true</b> or <b>false</b>.'+
+         (S.trueStmt?' This one is <b>true</b>, and it is true no matter what '+W+' was.':' This one is <b>false</b>, and no value of '+W+' could rescue it &mdash; '+W+' is not even in the room.'),
+       cap:(S.trueStmt?'The two lines were never two lines.':'The two lines never meet.')});
+
+     /* --- 6. verdict --- */
+     if(S.trueStmt){
+       add('verdict', hl('infinitely many solutions'),
+         '<u>the solution set</u>{ (<i>x</i>, <i>y</i>) : '+vv(S.v)+' = '+S.expr+' } &mdash; that is, <i>x</i> may be any real number and '+vv(S.v)+' = '+S.expr+' follows.');
+       snap({t:'Verdict &mdash; infinitely many',s:'the equations are dependent',hi:0,vanish:true,same:true,
+         why:'The statement came out true for every '+W+', which means <b>every</b> pair satisfying &#9312; automatically satisfies &#9313;. And so it should: rearrange &#9312; into standard form, '+std(S.a1,S.b1,S.c1)+', multiply both sides by '+fstr(F(S.p,S.a1))+', and out comes '+std(S.p,S.q,S.r)+' &mdash; equation &#9313;, letter for letter. Two equations, but only one line: the system is <b>consistent</b> and <b>dependent</b>.',
+         tip:{c:'mnem',h:'&ldquo;Infinitely many&rdquo; is not the same as &ldquo;anything goes.&rdquo; The pair (0, 0) is <i>not</i> a solution here. Only the pairs riding on '+vv(S.v)+' = '+S.expr+' qualify, so the answer must be written as that set, never as the bare word <i>all</i>.'},
+         cap:'One line drawn twice. Every point on it solves both equations at once.'});
+     } else {
+       add('verdict', hl('no solution'),
+         '<u>the solution set</u>&empty; &mdash; the empty set. There is no pair (<i>x</i>, <i>y</i>) that satisfies both equations.');
+       snap({t:'Verdict &mdash; no solution',s:'the system is inconsistent',hi:0,vanish:true,par:true,
+         why:'A false statement with no variable left in it means the assumption that started the whole calculation &mdash; that some pair satisfies both equations &mdash; was wrong from the beginning. The lines are <b>parallel</b>: &#9312; is '+vv('y')+' = '+lead(S.m,'x')+moreK(S.b)+', and &#9313; solved for '+vv('y')+' is '+vv('y')+' = '+lead(S.m,'x')+fmore(F(S.r,S.q))+'. Identical slope '+S.m+', different '+vv('y')+'-intercept &mdash; so they run alongside each other forever, always exactly the same distance apart.',
+         tip:{c:'note',h:'Answer &ldquo;no solution&rdquo; or &empty;, never &ldquo;0&rdquo; and never &ldquo;(0, 0)&rdquo;. Zero is a number that could be a coordinate; the empty set is the statement that no coordinates work at all. The system is called <b>inconsistent</b>.'},
+         cap:'Parallel lines: the same slope, held apart forever by different intercepts. No crossing point exists to find.'});
+     }
+   }
+   return steps;
+ }
+ SYS.forEach(function(S){ S.steps=build(S); });
+
+ /* ============ the graph ============ */
+ var SC=220/14, OX=126, OY=126, R=7;
+ function PX(x){ return (OX+x*SC).toFixed(1); }
+ function PY(y){ return (OY-y*SC).toFixed(1); }
+ function clipT(p,q,t){ if(Math.abs(p)<1e-12) return q>=0;
+   var rr=q/p;
+   if(p<0){ if(rr>t[1]) return false; if(rr>t[0]) t[0]=rr; }
+   else   { if(rr<t[0]) return false; if(rr<t[1]) t[1]=rr; }
+   return true; }
+ function seg(a,b,c){                     /* a·x + b·y = c, clipped to the window */
+   if(Math.abs(b)<1e-12){ var xv=c/a; if(xv<-R||xv>R) return null; return [[xv,-R],[xv,R]]; }
+   var x0=-R, x1=R, y0=(c-a*x0)/b, y1=(c-a*x1)/b, dy=y1-y0, t=[0,1];
+   if(!clipT(-dy, y0+R, t)) return null;
+   if(!clipT( dy, R-y0, t)) return null;
+   return [[x0+(x1-x0)*t[0], y0+dy*t[0]],[x0+(x1-x0)*t[1], y0+dy*t[1]]];
+ }
+ function drawLine(a,b,c,col,wid,dash,op){
+   var s=seg(a,b,c); if(!s) return '';
+   return '<line x1="'+PX(s[0][0])+'" y1="'+PY(s[0][1])+'" x2="'+PX(s[1][0])+'" y2="'+PY(s[1][1])+
+     '" stroke="'+col+'" stroke-width="'+wid+'" stroke-linecap="round" opacity="'+(op===undefined?1:op)+'"'+
+     (dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+ }
+ function txt(x,y,s,col,size,anch,wt){
+   return '<text x="'+x+'" y="'+y+'" font-size="'+size+'" fill="'+col+'" text-anchor="'+(anch||'middle')+
+     '" font-family="Inter,sans-serif" font-weight="'+(wt||600)+'">'+s+'</text>';
+ }
+ function numTxt(n){ return (n<0?'−'+Math.abs(n):''+n); }
+
+ function paint(S,st){
+   var o='', i, C1='#43458f', C2='#d1495b';
+   for(i=-R;i<=R;i++){
+     o+='<line x1="'+PX(i)+'" y1="'+PY(-R)+'" x2="'+PX(i)+'" y2="'+PY(R)+'" stroke="#e6e8f5" stroke-width="0.8"/>';
+     o+='<line x1="'+PX(-R)+'" y1="'+PY(i)+'" x2="'+PX(R)+'" y2="'+PY(i)+'" stroke="#e6e8f5" stroke-width="0.8"/>';
+   }
+   o+='<line x1="'+PX(-R)+'" y1="'+PY(0)+'" x2="'+PX(R)+'" y2="'+PY(0)+'" stroke="#9a9cb5" stroke-width="1.3"/>';
+   o+='<line x1="'+PX(0)+'" y1="'+PY(-R)+'" x2="'+PX(0)+'" y2="'+PY(R)+'" stroke="#9a9cb5" stroke-width="1.3"/>';
+   for(i=-6;i<=6;i+=2){ if(i===0) continue;
+     o+=txt(PX(i), (OY+9).toFixed(1), numTxt(i), '#9a9cb5', 7, 'middle', 500);
+     o+=txt((OX-4).toFixed(1), (parseFloat(PY(i))+2.6).toFixed(1), numTxt(i), '#9a9cb5', 7, 'end', 500);
+   }
+   o+=txt((OX+R*SC-2).toFixed(1),(OY-5).toFixed(1),'x','#7d7f94',9,'end',700);
+   o+=txt((OX+6).toFixed(1),(OY-R*SC+8).toFixed(1),'y','#7d7f94',9,'start',700);
+
+   var hi=st.hi||0;
+   if(st.same){
+     o+=drawLine(S.a1,S.b1,S.c1,C1,4.6,'',1);
+     o+=drawLine(S.p,S.q,S.r,C2,3.4,'2 6',1);
+   } else {
+     o+=drawLine(S.a1,S.b1,S.c1,C1,hi===1?4.6:2.6,'',hi===2?0.45:1);
+     o+=drawLine(S.p,S.q,S.r,C2,hi===2?4.6:2.6,'',hi===1?0.45:1);
+   }
+
+   /* points scattered along line 1 — the "search" picture */
+   if(st.dots){
+     var cand=[];
+     for(i=-R;i<=R;i++){
+       if(Math.abs(S.b1)<1e-12) break;
+       var yy=(S.c1-S.a1*i)/S.b1;
+       if(yy>=-R+0.3&&yy<=R-0.3) cand.push([i,yy]);
+     }
+     var stepn=Math.max(1,Math.ceil(cand.length/6));
+     for(i=0;i<cand.length;i+=stepn){
+       o+='<circle cx="'+PX(cand[i][0])+'" cy="'+PY(cand[i][1])+'" r="3.4" fill="#fff" stroke="'+C1+'" stroke-width="2"/>';
+     }
+   }
+
+   if(S.solvable){
+     var xs=S.xs, ys=S.ys;
+     if(st.gw||st.gv){
+       var showX=(S.w==='x')?st.gw:st.gv, showY=(S.w==='y')?st.gw:st.gv;
+       if(showX){
+         o+='<line x1="'+PX(xs)+'" y1="'+PY(0)+'" x2="'+PX(xs)+'" y2="'+PY(ys)+'" stroke="#7d7f94" stroke-width="1.4" stroke-dasharray="3 3"/>';
+         o+=txt(PX(xs),(OY+17).toFixed(1),'x = '+(Math.round(xs*100)/100),'#4d4f66',8.5,'middle',700);
+       }
+       if(showY){
+         o+='<line x1="'+PX(0)+'" y1="'+PY(ys)+'" x2="'+PX(xs)+'" y2="'+PY(ys)+'" stroke="#7d7f94" stroke-width="1.4" stroke-dasharray="3 3"/>';
+         o+=txt((OX-9).toFixed(1),(parseFloat(PY(ys))-5).toFixed(1),'y = '+(Math.round(ys*100)/100),'#4d4f66',8.5,'end',700);
+       }
+     }
+     if(st.ring) o+='<circle cx="'+PX(xs)+'" cy="'+PY(ys)+'" r="10" fill="none" stroke="#b8862f" stroke-width="1.6" opacity=".75"/>';
+     if(st.pt)   o+='<circle cx="'+PX(xs)+'" cy="'+PY(ys)+'" r="5.4" fill="#b8862f" stroke="#fff" stroke-width="2"/>';
+     if(st.label){
+       var lx=parseFloat(PX(xs))+9, ly=parseFloat(PY(ys))-9;
+       o+=txt(lx.toFixed(1),ly.toFixed(1),'('+(Math.round(xs*100)/100)+', '+(Math.round(ys*100)/100)+')','#8a6a20',9.5,'start',800);
+     }
+   } else if(st.par){
+     o+=txt(126,26,'the gap never closes','#b23145',9,'middle',800);
+     for(i=-3;i<=3;i++){
+       var ya=(S.c1-S.a1*i)/S.b1, yb=(S.r-S.p*i)/S.q;
+       if(Math.abs(ya)<R&&Math.abs(yb)<R)
+         o+='<line x1="'+PX(i)+'" y1="'+PY(ya)+'" x2="'+PX(i)+'" y2="'+PY(yb)+'" stroke="#b23145" stroke-width="1.4" stroke-dasharray="2 3"/>';
+     }
+   } else if(st.same){
+     o+=txt(126,26,'one line, written twice','#237a45',9,'middle',800);
+     for(i=-4;i<=4;i+=2){
+       var yc=(S.c1-S.a1*i)/S.b1;
+       if(Math.abs(yc)<R-0.3) o+='<circle cx="'+PX(i)+'" cy="'+PY(yc)+'" r="3.2" fill="#2f9e5b" stroke="#fff" stroke-width="1.4"/>';
+     }
+   }
+   return o;
+ }
+
+ /* ============ render ============ */
+ var cur=0, si=0;
+ /* one chip per step after the opening one, so chip k lights up at step k+1 */
+ var PLAN_OK=['isolate','substitute','distribute','combine','solve','back-sub','check'];
+ var PLAN_NO=['isolate','substitute','distribute','combine','no variable left','verdict'];
+
+ $("pick").innerHTML=SYS.map(function(s,k){
+   return '<button data-k="'+k+'">'+s.lab+'<small>'+s.sm+'</small></button>';
+ }).join('');
+ Array.prototype.forEach.call($("pick").querySelectorAll('button'),function(b){
+   b.onclick=function(){ cur=+b.dataset.k; si=0; render(); };
+ });
+
+ function render(){
+   var S=SYS[cur], st=S.steps[si];
+   $("art").innerHTML=paint(S,st);
+   $("lg1").innerHTML=S.e1disp;
+   $("lg2").innerHTML=S.e2disp;
+   $("cap").innerHTML=st.cap;
+   $("stage").className=S.tone;
+   $("stage").innerHTML=st.t+'<small>'+st.s+' &middot; step '+(si+1)+' of '+S.steps.length+'</small>';
+
+   $("work").innerHTML=st.rows.map(function(r,idx){
+     var on=(idx>=st.from);
+     return '<div class="wr'+(on?' on':'')+'"><span class="pl">'+r.pl+'</span><span class="mx">'+r.mx+
+       (r.chip?'<span class="chip '+r.chip+'">'+(r.chip==='t'?'&#10003; true':'&#10007; false')+'</span>':'')+
+       (r.ex?'<span class="ex">'+r.ex+'</span>':'')+'</span></div>';
+   }).join('');
+
+   $("info").innerHTML='<span class="n">'+st.t+'</span>'+st.why+
+     (st.tip?'<div class="'+st.tip.c+'">'+st.tip.h+'</div>':'');
+
+   var PLAN=S.solvable?PLAN_OK:PLAN_NO;
+   $("plan").innerHTML=PLAN.map(function(p,k){
+     return '<span class="'+((k===si-1)?'on':((k<si-1)?'done':''))+'">'+p+'</span>';
+   }).join('');
+
+   Array.prototype.forEach.call($("pick").querySelectorAll('button'),function(b){
+     b.className=(+b.dataset.k===cur)?'on':'';
+   });
+
+   $("prev").disabled=(si===0);
+   $("next").disabled=(si===S.steps.length-1);
+ }
+
+ $("prev").onclick=function(){ if(si>0){ si--; render(); } };
+ $("next").onclick=function(){ if(si<SYS[cur].steps.length-1){ si++; render(); } };
+ document.addEventListener('keydown',function(e){
+   if(e.key==='ArrowRight'){ if(si<SYS[cur].steps.length-1){ si++; render(); } }
+   else if(e.key==='ArrowLeft'){ if(si>0){ si--; render(); } }
+ });
+
+ render();
+})();
+</script>
+</body>
+</html>

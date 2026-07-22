@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Test of Independence</title>
+<meta name="description" content="Survey real people, cross-tabulate two categorical variables, build the expected counts out of the row and column totals, and test whether the two variables are associated.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:9px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:138px;line-height:1.3;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.r input[type=range]::-webkit-slider-thumb{background:#d1495b;} .sl.r input[type=range]::-moz-range-thumb{background:#d1495b;}
+.sl .nv{font-size:15px;font-weight:800;color:var(--teal-dk);min-width:74px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;line-height:1.3;}
+.tiles div.warn{border-color:#e2adb7;background:#fdf1f3;} .tiles div.warn .vv{color:#b23145;}
+.tiles div.good{border-color:#b6d8c4;background:#f0f8f3;} .tiles div.good .vv{color:#237a45;}
+.cap{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.55;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.sent{border:1px solid #bcd6e2;border-left:5px solid var(--teal);background:#eef6f9;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:13.2px;line-height:1.6;color:var(--soft);}
+.sent b{color:var(--teal-dk);}
+.sent .big{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.sent.warn{border-color:#e2adb7;border-left-color:#d1495b;background:#fdf1f3;} .sent.warn .big{color:#b23145;}
+.sent.good{border-color:#b6d8c4;border-left-color:#2f9e5b;background:#f0f8f3;} .sent.good .big{color:#237a45;}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.strip div{border:1px solid var(--line);border-radius:10px;padding:7px 8px;background:#fff;text-align:center;}
+.strip .lb{display:block;font-size:9.1px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.strip .vv{display:block;font-size:14.5px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.strip div.warn{border-color:#e2adb7;background:#fdf1f3;} .strip div.warn .vv{color:#b23145;}
+.strip div.good{border-color:#b6d8c4;background:#f0f8f3;} .strip div.good .vv{color:#237a45;}
+table.tv{width:100%;border-collapse:collapse;margin-top:9px;font-variant-numeric:tabular-nums;}
+table.tv th,table.tv td{padding:5px 4px;font-size:11.7px;text-align:right;border-bottom:1px solid var(--line);color:var(--soft);font-weight:600;}
+table.tv th{font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.3;}
+table.tv td:first-child,table.tv th:first-child{text-align:left;font-weight:800;color:var(--teal-dk);}
+table.tv tbody tr{cursor:pointer;}
+table.tv tbody tr:hover td{background:#f2f8fb;}
+table.tv tbody tr.on td{background:#e2eff5;color:var(--teal-dk);}
+table.tv tr:last-child td{border-bottom:none;}
+.mnem,.note{font-size:12px;border-radius:8px;padding:9px 12px;margin-top:10px;line-height:1.6;}
+.mnem{color:#8a6a20;background:#fbf3e2;border:1px solid #ecd9ac;} .mnem b{color:#5a4212;}
+.note{color:#8a2a3a;background:#fae5e8;border:1px solid #f0c9d0;} .note b{color:#7a1f2c;}
+.list .it .s{display:block;margin-top:2px;line-height:1.35;}
+.list .it .nm{line-height:1.4;}
+.modeseg + .cap{margin-top:2px;}
+.wrap > div{min-width:0;}
+.tw{overflow-x:auto;}
+@media (max-width:560px){
+  .tiles,.strip{grid-template-columns:repeat(2,1fr);}
+  .sl label{min-width:0;flex:0 0 92px;white-space:normal;}
+  .sl .nv{min-width:54px;font-size:13.5px;}
+  .seg{flex-wrap:wrap;} .seg button{flex:1 0 46%;}
+  .modeseg{flex-wrap:wrap;} .modeseg button{flex:1 0 100%;}
+  table.tv th,table.tv td{padding:5px 2px;font-size:11px;}
+}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 13</div>
+  <h1>Test of Independence</h1>
+  <div class="intro">Now there are <b>two</b> categorical questions on the same survey form, and the thing you want to know is whether the answers travel together. Do people who commute by bicycle rate their commute differently from people who drive? You cannot answer that with an average, and you cannot answer it by comparing one number to another &mdash; the data are a whole <b>table</b> of counts, and you have to judge the table as a unit. The move that makes it possible is quietly ingenious: <b>assume for a moment the two questions have nothing to do with each other</b>, and ask what the table would have looked like. Independence pins down every expected count exactly, using nothing but the row and column totals you already have. Then you compare, cell by cell, and add up the misses the same way you did for goodness of fit. Below you set how strongly the two variables are really linked, survey real people, and watch the expected table build itself out of the margins.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">One survey, cross-tabulated</h2>
+      <div class="cap" style="margin-top:2px;">Each bar is <b>one commute mode</b>, split by how those particular people rated their commute. Because every bar is stretched to the same length, you are looking at <b>conditional proportions within the row</b> &mdash; the profile of answers <i>given</i> that someone commutes that way. The bottom bar is everyone pooled together, and the <b>dashed lines</b> drop down from its boundaries. Here is the whole idea of independence in one picture: <b>if the two questions are unrelated, every bar has the same striping</b>, and every boundary lands on a dashed line. Press <b>Survey new people</b> a few times with the association set to zero &mdash; the boundaries jitter around the lines but never drift systematically away from them.</div>
+      <svg viewBox="0 0 480 250" id="bars" aria-label="rating profile for each commute mode, compared against the pooled profile for everyone"></svg>
+      <div class="lgd" id="barlgd"></div>
+      <div class="row"><button class="btn solid" id="bnew">Survey new people</button><button class="btn" id="bhunt">Find a misleading survey</button></div>
+      <div class="sent" id="barsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Where the expected counts come from</h2>
+      <div class="cap" style="margin-top:2px;">This is the step the whole test turns on, and it is worth slowing down for. If the two questions really are unrelated, then the chance a person falls in row <i>i</i> <b>and</b> column <i>j</i> is just the chance of row <i>i</i> times the chance of column <i>j</i>. We do not know those chances, so we use the best estimates on the table &mdash; the margins themselves, R<sub>i</sub>&#8202;/&#8202;n and C<sub>j</sub>&#8202;/&#8202;n. Multiply them together for the joint proportion, then multiply by n to turn a proportion back into a count, and the n's collapse: <b>E = R<sub>i</sub> &times; C<sub>j</sub> &divide; n</b>. <b>Tap any cell</b> to watch its row total and column total light up and see the arithmetic written out.</div>
+      <svg viewBox="0 0 480 280" id="tab" aria-label="the two-way table of observed counts with row totals, column totals, and the expected count under independence in each cell"></svg>
+      <div class="lgd">
+        <span><i style="background:#1c4454"></i>observed count O</span>
+        <span><i style="background:#9fb3bd"></i>expected under independence E</span>
+        <span><i style="background:#b8862f"></i>the two margins feeding the tapped cell</span>
+      </div>
+      <div class="sent" id="tabsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Building &chi;&sup2;, cell by cell</h2>
+      <div class="cap" style="margin-top:2px;">Exactly the arithmetic from the previous section, now run over every cell of the table: square the miss so that too&#8209;many and too&#8209;few both count as wrong, divide by the expected count so a miss is judged against the scale it happened on, and add. The grid shades each cell by how much it contributes and colours it by direction &mdash; <span style="color:#b23145;font-weight:800;">red</span> where more people landed there than independence predicted, <span style="color:#2f6f9f;font-weight:800;">blue</span> where fewer. In a genuine association the reds and blues form a <b>pattern</b>, not a scatter. Tap any row of the table to isolate its arithmetic.</div>
+      <svg viewBox="0 0 480 260" id="cells" aria-label="each cell's contribution to the chi-square statistic, and the running total against the critical value"></svg>
+      <div class="tw"><table class="tv"><thead><tr><th>Cell</th><th>Observed<br>O</th><th>Expected<br>E</th><th>O &minus; E</th><th>(O&minus;E)&sup2; &divide; E</th><th>Adjusted<br>residual</th></tr></thead><tbody id="tbl"></tbody></table></div>
+      <div class="sent" id="cellsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>How surprising is that total?</h2>
+      <div class="cap" style="margin-top:2px;">&chi;&sup2; is zero only if every cell lands exactly on its expectation, and any departure in any direction pushes it up, so once again the entire question lives in the <b>upper tail</b>. The curve is the distribution the statistic follows <b>when the two variables are independent</b> &mdash; and note the degrees of freedom have changed. It is no longer &ldquo;cells minus one.&rdquo; It is <b>df = (r &minus; 1)(c &minus; 1)</b>, because this time the expected counts were built out of the data's own margins, and every margin you borrow costs you a degree of freedom.</div>
+      <svg viewBox="0 0 480 210" id="dist" aria-label="the chi-square distribution for the current degrees of freedom, with the observed statistic marked and the upper tail shaded"></svg>
+      <div class="lgd">
+        <span><i style="background:#cfdde4"></i>&chi;&sup2; if the two were independent</span>
+        <span><i style="background:#e6b3bd"></i>this big or bigger &mdash; the p&#8209;value</span>
+        <span><i style="background:#1c4454"></i>your total</span>
+        <span><i style="background:#b8862f"></i>reject beyond here</span>
+      </div>
+      <div class="sent" id="distsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Run the whole survey a thousand times</h2>
+      <div class="cap" style="margin-top:2px;">One survey settles nothing. Each run below recruits a fresh set of people from the <b>true</b> joint distribution, cross&#8209;tabulates them, rebuilds the expected counts from <i>that</i> table's margins, and keeps only &chi;&sup2;. The <b>bars</b> are those simulated totals. The <b>dark curve</b> is the theoretical &chi;&sup2; distribution with (r &minus; 1)(c &minus; 1) degrees of freedom, drawn from the formula and fitted to nothing at all. Set the association to zero and the bars settle onto the curve &mdash; that agreement is the entire justification for reading a p&#8209;value off it. Dial the association up and the pile marches right, which is what power looks like.</div>
+      <svg viewBox="0 0 480 236" id="hist" aria-label="histogram of chi-square values from many simulated surveys with the theoretical chi-square curve overlaid"></svg>
+      <div class="lgd">
+        <span><i style="background:#bcd9e6"></i>simulated surveys</span>
+        <span><i style="background:#1c4454"></i>theory, not fitted</span>
+        <span><i style="background:#b8862f"></i>rejection cut&#8209;off</span>
+      </div>
+      <div class="strip">
+        <div><span class="lb">Surveys<br>run</span><span class="vv" id="rN">0</span></div>
+        <div><span class="lb">Mean &chi;&sup2;<br>observed</span><span class="vv" id="rM">&mdash;</span></div>
+        <div><span class="lb">Mean &chi;&sup2;<br>predicted</span><span class="vv" id="rT">&mdash;</span></div>
+        <div><span class="lb" id="rPl">Share<br>rejecting</span><span class="vv" id="rP">&mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="run1">Run 1,000 surveys</button><button class="btn" id="run2">Add 4,000 more</button><button class="btn" id="rrs">Reset</button></div>
+      <div class="cap" id="histcap"></div>
+    </div>
+  </div>
+
+  <div>
+    <div id="stage">Two questions on one form<small>set the study up, then start surveying</small></div>
+
+    <div class="card">
+      <h2>The survey, and the truth behind it</h2>
+      <div class="cap" style="margin-top:2px;">A city asks commuters two questions: <b>how do you get to work</b>, and <b>how would you describe the trip</b>. In real life you would know only the answers; here you also set the truth behind them, so you can watch the machinery succeed and fail against something you already know.</div>
+      <div class="hd">The table</div>
+      <div class="sl"><label>commute modes, r rows</label><input type="range" id="sR" min="2" max="4" step="1" value="3" aria-label="number of row categories"><span class="nv" id="vR">3</span></div>
+      <div class="sl"><label>rating levels, c columns</label><input type="range" id="sC" min="2" max="4" step="1" value="3" aria-label="number of column categories"><span class="nv" id="vC">3</span></div>
+      <div class="sl"><label>people surveyed, n</label><input type="range" id="sN" min="0" max="14" step="1" value="7" aria-label="sample size, people surveyed"><span class="nv" id="vN">300</span></div>
+      <div class="hd">The hidden truth</div>
+      <div class="sl r"><label>strength of association</label><input type="range" id="sT" min="0" max="25" step="1" value="12" aria-label="how strongly the two variables are associated in the population"><span class="nv" id="vT">12</span></div>
+      <div class="cap" id="tiltcap"></div>
+      <div class="hd">Jump to a situation worth seeing</div>
+      <div class="seg" id="preSeg">
+        <button data-v="0">Truly independent<small>nothing to find</small></button>
+        <button data-v="1">A real association<small>n = 400</small></button>
+        <button data-v="2">Strong, tiny survey<small>n = 40</small></button>
+        <button data-v="3">Faint, huge survey<small>n = 2000</small></button>
+        <button data-v="4">A 4 &times; 4 table<small>df = 9</small></button>
+      </div>
+      <div class="row"><button class="btn" id="brst">Reset everything</button></div>
+    </div>
+
+    <div class="card">
+      <h2>This survey, computed live</h2>
+      <div class="tiles">
+        <div><span class="lb">People<br>counted n</span><span class="vv" id="tN">&mdash;</span><span class="sub">counts, never %</span></div>
+        <div><span class="lb">Table<br>size</span><span class="vv" id="tK">&mdash;</span><span class="sub">rows &times; columns</span></div>
+        <div><span class="lb">Degrees of<br>freedom</span><span class="vv" id="tDF">&mdash;</span><span class="sub">(r&minus;1)(c&minus;1)</span></div>
+        <div><span class="lb">Smallest<br>expected E</span><span class="vv" id="tME">&mdash;</span><span class="sub" id="tMEs">&nbsp;</span></div>
+        <div><span class="lb">&chi;&sup2;<br>statistic</span><span class="vv" id="tX">&mdash;</span><span class="sub">&Sigma; (O&minus;E)&sup2;/E</span></div>
+        <div><span class="lb">Reject<br>beyond</span><span class="vv" id="tC">&mdash;</span><span class="sub">&alpha; = 0.05</span></div>
+        <div id="bxP"><span class="lb">p&#8209;value<br>upper tail</span><span class="vv" id="tP">&mdash;</span><span class="sub" id="tPs">&nbsp;</span></div>
+        <div><span class="lb">Cram&eacute;r's<br>V</span><span class="vv" id="tV">&mdash;</span><span class="sub" id="tVs">&nbsp;</span></div>
+      </div>
+      <div class="sent" id="sent"></div>
+      <div class="cap">Watch <b>&chi;&sup2;</b> and <b>V</b> disagree. Leave the association slider alone and drag the sample size from end to end: &chi;&sup2; and the p&#8209;value swing violently, because &chi;&sup2; is very nearly proportional to n. Cram&eacute;r's V barely moves, because it is &chi;&sup2; with the sample size divided back out &mdash; V = &radic;(&chi;&sup2; &divide; (n &times; min(r&minus;1, c&minus;1))). One of those two numbers is telling you about the world; the other is telling you about your budget.</div>
+    </div>
+
+    <div class="card">
+      <h2>Is the curve even legal here?</h2>
+      <div class="cap" style="margin-top:2px;">The &chi;&sup2; curve is an <b>approximation</b> to the true behaviour of a discrete statistic, and it only becomes a good one when the expected counts are not too thin. The conservative working rule is that <b>every expected count should be at least 5</b>. The more permissive rule most software uses, due to Cochran, is that <b>no expected count falls below 1</b> and <b>no more than 20% of the cells fall below 5</b>. Note carefully what the rule is about: <b>E</b>, not O. Observing zero people in a cell is perfectly legal. <i>Expecting</i> half a person is not.</div>
+      <div class="strip">
+        <div id="cA"><span class="lb">Smallest<br>expected</span><span class="vv" id="cAv">&mdash;</span></div>
+        <div id="cB"><span class="lb">Cells with<br>E &lt; 5</span><span class="vv" id="cBv">&mdash;</span></div>
+        <div id="cC"><span class="lb">Cochran<br>rule</span><span class="vv" id="cCv">&mdash;</span></div>
+        <div id="cD"><span class="lb">n needed to<br>clear E &ge; 5</span><span class="vv" id="cDv">&mdash;</span></div>
+      </div>
+      <div class="sent" id="condsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Say it right</h2>
+      <div class="cap" style="margin-top:2px;">Eleven things people say after a test of independence. Five of them are correct. Tap each one.</div>
+      <div class="list" id="claims"></div>
+      <div id="info"></div>
+    </div>
+
+    <div class="card">
+      <h2>What to carry out of this section</h2>
+      <div class="mnem"><b>E = row total &times; column total &divide; n, and the formula is not a rule to memorise &mdash; it is a sentence.</b> Independence means the joint chance factors: P(row and column) = P(row) &times; P(column). Estimate each piece from the margins, R<sub>i</sub>&#8202;/&#8202;n and C<sub>j</sub>&#8202;/&#8202;n, multiply them for the joint proportion, then multiply by n to convert a proportion into a headcount. The n's cancel down to R<sub>i</sub>C<sub>j</sub>&#8202;/&#8202;n. If you can say that sentence you never need to look the formula up, and you will also see instantly why the expected table has exactly the same margins as the observed one.</div>
+      <div class="mnem"><b>Expected counts are almost never whole numbers, and that is fine.</b> E = 47&times;62&divide;300 = 9.71 does not mean 9.71 people. It is the long&#8209;run average number of people who would land in that cell across many surveys of this size if the two variables were unrelated. Rounding it before computing the statistic is a small, needless error. Only the observed counts are forced to be integers &mdash; they are people.</div>
+      <div class="mnem"><b>df = (r &minus; 1)(c &minus; 1), and the bookkeeping is exact.</b> There are rc cells. Subtract 1 because the counts must total n. Subtract another (r &minus; 1) for the row proportions you estimated from the data, and (c &minus; 1) for the column proportions. That leaves rc &minus; 1 &minus; (r&minus;1) &minus; (c&minus;1) = rc &minus; r &minus; c + 1 = (r &minus; 1)(c &minus; 1). Compare with goodness of fit, where the claimed proportions arrived from outside the data and cost you nothing, so df was simply k &minus; 1. <b>Estimating things from your own data is not free.</b> Drag r and c and watch the curve reshape underneath a table whose story has not changed.</div>
+      <div class="mnem"><b>Independence has a picture, and it is the first panel.</b> &ldquo;The two variables are independent&rdquo; is the same statement as &ldquo;the conditional distribution of ratings is identical for every commute mode&rdquo; &mdash; every bar striped the same way. That equivalence is worth more than the formula, because it tells you what to look at before you compute anything, and it tells you what a significant result actually claims: <i>somewhere</i>, some row's profile differs from the others.</div>
+      <div class="note"><b>Association is not causation, and this design cannot rescue you.</b> Suppose the test comes back overwhelming and the people on foot rate their commutes far more pleasantly. Three explanations remain wide open. Walking may genuinely make the trip nicer. Or people who already live somewhere pleasant to walk <i>chose</i> to walk &mdash; the exposure is self&#8209;selected, and the causal arrow runs backwards. Or something behind both, like living downtown, drives the mode and the mood independently &mdash; a confounder. The &chi;&sup2; test cannot distinguish these, because it only ever saw a table of counts. It certifies that the pattern is more than noise. It says nothing whatsoever about where the pattern came from.</div>
+      <div class="note"><b>Significant and strong are different words.</b> Load the <i>Faint, huge survey</i> preset. The p&#8209;value is minuscule and Cram&eacute;r's V is close to zero, and both are correct: the association is real and it is negligible. Because &chi;&sup2; grows roughly in proportion to n, any association that is not exactly zero becomes significant eventually, and with enough people you will reject independence over a difference nobody could act on. Always report an effect size next to the p&#8209;value. A p&#8209;value answers &ldquo;could this be nothing?&rdquo; It never answers &ldquo;how big is it?&rdquo;</div>
+      <div class="note"><b>The p&#8209;value is not the probability that the variables are independent.</b> It is computed by <i>assuming</i> independence and asking how often a table this discrepant, or worse, would arise from pure sampling noise. It is P(data this extreme | independence), not P(independence | data). Those two are not interchangeable, and swapping them is the single most common misstatement in applied statistics. It also explains why we never &ldquo;accept&rdquo; the null: a large p&#8209;value means your data were compatible with independence, and small data are compatible with almost everything.</div>
+      <div class="note"><b>A significant &chi;&sup2; does not name the guilty cell.</b> This is an <b>omnibus</b> test &mdash; one number for the entire table. The natural follow&#8209;up is the adjusted residuals in the third panel: values beyond roughly &plusmn;2 mark cells pulling hardest, and their signs show the direction. But scanning rc cells after a significant result and reporting whichever ones look big is a fishing expedition, and any cell picked that way deserves confirmation in fresh data rather than a p&#8209;value inherited from the omnibus test.</div>
+      <div class="note"><b>When the expected counts are too thin, stop &mdash; do not round up and continue.</b> Load the <i>Strong, tiny survey</i> preset and look at the smallest expected count. With E's below 5, the &chi;&sup2; curve is a poor stand&#8209;in for the discrete truth and the p&#8209;value cannot be trusted in either direction. The real fixes are to collapse categories that genuinely belong together, gather more people, or use <b>Fisher's exact test</b>, which computes the answer from the exact distribution of tables with those margins instead of leaning on a curve.</div>
+      <div class="note"><b>Two different studies, one identical calculation.</b> If you sample n people at random and record both answers, you are testing <b>independence</b>. If instead you deliberately recruit 150 drivers, 150 cyclists, and 150 walkers and ask each group one question, the row totals were fixed by you, not by chance, and you are testing <b>homogeneity</b> &mdash; whether several populations share one distribution. The expected counts, the statistic, the degrees of freedom and the table you read are all the same. What differs is the sentence you are entitled to write at the end, and which margins were yours to choose.</div>
+      <div class="cap">One last thing worth doing. Set the association to zero, so the two questions are genuinely unrelated, and run five thousand surveys. The mean &chi;&sup2; settles on (r &minus; 1)(c &minus; 1) &mdash; not approximately, and not by luck &mdash; and about one survey in twenty crosses the rejection line anyway. Those tables contain no association at all. They are ordinary surveys of an ordinary city, and they are the advertised, agreed&#8209;upon price of drawing the line at 5%.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ================= seeded PRNG (mulberry32) — reproducible every session ================= */
+ var SEED0=20260815, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+
+ /* ================= special functions ================= */
+ function lgam(xx){
+   var cof=[76.18009172947146,-86.50532032941677,24.01409824083091,
+            -1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+   var x=xx,y=xx,tmp=x+5.5,ser=1.000000000190015,j;
+   tmp-=(x+0.5)*Math.log(tmp);
+   for(j=0;j<6;j++){ y+=1; ser+=cof[j]/y; }
+   return -tmp+Math.log(2.5066282746310005*ser/x);
+ }
+ function gser(a,x){
+   var ap=a, sum=1/a, del=sum, n;
+   for(n=1;n<=600;n++){
+     ap+=1; del*=x/ap; sum+=del;
+     if(Math.abs(del)<Math.abs(sum)*1e-15) break;
+   }
+   return sum*Math.exp(-x+a*Math.log(x)-lgam(a));
+ }
+ function gcf(a,x){
+   var FPMIN=1e-300, EPS=1e-15;
+   var b=x+1-a, c=1/FPMIN, d=1/b, h=d, i, an, del;
+   for(i=1;i<=600;i++){
+     an=-i*(i-a);
+     b+=2;
+     d=an*d+b; if(Math.abs(d)<FPMIN) d=FPMIN;
+     c=b+an/c; if(Math.abs(c)<FPMIN) c=FPMIN;
+     d=1/d; del=d*c; h*=del;
+     if(Math.abs(del-1)<EPS) break;
+   }
+   return Math.exp(-x+a*Math.log(x)-lgam(a))*h;
+ }
+ function gammq(a,x){                       /* P(X > x) for a gamma(a,1) */
+   if(x<=0) return 1;
+   if(x<a+1) return 1-gser(a,x);
+   return gcf(a,x);
+ }
+ function chiTail(x,v){ return gammq(v/2,x/2); }      /* P(chi-square_v > x) */
+ function chiPdf(x,v){
+   if(x<0) return 0;
+   if(x===0) return v===2?0.5:0;
+   return Math.exp((v/2-1)*Math.log(x)-x/2-(v/2)*Math.LN2-lgam(v/2));
+ }
+ function invChi(tail,v){                   /* the x with P(X > x) = tail */
+   var lo=0, hi=3000, mid, i;
+   for(i=0;i<95;i++){ mid=(lo+hi)/2; if(chiTail(mid,v)>tail) lo=mid; else hi=mid; }
+   return (lo+hi)/2;
+ }
+
+ /* ================= the setup ================= */
+ var ROWS=[{nm:'Car',ic:'🚗',w:44},{nm:'Transit',ic:'🚌',w:24},
+           {nm:'Bicycle',ic:'🚲',w:19},{nm:'On foot',ic:'🚶',w:13}];
+ var COLSETS={
+   2:{nm:['Stressful','Not stressful'],w:[52,48],col:['#d1495b','#2f9e5b']},
+   3:{nm:['Stressful','Neutral','Pleasant'],w:[40,34,26],col:['#d1495b','#c9a227','#2f9e5b']},
+   4:{nm:['Stressful','Tiring','Neutral','Pleasant'],w:[28,26,26,20],col:['#d1495b','#d98032','#c9a227','#2f9e5b']}
+ };
+ var NS=[40,60,80,100,150,200,250,300,400,500,600,800,1000,1500,2000];
+ var P={r:3,c:3,ni:7,str:12};
+ var AL=0.05, ci=-1, cellSel=-1, tapI=-1, tapJ=-1;
+ var O=[], hunted=0, huntOK=1;
+
+ function N(){ return NS[P.ni]; }
+ function rowW(){ var a=[],s=0,i; for(i=0;i<P.r;i++) s+=ROWS[i].w;
+   for(i=0;i<P.r;i++) a.push(ROWS[i].w/s); return a; }
+ function colW(){ var W=COLSETS[P.c].w,a=[],s=0,i; for(i=0;i<P.c;i++) s+=W[i];
+   for(i=0;i<P.c;i++) a.push(W[i]/s); return a; }
+ function colNm(j){ return COLSETS[P.c].nm[j]; }
+ function colCol(j){ return COLSETS[P.c].col[j]; }
+ function isNull(){ return P.str<=0; }
+
+ /* The truth: a log-linear association model.  p(i,j) is proportional to
+    a(i) * b(j) * exp(theta * u(i) * v(j)), with u and v centred scores running
+    from -1 to +1.  theta = 0 gives p(i,j) = a(i)*b(j) exactly — genuine
+    independence — and larger theta ties later rows to later columns. */
+ function truth(){
+   var r=P.r,c=P.c,a=rowW(),b=colW(),th=P.str/25*0.85,i,j,u,v,s=0,M=[];
+   for(i=0;i<r;i++){
+     M.push([]); u=(i-(r-1)/2)/((r-1)/2);
+     for(j=0;j<c;j++){
+       v=(j-(c-1)/2)/((c-1)/2);
+       var w=a[i]*b[j]*Math.exp(th*u*v);
+       M[i].push(w); s+=w;
+     }
+   }
+   for(i=0;i<r;i++) for(j=0;j<c;j++) M[i][j]/=s;
+   return M;
+ }
+
+ /* ================= the statistic, computed one way in one place ================= */
+ function stat(T){
+   var r=T.length,c=T[0].length,i,j,n=0,R=[],K=[],E=[],con=[],adj=[],x=0,s;
+   for(i=0;i<r;i++){ s=0; for(j=0;j<c;j++) s+=T[i][j]; R.push(s); n+=s; }
+   for(j=0;j<c;j++){ s=0; for(i=0;i<r;i++) s+=T[i][j]; K.push(s); }
+   var minE=Infinity, few=0, big=-1, bi=0, bj=0, zero=0;
+   for(i=0;i<r;i++){
+     E.push([]); con.push([]); adj.push([]);
+     for(j=0;j<c;j++){
+       var e=n>0?R[i]*K[j]/n:0, d=T[i][j]-e, cc=e>0?d*d/e:0;
+       E[i].push(e); con[i].push(cc); x+=cc;
+       var den=e*(1-R[i]/n)*(1-K[j]/n);
+       adj[i].push(den>1e-12?d/Math.sqrt(den):0);
+       if(e<minE) minE=e;
+       if(e<5) few++;
+       if(e<1) zero++;
+       if(cc>big){ big=cc; bi=i; bj=j; }
+     }
+   }
+   var df=(r-1)*(c-1), mn=Math.min(r-1,c-1);
+   var V=(n>0&&mn>0)?Math.sqrt(x/(n*mn)):0;
+   return {r:r,c:c,n:n,R:R,K:K,E:E,con:con,adj:adj,x:x,df:df,V:V,
+           minE:minE,few:few,thin:zero,big:big,bi:bi,bj:bj,
+           p:chiTail(x,df), crit:invChi(AL,df)};
+ }
+
+ /* Noncentrality per observation under the truth currently set:
+    lambda = sum (p_ij - p_i. * p_.j)^2 / (p_i. * p_.j).
+    Exactly zero when the model is independent, so the predicted mean is df. */
+ function theory(){
+   var M=truth(),r=P.r,c=P.c,pr=[],pk=[],i,j,s,lam=0;
+   for(i=0;i<r;i++){ s=0; for(j=0;j<c;j++) s+=M[i][j]; pr.push(s); }
+   for(j=0;j<c;j++){ s=0; for(i=0;i<r;i++) s+=M[i][j]; pk.push(s); }
+   for(i=0;i<r;i++) for(j=0;j<c;j++){
+     var q=pr[i]*pk[j], d=M[i][j]-q;
+     if(q>0) lam+=d*d/q;
+   }
+   var df=(r-1)*(c-1);
+   return {lam:lam, ncp:N()*lam, mean:df+N()*lam};
+ }
+
+ /* ================= surveying real people ================= */
+ function fill(){
+   var M=truth(),r=P.r,c=P.c,n=N(),cum=[],s=0,i,j,k,u,T=[];
+   for(i=0;i<r;i++){ T.push([]); for(j=0;j<c;j++){ T[i].push(0); s+=M[i][j]; cum.push(s); } }
+   var L=cum.length;
+   for(k=0;k<n;k++){
+     u=rnd()*s;
+     for(i=0;i<L-1;i++){ if(u<cum[i]) break; }
+     T[Math.floor(i/c)][i%c]++;
+   }
+   return T;
+ }
+ function newSurvey(){ O=fill(); hunted=0; huntOK=1; tapI=-1; tapJ=-1; cellSel=-1; }
+ function hunt(){                             /* chase a false alarm, or a miss */
+   var want=isNull(), k=0, C;
+   do{ O=fill(); k++; C=stat(O); }while(k<900 && ((want && C.p>=AL) || (!want && C.p<AL)));
+   hunted=k; huntOK=(want?C.p<AL:C.p>=AL)?1:0;
+   tapI=-1; tapJ=-1; cellSel=-1;
+ }
+
+ /* ================= formatting ================= */
+ function f1(x){ return (x<0?'&minus;':'')+Math.abs(x).toFixed(1); }
+ function f2(x){ return (x<0?'&minus;':'')+Math.abs(x).toFixed(2); }
+ function f3(x){ return (x<0?'&minus;':'')+Math.abs(x).toFixed(3); }
+ function sgn1(x){ return (x<0?'&minus;':'+')+Math.abs(x).toFixed(1); }
+ function sgn2(x){ return (x<0?'&minus;':'+')+Math.abs(x).toFixed(2); }
+ function com(s){ s=String(s); var q=s.split('.');
+   q[0]=q[0].replace(/\B(?=(\d{3})+(?!\d))/g,','); return q.join('.'); }
+ function pv(p){ return p<0.0001?'&lt; 0.0001':p.toFixed(4); }
+ function pc(v,d){ return (v*100).toFixed(d===undefined?1:d)+'%'; }
+ function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+ /* ================= panel 1 — the profile bars ================= */
+ function drawBars(){
+   var C=stat(O), r=P.r, cc=P.c, i, j, out='';
+   var LX=104, X0=110, X1=470, BH=26, GAP=12, Y0=26;
+   var yEnd=Y0+r*(BH+GAP), yAll=yEnd+16, H=yAll+BH+34;
+   $("bars").setAttribute('viewBox','0 0 480 '+H);
+
+   /* dashed guides at the pooled column boundaries */
+   var acc=0, gx=[];
+   for(j=0;j<cc-1;j++){ acc+=C.n>0?C.K[j]/C.n:0; gx.push(X0+acc*(X1-X0)); }
+
+   out+='<text x="4" y="14" font-size="9.6" font-weight="800" fill="#78868d" letter-spacing="1.2">HOW EACH GROUP RATED THE TRIP</text>';
+   out+='<text x="476" y="14" font-size="9.6" font-weight="800" fill="#78868d" text-anchor="end" letter-spacing="1.2">WITHIN-ROW SHARE</text>';
+
+   for(i=0;i<r;i++){
+     var y=Y0+i*(BH+GAP), tot=C.R[i], x=X0;
+     out+='<text x="'+(LX-6)+'" y="'+(y+13)+'" font-size="11.6" font-weight="800" fill="#1c4454" text-anchor="end">'+ROWS[i].nm+'</text>';
+     out+='<text x="'+(LX-6)+'" y="'+(y+24)+'" font-size="9.6" font-weight="700" fill="#78868d" text-anchor="end">'+com(tot)+' people</text>';
+     if(tot<=0){
+       out+='<rect x="'+X0+'" y="'+y+'" width="'+(X1-X0)+'" height="'+BH+'" rx="4" fill="#eef2f4"/>';
+       out+='<text x="'+((X0+X1)/2)+'" y="'+(y+17)+'" font-size="10" font-weight="700" fill="#9fb3bd" text-anchor="middle">nobody in this group</text>';
+       continue;
+     }
+     for(j=0;j<cc;j++){
+       var w=(O[i][j]/tot)*(X1-X0);
+       out+='<rect x="'+x.toFixed(2)+'" y="'+y+'" width="'+Math.max(0,w).toFixed(2)+'" height="'+BH+'" fill="'+colCol(j)+'" opacity="'+(tapJ===j?1:0.86)+'"/>';
+       if(w>30) out+='<text x="'+(x+w/2).toFixed(2)+'" y="'+(y+17)+'" font-size="10.4" font-weight="800" fill="#fff" text-anchor="middle">'+pc(O[i][j]/tot,0)+'</text>';
+       x+=w;
+     }
+     out+='<rect x="'+X0+'" y="'+y+'" width="'+(X1-X0)+'" height="'+BH+'" rx="3" fill="none" stroke="'+(tapI===i?'#1c4454':'#dfe8ed')+'" stroke-width="'+(tapI===i?2:1)+'"/>';
+   }
+
+   /* guides span the group bars only */
+   for(j=0;j<gx.length;j++)
+     out+='<line x1="'+gx[j].toFixed(2)+'" y1="'+(Y0-4)+'" x2="'+gx[j].toFixed(2)+'" y2="'+(yEnd-GAP+4)+'" stroke="#1c4454" stroke-width="1.6" stroke-dasharray="4 3" opacity=".72"/>';
+
+   /* the pooled bar */
+   var xa=X0;
+   out+='<text x="'+(LX-6)+'" y="'+(yAll+13)+'" font-size="11.6" font-weight="800" fill="#b8862f" text-anchor="end">Everyone</text>';
+   out+='<text x="'+(LX-6)+'" y="'+(yAll+24)+'" font-size="9.6" font-weight="700" fill="#78868d" text-anchor="end">'+com(C.n)+' people</text>';
+   for(j=0;j<cc;j++){
+     var wa=C.n>0?(C.K[j]/C.n)*(X1-X0):0;
+     out+='<rect x="'+xa.toFixed(2)+'" y="'+yAll+'" width="'+Math.max(0,wa).toFixed(2)+'" height="'+BH+'" fill="'+colCol(j)+'" opacity=".55"/>';
+     if(wa>30) out+='<text x="'+(xa+wa/2).toFixed(2)+'" y="'+(yAll+17)+'" font-size="10.4" font-weight="800" fill="#3d4d55" text-anchor="middle">'+pc(C.n>0?C.K[j]/C.n:0,0)+'</text>';
+     xa+=wa;
+   }
+   out+='<rect x="'+X0+'" y="'+yAll+'" width="'+(X1-X0)+'" height="'+BH+'" rx="3" fill="none" stroke="#b8862f" stroke-width="1.6"/>';
+   out+='<text x="'+X0+'" y="'+(H-8)+'" font-size="9.6" font-weight="700" fill="#9fb3bd">0%</text>';
+   out+='<text x="'+X1+'" y="'+(H-8)+'" font-size="9.6" font-weight="700" fill="#9fb3bd" text-anchor="end">100%</text>';
+   out+='<text x="'+((X0+X1)/2)+'" y="'+(H-8)+'" font-size="9.6" font-weight="700" fill="#b8862f" text-anchor="middle">dashed lines = the pooled profile</text>';
+   $("bars").innerHTML=out;
+
+   /* legend */
+   var lg='';
+   for(j=0;j<cc;j++) lg+='<span><i style="background:'+colCol(j)+'"></i>'+colNm(j)+'</span>';
+   $("barlgd").innerHTML=lg;
+
+   /* the biggest gap between a row profile and the pooled profile */
+   var gi=0,gj=0,gd=-1;
+   for(i=0;i<r;i++) for(j=0;j<cc;j++){
+     if(C.R[i]<=0||C.n<=0) continue;
+     var d=Math.abs(O[i][j]/C.R[i]-C.K[j]/C.n);
+     if(d>gd){ gd=d; gi=i; gj=j; }
+   }
+   var s='';
+   if(gd<0){ s='<span class="big">No data yet</span>Press <b>Survey new people</b>.'; }
+   else{
+     s='<span class="big">'+ROWS[gi].nm+' vs everyone</span>'+
+       'The widest gap in the picture: <b>'+pc(O[gi][gj]/C.R[gi])+'</b> of the <b>'+ROWS[gi].nm.toLowerCase()+'</b> group answered &ldquo;'+colNm(gj)+'&rdquo;, against <b>'+pc(C.K[gj]/C.n)+'</b> of everyone pooled &mdash; a gap of <b>'+pc(gd)+'</b>. '+
+       (isNull()
+         ? 'And yet the two questions are set to be <b>completely unrelated</b> right now. Every gap you can see is sampling noise, which is exactly why eyeballing the bars is not a test.'
+         : 'The association is real here, but so is the noise, and by eye you cannot separate them. That is what the statistic is for.');
+   }
+   if(hunted>1) s+=' <b>'+(huntOK?'Found it':'Gave up')+'</b> after searching '+com(hunted)+' surveys.';
+   $("barsent").className='sent'+(isNull()?'':' warn');
+   $("barsent").innerHTML=s;
+ }
+
+ /* ================= panel 2 — the table and the margins ================= */
+ function drawTab(){
+   var C=stat(O), r=P.r, cc=P.c, i, j, out='';
+   var LX=98, CW=Math.min(84,(468-LX)/(cc+1)), HH=32, RH=44;
+   var H=HH+(r+1)*RH+16;
+   $("tab").setAttribute('viewBox','0 0 480 '+H);
+   function cx(j){ return LX+j*CW; }
+   function cy(i){ return HH+i*RH; }
+
+   /* highlight bands for the tapped cell */
+   if(tapI>=0&&tapJ>=0){
+     out+='<rect x="'+LX+'" y="'+cy(tapI)+'" width="'+((cc+1)*CW)+'" height="'+RH+'" fill="#fbf3e2"/>';
+     out+='<rect x="'+cx(tapJ)+'" y="'+HH+'" width="'+CW+'" height="'+((r+1)*RH)+'" fill="#fbf3e2"/>';
+     out+='<rect x="'+cx(tapJ)+'" y="'+cy(tapI)+'" width="'+CW+'" height="'+RH+'" fill="#f3e4bd"/>';
+   }
+
+   /* header */
+   for(j=0;j<cc;j++)
+     out+='<text x="'+(cx(j)+CW/2)+'" y="'+(HH-16)+'" font-size="10.2" font-weight="800" fill="'+colCol(j)+'" text-anchor="middle">'+colNm(j)+'</text>';
+   out+='<text x="'+(cx(cc)+CW/2)+'" y="'+(HH-16)+'" font-size="10.2" font-weight="800" fill="#b8862f" text-anchor="middle">Row total</text>';
+   out+='<text x="'+(HH-16)+'" y="'+(HH-16)+'" font-size="9.6" font-weight="800" fill="#9fb3bd">count / expected</text>';
+
+   for(i=0;i<r;i++){
+     out+='<text x="'+(LX-6)+'" y="'+(cy(i)+20)+'" font-size="11.4" font-weight="800" fill="#1c4454" text-anchor="end">'+ROWS[i].nm+'</text>';
+     out+='<text x="'+(LX-6)+'" y="'+(cy(i)+33)+'" font-size="9.4" font-weight="700" fill="#9fb3bd" text-anchor="end">'+ROWS[i].ic+'</text>';
+     for(j=0;j<cc;j++){
+       var sel=(tapI===i&&tapJ===j);
+       out+='<rect class="rgn" data-i="'+i+'" data-j="'+j+'" x="'+cx(j)+'" y="'+cy(i)+'" width="'+CW+'" height="'+RH+'" fill="transparent" stroke="'+(sel?'#1c4454':'#dfe8ed')+'" stroke-width="'+(sel?2:1)+'"/>';
+       out+='<text x="'+(cx(j)+CW/2)+'" y="'+(cy(i)+20)+'" font-size="15" font-weight="800" fill="#1c4454" text-anchor="middle" pointer-events="none">'+com(O[i][j])+'</text>';
+       out+='<text x="'+(cx(j)+CW/2)+'" y="'+(cy(i)+34)+'" font-size="10.6" font-weight="700" fill="#9fb3bd" text-anchor="middle" pointer-events="none">'+C.E[i][j].toFixed(1)+'</text>';
+     }
+     out+='<rect x="'+cx(cc)+'" y="'+cy(i)+'" width="'+CW+'" height="'+RH+'" fill="none" stroke="#ecd9ac"/>';
+     out+='<text x="'+(cx(cc)+CW/2)+'" y="'+(cy(i)+26)+'" font-size="14" font-weight="800" fill="#b8862f" text-anchor="middle">'+com(C.R[i])+'</text>';
+   }
+   /* totals row */
+   out+='<text x="'+(LX-6)+'" y="'+(cy(r)+26)+'" font-size="11.2" font-weight="800" fill="#b8862f" text-anchor="end">Column total</text>';
+   for(j=0;j<cc;j++){
+     out+='<rect x="'+cx(j)+'" y="'+cy(r)+'" width="'+CW+'" height="'+RH+'" fill="none" stroke="#ecd9ac"/>';
+     out+='<text x="'+(cx(j)+CW/2)+'" y="'+(cy(r)+26)+'" font-size="14" font-weight="800" fill="#b8862f" text-anchor="middle">'+com(C.K[j])+'</text>';
+   }
+   out+='<rect x="'+cx(cc)+'" y="'+cy(r)+'" width="'+CW+'" height="'+RH+'" fill="#eef6f9" stroke="#bcd6e2"/>';
+   out+='<text x="'+(cx(cc)+CW/2)+'" y="'+(cy(r)+22)+'" font-size="14" font-weight="800" fill="#1c4454" text-anchor="middle">'+com(C.n)+'</text>';
+   out+='<text x="'+(cx(cc)+CW/2)+'" y="'+(cy(r)+34)+'" font-size="9" font-weight="800" fill="#78868d" text-anchor="middle">n</text>';
+   $("tab").innerHTML=out;
+
+   Array.prototype.forEach.call($("tab").querySelectorAll('.rgn'),function(el){
+     el.onclick=function(){
+       var i=+el.getAttribute('data-i'), j=+el.getAttribute('data-j');
+       if(tapI===i&&tapJ===j){ tapI=-1; tapJ=-1; } else { tapI=i; tapJ=j; }
+       cellSel=(tapI<0)?-1:tapI*P.c+tapJ;
+       drawTab(); drawBars(); drawCells();
+     };
+   });
+
+   var s;
+   if(tapI<0){
+     s='<span class="big">Tap a cell</span>'+
+       'Every expected count on this table came from the margins alone. Notice what that guarantees: the expected counts add up to the very same row totals and column totals as the observed ones. The expected table is not a rival table &mdash; it is <b>your table with the association surgically removed</b>, and &chi;&sup2; measures how far you had to move to remove it.';
+   }else{
+     var e=C.E[tapI][tapJ], o=O[tapI][tapJ];
+     s='<span class="big">'+ROWS[tapI].nm+' &times; '+colNm(tapJ)+'</span>'+
+       'Of the <b>'+com(C.n)+'</b> people surveyed, <b>'+com(C.R[tapI])+'</b> commute by '+ROWS[tapI].nm.toLowerCase()+' and <b>'+com(C.K[tapJ])+'</b> called the trip &ldquo;'+colNm(tapJ)+'&rdquo;. '+
+       'If the two questions were unrelated, the share landing in this cell would be <b>'+f3(C.n>0?C.R[tapI]/C.n:0)+' &times; '+f3(C.n>0?C.K[tapJ]/C.n:0)+' = '+f3(C.n>0?(C.R[tapI]/C.n)*(C.K[tapJ]/C.n):0)+'</b>, so the expected count is '+
+       '<b>'+com(C.R[tapI])+' &times; '+com(C.K[tapJ])+' &divide; '+com(C.n)+' = '+e.toFixed(2)+'</b>. '+
+       'You actually observed <b>'+com(o)+'</b> &mdash; a miss of <b>'+sgn2(o-e)+'</b>, contributing <b>'+f2(C.con[tapI][tapJ])+'</b> to &chi;&sup2;'+
+       (C.x>0?' ('+pc(C.con[tapI][tapJ]/C.x)+' of the total)':'')+'.';
+   }
+   $("tabsent").className='sent';
+   $("tabsent").innerHTML=s;
+ }
+
+ /* ================= panel 3 — the contributions ================= */
+ function drawCells(){
+   var C=stat(O), r=P.r, cc=P.c, i, j, out='';
+   var LX=96, X0=100, X1=468, CW=(X1-X0)/cc, CH=40, Y0=30;
+   var gEnd=Y0+r*CH, BY=gEnd+42, BH=26, H=BY+BH+40;
+   $("cells").setAttribute('viewBox','0 0 480 '+H);
+
+   for(j=0;j<cc;j++)
+     out+='<text x="'+(X0+j*CW+CW/2)+'" y="'+(Y0-9)+'" font-size="9.8" font-weight="800" fill="'+colCol(j)+'" text-anchor="middle">'+colNm(j)+'</text>';
+   out+='<text x="4" y="14" font-size="9.6" font-weight="800" fill="#78868d" letter-spacing="1.2">CONTRIBUTION OF EACH CELL, (O&#8722;E)&#178;/E</text>';
+
+   var mx=0;
+   for(i=0;i<r;i++) for(j=0;j<cc;j++) if(C.con[i][j]>mx) mx=C.con[i][j];
+   if(mx<=0) mx=1;
+
+   for(i=0;i<r;i++){
+     out+='<text x="'+(LX-6)+'" y="'+(Y0+i*CH+24)+'" font-size="11.2" font-weight="800" fill="#1c4454" text-anchor="end">'+ROWS[i].nm+'</text>';
+     for(j=0;j<cc;j++){
+       var v=C.con[i][j], up=(O[i][j]>=C.E[i][j]);
+       var op=0.10+0.80*Math.sqrt(v/mx);
+       var sel=(cellSel===i*cc+j);
+       out+='<rect class="rgn" data-i="'+i+'" data-j="'+j+'" x="'+(X0+j*CW)+'" y="'+(Y0+i*CH)+'" width="'+CW+'" height="'+CH+'" fill="'+(up?'#d1495b':'#2f6f9f')+'" opacity="'+op.toFixed(3)+'"/>';
+       out+='<rect x="'+(X0+j*CW)+'" y="'+(Y0+i*CH)+'" width="'+CW+'" height="'+CH+'" fill="none" stroke="'+(sel?'#1c4454':'#fff')+'" stroke-width="'+(sel?2.4:1)+'" pointer-events="none"/>';
+       var lt=(op>0.5);
+       out+='<text x="'+(X0+j*CW+CW/2)+'" y="'+(Y0+i*CH+19)+'" font-size="13" font-weight="800" fill="'+(lt?'#fff':'#1e2a30')+'" text-anchor="middle" pointer-events="none">'+f2(v)+'</text>';
+       out+='<text x="'+(X0+j*CW+CW/2)+'" y="'+(Y0+i*CH+31)+'" font-size="9.4" font-weight="700" fill="'+(lt?'rgba(255,255,255,.9)':'#78868d')+'" text-anchor="middle" pointer-events="none">'+sgn1(O[i][j]-C.E[i][j])+'</text>';
+     }
+   }
+
+   /* the assembly bar */
+   var span=Math.max(C.x,C.crit)*1.18, BX0=40, BX1=460;
+   if(span<=0) span=1;
+   out+='<text x="4" y="'+(BY-12)+'" font-size="9.6" font-weight="800" fill="#78868d" letter-spacing="1.2">THE CELLS STACKED INTO ONE TOTAL</text>';
+   out+='<rect x="'+BX0+'" y="'+BY+'" width="'+(BX1-BX0)+'" height="'+BH+'" rx="4" fill="#f2f6f8" stroke="#dfe8ed"/>';
+   var ax=BX0;
+   for(i=0;i<r;i++) for(j=0;j<cc;j++){
+     var w=(C.con[i][j]/span)*(BX1-BX0);
+     if(w<=0) continue;
+     var up2=(O[i][j]>=C.E[i][j]);
+     out+='<rect x="'+ax.toFixed(2)+'" y="'+BY+'" width="'+w.toFixed(2)+'" height="'+BH+'" fill="'+(up2?'#d1495b':'#2f6f9f')+'" opacity="'+(cellSel===i*cc+j?1:0.62)+'" stroke="#fff" stroke-width=".7"/>';
+     ax+=w;
+   }
+   var cxp=BX0+(C.crit/span)*(BX1-BX0);
+   out+='<line x1="'+cxp.toFixed(2)+'" y1="'+(BY-7)+'" x2="'+cxp.toFixed(2)+'" y2="'+(BY+BH+7)+'" stroke="#b8862f" stroke-width="2" stroke-dasharray="4 3"/>';
+   out+='<text x="'+cxp.toFixed(2)+'" y="'+(BY+BH+21)+'" font-size="9.6" font-weight="800" fill="#b8862f" text-anchor="middle">critical '+f2(C.crit)+'</text>';
+   out+='<text x="'+Math.min(BX1,ax+5).toFixed(2)+'" y="'+(BY-6)+'" font-size="11.4" font-weight="800" fill="#1c4454" text-anchor="'+(ax>360?'end':'start')+'">&#967;&#178; = '+f2(C.x)+'</text>';
+   $("cells").innerHTML=out;
+
+   Array.prototype.forEach.call($("cells").querySelectorAll('.rgn'),function(el){
+     el.onclick=function(){
+       var i=+el.getAttribute('data-i'), j=+el.getAttribute('data-j'), k=i*P.c+j;
+       cellSel=(cellSel===k)?-1:k;
+       tapI=(cellSel<0)?-1:i; tapJ=(cellSel<0)?-1:j;
+       drawCells(); drawTab(); drawBars(); drawTable();
+     };
+   });
+   drawTable();
+
+   var s;
+   if(cellSel<0){
+     s='<span class="big">&chi;&sup2; = '+f2(C.x)+' over '+C.df+' df</span>'+
+       'The largest single contribution is <b>'+f2(C.big)+'</b>, from <b>'+ROWS[C.bi].nm+' &times; '+colNm(C.bj)+'</b> &mdash; '+
+       (C.x>0?pc(C.big/C.x):'0%')+' of the whole statistic. '+
+       (isNull()
+         ? 'Remember the association is switched off right now, so this cell is not guilty of anything. Some cell always has to be the largest.'
+         : 'Tap it, and look for the <b>pattern</b>: in a real association the reds and blues line up along a diagonal rather than scattering at random.');
+   }else{
+     var i2=Math.floor(cellSel/cc), j2=cellSel%cc, o=O[i2][j2], e=C.E[i2][j2], d=o-e;
+     s='<span class="big">'+ROWS[i2].nm+' &times; '+colNm(j2)+'</span>'+
+       '<b>O = '+com(o)+'</b>, <b>E = '+e.toFixed(2)+'</b>, so <b>O &minus; E = '+sgn2(d)+'</b>. Square it: <b>'+f2(d*d)+'</b>. Divide by E: <b>'+f2(d*d)+' &divide; '+e.toFixed(2)+' = '+f2(C.con[i2][j2])+'</b>. '+
+       'That is '+(C.x>0?pc(C.con[i2][j2]/C.x):'0%')+' of &chi;&sup2;. Its adjusted residual is <b>'+sgn2(C.adj[i2][j2])+'</b>'+
+       (Math.abs(C.adj[i2][j2])>2?' &mdash; beyond &plusmn;2, so this cell is pulling hard.':' &mdash; inside &plusmn;2, so nothing remarkable.');
+   }
+   $("cellsent").className='sent';
+   $("cellsent").innerHTML=s;
+ }
+
+ function drawTable(){
+   var C=stat(O), r=P.r, cc=P.c, i, j, out='';
+   for(i=0;i<r;i++) for(j=0;j<cc;j++){
+     var k=i*cc+j, o=O[i][j], e=C.E[i][j], d=o-e;
+     out+='<tr data-k="'+k+'" class="'+(cellSel===k?'on':'')+'">'+
+       '<td>'+ROWS[i].nm+' &middot; '+colNm(j)+'</td>'+
+       '<td>'+com(o)+'</td><td>'+e.toFixed(2)+'</td><td>'+sgn1(d)+'</td>'+
+       '<td>'+f2(C.con[i][j])+'</td><td>'+sgn2(C.adj[i][j])+'</td></tr>';
+   }
+   out+='<tr style="cursor:default"><td>Total</td><td>'+com(C.n)+'</td><td>'+C.n.toFixed(2)+'</td><td>&plusmn;0.0</td><td><b>'+f2(C.x)+'</b></td><td>&mdash;</td></tr>';
+   $("tbl").innerHTML=out;
+   Array.prototype.forEach.call($("tbl").querySelectorAll('tr[data-k]'),function(tr){
+     tr.onclick=function(){
+       var k=+tr.getAttribute('data-k');
+       cellSel=(cellSel===k)?-1:k;
+       tapI=(cellSel<0)?-1:Math.floor(k/P.c); tapJ=(cellSel<0)?-1:k%P.c;
+       drawCells(); drawTab(); drawBars();
+     };
+   });
+ }
+
+ /* ================= panel 4 — the reference distribution ================= */
+ function drawDist(){
+   var C=stat(O), v=C.df, out='';
+   var DX0=38, DX1=464, DY0=18, DYB=168;
+   var XH=Math.max(invChi(0.0006,v), C.x*1.14, C.crit*1.3);
+   var pk=0, i, x;
+   for(i=0;i<=300;i++){ x=XH*i/300; var d=chiPdf(x,v); if(isFinite(d)&&d>pk) pk=d; }
+   if(!(pk>0)) pk=1;
+   function dx(t){ return DX0+(t/XH)*(DX1-DX0); }
+   function dy(t){ var y=DYB-(chiPdf(t,v)/pk)*(DYB-DY0); return y<DY0?DY0:y; }
+   function band(a,b,fill){
+     var s='<path d="M'+dx(a).toFixed(2)+' '+DYB, k, t;
+     for(k=0;k<=140;k++){ t=a+(b-a)*k/140; s+=' L'+dx(t).toFixed(2)+' '+dy(t).toFixed(2); }
+     return s+' L'+dx(b).toFixed(2)+' '+DYB+' Z" fill="'+fill+'"/>';
+   }
+   out+=band(0.0001,XH,'#cfdde4');
+   if(C.x<XH) out+=band(C.x,XH,'#e6b3bd');
+   var pth='', k2, t2;
+   for(k2=0;k2<=300;k2++){ t2=Math.max(0.0001,XH*k2/300); pth+=(k2?' L':'M')+dx(t2).toFixed(2)+' '+dy(t2).toFixed(2); }
+   out+='<path d="'+pth+'" fill="none" stroke="#5b7f92" stroke-width="1.7"/>';
+   out+='<line x1="'+DX0+'" y1="'+DYB+'" x2="'+DX1+'" y2="'+DYB+'" stroke="#c3d2d9" stroke-width="1.2"/>';
+   var cxp=dx(Math.min(C.crit,XH));
+   out+='<line x1="'+cxp.toFixed(2)+'" y1="'+DY0+'" x2="'+cxp.toFixed(2)+'" y2="'+DYB+'" stroke="#b8862f" stroke-width="1.8" stroke-dasharray="4 3"/>';
+   out+='<text x="'+cxp.toFixed(2)+'" y="'+(DY0+10)+'" font-size="9.6" font-weight="800" fill="#b8862f" text-anchor="middle">'+f2(C.crit)+'</text>';
+   var sx=dx(Math.min(C.x,XH));
+   out+='<line x1="'+sx.toFixed(2)+'" y1="'+(DY0+14)+'" x2="'+sx.toFixed(2)+'" y2="'+DYB+'" stroke="#1c4454" stroke-width="2.4"/>';
+   out+='<circle cx="'+sx.toFixed(2)+'" cy="'+(DY0+14)+'" r="3.6" fill="#1c4454"/>';
+   out+='<text x="'+sx.toFixed(2)+'" y="'+(DY0+8)+'" font-size="10.4" font-weight="800" fill="#1c4454" text-anchor="'+(sx>380?'end':(sx<70?'start':'middle'))+'">&#967;&#178; = '+f2(C.x)+(C.x>XH?' (off scale)':'')+'</text>';
+   for(k2=0;k2<=4;k2++){
+     var tv=XH*k2/4;
+     out+='<text x="'+dx(tv).toFixed(2)+'" y="'+(DYB+15)+'" font-size="9.6" font-weight="700" fill="#9fb3bd" text-anchor="middle">'+tv.toFixed(0)+'</text>';
+   }
+   out+='<text x="'+DX0+'" y="'+(DYB+32)+'" font-size="10" font-weight="800" fill="#78868d">&#967;&#178; with df = ('+(P.r-1)+')('+(P.c-1)+') = '+v+'</text>';
+   out+='<text x="'+DX1+'" y="'+(DYB+32)+'" font-size="10" font-weight="800" fill="#b23145" text-anchor="end">shaded tail = p = '+pv(C.p)+'</text>';
+   $("dist").innerHTML=out;
+
+   var rej=C.p<AL;
+   var s='<span class="big">p = '+pv(C.p)+'</span>';
+   s+='If the two questions really were unrelated, <b>'+pc(C.p,C.p<0.01?3:1)+'</b> of surveys of '+com(C.n)+' people would produce a table at least this discrepant. ';
+   s+=rej
+     ? 'That is below &alpha; = 0.05, so we <b>reject independence</b> and conclude the two variables are associated in this population.'
+     : 'That is not below &alpha; = 0.05, so we <b>do not reject independence</b>. The data are compatible with the two questions being unrelated &mdash; which is not the same as showing that they are.';
+   s+=' '+(isNull()
+     ? (rej?'<b>And that is a false alarm</b>: the truth is set to exact independence. This is the 5% you agreed to pay.'
+          :'Correct call &mdash; the truth is set to exact independence.')
+     : (rej?'Correct call &mdash; there really is an association here.'
+          :'<b>And that is a miss</b>: an association really is present, but this survey could not resolve it.'));
+   $("distsent").className='sent'+(rej?' warn':' good');
+   $("distsent").innerHTML=s;
+ }
+
+ /* ================= panel 5 — repeating the whole study ================= */
+ var SIM=[], simN=0, simRej=0, simSum=0;
+ function runSim(m){
+   var M=truth(), r=P.r, cc=P.c, n=N(), cum=[], s=0, i, j, k, q, u, L;
+   for(i=0;i<r;i++) for(j=0;j<cc;j++){ s+=M[i][j]; cum.push(s); }
+   L=cum.length;
+   var df=(r-1)*(cc-1), crit=invChi(AL,df);
+   var T=[], R=[], K=[];
+   for(q=0;q<m;q++){
+     for(i=0;i<r;i++){ T[i]=T[i]||[]; for(j=0;j<cc;j++) T[i][j]=0; }
+     for(k=0;k<n;k++){
+       u=rnd()*s;
+       for(i=0;i<L-1;i++){ if(u<cum[i]) break; }
+       T[Math.floor(i/cc)][i%cc]++;
+     }
+     var tot=0;
+     for(i=0;i<r;i++){ var a=0; for(j=0;j<cc;j++) a+=T[i][j]; R[i]=a; tot+=a; }
+     for(j=0;j<cc;j++){ var b=0; for(i=0;i<r;i++) b+=T[i][j]; K[j]=b; }
+     var x=0;
+     for(i=0;i<r;i++) for(j=0;j<cc;j++){
+       var e=tot>0?R[i]*K[j]/tot:0;
+       if(e>0){ var d=T[i][j]-e; x+=d*d/e; }
+     }
+     SIM.push(x); simSum+=x; simN++; if(x>crit) simRej++;
+   }
+   drawHist();
+ }
+ function resetSim(){ SIM=[]; simN=0; simRej=0; simSum=0; drawHist(); }
+
+ function drawHist(){
+   var C=stat(O), v=C.df, out='';
+   var HX0=38, HX1=464, HY0=16, HYB=176;
+   var hi=Math.max(invChi(0.001,v), C.crit*1.35, 6);
+   var i, mxv=0;
+   for(i=0;i<SIM.length;i++) if(SIM[i]>mxv) mxv=SIM[i];
+   if(mxv>hi) hi=Math.min(mxv*1.05, hi*3.2);
+   var NB=44, bw=hi/NB, cnt=new Array(NB), over=0;
+   for(i=0;i<NB;i++) cnt[i]=0;
+   for(i=0;i<SIM.length;i++){
+     var b=Math.floor(SIM[i]/bw);
+     if(b>=NB){ over++; } else cnt[b]++;
+   }
+   var dmax=0;
+   for(i=0;i<NB;i++){ var d=simN>0?cnt[i]/(simN*bw):0; if(d>dmax) dmax=d; }
+   var pk=0, x;
+   for(i=0;i<=300;i++){ x=Math.max(0.0001,hi*i/300); var pd=chiPdf(x,v); if(isFinite(pd)&&pd>pk) pk=pd; }
+   if(pk>dmax) dmax=pk;
+   if(!(dmax>0)) dmax=1;
+   function hx(t){ return HX0+(t/hi)*(HX1-HX0); }
+   function hy(d){ var y=HYB-(d/dmax)*(HYB-HY0); return y<HY0?HY0:y; }
+
+   for(i=0;i<NB;i++){
+     if(cnt[i]<=0) continue;
+     var dn=cnt[i]/(simN*bw), y=hy(dn);
+     out+='<rect x="'+hx(i*bw).toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+((HX1-HX0)/NB-0.8).toFixed(2)+'" height="'+(HYB-y).toFixed(2)+'" fill="#bcd9e6"/>';
+   }
+   var pth='', t;
+   for(i=0;i<=300;i++){ t=Math.max(0.0001,hi*i/300); pth+=(i?' L':'M')+hx(t).toFixed(2)+' '+hy(chiPdf(t,v)).toFixed(2); }
+   out+='<path d="'+pth+'" fill="none" stroke="#1c4454" stroke-width="2"/>';
+   out+='<line x1="'+HX0+'" y1="'+HYB+'" x2="'+HX1+'" y2="'+HYB+'" stroke="#c3d2d9" stroke-width="1.2"/>';
+   var cxp=hx(Math.min(C.crit,hi));
+   out+='<line x1="'+cxp.toFixed(2)+'" y1="'+HY0+'" x2="'+cxp.toFixed(2)+'" y2="'+HYB+'" stroke="#b8862f" stroke-width="1.8" stroke-dasharray="4 3"/>';
+   out+='<text x="'+cxp.toFixed(2)+'" y="'+(HY0+10)+'" font-size="9.6" font-weight="800" fill="#b8862f" text-anchor="middle">'+f2(C.crit)+'</text>';
+   for(i=0;i<=4;i++){
+     var tv=hi*i/4;
+     out+='<text x="'+hx(tv).toFixed(2)+'" y="'+(HYB+15)+'" font-size="9.6" font-weight="700" fill="#9fb3bd" text-anchor="middle">'+tv.toFixed(0)+'</text>';
+   }
+   out+='<text x="'+HX0+'" y="'+(HYB+32)+'" font-size="10" font-weight="800" fill="#78868d">'+(simN?com(simN)+' simulated surveys':'no surveys run yet')+'</text>';
+   if(over>0) out+='<text x="'+HX1+'" y="'+(HYB+32)+'" font-size="10" font-weight="800" fill="#b23145" text-anchor="end">'+com(over)+' past the right edge</text>';
+   out+='<text x="'+HX1+'" y="'+(HY0+10)+'" font-size="10" font-weight="800" fill="#1c4454" text-anchor="end">theory: &#967;&#178; with df = '+v+'</text>';
+   $("hist").innerHTML=out;
+
+   var th=theory();
+   $("rN").innerHTML=com(simN);
+   $("rM").innerHTML=simN?f2(simSum/simN):'&mdash;';
+   $("rT").innerHTML=f2(th.mean);
+   $("rP").innerHTML=simN?pc(simRej/simN):'&mdash;';
+   $("rPl").innerHTML=isNull()?'False alarm<br>rate':'Power<br>share rejecting';
+   var cap;
+   if(!simN){
+     cap='Press <b>Run 1,000 surveys</b>. Each one recruits '+com(N())+' fresh people, cross&#8209;tabulates them, and computes &chi;&sup2; from scratch.';
+   }else if(isNull()){
+     cap='The association is off, so the truth is exact independence. The bars should hug the curve, the mean should sit near <b>df = '+th.mean.toFixed(0)+'</b>, and the rejection share should hover near <b>5%</b> &mdash; observed here: mean <b>'+f2(simSum/simN)+'</b>, rejecting <b>'+pc(simRej/simN)+'</b>. Every one of those rejections is a false alarm about a city where the two questions are genuinely unrelated.';
+   }else{
+     cap='The association is on, so the bars have shifted right of the null curve. The predicted mean is <b>df + n&lambda; = '+C.df+' + '+f2(th.ncp)+' = '+f2(th.mean)+'</b> (a large&#8209;sample approximation), against an observed mean of <b>'+f2(simSum/simN)+'</b>. The share crossing the cut&#8209;off is the test’s <b>power</b> here: <b>'+pc(simRej/simN)+'</b>. Drag the sample size and watch that number, not the p&#8209;value of any single survey &mdash; power is a property of the design, not of one result.';
+   }
+   $("histcap").innerHTML=cap;
+ }
+
+ /* ================= "say it right" ================= */
+ var CL=[
+  {ok:1,t:'The expected counts came from the data’s own row and column totals.',
+   d:'<b>Correct, and it is the defining feature of this test.</b> In goodness of fit the expected counts came from an outside claim, fixed before you looked at anything. Here there is no outside claim &mdash; independence alone does not say what fraction cycles or what fraction is stressed. Those have to be estimated from the margins, which is precisely why the degrees of freedom are (r&minus;1)(c&minus;1) rather than rc&minus;1.'},
+  {ok:0,t:'p = 0.02 means there is a 2% chance the two variables are really independent.',
+   d:'<b>Wrong, and it is the most common error in all of statistics.</b> The p&#8209;value is computed <i>assuming</i> independence: it is the probability of a table at least this discrepant <b>given</b> that assumption. It is P(data | independence), not P(independence | data). The second quantity would require a prior probability that independence is true, which nothing in this calculation supplies.'},
+  {ok:0,t:'The test was significant, so commuting by bicycle must cause people to enjoy the trip.',
+   d:'<b>Wrong.</b> The test saw a table of counts and nothing else. Three explanations survive it equally well: cycling really does improve the trip; people whose trip was already pleasant chose to cycle (reverse causation through self&#8209;selection); or living somewhere walkable drives both the mode and the mood (confounding). Establishing which requires a different design &mdash; randomisation or careful control &mdash; not a smaller p&#8209;value.'},
+  {ok:1,t:'An expected count of 16.7 is fine — expected counts need not be whole numbers.',
+   d:'<b>Correct.</b> An expected count is a long&#8209;run average over many hypothetical surveys, not a headcount, so fractions are entirely proper. Only the observed counts must be integers, because those are people. Rounding E before computing (O&minus;E)&sup2;/E introduces a small error for no reason at all.'},
+  {ok:1,t:'df = (r − 1)(c − 1), because the margins are fixed by the data.',
+   d:'<b>Correct, and the arithmetic is exact.</b> Start with rc cells, subtract 1 because the counts must total n, subtract (r&minus;1) for the row proportions estimated from the data and (c&minus;1) for the column proportions. That leaves rc &minus; r &minus; c + 1, which factors as (r&minus;1)(c&minus;1). Equivalently: once you fill in the top&#8209;left (r&minus;1) by (c&minus;1) block, the margins force every remaining cell.'},
+  {ok:0,t:'A large χ² tells you which cell is responsible for the mismatch.',
+   d:'<b>Wrong.</b> &chi;&sup2; is an <b>omnibus</b> statistic: one number for the entire table, answering only &ldquo;is there association anywhere?&rdquo;. The per&#8209;cell contributions and adjusted residuals are the right place to look next, and residuals beyond about &plusmn;2 are worth attention &mdash; but choosing a cell <i>after</i> seeing which one looks biggest is exploratory, and it deserves confirmation in new data rather than a p&#8209;value borrowed from the omnibus test.'},
+  {ok:0,t:'You can run the test on a table of row percentages as long as they add to 100.',
+   d:'<b>Wrong, and it destroys the result.</b> &chi;&sup2; is very nearly proportional to n, so the sample size is half the information in the statistic. Feeding it percentages silently asserts that you surveyed 100 people per row. A genuine association found in 5,000 people and a fluke found in 40 collapse to the same table of percentages and produce the same meaningless number. Always test raw counts.'},
+  {ok:0,t:'The p&#8209;value was 0.31, so the two variables are independent in this population.',
+   d:'<b>Wrong.</b> Failing to reject is not proof of the null. A large p&#8209;value says the data were compatible with independence, and small or noisy data are compatible with almost everything. Load the <i>Strong, tiny survey</i> preset and press <b>Survey new people</b> several times: a genuinely strong association slips past the test in roughly three surveys out of ten, and with expected counts that thin the p&#8209;value was never trustworthy in either direction to begin with. The honest sentence is &ldquo;this survey found no evidence of association,&rdquo; ideally with a confidence interval or an effect size showing what sizes remain plausible.'},
+  {ok:1,t:'With a large enough survey, even a trivially weak association becomes significant.',
+   d:'<b>Correct, and it is why an effect size is not optional.</b> Because &chi;&sup2; grows roughly in proportion to n, any association that is not exactly zero will eventually cross any threshold. Load the <i>Faint, huge survey</i> preset: p is minuscule while Cram&eacute;r’s V sits near zero. Both are right. Significance answers &ldquo;could this be nothing?&rdquo;; only the effect size answers &ldquo;is it worth anything?&rdquo;'},
+  {ok:0,t:'If we swapped which variable is rows and which is columns, the answer would change.',
+   d:'<b>Wrong &mdash; the test is perfectly symmetric.</b> Transposing the table transposes every row and column total, so every expected count R<sub>i</sub>C<sub>j</sub>/n is unchanged, every contribution is unchanged, &chi;&sup2; is identical, and (r&minus;1)(c&minus;1) equals (c&minus;1)(r&minus;1). The test has no notion of an explanatory variable and no notion of direction. That symmetry is worth sitting with: it is the formal reason the test can never speak to causation.'},
+  {ok:1,t:'Independence means every commute mode has the same profile of ratings.',
+   d:'<b>Correct &mdash; that is the first panel, in words.</b> Independence is exactly the statement that the conditional distribution of one variable is the same at every level of the other, so every bar is striped identically and every boundary lands on its dashed line. This is also the cleanest way to state what a significant result claims: <i>somewhere</i> among the rows, at least one profile differs from the rest.'}
+ ];
+ function drawClaims(){
+   $("claims").innerHTML=CL.map(function(c,i){
+     return '<button class="it'+(i===ci?' on':'')+'" data-i="'+i+'"><span><span class="nm">'+c.t+'</span></span></button>';
+   }).join('');
+   Array.prototype.forEach.call($("claims").querySelectorAll('.it'),function(b){
+     b.onclick=function(){ var i=+b.getAttribute('data-i'); ci=(ci===i)?-1:i; drawClaims(); };
+   });
+   if(ci<0){
+     $("info").innerHTML='<span class="n">Five are true</span>Tap any statement to see whether it holds up, and why. Several of these are things you will hear said out loud in meetings where a table of counts has just been tested.';
+   }else{
+     var c=CL[ci];
+     $("info").innerHTML='<span class="n">'+(c.ok?'✓ True':'✕ False')+'</span>'+c.d;
+   }
+ }
+
+ /* ================= the live tiles ================= */
+ function drawTiles(){
+   var C=stat(O), th=theory();
+   $("tN").innerHTML=com(C.n);
+   $("tK").innerHTML=P.r+' &times; '+P.c;
+   $("tDF").innerHTML=C.df;
+   $("tME").innerHTML=C.minE.toFixed(1);
+   $("tMEs").innerHTML=C.minE<5?'below 5 &mdash; thin':'clears the rule';
+   $("tME").parentNode.className=C.minE<5?'warn':'good';
+   $("tX").innerHTML=f2(C.x);
+   $("tC").innerHTML=f2(C.crit);
+   $("tP").innerHTML=pv(C.p);
+   $("tPs").innerHTML=C.p<AL?'reject at 0.05':'do not reject';
+   $("bxP").className=C.p<AL?'warn':'good';
+   $("tV").innerHTML=f3(C.V);
+   $("tVs").innerHTML=C.V<0.1?'negligible':(C.V<0.2?'weak':(C.V<0.35?'moderate':'strong'));
+
+   var rej=C.p<AL;
+   var s='<span class="big">'+(rej?'Association detected':'No association detected')+'</span>';
+   s+='Across <b>'+com(C.n)+'</b> people in a <b>'+P.r+' &times; '+P.c+'</b> table, &chi;&sup2; = <b>'+f2(C.x)+'</b> on <b>'+C.df+'</b> degrees of freedom, p = <b>'+pv(C.p)+'</b>, Cram&eacute;r’s V = <b>'+f3(C.V)+'</b>. ';
+   s+=rej
+     ? 'There is enough evidence to say commute mode and rating are <b>associated</b> in this population &mdash; and the effect size calls that association <b>'+(C.V<0.1?'negligible':(C.V<0.2?'weak':(C.V<0.35?'moderate':'strong')))+'</b>. Significance and strength are separate findings, and both belong in the write&#8209;up.'
+     : 'There is not enough evidence to call the two variables associated. Note what this does <b>not</b> say: it does not say they are unrelated. It says this survey could not tell.';
+   s+=' Behind the scenes the truth is '+(isNull()
+     ? '<b>exact independence</b>, so the honest answer is &ldquo;no association&rdquo;.'
+     : 'a <b>real association</b> with n&lambda; = '+f2(th.ncp)+', so the honest answer is &ldquo;associated&rdquo;.');
+   $("sent").className='sent'+(rej?' warn':' good');
+   $("sent").innerHTML=s;
+
+   $("stage").style.background=rej?'#b23145':'#2f6f8a';
+   $("stage").innerHTML=(rej?'Reject independence':'Do not reject independence')+
+     '<small>&chi;&sup2; = '+f2(C.x)+' &middot; df = '+C.df+' &middot; p = '+pv(C.p)+' &middot; V = '+f3(C.V)+'</small>';
+ }
+
+ /* ================= assumptions panel ================= */
+ function drawCond(){
+   var C=stat(O), cells=P.r*P.c;
+   var pctFew=C.few/cells;
+   var cochran=(C.thin===0 && pctFew<=0.2);
+   var need=C.minE>0?Math.ceil(5*C.n/C.minE):Infinity;
+   $("cAv").innerHTML=C.minE.toFixed(2);
+   $("cA").className=C.minE<5?'warn':'good';
+   $("cBv").innerHTML=C.few+' of '+cells;
+   $("cB").className=C.few>0?'warn':'good';
+   $("cCv").innerHTML=cochran?'passes':'fails';
+   $("cC").className=cochran?'good':'warn';
+   $("cDv").innerHTML=isFinite(need)?com(need):'&mdash;';
+   $("cD").className=(isFinite(need)&&need>C.n)?'warn':'good';
+
+   var s;
+   if(C.minE>=5){
+     s='<span class="big">Safe to read</span>Every one of the '+cells+' expected counts is at least 5 (the smallest is <b>'+C.minE.toFixed(2)+'</b>), so the &chi;&sup2; curve is a good approximation and the p&#8209;value can be taken at face value. Drag the sample size down and watch how quickly that stops being true once the table has many cells to spread people across.';
+   }else if(cochran){
+     s='<span class="big">Borderline</span>'+C.few+' of the '+cells+' cells have an expected count below 5 (smallest <b>'+C.minE.toFixed(2)+'</b>), but none falls below 1 and fewer than a fifth are thin, so the table passes the more permissive <b>Cochran rule</b> that most software applies. Treat the p&#8209;value as approximate rather than exact. About <b>'+com(need)+'</b> people would put every cell above 5.';
+   }else{
+     s='<span class="big">Do not trust this p&#8209;value</span>'+C.few+' of the '+cells+' cells have an expected count below 5 and the smallest is <b>'+C.minE.toFixed(2)+'</b>. The &chi;&sup2; curve is a poor stand&#8209;in for the discrete truth here, and the error can run in either direction &mdash; this is not a &ldquo;conservative&rdquo; failure you can shrug off. Collapse categories that genuinely belong together, survey about <b>'+com(need)+'</b> people, or use <b>Fisher’s exact test</b>, which enumerates the possible tables with these margins instead of leaning on a curve.';
+   }
+   $("condsent").className='sent'+(C.minE>=5?' good':(cochran?'':' warn'));
+   $("condsent").innerHTML=s;
+ }
+
+ /* ================= controls ================= */
+ function drawSegs(){
+   Array.prototype.forEach.call($("preSeg").querySelectorAll('button'),function(b){
+     b.className=(+b.getAttribute('data-v')===curPre)?'on':'';
+   });
+ }
+ function labels(){
+   $("vR").innerHTML=P.r; $("vC").innerHTML=P.c;
+   $("vN").innerHTML=com(N()); $("vT").innerHTML=P.str;
+   var th=theory();
+   $("tiltcap").innerHTML=isNull()
+     ? 'At <b>zero</b> the two questions are <b>exactly independent</b> in the population &mdash; every commute mode really does share one profile of ratings. Anything the test finds now is a false alarm, by construction.'
+     : 'Later rows are pulled toward later columns: people on foot and on bicycles genuinely rate the trip better. The strength of that pull is <b>&lambda; = '+f3(th.lam)+'</b> per person, so a survey of '+com(N())+' carries <b>n&lambda; = '+f2(th.ncp)+'</b> &mdash; and the mean &chi;&sup2; should land near df + n&lambda; = <b>'+f2(th.mean)+'</b> against a cut&#8209;off of '+f2(invChi(AL,(P.r-1)*(P.c-1)))+'.';
+ }
+ function redrawAll(){ drawBars(); drawTab(); drawCells(); drawDist(); drawTiles(); drawCond(); drawHist(); }
+ function dialsChanged(){
+   labels(); resetSim(); newSurvey(); redrawAll();
+ }
+
+ var PRE=[{r:3,c:3,ni:5,str:0},{r:3,c:3,ni:8,str:12},{r:3,c:3,ni:0,str:25},
+          {r:3,c:3,ni:14,str:6},{r:4,c:4,ni:9,str:12}];
+ var curPre=-1;
+ function applyPre(k){
+   var q=PRE[k];
+   P.r=q.r; P.c=q.c; P.ni=q.ni; P.str=q.str;
+   $("sR").value=P.r; $("sC").value=P.c; $("sN").value=P.ni; $("sT").value=P.str;
+   curPre=k; drawSegs(); ci=-1; drawClaims(); dialsChanged();
+ }
+
+ $("sR").oninput=function(){ P.r=+this.value; curPre=-1; drawSegs(); dialsChanged(); };
+ $("sC").oninput=function(){ P.c=+this.value; curPre=-1; drawSegs(); dialsChanged(); };
+ $("sN").oninput=function(){ P.ni=+this.value; curPre=-1; drawSegs(); dialsChanged(); };
+ $("sT").oninput=function(){ P.str=+this.value; curPre=-1; drawSegs(); dialsChanged(); };
+ $("bnew").onclick=function(){ newSurvey(); redrawAll(); };
+ $("bhunt").onclick=function(){ hunt(); redrawAll(); };
+ $("run1").onclick=function(){ runSim(1000); };
+ $("run2").onclick=function(){ runSim(4000); };
+ $("rrs").onclick=function(){ resetSim(); };
+ $("brst").onclick=function(){
+   seed=SEED0; P={r:3,c:3,ni:7,str:12}; curPre=-1; ci=-1;
+   $("sR").value=3; $("sC").value=3; $("sN").value=7; $("sT").value=12;
+   drawSegs(); drawClaims(); dialsChanged();
+ };
+ Array.prototype.forEach.call($("preSeg").querySelectorAll('button'),function(b){
+   b.onclick=function(){ applyPre(+b.getAttribute('data-v')); };
+ });
+
+ /* ================= go ================= */
+ drawClaims(); labels(); newSurvey(); redrawAll();
+})();
+</script>
+</body>
+</html>

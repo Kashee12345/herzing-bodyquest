@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>The Z-Test for a Mean</title>
+<meta name="description" content="Run a complete one-sample z-test on real simulated data and watch the test statistic land on the standard normal curve, next to the critical value and the shaded p-value.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:126px;line-height:1.3;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.alt input[type=range]{background:#e3daea;}
+.sl.alt input[type=range]::-webkit-slider-thumb{background:var(--purple);}
+.sl.alt input[type=range]::-moz-range-thumb{background:var(--purple);}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:70px;text-align:right;font-variant-numeric:tabular-nums;}
+.sl.alt .nv{color:var(--purple);}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.tiles div.rj{border-color:#e2adb7;background:#fdf1f3;} .tiles div.rj .vv{color:#b23145;}
+.tiles div.fr{border-color:#b6d8c4;background:#f0f8f3;} .tiles div.fr .vv{color:#237a45;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.stp{font-size:12.5px;color:var(--soft);line-height:1.62;padding:8px 0 8px 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;}
+.stp:first-child{border-top:none;}
+.stp b{color:var(--teal-dk);} .stp .k{font-family:var(--disp);font-weight:600;color:var(--teal-dk);}
+.stp .ok{color:#237a45;font-weight:800;} .stp .bad{color:#b23145;font-weight:800;}
+.sent{border:1px solid #bcd6e2;border-left:5px solid var(--teal);background:#eef6f9;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:13.2px;line-height:1.6;color:var(--soft);}
+.sent b{color:var(--teal-dk);}
+.sent .big{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.sent.rj{border-color:#e2adb7;border-left-color:#d1495b;background:#fdf1f3;} .sent.rj .big{color:#b23145;}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.strip div{border:1px solid var(--line);border-radius:10px;padding:7px 8px;background:#fff;text-align:center;}
+.strip .lb{display:block;font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.strip .vv{display:block;font-size:14.5px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-radius:20px;padding:3px 10px;margin-left:6px;vertical-align:2px;}
+.tag.tt{background:#e5f3ea;color:#237a45;} .tag.ff{background:#fae5e8;color:#b23145;}
+.mnem,.note{font-size:12px;border-radius:8px;padding:9px 12px;margin-top:10px;line-height:1.6;}
+.mnem{color:#8a6a20;background:#fbf3e2;border:1px solid #ecd9ac;} .mnem b{color:#5a4212;}
+.note{color:#8a2a3a;background:#fae5e8;border:1px solid #f0c9d0;} .note b{color:#7a1f2c;}
+.list .it .s{display:block;margin-top:2px;line-height:1.35;}
+#chart{cursor:ew-resize;touch-action:none;}
+.seg + .seg{margin-top:7px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 11</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 11</div>
+  <h1>The Z&#8209;Test for a Mean</h1>
+  <div class="intro">A one&#8209;sample z&#8209;test asks one question: <b>is this sample mean farther from the claimed value than sampling noise alone would plausibly push it?</b> The whole test is a change of ruler. You know how far the sample mean is from the claim in the original units &mdash; millilitres, points, pounds per square inch &mdash; but those units cannot tell you whether the gap is big, because &ldquo;big&rdquo; depends entirely on how much sample means bounce around. So you re&#8209;measure the gap in <b>standard errors</b>, and that re&#8209;measured number is <b>z</b>. Once the gap is in standard errors, one fixed curve &mdash; the standard normal &mdash; answers the question for every study ever run. Below you can run the test end to end: draw a real sample, watch its mean form, see z land on the curve beside the critical value and the shaded p&#8209;value, and then run the same test hundreds of times to see how often it gets the answer right.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The test statistic, on the curve</h2>
+      <div class="cap" style="margin-top:0;">This is the sampling distribution of the test statistic <b>if H<sub>0</sub> were true</b> &mdash; and because z is measured in standard errors, it is the <i>same</i> curve for every z&#8209;test in the world. The dark marker is your z. The pale red region is where you agreed in advance to reject; the hatched region is every result at least as extreme as yours, whose area is the p&#8209;value. Read the two rulers under the axis: the top row is z, the bottom row is the sample mean that produces it. Drag the marker to move your result.</div>
+      <svg viewBox="0 0 480 300" id="chart" aria-label="the standard normal curve with the rejection region shaded, the observed test statistic marked, and the p-value area hatched"></svg>
+      <div class="lgd">
+        <span><i style="background:#f2ccd3"></i>rejection region &mdash; area = &alpha;</span>
+        <span><i style="background:#8fb6c8"></i>at least this extreme &mdash; area = p</span>
+        <span><i style="background:#1c4454;border-radius:50%"></i>your test statistic z</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>The sample it came from</h2>
+      <div class="cap" style="margin-top:2px;">Every dot is one real observation, drawn one at a time from a population with the true mean you set on the right. The <b>wide outline</b> is that population &mdash; how much a single observation varies. The <b>narrow shaded spike</b> is where the mean of <i>n</i> of them lands when H<sub>0</sub> is true, and its width is the standard error. That spike is the curve in the panel above, still wearing its original units.</div>
+      <svg viewBox="0 0 480 236" id="samp" aria-label="the individual sampled observations as dots, the wide population distribution, and the narrow sampling distribution of the mean"></svg>
+      <div class="lgd">
+        <span><i style="background:#a9b6bc"></i>one observation varies this much (&sigma;)</span>
+        <span><i style="background:#bcd9e6"></i>the mean of n varies this much (&sigma;/&radic;n)</span>
+        <span><i style="background:#1c4454"></i>x&#772;</span>
+        <span><i style="background:#2f6f8a"></i>&mu;<sub>0</sub></span>
+      </div>
+      <div class="row"><button class="btn solid" id="bdraw">Draw a new sample</button><button class="btn" id="bcen">Put x&#772; on &mu;<sub>0</sub></button></div>
+      <div class="cap" id="sampcap"></div>
+    </div>
+    <div class="card">
+      <h2>Run the whole test, over and over</h2>
+      <div class="cap" style="margin-top:2px;">A single test either rejects or it doesn&rsquo;t; you cannot tell from one run whether the <i>procedure</i> is any good. So run it repeatedly. Each click below draws a brand&#8209;new sample of <i>n</i> observations from the same population, computes its own z, and applies the same rule. Bars in the pale red zone are the runs that rejected H<sub>0</sub>.</div>
+      <svg viewBox="0 0 480 208" id="rep" aria-label="histogram of test statistics from many repeated tests, with the runs falling in the rejection region shaded"></svg>
+      <div class="strip">
+        <div><span class="lb">Tests<br>run</span><span class="vv" id="rN">0</span></div>
+        <div><span class="lb">Rejected<br>H<sub>0</sub></span><span class="vv" id="rK">0</span></div>
+        <div><span class="lb">Observed<br>rate</span><span class="vv" id="rObs">&mdash;</span></div>
+        <div><span class="lb">Exact long&#8209;<br>run rate</span><span class="vv" id="rExp">&mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="run1">Run 200 tests</button><button class="btn" id="run2">Add 2,000 more</button><button class="btn" id="rrs">Reset</button></div>
+      <div class="cap" id="repcap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Four studies<small>pick one to begin</small></div>
+    <div class="card">
+      <h2>The study on the table</h2>
+      <div class="list" id="studies"></div>
+      <div class="cap" id="claimtxt" style="font-size:12.6px;color:var(--soft);"></div>
+    </div>
+    <div class="card">
+      <h2>Set the test up</h2>
+      <div class="hd">1 &middot; Which alternative did you commit to?</div>
+      <div class="seg" id="altSeg">
+        <button data-v="lt">&mu; &lt; &mu;&#8320;<small>left tail</small></button>
+        <button data-v="ne">&mu; &ne; &mu;&#8320;<small>two tails</small></button>
+        <button data-v="gt">&mu; &gt; &mu;&#8320;<small>right tail</small></button>
+      </div>
+      <div class="hd">2 &middot; How much false-alarm risk will you accept?</div>
+      <div class="seg" id="alSeg">
+        <button data-v="0.10">&alpha; = 0.10<small>looser</small></button>
+        <button data-v="0.05">&alpha; = 0.05<small>the usual</small></button>
+        <button data-v="0.01">&alpha; = 0.01<small>stricter</small></button>
+      </div>
+      <div class="hd">3 &middot; The data</div>
+      <div class="sl"><label>sample size n</label><input type="range" id="nSl"><span class="nv" id="nVal">&mdash;</span></div>
+      <div class="sl"><label id="xbLab">sample mean x&#772;</label><input type="range" id="xbSl"><span class="nv" id="xbVal">&mdash;</span></div>
+      <div class="hd">4 &middot; The world the sample comes from</div>
+      <div class="sl alt"><label id="muLab">true mean &mu; (hidden in real life)</label><input type="range" id="muSl"><span class="nv" id="muVal">&mdash;</span></div>
+      <div class="cap" id="worldcap"></div>
+      <div class="row"><button class="btn" id="bnull">Set &mu; = &mu;&#8320; (H&#8320; true)</button><button class="btn" id="brst">Reset the study</button></div>
+    </div>
+    <div class="card">
+      <h2>The test, step by step, with your numbers</h2>
+      <div class="tiles">
+        <div><span class="lb">Standard<br>error</span><span class="vv" id="tSe">&mdash;</span><span class="sub">&sigma;/&radic;n</span></div>
+        <div><span class="lb">Test<br>statistic z</span><span class="vv" id="tZ">&mdash;</span><span class="sub">SEs from &mu;&#8320;</span></div>
+        <div><span class="lb">Critical<br>value</span><span class="vv" id="tC">&mdash;</span><span class="sub" id="tCs">&nbsp;</span></div>
+        <div id="tDbox"><span class="lb">p&#8209;value<br>vs &alpha;</span><span class="vv" id="tP">&mdash;</span><span class="sub" id="tPs">&nbsp;</span></div>
+      </div>
+      <div id="steps" style="margin-top:12px;"></div>
+      <div class="sent" id="sent"></div>
+    </div>
+    <div class="card">
+      <h2>Say it right</h2>
+      <div class="cap" style="margin-top:2px;">Seven things people say after running a z&#8209;test. Two are correct. Tap each one.</div>
+      <div class="list" id="claims"></div>
+      <div id="info"><span class="n">The test in one line</span>Measure the gap <b>x&#772; &minus; &mu;<sub>0</sub></b> in units of <b>&sigma;/&radic;n</b>, then ask how often pure sampling noise would push it that far. That is all a z&#8209;test is.</div>
+    </div>
+    <div class="card">
+      <h2>When a z&#8209;test is the right tool</h2>
+      <div class="mnem"><b>The z&#8209;test needs &sigma;, and you almost never have it.</b> Notice what the standard error formula asks for: &sigma;, the <i>population</i> standard deviation &mdash; a fixed, known constant, not something computed from your sample. The four studies here each have a genuine reason to claim it: a scoring scale built to a fixed spread, a filling line with years of calibration logs, an instrument with a manufacturer&rsquo;s reference database. Outside cases like those, you do not know &sigma;, you estimate it with the sample standard deviation <i>s</i> &mdash; and the moment you do, the statistic stops following the normal curve and follows a <b>t</b> distribution instead, with heavier tails to pay for the extra thing you had to guess. Same gap, same logic, same arithmetic, wider curve. That is the next section, and in practice it is the one you will use.</div>
+      <div class="note"><b>Three conditions, and only one of them is optional.</b> <b>Random sampling</b> is not negotiable: the standard error formula is derived from independent draws, and no sample size repairs a biased one &mdash; a large convenience sample is just a confidently wrong answer. <b>&sigma; known</b> is what makes it a z&#8209;test rather than a t&#8209;test. <b>Approximate normality of x&#772;</b> is the one you can buy with sample size: if the population itself is normal, x&#772; is exactly normal at any n, and if it is not, the Central Limit Theorem pulls the sampling distribution of x&#772; toward normal as n grows &mdash; conventionally n&nbsp;&ge;&nbsp;30 is enough unless the population is severely skewed or has outliers. Drop n below 30 on the reaction&#8209;time study, where the population is right&#8209;skewed, and the condition check flags it.</div>
+      <div class="note"><b>Pick the tail before you look.</b> A one&#8209;sided test at &alpha;&nbsp;=&nbsp;0.05 puts the whole 5% in one tail, so its critical value is 1.645 instead of 1.960 &mdash; easier to reject, but only in the direction you named. Switching to the tail your data happened to favour <i>after</i> seeing the data quietly doubles your real false&#8209;alarm rate, because you gave yourself two chances and charged yourself for one. Choose the alternative from the question you set out to answer, and leave it alone.</div>
+      <div class="cap">One last thing the curve makes visible. Push n up on any study while holding x&#772; where it is, and watch z stretch away from zero without the gap in the original units changing at all. The world did not move; your instrument got sharper. A z of 6 from an enormous sample can sit on a difference far too small to act on, and a z of 1 from a small sample can sit on a difference that would matter enormously if only you had the data to see it. <b>Significance and importance are different questions</b>, and only the first one is answered here.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var S0='&#8320;', SA='&#8336;';
+
+ /* ---------- seeded PRNG (mulberry32) so every run reproduces exactly ---------- */
+ var SEED0=20260719, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ var spare=null;
+ function gauss(){
+   if(spare!==null){ var s=spare; spare=null; return s; }
+   var u=1-rnd(), v=rnd(), r=Math.sqrt(-2*Math.log(u));
+   spare=r*Math.sin(2*Math.PI*v);
+   return r*Math.cos(2*Math.PI*v);
+ }
+
+ /* ---------- standard normal CDF via erfc (fractional error < 1.2e-7) ---------- */
+ function erfc(x){
+   var z=Math.abs(x), t=1/(1+0.5*z);
+   var ans=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+
+     t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+
+     t*(-0.82215223+t*0.17087277)))))))));
+   return x>=0?ans:2-ans;
+ }
+ function normCdf(x){ return 0.5*erfc(-x/Math.SQRT2); }
+ /* inverse by bisection on a monotone function - exact to machine precision in z */
+ function invNorm(p){
+   var lo=-9, hi=9, mid, i;
+   for(i=0;i<72;i++){ mid=(lo+hi)/2; if(normCdf(mid)<p){ lo=mid; } else { hi=mid; } }
+   return (lo+hi)/2;
+ }
+
+ /* ================= the four studies ================= */
+ var ST=[
+  {k:'fill', nm:'Bottle filling line', ct:'&mu; &middot; millilitres per bottle', col:'#2f6f8a',
+   unit:' mL', who:'bottles', item:'bottle', dp:2, sdp:4,
+   mu0:500, sigma:4, popNormal:1,
+   ctx:'the mean fill volume',
+   dir0:'ne',
+   lo:496.5, hi:503.5, step:0.05, xb0:498.6, mu0true:500,
+   n0:30, nMin:10, nMax:120, nStep:1,
+   claim:'A filling line is set to put <b>500 mL</b> in every bottle. Years of calibration logs put the bottle&#8209;to&#8209;bottle spread at <b>&sigma; = 4 mL</b>, and that spread does not change when the valve drifts &mdash; only the centre does. A technician pulls a random sample off the line. Over&#8209;filling wastes product and under&#8209;filling breaks the label claim, so <b>either</b> direction matters and the test is two&#8209;sided.',
+   sigwhy:'&sigma; = 4 mL comes from the machine&rsquo;s calibration history, not from this sample &mdash; which is exactly what licenses a z&#8209;test here.',
+   note:'The sample you start with lands 1.4 mL low, and the true mean really is 500 &mdash; this is what ordinary sampling noise looks like. At &alpha; = 0.05 it comes within a whisker of a false alarm without quite producing one. Nudge x&#772; a little lower and watch a perfectly healthy line get convicted.'},
+
+  {k:'exam', nm:'Certification exam', ct:'&mu; &middot; scaled score', col:'#7a5a8a',
+   unit:'', who:'graduates', item:'graduate', dp:1, sdp:3,
+   mu0:500, sigma:100, popNormal:1,
+   ctx:'the mean score of this provider&rsquo;s graduates',
+   dir0:'gt',
+   lo:460, hi:545, step:0.5, xb0:533, mu0true:530,
+   n0:64, nMin:16, nMax:200, nStep:2,
+   claim:'A certification exam is scored on a scale <i>constructed</i> so that the national candidate population has mean <b>500</b> and standard deviation <b>&sigma; = 100</b>. A training provider claims its graduates score <b>higher</b> than the national mean. A random sample of its graduates sits the exam, and only a score above 500 would support the claim.',
+   sigwhy:'&sigma; = 100 is a property of the scoring scale itself &mdash; it was built in when the test was normed, so it is genuinely known rather than estimated.',
+   note:'With &sigma; = 100 and n = 64 the standard error is exactly 12.5, so every 12.5 points of gap is worth one unit of z. That is the cleanest possible demonstration that z is just the gap re&#8209;expressed in a different unit.'},
+
+  {k:'psi', nm:'Concrete strength', ct:'&mu; &middot; psi at 28 days', col:'#b8862f',
+   unit:' psi', who:'cylinders', item:'cylinder', dp:0, sdp:2,
+   mu0:4000, sigma:240, popNormal:1,
+   ctx:'the batch&rsquo;s mean compressive strength',
+   dir0:'lt',
+   lo:3860, hi:4140, step:1, xb0:3928, mu0true:3950,
+   n0:36, nMin:9, nMax:150, nStep:1,
+   claim:'A supplier guarantees a mean 28&#8209;day compressive strength of <b>4,000 psi</b>. The plant&rsquo;s long testing record fixes the cylinder&#8209;to&#8209;cylinder spread at <b>&sigma; = 240 psi</b>. An inspector tests a random sample of cylinders. Only <b>weakness</b> would justify rejecting the batch &mdash; concrete stronger than promised is not a problem &mdash; so the alternative points down.',
+   sigwhy:'&sigma; = 240 psi is drawn from thousands of archived cylinder breaks at this plant, so it is known independently of the batch being judged.',
+   note:'The batch really is weak here &mdash; 3,950 against a promised 4,000 &mdash; but the shortfall is small relative to how much individual cylinders vary. Run the repeated tests below and you will find this test catches the problem only about a third of the time. A shortfall that is real and a test that finds it are two different things.'},
+
+  {k:'rt', nm:'Braking reaction time', ct:'&mu; &middot; seconds to the brake', col:'#2f9e5b',
+   unit:' s', who:'runs', item:'run', dp:3, sdp:5,
+   mu0:0.55, sigma:0.08, popNormal:0,
+   ctx:'the mean reaction time while texting',
+   dir0:'gt',
+   lo:0.500, hi:0.605, step:0.001, xb0:0.562, mu0true:0.556,
+   n0:40, nMin:10, nMax:200, nStep:2,
+   claim:'A driving simulator logs braking reaction time. Its manufacturer&rsquo;s reference database &mdash; hundreds of thousands of logged runs &mdash; puts the undistracted mean at <b>0.550 s</b> with <b>&sigma; = 0.080 s</b>. A study asks whether reading a text message makes drivers <b>slower</b>, so the alternative points up. Reaction times are <b>right&#8209;skewed</b>, so this test leans on the Central Limit Theorem rather than on a normal population.',
+   sigwhy:'&sigma; = 0.080 s is a published instrument constant from the reference database, which is why a z&#8209;test is defensible even though this sample is small.',
+   note:'Texting really does slow these drivers &mdash; by 6 milliseconds, against individual variation of 80 &mdash; and this test almost never notices. A large p&#8209;value here is a verdict on the study, not on the world. Now watch how slowly data fixes that: pushing n from 40 to 200, five times the sample, lifts the test&rsquo;s chance of noticing only from about 12% to about 28%. When a real effect is tiny next to how much individuals vary, sample size buys detection expensively.'}
+ ];
+
+ /* ---------- interpretation statements ---------- */
+ var CLM=[
+  {ok:1, t:'&ldquo;z = 2.5 means our sample mean sits 2.5 standard errors above &mu;&#8320;.&rdquo;',
+   s:'what z literally measures',
+   d:'<b>Correct.</b> z is the gap x&#772;&nbsp;&minus;&nbsp;&mu;<sub>0</sub> divided by the standard error, so it is that gap counted in standard errors. Everything else in the test &mdash; the critical value, the p&#8209;value, the decision &mdash; is downstream of that one number, which is why a single fixed curve serves every z&#8209;test regardless of units or sample size.'},
+  {ok:0, t:'&ldquo;p = 0.03, so there is a 3% chance H&#8320; is true.&rdquo;',
+   s:'the classic inversion',
+   d:'<b>Wrong, and it is the most common error in statistics.</b> The p&#8209;value is computed <i>inside</i> the assumption that H<sub>0</sub> holds: it is P(a result at least this extreme | H<sub>0</sub> true), not P(H<sub>0</sub> true | this result). Those are different quantities, and turning one into the other needs information &mdash; how often hypotheses like this one are true, and how good the study is at detecting real effects &mdash; that appears nowhere in the calculation.'},
+  {ok:0, t:'&ldquo;We failed to reject H&#8320;, so H&#8320; is true &mdash; &mu; equals 500.&rdquo;',
+   s:'absence of evidence',
+   d:'<b>Wrong.</b> Failing to reject means the data are compatible with H<sub>0</sub>, and they are usually compatible with a whole range of other values too. The reaction&#8209;time study proves the point: the true mean genuinely is not 0.550, yet the test fails to reject roughly seven times out of eight. A test can accumulate evidence <i>against</i> a null value; it has no machinery for confirming one. If you want to know which values are plausible, build a confidence interval.'},
+  {ok:1, t:'&ldquo;The p&#8209;value rule and the critical&#8209;value rule always give the same decision.&rdquo;',
+   s:'two spellings of one rule',
+   d:'<b>Correct, and it is not a coincidence.</b> The critical value is defined as the z whose tail area is exactly &alpha;, so &ldquo;z is past the critical value&rdquo; and &ldquo;the tail area beyond z is at most &alpha;&rdquo; are the same statement read from opposite ends. Watch the two lines in the decision step: they can never disagree, no matter how you set the sliders.'},
+  {ok:0, t:'&ldquo;Our result came out high, so we&rsquo;ll use the upper&#8209;tail test to get a smaller p.&rdquo;',
+   s:'choosing the tail after the fact',
+   d:'<b>Wrong &mdash; and it invalidates the test.</b> A one&#8209;sided test earns its lower critical value by promising, in advance, to ignore departures in the other direction. If you pick the tail after seeing which way the data leaned, you have effectively run a two&#8209;sided test while reporting one&#8209;sided numbers, and your real false&#8209;alarm rate is roughly double the &alpha; you quoted. The alternative comes from the question, before the data.'},
+  {ok:0, t:'&ldquo;p &lt; 0.001, so the effect must be large and important.&rdquo;',
+   s:'significance is not size',
+   d:'<b>Wrong.</b> z grows with &radic;n even when the gap in original units is frozen. Hold x&#772; still on any study here and drag n upward: the distance between x&#772; and &mu;<sub>0</sub> never moves an inch, yet z marches outward and p collapses. A tiny p&#8209;value says &ldquo;this is more than noise&rdquo;, not &ldquo;this is worth acting on.&rdquo; How big and whether it matters are answered by the estimate and its interval, in the units the decision is actually made in.'},
+  {ok:0, t:'&ldquo;We didn&rsquo;t know &sigma;, so we used the sample SD in the z formula.&rdquo;',
+   s:'that is a t&#8209;test now',
+   d:'<b>Wrong &mdash; the curve changes.</b> Substituting s for &sigma; adds a second source of randomness, because s wobbles from sample to sample too. The resulting statistic follows a t distribution with n&nbsp;&minus;&nbsp;1 degrees of freedom, whose tails are fatter than the normal&rsquo;s, so the correct critical values are farther out. Using normal critical values with an estimated SD makes you reject more often than your stated &alpha; &mdash; the error is small at large n and serious at small n.'}
+ ];
+
+ /* ---------- state ---------- */
+ var si=0, xb=0, muT=0, n=30, alt='ne', al=0.05, ci=-1;
+ var res=[], jit=[], zs=[];
+ var GA={zLo:-4.3,zHi:4.3,X0:40,X1:464};
+
+ function C(){ return ST[si]; }
+ function com(s){ s=String(s); var p=s.split('.'); p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,','); return p.join('.'); }
+ function fmt(v){ return com(v.toFixed(C().dp)); }
+ function fms(v){ return com(v.toFixed(C().sdp)); }
+ function snap(v,st){ return parseFloat((Math.round(v/st)*st).toFixed(6)); }
+ function alTxt(){ return al.toFixed(2); }
+
+ function SE(){ return C().sigma/Math.sqrt(n); }
+ function zObs(){ return (xb-C().mu0)/SE(); }
+ function zCrit(){ return alt==='ne' ? invNorm(1-al/2) : invNorm(1-al); }
+ function pOf(z){
+   if(alt==='lt') return normCdf(z);
+   if(alt==='gt') return 1-normCdf(z);
+   return 2*(1-normCdf(Math.abs(z)));
+ }
+ function rejects(z){
+   var zc=zCrit();
+   if(alt==='lt') return z<=-zc;
+   if(alt==='gt') return z>=zc;
+   return Math.abs(z)>=zc;
+ }
+ function pTxt(p){ return p>=0.0001?p.toFixed(4):p.toExponential(2); }
+ function pctTxt(p){
+   var v=p*100;
+   if(v>=0.01) return v.toFixed(2)+'%';
+   if(v>=0.0001) return v.toFixed(4)+'%';
+   return v.toExponential(2)+'%';
+ }
+ /* exact long-run rejection rate: equals alpha when mu = mu0, and is the power otherwise */
+ function longRun(){
+   var d=(muT-C().mu0)/SE(), zc=zCrit();
+   if(alt==='gt') return 1-normCdf(zc-d);
+   if(alt==='lt') return normCdf(-zc-d);
+   return normCdf(-zc-d)+1-normCdf(zc-d);
+ }
+ function isNull(){ return Math.abs(muT-C().mu0)<1e-12; }
+ function dirPhrase(){ return alt==='ne'?'differs from':(alt==='lt'?'is less than':'is greater than'); }
+ function haTxt(){
+   var c=C();
+   return 'H'+SA+': &mu; '+(alt==='ne'?'&ne;':(alt==='lt'?'&lt;':'&gt;'))+' '+fmt(c.mu0)+c.unit;
+ }
+
+ /* ================= chart A : the standard normal, with z on it ================= */
+ function chartA(){
+   var c=C(), z=zObs(), zc=zCrit();
+   var X0=40, X1=464, Yb=214, H=150;
+   var zHi=Math.max(4.3, Math.abs(z)+0.7, zc+0.6), zLo=-zHi;
+   GA={zLo:zLo,zHi:zHi,X0:X0,X1:X1};
+   function px(v){ return X0+(v-zLo)/(zHi-zLo)*(X1-X0); }
+   function cy(v){ return Yb-Math.exp(-0.5*v*v)*H; }
+   function area(a,b){
+     a=Math.max(a,zLo); b=Math.min(b,zHi);
+     if(b<=a) return '';
+     var p='M'+px(a).toFixed(1)+' '+Yb, i, x;
+     for(i=0;i<=72;i++){ x=a+(b-a)*i/72; p+='L'+px(x).toFixed(1)+' '+cy(x).toFixed(1); }
+     return p+'L'+px(b).toFixed(1)+' '+Yb+'Z';
+   }
+   var s='<defs><pattern id="pvh" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'+
+         '<line x1="3.5" y1="0" x2="3.5" y2="7" stroke="#2f6f8a" stroke-width="3.2" opacity=".5"/></pattern></defs>';
+   var i,x;
+
+   /* rejection region(s) - the area alpha, fixed before the data */
+   if(alt==='gt'){ s+='<path d="'+area(zc,zHi)+'" fill="#f2ccd3"/>'; }
+   else if(alt==='lt'){ s+='<path d="'+area(zLo,-zc)+'" fill="#f2ccd3"/>'; }
+   else { s+='<path d="'+area(zc,zHi)+'" fill="#f2ccd3"/><path d="'+area(zLo,-zc)+'" fill="#f2ccd3"/>'; }
+
+   /* p-value region(s) - everything at least as extreme as the observed z */
+   var az=Math.abs(z);
+   if(alt==='gt'){ s+='<path d="'+area(z,zHi)+'" fill="url(#pvh)"/>'; }
+   else if(alt==='lt'){ s+='<path d="'+area(zLo,z)+'" fill="url(#pvh)"/>'; }
+   else { s+='<path d="'+area(az,zHi)+'" fill="url(#pvh)"/><path d="'+area(zLo,-az)+'" fill="url(#pvh)"/>'; }
+
+   /* the curve */
+   var pth='';
+   for(i=0;i<=220;i++){ x=zLo+(zHi-zLo)*i/220; pth+=(i?'L':'M')+px(x).toFixed(1)+' '+cy(x).toFixed(1); }
+   s+='<path d="'+pth+'" fill="none" stroke="#2f6f8a" stroke-width="2.4"/>';
+
+   /* axis and the two rulers */
+   s+='<line x1="'+X0+'" y1="'+Yb+'" x2="'+X1+'" y2="'+Yb+'" stroke="#c6d7e0" stroke-width="1.2"/>';
+   var k,tx;
+   for(k=-12;k<=12;k++){
+     if(k<zLo+0.2||k>zHi-0.2) continue;
+     tx=px(k);
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+Yb+'" x2="'+tx.toFixed(1)+'" y2="'+(Yb+5)+'" stroke="#c6d7e0" stroke-width="1.2"/>';
+     s+='<text x="'+tx.toFixed(1)+'" y="'+(Yb+18)+'" font-size="9.8" fill="#78868d" text-anchor="middle" font-weight="700">'+(k>0?'+':'')+k+'</text>';
+     if(k%2===0) s+='<text x="'+tx.toFixed(1)+'" y="'+(Yb+32)+'" font-size="8.8" fill="#a9b6bc" text-anchor="middle" font-weight="700">'+fmt(c.mu0+k*SE())+'</text>';
+   }
+   s+='<text x="'+(X0-7)+'" y="'+(Yb+18)+'" font-size="9.6" fill="#4a585f" text-anchor="end" font-weight="800">z</text>';
+   s+='<text x="'+(X0-7)+'" y="'+(Yb+32)+'" font-size="9.6" fill="#4a585f" text-anchor="end" font-weight="800">x&#772;</text>';
+
+   /* the null centre */
+   var m0=px(0);
+   s+='<line x1="'+m0.toFixed(1)+'" y1="'+(Yb-H-4)+'" x2="'+m0.toFixed(1)+'" y2="'+Yb+'" stroke="#2f6f8a" stroke-width="1.3" stroke-dasharray="3,3" opacity=".7"/>';
+   s+='<text x="'+m0.toFixed(1)+'" y="'+(Yb-H-10)+'" font-size="10.4" fill="#1c4454" text-anchor="middle" font-weight="800">H'+S0+': &mu; = '+fmt(c.mu0)+c.unit+'</text>';
+
+   /* the critical value(s) */
+   function critLine(v,lab){
+     var cx=px(v);
+     s+='<line x1="'+cx.toFixed(1)+'" y1="'+(Yb-118)+'" x2="'+cx.toFixed(1)+'" y2="'+Yb+'" stroke="#d1495b" stroke-width="1.7" stroke-dasharray="4,3"/>';
+     s+='<text x="'+cx.toFixed(1)+'" y="'+(Yb-124)+'" font-size="10" fill="#b23145" text-anchor="middle" font-weight="800">'+lab+'</text>';
+   }
+   if(alt==='gt'){ critLine(zc,'z* = +'+zc.toFixed(3)); }
+   else if(alt==='lt'){ critLine(-zc,'z* = &minus;'+zc.toFixed(3)); }
+   else { critLine(zc,'+'+zc.toFixed(3)); critLine(-zc,'&minus;'+zc.toFixed(3)); }
+
+   /* label the rejection band(s) */
+   function rejLab(a,b){
+     var mx=(px(Math.max(a,zLo))+px(Math.min(b,zHi)))/2;
+     s+='<text x="'+mx.toFixed(1)+'" y="'+(Yb-84)+'" font-size="9.6" fill="#b23145" text-anchor="middle" font-weight="800">reject H'+S0+'</text>';
+   }
+   if(alt!=='lt') rejLab(zc,zHi);
+   if(alt!=='gt') rejLab(zLo,-zc);
+
+   /* the observed statistic */
+   var ox=px(z<zLo?zLo:(z>zHi?zHi:z)), oy=cy(z<zLo?zLo:(z>zHi?zHi:z));
+   var anch=(ox>X1-72)?'end':((ox<X0+72)?'start':'middle');
+   s+='<line x1="'+ox.toFixed(1)+'" y1="'+(oy-2).toFixed(1)+'" x2="'+ox.toFixed(1)+'" y2="'+Yb+'" stroke="#1c4454" stroke-width="2.2"/>';
+   s+='<circle cx="'+ox.toFixed(1)+'" cy="'+oy.toFixed(1)+'" r="5.8" fill="#1c4454"/><circle cx="'+ox.toFixed(1)+'" cy="'+oy.toFixed(1)+'" r="2.3" fill="#fff"/>';
+   s+='<text x="'+ox.toFixed(1)+'" y="26" font-size="11" fill="#1c4454" text-anchor="'+anch+'" font-weight="800">x&#772; = '+fmt(xb)+c.unit+'</text>';
+   s+='<text x="'+ox.toFixed(1)+'" y="42" font-size="12.4" fill="#1c4454" text-anchor="'+anch+'" font-weight="800">z = '+(z>=0?'+':'&minus;')+Math.abs(z).toFixed(3)+'</text>';
+   s+='<line x1="'+ox.toFixed(1)+'" y1="48" x2="'+ox.toFixed(1)+'" y2="'+Math.max(50,oy-9).toFixed(1)+'" stroke="#1c4454" stroke-width="1" stroke-dasharray="2,2" opacity=".55"/>';
+
+   /* footers */
+   var p=pOf(z);
+   s+='<text x="'+X0+'" y="266" font-size="10.4" fill="#25607a" font-weight="800">hatched area = p&#8209;value = '+pTxt(p)+'  ('+pctTxt(p)+')</text>';
+   s+='<text x="'+X0+'" y="284" font-size="10.4" fill="#b23145" font-weight="800">pale red area = &alpha; = '+alTxt()+'   &middot;   '+(alt==='ne'?'split as '+(al/2).toFixed(3)+' in each tail':'all of it in one tail')+'</text>';
+   $("chart").innerHTML=s;
+
+   $("cap").innerHTML='H'+S0+': &mu; = '+fmt(c.mu0)+c.unit+' &nbsp;&middot;&nbsp; '+haTxt()+' &nbsp;&middot;&nbsp; &alpha; = '+alTxt()+'. '+c.note;
+ }
+
+ /* ================= chart B : the sample, in its original units ================= */
+ function chartB(){
+   var c=C(), se=SE();
+   var X0=40, X1=464, Yb=138, PH=100;
+   var cen=(c.mu0+muT)/2;
+   var half=Math.max(Math.abs(c.mu0-muT)/2+3.3*c.sigma, 3.5*c.sigma, Math.abs(xb-cen)+0.6*c.sigma);
+   var lo=cen-half, hi=cen+half;
+   function bx(v){ var t=X0+(v-lo)/(hi-lo)*(X1-X0); return t<X0-6?X0-6:(t>X1+6?X1+6:t); }
+   function band(m,sd,a,b,close){
+     a=Math.max(a,lo); b=Math.min(b,hi);
+     if(b<=a) return '';
+     var p=close?('M'+bx(a).toFixed(1)+' '+Yb):'', i, x, y;
+     for(i=0;i<=150;i++){
+       x=a+(b-a)*i/150; y=Yb-Math.exp(-0.5*Math.pow((x-m)/sd,2))*PH;
+       p+=((i||close)?'L':'M')+bx(x).toFixed(1)+' '+y.toFixed(1);
+     }
+     if(close) p+='L'+bx(b).toFixed(1)+' '+Yb+'Z';
+     return p;
+   }
+   var s='', i;
+
+   /* where the mean of n lands when H0 is true - the narrow spike */
+   s+='<path d="'+band(c.mu0,se,c.mu0-4.4*se,c.mu0+4.4*se,1)+'" fill="#bcd9e6" opacity=".85"/>';
+   /* where a single observation lands - the wide population */
+   s+='<path d="'+band(muT,c.sigma,lo,hi,0)+'" fill="none" stroke="#a9b6bc" stroke-width="1.8"/>';
+
+   /* the actual data */
+   var r=n>140?2.1:(n>70?2.6:3.3), op=n>140?0.42:0.55;
+   for(i=0;i<res.length;i++){
+     var vx=bx(xb+res[i]), vy=146+jit[i]*38;
+     s+='<circle cx="'+vx.toFixed(1)+'" cy="'+vy.toFixed(1)+'" r="'+r+'" fill="#2f6f8a" opacity="'+op+'"/>';
+   }
+
+   /* axis and ticks */
+   s+='<line x1="'+X0+'" y1="'+Yb+'" x2="'+X1+'" y2="'+Yb+'" stroke="#c6d7e0" stroke-width="1.2"/>';
+   var k,tv,tx;
+   for(k=-3;k<=3;k++){
+     tv=c.mu0+k*c.sigma; if(tv<lo||tv>hi) continue;
+     tx=bx(tv);
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+Yb+'" x2="'+tx.toFixed(1)+'" y2="'+(Yb+4)+'" stroke="#c6d7e0" stroke-width="1.2"/>';
+     s+='<text x="'+tx.toFixed(1)+'" y="200" font-size="9.4" fill="#a9b6bc" text-anchor="middle" font-weight="700">'+fmt(tv)+'</text>';
+   }
+
+   /* mu0 and xbar */
+   var m0=bx(c.mu0), mx=bx(xb), mt=bx(muT);
+   s+='<line x1="'+mt.toFixed(1)+'" y1="'+(Yb-PH-4)+'" x2="'+mt.toFixed(1)+'" y2="'+Yb+'" stroke="#7a5a8a" stroke-width="1.3" stroke-dasharray="2,3" opacity=".8"/>';
+   s+='<line x1="'+m0.toFixed(1)+'" y1="26" x2="'+m0.toFixed(1)+'" y2="'+Yb+'" stroke="#2f6f8a" stroke-width="1.5" stroke-dasharray="4,3"/>';
+   s+='<line x1="'+mx.toFixed(1)+'" y1="40" x2="'+mx.toFixed(1)+'" y2="190" stroke="#1c4454" stroke-width="2.2"/>';
+   var a0=(m0>X1-70)?'end':((m0<X0+70)?'start':'middle');
+   var ax=(mx>X1-70)?'end':((mx<X0+70)?'start':'middle');
+   s+='<text x="'+m0.toFixed(1)+'" y="20" font-size="10.2" fill="#2f6f8a" text-anchor="'+a0+'" font-weight="800">&mu;'+S0+' = '+fmt(c.mu0)+c.unit+'</text>';
+   s+='<text x="'+mx.toFixed(1)+'" y="34" font-size="10.6" fill="#1c4454" text-anchor="'+ax+'" font-weight="800">x&#772; = '+fmt(xb)+c.unit+'</text>';
+
+   /* the gap, measured twice */
+   var gap=xb-c.mu0, z=zObs();
+   var ga=Math.min(m0,mx), gb=Math.max(m0,mx), gm=(ga+gb)/2;
+   if(gb-ga>7){
+     s+='<line x1="'+ga.toFixed(1)+'" y1="212" x2="'+gb.toFixed(1)+'" y2="212" stroke="#1c4454" stroke-width="1.3"/>';
+     s+='<line x1="'+ga.toFixed(1)+'" y1="208" x2="'+ga.toFixed(1)+'" y2="216" stroke="#1c4454" stroke-width="1.3"/>';
+     s+='<line x1="'+gb.toFixed(1)+'" y1="208" x2="'+gb.toFixed(1)+'" y2="216" stroke="#1c4454" stroke-width="1.3"/>';
+   }
+   var gt=Math.max(X0+96,Math.min(X1-96,gm));
+   s+='<text x="'+gt.toFixed(1)+'" y="228" font-size="10.2" fill="#1c4454" text-anchor="middle" font-weight="800">gap = '+(gap>=0?'+':'&minus;')+fmt(Math.abs(gap))+c.unit+' = '+Math.abs(z).toFixed(2)+' standard errors</text>';
+   $("samp").innerHTML=s;
+
+   var cap='These <b>'+com(n)+'</b> dots were generated one at a time from a population centred at <b>'+fmt(muT)+c.unit+'</b> with &sigma; = '+fmt(c.sigma)+c.unit+'. ';
+   cap+='A single '+c.item+' scatters across the whole wide outline, yet the <i>mean</i> of '+com(n)+' of them is confined to the narrow spike &mdash; that is the entire reason a gap of '+fmt(Math.abs(gap))+c.unit+' can count as large. ';
+   cap+='<b>Draw a new sample</b> generates fresh data and lets x&#772; land wherever it lands. Moving the x&#772; slider instead slides this same sample sideways, holding its shape, so you can ask what a different result would have done without waiting for one.';
+   $("sampcap").innerHTML=cap;
+ }
+
+ /* ================= chart C : the same test, run many times ================= */
+ function chartC(){
+   var c=C(), zc=zCrit(), ez=(muT-c.mu0)/SE();
+   var X0=40, X1=464, Yb=150, Ytop=30, H=Yb-Ytop, NB=52;
+   var A=Math.min(-4.4, ez-3.8), B=Math.max(4.4, ez+3.8);
+   function px(v){ return X0+(v-A)/(B-A)*(X1-X0); }
+   var s='', i, b;
+
+   /* the rejection zone, behind the bars */
+   function zone(a,bb){
+     a=Math.max(a,A); bb=Math.min(bb,B);
+     if(bb<=a) return '';
+     return '<rect x="'+px(a).toFixed(1)+'" y="'+Ytop+'" width="'+(px(bb)-px(a)).toFixed(1)+'" height="'+(Yb-Ytop)+'" fill="#fbeaee"/>';
+   }
+   if(alt!=='lt') s+=zone(zc,B);
+   if(alt!=='gt') s+=zone(A,-zc);
+
+   var cnt=[], rej=[];
+   for(i=0;i<NB;i++){ cnt.push(0); rej.push(0); }
+   var off=0;
+   for(i=0;i<zs.length;i++){
+     var v=zs[i];
+     if(v<A||v>B){ off++; continue; }
+     b=Math.floor((v-A)/(B-A)*NB); if(b>=NB) b=NB-1; if(b<0) b=0;
+     cnt[b]++; if(rejects(v)) rej[b]++;
+   }
+   var mx=1;
+   for(i=0;i<NB;i++){ if(cnt[i]>mx) mx=cnt[i]; }
+   var bw=(X1-X0)/NB;
+   for(i=0;i<NB;i++){
+     if(!cnt[i]) continue;
+     var h=cnt[i]/mx*H, y=Yb-h, xx=X0+i*bw, hr=h*rej[i]/cnt[i];
+     if(h-hr>0.05) s+='<rect x="'+xx.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+(bw-0.7).toFixed(1)+'" height="'+(h-hr).toFixed(1)+'" fill="#cfe0e8"/>';
+     if(hr>0.05) s+='<rect x="'+xx.toFixed(1)+'" y="'+(Yb-hr).toFixed(1)+'" width="'+(bw-0.7).toFixed(1)+'" height="'+hr.toFixed(1)+'" fill="#d1495b"/>';
+   }
+
+   s+='<line x1="'+X0+'" y1="'+Yb+'" x2="'+X1+'" y2="'+Yb+'" stroke="#c6d7e0" stroke-width="1.2"/>';
+   var k,tx;
+   for(k=-8;k<=10;k++){
+     if(k<A+0.2||k>B-0.2) continue;
+     tx=px(k);
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+Yb+'" x2="'+tx.toFixed(1)+'" y2="'+(Yb+4)+'" stroke="#c6d7e0" stroke-width="1.2"/>';
+     s+='<text x="'+tx.toFixed(1)+'" y="'+(Yb+16)+'" font-size="9.4" fill="#a9b6bc" text-anchor="middle" font-weight="700">'+(k>0?'+':'')+k+'</text>';
+   }
+   function cl(v){
+     var cx=px(v);
+     s+='<line x1="'+cx.toFixed(1)+'" y1="'+Ytop+'" x2="'+cx.toFixed(1)+'" y2="'+(Yb+4)+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="4,3"/>';
+   }
+   if(alt!=='lt') cl(zc);
+   if(alt!=='gt') cl(-zc);
+   var zx=px(0);
+   s+='<line x1="'+zx.toFixed(1)+'" y1="'+Ytop+'" x2="'+zx.toFixed(1)+'" y2="'+Yb+'" stroke="#2f6f8a" stroke-width="1.2" stroke-dasharray="3,3" opacity=".7"/>';
+   var ex=px(ez);
+   s+='<line x1="'+ex.toFixed(1)+'" y1="'+(Ytop-4)+'" x2="'+ex.toFixed(1)+'" y2="'+Yb+'" stroke="#7a5a8a" stroke-width="1.6"/>';
+   var ea=(ex>X1-96)?'end':((ex<X0+96)?'start':'middle');
+   s+='<text x="'+ex.toFixed(1)+'" y="'+(Ytop-9)+'" font-size="9.8" fill="#7a5a8a" text-anchor="'+ea+'" font-weight="800">these tests centre here (z = '+(ez>=0?'+':'&minus;')+Math.abs(ez).toFixed(2)+')</text>';
+   if(!zs.length) s+='<text x="252" y="'+((Ytop+Yb)/2)+'" font-size="12" fill="#a9b6bc" text-anchor="middle" font-weight="700">no tests run yet &mdash; press a button below</text>';
+   if(off) s+='<text x="'+X1+'" y="'+(Yb+32)+'" font-size="9.4" fill="#a9b6bc" text-anchor="end" font-weight="700">'+com(off)+' landed off the axis (still counted)</text>';
+   s+='<text x="'+X0+'" y="'+(Yb+32)+'" font-size="9.8" fill="#4a585f" font-weight="700">each bar is a batch of complete tests &middot; n = '+com(n)+' per test &middot; &mu; = '+fmt(muT)+c.unit+'</text>';
+   $("rep").innerHTML=s;
+
+   var N=zs.length, kk=0;
+   for(i=0;i<N;i++){ if(rejects(zs[i])) kk++; }
+   var lr=longRun();
+   $("rN").innerHTML=com(N);
+   $("rK").innerHTML=com(kk);
+   $("rObs").innerHTML=N?((kk/N*100).toFixed(1)+'%'):'&mdash;';
+   $("rExp").innerHTML=(lr*100).toFixed(1)+'%';
+
+   var cap;
+   if(!N){
+     cap='Nothing has been run yet. Each test below draws <b>'+com(n)+'</b> fresh observations from a population with true mean <b>'+fmt(muT)+c.unit+'</b>, computes that sample&rsquo;s own z, and applies the rule &ldquo;'+(alt==='ne'?'reject if |z| &ge; '+zc.toFixed(3):(alt==='lt'?'reject if z &le; &minus;'+zc.toFixed(3):'reject if z &ge; +'+zc.toFixed(3)))+'&rdquo;.';
+   } else {
+     cap='Out of <b>'+com(N)+'</b> complete tests, <b>'+com(kk)+'</b> rejected H'+S0+' &mdash; <b>'+(kk/N*100).toFixed(1)+'%</b>, against an exact long&#8209;run rate of <b>'+(lr*100).toFixed(1)+'%</b>. ';
+     if(N<500) cap+='A few hundred runs still wobble; add more and watch the two numbers converge. ';
+     if(isNull()){
+       cap+='Here the true mean <i>is</i> &mu;'+S0+', so <b>every single rejection is a false alarm</b> &mdash; and the rate settles exactly on &alpha; = '+alTxt()+'. That is what &alpha; means: not a property of any one study, but the share of studies this procedure convicts when there is nothing to convict. Lower &alpha; and the red shrinks.';
+     } else {
+       cap+='Here the true mean really is <b>'+fmt(muT)+c.unit+'</b>, not '+fmt(C().mu0)+c.unit+', so every rejection is correct and every failure to reject is a <b>missed real effect</b>. That rejection rate is the test&rsquo;s <b>power</b> &mdash; and notice it is a property of the design, not of the data: raise n, or move &mu; farther from &mu;'+S0+', or loosen &alpha;, and it climbs. At '+(lr*100).toFixed(0)+'%, a study like this one would '+(lr<0.5?'more often than not <b>miss</b> an effect that is genuinely there':'usually catch it')+'.';
+     }
+   }
+   $("repcap").innerHTML=cap;
+ }
+
+ /* ================= the written test ================= */
+ function steps(){
+   var c=C(), se=SE(), z=zObs(), zc=zCrit(), p=pOf(z), rj=rejects(z);
+   var az=Math.abs(z);
+
+   $("tSe").innerHTML=fms(se);
+   $("tZ").innerHTML=(z>=0?'+':'&minus;')+az.toFixed(3);
+   $("tC").innerHTML=(alt==='ne'?'&plusmn;':(alt==='lt'?'&minus;':'+'))+zc.toFixed(3);
+   $("tCs").innerHTML=(alt==='ne'?'z at &alpha;/2':'z at &alpha;');
+   $("tP").innerHTML=pTxt(p);
+   $("tPs").innerHTML=(p<=al?'&le;':'&gt;')+' &alpha; = '+alTxt();
+   $("tDbox").className=rj?'rj':'fr';
+
+   var okN=(n>=30), condOK=(c.popNormal||okN);
+   var h='';
+   h+='<div class="stp"><b>1 &middot; The hypotheses</b>, fixed before the data. <span class="k">H'+S0+': &mu; = '+fmt(c.mu0)+c.unit+'</span> against <span class="k">'+haTxt()+'</span>, tested at &alpha; = '+alTxt()+'.</div>';
+   h+='<div class="stp"><b>2 &middot; The conditions.</b> Random sample <span class="ok">&#10003;</span> &middot; &sigma; known <span class="ok">&#10003;</span> ('+c.sigwhy+') &middot; sampling distribution of x&#772; approximately normal '+
+      (c.popNormal
+        ? '<span class="ok">&#10003;</span> (the population is taken to be roughly normal, so x&#772; is normal at any n)'
+        : (okN?'<span class="ok">&#10003;</span>':'<span class="bad">&#10007;</span>')+' (this population is right&#8209;skewed, so it rests on the CLT and wants n &ge; 30 &mdash; you have n = '+com(n)+')')+'.</div>';
+   h+='<div class="stp"><b>3 &middot; The standard error.</b> &sigma;/&radic;n = '+fmt(c.sigma)+' / &radic;'+com(n)+' = <b>'+fms(se)+c.unit+'</b>. This is the yardstick; everything after it is division.</div>';
+   h+='<div class="stp"><b>4 &middot; The test statistic.</b> z = (x&#772; &minus; &mu;'+S0+') / (&sigma;/&radic;n) = ('+fmt(xb)+' &minus; '+fmt(c.mu0)+') / '+fms(se)+' = <b>'+(z>=0?'+':'&minus;')+az.toFixed(3)+'</b>. The sample mean sits <b>'+az.toFixed(2)+'</b> standard errors '+(z>=0?'above':'below')+' the claimed value.</div>';
+   var pline;
+   if(alt==='lt') pline='p = P(Z &le; '+(z>=0?'+':'&minus;')+az.toFixed(3)+') = <b>'+pTxt(p)+'</b>';
+   else if(alt==='gt') pline='p = P(Z &ge; '+(z>=0?'+':'&minus;')+az.toFixed(3)+') = <b>'+pTxt(p)+'</b>';
+   else pline='p = 2 &times; P(Z &ge; '+az.toFixed(3)+') = 2 &times; '+(p/2>=0.00001?(p/2).toFixed(5):(p/2).toExponential(2))+' = <b>'+pTxt(p)+'</b>';
+   h+='<div class="stp"><b>5 &middot; The p&#8209;value.</b> '+pline+'. If &mu; really were '+fmt(c.mu0)+c.unit+', <b>'+pctTxt(p)+'</b> of samples of '+com(n)+' '+c.who+' would land at least this far '+(alt==='ne'?'from it, on either side':'in this direction')+'.</div>';
+   h+='<div class="stp"><b>6 &middot; The decision</b>, reached two ways that can never disagree. Critical value: '+
+      (alt==='ne'?'|z| = '+az.toFixed(3)+(rj?' &ge; ':' &lt; ')+zc.toFixed(3):'z = '+(z>=0?'+':'&minus;')+az.toFixed(3)+(alt==='gt'?(rj?' &ge; +':' &lt; +'):(rj?' &le; &minus;':' &gt; &minus;'))+zc.toFixed(3))+
+      ' &rarr; <span class="'+(rj?'bad':'ok')+'">'+(rj?'reject':'fail to reject')+'</span>. p&#8209;value: '+pTxt(p)+(p<=al?' &le; ':' &gt; ')+alTxt()+' &rarr; <span class="'+(rj?'bad':'ok')+'">'+(rj?'reject':'fail to reject')+'</span>.</div>';
+   if(!condOK) h+='<div class="stp"><b class="bad">Condition warning.</b> With a right&#8209;skewed population and n = '+com(n)+', the sampling distribution of x&#772; may not be normal enough for these numbers to be trusted. The arithmetic still runs; the p&#8209;value just stops meaning what it claims to.</div>';
+   $("steps").innerHTML=h;
+
+   var sn='';
+   if(rj){
+     sn='<span class="big">Reject H'+S0+'.</span> At &alpha; = '+alTxt()+', a result this far out would happen only '+pctTxt(p)+' of the time if &mu; were '+fmt(c.mu0)+c.unit+'. There is sufficient evidence to conclude that <b>'+c.ctx+' '+dirPhrase()+' '+fmt(c.mu0)+c.unit+'</b>. What this does <i>not</i> say: how big the difference is, or how probable H'+S0+' was.';
+   } else {
+     sn='<span class="big">Fail to reject H'+S0+'.</span> At &alpha; = '+alTxt()+', a result this far out would happen '+pctTxt(p)+' of the time even if &mu; were exactly '+fmt(c.mu0)+c.unit+' &mdash; unremarkable. There is <b>not</b> sufficient evidence to conclude that '+c.ctx+' '+dirPhrase()+' '+fmt(c.mu0)+c.unit+'. That is not the same as showing it equals '+fmt(c.mu0)+c.unit+'; this test has no way to establish that, and a small sample can hide a real difference easily.';
+   }
+   $("sent").innerHTML=sn;
+   $("sent").className='sent'+(rj?' rj':'');
+
+   var lr=longRun();
+   $("worldcap").innerHTML=isNull()
+     ? 'You have set the population mean to <b>exactly &mu;'+S0+'</b>, so <b>H'+S0+' is true</b> and any rejection is a false alarm. The test&rsquo;s long&#8209;run rejection rate here is <b>'+(lr*100).toFixed(1)+'%</b> &mdash; identical to &alpha;, by construction.'
+     : 'The population mean is <b>'+fmt(muT)+c.unit+'</b>, so <b>H'+S0+' is false</b> by '+fmt(Math.abs(muT-C().mu0))+c.unit+'. This test&rsquo;s long&#8209;run chance of catching that &mdash; its <b>power</b> &mdash; is <b>'+(lr*100).toFixed(1)+'%</b>. In a real study you never see this row; that is the whole difficulty.';
+ }
+
+ /* ================= sampling ================= */
+ function newSample(keepMean){
+   var c=C(), i, xs=[], m=0;
+   res=[]; jit=[];
+   for(i=0;i<n;i++){ xs.push(muT+c.sigma*gauss()); m+=xs[i]; }
+   m/=n;
+   for(i=0;i<n;i++){ res.push(xs[i]-m); jit.push(rnd()); }
+   if(!keepMean){
+     xb=snap(m,c.step);
+     if(xb<c.lo) xb=c.lo; if(xb>c.hi) xb=c.hi;
+     $("xbSl").value=xb; $("xbVal").innerHTML=fmt(xb);
+   }
+ }
+ function runTests(m){
+   var c=C(), se=SE(), i, j, s;
+   for(i=0;i<m;i++){
+     s=0;
+     for(j=0;j<n;j++){ s+=muT+c.sigma*gauss(); }
+     zs.push((s/n-c.mu0)/se);
+   }
+ }
+
+ /* ================= render ================= */
+ function draw(){ chartA(); chartB(); chartC(); steps(); }
+
+ function renderStudies(){
+   $("studies").innerHTML=ST.map(function(x,i){
+     return '<button class="it'+(i===si?' on':'')+'" data-i="'+i+'"><span class="sw" style="background:'+x.col+'"></span><span><span class="nm">'+x.nm+'</span><span class="s">'+x.ct+'</span></span></button>';
+   }).join('');
+   var b=$("studies").querySelectorAll('.it'), q;
+   for(q=0;q<b.length;q++){ b[q].onclick=(function(el){ return function(){ pick(parseInt(el.dataset.i,10)); }; })(b[q]); }
+ }
+ function renderClaims(){
+   $("claims").innerHTML=CLM.map(function(x,i){
+     return '<button class="it'+(i===ci?' on':'')+'" data-i="'+i+'"><span><span class="nm" style="font-weight:600;font-size:12.2px;line-height:1.45;display:block;">'+x.t+'</span></span></button>';
+   }).join('');
+   var b=$("claims").querySelectorAll('.it'), q;
+   for(q=0;q<b.length;q++){ b[q].onclick=(function(el){ return function(){ ci=parseInt(el.dataset.i,10); showClaim(); }; })(b[q]); }
+ }
+ function showClaim(){
+   var x=CLM[ci];
+   $("info").innerHTML='<span class="n">'+x.s+'<span class="tag '+(x.ok?'tt':'ff')+'">'+(x.ok?'correct':'wrong')+'</span></span>'+x.d;
+   renderClaims();
+ }
+ function renderSegs(){
+   var a=$("altSeg").querySelectorAll('button'), q;
+   for(q=0;q<a.length;q++){ a[q].className=(a[q].dataset.v===alt)?'on':''; }
+   var b=$("alSeg").querySelectorAll('button');
+   for(q=0;q<b.length;q++){ b[q].className=(parseFloat(b[q].dataset.v)===al)?'on':''; }
+ }
+ function setSliders(){
+   var c=C();
+   var q=$("nSl"); q.min=c.nMin; q.max=c.nMax; q.step=c.nStep; q.value=n;
+   var x=$("xbSl"); x.min=c.lo; x.max=c.hi; x.step=c.step; x.value=xb;
+   var m=$("muSl"); m.min=c.lo; m.max=c.hi; m.step=c.step; m.value=muT;
+   $("nVal").innerHTML=com(n);
+   $("xbVal").innerHTML=fmt(xb);
+   $("muVal").innerHTML=fmt(muT);
+ }
+
+ function pick(i){
+   si=i; var c=C();
+   xb=c.xb0; muT=c.mu0true; n=c.n0; alt=c.dir0; zs=[];
+   seed=SEED0; spare=null;
+   $("stage").style.background=c.col;
+   $("stage").innerHTML=c.nm+'<small>'+c.ct+'</small>';
+   $("claimtxt").innerHTML=c.claim;
+   $("xbLab").innerHTML='sample mean x&#772;';
+   newSample(1);
+   setSliders(); renderSegs(); renderStudies(); draw();
+ }
+
+ /* ---------- drag the statistic along the curve ---------- */
+ var dragging=false;
+ function fromEvent(e){
+   var sv=$("chart"), r=sv.getBoundingClientRect(), c=C();
+   var cx=(e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX;
+   var vx=(cx-r.left)/r.width*480;
+   var t=(vx-GA.X0)/(GA.X1-GA.X0);
+   var z=GA.zLo+t*(GA.zHi-GA.zLo);
+   var v=snap(c.mu0+z*SE(),c.step);
+   if(v<c.lo) v=c.lo; if(v>c.hi) v=c.hi;
+   xb=v; $("xbSl").value=xb; $("xbVal").innerHTML=fmt(xb);
+   chartA(); chartB(); steps();
+ }
+ $("chart").addEventListener('pointerdown',function(e){ dragging=true; try{ this.setPointerCapture(e.pointerId); }catch(err){} fromEvent(e); e.preventDefault(); });
+ $("chart").addEventListener('pointermove',function(e){ if(dragging){ fromEvent(e); e.preventDefault(); } });
+ window.addEventListener('pointerup',function(){ dragging=false; });
+
+ /* ---------- controls ---------- */
+ $("nSl").oninput=function(){ n=parseInt(this.value,10); $("nVal").innerHTML=com(n); zs=[]; newSample(1); draw(); };
+ $("xbSl").oninput=function(){ xb=snap(parseFloat(this.value),C().step); $("xbVal").innerHTML=fmt(xb); chartA(); chartB(); steps(); };
+ $("muSl").oninput=function(){ muT=snap(parseFloat(this.value),C().step); $("muVal").innerHTML=fmt(muT); zs=[]; newSample(1); draw(); };
+ $("bdraw").onclick=function(){ newSample(0); zs=[]; draw(); };
+ $("bcen").onclick=function(){ xb=C().mu0; $("xbSl").value=xb; $("xbVal").innerHTML=fmt(xb); chartA(); chartB(); steps(); };
+ $("bnull").onclick=function(){ muT=C().mu0; $("muSl").value=muT; $("muVal").innerHTML=fmt(muT); zs=[]; newSample(1); draw(); };
+ $("brst").onclick=function(){ pick(si); };
+ $("run1").onclick=function(){ runTests(200); chartC(); };
+ $("run2").onclick=function(){ runTests(2000); chartC(); };
+ $("rrs").onclick=function(){ zs=[]; chartC(); };
+
+ var av=$("altSeg").querySelectorAll('button'), aq;
+ for(aq=0;aq<av.length;aq++){ av[aq].onclick=(function(el){ return function(){ alt=el.dataset.v; renderSegs(); draw(); }; })(av[aq]); }
+ var bv=$("alSeg").querySelectorAll('button'), bq;
+ for(bq=0;bq<bv.length;bq++){ bv[bq].onclick=(function(el){ return function(){ al=parseFloat(el.dataset.v); renderSegs(); draw(); }; })(bv[bq]); }
+
+ /* ---------- go ---------- */
+ renderClaims();
+ pick(0);
+})();
+</script>
+</body>
+</html>

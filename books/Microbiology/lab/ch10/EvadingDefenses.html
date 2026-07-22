@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Evading the Body's Defenses</title>
+<meta name="description" content="Interactive look at how pathogens dodge the immune system — capsules, antigenic variation, and intracellular hiding. Toggle the immune attack against the microbe's escape. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:0.98fr 1.02fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.seg{margin-top:11px;}
+.hint{margin-top:8px;font-size:12px;color:var(--muted);text-align:center;}
+#info .org span.hi{background:var(--teal);color:#fff;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 10</div>
+  <h1>Evading the Body's Defenses</h1>
+  <div class="intro">Your immune system has two great weapons: <b>phagocytes</b> that eat invaders and <b>antibodies</b> that tag them for destruction. Successful pathogens survive by <b>dodging</b> these defenses. Explore three classic escape tricks &mdash; then flip between the normal immune attack and the microbe's counter-move.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Pick an escape trick</h2>
+    <svg viewBox="0 0 220 200" aria-label="immune evasion scene"><g id="art"></g></svg>
+    <div class="seg" id="seg">
+      <button data-m="def" class="on">Immune defense<small>what normally happens</small></button>
+      <button data-m="eva">Microbe's trick<small>how it escapes</small></button>
+    </div>
+    <div class="hint">Tap a trick on the right, then flip the toggle above.</div>
+  </div></div>
+  <div>
+    <div id="stage">Three ways to hide<small>tap a trick to begin</small></div>
+    <div class="card">
+      <div class="list" id="list"></div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"><b>Three escapes, one idea:</b> a <b>capsule</b> hides you from phagocytes, <b>antigenic variation</b> hides you from antibodies, and going <b>intracellular</b> hides you inside the very cell antibodies can't follow you into.</div>
+      <div class="note" id="note"><b>Watch for overwhelming or reactivated infection.</b> Encapsulated microbes (pneumococcus, meningococcus, Hib) can overwhelm <b>asplenic</b> and sickle-cell patients &mdash; vaccinate them. Intracellular hiders like <i>M. tuberculosis</i> stay <b>latent</b> for years and reactivate under steroids, TNF-inhibitors, or HIV.</div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var S=[
+  {k:'capsule',ic:'🛡️',nm:'Capsule',ct:'Slippery outer coat',sub:'Antiphagocytic polysaccharide layer',col:'#2f6f9f',
+   dodges:'Phagocytosis by neutrophils &amp; macrophages',
+   mech:'A slippery <b>polysaccharide</b> layer (occasionally protein, as in anthrax) coats the cell and <b>masks the surface molecules phagocytes grab</b>, so neutrophils and macrophages can\'t engulf it. It also blocks complement deposition. The microbe is only cleared once <b>antibody or complement opsonizes</b> &mdash; coats &mdash; the capsule so phagocytes can finally hold on.',
+   examples:['S. pneumoniae','N. meningitidis','H. influenzae type b','K. pneumoniae','Cryptococcus'],
+   nursing:'<b>Nursing:</b> Capsular sugars are the target of key vaccines &mdash; <b>PCV/PPSV, Hib, and meningococcal</b>. Patients without a working spleen (splenectomy, sickle-cell) can\'t filter encapsulated bugs, so they need these vaccines and an urgent work-up for any fever.'},
+  {k:'antigen',ic:'🎭',nm:'Antigenic variation',ct:'A moving target',sub:'Changing the surface antigens',col:'#b8862f',
+   dodges:'Antibody recognition',
+   mech:'The microbe <b>keeps changing its surface antigens</b>, so antibodies made against the old version no longer fit. Influenza does this by <b>drift</b> (small point mutations) and <b>shift</b> (whole-segment reassortment &rarr; pandemics); <i>N. gonorrhoeae</i> and <i>Trypanosoma</i> switch surface-protein genes to stay one step ahead of the response.',
+   examples:['Influenza','N. gonorrhoeae','Trypanosoma brucei','Borrelia','HIV'],
+   nursing:'<b>Nursing:</b> This is why the <b>flu shot is reformulated every year</b> and why a past gonorrhea infection gives <b>no lasting immunity</b> (reinfection is common). It is also a major reason vaccines against HIV and gonorrhea remain so hard to make.'},
+  {k:'intra',ic:'🚪',nm:'Intracellular hiding',ct:'Living inside host cells',sub:'Hiding where antibodies can\'t reach',col:'#6d3f9c',
+   dodges:'Antibodies &amp; complement in the blood',
+   mech:'By living <b>inside host cells</b>, the microbe hides from antibodies and complement, which act only in blood and tissue fluid. Some <b>block phagolysosome fusion</b> to survive inside macrophages (<i>M. tuberculosis</i>), some escape into the cytoplasm (<i>Listeria</i>), and some go <b>latent</b>. Only <b>cell-mediated immunity</b> &mdash; T cells and activated macrophages &mdash; can root them out.',
+   examples:['M. tuberculosis','Listeria','Salmonella','Rickettsia','Chlamydia','all viruses'],
+   nursing:'<b>Nursing:</b> Intracellular infections need drugs that <b>penetrate cells</b> and <b>long courses</b> (TB = months of multidrug therapy). Screen for <b>latent TB</b> (IGRA or PPD) before starting steroids or biologics that can trigger reactivation.'}
+ ];
+ var cur=S[0], mode='def';
+
+ function cap(t,c){ return '<text x="110" y="190" text-anchor="middle" font-size="11" font-weight="700" fill="'+(c||'#6a5f7e')+'">'+t+'</text>'; }
+ function ab(x,y,rot,c){ return '<g transform="translate('+x+' '+y+') rotate('+rot+')">'+
+   '<line x1="0" y1="2" x2="0" y2="15" stroke="'+c+'" stroke-width="3.2"/>'+
+   '<line x1="0" y1="2" x2="-8" y2="-9" stroke="'+c+'" stroke-width="3.2"/>'+
+   '<line x1="0" y1="2" x2="8" y2="-9" stroke="'+c+'" stroke-width="3.2"/></g>'; }
+ function spikes(cx,cy,r,n,c){ var s=''; for(var a=0;a<n;a++){ var an=a/n*6.2832; var x1=cx+r*Math.cos(an),y1=cy+r*Math.sin(an),x2=cx+(r+11)*Math.cos(an),y2=cy+(r+11)*Math.sin(an);
+   s+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="3.4"/><circle cx="'+x2+'" cy="'+y2+'" r="3.6" fill="'+c+'"/>'; } return s; }
+ function arrow(x1,y1,x2,y2,c){ var ang=Math.atan2(y2-y1,x2-x1),a1=ang+2.6,a2=ang-2.6;
+   return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="2.4"/>'+
+     '<polygon points="'+x2+','+y2+' '+(x2+7*Math.cos(a1))+','+(y2+7*Math.sin(a1))+' '+(x2+7*Math.cos(a2))+','+(y2+7*Math.sin(a2))+'" fill="'+c+'"/>'; }
+
+ function drawCapsule(s,m){ var col=s.col,out='';
+   out+='<circle cx="70" cy="104" r="45" fill="#e7dff2" stroke="#c0b0dc" stroke-width="2.5"/>';
+   out+='<circle cx="54" cy="120" r="13" fill="#cdbbe8"/>';
+   out+='<text x="70" y="72" text-anchor="middle" font-size="9" fill="#6a5f7e" font-weight="700">phagocyte</text>';
+   if(m==='def'){
+     out+='<path d="M108 74 q40 -8 46 26" fill="none" stroke="#e7dff2" stroke-width="15" stroke-linecap="round"/>';
+     out+='<path d="M108 134 q40 8 46 -26" fill="none" stroke="#e7dff2" stroke-width="15" stroke-linecap="round"/>';
+     out+='<rect x="130" y="89" width="42" height="30" rx="15" fill="'+col+'"/>';
+     out+='<circle cx="145" cy="99" r="4" fill="#fff" opacity=".4"/>';
+     out+=cap('Phagocyte engulfs and digests it','#4a3f63');
+   }else{
+     out+='<path d="M106 80 q22 -6 26 6" fill="none" stroke="#e7dff2" stroke-width="15" stroke-linecap="round"/>';
+     out+='<path d="M106 128 q22 6 26 -6" fill="none" stroke="#e7dff2" stroke-width="15" stroke-linecap="round"/>';
+     out+='<ellipse cx="158" cy="104" rx="35" ry="31" fill="'+col+'" opacity=".16"/>';
+     out+='<ellipse cx="158" cy="104" rx="28" ry="25" fill="'+col+'" opacity=".2"/>';
+     out+='<rect x="140" y="90" width="38" height="28" rx="14" fill="'+col+'"/>';
+     out+='<circle cx="153" cy="99" r="4" fill="#fff" opacity=".4"/>';
+     out+=arrow(148,70,130,58,'#b23145');
+     out+=arrow(148,138,130,150,'#b23145');
+     out+=cap('Capsule is too slippery to grip','#b23145');
+   }
+   return out; }
+
+ function drawAntigen(s,m){ var col=s.col,out='',cx=104,cy=96,r=30,OLD='#8a2a3a',NEW='#2f9e5b';
+   out+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+col+'"/>';
+   out+='<circle cx="'+(cx-9)+'" cy="'+(cy-8)+'" r="6" fill="#fff" opacity=".28"/>';
+   if(m==='def'){
+     out+=spikes(cx,cy,r,10,OLD);
+     out+=ab(cx,cy-r-22,180,OLD);
+     out+=ab(cx+r+22,cy,270,OLD);
+     out+=ab(cx-r-22,cy,90,OLD);
+     out+=cap('Antibodies lock onto the antigens','#4a3f63');
+   }else{
+     out+=spikes(cx,cy,r,10,NEW);
+     out+=ab(184,44,25,OLD);
+     out+=ab(30,150,-40,OLD);
+     out+=ab(180,148,60,OLD);
+     out+=cap('New antigens — old antibodies miss','#237a45');
+   }
+   return out; }
+
+ function drawIntra(s,m){ var col=s.col,out='';
+   if(m==='def'){
+     out+='<rect x="8" y="18" width="204" height="154" rx="14" fill="#eef4fa"/>';
+     out+='<text x="18" y="36" font-size="10" fill="#7c93a8" font-weight="700">bloodstream</text>';
+     out+='<circle cx="110" cy="96" r="20" fill="'+col+'"/><circle cx="103" cy="89" r="4.5" fill="#fff" opacity=".35"/>';
+     out+=ab(110,60,180,'#3d2a5c');
+     out+=ab(150,96,270,'#3d2a5c');
+     out+=ab(58,118,60,'#3d2a5c');
+     out+=cap('Antibodies find it in the blood','#255f8a');
+   }else{
+     out+='<rect x="26" y="30" width="168" height="138" rx="36" fill="#e4f1ea" stroke="#93c7a6" stroke-width="2.5"/>';
+     out+='<text x="110" y="24" text-anchor="middle" font-size="10" fill="#3f7a57" font-weight="700">host cell</text>';
+     out+='<circle cx="134" cy="112" r="26" fill="#cfe6d8"/>';
+     out+='<text x="134" y="116" text-anchor="middle" font-size="9" fill="#4f8a68" font-weight="700">nucleus</text>';
+     out+='<circle cx="80" cy="86" r="15" fill="'+col+'"/><circle cx="74" cy="80" r="3.6" fill="#fff" opacity=".4"/>';
+     out+=ab(70,10,180,'#3d2a5c');
+     out+=ab(208,58,270,'#3d2a5c');
+     out+=ab(10,118,90,'#3d2a5c');
+     out+=cap('Hidden inside — antibodies can\'t reach','#b23145');
+   }
+   return out; }
+
+ function draw(s,m){ if(s.k==='capsule')return drawCapsule(s,m); if(s.k==='antigen')return drawAntigen(s,m); return drawIntra(s,m); }
+
+ function renderList(){
+   $("list").innerHTML=S.map(function(s){return '<button class="it'+(s.k===cur.k?' on':'')+'" data-k="'+s.k+'"><span class="ic">'+s.ic+'</span><span><span class="nm">'+s.nm+'</span><br><span class="ct">'+s.ct+'</span></span></button>';}).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){b.onclick=function(){sel(b.dataset.k);};});
+ }
+ function paint(){
+   $("art").innerHTML=draw(cur,mode);
+   $("cardTitle").innerHTML=cur.nm;
+   document.querySelectorAll('#seg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-m')===mode); });
+ }
+ function sel(k){
+   cur=S.filter(function(x){return x.k===k;})[0];
+   $("stage").style.background=cur.col;
+   $("stage").innerHTML=cur.nm+'<small>'+cur.sub+'</small>';
+   $("info").innerHTML='<span class="n">'+cur.nm+'</span>'+cur.mech+
+     '<div class="loc"><b>Defeats:</b> '+cur.dodges+'</div>'+
+     '<div class="org">'+cur.examples.map(function(e){return '<span>'+e+'</span>';}).join('')+'</div>'+
+     '<div class="dd">'+cur.nursing+'</div>';
+   renderList(); paint();
+ }
+ document.querySelectorAll('#seg button').forEach(function(b){ b.onclick=function(){ mode=b.getAttribute('data-m'); paint(); }; });
+ sel('capsule');
+})();
+</script>
+</body>
+</html>

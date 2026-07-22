@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Build a Frequency Table</title>
+<meta name="description" content="Turn a pile of raw numbers into a real frequency table, column by column. Live-computed frequency, relative frequency, cumulative frequency and cumulative relative frequency, with a histogram and ogive that redraw as you change the class width.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:0.97fr 1.03fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:74px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.ft{width:100%;border-collapse:collapse;margin-top:13px;font-variant-numeric:tabular-nums;}
+.ft th,.ft td{padding:6px 5px;text-align:right;font-size:12.2px;border-bottom:1px solid var(--line);}
+.ft th{font-size:9.2px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;border-bottom:1.5px solid #c9d8e0;vertical-align:bottom;}
+.ft th span{display:block;font-size:8.4px;font-weight:700;color:#a9b6bd;letter-spacing:0;text-transform:none;}
+.ft td:first-child,.ft th:first-child{text-align:left;font-weight:700;}
+.ft tbody tr{cursor:pointer;}
+.ft tbody tr:hover{background:#eef5f8;}
+.ft tbody tr.on{background:#fbf3e2;}
+.ft tbody tr.on td{color:#8a6a20;font-weight:800;}
+.ft tfoot td{font-weight:800;color:var(--teal-dk);border-bottom:none;border-top:1.5px solid #c9d8e0;}
+.ft .hi{background:#e9f3f7;}
+.ft tbody tr.on .hi{background:#f7e9c8;}
+.ft .cs{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:0;}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:11px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:6px;line-height:1.45;}
+@media (max-width:520px){.row .btn{font-size:12px;padding:10px 3px;}.tiles .lb{font-size:8.6px;}.sl label{font-size:10px;}.sl .nv{min-width:64px;font-size:13px;}.ft th,.ft td{padding:5px 3px;font-size:11.4px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 3</div>
+  <h1>Build a Frequency Table</h1>
+  <div class="intro">A list of numbers tells you almost nothing until it is <b>organised</b>. A frequency table is the first and most useful thing you can do to raw data &mdash; and it is built one column at a time, each column made from the one before it. Step through the build below; every number in the table is computed live from the data actually shown.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="rawTitle">The raw data</h2>
+      <svg viewBox="0 0 340 150" aria-label="dot plot of the raw values, coloured by class"><g id="dots"></g></svg>
+      <div class="cap" id="rawCap"></div>
+    </div>
+    <div class="card"><h2 id="histTitle">The same data, binned</h2>
+      <svg viewBox="0 0 340 204" aria-label="histogram of the frequency table, with the cumulative curve"><g id="hist"></g></svg>
+      <div class="lgd" id="lgd"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Build a frequency table<small>press Next to add a column</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="0" class="on">Commute time<small>48 workers, minutes</small></button>
+        <button data-v="1">Coffee<small>cups per day</small></button>
+        <button data-v="2">Heart rate<small>resting, bpm</small></button>
+      </div>
+      <div class="sl"><label for="wSl">Class width</label><input type="range" id="wSl" min="0" max="3" step="1" value="1"><span class="nv" id="wVal">10 min</span></div>
+      <div class="sl"><label for="nSl">Sample size n</label><input type="range" id="nSl" min="0" max="4" step="1" value="2"><span class="nv" id="nVal">48</span></div>
+      <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button><button class="btn" id="samp">&#8635; New sample</button></div>
+      <div class="tiles">
+        <div><span class="lb">Values (n)</span><span class="vv" id="tN">48</span></div>
+        <div><span class="lb">Classes (k)</span><span class="vv" id="tK">&mdash;</span></div>
+        <div><span class="lb">Busiest class</span><span class="vv" id="tB">&mdash;</span></div>
+      </div>
+      <table class="ft" id="ft"></table>
+      <div class="fn" id="fnote"></div>
+      <div id="info"></div>
+      <div class="mnem">Each column is built from the one on its left. <b>f</b> counts. <b>Rel. f</b> divides f by n. <b>Cum. f</b> adds f downwards. <b>Cum. rel. f</b> divides that running total by n. Four columns &mdash; three pieces of arithmetic.</div>
+      <div class="note"><b>Binning throws information away.</b> Drag the class-width slider without changing a single data value. The same numbers can look smooth at one width and lumpy at another, and once the table is built you can no longer recover the values inside a class &mdash; only that they were in it. The shape a histogram shows is partly a choice its author made.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- seeded PRNG: the page opens with the same data set every time ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function nrm(r){var u=1-r(),v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+
+ /* ================= the three data sets ================= */
+ var DS=[
+  {nm:'commute time',un:'minutes',uns:'min',ax:'commute time (minutes)',
+   one:'one worker’s door-to-desk time',many:'workers',
+   ws:[5,10,15,20],w0:1},
+  {nm:'cups of coffee',un:'cups per day',uns:'cups',ax:'cups of coffee per day',
+   one:'one person’s daily cup count',many:'people',
+   ws:[1,2,3],w0:0},
+  {nm:'resting heart rate',un:'bpm',uns:'bpm',ax:'resting heart rate (bpm)',
+   one:'one person’s resting pulse',many:'people',
+   ws:[5,10,15,20],w0:0}
+ ];
+ var NS=[20,30,48,80,150];
+ var COFFEE=[0.12,0.22,0.26,0.20,0.12,0.06,0.02];   /* probabilities for 0..6 cups; sums to 1 */
+
+ var ds=0,wi=1,ni=2,step=1,sel=-1,seedN=0,raw=[];
+
+ /* every value is a whole number, so class limits can be written the textbook
+    way ("20-24") and still mean exactly 20 <= x < 25 */
+ function gen(){
+  var r=mulberry32(70117+seedN*7919),n=NS[ni],out=[],i,v,u,c,k;
+  for(i=0;i<n;i++){
+    if(ds===0){v=Math.round(Math.exp(3.05+0.45*nrm(r)));if(v<5)v=5;if(v>80)v=80;}
+    else if(ds===2){v=Math.round(72+9*nrm(r));if(v<46)v=46;if(v>104)v=104;}
+    else{u=r();c=0;for(k=0;k<COFFEE.length;k++){c+=COFFEE[k];if(u<c)break;}if(k>=COFFEE.length)k=COFFEE.length-1;v=k;}
+    out.push(v);
+  }
+  raw=out;sel=-1;
+ }
+ function W(){return DS[ds].ws[wi];}
+
+ /* ================= build the table ================= */
+ function build(){
+  var w=W(),n=raw.length,i,mn=raw[0],mx=raw[0];
+  for(i=1;i<n;i++){if(raw[i]<mn)mn=raw[i];if(raw[i]>mx)mx=raw[i];}
+  var lo0=Math.floor(mn/w)*w;                 /* a tidy starting limit at or below the minimum */
+  var k=Math.floor((mx-lo0)/w)+1;             /* enough classes that the maximum falls inside the last one */
+  var rows=[],b;
+  for(i=0;i<k;i++)rows.push({lo:lo0+i*w,hi:lo0+(i+1)*w,f:0});
+  for(i=0;i<n;i++){b=Math.floor((raw[i]-lo0)/w);if(b<0)b=0;if(b>k-1)b=k-1;rows[b].f++;}
+  var cum=0,fmax=0,rsum=0;
+  for(i=0;i<k;i++){
+    cum+=rows[i].f;
+    rows[i].rel=rows[i].f/n;
+    rows[i].cf=cum;
+    rows[i].crel=cum/n;
+    if(rows[i].f>fmax)fmax=rows[i].f;
+    rsum+=Math.round(rows[i].rel*1000)/1000;   /* what the ROUNDED column really adds to */
+  }
+  return {w:w,n:n,k:k,lo0:lo0,hiL:lo0+k*w,rows:rows,fmax:fmax,mn:mn,mx:mx,rsum:rsum};
+ }
+ function lab(r,w){return (w===1)?String(r.lo):(r.lo+'–'+(r.hi-1));}
+ function ccol(i){return (i===sel)?'#b8862f':((i%2)?'#5b95ad':'#2f6f8a');}
+ function medIdx(T){var i;for(i=0;i<T.k;i++)if(T.rows[i].crel>=0.5)return i;return T.k-1;}
+
+ /* ================= geometry, shared by both charts ================= */
+ var HX0=36,HX1=298,HBASE=158,HTOP=22;
+ function hx(v,T){return HX0+(v-T.lo0)/(T.hiL-T.lo0)*(HX1-HX0);}
+ function cy(p){return HBASE-p*(HBASE-HTOP);}
+ function axisTop(m){var C=[1,2,5,10,20,25,50,100,200],i;
+   for(i=0;i<C.length;i++)if(Math.ceil(m/C[i])<=5)return{step:C[i],top:Math.ceil(m/C[i])*C[i]};
+   return{step:200,top:Math.ceil(m/200)*200};}
+
+ /* ================= chart 1 : every value as one dot ================= */
+ var DBASE=126,DTOP=6;
+ function drawDots(T){
+  var s='',i,j,cnt={},mxs=0,v;
+  for(i=0;i<raw.length;i++){v=raw[i];cnt[v]=(cnt[v]||0)+1;if(cnt[v]>mxs)mxs=cnt[v];}
+  var sp=Math.min(7.4,(DBASE-DTOP)/mxs),r=Math.max(0.9,sp*0.42);
+  var seen={};
+  for(i=0;i<raw.length;i++){
+    v=raw[i];j=(seen[v]||0);seen[v]=j+1;
+    var b=Math.floor((v-T.lo0)/T.w);if(b<0)b=0;if(b>T.k-1)b=T.k-1;
+    s+='<circle cx="'+hx(v+0.5,T).toFixed(1)+'" cy="'+(DBASE-2-r-j*sp).toFixed(1)+'" r="'+r.toFixed(2)+'" fill="'+ccol(b)+'"/>';
+  }
+  /* the class boundaries, drawn straight through the raw data */
+  for(i=0;i<=T.k;i++){
+    var bx=hx(T.lo0+i*T.w,T);
+    s+='<line x1="'+bx.toFixed(1)+'" y1="'+DTOP+'" x2="'+bx.toFixed(1)+'" y2="'+DBASE+'" stroke="#c2d3db" stroke-width="1" stroke-dasharray="3 3"/>';
+  }
+  s+='<line x1="'+HX0+'" y1="'+DBASE+'" x2="'+HX1+'" y2="'+DBASE+'" stroke="#b7c7d0" stroke-width="1.4"/>';
+  s+=xTicks(T,DBASE);
+  $("dots").innerHTML=s;
+ }
+
+ /* shared x-axis ticks, so the dot plot and the histogram line up exactly */
+ function xTicks(T,base){
+  var s='',i,j,sk=Math.ceil((T.k+1)/7),idx=[];
+  for(i=0;i<T.k;i+=sk)idx.push(i);
+  idx.push(T.k);
+  /* keep both end labels; drop the neighbour instead if the last two would collide */
+  if(idx.length>2&&idx[idx.length-1]-idx[idx.length-2]<sk)idx.splice(idx.length-2,1);
+  for(j=0;j<idx.length;j++){
+    i=idx[j];
+    var xx=hx(T.lo0+i*T.w,T),a=(i===0)?'start':((i===T.k)?'end':'middle');
+    s+='<line x1="'+xx.toFixed(1)+'" y1="'+base+'" x2="'+xx.toFixed(1)+'" y2="'+(base+4)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+    s+='<text x="'+xx.toFixed(1)+'" y="'+(base+15)+'" font-size="9.2" fill="#78868d" font-weight="600" text-anchor="'+a+'">'+(T.lo0+i*T.w)+'</text>';
+  }
+  return s;
+ }
+
+ /* ================= chart 2 : the table drawn ================= */
+ function drawHist(T){
+  var s='',i,r,x0,x1,h,ax=axisTop(T.fmax||1);
+  var showF=(step>=2),showC=(step>=5);
+
+  if(showF){
+    for(i=0;i<=ax.top/ax.step;i++){
+      var gv=i*ax.step,gy=HBASE-gv/ax.top*(HBASE-HTOP);
+      s+='<line x1="'+HX0+'" y1="'+gy.toFixed(1)+'" x2="'+HX1+'" y2="'+gy.toFixed(1)+'" stroke="#e7eef2" stroke-width="1"/>';
+      s+='<text x="'+(HX0-6)+'" y="'+(gy+3.4).toFixed(1)+'" font-size="9" fill="#95a3aa" font-weight="600" text-anchor="end">'+gv+'</text>';
+    }
+    s+='<text x="'+(HX0-6)+'" y="'+(HTOP-8)+'" font-size="8.6" fill="#95a3aa" font-weight="700" text-anchor="end">f</text>';
+  }
+
+  for(i=0;i<T.k;i++){
+    r=T.rows[i];x0=hx(r.lo,T);x1=hx(r.hi,T);
+    if(!showF){
+      s+='<rect x="'+x0.toFixed(1)+'" y="'+HTOP+'" width="'+(x1-x0).toFixed(1)+'" height="'+(HBASE-HTOP)+'" fill="'+ccol(i)+'" opacity=".07" stroke="#c2d3db" stroke-width="1" stroke-dasharray="3 3"/>';
+    }else if(r.f>0){
+      h=r.f/ax.top*(HBASE-HTOP);
+      s+='<rect x="'+x0.toFixed(1)+'" y="'+(HBASE-h).toFixed(1)+'" width="'+(x1-x0).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="'+ccol(i)+'" stroke="#fffdf9" stroke-width="1"/>';
+      if(T.k<=10)s+='<text x="'+((x0+x1)/2).toFixed(1)+'" y="'+(HBASE-h-4).toFixed(1)+'" font-size="9.6" font-weight="800" fill="'+((i===sel)?'#8a6a20':'#5b7c8c')+'" text-anchor="middle">'+r.f+'</text>';
+    }
+  }
+
+  if(showC){
+    var d='M'+hx(T.lo0,T).toFixed(1)+' '+cy(0).toFixed(1),pts='';
+    for(i=0;i<T.k;i++){
+      var ox=hx(T.rows[i].hi,T),oy=cy(T.rows[i].crel);
+      d+=' L'+ox.toFixed(1)+' '+oy.toFixed(1);
+      pts+='<circle cx="'+ox.toFixed(1)+'" cy="'+oy.toFixed(1)+'" r="2.6" fill="#b8862f" stroke="#fffdf9" stroke-width="1.2"/>';
+    }
+    s+='<path d="'+d+'" fill="none" stroke="#b8862f" stroke-width="2.2" stroke-linejoin="round"/>'+pts;
+    s+='<circle cx="'+hx(T.lo0,T).toFixed(1)+'" cy="'+cy(0).toFixed(1)+'" r="2.6" fill="#b8862f" stroke="#fffdf9" stroke-width="1.2"/>';
+    for(i=0;i<=4;i++){
+      var pv=i/4,py=cy(pv);
+      s+='<line x1="'+HX1+'" y1="'+py.toFixed(1)+'" x2="'+(HX1+4)+'" y2="'+py.toFixed(1)+'" stroke="#dcc48a" stroke-width="1.2"/>';
+      s+='<text x="'+(HX1+7)+'" y="'+(py+3.4).toFixed(1)+'" font-size="9" fill="#a8913f" font-weight="700" text-anchor="start">'+pv.toFixed(2)+'</text>';
+    }
+    s+='<text x="'+(HX1+7)+'" y="'+(HTOP-8)+'" font-size="8.6" fill="#a8913f" font-weight="700" text-anchor="start">cum.</text>';
+  }
+
+  s+='<line x1="'+HX0+'" y1="'+HBASE+'" x2="'+HX1+'" y2="'+HBASE+'" stroke="#b7c7d0" stroke-width="1.4"/>';
+  s+=xTicks(T,HBASE);
+  s+='<text x="'+((HX0+HX1)/2)+'" y="'+(HBASE+33)+'" font-size="9.6" fill="#95a3aa" font-weight="700" text-anchor="middle">'+DS[ds].ax+'</text>';
+  $("hist").innerHTML=s;
+ }
+
+ /* ================= the table itself ================= */
+ function drawTable(T){
+  var d=DS[ds],i,r,h='',cols=[
+    {id:'f',   on:step>=2,nw:step===2,th:'f',          sub:'count'},
+    {id:'rel', on:step>=3,nw:step===3,th:'Rel. f',     sub:'f ÷ n'},
+    {id:'cf',  on:step>=4,nw:step===4,th:'Cum. f',     sub:'running total'},
+    {id:'crel',on:step>=5,nw:step===5,th:'Cum. rel. f',sub:'cum. f ÷ n'}
+  ];
+  h+='<thead><tr><th>Class<span>'+d.un+'</span></th>';
+  for(i=0;i<cols.length;i++)if(cols[i].on)h+='<th class="'+(cols[i].nw?'hi':'')+'">'+cols[i].th+'<span>'+cols[i].sub+'</span></th>';
+  h+='</tr></thead><tbody>';
+  for(i=0;i<T.k;i++){
+    r=T.rows[i];
+    h+='<tr data-i="'+i+'"'+(i===sel?' class="on"':'')+'><td><i class="cs" style="background:'+ccol(i)+'"></i>'+lab(r,T.w)+'</td>';
+    if(cols[0].on)h+='<td class="'+(cols[0].nw?'hi':'')+'">'+r.f+'</td>';
+    if(cols[1].on)h+='<td class="'+(cols[1].nw?'hi':'')+'">'+r.rel.toFixed(3)+'</td>';
+    if(cols[2].on)h+='<td class="'+(cols[2].nw?'hi':'')+'">'+r.cf+'</td>';
+    if(cols[3].on)h+='<td class="'+(cols[3].nw?'hi':'')+'">'+r.crel.toFixed(3)+'</td>';
+    h+='</tr>';
+  }
+  h+='</tbody><tfoot><tr><td>Total</td>';
+  if(cols[0].on)h+='<td>'+T.n+'</td>';
+  if(cols[1].on)h+='<td>'+T.rsum.toFixed(3)+'</td>';
+  if(cols[2].on)h+='<td>&mdash;</td>';
+  if(cols[3].on)h+='<td>&mdash;</td>';
+  h+='</tr></tfoot>';
+  $("ft").innerHTML=h;
+  var tr=$("ft").getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+  for(i=0;i<tr.length;i++)tr[i].onclick=function(){
+    var v=+this.getAttribute('data-i');sel=(sel===v)?-1:v;render();
+  };
+
+  var fn='';
+  if(step>=3&&T.rsum.toFixed(3)!=='1.000')
+    fn='The Rel. f column adds to <b>'+T.rsum.toFixed(3)+'</b>, not 1.000, because each entry was rounded to three decimals. The exact values do add to 1. Rounding drift like this is normal &mdash; it is not a mistake to hunt down.';
+  else if(step>=3)
+    fn='The Rel. f column adds to exactly <b>1.000</b> here. It will not always: rounded entries often land on 0.999 or 1.001, and that is only rounding.';
+  $("fnote").innerHTML=fn;
+ }
+
+ /* ================= words ================= */
+ function pct(x){return (x*100).toFixed(1);}
+
+ function readout(T){
+  if(sel<0||sel>=T.k)return '';
+  var r=T.rows[sel],d=DS[ds];
+  var s='<div class="loc">Class <b>'+lab(r,T.w)+' '+d.uns+'</b> &mdash; ';
+  if(step<2){s+='holds every value from <b>'+r.lo+'</b> up to but not including <b>'+r.hi+'</b>. Press Next to count them.</div>';return s;}
+  s+='<b>f = '+r.f+'</b>, so '+r.f+' of the '+T.n+' values land in it';
+  if(step>=3)s+=' &mdash; a relative frequency of <b>'+r.rel.toFixed(3)+'</b>, i.e. <b>'+pct(r.rel)+'%</b> of the data';
+  s+='. ';
+  if(step>=4){
+    s+='Its cumulative frequency is <b>'+r.cf+'</b>: '+r.cf+' value'+(r.cf===1?' is':'s are')+' <b>'+(r.hi-1)+' '+d.uns+' or less</b>';
+    if(step>=5)s+=' &mdash; that is <b>'+pct(r.crel)+'%</b> of them, leaving <b>'+pct(1-r.crel)+'%</b> at '+r.hi+' '+d.uns+' or more';
+    else s+=', leaving <b>'+(T.n-r.cf)+'</b> at '+r.hi+' or more';
+    s+='.';
+  }
+  return s+'</div>';
+ }
+
+ function infoHTML(T){
+  var d=DS[ds],h='',i,bi=0,emp=0;
+  for(i=0;i<T.k;i++){if(T.rows[i].f>T.rows[bi].f)bi=i;if(T.rows[i].f===0)emp++;}
+  if(step===1){
+   h='<span class="n">Step 1 &middot; Carve the number line into classes</span>'+
+     'Before you can count anything, you have to decide <b>what to count into</b>. Three rules govern the classes: they must not <b>overlap</b>, together they must <b>cover every value</b>, and &mdash; by convention &mdash; they should be <b>equally wide</b>, so that a taller bar always means more data and never just a wider bin.'+
+     '<div class="dd">The width is currently <b>'+T.w+' '+d.uns+'</b>, which produces <b>'+T.k+'</b> classes spanning <b>'+T.lo0+'</b> to <b>'+(T.hiL-1)+'</b>. A class written <b>'+lab(T.rows[0],T.w)+'</b> means <b>'+T.rows[0].lo+' ≤ x &lt; '+T.rows[0].hi+'</b>: its own lower limit is in, the next class&rsquo;s lower limit is out. That one convention is what stops a value being counted twice, or missed entirely.</div>'+
+     '<div class="loc">There is no single correct number of classes. Most data are well served by roughly <b>5 to 15</b>. Slide the width and watch k change: too few classes and all the detail collapses into a lump, too many and you have simply rewritten the raw list.</div>';
+  }else if(step===2){
+   h='<span class="n">Step 2 &middot; Count them &mdash; the frequency, f</span>'+
+     'Pass through the raw values once, adding one to whichever class each value falls in. That count is the <b>frequency</b>. It is a plain whole number: no division, no interpretation.'+
+     '<div class="dd">The check that catches nearly every counting slip: <b>the f column must add to n</b>. Here it adds to <b>'+T.n+'</b>, and n is <b>'+T.n+'</b>. The busiest class is <b>'+lab(T.rows[bi],T.w)+'</b> with <b>'+T.rows[bi].f+'</b> values.</div>'+
+     '<div class="dd">The histogram is now just this column drawn: one bar per class, height = f. Notice the bars <b>touch</b>. They touch because the classes touch &mdash; the horizontal axis is a continuous measurement, not a set of separate categories. That contact is the visual difference between a histogram and a bar chart.</div>'+
+     (emp?('<div class="loc"><b>'+emp+' class'+(emp===1?'':'es')+' here came out empty (f = 0)</b> &mdash; and '+(emp===1?'it keeps its':'they keep their')+' row. Deleting an empty class would quietly close a real gap in the data and break the equal-width rule, so the bars would no longer be comparable. An empty class is information: it says <i>nothing was measured in this range</i>.</div>')
+        :'<div class="loc">Every class here caught at least one value. Narrow the class width and you will eventually open a gap &mdash; a class with <b>f = 0</b>. Keep its row. An empty class is a real statement about the data, and dropping it would leave unequal-width bars that can no longer be compared by height.</div>');
+  }else if(step===3){
+   h='<span class="n">Step 3 &middot; Divide by n &mdash; the relative frequency</span>'+
+     'Relative frequency is <b>f &divide; n</b>: the <b>share</b> of the data sitting in each class. Every entry falls between 0 and 1, and the exact values add to exactly 1.'+
+     '<div class="dd">Why bother, when f is sitting right there? Because a raw count cannot be compared across data sets of different sizes. <b>9 out of 48</b> and <b>15 out of 80</b> tell the identical story &mdash; both are 0.188 &mdash; but the counts 9 and 15 look nothing alike. Move the <b>Sample size</b> slider and watch the f column climb while the Rel. f column barely stirs.</div>'+
+     '<div class="loc">Multiply by 100 for a percentage: <b>'+T.rows[bi].rel.toFixed(3)+'</b> in the busiest class is <b>'+pct(T.rows[bi].rel)+'%</b> of this data. Keep it honest &mdash; that is the share observed <b>in this sample</b>, not the true share in whatever wider group the sample came from.</div>';
+  }else if(step===4){
+   h='<span class="n">Step 4 &middot; Add as you go &mdash; the cumulative frequency</span>'+
+     'Cumulative frequency is a <b>running total</b> down the f column: each row is its own count plus everything above it. It answers a question f alone cannot: <b>&ldquo;how many are at most this much?&rdquo;</b>'+
+     '<div class="dd">Two checks. The column can never decrease, and the <b>last entry must equal n</b> &mdash; it does: <b>'+T.rows[T.k-1].cf+'</b>. If your last cumulative entry is not n, an f is wrong.</div>'+
+     '<div class="dd">Be careful with the wording. In the row labelled <b>'+lab(T.rows[bi],T.w)+'</b>, the cumulative frequency <b>'+T.rows[bi].cf+'</b> counts values <b>below '+T.rows[bi].hi+'</b> &mdash; the top of that class &mdash; not values below '+(T.rows[bi].hi-1)+'. Cumulative columns are read at the class&rsquo;s <b>upper</b> edge.</div>';
+  }else if(step===5){
+   h='<span class="n">Step 5 &middot; Divide the running total by n</span>'+
+     'Cumulative relative frequency is <b>cum. f &divide; n</b>. It answers &ldquo;what <b>proportion</b> are at most this much?&rdquo;, it never decreases, and it must finish at exactly <b>1.000</b>.'+
+     '<div class="dd">Plotted against the class boundaries it becomes the gold curve now climbing across the histogram &mdash; an <b>ogive</b>. It begins at 0 at the first boundary and reaches 1 at the last, rising steeply where the data are crowded and flattening where they thin out. The steepest stretch of the ogive sits directly above the tallest bar; that is the same fact told twice.</div>'+
+     '<div class="loc">Read it off the curve: about <b>'+pct(T.rows[medIdx(T)].crel)+'%</b> of these '+d.many+' are at <b>'+(T.rows[medIdx(T)].hi-1)+' '+d.uns+' or less</b>. Half the data lies on either side of the height 0.50 &mdash; which is exactly how the ogive locates a median.</div>';
+  }else{
+   h='<span class="n">Step 6 &middot; Now read it</span>'+
+     'The table is finished, and each column answers a different shape of question. <b>f</b>: how many are in this range? <b>Rel. f</b>: what share is in this range? <b>Cum. f</b>: how many are this much or less? <b>Cum. rel. f</b>: what share is this much or less? Anything of the form &ldquo;how many are <i>more</i> than this?&rdquo; is n minus the cumulative entry.'+
+     '<div class="dd"><b>Tap any row</b> to have it read aloud in words, and watch the matching bar and the matching raw dots light up. Then change the class width and read the same row again &mdash; the underlying '+T.n+' values never moved, but the sentence you can say about them did.</div>'+
+     '<div class="dd">That is the honest cost of the whole exercise. A frequency table is a <b>summary</b>, and a summary is a decision. You gained a shape you can see; you gave up the ability to recover any individual value from the table. Keep the raw data.</div>';
+  }
+  return h+readout(T);
+ }
+
+ /* ================= wire it together ================= */
+ var STEPS=['','Choose the classes','Count them &rarr; f','Divide by n &rarr; rel. f','Add downwards &rarr; cum. f','Divide again &rarr; cum. rel. f','Read the finished table'];
+
+ function render(){
+  var T=build(),d=DS[ds],bi=0,i;
+  for(i=0;i<T.k;i++)if(T.rows[i].f>T.rows[bi].f)bi=i;
+  if(sel>=T.k)sel=-1;
+  if(step>=6&&sel<0)sel=medIdx(T);
+
+  $("tN").innerHTML=T.n;
+  $("tK").innerHTML=T.k;
+  $("tB").innerHTML=lab(T.rows[bi],T.w);
+
+  $("stage").style.background=(step>=6)?'var(--gold)':'var(--teal)';
+  $("stage").innerHTML=STEPS[step]+'<small>step '+step+' of 6 &middot; '+T.n+' values of '+d.nm+' &middot; '+T.k+' classes of width '+T.w+'</small>';
+
+  $("rawTitle").innerHTML='The raw data &mdash; '+T.n+' values';
+  $("rawCap").innerHTML='One dot = <b>'+d.one+'</b>. Values run from <b>'+T.mn+'</b> to <b>'+T.mx+'</b> '+d.uns+'. The dashed lines are the class boundaries; a dot is coloured by the class it falls into. Nothing here is summarised yet &mdash; this <i>is</i> the data.';
+  $("histTitle").innerHTML=(step>=2)?('The same data, binned &mdash; '+T.k+' classes of width '+T.w):'The empty classes, waiting to be filled';
+  $("lgd").innerHTML=(step>=5)
+    ? '<span><i style="background:#2f6f8a"></i>bar height = frequency</span><span><i style="background:#b8862f"></i>curve = cumulative relative frequency (ogive)</span>'
+    : '<span><i style="background:#2f6f8a"></i>bar height = frequency, f</span><span><i style="background:#5b95ad"></i>alternating shade = next class</span>';
+
+  drawDots(T);drawHist(T);drawTable(T);
+  $("info").innerHTML=infoHTML(T);
+  $("prev").disabled=(step===1);
+  $("next").disabled=(step===6);
+ }
+
+ function setDataset(v){
+  ds=v;wi=DS[ds].w0;
+  $("wSl").max=DS[ds].ws.length-1;
+  $("wSl").value=wi;
+  gen();render();updLabels();
+ }
+ function updLabels(){
+  $("wVal").innerHTML=W()+' '+DS[ds].uns;
+  $("nVal").innerHTML=NS[ni];
+ }
+
+ $("prev").onclick=function(){if(step>1){step--;render();}};
+ $("next").onclick=function(){if(step<6){step++;render();}};
+ $("samp").onclick=function(){seedN++;gen();render();};
+ $("wSl").oninput=function(){wi=+this.value;sel=-1;updLabels();render();};
+ $("nSl").oninput=function(){ni=+this.value;gen();updLabels();render();};
+
+ var sg=$("seg").getElementsByTagName('button');
+ for(var j=0;j<sg.length;j++)sg[j].onclick=function(){
+   for(var q=0;q<sg.length;q++)sg[q].className='';
+   this.className='on';setDataset(+this.getAttribute('data-v'));
+ };
+
+ gen();updLabels();render();
+})();
+</script>
+</body>
+</html>

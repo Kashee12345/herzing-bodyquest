@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>The Requirement Curve</title>
+<meta name="description" content="Interactive Dietary Reference Intakes — drag an intake across a population requirement curve and watch the EAR, RDA, AI, and UL each show what they are for.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+svg#plot{touch-action:none;cursor:ew-resize;}
+.rd{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px;}
+.rd div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.rd div span{display:block;font-size:9.6px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);}
+.rd div b{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);font-variant-numeric:tabular-nums;margin-top:2px;}
+.rd div b i{font-style:normal;font-size:10.5px;color:var(--muted);font-weight:700;margin-left:3px;}
+.slab{display:flex;align-items:center;gap:8px;margin-top:11px;}
+.slab .lb{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);flex:1;}
+.slab input[type=number]{width:78px;border:1px solid var(--line);border-radius:8px;padding:6px 7px;font-family:var(--sans);font-weight:800;font-size:13px;color:var(--teal-dk);text-align:right;background:#fffdf9;}
+.slab .un{font-size:10.5px;font-weight:800;color:var(--muted);flex:none;}
+input[type=range]{width:100%;margin-top:7px;height:22px;accent-color:var(--teal);cursor:pointer;display:block;}
+.seg button.off{opacity:.5;}
+.ev{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:3px 9px;vertical-align:middle;}
+.ev.s{background:#e5f3ea;color:#237a45;} .ev.p{background:#fdf0dd;color:#8a6a20;}
+.pu{margin-top:10px;border-top:1px dashed #ddd2ba;padding-top:7px;}
+.pu .ln{display:flex;gap:10px;font-size:12px;color:var(--soft);padding:3px 0;line-height:1.45;}
+.pu .ln .lf{flex:none;width:104px;font-size:9.8px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding-top:2px;}
+.pu .ln .rt b{color:var(--ink);}
+.hint{font-size:11px;color:var(--muted);margin-top:9px;line-height:1.45;text-align:center;}
+.it .k{margin-left:auto;font-size:11px;font-weight:800;color:var(--teal-dk);flex:none;text-align:right;}
+.it.on .k{color:#fff;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 1</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 1</div>
+  <h1>The Requirement Curve</h1>
+  <div class="intro">People do not all need the same amount of a nutrient, so a single recommended number can never be the whole story. The <b>Dietary Reference Intakes</b> answer this by describing the <i>spread</i> of requirements in a group and then placing four different markers on it. Drag an intake across the curve below and watch what each marker is actually for.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Vitamin C · men 19 y and older</h2>
+      <svg id="plot" viewBox="0 0 320 288" aria-label="Top: the distribution of nutrient requirements across a population, with the EAR, RDA, AI and UL marked. Bottom: risk of inadequacy falling and risk of adverse effects rising as intake increases. A movable line shows the chosen intake."><g id="art"></g></svg>
+      <div class="rd">
+        <div><span>Usual intake</span><b><span id="rIn">—</span><i id="rInU"></i></b></div>
+        <div><span>Requirement met for</span><b><span id="rMet">—</span></b></div>
+        <div><span>Risk of inadequacy</span><b><span id="rInad">—</span></b></div>
+        <div><span>Position</span><b><span id="rPos" style="font-size:12.5px;">—</span></b></div>
+      </div>
+      <div class="mnem"><b>EAR is the middle. RDA is the middle plus a margin. AI is what we use when there is no middle to find. UL is the ceiling.</b> Every one of these is a <b>population reference value</b> used to plan and evaluate diets &mdash; none of them is a prescription, and none of them is a measurement of any individual person&rsquo;s need.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">The requirement curve<small>drag the line, or tap a standard below</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg"><button data-m="0" class="on">Set an intake</button><button data-m="1">Choose a nutrient</button></div>
+      <div id="panelSet">
+        <div class="seg" id="sseg">
+          <button data-s="ear">EAR<small>meets half</small></button>
+          <button data-s="rda">RDA<small>meets ~97.5%</small></button>
+          <button data-s="ai">AI<small>when no EAR</small></button>
+          <button data-s="ul">UL<small>the ceiling</small></button>
+        </div>
+        <div class="slab"><span class="lb">Usual daily intake</span><input type="number" id="nIn" min="0" step="1" aria-label="usual daily intake"><span class="un" id="uIn"></span></div>
+        <input type="range" id="rIn2" min="0" max="100" step="1" aria-label="usual daily intake slider">
+        <div class="row"><button class="btn" id="bZero">Reset to zero</button><button class="btn solid" id="bGoal">Snap to the goal</button></div>
+      </div>
+      <div id="panelNut" style="display:none;">
+        <div class="list" id="nlist"></div>
+        <div class="hint">Every value names the <b>life-stage and sex group</b> it belongs to. A DRI without its population attached is not a usable number &mdash; the same nutrient can differ two-fold between groups.</div>
+      </div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var N=[
+  {k:'vitc',ic:'🍊',nm:'Vitamin C',pop:'Men 19 y and older',u:'mg/day',ear:75,rda:90,ul:2000,
+   crit:'The EAR is anchored to the intake that maintains near-maximal <b>neutrophil ascorbate concentration</b> with minimal urinary loss &mdash; a defined, measurable criterion of adequacy rather than an opinion about health.',
+   note:'The same nutrient, a different group: women 19 y and older have an <b>EAR of 60</b> and an <b>RDA of 75 mg/day</b>. People who smoke are given <b>an extra 35 mg/day</b> in both sexes, because oxidative turnover of ascorbate is measurably higher. <span class="ev s">strong evidence</span>',
+   ulnote:'The UL of <b>2,000 mg/day</b> for adults is based on osmotic diarrhoea and gastrointestinal disturbance from unabsorbed vitamin C in the gut &mdash; a tolerance endpoint, not organ toxicity.'},
+
+  {k:'vitd',ic:'☀️',nm:'Vitamin D',pop:'Adults 19&ndash;70 y',u:'IU/day',ear:400,rda:600,ul:4000,
+   crit:'This is one of the few DRIs built from a <b>dose&ndash;response model</b> rather than a balance study: intake was modelled against serum 25-hydroxyvitamin D, and the RDA is the intake predicted to bring nearly everyone to the target concentration.',
+   note:'In micrograms these are an <b>EAR of 10</b>, an <b>RDA of 15</b>, and a <b>UL of 100 &micro;g/day</b> &mdash; 1 &micro;g = 40 IU, and both units appear on labels. Adults over 70 y have a higher RDA of <b>800 IU (20 &micro;g)</b>. Critically, every one of these figures <b>assumes minimal sun exposure</b>, because skin synthesis could not be quantified across latitudes, seasons, and skin tones. <span class="ev s">strong evidence</span>',
+   ulnote:'The UL of <b>4,000 IU/day</b> for adults is set on hypercalcaemia and related endpoints at sustained high supplemental intakes.'},
+
+  {k:'iron',ic:'🩸',nm:'Iron',pop:'Women 19&ndash;50 y, not pregnant',u:'mg/day',ear:8.1,rda:18,ul:45,skew:1,
+   crit:'The requirement is modelled from obligatory losses plus menstrual losses, then divided by an assumed <b>18% absorption</b> from a mixed diet. Absorption, not intake, is the bottleneck.',
+   note:'Look at the shape of this curve. Menstrual iron loss is <b>strongly right-skewed</b> across a population, so the requirement distribution is not symmetrical and the RDA is <b>not</b> the EAR plus two standard deviations &mdash; 18 is far more than 8.1 + 2&nbsp;SD would give. It was taken directly from the <b>97.5th percentile</b> of the modelled distribution. Men 19 y and older sit far lower: EAR 6, RDA 8 mg/day. <span class="ev s">strong evidence</span>',
+   ulnote:'The UL of <b>45 mg/day</b> is based on gastrointestinal distress. It does <b>not</b> apply to people taking iron under clinical supervision for a diagnosed deficiency &mdash; that is a treatment decision, made and monitored by a clinician, not a dietary reference value.'},
+
+  {k:'folate',ic:'🥬',nm:'Folate',pop:'Adults 19 y and older',u:'µg DFE/day',ear:320,rda:400,ul:1000,
+   crit:'The criterion is <b>erythrocyte folate concentration</b> maintained with normal plasma homocysteine and serum folate &mdash; a red-cell pool that reflects months of intake rather than yesterday&rsquo;s meal.',
+   note:'The unit is doing real work here. <b>DFE</b> means <i>dietary folate equivalents</i>, which exist because synthetic folic acid is absorbed roughly <b>1.7 times</b> as efficiently as the folate naturally present in food. Requirements are higher in pregnancy (RDA <b>600 &micro;g DFE/day</b>), and separate public-health guidance on folic acid before conception is a clinical matter decided with a clinician. <span class="ev s">strong evidence</span>',
+   ulnote:'This UL is the classic trap: <b>1,000 &micro;g/day applies only to folic acid</b> from supplements and fortified foods &mdash; <b>not</b> to folate occurring naturally in food, which has no UL. It was set because high folic acid intake can correct the anaemia of vitamin B12 deficiency while the neurological damage continues unnoticed.'},
+
+  {k:'mg',ic:'🌰',nm:'Magnesium',pop:'Women 19&ndash;30 y',u:'mg/day',ear:255,rda:310,ul:350,
+   crit:'The EAR rests on <b>balance studies</b> &mdash; the intake at which magnesium entering the body equals magnesium leaving it, so body stores neither fill nor drain.',
+   note:'Magnesium is the sharpest illustration that a UL is not simply &ldquo;the RDA with headroom.&rdquo; Its UL (350) sits <b>below</b> what many people take in from food alone, and that is not a contradiction. <span class="ev s">strong evidence</span>',
+   ulnote:'The UL of <b>350 mg/day applies only to magnesium from supplements and pharmacologic agents</b> &mdash; there is <b>no UL for magnesium in food</b>, because the kidney handles dietary magnesium without difficulty. The endpoint is osmotic diarrhoea from unabsorbed magnesium salts, which food-bound magnesium does not produce.'},
+
+  {k:'vita',ic:'🥕',nm:'Vitamin A',pop:'Men 19 y and older',u:'µg RAE/day',ear:625,rda:900,ul:3000,
+   crit:'The criterion is an adequate <b>liver retinol reserve</b> &mdash; roughly 20 &micro;g of retinol per gram of liver, enough to buffer several months of low intake.',
+   note:'<b>RAE</b> &mdash; retinol activity equivalents &mdash; converts everything to one scale, because provitamin A carotenoids from plants yield far less retinol than preformed retinol does (12 &micro;g of &beta;-carotene counts as 1 &micro;g RAE). Women 19 y and older: EAR 500, RDA <b>700 &micro;g RAE/day</b>. <span class="ev s">strong evidence</span>',
+   ulnote:'The UL of <b>3,000 &micro;g/day applies to preformed vitamin A (retinol) only</b>. Provitamin A carotenoids are excluded, because conversion is down-regulated when stores are full, so they do not produce retinol toxicity. The endpoints are liver abnormality and, in pregnancy, teratogenicity.'},
+
+  {k:'fiber',ic:'🌾',nm:'Total fiber',pop:'Men 19&ndash;50 y',u:'g/day',ai:38,
+   crit:'No EAR could be set, because there is no measurable biochemical marker that says a person&rsquo;s fibre requirement has been met. There is no pool to saturate and no enzyme to fill.',
+   note:'The AI of <b>38 g/day</b> comes from the intake level associated with the lowest observed risk of coronary heart disease in prospective cohorts, scaled as <b>14 g per 1,000 kcal</b>. Women 19&ndash;50 y have an AI of <b>25 g/day</b> &mdash; the difference is energy intake, not sex per se. Because this is an observational anchor rather than a modelled requirement, the evidence tier is genuinely lower. <span class="ev p">preliminary / observational basis</span>',
+   ulnote:'There is <b>no UL for fibre</b>. That is not a statement that any amount is fine &mdash; it means the data were not sufficient to set one.'},
+
+  {k:'k',ic:'🥔',nm:'Potassium',pop:'Women 19 y and older',u:'mg/day',ai:2600,
+   crit:'Balance studies could not identify a requirement that satisfied the criteria for an EAR, so the 2019 review set an AI instead &mdash; and, notably, <b>lowered</b> it from the 2005 value.',
+   note:'The AI is <b>2,600 mg/day</b> for women and <b>3,400 mg/day</b> for men 19 y and older, both reduced from the earlier 4,700 mg figure when the review concluded that the blood-pressure evidence did not support a requirement-based number. This is a useful reminder that DRIs are <b>revised as evidence changes</b> &mdash; an older textbook table is not merely dated, it can be wrong. <span class="ev p">evidence judged insufficient for an EAR</span>',
+   ulnote:'There is <b>no UL for potassium</b> in apparently healthy people, because healthy kidneys excrete the excess. People with impaired renal excretion are a different situation entirely, managed with a clinician.'},
+
+  {k:'na',ic:'🧂',nm:'Sodium',pop:'Adults 19&ndash;50 y',u:'mg/day',ai:1500,cdrr:2300,
+   crit:'The AI is the intake that covers sweat and other obligatory losses while still allowing an adequate intake of other nutrients &mdash; not a modelled requirement distribution.',
+   note:'Sodium is the one nutrient where the 2019 review introduced an entirely <b>new kind of reference value</b>. The old UL was withdrawn, because the evidence did not show a threshold above which risk of <i>toxicity</i> appears. In its place is the <b>CDRR &mdash; Chronic Disease Risk Reduction intake &mdash; of 2,300 mg/day</b>, a different claim: reducing intake toward this level is expected to reduce chronic disease risk, on moderate-quality evidence. <span class="ev p">moderate-strength evidence</span>',
+   ulnote:'<b>There is no UL for sodium.</b> The CDRR marker on the axis is not a ceiling of tolerance &mdash; it is a chronic-disease-risk benchmark, judged on a different evidence standard than a UL, and it is the only one of its kind in the DRI system.'}
+ ];
+
+ var S={
+  ear:{nm:'EAR &mdash; Estimated Average Requirement',col:'#2f6f9f',
+   d:'The daily intake estimated to meet the requirement of <b>half</b> the healthy people in one life-stage and sex group. It is a <b>median</b>, not a target &mdash; at exactly the EAR, by construction, half the group still falls short. Its real jobs are arithmetic and assessment: every RDA is calculated from an EAR, and the proportion of a <b>group</b> whose usual intake sits below the EAR approximates the prevalence of inadequacy in that group.',
+   rows:[['Set from','a defined criterion of adequacy &mdash; an enzyme saturating, a body pool filling, a marker normalising'],['Covers','<b>50%</b> of the group'],['For a person','<b>no</b> &mdash; aiming here means a coin-flip chance of falling short'],['For a group','<b>yes</b> &mdash; this is the assessment tool']]},
+  rda:{nm:'RDA &mdash; Recommended Dietary Allowance',col:'#2f9e5b',
+   d:'The average daily intake that meets the requirement of <b>nearly all</b> &mdash; 97 to 98 percent &mdash; of healthy people in the group. Where the requirement distribution is roughly symmetrical it is calculated as <b>EAR + 2 standard deviations</b>, which is why an RDA can never exist without an EAR behind it. It is a <b>goal for one individual</b>, and it is deliberately generous: most people need less than the RDA, and an intake below it does not mean deficiency &mdash; only that the probability of inadequacy is no longer very small.',
+   rows:[['Set from','the EAR plus a margin covering the spread of requirements'],['Covers','<b>97&ndash;98%</b> of the group'],['For a person','<b>yes</b> &mdash; this is the goal'],['For a group','<b>no</b> &mdash; counting people below the RDA badly overstates inadequacy']]},
+  ai:{nm:'AI &mdash; Adequate Intake',col:'#7a5a8a',
+   d:'Used when the evidence is <b>not sufficient to set an EAR</b>. Rather than a modelled requirement, an AI is an observed or experimentally determined approximation of the intake of apparently healthy people who show no sign of inadequacy &mdash; the intake of exclusively breastfed infants, or the median intake of a healthy population. It is used the way an RDA is used, as a goal for an individual, but it carries <b>substantially more uncertainty</b>. Because no requirement distribution exists behind it, you cannot say what share of a group is covered at any intake, and you cannot use an AI to estimate the prevalence of inadequacy. <span class="ev p">weaker evidence base than an EAR/RDA</span>',
+   rows:[['Set from','observed intakes of apparently healthy groups, or experimental data'],['Covers','<b>unknown</b> &mdash; believed to meet or exceed the needs of most'],['For a person','<b>yes</b> &mdash; but with less confidence than an RDA'],['For a group','<b>no</b> &mdash; prevalence of inadequacy cannot be estimated from an AI']]},
+  ul:{nm:'UL &mdash; Tolerable Upper Intake Level',col:'#d1495b',
+   d:'The highest average daily intake <b>likely to pose no risk of adverse effects</b> for almost everyone in the group. It is a ceiling, not a recommendation: there is no benefit to intakes approaching it, and it is not a threshold at which harm switches on. Above the UL the <i>potential</i> risk of adverse effects begins to increase, and the true shape of that rise is usually not well characterised &mdash; which is exactly why the curve below is drawn as a dashed, schematic line. Two cautions trip people constantly: a UL often applies to <b>one specific form or source</b> of a nutrient rather than to total intake, and <b>no UL does not mean no upper limit</b> &mdash; it means the data were insufficient to set one.',
+   rows:[['Set from','the highest intake with no observed adverse effect, divided by an uncertainty factor'],['Covers','almost all of the group, for <b>safety</b> &mdash; not for adequacy'],['For a person','<b>stay below it</b> &mdash; it is never a goal'],['For a group','the share exceeding it estimates the share at potential risk']]},
+  cdrr:{nm:'CDRR &mdash; Chronic Disease Risk Reduction intake',col:'#b8862f',
+   d:'A reference value unique to <b>sodium</b>, introduced in 2019 when the sodium UL was withdrawn. A UL asks whether an intake causes a <i>toxicological</i> adverse effect; a CDRR asks whether <i>reducing</i> intake lowers the risk of a chronic disease. The sodium CDRR of <b>2,300 mg/day for adults</b> means that reducing usual intake toward that level is expected to reduce chronic disease risk &mdash; on evidence graded moderate, not strong. It is not a threshold, not a toxicity ceiling, and not a target that guarantees anything for any individual. <span class="ev p">moderate-strength evidence</span>',
+   rows:[['Set from','intervention and observational evidence linking intake reduction to disease risk'],['Covers','a population-level risk statement, not a requirement'],['For a person','a direction of travel, not a threshold'],['For a group','used in public-health planning']]}
+ };
+
+ var cur=N[0], intake=0, sel='', step=1, dec=0, hi=1, mid=1, pw=false, drag=false;
+ var X0=34, W=276, AT=22, AB=128, BT=184, BB=252;
+ var svg=$('plot');
+
+ function ncdf(z){
+   var t=1/(1+0.2316419*Math.abs(z));
+   var d=0.3989422804014327*Math.exp(-z*z/2);
+   var p=d*t*(0.319381530+t*(-0.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429))));
+   return z>0?1-p:p;
+ }
+ function fmt(v){
+   var s=(v>=100?String(Math.round(v)):(Math.round(v*10)/10).toString());
+   return s.replace(/\B(?=(\d{3})+(?!\d))/g,',');
+ }
+ /* &lt; must be escaped — this string is written through innerHTML, including into SVG <text>. */
+ function pct(p){ if(p>0&&p<0.5)return '&lt;0.5'; if(p<100&&p>99.5)return '&gt;99.5'; return String(Math.round(p)); }
+ function goal(){ return cur.rda||cur.ai||0; }
+
+ function setup(){
+   var g=goal();
+   mid=1.7*g;
+   var top=cur.ul?cur.ul*1.25:0;
+   if(cur.cdrr) top=Math.max(top,cur.cdrr*1.12);
+   pw = top>mid*1.05;
+   hi = pw?top:Math.max(mid,top);
+   var raw=hi/160, p10=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10)), n=raw/p10;
+   step=(n<=1?1:(n<=2?2:(n<=5?5:10)))*p10;
+   dec=step<1?1:0;
+   hi=Math.ceil(hi/step)*step;
+ }
+ function xmap(v){
+   v=Math.max(0,Math.min(hi,v));
+   if(!pw) return X0+W*(v/hi);
+   if(v<=mid) return X0+W*0.6*(v/mid);
+   return X0+W*(0.6+0.4*(v-mid)/(hi-mid));
+ }
+ function xinv(px){
+   var f=(px-X0)/W; f=Math.max(0,Math.min(1,f));
+   if(!pw) return f*hi;
+   if(f<=0.6) return f/0.6*mid;
+   return mid+(f-0.6)/0.4*(hi-mid);
+ }
+ function cdf(v){
+   if(!cur.ear) return -1;
+   if(cur.skew){
+     if(v<=0) return 0;
+     var mu=Math.log(cur.ear), sg=(Math.log(cur.rda)-mu)/1.96;
+     return ncdf((Math.log(v)-mu)/sg);
+   }
+   var sd=(cur.rda-cur.ear)/2;
+   return ncdf((v-cur.ear)/sd);
+ }
+ function pdf(v){
+   if(cur.skew){ if(v<=0)return 0;
+     var mu=Math.log(cur.ear), sg=(Math.log(cur.rda)-mu)/1.96, z=(Math.log(v)-mu)/sg;
+     return Math.exp(-0.5*z*z)/v; }
+   var sd=(cur.rda-cur.ear)/2, y=(v-cur.ear)/sd;
+   return Math.exp(-0.5*y*y);
+ }
+
+ function tag(x,y,txt,col,key,on){
+   var w=txt.length*5.4+11, hx=Math.max(X0,Math.min(X0+W-w,x-w/2));
+   var o='<g class="rgn" data-s="'+key+'">';
+   o+='<rect x="'+hx.toFixed(1)+'" y="'+(y-9)+'" width="'+w.toFixed(1)+'" height="13" rx="6.5" fill="'+col+'" opacity="'+(on?1:0.86)+'"'+(on?' stroke="#33291a" stroke-width="1.2"':'')+'/>';
+   o+='<text x="'+(hx+w/2).toFixed(1)+'" y="'+(y+0.4)+'" font-size="7.4" font-weight="800" fill="#fff" text-anchor="middle" pointer-events="none">'+txt+'</text></g>';
+   return o;
+ }
+ function vline(x,col,dash,t,b){
+   return '<line x1="'+x.toFixed(1)+'" y1="'+t+'" x2="'+x.toFixed(1)+'" y2="'+b+'" stroke="'+col+'" stroke-width="1.3"'+(dash?' stroke-dasharray="3 3"':'')+' opacity=".85"/>';
+ }
+
+ function draw(){
+   var o='', i, x, v;
+
+   /* ---------- panel A : the requirement distribution ---------- */
+   o+='<text x="'+X0+'" y="11" font-size="7.5" font-weight="800" letter-spacing=".8" fill="#8d8270">WHERE THIS GROUP&rsquo;S REQUIREMENTS FALL</text>';
+   o+='<rect x="'+X0+'" y="'+AT+'" width="'+W+'" height="'+(AB-AT)+'" fill="#fffdf9"/>';
+
+   if(cur.ul){
+     var gx=xmap(goal()), ux=xmap(cur.ul);
+     o+='<rect x="'+gx.toFixed(1)+'" y="'+AT+'" width="'+Math.max(0,ux-gx).toFixed(1)+'" height="'+(AB-AT)+'" fill="#2f9e5b" opacity=".05"/>';
+     o+='<rect x="'+ux.toFixed(1)+'" y="'+AT+'" width="'+Math.max(0,X0+W-ux).toFixed(1)+'" height="'+(AB-AT)+'" fill="#d1495b" opacity=".07"/>';
+   }
+
+   if(cur.ear){
+     var pk=0, sm=[];
+     for(i=0;i<=138;i++){ x=X0+W*i/138; v=xinv(x); var d=pdf(v); if(d>pk)pk=d; sm.push([x,d]); }
+     var ix=xmap(intake);
+     var ptsL='M'+X0+' '+AB, ptsR='', started=false;
+     for(i=0;i<sm.length;i++){
+       var px=sm[i][0], py=AB-(AB-AT-14)*(sm[i][1]/pk);
+       if(px<=ix) ptsL+=' L'+px.toFixed(1)+' '+py.toFixed(1);
+       else { if(!started){ptsR='M'+px.toFixed(1)+' '+py.toFixed(1);started=true;} else ptsR+=' L'+px.toFixed(1)+' '+py.toFixed(1); }
+     }
+     ptsL+=' L'+Math.min(ix,X0+W).toFixed(1)+' '+AB+' Z';
+     if(started) ptsR+=' L'+(X0+W)+' '+AB+' L'+Math.max(X0,ix).toFixed(1)+' '+AB+' Z';
+     o+='<path d="'+ptsL+'" fill="#2f9e5b" opacity=".34"/>';
+     if(started) o+='<path d="'+ptsR+'" fill="#c9bda6" opacity=".30"/>';
+     var out='M';
+     for(i=0;i<sm.length;i++) out+=(i?' L':'')+sm[i][0].toFixed(1)+' '+(AB-(AB-AT-14)*(sm[i][1]/pk)).toFixed(1);
+     o+='<path d="'+out+'" fill="none" stroke="#6b4710" stroke-width="1.5"/>';
+     var cv=cdf(intake)*100;
+     o+='<text x="'+X0+'" y="'+(AT+11)+'" font-size="7.2" font-weight="800" fill="#237a45">'+pct(cv)+'% of the group covered</text>';
+     o+='<text x="'+(X0+W)+'" y="'+(AT+11)+'" font-size="7.2" font-weight="800" fill="#8d8270" text-anchor="end">'+pct(100-cv)+'% still short</text>';
+   } else {
+     for(i=0;i<20;i++){ var dx=X0+i*16;
+       o+='<line x1="'+dx+'" y1="'+AB+'" x2="'+(dx+26)+'" y2="'+AT+'" stroke="#ddd2ba" stroke-width="1" stroke-dasharray="2 4" opacity=".8"/>'; }
+     o+='<rect x="'+X0+'" y="'+AT+'" width="'+W+'" height="'+(AB-AT)+'" fill="none" stroke="#ddd2ba" stroke-width="1.2" stroke-dasharray="4 3"/>';
+     o+='<text x="'+(X0+W/2)+'" y="'+((AT+AB)/2-4)+'" font-size="9" font-weight="800" fill="#8d8270" text-anchor="middle">no requirement distribution exists</text>';
+     o+='<text x="'+(X0+W/2)+'" y="'+((AT+AB)/2+9)+'" font-size="7.6" font-weight="700" fill="#a89b85" text-anchor="middle">the evidence could not support an EAR &mdash; so this nutrient has an AI</text>';
+   }
+   o+='<line x1="'+X0+'" y1="'+AB+'" x2="'+(X0+W)+'" y2="'+AB+'" stroke="#c9bda6" stroke-width="1.4"/>';
+
+   /* ---------- marker lines + chips ---------- */
+   var M=[];
+   if(cur.ear) M.push(['ear','EAR '+fmt(cur.ear),cur.ear,S.ear.col,0]);
+   if(cur.rda) M.push(['rda','RDA '+fmt(cur.rda),cur.rda,S.rda.col,1]);
+   if(cur.ai)  M.push(['ai','AI '+fmt(cur.ai),cur.ai,S.ai.col,1]);
+   if(cur.ul)  M.push(['ul','UL '+fmt(cur.ul),cur.ul,S.ul.col,0]);
+   if(cur.cdrr)M.push(['cdrr','CDRR '+fmt(cur.cdrr),cur.cdrr,S.cdrr.col,1]);
+   for(i=0;i<M.length;i++){
+     var mx=xmap(M[i][2]);
+     o+=vline(mx,M[i][3],1,AT,AB)+vline(mx,M[i][3],1,BT,BB);
+   }
+
+   /* ---------- panel B : the two risk curves ---------- */
+   o+='<text x="'+X0+'" y="'+(BT-9)+'" font-size="7.5" font-weight="800" letter-spacing=".8" fill="#8d8270">RISK, AS USUAL INTAKE RISES</text>';
+   o+='<line x1="'+X0+'" y1="'+BT+'" x2="'+(X0+W)+'" y2="'+BT+'" stroke="#ece4d6" stroke-width="1"/>';
+   o+='<text x="'+(X0-4)+'" y="'+(BT+3)+'" font-size="6.6" fill="#a89b85" text-anchor="end" font-weight="700">high</text>';
+   o+='<text x="'+(X0-4)+'" y="'+(BB+2)+'" font-size="6.6" fill="#a89b85" text-anchor="end" font-weight="700">none</text>';
+   if(cur.ear){
+     var pa='M';
+     for(i=0;i<=138;i++){ x=X0+W*i/138; var r=1-cdf(xinv(x));
+       pa+=(i?' L':'')+x.toFixed(1)+' '+(BB-(BB-BT)*r).toFixed(1); }
+     o+='<path d="'+pa+'" fill="none" stroke="'+S.ear.col+'" stroke-width="2"/>';
+     o+='<text x="'+(X0+3)+'" y="'+(BT+11)+'" font-size="7.2" font-weight="800" fill="'+S.ear.col+'">risk of inadequacy</text>';
+   } else {
+     o+='<line x1="'+X0+'" y1="'+(BB-(BB-BT)*0.55)+'" x2="'+(X0+W*0.55)+'" y2="'+(BB-(BB-BT)*0.55)+'" stroke="#a89b85" stroke-width="1.6" stroke-dasharray="4 4"/>';
+     o+='<text x="'+(X0+3)+'" y="'+(BT+11)+'" font-size="7.2" font-weight="800" fill="#8d8270">risk of inadequacy cannot be quantified without an EAR</text>';
+   }
+   if(cur.ul){
+     var pb='', ok=false;
+     for(i=0;i<=138;i++){ x=X0+W*i/138; v=xinv(x);
+       var rr=v<=cur.ul?0:Math.min(1,Math.pow((v-cur.ul)/(hi-cur.ul+0.0001),0.75));
+       pb+=(ok?' L':'M')+x.toFixed(1)+' '+(BB-(BB-BT)*rr).toFixed(1); ok=true; }
+     o+='<path d="'+pb+'" fill="none" stroke="'+S.ul.col+'" stroke-width="2" stroke-dasharray="5 3"/>';
+     o+='<text x="'+(X0+W)+'" y="'+(BT+11)+'" font-size="7.2" font-weight="800" fill="'+S.ul.col+'" text-anchor="end">potential risk of adverse effects</text>';
+   } else {
+     o+='<text x="'+(X0+W)+'" y="'+(BT+11)+'" font-size="7.2" font-weight="800" fill="#a89b85" text-anchor="end">no UL was set for this nutrient</text>';
+   }
+   o+='<line x1="'+X0+'" y1="'+BB+'" x2="'+(X0+W)+'" y2="'+BB+'" stroke="#c9bda6" stroke-width="1.4"/>';
+
+   /* ---------- x ticks ---------- */
+   var tk=pw?[0,mid/2,mid,mid+(hi-mid)/2,hi]:[0,hi/4,hi/2,hi*3/4,hi];
+   for(i=0;i<tk.length;i++){
+     var tx=xmap(tk[i]);
+     o+='<line x1="'+tx.toFixed(1)+'" y1="'+BB+'" x2="'+tx.toFixed(1)+'" y2="'+(BB+3)+'" stroke="#c9bda6" stroke-width="1"/>';
+     o+='<text x="'+tx.toFixed(1)+'" y="'+(BB+12)+'" font-size="7" fill="#a89b85" text-anchor="'+(i===0?'start':(i===tk.length-1?'end':'middle'))+'" font-weight="700">'+fmt(tk[i])+'</text>';
+   }
+   if(pw){ var bx=X0+W*0.6;
+     o+='<path d="M'+(bx-3)+' '+(AB+4)+' l3 -4 l3 4" fill="none" stroke="#c9bda6" stroke-width="1.2"/>';
+     o+='<path d="M'+(bx-3)+' '+(BB+4)+' l3 -4 l3 4" fill="none" stroke="#c9bda6" stroke-width="1.2"/>';
+     /* own baseline — this note would otherwise run into the unit caption */
+     o+='<text x="'+(X0+W)+'" y="'+(BB+31)+'" font-size="6.6" fill="#a89b85" text-anchor="end" font-weight="700">axis compressed past the arrow &mdash; a UL often sits far above an RDA</text>';
+   }
+   o+='<text x="'+X0+'" y="'+(BB+22)+'" font-size="7" fill="#8d8270" font-weight="800">usual daily intake, '+cur.u+'</text>';
+
+   /* ---------- drag surfaces: above the chip strip, below the chips ---------- */
+   o+='<rect class="hit" x="'+X0+'" y="'+AT+'" width="'+W+'" height="'+(AB-AT)+'" fill="#fff" opacity="0"/>';
+   o+='<rect class="hit" x="'+X0+'" y="'+BT+'" width="'+W+'" height="'+(BB-BT)+'" fill="#fff" opacity="0"/>';
+
+   /* ---------- chips (tappable, painted above the drag surfaces) ---------- */
+   for(i=0;i<M.length;i++) o+=tag(xmap(M[i][2]),M[i][4]?155:141,M[i][1],M[i][3],M[i][0],sel===M[i][0]);
+
+   /* ---------- the movable intake line ---------- */
+   var ix2=xmap(intake);
+   o+='<g pointer-events="none">';
+   o+='<line x1="'+ix2.toFixed(1)+'" y1="'+AT+'" x2="'+ix2.toFixed(1)+'" y2="'+AB+'" stroke="#33291a" stroke-width="2"/>';
+   o+='<line x1="'+ix2.toFixed(1)+'" y1="'+BT+'" x2="'+ix2.toFixed(1)+'" y2="'+BB+'" stroke="#33291a" stroke-width="2"/>';
+   o+='<circle cx="'+ix2.toFixed(1)+'" cy="'+AB+'" r="4.6" fill="#33291a"/>';
+   o+='<circle cx="'+ix2.toFixed(1)+'" cy="'+AB+'" r="1.8" fill="#fffdf9"/>';
+   var lw=String(fmt(intake)).length*5.2+16, lx=Math.max(X0,Math.min(X0+W-lw,ix2-lw/2));
+   o+='<rect x="'+lx.toFixed(1)+'" y="'+(AT-16)+'" width="'+lw.toFixed(1)+'" height="13" rx="6.5" fill="#33291a"/>';
+   o+='<text x="'+(lx+lw/2).toFixed(1)+'" y="'+(AT-6.4)+'" font-size="7.4" font-weight="800" fill="#fffdf9" text-anchor="middle">'+fmt(intake)+'</text>';
+   o+='</g>';
+
+   $('art').innerHTML=o;
+
+   var ns=$('art').querySelectorAll('.rgn');
+   for(i=0;i<ns.length;i++) ns[i].onclick=(function(k){return function(e){e.stopPropagation();pick(k,true);};})(ns[i].getAttribute('data-s'));
+ }
+
+ /* Drag is bound once to the <svg> root, which survives every redraw.
+    Binding it to the redrawn rects would drop the gesture on the first move. */
+ function inPlot(e){
+   var r=svg.getBoundingClientRect();
+   var y=(e.clientY-r.top)/r.height*288;
+   return (y>=AT&&y<=AB)||(y>=BT&&y<=BB);
+ }
+ function fromEvent(e){
+   var r=svg.getBoundingClientRect();
+   return xinv((e.clientX-r.left)/r.width*320);
+ }
+ svg.addEventListener('pointerdown',function(e){
+   if(e.target&&e.target.getAttribute&&e.target.getAttribute('data-s')) return;
+   if(e.target&&e.target.parentNode&&e.target.parentNode.getAttribute&&e.target.parentNode.getAttribute('data-s')) return;
+   if(!inPlot(e)) return;
+   drag=true; try{svg.setPointerCapture(e.pointerId);}catch(err){}
+   setIntake(fromEvent(e));
+ });
+ svg.addEventListener('pointermove',function(e){ if(drag) setIntake(fromEvent(e)); });
+ svg.addEventListener('pointerup',function(){ drag=false; });
+ svg.addEventListener('pointercancel',function(){ drag=false; });
+
+ function readouts(){
+   var c=cdf(intake);
+   $('rIn').innerHTML=fmt(intake); $('rInU').innerHTML=cur.u;
+   $('rMet').innerHTML = c<0 ? '<span style="font-size:12.5px;color:var(--muted);">not knowable</span>' : pct(c*100)+'<i>% of group</i>';
+   $('rInad').innerHTML= c<0 ? '<span style="font-size:12.5px;color:var(--muted);">not knowable</span>' : pct(100-c*100)+'<i>%</i>';
+   var cls='low', txt='';
+   if(cur.ul&&intake>cur.ul){ cls='high'; txt='above the UL'; }
+   else if(cur.ear){
+     if(intake<cur.ear){ cls='low'; txt='below the EAR'; }
+     else if(intake<cur.rda){ cls='low'; txt='between EAR and RDA'; }
+     else { cls='normal'; txt='at or above the RDA'; }
+   } else {
+     if(intake<cur.ai){ cls='low'; txt='below the AI'; }
+     else { cls='normal'; txt='at or above the AI'; }
+   }
+   if(cur.cdrr&&intake>cur.cdrr&&!(cur.ul&&intake>cur.ul)){ cls='high'; txt='above the CDRR'; }
+   $('rPos').innerHTML='<span class="pill '+cls+'">'+txt+'</span>';
+ }
+
+ function stage(){
+   var c=cdf(intake), col=S.rda.col, sub;
+   if(cur.ul&&intake>cur.ul){ col=S.ul.col; sub='above the Tolerable Upper Intake Level'; }
+   else if(c<0){ col=S.ai.col; sub=intake>=cur.ai?'at or above the Adequate Intake':'below the Adequate Intake'; }
+   else if(intake<cur.ear){ col=S.ear.col; sub=pct(100-c*100)+'% of this group would still fall short here'; }
+   else if(intake<cur.rda){ col='#b8862f'; sub='covers '+pct(c*100)+'% of the group &mdash; past the median, short of the RDA'; }
+   else { col=S.rda.col; sub='covers '+pct(c*100)+'% of the group'; }
+   $('stage').style.background=col;
+   $('stage').innerHTML=fmt(intake)+' '+cur.u+'<small>'+sub+'</small>';
+   $('cardTitle').innerHTML=cur.nm+' &middot; '+cur.pop.toLowerCase();
+ }
+
+ function segmarks(){
+   var bs=$('sseg').querySelectorAll('button');
+   for(var i=0;i<bs.length;i++){
+     var k=bs[i].getAttribute('data-s'), has=!!cur[k];
+     bs[i].className=(sel===k?'on':'')+(has?'':' off');
+   }
+ }
+
+ function setIntake(v){
+   v=Math.max(0,Math.min(hi,Math.round(v/step)*step));
+   intake=+v.toFixed(dec);
+   $('nIn').value=intake; $('rIn2').value=intake;
+   draw(); readouts(); stage();
+ }
+
+ function pick(k,snap){
+   sel=k; segmarks();
+   var s=S[k], has=!!cur[k];
+   if(snap&&has) setIntake(cur[k]); else { draw(); }
+   var rows='';
+   for(var i=0;i<s.rows.length;i++) rows+='<div class="ln"><span class="lf">'+s.rows[i][0]+'</span><span class="rt">'+s.rows[i][1]+'</span></div>';
+   var head='<span class="n">'+s.nm+'</span>';
+   var body=s.d+'<div class="pu">'+rows+'</div>';
+   var tail='';
+   if(has){
+     tail='<div class="loc">For <b>'+cur.nm.toLowerCase()+'</b>, '+cur.pop.toLowerCase()+': <b>'+k.toUpperCase()+' = '+fmt(cur[k])+' '+cur.u+'</b>.'+
+       (k==='ul'&&cur.ulnote?' '+cur.ulnote:'')+
+       (k==='ear'&&cur.crit?' '+cur.crit:'')+'</div>';
+   } else if(k==='ear'||k==='rda'){
+     tail='<div class="note"><b>'+cur.nm+' has no '+k.toUpperCase()+'.</b> '+cur.crit+' Without an EAR there can be no RDA, so an <b>AI of '+fmt(cur.ai)+' '+cur.u+'</b> is used in its place for '+cur.pop.toLowerCase()+'.</div>';
+   } else if(k==='ai'){
+     tail='<div class="note"><b>'+cur.nm+' has no AI</b> for this group &mdash; and that is the normal case. An AI is only used when an EAR cannot be established; here it could, so this nutrient has an <b>EAR of '+fmt(cur.ear)+'</b> and an <b>RDA of '+fmt(cur.rda)+' '+cur.u+'</b> instead. A nutrient has one or the other, never both.</div>';
+   } else if(k==='ul'){
+     /* the nutrient's own ulnote already opens with "there is no UL for X" — don't say it twice */
+     tail='<div class="note">'+(cur.ulnote||'<b>No UL has been set for '+cur.nm.toLowerCase()+'</b> in this group.')+
+       ' An absent UL means the evidence was insufficient to establish one &mdash; it is not a finding that high intakes carry no risk.</div>';
+   } else if(k==='cdrr'){
+     tail='<div class="note">The CDRR exists only for <b>sodium</b>. No other nutrient currently carries one.</div>';
+   }
+   $('info').innerHTML=head+body+tail;
+ }
+
+ function nlist(){
+   var o='';
+   for(var i=0;i<N.length;i++){ var n=N[i];
+     var lab=n.ear?('EAR '+fmt(n.ear)+' &middot; RDA '+fmt(n.rda)):('AI '+fmt(n.ai));
+     lab+=n.ul?('<br>UL '+fmt(n.ul)):(n.cdrr?'<br>CDRR '+fmt(n.cdrr):'<br>no UL');
+     o+='<button class="it'+(n.k===cur.k?' on':'')+'" data-k="'+n.k+'"><span class="ic">'+n.ic+'</span>'+
+        '<span><span class="nm">'+n.nm+'</span><br><span class="ct">'+n.pop+' &middot; '+n.u+'</span></span>'+
+        '<span class="k">'+lab+'</span></button>';
+   }
+   $('nlist').innerHTML=o;
+   var bs=$('nlist').querySelectorAll('.it');
+   for(var j=0;j<bs.length;j++) bs[j].onclick=(function(k){return function(){choose(k);};})(bs[j].getAttribute('data-k'));
+ }
+
+ function choose(k){
+   for(var i=0;i<N.length;i++) if(N[i].k===k) cur=N[i];
+   setup(); sel='';
+   $('nIn').step=step; $('nIn').max=hi;
+   $('rIn2').min=0; $('rIn2').max=hi; $('rIn2').step=step;
+   $('uIn').innerHTML=cur.u;
+   setIntake(goal()); segmarks(); nlist();
+   var s=cur.ear?'This nutrient has a full <b>EAR and RDA</b>, so the requirement distribution above is a real, modelled curve.':'This nutrient has <b>only an AI</b> &mdash; notice that the top panel is empty. That emptiness is the point.';
+   $('info').innerHTML='<span class="n">'+cur.ic+' '+cur.nm+'</span><b>Population: '+cur.pop+'.</b> All values in '+cur.u+'. '+s+
+     '<div class="dd">'+cur.note+'</div>'+
+     '<div class="loc">'+cur.crit+'</div>';
+ }
+
+ var ms=$('modeseg').querySelectorAll('button');
+ for(var q=0;q<ms.length;q++) ms[q].onclick=(function(b){return function(){
+   var m=+b.getAttribute('data-m');
+   for(var z=0;z<ms.length;z++) ms[z].className=(ms[z]===b?'on':'');
+   $('panelSet').style.display=m===0?'':'none';
+   $('panelNut').style.display=m===1?'':'none';
+   if(m===1) nlist();
+ };})(ms[q]);
+
+ var ss=$('sseg').querySelectorAll('button');
+ for(var w=0;w<ss.length;w++) ss[w].onclick=(function(b){return function(){pick(b.getAttribute('data-s'),true);};})(ss[w]);
+
+ $('nIn').oninput=function(){ var v=parseFloat($('nIn').value); if(isNaN(v))v=0; setIntake(v); };
+ $('nIn').onblur=function(){ $('nIn').value=intake; };
+ $('rIn2').oninput=function(){ setIntake(+$('rIn2').value); };
+ $('bZero').onclick=function(){ setIntake(0);
+   /* the "0% covered" reading only exists for nutrients that have a requirement curve */
+   var lead=cur.ear?'Both panels now read their extremes: <b>0% of the group is covered</b>, and the risk of inadequacy is at its maximum.'
+     :'The intake marker is at the far left. Notice that even here the panels cannot report a percentage &mdash; with only an <b>AI</b> and no requirement distribution, &ldquo;how much of the group is covered&rdquo; is a question the evidence cannot answer at <i>any</i> intake.';
+   $('info').innerHTML='<span class="n">An intake of zero</span>'+lead+' This is the left edge of the DRI system &mdash; the point the whole apparatus of EAR, RDA, and AI exists to move people away from.'+
+   '<div class="dd">Notice what the right-hand curve does <i>not</i> do here. Risk of adverse effects is zero and stays zero for a long stretch. Inadequacy and excess are two separate risks with two separate curves, and the wide gap between them is where ordinary eating happens.</div>'; };
+ $('bGoal').onclick=function(){ setIntake(goal()); pick(cur.rda?'rda':'ai',false); };
+
+ choose('vitc');
+ $('info').innerHTML='<span class="n">Four markers, one curve</span>Requirements vary from person to person, so the science begins with a <b>distribution</b>, not a number. The bell in the top panel is the estimated spread of vitamin C requirements among men 19 y and older &mdash; some need little, some need much, most sit near the middle.'+
+   '<div class="dd">Drag the dark line, or tap <b>EAR</b>, <b>RDA</b>, <b>AI</b>, or <b>UL</b> above, and watch the green shaded share of the group grow. The four standards are not four opinions about the same quantity &mdash; each answers a different question, and using the wrong one is the most common DRI error there is.</div>'+
+   '<div class="loc">Two other DRI values are not shown on this axis because they are not intakes of a single nutrient: the <b>EER</b> (Estimated Energy Requirement), which is an energy figure calculated per person, and the <b>AMDR</b> (Acceptable Macronutrient Distribution Range), which is expressed as a percentage of total energy &mdash; 45&ndash;65% carbohydrate, 10&ndash;35% protein, 20&ndash;35% fat for adults.</div>'+
+   '<div class="note"><b>These are reference values for planning and evaluating diets &mdash; not medical advice and not a dose.</b> They describe groups, not individuals. Anyone&rsquo;s actual requirement can sit anywhere on these curves, and decisions about supplementation or therapeutic intakes belong with a qualified clinician who knows the person.</div>';
+})();
+</script>
+</body>
+</html>

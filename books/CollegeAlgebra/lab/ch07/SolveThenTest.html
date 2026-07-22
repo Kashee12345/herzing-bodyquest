@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Solve, Then Test: Rational Equations</title>
+<meta name="description" content="Rational equations run as a worked-step machine — list the excluded values first, clear the denominators with the LCD, solve, then test every candidate against the excluded list. Includes a live graph and a draggable test-value probe.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;--ok:#2f9e5b;--no:#d1495b;}
+.wrap{grid-template-columns:0.94fr 1.06fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+
+/* ---- example picker ---- */
+#pick{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:13px;}
+#pick button{display:block;text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 9px;cursor:pointer;font-family:var(--sans);transition:.12s;}
+#pick button:hover{border-color:var(--teal);}
+#pick button .nm{display:block;font-weight:700;font-size:11.4px;color:var(--ink);line-height:1.15;}
+#pick button .ct{display:block;font-family:var(--math);font-size:11.6px;color:var(--muted);margin-top:3px;line-height:1.3;}
+#pick button.on{background:var(--teal);border-color:var(--teal);}
+#pick button.on .nm{color:#fff;} #pick button.on .ct{color:rgba(255,255,255,.9);}
+#pick sup{font-size:.66em;}
+
+/* ---- the worked-step machine ---- */
+.work{margin-top:2px;min-height:262px;}
+.wr{display:flex;gap:9px;align-items:baseline;padding:7px 8px;border-radius:9px;border-left:4px solid transparent;transition:.18s;}
+.wr + .wr{margin-top:2px;}
+.wr .pl{flex:none;width:76px;font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.wr .mx{font-family:var(--math);font-size:14.5px;color:var(--muted);line-height:1.75;flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;padding-bottom:1px;}
+.wr.on{background:#eef0fa;border-left-color:var(--teal);}
+.wr.on .mx{font-size:16.5px;color:var(--ink);font-weight:600;}
+.wr.on .pl{color:var(--teal);}
+.wr.done .mx{color:var(--soft);}
+.wr .ex{font-family:var(--sans);font-size:12.2px;color:var(--soft);line-height:1.58;margin-top:8px;display:block;font-weight:400;}
+.wr:not(.on) .ex{display:none;}
+.wr .ex b{color:var(--ink);} .wr .ex i{font-family:var(--math);font-size:1.06em;}
+.mx sub{font-size:.62em;} .mx sup{font-size:.66em;} .ex sup{font-size:.66em;}
+.mx .op{font-family:var(--sans);font-size:.72em;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);padding:0 4px;}
+
+/* stacked fraction, HTML only */
+.fr{display:inline-block;vertical-align:middle;text-align:center;line-height:1.24;margin:0 2px;}
+.fr .nu{display:block;padding:0 7px 2px;border-bottom:1.5px solid currentColor;}
+.fr .de{display:block;padding:2px 7px 0;}
+
+/* highlights */
+.hl{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.gl{border-radius:4px;padding:1px 4px;background:#dbe9f5;box-shadow:inset 0 0 0 1.5px #9dc0dc;}
+.bad{border-radius:4px;padding:1px 5px;background:#fae5e8;box-shadow:inset 0 0 0 1.5px #eab6bf;color:#a6293c;}
+.gd{border-radius:4px;padding:1px 5px;background:#e2f3e8;box-shadow:inset 0 0 0 1.5px #a8d6ba;color:#1f6f42;}
+.wr:not(.on) .hl,.wr:not(.on) .gl,.wr:not(.on) .bad,.wr:not(.on) .gd{background:transparent;box-shadow:none;padding:0;}
+
+/* ---- left column: graph + probe ---- */
+.legend{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px;font-size:10.4px;color:var(--muted);align-items:center;}
+.legend span{display:flex;align-items:center;gap:5px;}
+.legend i{width:15px;height:3px;border-radius:2px;display:inline-block;font-style:normal;}
+.legend em{font-family:var(--math);font-style:normal;font-size:11.4px;color:var(--soft);}
+.legend sup{font-size:.7em;}
+
+.probe{margin-top:11px;border-top:1px solid var(--line);padding-top:11px;}
+.plab{display:flex;justify-content:space-between;align-items:baseline;font-size:9.6px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+.plab b{font-family:var(--math);font-size:16px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--teal-dk);}
+input[type=range]{width:100%;margin:7px 0 3px;accent-color:var(--teal);height:20px;cursor:pointer;}
+.pcmp{display:flex;align-items:center;gap:7px;margin-top:3px;}
+.pcmp .side{flex:1;border:1px solid var(--line);border-radius:9px;padding:6px 8px;background:#fff;min-width:0;}
+.pcmp .side u{display:block;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;text-decoration:none;color:var(--muted);}
+.pcmp .side var{display:block;font-family:var(--math);font-style:normal;font-size:15px;font-weight:700;margin-top:1px;overflow:hidden;text-overflow:ellipsis;}
+.pcmp .side.l var{color:var(--teal);} .pcmp .side.r var{color:#a3761f;}
+.pcmp .side.und var{color:var(--no);font-size:13px;}
+#pop{flex:none;font-family:var(--math);font-size:21px;font-weight:700;color:var(--muted);width:22px;text-align:center;}
+#pop.eq{color:var(--ok);} #pop.un{color:var(--no);font-size:17px;}
+#pmsg{font-size:11.8px;line-height:1.5;margin-top:8px;border-radius:9px;padding:7px 10px;background:#f1f2f9;color:var(--soft);border:1px solid var(--line);}
+#pmsg.eq{background:#e9f6ee;border-color:#bfe2cd;color:#1f6f42;}
+#pmsg.un{background:#fae5e8;border-color:#f0c9d0;color:#8a2a3a;}
+#pmsg b{color:inherit;} #pmsg i{font-family:var(--math);font-style:normal;font-weight:700;}
+#chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+#chips button{font-family:var(--math);font-size:12.4px;font-weight:700;border-radius:20px;padding:4px 11px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--soft);}
+#chips button small{font-family:var(--sans);font-size:8.6px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;margin-left:5px;opacity:.85;}
+#chips button.x{border-color:#eab6bf;background:#fdf2f4;color:#a6293c;}
+#chips button.g{border-color:#a8d6ba;background:#eff8f2;color:#1f6f42;}
+#chips button:hover{filter:brightness(.97);}
+.cap{font-size:12px;color:var(--soft);line-height:1.55;margin-top:10px;border-top:1px solid var(--line);padding-top:9px;min-height:52px;}
+.cap b{color:var(--ink);} .cap i{font-family:var(--math);font-style:normal;font-weight:700;}
+.note i,.mnem i{font-family:var(--math);font-style:normal;font-weight:700;}
+#info i{font-family:var(--math);font-style:normal;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 7</div>
+  <h1>Solve, Then Test</h1>
+  <div class="intro">A rational equation has the variable <b>downstairs</b>, in a denominator &mdash; and that changes the rules. Clearing the fractions can hand you an answer the original equation never had. So you list the <b>excluded values first</b>, solve second, and <b>test every candidate</b> last. Step through four equations and watch where the fake answers come from.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="gt">Each side is a curve</h2>
+      <svg viewBox="0 0 300 240" aria-label="graph of both sides of the equation"><g id="art"></g></svg>
+      <div class="legend">
+        <span><i style="background:#43458f"></i>left side <em id="lgL"></em></span>
+        <span><i style="background:#b8862f"></i>right side <em id="lgR"></em></span>
+        <span><i style="background:#d1495b;height:0;border-top:2px dashed #d1495b"></i>excluded</span>
+      </div>
+      <div class="probe">
+        <div class="plab"><span>drag to test a value</span><b id="pv"></b></div>
+        <input type="range" id="sl">
+        <div class="pcmp">
+          <div class="side l" id="sL"><u>left side</u><var id="lv">&mdash;</var></div>
+          <div id="pop">&ne;</div>
+          <div class="side r" id="sR"><u>right side</u><var id="rv">&mdash;</var></div>
+        </div>
+        <div id="pmsg"></div>
+        <div id="chips"></div>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Rational equations<small>pick an equation, then press Next</small></div>
+    <div class="card">
+      <div id="pick"></div>
+      <div class="work" id="work"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div id="info"></div>
+      <div class="note" id="why"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var X='<i>x</i>';
+ function fr(n,d){return '<span class="fr"><span class="nu">'+n+'</span><span class="de">'+d+'</span></span>';}
+ function hl(s){return '<span class="hl">'+s+'</span>';}
+ function gl(s){return '<span class="gl">'+s+'</span>';}
+ function bad(s){return '<span class="bad">'+s+'</span>';}
+ function gd(s){return '<span class="gd">'+s+'</span>';}
+ var TO=' &nbsp;<span class="op">gives</span>&nbsp; ';
+ var PL=['The equation','Excluded values','Find the LCD','Multiply by LCD','Cancel','Solve','Test each answer'];
+
+ /* ---------------- the four equations ---------------- */
+ var E=[
+ {
+  k:'a', nm:'One clean solution', pv:'3/('+X+'&minus;2) = 5/('+X+'+4)',
+  gL:'3/('+X+'&minus;2)', gR:'5/('+X+'+4)',
+  L:function(x){return 3/(x-2);}, R:function(x){return 5/(x+4);},
+  exc:[2,-4], cand:[{v:11,ok:1}], win:[-12,16,-3,3], p0:0,
+  vt:'One solution: '+X+' = 11', vok:1,
+  steps:[
+   fr('3',X+' &minus; 2')+' &nbsp;=&nbsp; '+fr('5',X+' + 4'),
+   X+' &minus; 2 = 0 &rArr; '+hl(X+' &ne; 2')+' &nbsp;&nbsp; '+X+' + 4 = 0 &rArr; '+hl(X+' &ne; &minus;4'),
+   'LCD = '+gl('('+X+' &minus; 2)('+X+' + 4)'),
+   gl('('+X+'&minus;2)('+X+'+4)')+' · '+fr('3',X+'&minus;2')+' &nbsp;=&nbsp; '+gl('('+X+'&minus;2)('+X+'+4)')+' · '+fr('5',X+'+4'),
+   '3'+hl('('+X+' + 4)')+' = 5'+hl('('+X+' &minus; 2)'),
+   '3'+X+' + 12 = 5'+X+' &minus; 10'+TO+'22 = 2'+X+TO+hl(X+' = 11'),
+   '11 &ne; 2 &nbsp;·&nbsp; 11 &ne; &minus;4'+TO+gd('keep '+X+' = 11')
+  ],
+  ex:[
+   'A <b>rational equation</b> is an equation with the variable in a denominator. Every algebra move you already know still works &mdash; but one brand-new step gets added at the very end.',
+   'Set each denominator equal to zero and solve. Those two inputs make a fraction undefined, so they can <b>never</b> be solutions, no matter what the algebra produces later. Write them down <b>now</b>, before you solve anything. On the graph they are the dashed red walls.',
+   'The denominators share no common factor, so the least common denominator is just their product.',
+   'Multiply <b>both entire sides</b> by the LCD. This is a legal move precisely because the LCD is not zero &mdash; we just excluded the values that would make it zero.',
+   'On the left, <i>x</i>&minus;2 cancels; on the right, <i>x</i>+4 cancels. Every fraction is gone. What is left is an ordinary linear equation &mdash; and it is <b>not the same equation</b> we started with.',
+   'Distribute, gather the <i>x</i> terms, divide. Call 11 a <b>candidate</b>, not an answer. It has solved the cleared equation; it has not yet earned the right to be called a solution of the original.',
+   'Compare the candidate to the excluded list: 11 is neither 2 nor &minus;4, so it survives. Substituting back confirms it &mdash; 3/9 = 1/3 on the left and 5/15 = 1/3 on the right. Drag the probe to <i>x</i> = 11 and watch the two curves meet.'
+  ],
+  cap6:'The curves cross exactly once, at <i>x</i> = 11 &mdash; one honest intersection, one honest solution.'
+ },
+ {
+  k:'d', nm:'Two candidates, both good', pv:'12/'+X+' &minus; 12/('+X+'+2) = 1',
+  gL:'12/'+X+' &minus; 12/('+X+'+2)', gR:'1',
+  L:function(x){return 12/x-12/(x+2);}, R:function(x){return 1;},
+  exc:[0,-2], cand:[{v:-6,ok:1},{v:4,ok:1}], win:[-12,10,-4,6], p0:7,
+  vt:'Two solutions: '+X+' = &minus;6 and '+X+' = 4', vok:1,
+  steps:[
+   fr('12',X)+' &minus; '+fr('12',X+' + 2')+' &nbsp;=&nbsp; 1',
+   X+' = 0 &rArr; '+hl(X+' &ne; 0')+' &nbsp;&nbsp; '+X+' + 2 = 0 &rArr; '+hl(X+' &ne; &minus;2'),
+   'LCD = '+gl(X+'('+X+' + 2)'),
+   gl(X+'('+X+'+2)')+'·'+fr('12',X)+' &minus; '+gl(X+'('+X+'+2)')+'·'+fr('12',X+'+2')+' = '+gl(X+'('+X+'+2)')+'·1',
+   '12'+hl('('+X+' + 2)')+' &minus; 12'+hl(X)+' = '+hl(X+'('+X+' + 2)'),
+   '12'+X+' + 24 &minus; 12'+X+' = '+X+'<sup>2</sup> + 2'+X+TO+X+'<sup>2</sup> + 2'+X+' &minus; 24 = 0'+TO+'('+X+' + 6)('+X+' &minus; 4) = 0'+TO+hl(X+' = &minus;6')+' or '+hl(X+' = 4'),
+   '&minus;6 and 4 are neither 0 nor &minus;2'+TO+gd('keep both')
+  ],
+  ex:[
+   'The right-hand side is a plain 1 &mdash; no fraction at all. It still has to be multiplied by the LCD along with everything else. A term without a denominator is a term with a denominator of 1.',
+   'Two denominators, two excluded values: <i>x</i> = 0 and <i>x</i> = &minus;2. Notice that <i>x</i> alone counts as a denominator. Miss it and you will miss an exclusion.',
+   'Again no shared factors, so the LCD is the product <i>x</i>(<i>x</i>+2).',
+   'Three terms, three multiplications &mdash; including the lonely 1 on the right. Skipping that term is the single most common way to wreck a rational equation.',
+   'The fractions cancel and the right side becomes a product, which will make this a <b>quadratic</b>. Clearing denominators often raises the degree, and that is exactly why extra candidates can appear.',
+   'The 12<i>x</i> terms cancel on the left, leaving 24 = <i>x</i><sup>2</sup> + 2<i>x</i>. Move everything to one side and factor. Two candidates this time: &minus;6 and 4.',
+   'Check both against the excluded list {0, &minus;2}. Neither is on it, so <b>both survive</b>. Substituting: at <i>x</i> = 4, 3 &minus; 2 = 1; at <i>x</i> = &minus;6, &minus;2 &minus; (&minus;3) = 1. Extra candidates are not automatically fake &mdash; you have to check to find out.'
+  ],
+  cap6:'The flat gold line <i>y</i> = 1 meets the curve twice, at <i>x</i> = &minus;6 and <i>x</i> = 4. Two real crossings, two real solutions.'
+ },
+ {
+  k:'c', nm:'One good, one fake', pv:''+X+'/('+X+'+2) + 4/('+X+'&minus;2) = 16/('+X+'<sup>2</sup>&minus;4)',
+  gL:''+X+'/('+X+'+2) + 4/('+X+'&minus;2)', gR:'16/('+X+'<sup>2</sup>&minus;4)',
+  L:function(x){return x/(x+2)+4/(x-2);}, R:function(x){return 16/(x*x-4);},
+  exc:[2,-2], cand:[{v:-4,ok:1},{v:2,ok:0}], win:[-10,8,-6,6], p0:0,
+  vt:'One solution: '+X+' = &minus;4 &nbsp;· &nbsp;'+X+' = 2 rejected', vok:1,
+  steps:[
+   fr(X,X+' + 2')+' + '+fr('4',X+' &minus; 2')+' &nbsp;=&nbsp; '+fr('16',X+'<sup>2</sup> &minus; 4'),
+   X+'<sup>2</sup> &minus; 4 = '+hl('('+X+' + 2)('+X+' &minus; 2)')+TO+hl(X+' &ne; 2')+' and '+hl(X+' &ne; &minus;2'),
+   'LCD = '+gl('('+X+' + 2)('+X+' &minus; 2)'),
+   gl('('+X+'+2)('+X+'&minus;2)')+'·'+fr(X,X+'+2')+' + '+gl('('+X+'+2)('+X+'&minus;2)')+'·'+fr('4',X+'&minus;2')+' = '+gl('('+X+'+2)('+X+'&minus;2)')+'·'+fr('16','('+X+'+2)('+X+'&minus;2)'),
+   hl(X+'('+X+' &minus; 2)')+' + '+hl('4('+X+' + 2)')+' = '+hl('16'),
+   X+'<sup>2</sup> + 2'+X+' + 8 = 16'+TO+X+'<sup>2</sup> + 2'+X+' &minus; 8 = 0'+TO+'('+X+' + 4)('+X+' &minus; 2) = 0'+TO+hl(X+' = &minus;4')+' or '+hl(X+' = 2'),
+   '&minus;4 is allowed &rArr; '+gd('keep')+' &nbsp;·&nbsp; 2 is excluded &rArr; '+bad('throw out')
+  ],
+  ex:[
+   '<b>Always factor the denominators first.</b> That right-hand denominator <i>x</i><sup>2</sup> &minus; 4 is hiding two factors, and until you see them you cannot find the excluded values or the LCD.',
+   'Factoring the difference of squares exposes both walls at once: <i>x</i><sup>2</sup> &minus; 4 = (<i>x</i>+2)(<i>x</i>&minus;2), so <i>x</i> cannot be 2 or &minus;2. Keep this list in view &mdash; you are going to need it in about four steps.',
+   'Every denominator in the problem is built from (<i>x</i>+2) and (<i>x</i>&minus;2), so their product is the LCD. Nothing new has to be invented.',
+   'Multiply all three terms. On the right the LCD matches the denominator exactly, so that fraction collapses to just 16.',
+   'All denominators are gone. But look carefully at what happened: the equation we now hold is a polynomial equation that is <b>allowed to be true at <i>x</i> = 2</b>, while the original was not even defined there. That gap is where a fake answer will slip in.',
+   'Expand, collect, factor. Two candidates fall out: &minus;4 and 2. The algebra is flawless &mdash; and one of these is still not a solution.',
+   '<b>Here is the whole point of the section.</b> <i>x</i> = 2 is on the excluded list, so it is <b>extraneous</b> &mdash; discard it without hesitation. <i>x</i> = &minus;4 checks out: 2 &minus; 2/3 = 4/3 on the left, 16/12 = 4/3 on the right. Drag the probe onto <i>x</i> = 2 and watch both sides go undefined.'
+  ],
+  cap6:'Green dot at <i>x</i> = &minus;4: a genuine crossing. Red &times; at <i>x</i> = 2: not a crossing at all, just a wall both curves race away from.'
+ },
+ {
+  k:'b', nm:'Every candidate fake', pv:''+X+'/('+X+'&minus;5) = 5/('+X+'&minus;5) + 2',
+  gL:''+X+'/('+X+'&minus;5)', gR:'5/('+X+'&minus;5) + 2',
+  L:function(x){return x/(x-5);}, R:function(x){return 5/(x-5)+2;},
+  exc:[5], cand:[{v:5,ok:0}], win:[-6,16,-4,6], p0:9,
+  vt:'No solution', vok:0,
+  steps:[
+   fr(X,X+' &minus; 5')+' &nbsp;=&nbsp; '+fr('5',X+' &minus; 5')+' + 2',
+   X+' &minus; 5 = 0 &rArr; '+hl(X+' &ne; 5'),
+   'LCD = '+gl('('+X+' &minus; 5)'),
+   gl('('+X+'&minus;5)')+'·'+fr(X,X+'&minus;5')+' = '+gl('('+X+'&minus;5)')+'·'+fr('5',X+'&minus;5')+' + '+gl('('+X+'&minus;5)')+'·2',
+   hl(X)+' = '+hl('5')+' + '+hl('2('+X+' &minus; 5)'),
+   X+' = 5 + 2'+X+' &minus; 10'+TO+X+' = 2'+X+' &minus; 5'+TO+'&minus;'+X+' = &minus;5'+TO+hl(X+' = 5'),
+   '5 is excluded &rArr; '+bad('throw out')+' &nbsp;·&nbsp; nothing survives &rArr; '+bad('no solution')
+  ],
+  ex:[
+   'Both fractions already share the denominator <i>x</i> &minus; 5, and there is a stray 2 on the right. This looks like the friendliest problem on the list. It is the one that bites.',
+   'A single denominator, a single excluded value: <i>x</i> &ne; 5. Hold onto it.',
+   'One distinct denominator, so the LCD is simply (<i>x</i> &minus; 5).',
+   'Multiply all three terms &mdash; the two fractions and the 2.',
+   'Clean and fraction-free. Nothing looks wrong yet.',
+   'Solve honestly and you get exactly one candidate: <i>x</i> = 5. There is no arithmetic error anywhere in this line.',
+   '<i>x</i> = 5 is <b>the excluded value itself</b>. The only candidate is extraneous, so it is thrown out and nothing is left. The equation has <b>no solution</b> &mdash; and "no solution" is a complete, correct answer.'
+  ],
+  cap6:'Rewrite the left side as 1 + 5/(<i>x</i>&minus;5) and the right as 2 + 5/(<i>x</i>&minus;5). Same curve, shifted up by exactly 1 &mdash; a gap that never closes, at any <i>x</i>. The graph says no solution before the algebra does.'
+ }];
+
+ var CAP=[
+  'Each side of the equation is drawn as its own curve. A solution is an <i>x</i> where the two curves reach the <b>same height</b>.',
+  'The dashed red lines are the excluded values. The curves fly away from them and never touch &mdash; there is no height there at all.',
+  'The LCD is the smallest expression containing every denominator&rsquo;s factors. Nothing on the graph changes yet.',
+  'Multiplying both sides by the LCD does not change the picture &mdash; but it does change the equation the picture belongs to.',
+  'The fraction-free equation is a <b>different, wider</b> equation. Its graph would be allowed to touch the red walls. The original is not.',
+  'Candidates are marked below the axis. A candidate is only a solution if the two curves actually meet there.',
+  ''
+ ];
+
+ var cur=0, step=0, probe=0;
+
+ /* ---------------- numeric helpers ---------------- */
+ function nice(span){var raw=span/6;var p=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10));var n=raw/p;var m=n<1.5?1:(n<3?2:(n<7?5:10));return m*p;}
+ function num(v){v=Math.round(v*1000)/1000;if(v===0)v=0;return String(v).replace('-','−');}
+ function fmt(v){
+   if(!isFinite(v))return '—';
+   if(Math.abs(v)>=1000)return num(Math.round(v));
+   var r=Math.round(v*1000)/1000; if(r===0)r=0;
+   return String(r).replace('-','−');
+ }
+ function isExc(x){var e=E[cur].exc;for(var i=0;i<e.length;i++){if(Math.abs(x-e[i])<1e-9)return e[i];}return null;}
+
+ /* build a curve as a list of unbroken segments, clipped to the window */
+ function build(f,X0,X1,Y0,Y1,brk){
+   var N=760,segs=[],c=[],px=null,py=null,i,b;
+   for(i=0;i<=N;i++){
+     var x=X0+(X1-X0)*i/N, jump=false;
+     if(px!==null){for(b=0;b<brk.length;b++){if((px-brk[b])*(x-brk[b])<=0)jump=true;}}
+     if(jump){if(c.length>1)segs.push(c);c=[];py=null;}
+     var y=f(x);
+     if(!isFinite(y)){if(c.length>1)segs.push(c);c=[];px=x;py=null;continue;}
+     var inr=(y>=Y0&&y<=Y1), pin=(py!==null&&py>=Y0&&py<=Y1);
+     if(inr){
+       if(py!==null&&!pin){var yb=(py>Y1)?Y1:Y0,t=(yb-py)/(y-py);c.push([px+(x-px)*t,yb]);}
+       c.push([x,y]);
+     }else if(pin){
+       var yc=(y>Y1)?Y1:Y0,u=(yc-py)/(y-py);c.push([px+(x-px)*u,yc]);
+       if(c.length>1)segs.push(c);c=[];
+     }
+     px=x;py=y;
+   }
+   if(c.length>1)segs.push(c);
+   return segs;
+ }
+
+ /* ---------------- the graph ---------------- */
+ function drawGraph(){
+   var e=E[cur],w=e.win,X0=w[0],X1=w[1],Y0=w[2],Y1=w[3];
+   var W=300,H=240,L=30,R=10,T=10,B=22;
+   function sx(x){return L+(x-X0)/(X1-X0)*(W-L-R);}
+   function sy(y){return T+(Y1-y)/(Y1-Y0)*(H-T-B);}
+   var pw=W-L-R, ph=H-T-B, s='', i, t;
+   s+='<defs><clipPath id="cp"><rect x="'+L+'" y="'+T+'" width="'+pw+'" height="'+ph+'"/></clipPath></defs>';
+   s+='<rect x="'+L+'" y="'+T+'" width="'+pw+'" height="'+ph+'" fill="#fbfaff" stroke="#e0e2ef"/>';
+   var xs=nice(X1-X0), ys=nice(Y1-Y0);
+   for(i=Math.ceil(X0/xs);i<=Math.floor(X1/xs+1e-9);i++){t=i*xs;
+     s+='<line x1="'+sx(t).toFixed(1)+'" y1="'+T+'" x2="'+sx(t).toFixed(1)+'" y2="'+(H-B)+'" stroke="#eceef8"/>';
+     s+='<text x="'+sx(t).toFixed(1)+'" y="'+(H-B+13)+'" font-size="8.5" fill="#7d7f94" text-anchor="middle">'+num(t)+'</text>';}
+   for(i=Math.ceil(Y0/ys);i<=Math.floor(Y1/ys+1e-9);i++){t=i*ys;
+     s+='<line x1="'+L+'" y1="'+sy(t).toFixed(1)+'" x2="'+(W-R)+'" y2="'+sy(t).toFixed(1)+'" stroke="#eceef8"/>';
+     s+='<text x="'+(L-4)+'" y="'+(sy(t)+3).toFixed(1)+'" font-size="8.5" fill="#7d7f94" text-anchor="end">'+num(t)+'</text>';}
+   if(Y0<0&&Y1>0)s+='<line x1="'+L+'" y1="'+sy(0).toFixed(1)+'" x2="'+(W-R)+'" y2="'+sy(0).toFixed(1)+'" stroke="#c3c6dd" stroke-width="1.2"/>';
+   if(X0<0&&X1>0)s+='<line x1="'+sx(0).toFixed(1)+'" y1="'+T+'" x2="'+sx(0).toFixed(1)+'" y2="'+(H-B)+'" stroke="#c3c6dd" stroke-width="1.2"/>';
+
+   /* excluded walls appear once they have been found */
+   if(step>=1){
+     for(i=0;i<e.exc.length;i++){var ex=e.exc[i];
+       if(ex<X0||ex>X1)continue;
+       s+='<line x1="'+sx(ex).toFixed(1)+'" y1="'+T+'" x2="'+sx(ex).toFixed(1)+'" y2="'+(H-B)+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="5 4" opacity=".85"/>';
+       s+='<text x="'+(sx(ex)+3).toFixed(1)+'" y="'+(T+10)+'" font-size="8.6" font-weight="700" fill="#d1495b">x≠'+num(ex)+'</text>';}
+   }
+
+   /* the two curves */
+   s+='<g clip-path="url(#cp)" fill="none" stroke-linecap="round" stroke-linejoin="round">';
+   var cv=[[e.L,'#43458f',2.3],[e.R,'#b8862f',2.3]];
+   for(i=0;i<2;i++){
+     var sg=build(cv[i][0],X0,X1,Y0,Y1,e.exc);
+     for(var j=0;j<sg.length;j++){
+       var pts='';
+       for(var k=0;k<sg[j].length;k++){pts+=sx(sg[j][k][0]).toFixed(1)+','+sy(sg[j][k][1]).toFixed(1)+' ';}
+       s+='<polyline points="'+pts+'" stroke="'+cv[i][1]+'" stroke-width="'+cv[i][2]+'"/>';
+     }
+   }
+   s+='</g>';
+
+   /* candidate ticks once they exist */
+   if(step>=5){
+     for(i=0;i<e.cand.length;i++){var c=e.cand[i];
+       if(c.v<X0||c.v>X1)continue;
+       var col=(step>=6)?(c.ok?'#2f9e5b':'#d1495b'):'#7d7f94';
+       s+='<line x1="'+sx(c.v).toFixed(1)+'" y1="'+(H-B-7)+'" x2="'+sx(c.v).toFixed(1)+'" y2="'+(H-B)+'" stroke="'+col+'" stroke-width="2.2"/>';
+     }
+   }
+   /* verdict markers */
+   if(step>=6){
+     for(i=0;i<e.cand.length;i++){var d=e.cand[i]; if(d.v<X0||d.v>X1)continue;
+       var mx=sx(d.v);
+       if(d.ok){
+         var my=sy(e.L(d.v));
+         s+='<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="6.4" fill="#fff" stroke="#2f9e5b" stroke-width="2.4"/>';
+         s+='<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="2.6" fill="#2f9e5b"/>';
+       }else{
+         var cy=T+ph*0.5;
+         s+='<circle cx="'+mx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="8.4" fill="#fff" stroke="#d1495b" stroke-width="1.8"/>';
+         s+='<path d="M'+(mx-4).toFixed(1)+' '+(cy-4).toFixed(1)+' L'+(mx+4).toFixed(1)+' '+(cy+4).toFixed(1)+' M'+(mx+4).toFixed(1)+' '+(cy-4).toFixed(1)+' L'+(mx-4).toFixed(1)+' '+(cy+4).toFixed(1)+'" stroke="#d1495b" stroke-width="2.1" stroke-linecap="round" fill="none"/>';
+       }
+     }
+   }
+
+   /* the live probe */
+   var p=probe;
+   if(p>=X0&&p<=X1){
+     var pxp=sx(p);
+     s+='<line x1="'+pxp.toFixed(1)+'" y1="'+T+'" x2="'+pxp.toFixed(1)+'" y2="'+(H-B)+'" stroke="#22243a" stroke-width="1" stroke-dasharray="3 3" opacity=".45"/>';
+     var lv=e.L(p), rv=e.R(p);
+     if(isFinite(lv)&&lv>=Y0&&lv<=Y1)s+='<circle cx="'+pxp.toFixed(1)+'" cy="'+sy(lv).toFixed(1)+'" r="4" fill="#43458f" stroke="#fff" stroke-width="1.6"/>';
+     if(isFinite(rv)&&rv>=Y0&&rv<=Y1)s+='<circle cx="'+pxp.toFixed(1)+'" cy="'+sy(rv).toFixed(1)+'" r="4" fill="#b8862f" stroke="#fff" stroke-width="1.6"/>';
+   }
+   $('art').innerHTML=s;
+ }
+
+ /* ---------------- probe readout ---------------- */
+ function readout(){
+   var e=E[cur], hit=isExc(probe);
+   $('pv').innerHTML=num(probe);
+   var lv=e.L(probe), rv=e.R(probe);
+   if(hit!==null){
+     $('lv').innerHTML=isFinite(lv)?fmt(lv):'undefined';
+     $('rv').innerHTML=isFinite(rv)?fmt(rv):'undefined';
+     $('sL').className='side l'+(isFinite(lv)?'':' und'); $('sR').className='side r'+(isFinite(rv)?'':' und');
+     $('pop').innerHTML='&times;'; $('pop').className='un';
+     $('pmsg').className='un';
+     $('pmsg').innerHTML='<b>Undefined.</b> <i>x</i> = '+num(hit)+' makes a denominator zero, so the equation makes no claim at all here. Any candidate that lands on this value is <b>extraneous</b>.';
+   }else{
+     $('lv').innerHTML=fmt(lv); $('rv').innerHTML=fmt(rv);
+     $('sL').className='side l'; $('sR').className='side r';
+     var eq=isFinite(lv)&&isFinite(rv)&&Math.abs(lv-rv)<1e-9*Math.max(1,Math.abs(lv));
+     $('pop').innerHTML=eq?'=':'&ne;'; $('pop').className=eq?'eq':'';
+     $('pmsg').className=eq?'eq':'';
+     $('pmsg').innerHTML=eq
+       ? '<b>Both sides agree.</b> <i>x</i> = '+num(probe)+' is a genuine solution &mdash; it is in the domain <i>and</i> it makes the equation true.'
+       : 'The two sides disagree at <i>x</i> = '+num(probe)+', so this value is not a solution. Slide until the curves meet.';
+   }
+   drawGraph();
+ }
+
+ /* ---------------- chips ---------------- */
+ function chips(){
+   var e=E[cur], h='', i;
+   if(step>=1){for(i=0;i<e.exc.length;i++){
+     h+='<button class="x" data-v="'+e.exc[i]+'">x = '+num(e.exc[i])+'<small>excluded</small></button>';}}
+   if(step>=5){for(i=0;i<e.cand.length;i++){var c=e.cand[i];
+     var cl=(step>=6)?(c.ok?'g':'x'):'';
+     var tag=(step>=6)?(c.ok?'solution':'extraneous'):'candidate';
+     h+='<button class="'+cl+'" data-v="'+c.v+'">x = '+num(c.v)+'<small>'+tag+'</small></button>';}}
+   $('chips').innerHTML=h;
+   var bs=$('chips').getElementsByTagName('button');
+   for(i=0;i<bs.length;i++){bs[i].onclick=function(){setProbe(parseFloat(this.getAttribute('data-v')));};}
+ }
+ function setProbe(v){probe=v;$('sl').value=v;readout();}
+
+ /* ---------------- steps ---------------- */
+ function render(){
+   var e=E[cur], h='', i;
+   for(i=0;i<=step;i++){
+     h+='<div class="wr'+(i===step?' on':' done')+'"><div class="pl">'+PL[i]+'</div><div class="mx">'+e.steps[i]+
+        (i===step?'<span class="ex">'+e.ex[i]+'</span>':'')+'</div></div>';
+   }
+   $('work').innerHTML=h;
+   $('prev').disabled=(step===0);
+   $('next').disabled=(step===6);
+   if(step===6){
+     $('stage').style.background=e.vok?'#2f9e5b':'#d1495b';
+     $('stage').innerHTML=e.vt+'<small>step 7 of 7 &middot; tested against the excluded values</small>';
+   }else{
+     $('stage').style.background='#43458f';
+     $('stage').innerHTML=e.nm+'<small>step '+(step+1)+' of 7 &middot; '+PL[step].toLowerCase()+'</small>';
+   }
+   $('cap').innerHTML=(step===6)?e.cap6:CAP[step];
+   $('gt').innerHTML=(step>=1)?'Two curves, and the walls between them':'Each side is a curve';
+   chips(); readout();
+ }
+
+ function pickUI(){
+   var h='';
+   for(var i=0;i<E.length;i++){
+     h+='<button data-i="'+i+'"'+(i===cur?' class="on"':'')+'><span class="nm">'+E[i].nm+'</span><span class="ct">'+E[i].pv+'</span></button>';
+   }
+   $('pick').innerHTML=h;
+   var bs=$('pick').getElementsByTagName('button');
+   for(var j=0;j<bs.length;j++){bs[j].onclick=function(){load(parseInt(this.getAttribute('data-i'),10));};}
+ }
+
+ function load(i){
+   cur=i; step=0;
+   var e=E[cur], w=e.win;
+   $('sl').min=w[0]; $('sl').max=w[1]; $('sl').step=0.05; $('sl').value=e.p0; probe=e.p0;
+   $('lgL').innerHTML=e.gL; $('lgR').innerHTML=e.gR;
+   $('why').innerHTML='<b>Why fake answers exist at all.</b> Multiplying both sides by ('+
+     (e.exc[0]<0?('<i>x</i> + '+(-e.exc[0])):('<i>x</i> &minus; '+e.exc[0]))+
+     ') is multiplying by <b>zero</b> when <i>x</i> = '+num(e.exc[0])+
+     '. And multiplying a false equation by zero turns it into a true one: 0 = 0. So the cleared equation is <b>wider</b> than the original &mdash; it can hold at the excluded values, where the original was never even defined. That is exactly where extraneous answers hide, which is why the check is not optional.';
+   pickUI(); render();
+ }
+
+ $('prev').onclick=function(){if(step>0){step--;render();}};
+ $('next').onclick=function(){if(step<6){step++;render();}};
+ $('sl').oninput=function(){probe=parseFloat(this.value);readout();};
+
+ $('info').innerHTML='<span class="n">The one extra rule</span>Solving a rational equation means clearing the denominators &mdash; and that step can <b>manufacture</b> answers. A value that solves the cleared equation but breaks the original is called <b>extraneous</b>. So the work is not finished when you solve it. It is finished when <b>every candidate has been compared to the excluded values</b>.'+
+   '<div class="loc">List the excluded values <b>before</b> you solve, then test <b>every</b> candidate against that list.</div>';
+
+ load(0);
+})();
+</script>
+</body>
+</html>

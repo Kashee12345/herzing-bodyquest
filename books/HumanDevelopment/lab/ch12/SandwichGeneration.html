@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f7f2">
+<title>The Sandwich Generation</title>
+<meta name="description" content="Tap the competing demands of midlife — caring upward for aging parents and downward for children at once — and watch the load stack in this interactive on the sandwich generation. For human development students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_humdev.css">
+<style>
+.wrap{grid-template-columns:0.96fr 1.04fr;}
+.load{height:14px;border-radius:8px;background:#e2efe7;overflow:hidden;margin-top:10px;border:1px solid var(--line);}
+.load i{display:block;height:100%;width:0;border-radius:8px;transition:width .38s ease,background .38s ease;}
+.loadrow{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted);margin-top:11px;font-weight:600;}
+.loadrow b{font-size:13px;color:var(--teal-dk);}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.dem{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 10px;cursor:pointer;text-align:left;font-family:var(--sans);width:100%;transition:.12s;}
+.dem:hover{border-color:var(--teal);}
+.dem .ic{font-size:19px;line-height:1;flex:none;}
+.dem .tx{min-width:0;}
+.dem .nm{font-weight:700;font-size:12.5px;color:var(--ink);display:block;line-height:1.15;}
+.dem .s{font-size:10.5px;color:var(--muted);display:block;margin-top:1px;}
+.dem.on{background:var(--teal);border-color:var(--teal);}
+.dem.on .nm{color:#fff;} .dem.on .s{color:rgba(255,255,255,.85);}
+#warn{margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Human Development · Chapter 12</div>
+  <h1>The Sandwich Generation</h1>
+  <div class="intro">In middle adulthood (roughly <b>40&ndash;65</b>), many adults are pressed from both sides at once &mdash; caring <b>upward</b> for aging parents and <b>downward</b> for children still finding their feet. Tap each demand to load the plate and feel the squeeze.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The midlife squeeze</h2>
+    <svg viewBox="0 0 240 224" aria-label="A midlife adult pressed between aging parents above and children below, with side demands of career, money, health, and partnership."><g id="art"></g></svg>
+    <div class="loadrow"><span>Demand load</span><b id="loadtxt">0% &middot; At ease</b></div>
+    <div class="load"><i id="loadbar"></i></div>
+    <div class="row"><button class="btn" id="reset">Reset</button><button class="btn solid" id="all">Carry it all</button></div>
+  </div></div>
+  <div>
+    <div id="stage">The competing demands<small>tap a demand to begin</small></div>
+    <div class="card">
+      <div class="dgrid" id="grid"></div>
+      <div id="info"></div>
+      <div id="warn"></div>
+    </div>
+  </div>
+</div>
+<footer>Human Development · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // Competing demands of midlife. side:'top'|'bottom' = the sandwich slices; others sit at a corner.
+ var D=[
+  {k:'parents',ic:'👵',nm:'Aging parents',s:'Elder care · filial maturity',col:'#7a5a8a',w:3,pos:'top',
+   feat:'A parent’s health begins to slip &mdash; chronic illness, falls, memory loss. The adult child moves from being cared for to <b>caregiver</b>, a shift developmentalists call <b>filial maturity</b>: taking responsibility for a parent while still respecting them as an adult, not treating them as a child.'},
+  {k:'children',ic:'🎓',nm:'Children to launch',s:'Teens · emerging adults',col:'#2f9e5b',w:3,pos:'bottom',
+   feat:'Even as children grow, many still need money, guidance, or a room &mdash; including <b>&ldquo;boomerang&rdquo;</b> adult children who move back home. Supporting a teenager’s launch <i>at the same time</i> as caring for one’s own parents is exactly what defines the <b>sandwich generation</b>.'},
+  {k:'career',ic:'💼',nm:'Career at its peak',s:'Consolidation · leadership',col:'#2f6f9f',w:2,pos:'ul',
+   feat:'Midlife is often the height of work responsibility and earning &mdash; the career-consolidation years. Work is also a healthy channel for <b>generativity</b>: mentoring, leading, and building something that outlasts you.'},
+  {k:'money',ic:'💰',nm:'The money squeeze',s:'Two generations + retirement',col:'#b8862f',w:3,pos:'ur',
+   feat:'A child’s tuition, a parent’s care costs, and saving for one’s own retirement can all land in the same decade. Financial strain is among the most-reported pressures of the sandwich years, because the money is pulled in three directions at once.'},
+  {k:'health',ic:'🫀',nm:'Your own aging body',s:'Midlife health · self-care',col:'#d1495b',w:2,pos:'ll',
+   feat:'The body signals midlife &mdash; perimenopause or declining testosterone, presbyopia, the first chronic conditions (blood pressure, joints). <b>Self-care is usually the demand dropped first</b>, which is what makes <b>caregiver burnout</b> a real risk.'},
+  {k:'partner',ic:'💞',nm:'The partnership',s:'Empty nest · couple bond',col:'#c85a86',w:2,pos:'lr',
+   feat:'The couple relationship needs tending amid everyone else’s needs. As children leave, partners meet the <b>empty nest</b> &mdash; for many a chance to reconnect, for some a strain once the shared job of parenting winds down.'}
+ ];
+ var TOTAL=0; D.forEach(function(d){TOTAL+=d.w;});
+ var on={}; var focus=null;
+ var cx=120, cy=112;
+ // corner node anchor points
+ var POS={ul:[36,74],ur:[204,74],ll:[36,150],lr:[204,150]};
+
+ function lerp(a,b,t){return Math.round(a+(b-a)*t);}
+ function strain(t){ // green -> coral by load fraction t
+   return 'rgb('+lerp(46,209,t)+','+lerp(125,73,t)+','+lerp(82,91,t)+')';
+ }
+ function arrow(x1,y1,x2,y2,col,w){
+   var dx=x2-x1, dy=y2-y1, L=Math.sqrt(dx*dx+dy*dy)||1, ux=dx/L, uy=dy/L;
+   var h=8, bx=x2-ux*h, by=y2-uy*h, px=-uy, py=ux;
+   return '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+bx.toFixed(1)+'" y2="'+by.toFixed(1)+'" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"/>'+
+     '<polygon points="'+x2.toFixed(1)+','+y2.toFixed(1)+' '+(bx+px*4.5).toFixed(1)+','+(by+py*4.5).toFixed(1)+' '+(bx-px*4.5).toFixed(1)+','+(by-py*4.5).toFixed(1)+'" fill="'+col+'"/>';
+ }
+ function slab(x,y,w,h,active,col){
+   return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+(h/2)+'" fill="'+(active?col:'#eef4ef')+'" stroke="'+(active?col:'#d7e6dc')+'" stroke-width="1.5"/>';
+ }
+ function node(p,active,d){
+   var x=POS[p][0], y=POS[p][1];
+   return '<circle cx="'+x+'" cy="'+y+'" r="17" fill="'+(active?d.col:'#fff')+'" stroke="'+(active?d.col:'#d7e6dc')+'" stroke-width="2"/>'+
+     '<text x="'+x+'" y="'+(y+6)+'" font-size="17" text-anchor="middle">'+d.ic+'</text>';
+ }
+ function byk(k){for(var i=0;i<D.length;i++){if(D[i].k===k)return D[i];}return null;}
+
+ function draw(frac){
+   var s='';
+   var topY = 20 + frac*13;          // top slice presses down as load grows
+   var botY = 178 - frac*13;         // bottom slice presses up
+   var pa=byk('parents'), ch=byk('children');
+   // top slice (aging parents)
+   s+=slab(30,topY,180,22,on.parents,pa.col);
+   s+='<text x="120" y="'+(topY+15)+'" font-size="14" text-anchor="middle">👵</text>';
+   // bottom slice (children)
+   s+=slab(30,botY,180,22,on.children,ch.col);
+   s+='<text x="120" y="'+(botY+15)+'" font-size="14" text-anchor="middle">🎓</text>';
+   // corner demand nodes + inward arrows when active
+   ['career','money','health','partner'].forEach(function(k){
+     var d=byk(k), p=POS[d.pos], nx=p[0], ny=p[1];
+     if(on[k]){
+       var dx=cx-nx, dy=cy-ny, L=Math.sqrt(dx*dx+dy*dy), ux=dx/L, uy=dy/L;
+       s+=arrow(nx+ux*18, ny+uy*18, cx-ux*30, cy-uy*30, d.col, 3);
+     }
+     s+=node(d.pos,on[k],d);
+   });
+   // squeeze arrows from the two slices
+   if(on.parents) s+=arrow(120, topY+24, 120, cy-30, pa.col, 3.4);
+   if(on.children) s+=arrow(120, botY-2, 120, cy+30, ch.col, 3.4);
+   // the midlife adult (the filling) — tint + expression track the load
+   var col=strain(frac);
+   s+='<rect x="106" y="112" width="28" height="30" rx="13" fill="'+col+'"/>';           // torso
+   s+='<circle cx="120" cy="98" r="15" fill="'+col+'"/>';                                  // head
+   s+='<circle cx="114" cy="95" r="1.7" fill="rgba(255,255,255,.9)"/><circle cx="126" cy="95" r="1.7" fill="rgba(255,255,255,.9)"/>';
+   if(frac<0.5) s+='<path d="M113 103 Q120 108 127 103" stroke="rgba(255,255,255,.9)" stroke-width="2" fill="none" stroke-linecap="round"/>';
+   else s+='<path d="M113 106 Q120 100 127 106" stroke="rgba(255,255,255,.9)" stroke-width="2" fill="none" stroke-linecap="round"/>';
+   return s;
+ }
+
+ function loadLabel(pct){
+   if(pct===0) return 'At ease';
+   if(pct<34) return 'Manageable';
+   if(pct<67) return 'Stretched';
+   if(pct<90) return 'Heavily loaded';
+   return 'Role overload';
+ }
+
+ var EMPTY='<span class="n">Middle adulthood · the squeeze</span>Erikson placed these years in the stage of <b>Generativity vs. Stagnation</b> &mdash; the pull to care for the next generation and give back. The sandwich generation lives that pull literally, tending parents and children at once. <b>Tap a demand</b> to see what it asks of the midlife adult.';
+
+ function render(){
+   var sum=0, count=0;
+   D.forEach(function(d){ if(on[d.k]){sum+=d.w; count++;} });
+   var frac=sum/TOTAL, pct=Math.round(frac*100), lab=loadLabel(pct);
+   var col=strain(frac);
+   $("art").innerHTML=draw(frac);
+   $("loadbar").style.width=pct+'%'; $("loadbar").style.background=col;
+   $("loadtxt").innerHTML=pct+'% &middot; '+lab;
+   $("stage").style.background=count?col:'var(--teal)';
+   $("stage").innerHTML=(count? count+' demand'+(count>1?'s':'')+' carried' : 'The competing demands')+
+     '<small>'+(count? lab+' · load '+pct+'%' : 'tap a demand to begin')+'</small>';
+   // toggles
+   $("grid").innerHTML=D.map(function(d){
+     return '<button class="dem'+(on[d.k]?' on':'')+'" data-k="'+d.k+'"><span class="ic">'+d.ic+'</span>'+
+       '<span class="tx"><span class="nm">'+d.nm+'</span><span class="s">'+d.s+'</span></span></button>';
+   }).join('');
+   document.querySelectorAll('#grid .dem').forEach(function(b){
+     b.onclick=function(){ var k=b.dataset.k; on[k]=!on[k]; focus=byk(k); render(); };
+   });
+   // info panel
+   if(focus) $("info").innerHTML='<span class="n">'+focus.ic+' '+focus.nm+'</span>'+focus.feat+
+     '<div class="loc">'+(on[focus.k]?'Now on the plate':'Set aside for now')+' &middot; weight '+focus.w+' of 3</div>';
+   else $("info").innerHTML=EMPTY;
+   // dynamic warning / framing
+   if(pct>=67) $("warn").innerHTML='<div class="note"><b>Role overload.</b> When the demands stack this high, the couple bond and personal health are usually the first things dropped &mdash; the road to <b>caregiver burnout</b>. Carried <i>with support</i>, this juggling act <i>is</i> generativity; carried alone, it tips toward strain.</div>';
+   else if(count>=3) $("warn").innerHTML='<div class="mnem"><b>The classic sandwich.</b> Pressed from above and below at once, midlife adults report their time and money pulled in several directions &mdash; the defining experience of these years.</div>';
+   else $("warn").innerHTML='';
+ }
+
+ $("all").onclick=function(){ D.forEach(function(d){on[d.k]=true;}); focus=byk('parents'); render(); };
+ $("reset").onclick=function(){ on={}; focus=null; render(); };
+ render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>How a Virus Replicates</title>
+<meta name="description" content="Step through the five stages of the viral replication cycle — attachment, entry, replication, assembly, and release — and see where antiviral drugs cut in. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:1fr 1fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.chk{display:flex;gap:8px;margin-top:2px;}
+.chk div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 4px;font-size:11px;font-weight:700;color:var(--muted);background:#fff;}
+.chk div .v{display:block;font-size:14px;margin-top:2px;}
+.chk div.yes{border-color:var(--teal);color:var(--teal-dk);background:#f5f1fa;}
+.chk div.no{color:#b23145;}
+.dots{display:flex;gap:5px;justify-content:center;margin-top:11px;}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--line);transition:.2s;cursor:pointer;}
+.dots i.on{background:var(--teal);transform:scale(1.25);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 5</div>
+  <h1>How a Virus Replicates</h1>
+  <div class="intro">A virus can&rsquo;t reproduce on its own &mdash; it must break into a living cell and turn it into a <b>virus factory</b>. Step through the five stages of the replication cycle, and watch where antiviral drugs cut in.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The replication cycle</h2>
+    <svg viewBox="0 0 220 190" aria-label="viral replication cycle"><g id="art"></g></svg>
+    <div class="dots" id="dots"></div>
+  </div></div>
+  <div>
+    <div id="stage">The five stages<small>press Next to begin</small></div>
+    <div class="card">
+      <div class="chk">
+        <div id="c1">Genome uncoated?<span class="v" id="v1">—</span></div>
+        <div id="c2">Copies made?<span class="v" id="v2">—</span></div>
+        <div id="c3">Virions released?<span class="v" id="v3">—</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem" id="drug"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var S=[
+  {t:'1 · Attachment',short:'Attachment',col:'#2f6f9f',unc:0,cop:0,rel:0,
+   d:'The virus binds a specific <b>receptor</b> on the host-cell surface &mdash; a lock-and-key fit between a viral surface protein and a host molecule. This specificity sets the virus&rsquo;s <b>host range and tissue tropism</b>: HIV binds <b>CD4</b> on T-cells; influenza binds <b>sialic acid</b> on respiratory cells.',
+   dg:'<b>Drug target:</b> attachment &amp; fusion inhibitors (<b>maraviroc</b>, <b>enfuvirtide</b> in HIV) jam this very first step.'},
+  {t:'2 · Entry &amp; Uncoating',short:'Entry',col:'#7a5a8a',unc:1,cop:0,rel:0,
+   d:'The virus crosses the membrane &mdash; by direct <b>fusion</b> of its envelope, or by being swallowed in a vesicle (<b>endocytosis</b>). Inside, the protein capsid breaks apart and <b>uncoats</b>, spilling the viral genome (DNA or RNA) into the cell.',
+   dg:'<b>Drug target:</b> uncoating blockers such as <b>amantadine</b> once stopped influenza A right here.'},
+  {t:'3 · Replication',short:'Replication',col:'#b8862f',unc:1,cop:1,rel:0,
+   d:'The virus <b>hijacks the host&rsquo;s machinery</b> to copy its genome and build viral proteins. Genome type decides how: many RNA viruses carry their own polymerase, and retroviruses like <b>HIV</b> use <b>reverse transcriptase</b> to turn RNA into DNA.',
+   dg:'<b>Drug target:</b> most antivirals strike here &mdash; nucleoside analogs (<b>acyclovir</b>), reverse-transcriptase inhibitors (<b>zidovudine</b>), polymerase inhibitors.'},
+  {t:'4 · Assembly',short:'Assembly',col:'#2f9e5b',unc:1,cop:1,rel:0,
+   d:'Fresh genome copies and capsid proteins <b>self-assemble</b> into complete virus particles, called <b>virions</b>. Enveloped viruses stage their proteins along the host membrane, getting ready to bud.',
+   dg:'<b>Drug target:</b> protease inhibitors (the HIV <b>&ldquo;-navir&rdquo;</b> drugs) block the protein cutting needed to make mature, infectious virions.'},
+  {t:'5 · Release',short:'Release',col:'#d1495b',unc:1,cop:1,rel:1,
+   d:'New virions leave the cell. <b>Enveloped</b> viruses <b>bud</b> off, wrapping in host membrane and often sparing the cell a while; <b>naked</b> viruses usually burst (<b>lyse</b>) the cell, killing it. The freed virions infect neighboring cells &mdash; and the whole cycle repeats.',
+   dg:'<b>Drug target:</b> neuraminidase inhibitors (<b>oseltamivir / Tamiflu</b>) stop influenza virions from cutting free &mdash; which is why they work best given early.'}
+ ];
+ var i=0;
+
+ function vir(cx,cy,r,col){
+   var p=[],a;
+   for(a=0;a<6;a++){var an=(a*60+30)*Math.PI/180;p.push((cx+r*Math.cos(an)).toFixed(1)+','+(cy+r*Math.sin(an)).toFixed(1));}
+   var s='<polygon points="'+p.join(' ')+'" fill="'+col+'"/>';
+   for(a=0;a<8;a++){var bn=a/8*6.2832,x1=cx+r*Math.cos(bn),y1=cy+r*Math.sin(bn),x2=cx+(r+5)*Math.cos(bn),y2=cy+(r+5)*Math.sin(bn);
+     s+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+col+'" stroke-width="1.8"/><circle cx="'+x2.toFixed(1)+'" cy="'+y2.toFixed(1)+'" r="1.9" fill="'+col+'"/>';}
+   return s;
+ }
+ function gen(x,y,col){return '<path d="M'+x+' '+y+' q6 -7 12 0 q6 7 12 0 q6 -7 12 0" stroke="'+col+'" stroke-width="2.4" fill="none" stroke-linecap="round"/>';}
+ function prot(x,y,col){return '<rect x="'+x+'" y="'+y+'" width="7" height="7" rx="1.5" fill="'+col+'" opacity=".85"/>';}
+ function recept(x,y){return '<line x1="'+x+'" y1="'+y+'" x2="'+(x-9)+'" y2="'+y+'" stroke="#a98fce" stroke-width="2.3"/><line x1="'+(x-9)+'" y1="'+y+'" x2="'+(x-15)+'" y2="'+(y-6)+'" stroke="#a98fce" stroke-width="2.3"/><line x1="'+(x-9)+'" y1="'+y+'" x2="'+(x-15)+'" y2="'+(y+6)+'" stroke="#a98fce" stroke-width="2.3"/>';}
+
+ function draw(s){
+   var o='';
+   // host cell body + membrane
+   o+='<ellipse cx="130" cy="95" rx="80" ry="78" fill="#f3eefb" stroke="'+s.col+'" stroke-width="3"/>';
+   // nucleus (host machinery)
+   o+='<circle cx="154" cy="90" r="27" fill="#e7dcf5" stroke="#c9b6e6" stroke-width="2"/>';
+   o+='<text x="154" y="88" font-size="8" text-anchor="middle" fill="#7a5a8a" font-weight="700">host</text>';
+   o+='<text x="154" y="98" font-size="8" text-anchor="middle" fill="#7a5a8a" font-weight="700">nucleus</text>';
+   // surface receptors on the left face
+   o+=recept(54,62)+recept(46,95)+recept(54,128);
+
+   if(s.short==='Attachment'){
+     o+=vir(24,95,12,s.col);
+     o+='<text x="20" y="150" font-size="9" fill="'+s.col+'" font-weight="700" text-anchor="middle">binds receptor</text>';
+   } else if(s.short==='Entry'){
+     o+=vir(52,95,11,s.col);
+     o+='<path d="M64 95 q8 -3 16 0" stroke="'+s.col+'" stroke-width="1.5" fill="none" stroke-dasharray="3 3"/>';
+     o+=gen(80,92,s.col);
+     o+='<text x="88" y="130" font-size="9" fill="'+s.col+'" font-weight="700" text-anchor="middle">genome released</text>';
+   } else if(s.short==='Replication'){
+     o+=gen(80,64,s.col)+gen(74,104,s.col)+gen(96,128,s.col);
+     o+=prot(102,58,s.col)+prot(74,84,s.col)+prot(118,112,s.col)+prot(90,120,s.col)+prot(108,80,s.col);
+     o+='<text x="96" y="150" font-size="9" fill="'+s.col+'" font-weight="700" text-anchor="middle">copies + proteins</text>';
+   } else if(s.short==='Assembly'){
+     o+=vir(88,66,9,s.col)+vir(80,108,9,s.col)+vir(110,120,9,s.col);
+     o+='<text x="94" y="150" font-size="9" fill="'+s.col+'" font-weight="700" text-anchor="middle">new virions built</text>';
+   } else {
+     // release — virions budding out through the left face
+     o+=vir(90,95,9,s.col);
+     o+=vir(30,66,9,s.col)+vir(16,98,9,s.col)+vir(32,126,9,s.col);
+     o+='<path d="M60 74 q-14 -6 -22 -4 M52 95 q-16 0 -24 3 M60 118 q-14 6 -22 6" stroke="'+s.col+'" stroke-width="1.4" fill="none" stroke-dasharray="3 3"/>';
+     o+='<text x="26" y="152" font-size="9" fill="'+s.col+'" font-weight="700" text-anchor="middle">virions escape</text>';
+   }
+   return o;
+ }
+
+ function set(v,on){v.className=on===1?'yes':(on===0?'no':'');v.querySelector('.v').innerHTML=on===1?'✓ yes':(on===0?'✕ not yet':'—');}
+
+ function render(){
+   var s=S[i];
+   $("art").innerHTML=draw(s);
+   $("cardTitle").innerHTML=s.short;
+   $("stage").style.background=s.col;
+   $("stage").innerHTML=s.t.replace(/^\d+ · /,'')+'<small>stage '+(i+1)+' of 5</small>';
+   set($("c1"),s.unc);set($("c2"),s.cop);set($("c3"),s.rel);
+   $("info").innerHTML='<span class="n">'+s.t+'</span>'+s.d;
+   $("drug").innerHTML=s.dg;
+   $("prev").disabled=(i===0);$("next").disabled=(i===S.length-1);
+   var d=$("dots").children;for(var k=0;k<d.length;k++){d[k].className=(k===i?'on':'');}
+ }
+
+ // build progress dots (also clickable)
+ var dh='';for(var j=0;j<S.length;j++){dh+='<i data-i="'+j+'"></i>';}
+ $("dots").innerHTML=dh;
+ Array.prototype.forEach.call($("dots").children,function(el){el.onclick=function(){i=+el.dataset.i;render();};});
+
+ $("prev").onclick=function(){if(i>0){i--;render();}};
+ $("next").onclick=function(){if(i<S.length-1){i++;render();}};
+ render();
+})();
+</script>
+</body>
+</html>

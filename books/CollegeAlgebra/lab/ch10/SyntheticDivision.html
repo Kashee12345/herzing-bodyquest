@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Synthetic Division: One Column at a Time</title>
+<meta name="description" content="Walk a synthetic division column by column — bring down, multiply, add — and watch the last number turn out to be P(k) on a live graph.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hl{background:#fbf0cf;border-radius:4px;padding:1px 4px;box-shadow:inset 0 -2px 0 #e8cf8a;}
+.hl.gold{background:#fbeed0;box-shadow:inset 0 -2px 0 #e0bf76;}
+.hl.good{background:#e5f3ea;box-shadow:inset 0 -2px 0 #a9d9be;}
+.hl.blue{background:#e5eef6;box-shadow:inset 0 -2px 0 #b3cde3;}
+.eqbig{font-size:16.5px;font-weight:700;color:var(--teal-dk);text-align:center;background:#f3f4fb;border:1px solid #dfe2f2;border-radius:10px;padding:10px 8px;margin:11px 0 0;line-height:1.55;}
+.eqsub{font-size:12px;font-weight:600;color:var(--muted);text-align:center;margin:5px 0 0;line-height:1.5;}
+.cap{font-size:12px;color:var(--soft);margin-top:9px;line-height:1.55;}
+.cap b{color:var(--teal-dk);}
+.cap .chip{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:3px;vertical-align:baseline;}
+.ledger{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.ledger div{border:1px solid var(--line);border-radius:10px;padding:7px 5px;text-align:center;background:#fff;}
+.ledger .k{display:block;font-size:9.2px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);line-height:1.25;}
+.ledger .v{display:block;font-size:15px;font-weight:700;color:var(--ink);margin-top:4px;line-height:1.25;}
+.ledger div.gold{border-color:#e6cf9c;background:#fcf6e8;} .ledger div.gold .v{color:#8a6a20;}
+.ledger div.good{border-color:#a9d9be;background:#eaf6ef;} .ledger div.good .v{color:#1f6b41;}
+.ledger div.tot{border-color:#c9cdea;background:#eef0fa;} .ledger div.tot .v{color:var(--teal-dk);}
+.prog{height:5px;border-radius:3px;background:#e3e5f2;overflow:hidden;margin:12px 0 2px;}
+.prog i{display:block;height:100%;background:var(--teal);transition:width .25s;border-radius:3px;}
+.why2{font-size:13px;line-height:1.62;color:var(--soft);}
+.why2 b{color:var(--ink);} .why2 p{margin-top:10px;}
+.why2 h3{font-family:var(--disp);font-weight:600;font-size:14.5px;color:var(--teal-dk);margin:16px 0 4px;}
+.why2 h3:first-child{margin-top:0;}
+.lead{display:inline-block;min-width:19px;font-weight:800;color:var(--teal);}
+.sld{width:100%;margin:0;-webkit-appearance:none;appearance:none;height:22px;background:transparent;cursor:pointer;}
+.sld::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-moz-range-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);margin-top:-7px;}
+.sld::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);}
+.sldlab{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--muted);font-weight:600;margin-top:10px;gap:8px;}
+.sldlab b{font-size:14px;color:var(--teal-dk);flex:none;}
+.grid .it .nm sup{font-size:.72em;} .grid .it .nm{font-size:12.5px;line-height:1.35;}
+.grid .it .s{display:block;margin-top:2px;font-size:10.3px;line-height:1.3;}
+.grid{margin-bottom:2px;}
+@keyframes pop{0%{opacity:0;transform:translateY(-7px) scale(.6);}62%{opacity:1;transform:translateY(0) scale(1.16);}100%{opacity:1;transform:scale(1);}}
+.pop{animation:pop .44s cubic-bezier(.34,1.56,.64,1) both;transform-box:fill-box;transform-origin:center;}
+@keyframes dashin{to{stroke-dashoffset:0;}}
+.draw{stroke-dasharray:300;stroke-dashoffset:300;animation:dashin .5s ease-out forwards;}
+@keyframes fadein{from{opacity:0;}to{opacity:1;}}
+.fade{animation:fadein .4s ease-out both;}
+@media (prefers-reduced-motion:reduce){.pop,.draw,.fade{animation:none;stroke-dashoffset:0;opacity:1;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 10</div>
+  <h1>Synthetic Division: One Column at a Time</h1>
+  <div class="intro">Long division of polynomials is mostly bookkeeping &mdash; and most of it cancels. Synthetic division throws away everything that always cancels and leaves three moves: <b>bring down</b>, <b>multiply</b>, <b>add</b>. Step through a column at a time and watch why the very last number is the value of the polynomial.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="cardTitle">Set up the division</h2>
+      <svg viewBox="0 0 380 180" aria-label="synthetic division tableau"><g id="tab"></g></svg>
+      <div class="cap"><span class="chip" style="background:#43458f"></span><b>Top row</b> &mdash; the coefficients of the dividend, highest power first, with a <b>0</b> for every missing power.
+      &nbsp; <span class="chip" style="background:#b8862f"></span><b>Middle row</b> &mdash; each product, <i>k</i> &times; the number diagonally below-left.
+      &nbsp; <span class="chip" style="background:#2f9e5b"></span><b>Bottom row</b> &mdash; the running result: quotient coefficients, then the remainder.</div>
+    </div>
+    <div class="card"><h2>Where the remainder lives on the graph</h2>
+      <svg viewBox="0 0 380 250" aria-label="graph of the dividend polynomial"><g id="gr"></g></svg>
+      <div class="cap" id="gcap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Synthetic division<small>choose a problem, then press Next</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg">
+        <button data-m="walk" class="on">Walk it, column by column</button>
+        <button data-m="slide">Slide <i>k</i> &amp; watch</button>
+      </div>
+      <div class="grid" id="plist"></div>
+      <div class="eqbig" id="eqbig"></div>
+      <div class="eqsub" id="eqsub"></div>
+      <div id="slidebox" style="display:none">
+        <div class="sldlab"><span>Divide by <i>x</i> &minus; <i>k</i> for&hellip;</span><b id="klab"><i>k</i> = 3</b></div>
+        <input class="sld" type="range" id="ksld" min="-6" max="6" step="1" value="3">
+      </div>
+      <div class="ledger" id="ledger"></div>
+      <div id="info"></div>
+      <div class="prog"><i id="prog" style="width:0"></i></div>
+      <div class="row" id="ctl"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+    <div class="card"><h2>Why the three moves are legal</h2>
+      <div class="why2">
+        <h3>It is long division with the guaranteed clutter deleted</h3>
+        <p>Divide 2<i>x</i><sup>3</sup> &minus; 5<i>x</i><sup>2</sup> + 3<i>x</i> &minus; 7 by <i>x</i> &minus; 3 the long way, and watch what each move turns into.</p>
+        <p><span class="lead">1.</span> 2<i>x</i><sup>3</sup> &divide; <i>x</i> = 2<i>x</i><sup>2</sup>. The <i>x</i>'s carried no information &mdash; the answer's coefficient is just the <b>2</b> you started with. So the first coefficient simply <span class="hl">comes down</span>. Which column a number sits in already records its power.</p>
+        <p><span class="lead">2.</span> Multiply back: 2<i>x</i><sup>2</sup>(<i>x</i> &minus; 3) = 2<i>x</i><sup>3</sup> &minus; 6<i>x</i><sup>2</sup>. That leading 2<i>x</i><sup>3</sup> is <b>guaranteed</b> to cancel &mdash; we chose 2<i>x</i><sup>2</sup> precisely to make it cancel. So never write it. Only the second piece survives, and its number is <span class="hl gold">2 &times; (&minus;3)</span>. That is the <b>multiply</b> row.</p>
+        <p><span class="lead">3.</span> Subtract: &minus;5<i>x</i><sup>2</sup> &minus; (&minus;6<i>x</i><sup>2</sup>) = +<i>x</i><sup>2</sup>. Subtracting 2 &times; (&minus;3) is exactly the same as <span class="hl good">adding 2 &times; (+3)</span>. Flip the divisor's sign once, at the very start, and every subtraction for the rest of the problem becomes an addition.</p>
+        <p>That is the entire method: <b>drop the <i>x</i>'s</b> (column position replaces them), <b>drop the term that always cancels</b>, and <b>flip the sign once</b> so you add instead of subtract. Nothing was approximated and nothing was lost &mdash; the answer is identical to long division, every time.</p>
+
+        <h3>Why the last number equals <i>P</i>(<i>k</i>)</h3>
+        <p>Every division can be written as a multiplication:</p>
+        <p style="text-align:center;font-size:14.5px;color:var(--teal-dk);font-weight:700;"><i>P</i>(<i>x</i>) = (<i>x</i> &minus; <i>k</i>) &middot; <i>Q</i>(<i>x</i>) + <i>R</i></p>
+        <p>Now substitute <i>x</i> = <i>k</i>. The factor (<i>k</i> &minus; <i>k</i>) is <b>0</b>, so the whole quotient term vanishes no matter how ugly <i>Q</i> is, and you are left with <b><i>P</i>(<i>k</i>) = <i>R</i></b>. That is the <b>Remainder Theorem</b>, and it is what the graph above is showing you: the height of the curve at <i>x</i> = <i>k</i> <i>is</i> the number in the bottom-right corner.</p>
+        <p>It also gives you the <b>Factor Theorem</b> for free: <i>R</i> = 0 exactly when (<i>x</i> &minus; <i>k</i>) divides evenly, which is exactly when <i>k</i> is a zero of <i>P</i>. Landing on a 0 in that last box means you have found a root <i>and</i> factored the polynomial in the same three seconds.</p>
+        <p>There is one more thing hiding in the bottom row. Written as a nest, <i>P</i>(3) for that first example is ((2&middot;3 &minus; 5)&middot;3 + 3)&middot;3 &minus; 7 = 11 &mdash; and 2, 1, 6, 11 are precisely the numbers in the bottom row. Each &ldquo;multiply, then add&rdquo; is one layer of the nest. Synthetic division and evaluating the polynomial are <b>literally the same arithmetic</b>.</p>
+
+        <h3>Two rules that catch almost every mistake</h3>
+        <div class="mnem"><b>Write the zeros.</b> Synthetic division reads meaning into column position, so a missing power must still occupy its column. <i>x</i><sup>4</sup> &minus; 16 is <b>1, 0, 0, 0, &minus;16</b> &mdash; five entries, not two. Skipping the placeholders shifts every power and silently ruins the answer.</div>
+        <div class="note"><b>Only for <i>x</i> &minus; <i>k</i>.</b> The divisor must be linear with leading coefficient 1. For <i>x</i> + 4, rewrite as <i>x</i> &minus; (&minus;4) and use <i>k</i> = &minus;4. For 2<i>x</i> &minus; 1, first factor: 2<i>x</i> &minus; 1 = 2(<i>x</i> &minus; &frac12;). Synthetically divide by <i>x</i> &minus; &frac12;, then <b>halve every quotient coefficient</b>; the remainder is unchanged. For a divisor of degree 2 or higher, synthetic division does not apply &mdash; use long division.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var C={ink:'#262a5c',line:'#c9cdea',gold:'#b8862f',green:'#2f9e5b',teal:'#43458f',coral:'#d1495b',mut:'#7d7f94'};
+
+ var P=[
+  {id:'A',a:[2,-5,3,-7],k:3,lab:'the basic move',
+   gx:[-2.3,4.3],kmin:-2,kmax:4,
+   after:'Remainder 11, so <i>x</i> &minus; 3 does <b>not</b> divide evenly and 3 is not a zero. But we did learn something for free: <i>P</i>(3) = 11.'},
+  {id:'B',a:[1,0,0,0,-16],k:2,lab:'missing powers',
+   gx:[-2.6,2.6],kmin:-2,kmax:2,
+   after:'Remainder 0, so <i>x</i><sup>4</sup> &minus; 16 = (<i>x</i> &minus; 2)(<i>x</i><sup>3</sup> + 2<i>x</i><sup>2</sup> + 4<i>x</i> + 8), and that cubic factors again to (<i>x</i> + 2)(<i>x</i><sup>2</sup> + 4). Full factorization: (<i>x</i> &minus; 2)(<i>x</i> + 2)(<i>x</i><sup>2</sup> + 4).'},
+  {id:'C',a:[1,6,3,-10],k:-4,lab:'divisor x + 4',
+   gx:[-6.4,2.4],kmin:-6,kmax:2,
+   after:'Remainder 10. The sign flip is the whole story here: the divisor is <i>x</i> + 4, so <i>k</i> = &minus;4, and every product came out negative-then-positive on its own.'},
+  {id:'D',a:[2,1,-13,6],k:2,lab:'a root — it factors',
+   gx:[-4.3,3.3],kmin:-4,kmax:3,
+   after:'Remainder 0, so 2 is a zero. That gives 2<i>x</i><sup>3</sup> + <i>x</i><sup>2</sup> &minus; 13<i>x</i> + 6 = (<i>x</i> &minus; 2)(2<i>x</i><sup>2</sup> + 5<i>x</i> &minus; 3), and the quadratic factors to (2<i>x</i> &minus; 1)(<i>x</i> + 3). All three zeros: <i>x</i> = 2, &frac12;, &minus;3.'},
+  {id:'E',a:[1,-2,-3,11],k:2,lab:'a 0 inside the answer',
+   gx:[-3.3,3.3],kmin:-3,kmax:3,
+   after:'The middle of the bottom row is <b>0</b>. That is a real coefficient, not a blank: the quotient is <i>x</i><sup>2</sup> + 0<i>x</i> &minus; 3, which we write as <i>x</i><sup>2</sup> &minus; 3. Remainder 5.'},
+  {id:'F',a:[1,0,-7,6],k:1,lab:'placeholder + a root',
+   gx:[-3.6,3.1],kmin:-3,kmax:3,
+   after:'Both lessons at once: a 0 placeholder for the missing <i>x</i><sup>2</sup> term, and a remainder of 0. So <i>x</i><sup>3</sup> &minus; 7<i>x</i> + 6 = (<i>x</i> &minus; 1)(<i>x</i><sup>2</sup> + <i>x</i> &minus; 6) = (<i>x</i> &minus; 1)(<i>x</i> + 3)(<i>x</i> &minus; 2).'}
+ ];
+
+ /* ---------- number & polynomial formatting (HTML entities only, no LaTeX) ---------- */
+ function nh(v){ return v<0 ? '&minus;'+Math.abs(v) : ''+v; }          /* for HTML */
+ function ns(v){ return v<0 ? '\u2212'+Math.abs(v) : ''+v; }      /* for SVG (true minus sign) */
+ function polyH(c){
+   var n=c.length,d=n-1,out='',first=true,i,v,p,av;
+   for(i=0;i<n;i++){ v=c[i]; p=d-i; if(v===0) continue; av=Math.abs(v);
+     if(first){ if(v<0) out+='&minus;'; first=false; }
+     else out += (v<0?' &minus; ':' + ');
+     if(av!==1 || p===0) out+=av;
+     if(p===1) out+='<i>x</i>'; else if(p>1) out+='<i>x</i><sup>'+p+'</sup>';
+   }
+   return first?'0':out;
+ }
+ function divH(k){ return k<0 ? '<i>x</i> + '+Math.abs(k) : '<i>x</i> &minus; '+k; }
+ function ev(a,x){ var v=0,i; for(i=0;i<a.length;i++) v=v*x+a[i]; return v; }
+ function compute(a,k){ var b=[a[0]],m=[null],i; for(i=1;i<a.length;i++){ m.push(b[i-1]*k); b.push(a[i]+m[i]); } return {b:b,m:m}; }
+
+ /* ---------- step list ---------- */
+ function buildSteps(n){
+   var S=[{t:'setup'},{t:'bring',i:0}],i;
+   for(i=1;i<n;i++){ S.push({t:'mul',i:i}); S.push({t:'add',i:i}); }
+   S.push({t:'read'});
+   return S;
+ }
+ function vis(st,n){
+   if(st.t==='setup') return {nb:0,nm:0};
+   if(st.t==='bring') return {nb:1,nm:0};
+   if(st.t==='mul')   return {nb:st.i,nm:st.i};
+   if(st.t==='add')   return {nb:st.i+1,nm:st.i};
+   return {nb:n,nm:n-1};
+ }
+
+ /* ---------- tableau SVG ---------- */
+ function head(x,y,ang,col){
+   var s=7.5,
+       ax=(x-s*Math.cos(ang-0.42)).toFixed(1), ay=(y-s*Math.sin(ang-0.42)).toFixed(1),
+       bx=(x-s*Math.cos(ang+0.42)).toFixed(1), by=(y-s*Math.sin(ang+0.42)).toFixed(1);
+   return '<polygon points="'+x.toFixed(1)+','+y.toFixed(1)+' '+ax+','+ay+' '+bx+','+by+'" fill="'+col+'"/>';
+ }
+ function tabSVG(a,k,nb,nm,mv,st){
+   var n=a.length, colW=(n>4?58:66), i, s='';
+   var content=24+82+(n-1)*colW, left=(380-content)/2;
+   var kx=left+24, barX=kx+22, x0=barX+34;
+   var yA=48, yM=88, lineY=102, yB=128;
+   var cx=function(j){ return x0+j*colW; };
+   var right=cx(n-1)+colW/2;
+
+   /* k box */
+   s+='<rect x="'+(kx-22)+'" y="'+(yA-25)+'" width="44" height="35" rx="9" fill="#eef0fa" stroke="'+C.line+'"/>';
+   s+='<text x="'+kx+'" y="'+(yA-1)+'" text-anchor="middle" font-size="19" font-weight="700" fill="'+C.ink+'" font-family="Inter,sans-serif">'+ns(k)+'</text>';
+   s+='<text x="'+kx+'" y="'+(yA-33)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="'+C.mut+'" font-family="Inter,sans-serif">k</text>';
+
+   /* bracket */
+   s+='<path d="M '+barX+' '+(yA-30)+' L '+barX+' '+lineY+' L '+right+' '+lineY+'" stroke="'+C.ink+'" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+
+   /* add-column highlight (drawn behind the numbers) */
+   if(st && st.t==='add'){
+     s+='<rect class="fade" x="'+(cx(st.i)-25)+'" y="'+(yA-25)+'" width="50" height="'+(yM+12-(yA-25))+'" rx="9" fill="#2f9e5b" opacity=".13"/>';
+   }
+   if(st && st.t==='bring'){
+     s+='<rect class="fade" x="'+(cx(0)-25)+'" y="'+(yA-25)+'" width="50" height="35" rx="9" fill="#43458f" opacity=".13"/>';
+   }
+
+   /* top row: coefficients */
+   for(i=0;i<n;i++){
+     var zero=(a[i]===0);
+     s+='<text x="'+cx(i)+'" y="'+yA+'" text-anchor="middle" font-size="19" font-weight="700" font-family="Inter,sans-serif" fill="'+(zero?C.gold:C.ink)+'">'+ns(a[i])+'</text>';
+     if(zero) s+='<text x="'+cx(i)+'" y="'+(yA-27)+'" text-anchor="middle" font-size="8.6" font-weight="800" fill="'+C.gold+'" font-family="Inter,sans-serif">HOLD</text>';
+   }
+
+   /* middle row: products */
+   for(i=1;i<=nm;i++){
+     var isNew=(st && st.t==='mul' && st.i===i);
+     s+='<text class="'+(isNew?'pop':'')+'" x="'+cx(i)+'" y="'+yM+'" text-anchor="middle" font-size="18" font-weight="700" font-family="Inter,sans-serif" fill="'+C.gold+'">'+ns(mv.m[i])+'</text>';
+   }
+
+   /* multiply arrow */
+   if(st && st.t==='mul'){
+     var i2=st.i, x1=cx(i2-1)+16, y1=yB-16, x2=cx(i2)-13, y2=yM+9;
+     var qx=(x1+x2)/2, qy=yB+13;
+     s+='<path class="draw" d="M '+x1+' '+y1+' Q '+qx+' '+qy+' '+x2+' '+y2+'" stroke="'+C.gold+'" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
+     s+=head(x2,y2,Math.atan2(y2-qy,x2-qx),C.gold);
+     s+='<text x="'+((x1+x2)/2)+'" y="'+(yB+27)+'" text-anchor="middle" font-size="11" font-weight="800" fill="'+C.gold+'" font-family="Inter,sans-serif">&times; '+ns(k)+'</text>';
+   }
+   /* add arrow */
+   if(st && st.t==='add'){
+     var xa=cx(st.i), ya1=yM+14, ya2=yB-19;
+     s+='<path class="draw" d="M '+xa+' '+ya1+' L '+xa+' '+ya2+'" stroke="'+C.green+'" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
+     s+=head(xa,ya2,Math.PI/2,C.green);
+     s+='<text x="'+(xa-27)+'" y="'+(yM-4)+'" text-anchor="middle" font-size="15" font-weight="800" fill="'+C.green+'" font-family="Inter,sans-serif">+</text>';
+   }
+   /* bring-down arrow */
+   if(st && st.t==='bring'){
+     var xb=cx(0);
+     s+='<path class="draw" d="M '+xb+' '+(yA+13)+' L '+xb+' '+(yB-19)+'" stroke="'+C.teal+'" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
+     s+=head(xb,yB-19,Math.PI/2,C.teal);
+   }
+
+   /* bottom row: results */
+   for(i=0;i<nb;i++){
+     var nw=(st && ((st.t==='bring'&&i===0)||(st.t==='add'&&st.i===i)));
+     var isR=(i===n-1);
+     s+='<text class="'+(nw?'pop':'')+'" x="'+cx(i)+'" y="'+yB+'" text-anchor="middle" font-size="20" font-weight="800" font-family="Inter,sans-serif" fill="'+(isR?(mv.b[i]===0?C.green:C.coral):C.teal)+'">'+ns(mv.b[i])+'</text>';
+   }
+
+   /* final labels: quotient bracket + remainder box */
+   if(st && st.t==='read'){
+     var qL=cx(0)-24, qR=cx(n-2)+24, yBr=yB+12;
+     s+='<path class="fade" d="M '+qL+' '+yBr+' L '+qL+' '+(yBr+7)+' L '+qR+' '+(yBr+7)+' L '+qR+' '+yBr+'" stroke="'+C.teal+'" stroke-width="1.8" fill="none" stroke-linejoin="round"/>';
+     s+='<text class="fade" x="'+((qL+qR)/2)+'" y="'+(yBr+22)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="'+C.teal+'" font-family="Inter,sans-serif">QUOTIENT COEFFICIENTS</text>';
+     var rc=cx(n-1), rcol=(mv.b[n-1]===0?C.green:C.coral);
+     s+='<rect class="fade" x="'+(rc-24)+'" y="'+(yB-22)+'" width="48" height="30" rx="8" fill="none" stroke="'+rcol+'" stroke-width="2"/>';
+     s+='<text class="fade" x="'+rc+'" y="'+(yBr+22)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="'+rcol+'" font-family="Inter,sans-serif">REMAINDER</text>';
+   }
+   return s;
+ }
+
+ /* ---------- graph SVG ---------- */
+ function niceStep(r){
+   var raw=r/5, mag=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10)), u=raw/mag;
+   return (u<1.5?1:u<3?2:u<7?5:10)*mag;
+ }
+ function grSVG(p,k,showDot){
+   var W=380,H=250,L=44,Rm=16,T=16,B=32;
+   var xmin=p.gx[0],xmax=p.gx[1],N=320,i,x,y,ys=[],ymin=Infinity,ymax=-Infinity;
+   for(i=0;i<=N;i++){ x=xmin+(xmax-xmin)*i/N; y=ev(p.a,x); ys.push(y); if(y<ymin)ymin=y; if(y>ymax)ymax=y; }
+   if(ymin>0)ymin=0; if(ymax<0)ymax=0;
+   var sp=ymax-ymin; if(sp<=0)sp=1;
+   ymin-=sp*0.10; ymax+=sp*0.10;
+   var X=function(v){ return L+(v-xmin)/(xmax-xmin)*(W-L-Rm); };
+   var Y=function(v){ return T+(ymax-v)/(ymax-ymin)*(H-T-B); };
+   var s='';
+   s+='<rect x="'+L+'" y="'+T+'" width="'+(W-L-Rm)+'" height="'+(H-T-B)+'" rx="8" fill="#fbfaff" stroke="#e6e8f5"/>';
+
+   /* grid */
+   var gs=niceStep(ymax-ymin), g0=Math.ceil(ymin/gs)*gs, gv;
+   for(gv=g0; gv<=ymax; gv+=gs){
+     var gy=Y(gv);
+     s+='<line x1="'+L+'" y1="'+gy.toFixed(1)+'" x2="'+(W-Rm)+'" y2="'+gy.toFixed(1)+'" stroke="#eceefa" stroke-width="1"/>';
+     s+='<text x="'+(L-6)+'" y="'+(gy+3.6).toFixed(1)+'" text-anchor="end" font-size="9.5" fill="'+C.mut+'" font-family="Inter,sans-serif">'+ns(Math.round(gv*100)/100)+'</text>';
+   }
+   var xi;
+   for(xi=Math.ceil(xmin); xi<=Math.floor(xmax); xi++){
+     var gx2=X(xi);
+     s+='<line x1="'+gx2.toFixed(1)+'" y1="'+T+'" x2="'+gx2.toFixed(1)+'" y2="'+(H-B)+'" stroke="#eceefa" stroke-width="1"/>';
+     s+='<text x="'+gx2.toFixed(1)+'" y="'+(H-B+14)+'" text-anchor="middle" font-size="9.5" fill="'+C.mut+'" font-family="Inter,sans-serif">'+ns(xi)+'</text>';
+   }
+   /* axes */
+   if(ymin<0&&ymax>0) s+='<line x1="'+L+'" y1="'+Y(0).toFixed(1)+'" x2="'+(W-Rm)+'" y2="'+Y(0).toFixed(1)+'" stroke="#b9bdd8" stroke-width="1.5"/>';
+   if(xmin<0&&xmax>0) s+='<line x1="'+X(0).toFixed(1)+'" y1="'+T+'" x2="'+X(0).toFixed(1)+'" y2="'+(H-B)+'" stroke="#b9bdd8" stroke-width="1.5"/>';
+
+   /* curve */
+   var pts='';
+   for(i=0;i<=N;i++){ x=xmin+(xmax-xmin)*i/N; pts+=X(x).toFixed(1)+','+Y(ys[i]).toFixed(1)+' '; }
+   s+='<polyline points="'+pts+'" fill="none" stroke="'+C.teal+'" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>';
+
+   /* the k line */
+   var R=ev(p.a,k);
+   if(k>=xmin&&k<=xmax){
+     s+='<line x1="'+X(k).toFixed(1)+'" y1="'+T+'" x2="'+X(k).toFixed(1)+'" y2="'+(H-B)+'" stroke="'+C.gold+'" stroke-width="1.8" stroke-dasharray="5 4"/>';
+     s+='<text x="'+(X(k)+0).toFixed(1)+'" y="'+(T+12)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="'+C.gold+'" font-family="Inter,sans-serif">x = '+ns(k)+'</text>';
+     if(showDot){
+       var dy=Y(R), dx=X(k), col=(R===0?C.green:C.coral);
+       if(ymin<0&&ymax>0) s+='<line class="fade" x1="'+(X(0)>L?X(0):L).toFixed(1)+'" y1="'+dy.toFixed(1)+'" x2="'+dx.toFixed(1)+'" y2="'+dy.toFixed(1)+'" stroke="'+col+'" stroke-width="1.5" stroke-dasharray="4 4"/>';
+       s+='<circle class="pop" cx="'+dx.toFixed(1)+'" cy="'+dy.toFixed(1)+'" r="6.5" fill="'+col+'" stroke="#fff" stroke-width="2.5"/>';
+       var lx=dx+11, anc='start';
+       if(dx>W-Rm-96){ lx=dx-11; anc='end'; }
+       var ly=dy-11; if(ly<T+22) ly=dy+21;
+       s+='<text class="fade" x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" text-anchor="'+anc+'" font-size="11.5" font-weight="800" fill="'+col+'" font-family="Inter,sans-serif">P('+ns(k)+') = '+ns(R)+'</text>';
+     }
+   }
+   return s;
+ }
+
+ /* ---------- state ---------- */
+ var pi=0, mode='walk', s=0, slideK=P[0].k;
+
+ function plist(){
+   $('plist').innerHTML=P.map(function(p,ix){
+     return '<button class="it'+(ix===pi?' on':'')+'" data-i="'+ix+'"><span class="nm">'+polyH(p.a)+'</span><span class="s">&divide; ('+divH(p.k)+') &middot; '+p.lab+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#plist .it'),function(b){
+     b.onclick=function(){ pi=+b.dataset.i; s=0; slideK=P[pi].k; render(); };
+   });
+ }
+
+ function render(){
+   var p=P[pi], a=p.a, n=a.length;
+   var k=(mode==='slide')?slideK:p.k;
+   var mv=compute(a,k);
+   var S=buildSteps(n), st=(mode==='slide')?{t:'read'}:S[s];
+   var v=(mode==='slide')?{nb:n,nm:n-1}:vis(st,n);
+   var R=mv.b[n-1], Q=mv.b.slice(0,n-1);
+
+   $('tab').innerHTML=tabSVG(a,k,v.nb,v.nm,mv,(mode==='slide')?null:st);
+
+   var doneR=(mode==='slide')||(st.t==='read')||(st.t==='add'&&st.i===n-1);
+   $('gr').innerHTML=grSVG(p,k,doneR);
+   $('gcap').innerHTML=doneR
+     ? 'The gold line marks <i>x</i> = '+nh(k)+'. The dot sits at height <b>'+nh(R)+'</b> &mdash; the very number in the bottom-right box. That is the Remainder Theorem: <b><i>P</i>(<i>k</i>) = <i>R</i></b>.'+(R===0?' Because the dot landed <b>on the axis</b>, '+divH(k)+' is a factor.':'')
+     : 'The gold line marks <i>x</i> = '+nh(k)+' &mdash; where we are about to evaluate. Finish the columns and the curve’s height there will turn out to be your remainder.';
+
+   $('eqbig').innerHTML='('+polyH(a)+') &divide; ('+divH(k)+')';
+   $('eqsub').innerHTML='Divisor '+divH(k)+' &nbsp;&rarr;&nbsp; <b>k = '+nh(k)+'</b>'+(k<0?' &nbsp;(the sign flips: <i>x</i> + '+Math.abs(k)+' is <i>x</i> &minus; ('+nh(k)+'))':'');
+
+   var showR=doneR;
+   $('ledger').innerHTML=
+     '<div class="tot"><span class="k">k</span><span class="v">'+nh(k)+'</span></div>'+
+     '<div><span class="k">Degree in</span><span class="v">'+(n-1)+'</span></div>'+
+     '<div class="'+(showR?(R===0?'good':'gold'):'')+'"><span class="k">Remainder</span><span class="v">'+(showR?nh(R):'&mdash;')+'</span></div>'+
+     '<div class="'+(showR&&R===0?'good':'')+'"><span class="k">'+divH(k)+' a factor?</span><span class="v">'+(showR?(R===0?'yes':'no'):'&mdash;')+'</span></div>';
+
+   /* stage + info */
+   var ttl,sub,body;
+   if(mode==='slide'){
+     ttl='Slide k'; sub='k = '+nh(k)+' · remainder '+nh(R);
+     $('stage').style.background=(R===0?C.green:C.teal);
+     $('cardTitle').innerHTML='Completed division for <i>k</i> = '+nh(k);
+     body='<span class="n">'+(R===0?'Remainder 0 — a factor!':'Remainder '+nh(R))+'</span>'+
+       'Every column has been filled in for <i>k</i> = <b>'+nh(k)+'</b>. Bottom row: <b>'+mv.b.map(nh).join(', ')+'</b>.'+
+       '<div class="loc">Quotient: <b>'+polyH(Q)+'</b> &nbsp;&middot;&nbsp; Remainder: <b>'+nh(R)+'</b></div>'+
+       (R===0
+        ? '<div class="dd">The dot on the graph is sitting <b>on the <i>x</i>-axis</b>. '+nh(k)+' is a zero of the polynomial, so '+divH(k)+' divides evenly and '+polyH(a)+' = ('+divH(k)+')('+polyH(Q)+').</div>'
+        : '<div class="dd">The remainder is not 0, so '+divH(k)+' does not divide evenly &mdash; but you still learned <b><i>P</i>('+nh(k)+') = '+nh(R)+'</b> from three lines of arithmetic. Drag until the remainder hits 0 to find a real zero.</div>')+
+       '<div class="dd"><b>Full statement:</b> '+polyH(a)+' = ('+divH(k)+')('+polyH(Q)+')'+(R===0?'':' + '+nh(R))+'</div>';
+   } else {
+     $('stage').style.background=(st.t==='read'&&R===0)?C.green:(st.t==='mul'?C.gold:(st.t==='add'?C.green:C.teal));
+     if(st.t==='setup'){
+       ttl='Set up the tableau'; sub='step 1 of '+S.length;
+       $('cardTitle').innerHTML='Set up the division';
+       var anyZero=a.some(function(c){return c===0;});
+       body='<span class="n">Write k, then the coefficients</span>'+
+         'The divisor is <b>'+divH(k)+'</b>, so <b>k = '+nh(k)+'</b>'+(k<0?' &mdash; the sign flips, because <i>x</i> + '+Math.abs(k)+' is really <i>x</i> &minus; ('+nh(k)+')':'')+'. '+
+         'Then list the dividend’s coefficients from the highest power down: <b>'+a.map(nh).join(', ')+'</b>.'+
+         (anyZero
+          ? '<div class="dd">Notice the <b class="hl gold">0</b> marked HOLD. The polynomial is written '+polyH(a)+', with no term for every power that is missing &mdash; but synthetic division reads meaning from <b>column position</b>, so each missing power still needs its own column. Leave it out and every remaining power shifts one place, quietly wrecking the answer.</div>'
+          : '<div class="dd">No powers are missing here, so every coefficient is already written out. Whenever one <i>is</i> missing, you must insert a 0 to hold its column.</div>')+
+         '<div class="loc">Nothing has been computed yet. Press <b>Next</b> to bring down the first coefficient.</div>';
+     } else if(st.t==='bring'){
+       ttl='Bring down'; sub='step 2 of '+S.length;
+       $('cardTitle').innerHTML='Move 1 of 3 &mdash; bring down';
+       body='<span class="n">Bring down '+nh(a[0])+'</span>'+
+         'The leading coefficient drops straight to the bottom row, untouched.'+
+         '<div class="dd"><b>Why nothing happens to it:</b> in long division the first thing you do is '+nh(a[0])+'<i>x</i><sup>'+(n-1)+'</sup> &divide; <i>x</i> = <b>'+nh(a[0])+'<i>x</i><sup>'+(n-2)+'</sup></b>. The coefficient is unchanged; only the power dropped by one. Since the columns already track the powers, there is literally nothing to compute &mdash; just copy it down.</div>'+
+         '<div class="loc">This <b>'+nh(a[0])+'</b> is the leading coefficient of the quotient, which has degree <b>'+(n-2)+'</b> &mdash; one less than the dividend.</div>';
+     } else if(st.t==='mul'){
+       var i=st.i, prev=mv.b[i-1], prod=mv.m[i];
+       ttl='Multiply by k'; sub='step '+(s+1)+' of '+S.length+' · column '+(i+1);
+       $('cardTitle').innerHTML='Move 2 of 3 &mdash; multiply diagonally';
+       body='<span class="n">'+nh(prev)+' &times; '+nh(k)+' = '+nh(prod)+'</span>'+
+         'Take the number you just landed on in the bottom row (<b>'+nh(prev)+'</b>), multiply it by <b>k = '+nh(k)+'</b>, and write the product <b class="hl gold">'+nh(prod)+'</b> in the middle row of the <i>next</i> column.'+
+         '<div class="dd"><b>Why:</b> in long division you would now multiply that quotient term by the whole divisor and line the result up underneath. The first piece of that product is built to cancel exactly &mdash; it always does &mdash; so it is never written. Only this second piece survives, and its coefficient is exactly '+nh(prev)+' &times; '+nh(k)+'.</div>'+
+         (prod===0?'<div class="loc">The product is <b>0</b> here. Write it anyway &mdash; a blank column is a mistake waiting to happen.</div>':'');
+     } else if(st.t==='add'){
+       var j=st.i, top=a[j], pr=mv.m[j], sum=mv.b[j];
+       ttl='Add the column'; sub='step '+(s+1)+' of '+S.length+' · column '+(j+1);
+       $('cardTitle').innerHTML='Move 3 of 3 &mdash; add straight down';
+       var pstr=(pr<0?'('+nh(pr)+')':nh(pr));
+       body='<span class="n">'+nh(top)+' + '+pstr+' = '+nh(sum)+'</span>'+
+         'Add the two numbers stacked in this column and write the total in the bottom row.'+
+         '<div class="dd"><b>Why you add instead of subtract:</b> long division would have you <i>subtract</i> the product of '+nh(mv.b[j-1])+' and '+nh(-k)+'. Subtracting '+nh(mv.b[j-1])+'&times;('+nh(-k)+') is the same as adding '+nh(mv.b[j-1])+'&times;('+nh(k)+'). We flipped the divisor’s sign once, at setup, so every step from here is an addition &mdash; which is exactly why synthetic division produces so few sign errors.</div>'+
+         (j===n-1
+          ? '<div class="loc">That was the last column, so this <b>'+nh(sum)+'</b> is the <b>remainder</b> &mdash; and look at the graph.</div>'
+          : '<div class="loc">This <b>'+nh(sum)+'</b> becomes the next quotient coefficient, and it is what you will multiply by k next.</div>')+
+         (sum===0&&j<n-1?'<div class="dd">The sum is <b>0</b>. That is a genuine coefficient of the quotient, not a blank &mdash; it means the quotient has no <i>x</i><sup>'+(n-2-j)+'</sup> term.</div>':'');
+     } else {
+       ttl=(R===0?'Remainder 0 — a factor!':'Read the answer'); sub='step '+S.length+' of '+S.length;
+       $('cardTitle').innerHTML='Read the bottom row';
+       body='<span class="n">'+(R===0?divH(k)+' divides evenly':'Quotient and remainder')+'</span>'+
+         'The bottom row is <b>'+mv.b.map(nh).join(', ')+'</b>. All but the last entry are the <b>quotient coefficients</b>, starting at degree <b>'+(n-2)+'</b>; the final entry is the <b>remainder</b>.'+
+         '<div class="loc">('+polyH(a)+') &divide; ('+divH(k)+') = <b>'+polyH(Q)+'</b>'+(R===0?'':' + <b>'+nh(R)+'</b>/('+divH(k)+')')+'</div>'+
+         '<div class="dd"><b>Check it by multiplying back:</b> ('+divH(k)+')('+polyH(Q)+')'+(R===0?'':' + '+nh(R))+' = '+polyH(a)+'. This is the identity <i>P</i> = (<i>x</i>&minus;<i>k</i>)<i>Q</i> + <i>R</i>, and it is worth doing on your first few.</div>'+
+         '<div class="dd">'+p.after+'</div>'+
+         '<div class="dd"><b>And for free:</b> <i>P</i>('+nh(k)+') = '+nh(R)+'. The dot on the graph is at height '+nh(R)+'.</div>';
+     }
+     $('stage').innerHTML=ttl+'<small>'+sub+'</small>';
+   }
+   if(mode==='slide') $('stage').innerHTML=ttl+'<small>'+sub+'</small>';
+   $('info').innerHTML=body;
+   $('prog').style.width=(mode==='slide'?100:(s/(S.length-1)*100))+'%';
+   $('prev').disabled=(mode==='slide'||s===0);
+   $('next').disabled=(mode==='slide'||s===S.length-1);
+   $('ctl').style.display=(mode==='slide')?'none':'flex';
+   $('slidebox').style.display=(mode==='slide')?'block':'none';
+   $('klab').innerHTML='<i>k</i> = '+nh(k);
+   $('ksld').min=p.kmin; $('ksld').max=p.kmax; $('ksld').value=k;
+   plist();
+ }
+
+ $('prev').onclick=function(){ if(s>0){ s--; render(); } };
+ $('next').onclick=function(){ var n=buildSteps(P[pi].a.length).length; if(s<n-1){ s++; render(); } };
+ $('ksld').oninput=function(){ slideK=+this.value; render(); };
+ Array.prototype.forEach.call(document.querySelectorAll('#modeseg button'),function(b){
+   b.onclick=function(){
+     mode=b.dataset.m;
+     Array.prototype.forEach.call(document.querySelectorAll('#modeseg button'),function(o){ o.className=(o===b?'on':''); });
+     if(mode==='slide'){ var p=P[pi]; if(slideK<p.kmin||slideK>p.kmax) slideK=p.k; }
+     else s=0;
+     render();
+   };
+ });
+ document.addEventListener('keydown',function(e){
+   if(mode!=='walk') return;
+   if(e.key==='ArrowRight'){ $('next').click(); }
+   else if(e.key==='ArrowLeft'){ $('prev').click(); }
+ });
+ render();
+})();
+</script>
+</body>
+</html>

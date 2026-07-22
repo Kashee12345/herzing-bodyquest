@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Where the Shading Overlaps</title>
+<meta name="description" content="Shade a system of linear inequalities one at a time and watch the overlap appear. Drag the sliders, tap the grid to test any point, and step through worked systems that show why a single test point decides an entire half of the plane.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;--l1:#43458f;--l2:#d1495b;}
+.wrap{grid-template-columns:0.96fr 1.04fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.modeseg button{font-size:12.5px;padding:10px 4px;line-height:1.25;}
+.modeseg button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:2px;}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+#plane{touch-action:none;cursor:crosshair;}
+#plane.locked{cursor:default;}
+#stage .big{font-family:var(--math);font-size:23px;font-weight:700;letter-spacing:.3px;}
+/* HTML-only fractions — there is no math renderer on this page */
+.fr{display:inline-flex;flex-direction:column;vertical-align:-0.52em;text-align:center;margin:0 3px;}
+.fr .fn{border-bottom:1.7px solid currentColor;padding:0 4px 1px;line-height:1.16;}
+.fr .fd{padding:1px 4px 0;line-height:1.16;}
+.why{font-family:var(--math);font-size:14.5px;color:var(--teal-dk);text-align:center;background:#f1f2f9;border:1px solid var(--line);border-radius:9px;padding:10px;margin-top:11px;line-height:1.95;}
+.why em{font-family:var(--sans);font-style:normal;font-size:10.5px;font-weight:800;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.why .sm{font-family:var(--sans);font-size:12px;color:var(--soft);line-height:1.55;display:block;margin-top:5px;}
+.sl{display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:1px dashed var(--line);}
+.sl:last-child{border-bottom:none;}
+.sl i{width:12px;height:12px;border-radius:3px;flex:none;}
+.sl .k{font-size:9.6px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);width:56px;flex:none;line-height:1.2;}
+.sl .v{font-family:var(--math);font-size:16.5px;color:var(--ink);font-weight:600;white-space:nowrap;}
+.sl .e{margin-left:auto;font-size:9.6px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;text-align:right;padding-left:8px;white-space:nowrap;}
+.sl .e.sd{color:var(--teal-dk);} .sl .e.ds{color:var(--muted);}
+.vd{display:flex;align-items:center;gap:9px;margin:12px 0 0;font-size:11.5px;font-weight:700;color:var(--muted);}
+.sldgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 15px;}
+.sld{margin-top:9px;}
+.sld .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:1px;}
+.sld .lab b{font-family:var(--math);font-size:18px;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+.eqcap{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;display:flex;align-items:center;gap:7px;}
+.eqcap i{width:11px;height:11px;border-radius:50%;flex:none;font-style:normal;}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;display:block;}
+input[type=range]:focus{outline:none;}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--l1);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);margin-top:-8px;}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--l1);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);}
+#g2 input[type=range]::-webkit-slider-thumb{background:var(--l2);}
+#g2 input[type=range]::-moz-range-thumb{background:var(--l2);}
+#g2 .lab b{color:#a33244;}
+.rels{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;gap:1px;background:var(--line);margin-top:9px;}
+.rels button{flex:1;border:none;background:#fff;color:var(--ink);font-family:var(--math);font-weight:700;font-size:15px;padding:7px 2px;cursor:pointer;line-height:1.1;}
+.rels button small{display:block;font-family:var(--sans);font-weight:700;font-size:8.4px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);margin-top:2px;}
+.rels button.on{background:var(--teal);color:#fff;} .rels button.on small{color:rgba(255,255,255,.9);}
+#rel2 button.on{background:var(--coral);}
+.hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:11px;line-height:1.5;}
+#presets .it{display:block;text-align:left;}
+#presets .it .nm,#presets .it .s{display:block;}
+#presets .it .s{font-family:var(--math);margin-top:1px;}
+#picker{display:grid;grid-template-columns:repeat(4,1fr);}
+#picker button{font-size:11.5px;padding:9px 3px;}
+#picker button small{font-family:var(--math);font-size:9.6px;display:block;font-weight:500;color:var(--muted);margin-top:1px;}
+#picker button.on small{color:rgba(255,255,255,.9);}
+@media (max-width:600px){#picker{grid-template-columns:1fr 1fr;} .sl .e{display:none;}}
+#mb,#rb{min-height:132px;margin-top:12px;}
+.dl{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:7px 2px;border-bottom:1px dashed var(--line);}
+.dl:last-child{border-bottom:none;}
+.mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.65;}
+.mx sub{font-size:.62em;vertical-align:sub;}
+.dl.cur .mx{font-size:17px;color:var(--ink);font-weight:600;}
+.pl{flex:none;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);white-space:nowrap;}
+.dl.cur .pl{color:var(--gold);}
+.tg{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.dl:not(.cur) .tg{background:transparent;box-shadow:none;padding:0;}
+.ok{border-radius:4px;padding:1px 5px;background:#dff0e4;box-shadow:inset 0 0 0 1.5px #a6d3b4;}
+.bad{border-radius:4px;padding:1px 5px;background:#fae5e8;box-shadow:inset 0 0 0 1.5px #f0c9d0;}
+.exlab{font-size:12.5px;color:var(--soft);margin-top:11px;line-height:1.6;border-top:1px solid var(--line);padding-top:10px;}
+.exlab b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 5</div>
+  <h1>Where the Shading Overlaps</h1>
+  <div class="intro">An equation in two variables draws a <b>line</b>. Replace the equals sign with an inequality sign and the answer swells from a line into <b>half of the plane</b> &mdash; and a whole <em>system</em> of inequalities is answered not by a point but by a <b>region</b>: the patch where every shaded half agrees. The one trick that makes it easy is that a single test point decides an entire half of the plane. Move the sliders, tap anywhere on the grid to test a point, and watch the overlap form.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="artTitle">Two half-planes, one overlap</h2>
+      <svg id="plane" viewBox="0 0 250 250" aria-label="coordinate plane with shaded half-planes and their overlapping solution region">
+        <defs>
+          <pattern id="hx" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="8" stroke="#b8862f" stroke-width="2.6" opacity=".34"/>
+          </pattern>
+        </defs>
+        <g id="art"></g>
+      </svg>
+      <div class="why" id="why"></div>
+    </div>
+    <div class="card"><h2>The edge: in or out?</h2>
+      <svg viewBox="0 0 250 128" aria-label="three panels: a dashed boundary whose points are excluded, a solid boundary whose points are included, and two shaded half-planes whose overlap is the answer">
+        <rect x="0" y="0" width="250" height="128" fill="#fbfbfe"/>
+        <line x1="83" y1="8" x2="83" y2="120" stroke="#e0e2ef" stroke-width="1"/>
+        <line x1="167" y1="8" x2="167" y2="120" stroke="#e0e2ef" stroke-width="1"/>
+        <text x="41" y="18" text-anchor="middle" font-family="Inter,sans-serif" font-size="8.3" font-weight="800" fill="#7d7f94">DASHED = EDGE OUT</text>
+        <text x="125" y="18" text-anchor="middle" font-family="Inter,sans-serif" font-size="8.3" font-weight="800" fill="#7d7f94">SOLID = EDGE IN</text>
+        <text x="209" y="18" text-anchor="middle" font-family="Inter,sans-serif" font-size="8.3" font-weight="800" fill="#7d7f94">OVERLAP = ANSWER</text>
+        <polygon points="10,100 74,36 74,112 10,112" fill="#43458f" opacity=".16"/>
+        <line x1="10" y1="100" x2="74" y2="36" stroke="#43458f" stroke-width="2.6" stroke-dasharray="6 4"/>
+        <circle cx="42" cy="68" r="6.4" fill="#fffdf9" stroke="#d1495b" stroke-width="2.6"/>
+        <line x1="38.6" y1="64.6" x2="45.4" y2="71.4" stroke="#d1495b" stroke-width="2.2"/>
+        <line x1="45.4" y1="64.6" x2="38.6" y2="71.4" stroke="#d1495b" stroke-width="2.2"/>
+        <polygon points="94,100 158,36 158,112 94,112" fill="#43458f" opacity=".16"/>
+        <line x1="94" y1="100" x2="158" y2="36" stroke="#43458f" stroke-width="2.6"/>
+        <circle cx="126" cy="68" r="6.4" fill="#2f9e5b" stroke="#fffdf9" stroke-width="2.2"/>
+        <polygon points="177,104 241,40 241,112 177,112" fill="#43458f" opacity=".15"/>
+        <polygon points="177,44 241,108 241,112 177,112" fill="#d1495b" opacity=".15"/>
+        <polygon points="177,104 207,74 241,108 241,112 177,112" fill="#b8862f" opacity=".36"/>
+        <polygon points="177,104 207,74 241,108 241,112 177,112" fill="url(#hx)"/>
+        <line x1="177" y1="104" x2="241" y2="40" stroke="#43458f" stroke-width="2.4"/>
+        <line x1="177" y1="44" x2="241" y2="108" stroke="#d1495b" stroke-width="2.4"/>
+        <text x="41" y="122" text-anchor="middle" font-family="Georgia,serif" font-size="9.6" font-weight="700" fill="#262a5c">&lt; and &gt;</text>
+        <text x="125" y="122" text-anchor="middle" font-family="Georgia,serif" font-size="9.6" font-weight="700" fill="#262a5c">&#8804; and &#8805;</text>
+        <text x="209" y="122" text-anchor="middle" font-family="Georgia,serif" font-size="9.6" font-weight="700" fill="#262a5c">both true at once</text>
+      </svg>
+      <div class="mnem"><b>The routine never changes, no matter how many inequalities there are.</b> For each one: (1) swap the inequality sign for an equals sign and graph that <b>boundary line</b>; (2) make it <b>dashed</b> for &lt; or &gt;, <b>solid</b> for &le; or &ge;; (3) pick any <b>test point that is not on the line</b> &mdash; the origin is easiest whenever the line misses it &mdash; and substitute; (4) if the statement comes out <b>true</b>, shade the side your test point is on; if <b>false</b>, shade the other side. Then the solution of the whole system is the region where <b>every</b> shading overlaps.<br><br><b>Why one point can speak for a whole half-plane.</b> Fix an <i>x</i>. As you slide straight up, your <i>y</i> grows while <i>mx</i> + <i>b</i> sits still, so the difference <i>y</i> &minus; (<i>mx</i> + <i>b</i>) grows steadily and passes through zero <b>exactly once</b> &mdash; right at the line. Above the line that difference is always positive; below it, always negative. It can never sneak back across without crossing the line. So the statement cannot change from true to false anywhere inside one side, and one test point settles the entire half.</div>
+      <div class="note"><b>Four ways this section is misread.</b><br>
+      <b>1. Shading toward the inequality sign.</b> &ldquo;It says &ge;, so shade up&rdquo; only works once the inequality is solved for <i>y</i> with a <b>positive</b> coefficient on <i>y</i>. Given &minus;2<i>y</i> &ge; 4<i>x</i> + 6, dividing by &minus;2 <b>reverses</b> the sign to <i>y</i> &le; &minus;2<i>x</i> &minus; 3, and the shading goes <b>down</b>. Test points never lie about this; sign-watching does.<br>
+      <b>2. Testing a point that sits on the boundary.</b> For <i>y</i> &ge; 2<i>x</i> the origin gives 0 &ge; 0, which is true &mdash; but the origin is <b>on</b> the line, so it belongs to both sides and decides nothing. Move to (1, 0) or (0, 1) and try again.<br>
+      <b>3. Turning in the overlap of the boundaries instead of the overlap of the regions.</b> The corner point where two boundary lines cross is only one point of the answer. The answer is the whole shaded patch &mdash; usually infinitely many points, often unbounded.<br>
+      <b>4. Forgetting that a system can have no solution at all.</b> <i>y</i> &ge; <i>x</i> + 2 together with <i>y</i> &le; <i>x</i> &minus; 3 asks for a <i>y</i> that is at least <i>x</i> + 2 and at most <i>x</i> &minus; 3 &mdash; so <i>x</i> + 2 &le; <i>x</i> &minus; 3, which simplifies to 2 &le; &minus;3. That is false for every <i>x</i>, so the shadings never meet and the solution set is empty.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage"><span class="big">&nbsp;</span><small>move a slider to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="modes">
+        <button data-m="0" class="on">Shade it live<small>sliders &amp; a test point</small></button>
+        <button data-m="1">Why it works<small>the reasoning, step by step</small></button>
+        <button data-m="2">Worked systems<small>four full solutions</small></button>
+      </div>
+
+      <div id="p0">
+        <div id="rows"></div>
+        <div class="vd" id="verdict"></div>
+        <div class="eqcap"><i style="background:#43458f"></i>Inequality 1</div>
+        <div class="sldgrid" id="g1">
+          <div class="sld">
+            <div class="lab"><span>slope <i>m</i><sub>1</sub></span><b id="o_m1">1</b></div>
+            <input type="range" id="r_m1" min="-6" max="6" step="1" value="-2" aria-label="slope of the first boundary line, in halves">
+          </div>
+          <div class="sld">
+            <div class="lab"><span>intercept <i>b</i><sub>1</sub></span><b id="o_b1">1</b></div>
+            <input type="range" id="r_b1" min="-6" max="6" step="1" value="4" aria-label="y-intercept of the first boundary line">
+          </div>
+        </div>
+        <div class="rels" id="rel1"></div>
+        <div class="eqcap"><i style="background:#d1495b"></i>Inequality 2</div>
+        <div class="sldgrid" id="g2">
+          <div class="sld">
+            <div class="lab"><span>slope <i>m</i><sub>2</sub></span><b id="o_m2">1</b></div>
+            <input type="range" id="r_m2" min="-6" max="6" step="1" value="2" aria-label="slope of the second boundary line, in halves">
+          </div>
+          <div class="sld">
+            <div class="lab"><span>intercept <i>b</i><sub>2</sub></span><b id="o_b2">1</b></div>
+            <input type="range" id="r_b2" min="-6" max="6" step="1" value="-2" aria-label="y-intercept of the second boundary line">
+          </div>
+        </div>
+        <div class="rels" id="rel2"></div>
+        <div class="grid" id="presets" style="margin-top:13px"></div>
+        <div class="hint">Tap anywhere on the grid to move the test point. It snaps to whole-number coordinates so every check stays exact.</div>
+      </div>
+
+      <div id="p1" style="display:none"><div id="rb"></div></div>
+
+      <div id="p2" style="display:none">
+        <div class="seg" id="picker"></div>
+        <div id="mb"></div>
+        <div class="exlab" id="exlab"></div>
+      </div>
+
+      <div id="info"></div>
+      <div class="note" id="note" style="display:none"></div>
+      <div class="row" id="nav" style="display:none"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var INK='#22243a', MUT='#7d7f94', LINE='#e0e2ef', TEAL='#43458f', TDK='#262a5c',
+     GOLD='#b8862f', CORAL='#d1495b', BLUE='#2f6f9f', GREEN='#2f9e5b',
+     PALE='#c6c9de', CARD='#fffdf9';
+ var MIN='&#8722;';
+ var COL=[TEAL,CORAL,GREEN];
+
+ /* ---------- exact rational arithmetic: nothing shown is ever rounded ---------- */
+ function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=a%b; a=b; b=t; } return a; }
+ function rat(n,d){ if(d<0){ n=-n; d=-d; } if(n===0) return {n:0,d:1}; var g=gcd(n,d)||1; return {n:n/g,d:d/g}; }
+ function I(n){ return {n:n,d:1}; }
+ function radd(a,b){ return rat(a.n*b.d + b.n*a.d, a.d*b.d); }
+ function rsub(a,b){ return rat(a.n*b.d - b.n*a.d, a.d*b.d); }
+ function rmul(a,b){ return rat(a.n*b.n, a.d*b.d); }
+ function rval(r){ return r.n/r.d; }
+
+ /* ---------- formatting: HTML entities only, never LaTeX ---------- */
+ function h(n){ return n<0 ? '&minus;'+(-n) : ''+n; }
+ function sv(n){ return n<0 ? MIN+(-n) : ''+n; }
+ function fr(n,d){ return '<span class="fr"><span class="fn">'+n+'</span><span class="fd">'+d+'</span></span>'; }
+ function rt(r){ if(r.n===0) return '0'; if(r.d===1) return h(r.n); return (r.n<0?'&minus;':'')+fr(Math.abs(r.n), r.d); }
+ function rp(r){ if(r.n===0) return '0'; if(r.d===1) return sv(r.n); return (r.n<0?MIN:'')+Math.abs(r.n)+'/'+r.d; }
+ function tg(s){ return '<span class="tg">'+s+'</span>'; }
+ function yes(s){ return '<span class="ok">'+s+'</span>'; }
+ function no(s){ return '<span class="bad">'+s+'</span>'; }
+ function ptT(x,y){ return '('+h(x)+', '+h(y)+')'; }
+ function ptP(x,y){ return '('+sv(x)+', '+sv(y)+')'; }
+
+ /* ---------- an inequality is A x + B y  (rel)  C, with A, B, C integers ---------- */
+ var SYM={lt:'&lt;',le:'&le;',gt:'&gt;',ge:'&ge;'};
+ var NAM={lt:'less than',le:'at most',gt:'greater than',ge:'at least'};
+ function Q(A,B,C,rel){ return {A:A,B:B,C:C,rel:rel}; }
+ function flip(r){ return {lt:'gt',gt:'lt',le:'ge',ge:'le'}[r]; }
+ function strict(r){ return r==='lt'||r==='gt'; }
+ function upward(r){ return r==='gt'||r==='ge'; }
+ /* solved for y:  y (r) m x + b   — dividing by B flips the sign when B is negative */
+ function yform(q){ return {m:rat(-q.A,q.B), b:rat(q.C,q.B), r:(q.B>0)?q.rel:flip(q.rel)}; }
+ /* a vertical boundary: A x (rel) C  becomes  x (r) c */
+ function xform(q){ return {c:rat(q.C,q.A), r:(q.A>0)?q.rel:flip(q.rel)}; }
+
+ function coefT(m){ if(m.n===1&&m.d===1) return '<i>x</i>'; if(m.n===-1&&m.d===1) return '&minus;<i>x</i>'; return rt(m)+'<i>x</i>'; }
+ function sideT(m,b){ if(m.n===0) return rt(b); var s=coefT(m);
+   if(b.n!==0) s+=(b.n<0?' &minus; ':' + ')+rt({n:Math.abs(b.n),d:b.d}); return s; }
+ function coefP(m){ if(m.n===1&&m.d===1) return 'x'; if(m.n===-1&&m.d===1) return MIN+'x'; return rp(m)+'x'; }
+ function sideP(m,b){ if(m.n===0) return rp(b); var s=coefP(m);
+   if(b.n!==0) s+=(b.n<0?' '+MIN+' ':' + ')+rp({n:Math.abs(b.n),d:b.d}); return s; }
+ function ineqT(q){ if(q.B===0){ var X=xform(q); return '<i>x</i> '+SYM[X.r]+' '+rt(X.c); }
+   var Y=yform(q); return '<i>y</i> '+SYM[Y.r]+' '+sideT(Y.m,Y.b); }
+ function ineqP(q){ if(q.B===0){ var X=xform(q); return 'x '+SYM[X.r]+' '+rp(X.c); }
+   var Y=yform(q); return 'y '+SYM[Y.r]+' '+sideP(Y.m,Y.b); }
+ function bndT(q){ if(q.B===0){ var X=xform(q); return '<i>x</i> = '+rt(X.c); }
+   var Y=yform(q); return '<i>y</i> = '+sideT(Y.m,Y.b); }
+
+ /* exact truth test at an integer lattice point */
+ function evalAt(q,x,y){ var f=q.A*x+q.B*y-q.C;
+   if(q.rel==='ge') return f>=0; if(q.rel==='gt') return f>0;
+   if(q.rel==='le') return f<=0; return f<0; }
+ function onEdge(q,x,y){ return (q.A*x+q.B*y-q.C)===0; }
+
+ /* the substitution, written out the way a student would write it */
+ function chkT(q,x,y){
+   var ok=evalAt(q,x,y), s, t;
+   if(q.B===0){ var X=xform(q); s=h(x)+' '+SYM[X.r]+' '+rt(X.c); }
+   else{
+     var Y=yform(q), rhs=radd(rmul(Y.m,I(x)),Y.b);
+     if(Y.m.n===0){ s=h(y)+' '+SYM[Y.r]+' '+rt(Y.b); }
+     else{
+       t=(Y.m.n===1&&Y.m.d===1)?'':((Y.m.n===-1&&Y.m.d===1)?'&minus;':rt(Y.m));
+       t+='('+h(x)+')';
+       if(Y.b.n!==0) t+=(Y.b.n<0?' &minus; ':' + ')+rt({n:Math.abs(Y.b.n),d:Y.b.d});
+       s=h(y)+' '+SYM[Y.r]+' '+t+' = '+rt(rhs);
+     }
+   }
+   return {ok:ok, edge:onEdge(q,x,y), html:s+' &nbsp; '+(ok?yes('true'):no('false'))};
+ }
+
+ /* ---------- world -> screen ---------- */
+ var R=6, U=18, X0=125, Y0=125;
+ function sx(x){ return X0 + U*x; }
+ function sy(y){ return Y0 - U*y; }
+
+ function grid(){
+   var s='<rect x="17" y="17" width="216" height="216" fill="#fbfbfe"/>', i;
+   for(i=-R;i<=R;i++){
+     s+='<line x1="'+sx(i)+'" y1="17" x2="'+sx(i)+'" y2="233" stroke="'+LINE+'" stroke-width="0.8"/>';
+     s+='<line x1="17" y1="'+sy(i)+'" x2="233" y2="'+sy(i)+'" stroke="'+LINE+'" stroke-width="0.8"/>';
+   }
+   s+='<line x1="14" y1="'+Y0+'" x2="236" y2="'+Y0+'" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<line x1="'+X0+'" y1="14" x2="'+X0+'" y2="236" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<polygon points="241,125 233,121 233,129" fill="'+INK+'"/><polygon points="9,125 17,121 17,129" fill="'+INK+'"/>';
+   s+='<polygon points="125,9 121,17 129,17" fill="'+INK+'"/><polygon points="125,241 121,233 129,233" fill="'+INK+'"/>';
+   s+='<text x="237" y="116" text-anchor="end" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">x</text>';
+   s+='<text x="133" y="17" text-anchor="start" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">y</text>';
+   var T=[-6,-4,-2,2,4,6];
+   for(i=0;i<T.length;i++){
+     s+='<text x="'+sx(T[i])+'" y="'+(Y0+11.5)+'" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="'+PALE+'">'+sv(T[i])+'</text>';
+     s+='<text x="'+(X0-5)+'" y="'+(sy(T[i])+3)+'" text-anchor="end" font-family="Georgia,serif" font-size="8" fill="'+PALE+'">'+sv(T[i])+'</text>';
+   }
+   return s;
+ }
+ function halo(x,y,anch,size,col,txt){
+   return '<text x="'+x+'" y="'+y+'" text-anchor="'+anch+'" font-family="Georgia,serif" font-size="'+size+
+          '" font-weight="700" fill="'+col+'" stroke="'+CARD+'" stroke-width="3.2" paint-order="stroke" stroke-linejoin="round">'+txt+'</text>';
+ }
+ function hArrow(x1,x2,y,col,w){
+   if(Math.abs(x2-x1)<1) return '';
+   var dir=(x2>x1)?1:-1, e=x2-dir*6;
+   return '<line x1="'+x1+'" y1="'+y+'" x2="'+e.toFixed(1)+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"/>'+
+          '<polygon points="'+x2.toFixed(1)+','+y+' '+e.toFixed(1)+','+(y-4.2)+' '+e.toFixed(1)+','+(y+4.2)+'" fill="'+col+'"/>';
+ }
+ function vArrow(x,y1,y2,col,w){
+   if(Math.abs(y2-y1)<1) return '';
+   var dir=(y2>y1)?1:-1, e=y2-dir*6;
+   return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+e.toFixed(1)+'" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"/>'+
+          '<polygon points="'+x+','+y2.toFixed(1)+' '+(x-4.2)+','+e.toFixed(1)+' '+(x+4.2)+','+e.toFixed(1)+'" fill="'+col+'"/>';
+ }
+
+ /* ---------- half-plane clipping (Sutherland-Hodgman) ----------
+    Start from the whole visible square and slice it with each inequality.
+    Convex in, convex out — this is exactly the shaded region, no sampling. */
+ function sqr(){ return [[-R,-R],[R,-R],[R,R],[-R,R]]; }
+ function fv(q,p){ return q.A*p[0]+q.B*p[1]-q.C; }
+ function clip(poly,q){
+   var up=upward(q.rel), out=[], i, n=poly.length;
+   if(n===0) return out;
+   for(i=0;i<n;i++){
+     var P=poly[i], Z=poly[(i+1)%n], fp=fv(q,P), fq=fv(q,Z);
+     if(!up){ fp=-fp; fq=-fq; }              /* now "inside" always means f >= 0 */
+     var pin=fp>=-1e-9, qin=fq>=-1e-9;
+     if(pin) out.push(P);
+     if(pin!==qin){ var t=fp/(fp-fq); out.push([P[0]+t*(Z[0]-P[0]), P[1]+t*(Z[1]-P[1])]); }
+   }
+   return out;
+ }
+ function pts(poly){ return poly.map(function(p){ return sx(p[0]).toFixed(2)+','+sy(p[1]).toFixed(2); }).join(' '); }
+ function area(poly){ var a=0,i,n=poly.length; if(n<3) return 0;
+   for(i=0;i<n;i++){ var P=poly[i], Z=poly[(i+1)%n]; a+=P[0]*Z[1]-Z[0]*P[1]; } return Math.abs(a/2); }
+ function cen(poly){ var x=0,y=0,i; for(i=0;i<poly.length;i++){ x+=poly[i][0]; y+=poly[i][1]; }
+   return [x/poly.length, y/poly.length]; }
+
+ function bpath(q){
+   if(q.B===0){ var x0=q.C/q.A; if(Math.abs(x0)>R) return '';
+     return 'M'+sx(x0)+' '+sy(-R)+' L'+sx(x0)+' '+sy(R); }
+   var m=-q.A/q.B, b=q.C/q.B, d='', pen=false, N=400, i, x, y;
+   for(i=0;i<=N;i++){
+     x=-R+i*(2*R/N); y=m*x+b;
+     if(y>=-R-1e-9 && y<=R+1e-9){ d+=(pen?'L':'M')+sx(x).toFixed(2)+' '+sy(y).toFixed(2)+' '; pen=true; }
+     else pen=false;
+   }
+   return d;
+ }
+ /* a stubby arrow leaving the boundary and pointing into the shading */
+ function shArrow(q,col){
+   if(q.B===0){
+     var X=xform(q), x0=rval(X.c); if(Math.abs(x0)>R-0.5) return '';
+     var dir=upward(X.r)?1:-1, px=sx(x0);
+     return hArrow(px+dir*4, px+dir*24, sy(3.4), col, 2.2);
+   }
+   var Y=yform(q), m=rval(Y.m), b=rval(Y.b), C=[-3.4,-1.8,1.8,3.4,0.5], i, xa=null;
+   for(i=0;i<C.length;i++){ var yy=m*C[i]+b; if(yy>-R+1.7 && yy<R-1.7){ xa=C[i]; break; } }
+   if(xa===null) return '';
+   var yv=m*xa+b, px2=sx(xa), py2=sy(yv), dy=upward(Y.r)?-22:22;
+   return vArrow(px2, py2+(dy>0?4:-4), py2+dy, col, 2.2);
+ }
+ function lab(q,col,k){
+   var txt=ineqP(q);
+   if(q.B===0){ var X=xform(q), x0=rval(X.c); if(Math.abs(x0)>R) return '';
+     return halo(Math.max(34,Math.min(216,sx(x0))), 29, 'middle', 9.5, col, txt); }
+   var Y=yform(q), m=rval(Y.m), b=rval(Y.b), i,
+       C=(k===1)?[4.2,2.4,-2.4,-4.2,0.6]:[-4.2,-2.4,2.4,4.2,0.6];
+   for(i=0;i<C.length;i++){
+     var yy=m*C[i]+b;
+     if(yy>-R+0.8 && yy<R-0.8) return halo(Math.max(38,Math.min(212,sx(C[i]))), sy(yy)-9, 'middle', 9.5, col, txt);
+   }
+   return '';
+ }
+
+ /* ---------- one renderer for every mode ----------
+    scene = {Q:[...], b:[show boundary], s:[show shading], ov:bool, marks:[...]} */
+ function drawScene(S){
+   var g=grid(), i, poly;
+   for(i=0;i<S.Q.length;i++){
+     if(S.s&&S.s[i]){ poly=clip(sqr(),S.Q[i]);
+       if(poly.length>2) g+='<polygon points="'+pts(poly)+'" fill="'+COL[i]+'" opacity=".16"/>'; }
+   }
+   if(S.ov){
+     poly=sqr(); for(i=0;i<S.Q.length;i++) poly=clip(poly,S.Q[i]);
+     if(area(poly)>0.02){
+       g+='<polygon points="'+pts(poly)+'" fill="'+GOLD+'" opacity=".34"/>';
+       g+='<polygon points="'+pts(poly)+'" fill="url(#hx)"/>';
+       g+='<polygon points="'+pts(poly)+'" fill="none" stroke="'+GOLD+'" stroke-width="1.7" stroke-linejoin="round"/>';
+       if(area(poly)>3.5){ var c=cen(poly);
+         g+=halo(Math.max(40,Math.min(210,sx(c[0]))), sy(c[1])+3.5, 'middle', 9.5, '#8a6420', 'solutions'); }
+     }
+   }
+   for(i=0;i<S.Q.length;i++){
+     if(S.b&&S.b[i]){
+       var q=S.Q[i], d=bpath(q);
+       if(d) g+='<path d="'+d+'" fill="none" stroke="'+COL[i]+'" stroke-width="2.7" stroke-linecap="round"'+
+                (strict(q.rel)?' stroke-dasharray="6 4"':'')+'/>';
+       if(S.s&&S.s[i]) g+=shArrow(q,COL[i]);
+       g+=lab(q,COL[i],i);
+     }
+   }
+   if(S.marks) for(i=0;i<S.marks.length;i++){
+     var M=S.marks[i], mx=sx(M.x), my=sy(M.y), mc=M.col||GOLD;
+     if(M.lab) g+=halo(Math.max(32,Math.min(218,mx)), my+(M.dy||-14), 'middle', 10, mc, M.lab);
+     if(M.ko){
+       g+='<circle cx="'+mx+'" cy="'+my+'" r="7" fill="'+CARD+'" stroke="'+mc+'" stroke-width="2.6"/>';
+       g+='<line x1="'+(mx-3.9)+'" y1="'+(my-3.9)+'" x2="'+(mx+3.9)+'" y2="'+(my+3.9)+'" stroke="'+mc+'" stroke-width="2.2"/>';
+       g+='<line x1="'+(mx+3.9)+'" y1="'+(my-3.9)+'" x2="'+(mx-3.9)+'" y2="'+(my+3.9)+'" stroke="'+mc+'" stroke-width="2.2"/>';
+     } else g+='<circle cx="'+mx+'" cy="'+my+'" r="6.6" fill="'+mc+'" stroke="#fff" stroke-width="2"/>';
+   }
+   return g;
+ }
+
+ /* ================= MODE 0: shade it live ================= */
+ /* Slope is stored as k/2 so every boundary, corner and check stays exact.
+    y (rel) (k/2)x + b  is multiplied through by the positive number 2, which
+    leaves the inequality sign alone:  -k x + 2 y (rel) 2 b.                   */
+ var L={k1:-2,b1:4,r1:'le', k2:2,b2:-2,r2:'ge', tx:0,ty:0};
+ var mode=0, wstep=0, exi=0, estep=0;
+ function liveQ(){ return [Q(-L.k1,2,2*L.b1,L.r1), Q(-L.k2,2,2*L.b2,L.r2)]; }
+
+ /* what kind of overlap two half-planes make — decided algebraically, not by pixels */
+ function shape(q1,q2){
+   var Y1=yform(q1), Y2=yform(q2);
+   if(!(Y1.m.n===Y2.m.n && Y1.m.d===Y2.m.d)) return {k:'wedge'};
+   var u1=upward(Y1.r), u2=upward(Y2.r);
+   if(u1===u2) return {k:'nested', up:u1};
+   var lo=u1?Y1:Y2, hi=u1?Y2:Y1, d=rsub(hi.b,lo.b);
+   if(d.n>0) return {k:'strip', lo:lo, hi:hi};
+   if(d.n===0 && !strict(lo.r) && !strict(hi.r)) return {k:'line', lo:lo};
+   return {k:'empty', lo:lo, hi:hi};
+ }
+
+ var PRE=[
+  {nm:'Wedge',     s:'slopes differ',      v:{k1:-2,b1:4,r1:'le', k2:2,b2:-2,r2:'ge'}},
+  {nm:'Strip',     s:'both edges dashed',  v:{k1:2,b1:-2,r1:'gt', k2:2,b2:3,r2:'lt'}},
+  {nm:'Empty',     s:'no solution at all', v:{k1:2,b1:2,r1:'ge',  k2:2,b2:-3,r2:'le'}},
+  {nm:'Redundant', s:'one does nothing',   v:{k1:2,b1:1,r1:'ge',  k2:2,b2:-3,r2:'ge'}}
+ ];
+
+ function render0(){
+   var QQ=liveQ(), q1=QQ[0], q2=QQ[1], S=shape(q1,q2);
+   var c1=chkT(q1,L.tx,L.ty), c2=chkT(q2,L.tx,L.ty), both=c1.ok&&c2.ok;
+   var marks=[{x:L.tx,y:L.ty,col:both?GREEN:CORAL,ko:!both,lab:ptP(L.tx,L.ty),dy:(sy(L.ty)>44?-15:21)}];
+   $("art").innerHTML=drawScene({Q:QQ,b:[1,1],s:[1,1],ov:1,marks:marks});
+   $("artTitle").innerHTML='Two half-planes, one overlap';
+
+   function row(col,name,q){
+     return '<div class="sl"><i style="background:'+col+'"></i><span class="k">'+name+'</span>'+
+            '<span class="v">'+ineqT(q)+'</span><span class="e '+(strict(q.rel)?'ds':'sd')+'">'+
+            (strict(q.rel)?'dashed edge':'solid edge')+'</span></div>';
+   }
+   $("rows").innerHTML=row(TEAL,'First',q1)+row(CORAL,'Second',q2);
+
+   var big,sub,col,pill,words,d,note='';
+   if(S.k==='wedge'){
+     var Y1=yform(q1), Y2=yform(q2), D=rsub(Y1.m,Y2.m), Cc=rsub(Y2.b,Y1.b),
+         cx=rat(Cc.n*D.d, Cc.d*D.n), cy=radd(rmul(Y1.m,cx),Y1.b),
+         cy2=radd(rmul(Y2.m,cx),Y2.b);
+     big='a wedge'; sub='the region is unbounded'; col=TEAL;
+     pill='<span class="pill normal">infinitely many</span>'; words='the boundaries cross once';
+     d='The two slopes differ ('+rt(Y1.m)+' against '+rt(Y2.m)+'), so the boundary lines must cross &mdash; and they cross exactly once, at the <b>corner</b> of the region. Setting the two boundary formulas equal gives '+
+       sideT(Y1.m,Y1.b)+' = '+sideT(Y2.m,Y2.b)+', then ('+rt(Y1.m)+' &minus; '+(Y2.m.n<0?'('+rt(Y2.m)+')':rt(Y2.m))+')<i>x</i> = '+rt(Y2.b)+' &minus; '+(Y1.b.n<0?'('+rt(Y1.b)+')':rt(Y1.b))+
+       ', so <i>x</i> = '+rt(cx)+' and <i>y</i> = '+rt(cy)+'. The second boundary agrees: it gives <i>y</i> = '+rt(cy2)+
+       '. From that corner the shaded wedge runs off to infinity, so <b>no amount of grid will show all of it</b> &mdash; which is exactly why the answer is written as a pair of inequalities and drawn as a shaded region, never listed as points.';
+     if(strict(q1.rel)||strict(q2.rel)){
+       note='<b>Watch the corner.</b> The corner sits at <i>x</i> = '+rt(cx)+', <i>y</i> = '+rt(cy)+', and it lies on '+
+         ((strict(q1.rel)&&strict(q2.rel))?'<b>both</b> dashed boundaries':'a <b>dashed</b> boundary')+
+         ', so it is <b>not</b> a solution even though it looks like the tip of the region. Dashed means the edge is a limit the region approaches without ever reaching.';
+     } else if(cx.d!==1 || cy.d!==1){
+       note='<b>The corner does not land on a grid corner.</b> Its exact coordinates are <i>x</i> = '+rt(cx)+', <i>y</i> = '+rt(cy)+
+         ' &mdash; a value you would misread off the picture. Shading tells you the <b>shape</b> of the answer reliably; for the exact corner, set the two boundary formulas equal and solve, as above.';
+     }
+   } else if(S.k==='strip'){
+     big='a strip'; sub='trapped between parallel lines'; col=BLUE;
+     pill='<span class="pill low">infinitely many</span>'; words='same slope, opposite directions';
+     d='Both boundaries have slope '+rt(S.lo.m)+', so they never meet &mdash; they run parallel forever at a fixed vertical gap of '+rt(rsub(S.hi.b,S.lo.b))+
+       '. One inequality says <i>y</i> is above the lower line, the other says <i>y</i> is below the upper line, so together they trap <i>y</i> in a band: '+
+       sideT(S.lo.m,S.lo.b)+' '+SYM[flip(S.lo.r)]+' <i>y</i> '+SYM[S.hi.r]+' '+sideT(S.hi.m,S.hi.b)+
+       '. The band is infinitely long but only '+rt(rsub(S.hi.b,S.lo.b))+' units tall measured straight up and down.';
+   } else if(S.k==='nested'){
+     var Ya=yform(q1), Yb=yform(q2), keep, drop, ka, kb;
+     if(S.up){ keep=(rsub(Ya.b,Yb.b).n>=0)?1:2; } else { keep=(rsub(Ya.b,Yb.b).n<=0)?1:2; }
+     ka=(keep===1)?q1:q2; kb=(keep===1)?q2:q1;
+     big='one is redundant'; sub='one half sits inside the other'; col=GOLD;
+     pill='<span class="pill normal">infinitely many</span>'; words='same slope, same direction';
+     d='Both boundaries have slope '+rt(Ya.m)+' and both shadings point the <b>same</b> way, so one shaded half sits entirely inside the other. The overlap is just the smaller half, and the system says nothing more than <b>'+ineqT(ka)+'</b> alone would. The other inequality, '+ineqT(kb)+
+       ', is satisfied automatically by every point that already satisfies the first &mdash; it is <b>redundant</b>. Systems in a textbook often hide one of these; spotting it saves you a shading.';
+   } else if(S.k==='line'){
+     big='just the line'; sub='the band has closed to nothing'; col=GREEN;
+     pill='<span class="pill low">the boundary only</span>'; words='squeezed from both sides';
+     d='One inequality says <i>y</i> is at least '+sideT(S.lo.m,S.lo.b)+' and the other says <i>y</i> is at most the same thing. The only way to be both at once is to be <b>equal</b> to it, so the solution set collapses from a region to the single line <b>'+bndT(q1)+
+       '</b>. This only survives because both signs allow equality; make either one strict and the solution set empties out completely. Nudge an intercept slider to watch it happen.';
+   } else {
+     big='no solution'; sub='the shadings never meet'; col=CORAL;
+     pill='<span class="pill high">empty set</span>'; words='inconsistent system';
+     d='Both boundaries have slope '+rt(S.lo.m)+', and the shadings point <b>away</b> from each other. Read what the pair demands: '+
+       sideT(S.lo.m,S.lo.b)+' '+SYM[flip(S.lo.r)]+' <i>y</i> '+SYM[S.hi.r]+' '+sideT(S.hi.m,S.hi.b)+
+       '. Chaining those gives '+sideT(S.lo.m,S.lo.b)+' '+SYM[(strict(S.lo.r)||strict(S.hi.r))?'lt':'le']+' '+sideT(S.hi.m,S.hi.b)+
+       ', and '+(S.lo.m.n===0?'comparing the two constants directly':'subtracting '+coefT(S.lo.m)+' from both sides')+' leaves '+rt(S.lo.b)+' '+SYM[(strict(S.lo.r)||strict(S.hi.r))?'lt':'le']+' '+rt(S.hi.b)+
+       ' &mdash; '+no('false')+', with no <i>x</i> left in it to rescue anything. There is no point anywhere in the plane that satisfies both.';
+     note='<b>Empty is an answer, not an error.</b> Write &ldquo;no solution&rdquo; or the empty set &mdash; not 0, and not the origin. Slide either intercept until the two lines pass each other and the empty set turns instantly into a strip.';
+   }
+   $("stage").style.background=col;
+   $("stage").innerHTML='<span class="big">'+big+'</span><small>'+sub+'</small>';
+   $("verdict").innerHTML=pill+'<span>'+words+'</span>';
+
+   var w='<em>test point '+ptT(L.tx,L.ty)+'</em>'+
+     '<span style="color:'+TEAL+'">'+c1.html+'</span><br>'+
+     '<span style="color:'+CORAL+'">'+c2.html+'</span>';
+   if(c1.edge||c2.edge){
+     w+='<span class="sm">This point lies <b>on</b> a boundary, so it belongs to both sides at once and cannot tell you which half to shade. For deciding a side, always pick a point <b>off</b> the line.</span>';
+   } else if(both){
+     w+='<span class="sm">Both true, so '+ptT(L.tx,L.ty)+' is a <b>solution of the system</b> &mdash; it lies in the gold overlap.</span>';
+   } else if(c1.ok||c2.ok){
+     w+='<span class="sm">Only one is true, so this point is <b>not</b> a solution. Satisfying one inequality is not enough; the point must land in <b>both</b> shadings.</span>';
+   } else {
+     w+='<span class="sm">Both false, so this point lies outside both shaded halves.</span>';
+   }
+   $("why").innerHTML=w;
+   $("info").innerHTML='<span class="n">'+big.charAt(0).toUpperCase()+big.slice(1)+'</span>'+d;
+   if(note){ $("note").style.display=''; $("note").innerHTML=note; } else { $("note").style.display='none'; }
+
+   $("o_m1").innerHTML=rt(rat(L.k1,2)); $("o_b1").innerHTML=h(L.b1);
+   $("o_m2").innerHTML=rt(rat(L.k2,2)); $("o_b2").innerHTML=h(L.b2);
+   $("r_m1").value=L.k1; $("r_b1").value=L.b1; $("r_m2").value=L.k2; $("r_b2").value=L.b2;
+   renderRels(); renderPresets();
+ }
+ function renderRels(){
+   ['1','2'].forEach(function(n){
+     var cur=L['r'+n];
+     $("rel"+n).innerHTML=['lt','le','gt','ge'].map(function(r){
+       return '<button class="'+(r===cur?'on':'')+'" data-r="'+r+'" data-n="'+n+'"><i>y</i> '+SYM[r]+
+              '<small>'+NAM[r]+'</small></button>';
+     }).join('');
+     Array.prototype.forEach.call($("rel"+n).querySelectorAll('button'),function(b){
+       b.onclick=function(){ L['r'+b.dataset.n]=b.dataset.r; render(); };
+     });
+   });
+ }
+ function renderPresets(){
+   var cur=-1,i;
+   for(i=0;i<PRE.length;i++){ var v=PRE[i].v;
+     if(v.k1===L.k1&&v.b1===L.b1&&v.r1===L.r1&&v.k2===L.k2&&v.b2===L.b2&&v.r2===L.r2) cur=i; }
+   $("presets").innerHTML=PRE.map(function(K,j){
+     return '<button class="it'+(j===cur?' on':'')+'" data-j="'+j+'"><span class="nm">'+K.nm+'</span><span class="s">'+K.s+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call($("presets").querySelectorAll('.it'),function(b){
+     b.onclick=function(){ var v=PRE[+b.dataset.j].v, k;
+       for(k in v) if(Object.prototype.hasOwnProperty.call(v,k)) L[k]=v[k];
+       render(); };
+   });
+ }
+
+ /* ================= MODE 1: why the routine works ================= */
+ /* Running example:  y <= x + 2  and  y >= -2x + 2.
+    Corner:  x + 2 = -2x + 2  ->  3x = 0  ->  x = 0,  y = 0 + 2 = 2.
+    Second boundary agrees:  -2(0) + 2 = 2.  So the corner is (0, 2).      */
+ var W1=Q(-1,1,2,'le');      /* -x + y <= 2   ->   y <= x + 2   */
+ var W2=Q(2,1,2,'ge');       /*  2x + y >= 2   ->   y >= -2x + 2 */
+ var W3=Q(-2,1,0,'ge');      /* -2x + y >= 0   ->   y >= 2x      */
+ var W=[
+  {p:'one inequality, half a plane',
+   sc:{Q:[W1],b:[1],s:[0],marks:[{x:0,y:5,col:BLUE,lab:'(0, 5)',dy:-14},{x:0,y:0,col:CORAL,lab:'(0, 0)',dy:21}]},
+   rows:[{p:'the boundary', m:'<i>y</i> = <i>x</i> + 2'},
+         {p:'high point', m:'at (0, 5): &nbsp; 5 against 0 + 2 = 2 &nbsp; &rarr; 5 is bigger'},
+         {p:'low point',  m:'at (0, 0): &nbsp; 0 against 0 + 2 = 2 &nbsp; &rarr; 0 is smaller'}],
+   d:'Graph the boundary first: change <i>y</i> &le; <i>x</i> + 2 into <i>y</i> = <i>x</i> + 2 and draw that line. The line is every place where <i>y</i> <b>equals</b> <i>x</i> + 2. Off the line, <i>y</i> is either bigger than <i>x</i> + 2 or smaller &mdash; there is no third option &mdash; and the line is the fence between those two territories. So the solution of an inequality is never a curve; it is one whole side of the plane.'},
+  {p:'the difference changes sign only at the line',
+   sc:{Q:[W1],b:[1],s:[0],marks:[{x:0,y:5,col:BLUE,lab:'d = 3',dy:-14},{x:0,y:2,col:GOLD,lab:'d = 0',dy:-14},{x:0,y:0,col:CORAL,lab:'d = &#8722;2',dy:21}]},
+   rows:[{p:'define d', m:'<i>d</i> = <i>y</i> &minus; (<i>x</i> + 2)'},
+         {p:'above', m:'at (0, 5): &nbsp; <i>d</i> = 5 &minus; 2 = '+tg('3')+' &nbsp; positive'},
+         {p:'on it',  m:'at (0, 2): &nbsp; <i>d</i> = 2 &minus; 2 = '+tg('0')},
+         {p:'below', m:'at (0, 0): &nbsp; <i>d</i> = 0 &minus; 2 = '+tg('&minus;2')+' &nbsp; negative'}],
+   d:'Here is the reason a single test point is allowed to speak for an entire half of the plane. Pin <i>x</i> in place and slide straight up: your <i>y</i> climbs steadily while <i>x</i> + 2 does not move at all, so <i>d</i> climbs steadily too. A quantity that climbs steadily passes through zero <b>exactly once</b> &mdash; and that one place is the line itself. Above the line <i>d</i> is positive everywhere; below it, negative everywhere. It cannot flip back without crossing.'},
+  {p:'so one test point settles the whole side',
+   sc:{Q:[W1],b:[1],s:[0],marks:[{x:0,y:0,col:GREEN,lab:'test (0, 0)',dy:21}]},
+   rows:[{p:'pick a point off the line', m:'the origin: 0 &ne; 0 + 2, so (0, 0) is not on it'},
+         {p:'substitute', m:'0 &le; (0) + 2'},
+         {p:'simplify', m:'0 &le; 2 &nbsp; '+yes('true')}],
+   d:'Choose any point that is <b>not on</b> the boundary and substitute it. The origin is the easiest arithmetic in mathematics, so use it whenever the line misses it. Here the statement comes out <b>true</b>, and since the truth value cannot change anywhere on that side, <b>every</b> point on the origin&rsquo;s side of the line is a solution. One substitution, half a plane decided.'},
+  {p:'shade it, and let the edge say in or out',
+   sc:{Q:[W1],b:[1],s:[1],marks:[{x:0,y:0,col:GREEN,lab:'true here',dy:21},{x:1,y:3,col:GOLD,lab:'(1, 3) on the edge',dy:-14}]},
+   rows:[{p:'true, so shade this side', m:'everything below and left of the line'},
+         {p:'the sign was &le;', m:'equality is allowed &rarr; '+tg('solid')+' boundary'},
+         {p:'check the edge', m:'at (1, 3): &nbsp; 3 &le; (1) + 2 = 3 &nbsp; '+yes('true')},
+         {p:'had it been &lt;', m:'3 &lt; 3 &nbsp; '+no('false')+' &rarr; dashed, edge excluded'}],
+   d:'Shade the side that tested true. Then decide the edge on its own: &le; and &ge; permit equality, so the boundary points are solutions and the line is drawn <b>solid</b>. The strict signs &lt; and &gt; forbid equality, so the boundary points are <b>not</b> solutions and the line is drawn <b>dashed</b> &mdash; a region that gets arbitrarily close to that edge without ever including it.'},
+  {p:'the second inequality, same routine',
+   sc:{Q:[W1,W2],b:[1,1],s:[1,1],marks:[{x:0,y:0,col:CORAL,ko:1,lab:'false here',dy:21}]},
+   rows:[{p:'second inequality', m:'<i>y</i> &ge; &minus;2<i>x</i> + 2'},
+         {p:'boundary', m:'<i>y</i> = &minus;2<i>x</i> + 2, solid (&ge;)'},
+         {p:'test the origin again', m:'0 &ge; &minus;2(0) + 2 = 2'},
+         {p:'simplify', m:'0 &ge; 2 &nbsp; '+no('false')}],
+   d:'Nothing new: boundary, dashed-or-solid, test point, shade. This time the origin makes the statement <b>false</b>, and because the truth value is constant on each side, false at the origin means false <b>everywhere</b> on the origin&rsquo;s side. So you shade the <b>other</b> side. A false test result is just as informative as a true one &mdash; it never means you did something wrong.'},
+  {p:'a solution must satisfy both, so take the overlap',
+   sc:{Q:[W1,W2],b:[1,1],s:[1,1],ov:1,marks:[{x:0,y:0,col:CORAL,ko:1,lab:'(0, 0)',dy:21},{x:3,y:1,col:GREEN,lab:'(3, 1)',dy:-14}]},
+   rows:[{p:'(0, 0): first only', m:'0 &le; 2 '+yes('true')+' &nbsp; but &nbsp; 0 &ge; 2 '+no('false')},
+         {p:'(3, 1): both', m:'1 &le; (3) + 2 = 5 '+yes('true')+' &nbsp; and &nbsp; 1 &ge; &minus;2(3) + 2 = &minus;4 '+yes('true')}],
+   d:'A point solves the <b>system</b> only when it solves <b>every</b> inequality in it &mdash; the word between them is <i>and</i>, never <i>or</i>. Geometrically that is the intersection of the shaded halves: the patch covered by both colours, marked here in gold. The origin lands in one shading only, so it fails. The point (3, 1) lands in both, so it passes. Notice the answer is a <b>region</b>, not a point: there are infinitely many solutions, and the shading is how you write them all down at once.'},
+  {p:'the corner is where the boundaries cross',
+   sc:{Q:[W1,W2],b:[1,1],s:[1,1],ov:1,marks:[{x:0,y:2,col:GOLD,lab:'(0, 2)',dy:-15}]},
+   rows:[{p:'set the boundaries equal', m:'<i>x</i> + 2 = &minus;2<i>x</i> + 2'},
+         {p:'collect the x terms', m:'3<i>x</i> = 0 &nbsp;&rarr;&nbsp; <i>x</i> = '+tg('0')},
+         {p:'back-substitute', m:'<i>y</i> = (0) + 2 = '+tg('2')},
+         {p:'confirm in the other', m:'&minus;2(0) + 2 = 2 &nbsp; '+yes('same y')},
+         {p:'is it included?', m:'2 &le; 2 '+yes('true')+' and 2 &ge; 2 '+yes('true')+' &rarr; yes'}],
+   d:'The tip of the wedge is found with the very same algebra you used for a system of <b>equations</b> &mdash; set the two boundary expressions equal and solve. That gives the corner (0, 2). Whether the corner itself is <b>part of</b> the solution set is a separate question, answered by the two signs: here both are non-strict, both boundaries are solid, and substituting confirms the corner belongs. If either inequality had been strict, the corner would sit on a dashed edge and be excluded.'},
+  {p:'when the origin sits on the line, use another point',
+   sc:{Q:[W3],b:[1],s:[1],marks:[{x:0,y:0,col:CORAL,ko:1,lab:'(0, 0) is on it',dy:21},{x:1,y:0,col:GREEN,lab:'(1, 0)',dy:21}]},
+   rows:[{p:'the inequality', m:'<i>y</i> &ge; 2<i>x</i>'},
+         {p:'origin fails as a test', m:'0 &ge; 2(0) = 0 is true, but (0, 0) is '+no('on the line')},
+         {p:'use (1, 0) instead', m:'0 &ge; 2(1) = 2 &nbsp; '+no('false')+' &rarr; shade the other side'},
+         {p:'confirm with (0, 1)', m:'1 &ge; 2(0) = 0 &nbsp; '+yes('true')+' &rarr; same side, shaded'}],
+   d:'A boundary through the origin makes the origin useless as a test point: it satisfies the equation, so it belongs to the line and not to either side, and it will report &ldquo;true&rdquo; for &le; and &ge; no matter which way the region actually goes. Step off the line to any convenient point &mdash; (1, 0) and (0, 1) are the usual choices &mdash; and the ambiguity vanishes. The two checks above disagree about truth precisely because they sit on opposite sides, which is the whole idea working correctly.'},
+  {p:'how to write and check the answer',
+   sc:{Q:[W1,W2],b:[1,1],s:[1,1],ov:1,marks:[{x:3,y:1,col:GREEN,lab:'(3, 1)',dy:-14},{x:-3,y:1,col:CORAL,ko:1,lab:'(&#8722;3, 1)',dy:-14}]},
+   rows:[{p:'the solution set', m:'all (<i>x</i>, <i>y</i>) with <i>y</i> &le; <i>x</i> + 2 and <i>y</i> &ge; &minus;2<i>x</i> + 2'},
+         {p:'verify inside', m:'(3, 1): &nbsp; 1 &le; 5 '+yes('&#10003;')+' &nbsp; 1 &ge; &minus;4 '+yes('&#10003;')},
+         {p:'verify outside', m:'(&minus;3, 1): &nbsp; 1 &le; &minus;1 '+no('&#10007;')+' &nbsp; 1 &ge; 8 '+no('&#10007;')}],
+   d:'There is no ordered pair to circle at the end of this kind of problem. The answer <b>is</b> the shaded region, and you report it by naming the inequalities, drawing the boundaries with the right solid-or-dashed style, and shading the overlap. To check your work, take one point clearly <b>inside</b> the shading and one clearly <b>outside</b>, and substitute both into <b>every</b> inequality: the inside point must pass them all, and the outside point must fail at least one. If your inside point fails something, you shaded a wrong side.'}
+ ];
+
+ /* ================= MODE 2: four worked systems ================= */
+ var EX=[
+  {nm:'A wedge', sub:'y &le; 2x + 1, y &ge; &minus;x + 4',
+   Q:[Q(-2,1,1,'le'), Q(1,1,4,'ge')],
+   steps:[
+    {p:'graph the first boundary', b:[1,0],s:[0,0],
+     rows:[{p:'first inequality', m:'<i>y</i> &le; 2<i>x</i> + 1'},
+           {p:'boundary', m:'<i>y</i> = 2<i>x</i> + 1 &nbsp; slope 2, intercept 1'},
+           {p:'style', m:'&le; allows equality &rarr; '+tg('solid')}],
+     d:'Trade the inequality sign for an equals sign and graph the line exactly as you would any <i>y</i> = <i>mx</i> + <i>b</i>: start at (0, 1) and step right 1, up 2. Because the sign is &le;, points on the line do satisfy the inequality, so draw it <b>solid</b>.'},
+    {p:'test a point off that line', b:[1,0],s:[0,0],mk:[{x:0,y:0,col:GREEN,lab:'test (0, 0)',dy:21}],
+     rows:[{p:'is the origin on it?', m:'0 = 2(0) + 1 = 1? &nbsp; no, so it is usable'},
+           {p:'substitute', m:'0 &le; 2(0) + 1'},
+           {p:'simplify', m:'0 &le; 1 &nbsp; '+yes('true')}],
+     d:'The origin is not on this line, so it makes a legal test point &mdash; and the arithmetic is trivial. The statement is <b>true</b> there, so the origin&rsquo;s side is the solution side of this first inequality.'},
+    {p:'shade the side that tested true', b:[1,0],s:[1,0],mk:[{x:0,y:0,col:GREEN,lab:'true',dy:21}],
+     rows:[{p:'result', m:'shade the half containing (0, 0)'},
+           {p:'sanity check', m:'at (0, &minus;4): &nbsp; &minus;4 &le; 1 &nbsp; '+yes('true')},
+           {p:'other side', m:'at (0, 4): &nbsp; 4 &le; 1 &nbsp; '+no('false')}],
+     d:'Shade everything on the origin&rsquo;s side of the line &mdash; the region below and to the right. Two more spot-checks confirm it: a point deeper into the shading still passes, and a point on the far side fails, which is exactly the constant-truth-value behaviour that made one test point enough.'},
+    {p:'graph the second boundary', b:[1,1],s:[1,0],
+     rows:[{p:'second inequality', m:'<i>y</i> &ge; &minus;<i>x</i> + 4'},
+           {p:'boundary', m:'<i>y</i> = &minus;<i>x</i> + 4 &nbsp; slope &minus;1, intercept 4'},
+           {p:'style', m:'&ge; allows equality &rarr; '+tg('solid')}],
+     d:'Repeat the routine for the second inequality on the <b>same</b> pair of axes &mdash; that is what makes it a system. Start at (0, 4) and step right 1, down 1. Solid again, since &ge; includes equality.'},
+    {p:'test the same point again', b:[1,1],s:[1,0],mk:[{x:0,y:0,col:CORAL,ko:1,lab:'test (0, 0)',dy:21}],
+     rows:[{p:'substitute', m:'0 &ge; &minus;(0) + 4'},
+           {p:'simplify', m:'0 &ge; 4 &nbsp; '+no('false')},
+           {p:'therefore', m:'shade the side '+tg('away from')+' the origin'}],
+     d:'You may reuse the origin for every inequality it does not lie on, and here it comes out <b>false</b>. False does not mean you made a mistake &mdash; it means the solutions live on the opposite side. Shade the half that does <b>not</b> contain the origin: up and to the right.'},
+    {p:'shade the other side', b:[1,1],s:[1,1],mk:[{x:0,y:0,col:CORAL,ko:1,lab:'(0, 0)',dy:21}],
+     rows:[{p:'check the far side', m:'at (5, 3): &nbsp; 3 &ge; &minus;5 + 4 = &minus;1 &nbsp; '+yes('true')},
+           {p:'note', m:'(0, 0) is in the first shading only &rarr; '+no('not a solution')}],
+     d:'Now two shadings sit on the page. The origin is inside the first but outside the second, which already tells you it cannot solve the system. Only the doubly-shaded patch qualifies.'},
+    {p:'the overlap is the solution set', b:[1,1],s:[1,1],ov:1,mk:[{x:1,y:3,col:GOLD,lab:'corner (1, 3)',dy:-15}],
+     rows:[{p:'find the corner', m:'2<i>x</i> + 1 = &minus;<i>x</i> + 4'},
+           {p:'collect', m:'3<i>x</i> = 3 &nbsp;&rarr;&nbsp; <i>x</i> = '+tg('1')},
+           {p:'back-substitute', m:'<i>y</i> = 2(1) + 1 = '+tg('3')},
+           {p:'confirm', m:'&minus;(1) + 4 = 3 &nbsp; '+yes('same y')},
+           {p:'included?', m:'3 &le; 3 '+yes('&#10003;')+' and 3 &ge; 3 '+yes('&#10003;')+' &rarr; yes'}],
+     d:'The gold region is the answer: every point in it satisfies both inequalities, and no point outside it does. Its tip is the corner (1, 3), found by the ordinary equation algebra. Both boundaries are solid there and both checks pass, so the corner belongs to the solution set. The region itself is <b>unbounded</b> &mdash; it opens to the right forever, which is why you shade rather than list.'},
+    {p:'check one point in and one point out', b:[1,1],s:[1,1],ov:1,
+     mk:[{x:4,y:2,col:GREEN,lab:'(4, 2) in',dy:-15},{x:0,y:0,col:CORAL,ko:1,lab:'(0, 0) out',dy:21}],
+     rows:[{p:'inside: first', m:'2 &le; 2(4) + 1 = 9 &nbsp; '+yes('&#10003;')},
+           {p:'inside: second', m:'2 &ge; &minus;(4) + 4 = 0 &nbsp; '+yes('&#10003;')},
+           {p:'outside: first', m:'0 &le; 2(0) + 1 = 1 &nbsp; '+yes('&#10003;')},
+           {p:'outside: second', m:'0 &ge; &minus;(0) + 4 = 4 &nbsp; '+no('&#10007;')}],
+     d:'Finish every one of these by verifying. Pick a point plainly inside the gold and confirm it passes <b>all</b> the inequalities; pick one plainly outside and confirm it fails <b>at least one</b>. The point (4, 2) passes both. The origin passes the first and fails the second, which is precisely why it lies in the indigo shading but not in the gold.'}
+   ],
+   tail:'<b>The shape to expect.</b> Whenever two boundary slopes differ, the shadings always overlap in an unbounded <b>wedge</b> with one corner &mdash; never in a closed shape, and never in nothing. Two inequalities alone cannot fence off a bounded region; you need at least three.'},
+
+  {nm:'A strip', sub:'y &gt; x &minus; 2, y &lt; x + 3',
+   Q:[Q(-1,1,-2,'gt'), Q(-1,1,3,'lt')],
+   steps:[
+    {p:'graph the first boundary', b:[1,0],s:[0,0],
+     rows:[{p:'first inequality', m:'<i>y</i> &gt; <i>x</i> &minus; 2'},
+           {p:'boundary', m:'<i>y</i> = <i>x</i> &minus; 2 &nbsp; slope 1, intercept &minus;2'},
+           {p:'style', m:'&gt; is strict &rarr; '+tg('dashed')}],
+     d:'Same first move, with one difference that matters: the sign is <b>strict</b>. Points on this line make <i>y</i> equal to <i>x</i> &minus; 2, not greater, so they are <b>not</b> solutions. Draw the boundary <b>dashed</b> to record that the edge is a limit the region never reaches.'},
+    {p:'test the origin', b:[1,0],s:[0,0],mk:[{x:0,y:0,col:GREEN,lab:'test (0, 0)',dy:21}],
+     rows:[{p:'substitute', m:'0 &gt; (0) &minus; 2'},
+           {p:'simplify', m:'0 &gt; &minus;2 &nbsp; '+yes('true')}],
+     d:'Zero is greater than negative two, so the origin&rsquo;s side is the solution side. Notice that the strictness of the sign has nothing to do with <b>which</b> side you shade &mdash; it only decides whether the edge itself is included.'},
+    {p:'shade above the dashed line', b:[1,0],s:[1,0],mk:[{x:0,y:0,col:GREEN,lab:'true',dy:21}],
+     rows:[{p:'shade', m:'the half containing (0, 0), above the line'},
+           {p:'on the edge', m:'at (0, &minus;2): &nbsp; &minus;2 &gt; &minus;2 &nbsp; '+no('false')}],
+     d:'Shade upward. The point (0, &minus;2) sits exactly on the boundary and fails, which is the dashed line doing its job: the region includes points as close to that edge as you like, but not the edge itself.'},
+    {p:'graph the second boundary', b:[1,1],s:[1,0],
+     rows:[{p:'second inequality', m:'<i>y</i> &lt; <i>x</i> + 3'},
+           {p:'boundary', m:'<i>y</i> = <i>x</i> + 3 &nbsp; slope 1, intercept 3'},
+           {p:'style', m:'&lt; is strict &rarr; '+tg('dashed')},
+           {p:'same slope', m:'1 and 1 &rarr; the boundaries are '+tg('parallel')}],
+     d:'The second boundary has the <b>same slope</b> as the first, so these two lines are parallel and will never cross. That guarantees the region has no corner &mdash; a fact you can predict from the slopes before drawing a single shading.'},
+    {p:'test the origin again', b:[1,1],s:[1,0],mk:[{x:0,y:0,col:GREEN,lab:'test (0, 0)',dy:21}],
+     rows:[{p:'substitute', m:'0 &lt; (0) + 3'},
+           {p:'simplify', m:'0 &lt; 3 &nbsp; '+yes('true')}],
+     d:'True again, so shade the origin&rsquo;s side of this second line as well &mdash; downward this time, since the origin sits below <i>y</i> = <i>x</i> + 3.'},
+    {p:'shade below the second line', b:[1,1],s:[1,1],mk:[{x:0,y:0,col:GREEN,lab:'(0, 0)',dy:21}],
+     rows:[{p:'shade', m:'the half containing (0, 0), below the line'},
+           {p:'so the origin', m:'is in '+yes('both')+' shadings'}],
+     d:'The origin came out true both times, so it lies in both halves &mdash; it is a solution of the system. Wherever a single test point passes every inequality, you already know the overlap is non-empty and where to find it.'},
+    {p:'the overlap is a parallel strip', b:[1,1],s:[1,1],ov:1,mk:[{x:0,y:0,col:GOLD,lab:'(0, 0)',dy:21}],
+     rows:[{p:'combine', m:'<i>x</i> &minus; 2 &lt; <i>y</i> &lt; <i>x</i> + 3'},
+           {p:'width', m:'measured straight up: 3 &minus; (&minus;2) = '+tg('5')+' units'},
+           {p:'shape', m:'infinitely long, never closes'}],
+     d:'Because the boundaries are parallel, the two inequalities squeeze <i>y</i> into a band of constant vertical thickness &mdash; here 5 units, at every value of <i>x</i>. The band runs forever in both directions. Both of its edges are dashed, so the strip is <b>open</b>: it contains everything strictly between the lines and neither line itself.'},
+    {p:'check the edges and the middle', b:[1,1],s:[1,1],ov:1,
+     mk:[{x:0,y:0,col:GREEN,lab:'(0, 0) in',dy:21},{x:0,y:3,col:CORAL,ko:1,lab:'(0, 3) out',dy:-15}],
+     rows:[{p:'inside', m:'(0, 0): &nbsp; 0 &gt; &minus;2 '+yes('&#10003;')+' &nbsp; 0 &lt; 3 '+yes('&#10003;')},
+           {p:'on the top edge', m:'(0, 3): &nbsp; 3 &gt; &minus;2 '+yes('&#10003;')+' &nbsp; 3 &lt; 3 '+no('&#10007;')},
+           {p:'above the strip', m:'(0, 5): &nbsp; 5 &lt; 3 &nbsp; '+no('&#10007;')}],
+     d:'The point (0, 3) is the one worth staring at. It satisfies the first inequality comfortably and fails the second by the narrowest possible margin &mdash; 3 is not less than 3 &mdash; so it is excluded. That single strict sign is the entire difference between an <b>open</b> region and a <b>closed</b> one, and it is why dashed and solid boundaries have to be drawn differently.'}
+   ],
+   tail:'<b>Predict from the slopes.</b> Equal slopes and opposite shading directions give a strip when the lines are ordered correctly, and an empty set when they are not. Equal slopes and matching directions make one inequality redundant. Only unequal slopes produce a corner.'},
+
+  {nm:'No solution', sub:'y &ge; x + 2, y &le; x &minus; 3',
+   Q:[Q(-1,1,2,'ge'), Q(-1,1,-3,'le')],
+   steps:[
+    {p:'graph the first boundary', b:[1,0],s:[0,0],
+     rows:[{p:'first inequality', m:'<i>y</i> &ge; <i>x</i> + 2'},
+           {p:'boundary', m:'<i>y</i> = <i>x</i> + 2 &nbsp; slope 1, intercept 2'},
+           {p:'style', m:'&ge; allows equality &rarr; '+tg('solid')}],
+     d:'Nothing about this system looks unusual at the start. Graph the boundary line, solid because the sign is non-strict, and carry on with the routine.'},
+    {p:'test the origin', b:[1,0],s:[0,0],mk:[{x:0,y:0,col:CORAL,ko:1,lab:'test (0, 0)',dy:21}],
+     rows:[{p:'substitute', m:'0 &ge; (0) + 2'},
+           {p:'simplify', m:'0 &ge; 2 &nbsp; '+no('false')},
+           {p:'therefore', m:'shade '+tg('away from')+' the origin'}],
+     d:'False at the origin, so the solutions of this first inequality all live on the other side &mdash; above and to the left of the line.'},
+    {p:'shade above the line', b:[1,0],s:[1,0],mk:[{x:0,y:5,col:GREEN,lab:'(0, 5) in',dy:-15}],
+     rows:[{p:'confirm the choice', m:'at (0, 5): &nbsp; 5 &ge; (0) + 2 = 2 &nbsp; '+yes('true')}],
+     d:'A confirming spot-check on the shaded side: (0, 5) passes. Whenever a false test result makes you shade the far side, it is worth one quick substitution on that side to be sure you flipped the right way.'},
+    {p:'graph the second boundary', b:[1,1],s:[1,0],
+     rows:[{p:'second inequality', m:'<i>y</i> &le; <i>x</i> &minus; 3'},
+           {p:'boundary', m:'<i>y</i> = <i>x</i> &minus; 3 &nbsp; slope 1, intercept &minus;3'},
+           {p:'same slope again', m:'1 and 1 &rarr; '+tg('parallel')+', and this one sits lower'}],
+     d:'Parallel to the first, and 5 units below it. That gap is where the trouble is about to come from: the first inequality demands you stay above the higher line, and the second is about to demand you stay below the lower one.'},
+    {p:'test the origin again', b:[1,1],s:[1,0],mk:[{x:0,y:0,col:CORAL,ko:1,lab:'test (0, 0)',dy:21}],
+     rows:[{p:'substitute', m:'0 &le; (0) &minus; 3'},
+           {p:'simplify', m:'0 &le; &minus;3 &nbsp; '+no('false')},
+           {p:'therefore', m:'shade '+tg('away from')+' the origin again'}],
+     d:'False again, so again you shade the side that does not contain the origin &mdash; but this time that is <b>downward</b>, because the origin sits above the line <i>y</i> = <i>x</i> &minus; 3.'},
+    {p:'the two shadings point apart', b:[1,1],s:[1,1],
+     rows:[{p:'first shading', m:'everything at or above <i>y</i> = <i>x</i> + 2'},
+           {p:'second shading', m:'everything at or below <i>y</i> = <i>x</i> &minus; 3'},
+           {p:'gap between them', m:'2 &minus; (&minus;3) = '+tg('5')+' units, and nothing is shaded twice'}],
+     d:'Look at the picture before touching any algebra: the arrows point in opposite directions, away from a 5-unit band that neither shading covers. There is no gold anywhere on the page, because there is nowhere on the page &mdash; or anywhere else in the plane &mdash; where both are true.'},
+    {p:'prove the overlap is empty', b:[1,1],s:[1,1],ov:1,
+     rows:[{p:'what the pair demands', m:'<i>x</i> + 2 &le; <i>y</i> &nbsp; and &nbsp; <i>y</i> &le; <i>x</i> &minus; 3'},
+           {p:'chain them', m:'<i>x</i> + 2 &le; <i>y</i> &le; <i>x</i> &minus; 3'},
+           {p:'drop the middle', m:'<i>x</i> + 2 &le; <i>x</i> &minus; 3'},
+           {p:'subtract x', m:'2 &le; &minus;3 &nbsp; '+no('false')}],
+     d:'The picture is convincing, but this is the proof. Chain the two requirements and the middle term drops out; subtracting <i>x</i> from both sides removes the variable <b>entirely</b> and leaves 2 &le; &minus;3, which is false with nothing left in it to adjust. When the variable vanishes and a <b>false</b> statement remains, the system is <b>inconsistent</b> and the solution set is <b>empty</b>.'},
+    {p:'write the answer honestly', b:[1,1],s:[1,1],ov:1,
+     mk:[{x:0,y:5,col:CORAL,ko:1,lab:'(0, 5)',dy:-15},{x:0,y:-5,col:CORAL,ko:1,lab:'(0, &#8722;5)',dy:21}],
+     rows:[{p:'try high', m:'(0, 5): &nbsp; 5 &ge; 2 '+yes('&#10003;')+' &nbsp; 5 &le; &minus;3 '+no('&#10007;')},
+           {p:'try low', m:'(0, &minus;5): &nbsp; &minus;5 &ge; 2 '+no('&#10007;')},
+           {p:'the answer', m:'no solution &mdash; the empty set'}],
+     d:'Every candidate fails: go high enough for the first and you overshoot the second; come down for the second and you fall out of the first. Write <b>no solution</b>, or the empty set. Do not write 0, and do not write (0, 0) &mdash; those name a real point, and a real point would be a real answer.'}
+   ],
+   tail:'<b>The tell.</b> Parallel boundaries with shadings pointing away from each other is the only way two linear inequalities can produce an empty solution set. If the slopes differ at all, the shadings must overlap somewhere, however far from the origin that somewhere is.'},
+
+  {nm:'A triangle', sub:'x &ge; 0, y &ge; 0, x + y &le; 5',
+   Q:[Q(1,0,0,'ge'), Q(0,1,0,'ge'), Q(1,1,5,'le')],
+   steps:[
+    {p:'the first boundary is a vertical line', b:[1,0,0],s:[0,0,0],
+     rows:[{p:'first inequality', m:'<i>x</i> &ge; 0'},
+           {p:'boundary', m:'<i>x</i> = 0 &mdash; the <i>y</i>-axis itself'},
+           {p:'why no slope', m:'no <i>y</i> appears, so it has no <i>y</i> = <i>mx</i> + <i>b</i> form'},
+           {p:'style', m:'&ge; allows equality &rarr; '+tg('solid')}],
+     d:'An inequality with no <i>y</i> in it still describes half the plane &mdash; the boundary is simply <b>vertical</b>. Since <i>x</i> = 0 has no slope-intercept form, the &ldquo;shade up or down&rdquo; habit has nothing to work with here, and only a test point can settle the direction. That is the first reason to trust test points over sign-watching.'},
+    {p:'the origin is on this line, so use another point', b:[1,0,0],s:[0,0,0],
+     mk:[{x:0,y:0,col:CORAL,ko:1,lab:'(0, 0) on the line',dy:21},{x:2,y:1,col:GREEN,lab:'test (2, 1)',dy:-15}],
+     rows:[{p:'origin is unusable', m:'(0, 0) satisfies <i>x</i> = 0, so it is '+no('on the boundary')},
+           {p:'use (2, 1) instead', m:'2 &ge; 0 &nbsp; '+yes('true')},
+           {p:'therefore', m:'shade the side containing (2, 1) &mdash; the right half'}],
+     d:'Here is the case the earlier warning was about. The origin lies on this boundary, so it belongs to neither side and cannot decide anything. Step off the line to any convenient point &mdash; (2, 1) is fine &mdash; and the inequality answers cleanly: shade everything to the right of the <i>y</i>-axis.'},
+    {p:'second boundary: the x-axis', b:[1,1,0],s:[1,0,0],mk:[{x:2,y:1,col:GREEN,lab:'test (2, 1)',dy:-15}],
+     rows:[{p:'second inequality', m:'<i>y</i> &ge; 0'},
+           {p:'boundary', m:'<i>y</i> = 0 &mdash; the <i>x</i>-axis, slope 0'},
+           {p:'test (2, 1) again', m:'1 &ge; 0 &nbsp; '+yes('true')},
+           {p:'therefore', m:'shade upward, the half containing (2, 1)'}],
+     d:'The origin is on this boundary too, so reuse (2, 1). It passes, so shade above the <i>x</i>-axis. Taken together, the first two inequalities have now fenced the answer into the <b>first quadrant</b> &mdash; which is exactly what <i>x</i> &ge; 0 and <i>y</i> &ge; 0 always mean when you meet them in a pair.'},
+    {p:'shade the first quadrant', b:[1,1,0],s:[1,1,0],
+     rows:[{p:'overlap so far', m:'<i>x</i> &ge; 0 and <i>y</i> &ge; 0'},
+           {p:'in words', m:'quadrant I, including both axes'},
+           {p:'still unbounded', m:'it runs off up and to the right'}],
+     d:'Two inequalities down, and the region is a quarter-plane: infinite in both directions, with the positive axes as its solid edges. A third inequality is what will finally close it off. Two straight boundaries can never enclose a bounded region &mdash; you need at least three.'},
+    {p:'third boundary: solve it for y first', b:[1,1,1],s:[1,1,0],
+     rows:[{p:'third inequality', m:'<i>x</i> + <i>y</i> &le; 5'},
+           {p:'subtract x', m:'<i>y</i> &le; &minus;<i>x</i> + 5'},
+           {p:'why the sign holds', m:'subtracting the same thing from both sides never flips it'},
+           {p:'boundary', m:'<i>y</i> = &minus;<i>x</i> + 5, intercepts (0, 5) and (5, 0), '+tg('solid')}],
+     d:'Rewrite in slope-intercept form so the line is easy to draw. Subtracting <i>x</i> from both sides is a shift, not a scaling, so the &le; is untouched &mdash; only <b>multiplying or dividing by a negative number</b> reverses an inequality. The quickest way to draw this one is by its two intercepts: (0, 5) and (5, 0).'},
+    {p:'test the origin on the third', b:[1,1,1],s:[1,1,0],mk:[{x:0,y:0,col:GREEN,lab:'test (0, 0)',dy:21}],
+     rows:[{p:'is it on the line?', m:'0 + 0 = 0, not 5 &rarr; usable'},
+           {p:'substitute', m:'(0) + (0) &le; 5'},
+           {p:'simplify', m:'0 &le; 5 &nbsp; '+yes('true')},
+           {p:'therefore', m:'shade toward the origin'}],
+     d:'The origin is off this third boundary, so it is available again &mdash; and it makes the statement true. Shade the side containing the origin, which is below and left of the line.'},
+    {p:'three shadings close a triangle', b:[1,1,1],s:[1,1,1],ov:1,
+     mk:[{x:0,y:0,col:GOLD,lab:'(0, 0)',dy:21},{x:5,y:0,col:GOLD,lab:'(5, 0)',dy:21},{x:0,y:5,col:GOLD,lab:'(0, 5)',dy:-15}],
+     rows:[{p:'x = 0 meets y = 0', m:'at (0, 0)'},
+           {p:'y = 0 meets x + y = 5', m:'<i>y</i> = 0 &rarr; <i>x</i> + 0 = 5 &rarr; (5, 0)'},
+           {p:'x = 0 meets x + y = 5', m:'<i>x</i> = 0 &rarr; 0 + <i>y</i> = 5 &rarr; (0, 5)'},
+           {p:'shape', m:tg('a closed triangle')+', all three edges solid'}],
+     d:'With three inequalities the region finally closes. Each pair of boundaries meets at one <b>vertex</b>, and here the three vertices are (0, 0), (5, 0) and (0, 5). Every edge is solid and every vertex satisfies all three inequalities, so this is a <b>closed, bounded</b> region &mdash; the kind that shows up whenever a problem limits a quantity from above and forbids it from going negative.'},
+    {p:'check inside and outside', b:[1,1,1],s:[1,1,1],ov:1,
+     mk:[{x:2,y:2,col:GREEN,lab:'(2, 2) in',dy:-15},{x:3,y:3,col:CORAL,ko:1,lab:'(3, 3) out',dy:-15}],
+     rows:[{p:'(2, 2): first', m:'2 &ge; 0 &nbsp; '+yes('&#10003;')},
+           {p:'(2, 2): second', m:'2 &ge; 0 &nbsp; '+yes('&#10003;')},
+           {p:'(2, 2): third', m:'2 + 2 = 4 &le; 5 &nbsp; '+yes('&#10003;')},
+           {p:'(3, 3): third', m:'3 + 3 = 6 &le; 5 &nbsp; '+no('&#10007;')},
+           {p:'(&minus;1, 2): first', m:'&minus;1 &ge; 0 &nbsp; '+no('&#10007;')}],
+     d:'The verification does not change just because there are three inequalities: an inside point must pass <b>every</b> one, and an outside point need only fail <b>one</b>. The point (2, 2) passes all three. The point (3, 3) satisfies both quadrant conditions and still fails, because 6 is not at most 5 &mdash; a good reminder that clearing most of a system is not clearing it.'}
+   ],
+   tail:'<b>Why this one is worth remembering.</b> The pattern <i>x</i> &ge; 0, <i>y</i> &ge; 0, plus a limit like <i>x</i> + <i>y</i> &le; 5, is the standard way a word problem says &ldquo;neither amount can be negative, and together they cannot exceed the supply.&rdquo; The vertices of the resulting region are where the best and worst cases of such a problem always turn out to sit.'}
+ ];
+
+ /* ---------- panels ---------- */
+ function stepList(arr,cur){
+   var out='',i;
+   for(i=0;i<=cur;i++){
+     out+='<div class="dl'+((i===cur)?' cur':'')+'"><span class="mx">'+arr[i].m+'</span><span class="pl">'+arr[i].p+'</span></div>';
+   }
+   return out;
+ }
+ function render1(){
+   var S=W[wstep];
+   $("art").innerHTML=drawScene(S.sc);
+   $("artTitle").innerHTML='Step '+(wstep+1)+' &mdash; '+S.p;
+   $("rb").innerHTML=stepList(S.rows,S.rows.length-1);
+   $("stage").style.background=TEAL;
+   $("stage").innerHTML='<span class="big">Why it works</span><small>step '+(wstep+1)+' of '+W.length+' &middot; '+S.p+'</small>';
+   $("info").innerHTML='<span class="n">'+S.p.charAt(0).toUpperCase()+S.p.slice(1)+'</span>'+S.d;
+   $("why").innerHTML='<em>the routine, every time</em>'+
+     'boundary &nbsp;&rarr;&nbsp; dashed or solid &nbsp;&rarr;&nbsp; test a point &nbsp;&rarr;&nbsp; shade &nbsp;&rarr;&nbsp; overlap'+
+     '<span class="sm">Repeat it once per inequality, on one set of axes, then take the region every shading has in common.</span>';
+   $("note").style.display='none';
+   $("prev").disabled=(wstep===0); $("next").disabled=(wstep===W.length-1);
+ }
+ function renderPicker(){
+   $("picker").innerHTML=EX.map(function(E,j){
+     return '<button class="'+(j===exi?'on':'')+'" data-j="'+j+'">'+E.nm+'<small>'+E.sub+'</small></button>';
+   }).join('');
+   Array.prototype.forEach.call($("picker").querySelectorAll('button'),function(b){
+     b.onclick=function(){ exi=+b.dataset.j; estep=0; render(); };
+   });
+ }
+ function render2(){
+   var E=EX[exi], S=E.steps[estep];
+   $("art").innerHTML=drawScene({Q:E.Q,b:S.b,s:S.s,ov:S.ov,marks:S.mk});
+   $("artTitle").innerHTML=E.nm+' &mdash; step '+(estep+1)+' of '+E.steps.length;
+   renderPicker();
+   $("mb").innerHTML=stepList(S.rows,S.rows.length-1);
+   $("exlab").innerHTML=E.tail;
+   $("stage").style.background=(exi===2?CORAL:(exi===1?BLUE:(exi===3?GREEN:TEAL)));
+   $("stage").innerHTML='<span class="big">'+E.nm+'</span><small>step '+(estep+1)+' of '+E.steps.length+' &middot; '+S.p+'</small>';
+   $("info").innerHTML='<span class="n">'+S.p.charAt(0).toUpperCase()+S.p.slice(1)+'</span>'+S.d;
+   $("why").innerHTML='<em>the system</em>'+E.sub.replace(/, /g,'<br>')+
+     '<span class="sm">Each inequality is graphed on the same axes, then the answer is the region where the shadings agree.</span>';
+   $("note").style.display='none';
+   $("prev").disabled=(estep===0); $("next").disabled=(estep===E.steps.length-1);
+ }
+
+ /* ---------- tapping the grid moves the test point ---------- */
+ var svg=$("plane");
+ function place(e){
+   var r=svg.getBoundingClientRect();
+   var vx=(e.clientX-r.left)*(250/r.width), vy=(e.clientY-r.top)*(250/r.height);
+   var x=Math.round((vx-X0)/U), y=Math.round((Y0-vy)/U);
+   L.tx=Math.max(-R,Math.min(R,x)); L.ty=Math.max(-R,Math.min(R,y));
+   render();
+ }
+ var down=false;
+ svg.addEventListener('pointerdown',function(e){ if(mode!==0) return;
+   down=true; svg.setPointerCapture(e.pointerId); e.preventDefault(); place(e); });
+ svg.addEventListener('pointermove',function(e){ if(down&&mode===0){ e.preventDefault(); place(e); } });
+ svg.addEventListener('pointerup',function(){ down=false; });
+ svg.addEventListener('pointercancel',function(){ down=false; });
+
+ /* ---------- sliders ---------- */
+ [['r_m1','k1'],['r_b1','b1'],['r_m2','k2'],['r_b2','b2']].forEach(function(p){
+   $(p[0]).addEventListener('input',function(){ L[p[1]]=parseInt(this.value,10); render(); });
+ });
+
+ /* ---------- mode switching ---------- */
+ Array.prototype.forEach.call($("modes").querySelectorAll('button'),function(b){
+   b.onclick=function(){
+     mode=+b.dataset.m;
+     Array.prototype.forEach.call($("modes").querySelectorAll('button'),function(x){ x.className=''; });
+     b.className='on';
+     render();
+   };
+ });
+ $("prev").onclick=function(){
+   if(mode===1 && wstep>0) wstep--;
+   else if(mode===2 && estep>0) estep--;
+   render();
+ };
+ $("next").onclick=function(){
+   if(mode===1 && wstep<W.length-1) wstep++;
+   else if(mode===2 && estep<EX[exi].steps.length-1) estep++;
+   render();
+ };
+
+ function render(){
+   $("p0").style.display=(mode===0)?'':'none';
+   $("p1").style.display=(mode===1)?'':'none';
+   $("p2").style.display=(mode===2)?'':'none';
+   $("nav").style.display=(mode===0)?'none':'';
+   svg.setAttribute('class',(mode===0)?'':'locked');
+   if(mode===0) render0();
+   else if(mode===1) render1();
+   else render2();
+ }
+
+ render();
+})();
+</script>
+</body>
+</html>

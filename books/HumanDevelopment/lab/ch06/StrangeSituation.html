@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f7f2">
+<title>The Strange Situation</title>
+<meta name="description" content="Run Mary Ainsworth's Strange Situation procedure and classify a baby's attachment style — secure, avoidant, resistant, or disorganized. An interactive for human-development students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_humdev.css">
+<style>.wrap{grid-template-columns:0.92fr 1.08fr;}
+.meter{height:12px;border-radius:6px;background:#e7f0ea;overflow:hidden;margin-top:6px;}
+.meter i{display:block;height:100%;width:0;background:var(--green);transition:width .45s,background .45s;}
+.who{display:flex;gap:6px;margin:2px 0 10px;}
+.who span{flex:1;text-align:center;font-size:11px;font-weight:700;border:1px solid var(--line);border-radius:8px;padding:6px 4px;color:var(--muted);background:#fff;transition:.15s;}
+.who span.on{border-color:var(--teal);color:var(--teal-dk);background:#eef7f1;}
+.who span.on .dot{color:var(--green);}
+.prof .r{display:flex;justify-content:space-between;gap:12px;padding:7px 1px;border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.4;}
+.prof .r:last-child{border-bottom:none;}
+.prof .r b{color:var(--muted);font-weight:700;flex:none;}
+.prof .r span{text-align:right;color:var(--ink);font-weight:600;}
+.prof .r.key{background:#eef7f1;border-radius:8px;padding:8px 9px;border-bottom:none;margin:2px 0;}
+.prof .r.key b,.prof .r.key span{color:var(--teal-dk);}
+#pType{font-family:var(--disp);font-weight:600;font-size:15px;color:var(--teal-dk);margin-bottom:8px;}
+.seg button small{text-transform:none;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Human Development · Chapter 6</div>
+  <h1>The Strange Situation</h1>
+  <div class="intro">In the 1970s <b>Mary Ainsworth</b> built the Strange Situation — a ~20-minute lab procedure of gentle separations and reunions that reveals how securely a <b>12–18-month-old</b> is attached to a caregiver. Pick a baby to observe, then step through all eight episodes and watch where the classification is made.</div>
+</header>
+<div class="wrap">
+  <div><div class="card">
+    <h2 id="cardTitle">The playroom</h2>
+    <svg viewBox="0 0 220 200" aria-label="Strange Situation playroom"><g id="art"></g></svg>
+    <div style="margin-top:8px;font-size:12px;color:var(--muted);">Baby's distress <span id="dtxt" style="float:right;font-weight:700;">—</span></div>
+    <div class="meter"><i id="mbar"></i></div>
+  </div></div>
+  <div>
+    <div id="stage">Choose a baby<small>then step through the eight episodes</small></div>
+    <div class="card">
+      <div class="seg" id="seg"></div>
+      <div class="who" id="who"></div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+    <div class="card">
+      <div id="pType">Classification signature</div>
+      <div class="prof" id="prof"></div>
+    </div>
+  </div>
+</div>
+<footer>Human Development · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ // The fixed 8-episode procedure. who = [caregiver present, stranger present]; baby is always present.
+ var EP=[
+  {t:'Introduction',who:[1,0],g:'The experimenter shows caregiver and baby into an unfamiliar playroom full of toys, then quietly leaves the pair alone.'},
+  {t:'Caregiver &amp; baby',who:[1,0],g:'The caregiver sits while the baby is free to explore. Does the baby use the caregiver as a <b>secure base</b> for exploring?'},
+  {t:'Stranger enters',who:[1,1],g:'A friendly stranger enters, chats with the caregiver, then gently approaches the baby. Watch for <b>stranger wariness</b>.'},
+  {t:'First separation',who:[0,1],g:'The caregiver slips out; the baby is left with the stranger. Watch for <b>separation distress</b>.'},
+  {t:'First reunion',who:[1,0],g:'The caregiver returns and the stranger leaves.',key:1},
+  {t:'Second separation',who:[0,0],g:'The caregiver leaves again — this time the baby is completely alone.'},
+  {t:'Stranger returns',who:[0,1],g:'The stranger comes back into the room and tries to comfort the baby.'},
+  {t:'Second reunion',who:[1,0],g:'The caregiver returns once more and picks the baby up. This is the clearest read on the attachment style.',key:1}
+ ];
+
+ // One behavior profile per attachment classification, aligned to the 8 episodes above.
+ var ST=[
+  {k:'secure',nm:'Secure',ty:'Type B',pct:'~60–65%',col:'var(--green)',
+   base:'Uses caregiver as a secure base',sep:'Clear, moderate distress',str:'Wary, but warms with caregiver near',
+   reun:'Seeks caregiver, is soothed, resumes play',care:'Sensitive, consistently responsive',
+   b:[{d:6,n:'Settles in comfortably at the caregiver’s side.'},
+      {d:8,n:'Explores the toys freely, glancing back to check in — the classic <b>secure base</b>.'},
+      {d:26,n:'Cautious of the stranger at first, but reassured while the caregiver is present.'},
+      {d:70,n:'Cries and searches — clear, healthy separation distress.'},
+      {d:20,n:'<b>Reaches for the caregiver, is quickly soothed, then returns to play.</b>'},
+      {d:80,n:'Cries hard while alone; plainly misses the caregiver.'},
+      {d:58,n:'Accepts a little comfort from the stranger, but clearly prefers the caregiver.'},
+      {d:14,n:'<b>Greets warmly, settles into contact, and confidently explores again.</b>'}]},
+  {k:'avoidant',nm:'Avoidant',ty:'Type A',pct:'~20%',col:'var(--blue)',
+   base:'Explores, but ignores caregiver',sep:'Little visible distress',str:'Treats stranger like caregiver',
+   reun:'Avoids or ignores the caregiver',care:'Emotionally unavailable / rejecting of comfort',
+   b:[{d:6,n:'Enters with little reference to the caregiver.'},
+      {d:8,n:'Explores independently and rarely checks back in.'},
+      {d:12,n:'Barely wary — treats the stranger much like the caregiver.'},
+      {d:22,n:'Shows little outward distress when the caregiver leaves.'},
+      {d:18,n:'<b>Turns away or ignores the caregiver — no real greeting.</b> Yet heart rate and cortisol run high: the calm is a strategy, not true ease.'},
+      {d:30,n:'Some unease while alone, but stays composed.'},
+      {d:24,n:'Comforted about as readily by the stranger as by the caregiver.'},
+      {d:16,n:'<b>Snubs or moves away from the caregiver; shows no preference over the stranger.</b>'}]},
+  {k:'resistant',nm:'Resistant',ty:'Type C',pct:'~10–15%',col:'var(--gold)',
+   base:'Too anxious to explore',sep:'Intense distress',str:'Very wary, even with caregiver near',
+   reun:'Seeks contact yet resists it — angry, not soothed',care:'Inconsistent, unpredictable responsiveness',
+   b:[{d:16,n:'Clings from the start; reluctant to leave the caregiver’s side.'},
+      {d:26,n:'Explores very little — hovers close and watchful.'},
+      {d:55,n:'Highly wary of the stranger even with the caregiver present.'},
+      {d:90,n:'Intense, near-inconsolable distress the moment the caregiver leaves.'},
+      {d:76,n:'<b>Reaches to be picked up, then arches and pushes away — angry and hard to soothe.</b>'},
+      {d:95,n:'Overwhelmed; sobbing while alone.'},
+      {d:86,n:'Rejects the stranger’s attempts to comfort.'},
+      {d:72,n:'<b>Mixes clinging with anger; cannot settle or return to the toys.</b>'}]},
+  {k:'disorganized',nm:'Disorganized',ty:'Type D',pct:'~5–10%',col:'var(--purple)',
+   base:'No coherent strategy',sep:'Distress plus odd behaviors',str:'Freezing or confusion',
+   reun:'Contradictory — approach then avoid, freezing, dazed',care:'Frightening/frightened caregiving; added by Main &amp; Solomon',
+   b:[{d:20,n:'Enters hesitantly; the approach is hard to read.'},
+      {d:26,n:'Play is fragmented and watchful.'},
+      {d:46,n:'Freezes or gives a confused response as the stranger approaches.'},
+      {d:70,n:'Distress mixed with dazed, motionless moments.'},
+      {d:64,n:'<b>Approaches the caregiver, then backs away — freezing, with a dazed expression.</b>'},
+      {d:82,n:'Distress with odd, stereotyped movements while alone.'},
+      {d:70,n:'Contradictory approach-and-avoid toward the stranger.'},
+      {d:66,n:'<b>May freeze or look fearful as the caregiver returns — no organized strategy.</b>'}]}
+ ];
+
+ var cur=0, i=0;
+
+ function distCol(d){ return d<30?'#2f9e5b':(d<60?'#b8862f':(d<80?'#e07a3f':'#d1495b')); }
+ function distLabel(d){ return d<30?'low':(d<60?'building':(d<80?'high':'peak')); }
+
+ function fig(x,top,sc,col,lbl){
+   var r=12*sc, hy=top+r, by=hy+r+2, bw=26*sc, bh=30*sc, o='';
+   o+='<rect x="'+(x-bw/2).toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="'+(bw/2).toFixed(1)+'" fill="'+col+'"/>';
+   o+='<circle cx="'+x+'" cy="'+hy.toFixed(1)+'" r="'+r.toFixed(1)+'" fill="'+col+'"/>';
+   o+='<circle cx="'+(x-r*0.34).toFixed(1)+'" cy="'+(hy-r*0.05).toFixed(1)+'" r="'+(r*0.13).toFixed(1)+'" fill="#fff"/>';
+   o+='<circle cx="'+(x+r*0.34).toFixed(1)+'" cy="'+(hy-r*0.05).toFixed(1)+'" r="'+(r*0.13).toFixed(1)+'" fill="#fff"/>';
+   o+='<text x="'+x+'" y="'+(by+bh+12).toFixed(1)+'" font-size="9.5" text-anchor="middle" fill="#4b5a52" font-weight="700">'+lbl+'</text>';
+   return o;
+ }
+
+ function baby(x,top,dist,k){
+   var col='#d1495b', r=12, hy=top+r, by=hy+r+2, bw=24, bh=22, o='', my=hy+5;
+   o+='<rect x="'+(x-bw/2)+'" y="'+by+'" width="'+bw+'" height="'+bh+'" rx="'+(bw/2)+'" fill="'+col+'"/>';
+   o+='<circle cx="'+x+'" cy="'+hy+'" r="'+r+'" fill="'+col+'"/>';
+   if(k==='disorganized'){
+     o+='<circle cx="'+(x-4)+'" cy="'+(hy-1)+'" r="2.4" fill="none" stroke="#fff" stroke-width="1.1"/><circle cx="'+(x-4)+'" cy="'+(hy-1)+'" r="0.8" fill="#fff"/>';
+     o+='<circle cx="'+(x+4)+'" cy="'+(hy-1)+'" r="2.4" fill="none" stroke="#fff" stroke-width="1.1"/><circle cx="'+(x+4)+'" cy="'+(hy-1)+'" r="0.8" fill="#fff"/>';
+     o+='<path d="M '+(x-5)+' '+my+' q 2.5 -3 5 0 q 2.5 3 5 0" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/>';
+   } else {
+     o+='<circle cx="'+(x-4)+'" cy="'+(hy-1)+'" r="1.7" fill="#fff"/><circle cx="'+(x+4)+'" cy="'+(hy-1)+'" r="1.7" fill="#fff"/>';
+     if(dist>=80){ o+='<ellipse cx="'+x+'" cy="'+(my+1)+'" rx="3.1" ry="3.9" fill="#7a1f2c"/>'; }
+     else if(dist>=60){ o+='<path d="M '+(x-5)+' '+(my+3)+' q 5 -5 10 0" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>'; }
+     else if(dist>=30){ o+='<path d="M '+(x-5)+' '+(my+1)+' H '+(x+5)+'" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>'; }
+     else { o+='<path d="M '+(x-5)+' '+my+' q 5 5 10 0" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>'; }
+   }
+   if(dist>=65){
+     o+='<path d="M '+(x-5)+' '+(hy+1)+' q -1 5 0 7" stroke="#8ec9ff" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
+     o+='<path d="M '+(x+5)+' '+(hy+1)+' q 1 5 0 7" stroke="#8ec9ff" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
+   }
+   o+='<text x="'+x+'" y="'+(by+bh+12)+'" font-size="9.5" text-anchor="middle" fill="#b23145" font-weight="700">Baby</text>';
+   return o;
+ }
+
+ function draw(who,dist,k){
+   var s='';
+   s+='<rect x="12" y="22" width="196" height="152" rx="12" fill="#eef6f0" stroke="#d3e6db" stroke-width="2"/>';
+   s+='<rect x="15" y="139" width="190" height="32" fill="#e2efe7" opacity=".75"/>';
+   s+='<line x1="14" y1="139" x2="206" y2="139" stroke="#cfe3d7" stroke-width="2"/>';
+   // door on the right wall
+   s+='<rect x="190" y="50" width="16" height="66" rx="2" fill="#d8c8a4" stroke="#c3ae7f" stroke-width="1.5"/>';
+   s+='<circle cx="194" cy="84" r="1.8" fill="#8a6a20"/>';
+   // a couple of toys
+   s+='<rect x="30" y="152" width="14" height="14" rx="3" fill="#b8862f"/>';
+   s+='<circle cx="96" cy="163" r="6" fill="#2f6f9f"/>';
+   if(who[0]) s+=fig(55,84,1,'var(--teal)','Caregiver');
+   if(who[1]) s+=fig(165,88,0.9,'#7a5a8a','Stranger');
+   s+=baby(110,116,dist,k);
+   if(!who[0]){ s+='<text x="55" y="104" font-size="9" text-anchor="middle" fill="#9aa8a0" font-style="italic">(caregiver out)</text>'; }
+   return s;
+ }
+
+ function chip(nm,on){ return '<span class="'+(on?'on':'')+'"><span class="dot">'+(on?'●':'○')+'</span> '+nm+'</span>'; }
+
+ function renderSeg(){
+   $("seg").innerHTML=ST.map(function(s,idx){
+     return '<button class="'+(idx===cur?'on':'')+'" data-i="'+idx+'">'+s.nm+'<small>'+s.ty+'</small></button>';
+   }).join('');
+   $("seg").querySelectorAll('button').forEach(function(btn){
+     btn.onclick=function(){ cur=+btn.dataset.i; render(); };
+   });
+ }
+
+ function renderProf(st){
+   $("pType").innerHTML='Reading &nbsp;·&nbsp; '+st.nm+' &nbsp;·&nbsp; '+st.ty+' &nbsp;·&nbsp; '+st.pct;
+   $("prof").innerHTML=
+     '<div class="r"><b>Secure base?</b><span>'+st.base+'</span></div>'+
+     '<div class="r"><b>Separation</b><span>'+st.sep+'</span></div>'+
+     '<div class="r"><b>The stranger</b><span>'+st.str+'</span></div>'+
+     '<div class="r key"><b>Reunion 🔑</b><span>'+st.reun+'</span></div>'+
+     '<div class="r"><b>Typical caregiving</b><span>'+st.care+'</span></div>';
+ }
+
+ function render(){
+   var st=ST[cur], ep=EP[i], b=st.b[i];
+   $("cardTitle").innerHTML='Episode '+(i+1)+' · '+ep.t;
+   $("art").innerHTML=draw(ep.who,b.d,st.k);
+   $("mbar").style.width=b.d+'%'; $("mbar").style.background=distCol(b.d);
+   $("dtxt").innerHTML=distLabel(b.d); $("dtxt").style.color=distCol(b.d);
+   $("stage").style.background=st.col;
+   $("stage").innerHTML=st.nm+'<small>'+st.ty+' · Episode '+(i+1)+' of 8 — '+ep.t+'</small>';
+   $("who").innerHTML=chip('Caregiver',ep.who[0])+chip('Stranger',ep.who[1])+chip('Baby',1);
+   $("info").innerHTML='<span class="n">'+ep.t+'</span>'+ep.g+
+     '<div class="dd"><b>This baby — </b>'+b.n+'</div>'+
+     (ep.key?'<div class="loc">🔑 Reunion is the moment the attachment style shows most clearly — Ainsworth classified chiefly on how the baby greets the returning caregiver.</div>':'');
+   $("prev").disabled=(i===0); $("next").disabled=(i===EP.length-1);
+   renderSeg(); renderProf(st);
+ }
+
+ $("prev").onclick=function(){ if(i>0){ i--; render(); } };
+ $("next").onclick=function(){ if(i<EP.length-1){ i++; render(); } };
+ document.addEventListener('keydown',function(e){
+   if(e.key==='ArrowLeft'&&i>0){ i--; render(); }
+   else if(e.key==='ArrowRight'&&i<EP.length-1){ i++; render(); }
+ });
+
+ render();
+})();
+</script>
+</body>
+</html>

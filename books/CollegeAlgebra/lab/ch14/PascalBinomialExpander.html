@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Pascal's Triangle & the Binomial Theorem</title>
+<meta name="description" content="Build Pascal's triangle, watch a row light up, and step through the expansion of a binomial one term at a time. See exactly where each coefficient comes from. Interactive College Algebra lesson.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.ctrl{margin:12px 0 2px;}
+.ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:700;color:var(--soft);margin-bottom:5px;}
+.ctrl label b{color:var(--teal-dk);font-size:15px;font-family:var(--disp);}
+.ctrl input[type=range]{width:100%;accent-color:var(--teal);height:22px;cursor:pointer;}
+.tricap{font-size:12px;color:var(--muted);line-height:1.5;margin-top:8px;}
+.buildbox{background:#eef0f9;border:1px solid var(--line);border-left:5px solid var(--gold);border-radius:10px;padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--soft);line-height:1.55;}
+.buildbox b{color:var(--teal-dk);}
+.exp{display:flex;flex-wrap:wrap;gap:4px 5px;align-items:center;margin:4px 0 2px;min-height:34px;}
+.tterm{background:#eef0f9;border:1px solid var(--line);color:var(--teal-dk);font-weight:700;font-size:13.5px;border-radius:8px;padding:6px 9px;line-height:1;transition:.15s;}
+.tterm.on{background:var(--coral);border-color:var(--coral);color:#fff;box-shadow:0 3px 10px rgba(209,73,91,.35);}
+.tterm.ghost{opacity:.34;font-weight:600;}
+.tterm sup{font-size:9.5px;} .tterm i{font-style:italic;}
+.op{font-size:12px;color:var(--gold);font-weight:800;}
+.eq{font-family:var(--disp);font-size:14.5px;color:var(--teal-dk);line-height:1.9;}
+.eq i{font-style:italic;} .eq b{color:var(--coral);}
+.choose{display:flex;flex-wrap:wrap;gap:4px;margin:7px 0 3px;}
+.fchip{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;font-style:italic;color:#fff;}
+.fchip.a{background:var(--teal);} .fchip.b{background:var(--gold);}
+.sig{font-family:var(--disp);font-size:15px;color:var(--teal-dk);text-align:center;font-weight:600;margin:2px 0;}
+.sig i{font-style:italic;}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);font-weight:600;margin-top:9px;}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:middle;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 14</div>
+  <h1>Pascal's Triangle &amp; the Binomial Theorem</h1>
+  <div class="intro">You never have to multiply <i>(a</i> + <i>b)</i> by itself over and over. <b>Pascal's triangle</b> hands you the coefficients, and the powers of <i>a</i> and <i>b</i> follow a simple rule. Pick a power, then step through the expansion one term at a time to see exactly where every number comes from.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Every number is the sum of the two directly above it</h2>
+    <svg viewBox="0 0 340 252" aria-label="Pascal's triangle"><g id="tri"></g></svg>
+    <div class="legend">
+      <span><i style="background:var(--teal)"></i>the row you're using (power <i>n</i>)</span>
+      <span><i style="background:var(--coral)"></i>the term you're on now</span>
+      <span><i style="background:var(--gold)"></i>the two &ldquo;parents&rdquo; that add to it</span>
+    </div>
+    <div class="tricap">Row <i>n</i> holds the coefficients for <i>(a</i> + <i>b)</i><sup><i>n</i></sup>. Tap any number in the lit row to jump to that term.</div>
+    <div class="buildbox" id="build"></div>
+  </div></div>
+  <div>
+    <div id="stage">Expand a binomial<small>choose a power and step through it</small></div>
+    <div class="card">
+      <div class="modeseg" id="mode">
+        <button data-m="ab" class="on"><i>(a</i> + <i>b)</i><sup>n</sup></button>
+        <button data-m="x2"><i>(x</i> + 2)<sup>n</sup></button>
+      </div>
+      <div class="ctrl"><label>Power &nbsp;<i>n</i><b id="vn">4</b></label>
+        <input type="range" id="n" min="0" max="8" step="1" value="4"></div>
+      <div class="sig" id="sig"></div>
+      <div class="exp" id="exp"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev term</button><button class="btn solid" id="next">Next term ›</button></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ // ---- exact integer Pascal's triangle, rows 0..8 ----
+ var P=[[1]];
+ for(var r=1;r<=8;r++){ var row=[1]; for(var c=1;c<r;c++) row.push(P[r-1][c-1]+P[r-1][c]); row.push(1); P.push(row); }
+ function ip(base,exp){ var v=1; for(var i=0;i<exp;i++) v*=base; return v; } // integer power
+
+ // ---- state ----
+ var n=4, k=0, mode='ab';
+
+ // ---- variable-power HTML (no LaTeX, italics for variables) ----
+ function pw(v,e){ if(e===0) return ''; if(e===1) return '<i>'+v+'</i>'; return '<i>'+v+'</i><sup>'+e+'</sup>'; }
+
+ // full HTML for term k of the current expansion
+ function termHTML(kk){
+   var C=P[n][kk], eA=n-kk, body, num, cs;
+   if(mode==='ab'){
+     body=pw('a',eA)+pw('b',kk);
+     cs=(C===1 && body!=='')?'':(''+C);
+     var out=cs+body; return out===''?'1':out;
+   } else { // (x + 2)^n : coefficient is C(n,k) * 2^k
+     num=C*ip(2,kk); body=pw('x',eA);
+     cs=(num===1 && body!=='')?'':(''+num);
+     var o2=cs+body; return o2===''?'1':o2;
+   }
+ }
+
+ // ---- draw the triangle (rows 0..n), highlight active row + current term + its parents ----
+ var TOP=24, ROWH=25, SP=33, CX=170, R=12.5;
+ function tx(i,j){ return CX + (j - i/2)*SP; }
+ function ty(i){ return TOP + i*ROWH; }
+ function drawTri(){
+   var s='';
+   // connective lines + parent rings for the current coefficient
+   if(n>=1 && k>0 && k<n){
+     var ccx=tx(n,k), ccy=ty(n,k);
+     var p1x=tx(n-1,k-1), p2x=tx(n-1,k), py=ty(n-1);
+     s+='<line x1="'+p1x+'" y1="'+py+'" x2="'+ccx+'" y2="'+ccy+'" stroke="#b8862f" stroke-width="1.6" stroke-dasharray="3 2"/>';
+     s+='<line x1="'+p2x+'" y1="'+py+'" x2="'+ccx+'" y2="'+ccy+'" stroke="#b8862f" stroke-width="1.6" stroke-dasharray="3 2"/>';
+     s+='<text x="'+((p1x+p2x)/2)+'" y="'+(py-14)+'" font-size="12" fill="#b8862f" text-anchor="middle" font-weight="800">+</text>';
+   }
+   for(var i=0;i<=n;i++){
+     for(var j=0;j<=i;j++){
+       var x=tx(i,j), y=ty(i), val=P[i][j];
+       var active=(i===n), cur=(i===n && j===k);
+       var parent=(n>=1 && k>0 && k<n && i===n-1 && (j===k-1||j===k));
+       var fill, stroke='#fff', sw=1.4, tcol;
+       if(cur){ fill='#d1495b'; stroke='#b8862f'; sw=2.6; tcol='#fff'; }
+       else if(active){ fill='#43458f'; tcol='#fff'; }
+       else if(parent){ fill='#f7edcf'; stroke='#b8862f'; sw=2.2; tcol='#8a6a20'; }
+       else { fill='#eef0f9'; tcol='#3d3f66'; }
+       s+='<g class="rgn" data-i="'+i+'" data-j="'+j+'">';
+       s+='<circle cx="'+x+'" cy="'+y+'" r="'+R+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'"/>';
+       s+='<text x="'+x+'" y="'+(y+4)+'" font-size="11" fill="'+tcol+'" text-anchor="middle" font-weight="800">'+val+'</text>';
+       s+='</g>';
+     }
+   }
+   return s;
+ }
+
+ // ---- the "why this number is here" readout under the triangle ----
+ function setBuild(i,j){
+   var t;
+   if(i===0){ t='Row 0 is a single <b>1</b> &mdash; that is <i>(a</i> + <i>b)</i><sup>0</sup> = <b>1</b> (anything to the 0 power).'; }
+   else if(j===0 || j===i){ t='This is an <b>edge</b> cell. Every row starts and ends with <b>1</b>: there is exactly one way to take all&nbsp;<i>a</i>&rsquo;s (or all&nbsp;<i>b</i>&rsquo;s).'; }
+   else { var p=P[i-1][j-1], q=P[i-1][j];
+     t='This cell = <b>'+p+' + '+q+' = '+(p+q)+'</b> &mdash; just add the two numbers directly above it. That is <b>Pascal&rsquo;s rule</b>, and it works because a term with '+j+' <i>b</i>&rsquo;s either uses the last factor&rsquo;s <i>b</i> (then pick '+(j-1)+' more from the rest) or does not (pick '+j+' from the rest).'; }
+   $("build").innerHTML=t;
+ }
+
+ // ---- one representative arrangement of a's and b's for the counting argument ----
+ function chooseHTML(){
+   if(n===0) return '<div class="choose"><span class="fchip a" style="width:auto;padding:0 9px;">1</span></div>'+
+     '<div class="dd">No factors to choose from &mdash; <i>(a</i> + <i>b)</i><sup>0</sup> is just <b>1</b>.</div>';
+   var chips='';
+   // show a-power first, then the b's (one of the C(n,k) equally-valid arrangements)
+   for(var t=0;t<n-k;t++) chips+='<span class="fchip a">a</span>';
+   for(var u=0;u<k;u++) chips+='<span class="fchip b">b</span>';
+   var C=P[n][k];
+   var msg='Multiplying <b>'+n+'</b> copies of <i>(a</i> + <i>b)</i>, each copy hands over an <i>a</i> or a <i>b</i>. This term needs exactly <b>'+k+'</b> <i>b</i>'+(k===1?'':'&rsquo;s')+'. The coefficient <b>'+C+'</b> counts how many of the '+n+' copies you could pick those '+k+' <i>b</i>'+(k===1?'':'&rsquo;s')+' from &mdash; that count is the number in the triangle.';
+   return '<div class="choose">'+chips+'</div><div class="dd">'+msg+'</div>';
+ }
+
+ // ---- master render ----
+ function render(){
+   $("vn").innerHTML=n;
+   $("tri").innerHTML=drawTri();
+   setBuild(n,k);
+
+   // sigma / general form
+   if(mode==='ab'){
+     $("sig").innerHTML='<i>(a</i> + <i>b)</i><sup>'+n+'</sup> = &sum; <i>C</i>(<i>n</i>,<i>k</i>) &middot; <i>a</i><sup><i>n</i>&minus;<i>k</i></sup> &middot; <i>b</i><sup><i>k</i></sup>';
+   } else {
+     $("sig").innerHTML='<i>(x</i> + 2)<sup>'+n+'</sup> = &sum; <i>C</i>(<i>n</i>,<i>k</i>) &middot; <i>x</i><sup><i>n</i>&minus;<i>k</i></sup> &middot; 2<sup><i>k</i></sup>';
+   }
+
+   // progressive expansion strip
+   var e='';
+   for(var t=0;t<=n;t++){
+     if(t>0) e+='<span class="op">+</span>';
+     var cls = t<k ? '' : (t===k ? ' on' : ' ghost');
+     e+='<span class="tterm'+cls+'">'+termHTML(t)+'</span>';
+   }
+   $("exp").innerHTML=e;
+
+   // worked step for term k
+   var C=P[n][k], eA=n-k;
+   var info='<span class="n">Term '+(k+1)+' of '+(n+1)+'</span>';
+   if(mode==='ab'){
+     info+='<div class="eq">general term: &nbsp;<i>C</i>('+n+',&thinsp;'+k+') &middot; <i>a</i><sup>'+n+'&minus;'+k+'</sup> &middot; <i>b</i><sup>'+k+'</sup><br>'+
+       '= '+C+' &middot; '+ (eA===0?'<i>a</i><sup>0</sup>':pw('a',eA)) +' &middot; '+ (k===0?'<i>b</i><sup>0</sup>':pw('b',k)) +
+       ' = <b>'+termHTML(k)+'</b></div>';
+   } else {
+     var num=C*ip(2,k);
+     info+='<div class="eq">general term: &nbsp;<i>C</i>('+n+',&thinsp;'+k+') &middot; <i>x</i><sup>'+n+'&minus;'+k+'</sup> &middot; 2<sup>'+k+'</sup><br>'+
+       'coefficient = '+C+' &middot; 2<sup>'+k+'</sup> = '+C+' &middot; '+ip(2,k)+' = <b>'+num+'</b><br>'+
+       'term = <b>'+termHTML(k)+'</b></div>';
+   }
+   info+='<div class="dd">The power of <i>'+(mode==='ab'?'a':'x')+'</i> counts <b>down</b> ('+n+' &rarr; 0) while the power of <i>'+(mode==='ab'?'b':'2')+'</i> counts <b>up</b> (0 &rarr; '+n+'). In every term the two exponents add to <b>'+n+'</b>.</div>';
+
+   info+='<span class="n" style="margin-top:12px;">Why the coefficient is '+C+'</span>'+chooseHTML();
+
+   if(mode==='x2'){
+     info+='<div class="mnem"><b>Two jobs, kept separate:</b> the triangle gives <i>C</i>('+n+',&thinsp;'+k+') = '+C+', then you multiply by 2<sup>'+k+'</sup> = '+ip(2,k)+' from the &ldquo;2&rdquo; in the binomial. Coefficient = '+C+' &middot; '+ip(2,k)+' = <b>'+(C*ip(2,k))+'</b>.</div>';
+   }
+
+   $("info").innerHTML=info;
+
+   $("prev").disabled=(k===0);
+   $("next").disabled=(k===n);
+   $("stage").innerHTML=(mode==='ab'?'<i>(a</i> + <i>b)</i>':'<i>(x</i> + 2)')+'<sup>'+n+'</sup>'+
+     '<small>using row '+n+' of the triangle &nbsp;·&nbsp; '+(n+1)+' term'+(n===0?'':'s')+'</small>';
+ }
+
+ // ---- interactions ----
+ $("n").oninput=function(){ n=+this.value; if(k>n) k=n; render(); };
+ $("prev").onclick=function(){ if(k>0){ k--; render(); } };
+ $("next").onclick=function(){ if(k<n){ k++; render(); } };
+ document.querySelectorAll('#mode button').forEach(function(b){
+   b.onclick=function(){ mode=b.dataset.m;
+     document.querySelectorAll('#mode button').forEach(function(x){x.classList.remove('on');});
+     b.classList.add('on'); render();
+   };
+ });
+ // tap a triangle cell: on the lit row it jumps to that term; any cell explains its build
+ $("tri").addEventListener('click',function(ev){
+   var g=ev.target.closest('.rgn'); if(!g) return;
+   var i=+g.dataset.i, j=+g.dataset.j;
+   if(i===n){ k=j; render(); }
+   setBuild(i,j);
+ });
+
+ render();
+})();
+</script>
+</body>
+</html>

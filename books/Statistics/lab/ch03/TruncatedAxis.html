@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>The Truncated Axis</title>
+<meta name="description" content="Slide the y-axis baseline off zero and watch a tiny, real difference balloon into a dramatic one. Every number — true difference, apparent difference, exaggeration factor — is computed live from the data the page draws.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:13px;font-weight:800;color:var(--teal-dk);min-width:96px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:16px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .vv small{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:0;}
+.tiles div.hot{border-color:#f0c9d0;background:#fdf5f7;} .tiles div.hot .vv{color:#b23145;}
+.meter{margin-top:11px;}
+.meter .mh{display:flex;justify-content:space-between;font-size:9.6px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+.meter .mb{height:11px;border-radius:6px;background:#e6eff4;overflow:hidden;margin-top:5px;border:1px solid var(--line);}
+.meter .mb i{display:block;height:100%;width:0;background:var(--teal);transition:width .25s,background .25s;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);} .cap.warn b{color:#b23145;}
+.rd{border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px 12px;margin-top:12px;font-size:12.4px;line-height:1.6;color:var(--soft);}
+.rd b{color:var(--ink);} .rd .big{color:#b23145;font-weight:800;}
+.ctx{font-size:12px;color:var(--soft);line-height:1.5;margin-bottom:10px;font-style:italic;}
+@media (max-width:520px){.sl label{font-size:10px;}.sl .nv{min-width:84px;font-size:12px;}.tiles .lb{font-size:8.8px;}.seg button{font-size:11.5px;padding:10px 3px;}.seg button small{font-size:9px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 3</div>
+  <h1>The Truncated Axis</h1>
+  <div class="intro">A bar chart makes a promise: <b>length stands for size</b>. That promise only holds when the y-axis starts at <b>zero</b>. Slide the baseline up and the data never changes &mdash; but the picture does. Every figure on this page is computed from the values actually plotted, so you can watch a real difference of a fraction of a percent turn into a chart that looks like a landslide.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="mainTitle">The chart as drawn</h2>
+      <div class="ctx" id="ctx"></div>
+      <svg viewBox="0 0 352 232" aria-label="chart with an adjustable y-axis baseline"><g id="main"></g></svg>
+      <div class="cap" id="mainCap"></div>
+    </div>
+    <div class="card"><h2>The same numbers, zero baseline</h2>
+      <svg viewBox="0 0 352 148" aria-label="the same data drawn with the y-axis starting at zero"><g id="mini"></g></svg>
+      <div class="cap">Identical data. Nothing here was re-measured &mdash; only the axis moved.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Move the baseline<small>the data stays put</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="0" class="on">Wait times<small>2 clinics</small></button>
+        <button data-v="1">On-time rate<small>6 months</small></button>
+        <button data-v="2">Accuracy<small>4 devices</small></button>
+        <button data-v="3">Poll<small>2 candidates</small></button>
+      </div>
+      <div class="modeseg" id="kseg" style="margin-top:12px;">
+        <button data-k="bar">Bars</button><button data-k="line">Line</button>
+      </div>
+      <div class="sl"><label for="bSl">Axis starts at</label><input type="range" id="bSl" min="0" max="100" step="1" value="0"><span class="nv" id="bVal">0</span></div>
+      <div class="sl"><label for="gSl">Real gap</label><input type="range" id="gSl" min="0" max="200" step="5" value="100"><span class="nv" id="gVal">as measured</span></div>
+      <div class="row">
+        <button class="btn solid" id="bZero">Zero baseline</button>
+        <button class="btn" id="bCrop">Crop to data</button>
+        <button class="btn" id="bDraw">New sample</button>
+      </div>
+      <div class="tiles">
+        <div><span class="lb">True difference<br>biggest vs smallest</span><span class="vv" id="t1">—</span></div>
+        <div id="tD"><span class="lb">Difference as drawn<br>what the bars say</span><span class="vv" id="t2">—</span></div>
+        <div id="tE"><span class="lb">Exaggeration<br>drawn ÷ true</span><span class="vv" id="t3">—</span></div>
+        <div><span class="lb">Vertical zoom<br>vs the zero-based view</span><span class="vv" id="t4">—</span></div>
+      </div>
+      <div class="meter"><div class="mh"><span>Honest</span><span id="mLab">no exaggeration</span><span>Extreme</span></div><div class="mb"><i id="mBar"></i></div></div>
+      <div class="rd" id="read"></div>
+      <div id="info"></div>
+      <div class="note" id="note"></div>
+      <div class="mnem"><b>Lines are the exception &mdash; but not a free pass.</b> A line chart encodes <b>position and change</b>, not length, so a non-zero baseline is often reasonable (nobody plots body temperature from 0&nbsp;°F). The axis range still controls how steep the change <i>looks</i>, so the rule becomes: read the axis numbers before you read the slope.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- seeded PRNG so every draw is reproducible ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+ function gaussFrom(rnd){var u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+
+ var DS=[
+  {nm:'Clinic wait time',sub:'average minutes to be seen',n:2,center:22.0,sd:0.55,unit:' min',dp:1,seed:1201,kind:'bar',
+   labels:['Clinic A','Clinic B'],
+   ctx:'Two clinics report their average wait time for the month.'},
+  {nm:'On-time rate',sub:'percent of appointments started on time',n:6,center:93.4,sd:0.33,unit:'%',dp:1,seed:5507,kind:'line',cap:100,
+   labels:['Jan','Feb','Mar','Apr','May','Jun'],
+   ctx:'Six months from a process that did not actually change — the month-to-month wobble is ordinary random variation.'},
+  {nm:'Device accuracy',sub:'percent agreement with a reference standard',n:4,center:98.0,sd:0.26,unit:'%',dp:1,seed:9103,kind:'bar',cap:100,
+   labels:['Model A','Model B','Model C','Model D'],
+   ctx:'Four thermometer models, each checked against the same reference instrument.'},
+  {nm:'Poll standings',sub:'percent of respondents',n:2,center:48.6,sd:0.7,unit:'%',dp:1,seed:3313,kind:'bar',cap:100,
+   labels:['Candidate A','Candidate B'],
+   ctx:'One poll of two candidates. The margin of error is about ±3 points, which is larger than the gap you are about to see magnified.'}
+ ];
+
+ var di=0, drawN=0, kind=DS[0].kind, basePct=0, gapPct=100;
+ var raw=[], mean0=0;
+
+ function sample(){
+  var d=DS[di], rnd=mulberry32(d.seed+drawN*7919), i, s=0;
+  raw=[];
+  for(i=0;i<d.n;i++){ raw.push(d.center+gaussFrom(rnd)*d.sd); }
+  for(i=0;i<d.n;i++){ s+=raw[i]; }
+  mean0=s/d.n;
+ }
+
+ /* ---- numeric helpers ---- */
+ function niceStep(r){
+  if(!(r>0))return 1;
+  var mag=Math.pow(10,Math.floor(Math.log(r)/Math.LN10)), c=[1,2,2.5,5,10], i;
+  for(i=0;i<c.length;i++){ if(c[i]*mag>=r-1e-9) return c[i]*mag; }
+  return 10*mag;
+ }
+ function decFor(st){
+  if(st>=1) return (Math.abs(st-Math.round(st))>1e-9)?1:0;
+  if(st>=0.1) return 1;
+  return 2;
+ }
+ function fmt(v,dp){ return (Math.abs(v)<1e-9?0:v).toFixed(dp); }
+
+ /* ---- chart renderer: pure SVG built from the computed numbers ---- */
+ function chartSVG(o){
+  var v=o.vals,lab=o.labels,lo=o.lo,hi=o.hi,st=o.st,dec=o.dec;
+  var L=o.L,R=o.R,T=o.T,B=o.B,fs=o.fs;
+  var PW=R-L,PH=B-T,n=v.length,s='',i,k,t,yy;
+  function Y(val){ var f=(val-lo)/(hi-lo); if(f<0)f=0; if(f>1)f=1; return B-f*PH; }
+
+  for(k=0;k<200;k++){
+   t=Math.ceil((lo-1e-9)/st)*st+k*st;
+   if(t>hi+1e-9) break;
+   yy=Y(t);
+   s+='<line x1="'+L+'" y1="'+yy.toFixed(1)+'" x2="'+R+'" y2="'+yy.toFixed(1)+'" stroke="#e3edf2" stroke-width="1"/>';
+   s+='<text x="'+(L-6)+'" y="'+(yy+fs*0.36).toFixed(1)+'" font-size="'+fs+'" fill="#78868d" text-anchor="end" font-weight="700">'+fmt(t,dec)+'</text>';
+  }
+  s+='<line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+B+'" stroke="#b9ccd6" stroke-width="1.5"/>';
+  s+='<line x1="'+L+'" y1="'+B+'" x2="'+R+'" y2="'+B+'" stroke="#b9ccd6" stroke-width="1.5"/>';
+
+  var slot=PW/n, bw=Math.min(slot*0.56,o.maxbw), mx=Math.max.apply(null,v);
+  for(i=0;i<n;i++){
+   var cx=L+slot*(i+0.5);
+   if(o.kind==='bar'){
+    var by=Y(v[i]), bh=B-by;
+    if(bh<0.6) bh=0.6;
+    s+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+(B-bh).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="2" fill="'+(v[i]>=mx-1e-9?'#d1495b':'#3f7d99')+'"/>';
+   }
+   s+='<text x="'+cx.toFixed(1)+'" y="'+(B+fs+6).toFixed(1)+'" font-size="'+fs+'" fill="#4a585f" text-anchor="middle" font-weight="700">'+lab[i]+'</text>';
+  }
+
+  if(o.kind==='line'){
+   var pd='';
+   for(i=0;i<n;i++){ pd+=(i?' L':'M')+(L+slot*(i+0.5)).toFixed(1)+' '+Y(v[i]).toFixed(1); }
+   s+='<path d="'+pd+'" fill="none" stroke="#d1495b" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>';
+   for(i=0;i<n;i++){ s+='<circle cx="'+(L+slot*(i+0.5)).toFixed(1)+'" cy="'+Y(v[i]).toFixed(1)+'" r="4" fill="#fffdf9" stroke="#d1495b" stroke-width="2.2"/>'; }
+  }
+
+  if(o.showVals){
+   for(i=0;i<n;i++){
+    var vx=L+slot*(i+0.5), vy=Y(v[i])-(o.kind==='line'?10:6);
+    if(vy<T+8) vy=T+8;
+    s+='<text x="'+vx.toFixed(1)+'" y="'+vy.toFixed(1)+'" font-size="'+(fs+0.6)+'" fill="#1c4454" text-anchor="middle" font-weight="800">'+fmt(v[i],o.dp)+'</text>';
+   }
+  }
+
+  if(lo>1e-9){
+   s+='<rect x="'+(L-4)+'" y="'+(B-13)+'" width="8" height="15" fill="#fffdf9"/>';
+   s+='<line x1="'+(L-5)+'" y1="'+(B-2)+'" x2="'+(L+5)+'" y2="'+(B-8)+'" stroke="#d1495b" stroke-width="1.8"/>';
+   s+='<line x1="'+(L-5)+'" y1="'+(B-6)+'" x2="'+(L+5)+'" y2="'+(B-12)+'" stroke="#d1495b" stroke-width="1.8"/>';
+  }
+  return s;
+ }
+
+ /* ---- the whole computation ---- */
+ function compute(){
+  var d=DS[di], g=gapPct/100, i, vals=[], pw=Math.pow(10,d.dp);
+  /* round to the same precision the labels show, so every printed number agrees */
+  for(i=0;i<d.n;i++){ vals.push(Math.round((mean0+(raw[i]-mean0)*g)*pw)/pw); }
+  var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
+
+  /* baseline: 0 → 97% of the smallest value, so the smallest bar never vanishes */
+  var base=(basePct/100)*0.97*lo;
+
+  /* truncated window */
+  var topRaw=hi+0.18*(hi-base);
+  var st=niceStep((topRaw-base)/5);
+  var top=Math.ceil((topRaw-1e-9)/st)*st;
+
+  /* zero-based window, same rule with base = 0 */
+  var topRaw0=hi*1.18;
+  var st0=niceStep(topRaw0/5);
+  var top0=Math.ceil((topRaw0-1e-9)/st0)*st0;
+
+  /* a percentage axis should not run past 100 */
+  if(d.cap&&d.cap>hi){ if(top>d.cap)top=d.cap; if(top0>d.cap)top0=d.cap; }
+
+  return {d:d,vals:vals,dmin:lo,dmax:hi,base:base,st:st,top:top,st0:st0,top0:top0};
+ }
+
+ function render(){
+  var C=compute(), d=C.d, i;
+
+  /* main chart */
+  $("main").innerHTML=chartSVG({vals:C.vals,labels:d.labels,lo:C.base,hi:C.top,st:C.st,dec:decFor(C.st),
+    L:52,R:344,T:16,B:186,fs:10.5,maxbw:74,kind:kind,showVals:(d.n<=4),dp:d.dp});
+  $("mini").innerHTML=chartSVG({vals:C.vals,labels:d.labels,lo:0,hi:C.top0,st:C.st0,dec:decFor(C.st0),
+    L:52,R:344,T:10,B:112,fs:9.5,maxbw:74,kind:kind,showVals:false,dp:d.dp});
+
+  /* the numbers */
+  var trueGap=C.dmax-C.dmin;
+  var truePct=trueGap/C.dmin*100;                      /* real % by which the biggest exceeds the smallest */
+  var drawnPct=trueGap/(C.dmin-C.base)*100;            /* % by which the drawn bar lengths differ */
+  var exag=C.dmin/(C.dmin-C.base);                     /* drawnPct ÷ truePct, defined even when the gap is 0 */
+  var zoom=C.top0/(C.top-C.base);                      /* vertical magnification vs the zero-based view */
+  var trueRatio=C.dmax/C.dmin;
+  var drawnRatio=(C.dmax-C.base)/(C.dmin-C.base);
+
+  $("ctx").innerHTML=d.ctx;
+  $("mainTitle").innerHTML=d.nm+' <span style="font-weight:400;color:var(--muted);font-size:12px;">· '+d.sub+'</span>';
+
+  var trunc=C.base>1e-9;
+  $("mainCap").className='cap'+(trunc?' warn':'');
+  $("mainCap").innerHTML=trunc
+   ? 'Y-axis runs <b>'+fmt(C.base,decFor(C.st))+'</b> to <b>'+fmt(C.top,decFor(C.st))+'</b> &mdash; <b>it does not start at zero.</b> The red slashes on the axis mark the break; most published charts leave them out.'
+   : 'Y-axis runs <b>0</b> to <b>'+fmt(C.top,decFor(C.st))+'</b>. '+(kind==='bar'
+       ? 'Bar length is proportional to the value, so your eye can be trusted.'
+       : 'The full scale is in view, so the slope you see is the change that happened.');
+
+  $("stage").style.background=trunc?(exag>=6?'#b23145':'#b8862f'):'#2f6f8a';
+  $("stage").innerHTML=(trunc?'Baseline lifted to '+fmt(C.base,decFor(C.st))+(d.unit==='%'?'%':d.unit):'Baseline at zero')
+    +'<small>'+(trunc?'the picture is magnified '+zoom.toFixed(1)+'× vertically':'the picture matches the data')+'</small>';
+
+  $("t1").innerHTML=truePct.toFixed(truePct<10?2:1)+'%';
+  $("t2").innerHTML=drawnPct.toFixed(drawnPct<10?2:1)+'%';
+  $("t3").innerHTML='×'+(exag<10?exag.toFixed(2):exag.toFixed(1));
+  $("t4").innerHTML='×'+zoom.toFixed(1);
+  $("tD").className=drawnPct>=2*truePct+0.01?'hot':'';
+  $("tE").className=exag>=2?'hot':'';
+
+  var mp=Math.max(0,Math.min(100,Math.log(exag)/Math.log(40)*100));
+  $("mBar").style.width=mp+'%';
+  $("mBar").style.background=exag<1.05?'#2f6f8a':(exag<3?'#b8862f':'#d1495b');
+  $("mLab").innerHTML=exag<1.05?'no exaggeration':'×'+(exag<10?exag.toFixed(1):Math.round(exag))+' exaggerated';
+
+  /* the plain-language read-out */
+  var rd;
+  if(trueGap<0.005){
+   rd='With the gap set to zero, every value is <b>'+fmt(C.dmin,d.dp)+(d.unit==='%'?'%':d.unit)+'</b>. Nothing differs, so nothing can be exaggerated &mdash; the chart is flat no matter where the axis starts. Push <b>Real gap</b> back up to see the effect return.';
+  }else{
+   rd='Highest is <b>'+fmt(C.dmax,d.dp)+(d.unit==='%'?'%':d.unit)+'</b>, lowest is <b>'+fmt(C.dmin,d.dp)+(d.unit==='%'?'%':d.unit)+'</b> &mdash; a real difference of <b>'+fmt(trueGap,2)+(d.unit==='%'?' points':d.unit)+'</b>, or <b>'+truePct.toFixed(truePct<10?2:1)+'%</b>.'
+     +(kind==='bar'
+       ? ' On this chart the tall bar is drawn <b class="big">'+drawnRatio.toFixed(drawnRatio<10?2:1)+'×</b> the length of the short one. In the data it is only <b>'+trueRatio.toFixed(3)+'×</b> as large.'
+       : ' The line here is drawn <b class="big">'+zoom.toFixed(1)+'×</b> steeper than it would be on a zero-based axis. The month-to-month change is the same either way.');
+  }
+  $("read").innerHTML=rd;
+
+  /* interpretation panel, keyed to how severe the truncation is */
+  var n,b;
+  if(!trunc){
+   n='An honest baseline'; b=(kind==='bar')
+     ? 'At zero, <b>length is the message</b>: a bar twice as long means a value twice as large, and the ratio you see is the ratio in the table. For a bar chart this is the only setting where eyeballing the picture gives you the right answer.'
+     : 'The whole scale from zero is in view. Against the full range these values are close together, and the line is nearly flat &mdash; which is what the numbers say.';
+  }else if(exag<1.6){
+   n='Slightly cropped'; b='A little space has been trimmed off the bottom. Differences are already overstated by <b>×'+exag.toFixed(2)+'</b>, but the shape of the data still roughly survives. Keep sliding &mdash; the distortion is not linear.';
+  }else if(exag<5){
+   n='Now it is misleading'; b=(kind==='bar'?'Bar length no longer tracks value. ':'The slope is now steep enough to look like a real trend. ')
+     +'What looks like a <b>'+drawnPct.toFixed(1)+'%</b> gap is really <b>'+truePct.toFixed(2)+'%</b>. Nothing in the chart is factually false &mdash; every point sits at the right height for <i>this</i> axis &mdash; which is exactly why this trick survives fact-checking.';
+  }else{
+   n='A landslide made of nothing'; b='The axis has been cropped so tightly that a <b>'+truePct.toFixed(2)+'%</b> difference is drawn as a <b>'+drawnPct.toFixed(0)+'%</b> one &mdash; <b>×'+Math.round(exag)+'</b> exaggeration. Compare the small chart below it: the same numbers, and the values are nearly indistinguishable.';
+  }
+  $("info").innerHTML='<span class="n">'+n+'</span>'+b;
+
+  var nt;
+  if(di===3){
+   nt='<b>The gap here is smaller than the margin of error.</b> With about ±3 points of sampling error, a '+truePct.toFixed(2)+'% separation is not evidence that either candidate is ahead. Truncating the axis dresses up sampling noise as a lead.';
+  }else if(di===1){
+   nt='<b>These six numbers came from one unchanged process.</b> Every rise and fall you see is random variation. A cropped axis turns that noise into a story about a trend that is not there. Press <b>New sample</b> &mdash; the drama survives, the direction does not.';
+  }else if(di===2){
+   nt='<b>Ranking is not the same as mattering.</b> One model does come out highest, but a difference of '+truePct.toFixed(2)+'% may be well inside the measurement error of the instruments. A chart cannot tell you whether a gap is meaningful; only the study design and the uncertainty can.';
+  }else{
+   nt='<b>Always read the axis before the bars.</b> The first thing to check on any bar chart is the number at the bottom of the y-axis. If it is not zero, the visual comparison has been rescaled and you must go back to the numbers.';
+  }
+  $("note").innerHTML=nt;
+
+  /* controls */
+  $("bVal").innerHTML=fmt(C.base,decFor(C.st))+(d.unit==='%'?'%':'');
+  $("gVal").innerHTML=(gapPct===100?'as measured':'×'+(gapPct/100).toFixed(2));
+  $("bZero").disabled=!trunc;
+ }
+
+ /* ---- wiring ---- */
+ function segs(){
+  var b=$("seg").querySelectorAll('button'), i;
+  for(i=0;i<b.length;i++){ b[i].className=(i===di?'on':''); }
+  var kb=$("kseg").querySelectorAll('button');
+  for(i=0;i<kb.length;i++){ kb[i].className=(kb[i].getAttribute('data-k')===kind?'on':''); }
+ }
+ $("seg").querySelectorAll('button').forEach(function(b){
+  b.onclick=function(){ di=+b.getAttribute('data-v'); drawN=0; kind=DS[di].kind; sample(); segs(); render(); };
+ });
+ $("kseg").querySelectorAll('button').forEach(function(b){
+  b.onclick=function(){ kind=b.getAttribute('data-k'); segs(); render(); };
+ });
+ $("bSl").oninput=function(){ basePct=+this.value; render(); };
+ $("gSl").oninput=function(){ gapPct=+this.value; render(); };
+ $("bZero").onclick=function(){ basePct=0; $("bSl").value=0; render(); };
+ $("bCrop").onclick=function(){ basePct=92; $("bSl").value=92; render(); };
+ $("bDraw").onclick=function(){ drawN++; sample(); render(); };
+
+ sample(); segs(); render();
+})();
+</script>
+</body>
+</html>

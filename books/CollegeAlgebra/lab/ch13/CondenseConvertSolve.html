@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Condense, Convert, Solve</title>
+<meta name="description" content="Solving logarithmic equations — condense to a single logarithm, convert to exponential form, solve, and check. With a live graph of the convert move and a second graph showing exactly where extraneous roots are born.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+.wrap{grid-template-columns:0.98fr 1.02fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* math typography (no renderer — pure HTML) */
+.fr{display:inline-flex;flex-direction:column;vertical-align:-0.58em;text-align:center;font-size:.86em;line-height:1.14;margin:0 3px;}
+.fr .nu{border-bottom:1.5px solid currentColor;padding:0 5px 2px;}
+.fr .de{padding:2px 5px 0;}
+.hl{background:#fbf0cf;border-radius:4px;padding:1px 4px;box-shadow:inset 0 -2px 0 #e8cf8a;}
+.hlr{background:#fae1e5;border-radius:4px;padding:1px 4px;box-shadow:inset 0 -2px 0 #eeb4bd;}
+/* step machine */
+.ln{border-radius:10px;padding:8px 11px;margin-bottom:5px;border:1px solid transparent;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px;}
+.ln.done{opacity:.5;}
+.ln.cur{background:#f3f4fb;border-color:#dfe2f2;}
+.ln .eqx{font-size:15.5px;font-weight:700;color:var(--teal-dk);line-height:2;min-width:0;overflow-wrap:anywhere;}
+.ln .rl{display:block;font-size:9.6px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;margin-top:3px;}
+.ln .vv{flex:none;font-size:10.6px;font-weight:800;color:#a4a7bb;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;}
+.ln .vv small{display:block;font-size:8.4px;letter-spacing:.5px;text-transform:uppercase;font-weight:800;opacity:.75;}
+.ln .vv.ok{color:#237a45;} .ln .vv.und{color:#b23145;}
+.pend{border-radius:10px;padding:6px 11px;margin-bottom:5px;font-size:12px;font-weight:800;color:#cccede;letter-spacing:4px;}
+/* graph captions + readouts */
+#gcap,#gcap2{font-size:12.6px;line-height:1.55;color:var(--soft);margin-top:9px;} #gcap b,#gcap2 b{color:var(--ink);}
+#gout,#gout2{font-size:12.5px;color:var(--teal-dk);background:#e6e8f5;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.65;font-variant-numeric:tabular-nums;}
+#gwarn{font-size:12px;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.5;color:#8a2a3a;background:#fae5e8;border:1px solid #f0c9d0;} #gwarn b{color:#7a1f2c;}
+/* rule-proof card */
+#rtxt{font-size:12.4px;line-height:1.58;color:var(--soft);margin-top:9px;} #rtxt b{color:var(--ink);}
+/* sliders */
+.numhd{font-size:9.8px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:15px 0 2px;border-top:1px solid var(--line);padding-top:12px;}
+.nsl{margin-top:7px;}
+.sld{width:100%;-webkit-appearance:none;appearance:none;height:20px;background:transparent;cursor:pointer;}
+.sld::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-moz-range-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);margin-top:-7px;}
+.sld::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);}
+.sldlab{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--muted);font-weight:600;gap:8px;}
+.sldlab b{font-size:15px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.sldlab span{min-width:0;overflow-wrap:anywhere;}
+.agree{margin-top:10px;border-radius:9px;padding:9px 11px;font-size:12.2px;line-height:1.55;background:#e5f3ea;border:1px solid #bfe3cd;color:#237a45;font-weight:600;} .agree b{color:#186036;}
+.agree.off{background:#fbf3e2;border-color:#ecd9ac;color:#8a6a20;} .agree.off b{color:#5a4212;}
+.agree.bad{background:#fae5e8;border-color:#f0c9d0;color:#8a2a3a;} .agree.bad b{color:#7a1f2c;}
+/* misc */
+.grid .it .nm{display:block;font-size:13.5px;line-height:1.75;}
+.grid .it .s{display:block;margin-top:3px;font-size:10.4px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+#ansbox{font-size:13px;border-radius:9px;padding:9px 12px;margin-top:11px;line-height:1.65;color:#255f8a;background:#e5eef6;border:1px solid #c9dcea;font-weight:600;} #ansbox b{color:#1c4a6d;}
+#dom{font-size:12px;border-radius:8px;padding:9px 11px;margin-top:11px;line-height:1.55;color:#5a4212;background:#fbf3e2;border:1px solid #ecd9ac;} #dom b{color:#42300c;}
+#gout,#gout2,#ansbox,#dom,#info,.mnem,#rtxt{overflow-wrap:anywhere;}
+@media (max-width:440px){.grid{grid-template-columns:1fr;} .ln .vv{text-align:left;white-space:normal;} .row{flex-wrap:wrap;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">&larr; Chapter 13</a></div>
+<header>
+  <div class="kick">College Algebra &middot; Chapter 13</div>
+  <h1>Condense, Convert, Solve</h1>
+  <div class="intro">A logarithmic equation hides the unknown <i>inside</i> a logarithm. The escape route never changes: <b>condense</b> the log side down to a single logarithm, <b>convert</b> that one logarithm into exponential form, then <b>solve</b> what is left. One extra duty comes with the territory &mdash; a logarithm refuses negative and zero inputs, so every candidate must be <b>checked in the original equation</b> before you are allowed to call it a solution.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2>Convert: the whole move in one picture</h2>
+      <svg viewBox="0 0 320 240" aria-label="graph of a logarithmic curve meeting a horizontal line"><g id="art"></g></svg>
+      <div class="nsl">
+        <div class="sldlab"><span>base <i>b</i> =</span><b id="labB">2.0</b></div>
+        <input class="sld" type="range" min="15" max="60" step="1" id="slB" value="20" aria-label="base b">
+      </div>
+      <div class="nsl">
+        <div class="sldlab"><span>right side <i>c</i> =</span><b id="labC">2.0</b></div>
+        <input class="sld" type="range" min="-30" max="30" step="1" id="slC" value="20" aria-label="value c">
+      </div>
+      <div id="gout"></div>
+      <div id="gwarn"></div>
+      <div id="gcap"></div>
+    </div>
+    <div class="card">
+      <h2>Why the three rules are true</h2>
+      <div class="seg" id="rseg">
+        <button data-r="prod" class="on">Product<small>logs add</small></button>
+        <button data-r="quot">Quotient<small>logs subtract</small></button>
+        <button data-r="pow">Power<small>exponent drops</small></button>
+      </div>
+      <svg viewBox="0 0 320 58" style="margin-top:11px" aria-label="factor-counting model for the logarithm rules"><g id="rart"></g></svg>
+      <div id="rtxt"></div>
+    </div>
+    <div class="card">
+      <h2>Where extraneous roots are born</h2>
+      <svg viewBox="0 0 320 240" aria-label="graph comparing a sum of logarithms with its condensed form"><g id="art2"></g></svg>
+      <div class="nsl">
+        <div class="sldlab"><span>solve log<sub>5</sub><i>x</i> + log<sub>5</sub>(<i>x</i> &minus; 4) = <i>c</i>, &nbsp;<i>c</i> =</span><b id="labC2">1.0</b></div>
+        <input class="sld" type="range" min="-20" max="20" step="1" id="slC2" value="10" aria-label="right side c">
+      </div>
+      <div id="gout2"></div>
+      <div id="gcap2"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Two shapes of log equation<small>choose one to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="mode"><button data-m="conv" class="on">One log &rarr; convert</button><button data-m="cond">Many logs &rarr; condense</button></div>
+      <div class="grid" id="picks"></div>
+      <div class="mnem" id="mnem"></div>
+    </div>
+    <div class="card">
+      <h2 id="stepTitle">Worked steps</h2>
+      <div id="steps"></div>
+      <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+      <div id="info"></div>
+      <div id="ansbox"></div>
+      <div id="dom"></div>
+      <div class="numhd">Substitute a value of <i>x</i> &mdash; watch which lines survive it</div>
+      <div class="nsl">
+        <div class="sldlab"><span>let <i>x</i> =</span><b id="labX">0.0000</b></div>
+        <input class="sld" type="range" min="0" max="400" step="1" id="slX" value="0" aria-label="value of x">
+      </div>
+      <div class="row"><button class="btn" id="jump">Jump to the solution</button><button class="btn" id="jumpb">Jump to the rejected root</button></div>
+      <div class="agree off" id="agree"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra &middot; an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var PW=Math.pow, E=Math.E;
+
+ /* ---------- logs that refuse illegal inputs ---------- */
+ function LB(b,v){ return v>0 ? Math.log(v)/Math.log(b) : NaN; }
+ function LNx(v){ return v>0 ? Math.log(v) : NaN; }
+ function L10(v){ return v>0 ? Math.log(v)/Math.LN10 : NaN; }
+
+ /* ---------- formatting ---------- */
+ function f4(v){ if(!isFinite(v))return '&mdash;'; var t=v.toFixed(4); if(t==='-0.0000')t='0.0000'; return t.replace('-','&minus;'); }
+ function f2(v){ var t=v.toFixed(2); if(t==='-0.00')t='0.00'; return t.replace('-','&minus;'); }
+ function f3(v){ var t=v.toFixed(3); if(t==='-0.000')t='0.000'; return t.replace('-','&minus;'); }
+ function near(a,b){ if(isNaN(a)||isNaN(b))return false; var m=Math.max(1,Math.abs(a),Math.abs(b)); return Math.abs(a-b)<=1e-9*m; }
+ function fr(n,d){ return '<span class="fr"><span class="nu">'+n+'</span><span class="de">'+d+'</span></span>'; }
+ function tx(x,y,s,col,sz,anc,wt,it){
+   return '<text x="'+x+'" y="'+y+'" font-size="'+(sz||10.5)+'" fill="'+(col||'#7d7f94')+'" font-weight="'+(wt||600)+'"'+
+     (anc?' text-anchor="'+anc+'"':'')+(it?' font-style="italic"':'')+' font-family="Inter,system-ui,sans-serif">'+s+'</text>';
+ }
+
+ /* ---------- rule palette + labels ---------- */
+ var C={start:'#4d4f66',domain:'#d1495b',isolate:'#2f6f9f',condense:'#b8862f',expand:'#7a5a8a',
+        convert:'#43458f',onetoone:'#43458f',clear:'#2f6f9f',rearrange:'#2f6f9f',factor:'#b8862f',
+        roots:'#7a5a8a',solve:'#262a5c',evaluate:'#43458f',check:'#2f9e5b',reject:'#d1495b',answer:'#2f9e5b'};
+ var RLAB={start:'Read the equation',domain:'Domain, before anything else',isolate:'Isolate the logarithm',
+        condense:'Condense to one logarithm',expand:'Multiply it out',convert:'Convert to exponential form',
+        onetoone:'One-to-one property',clear:'Clear the fraction',rearrange:'Set it equal to zero',
+        factor:'Factor',roots:'Candidates &mdash; not yet solutions',solve:'Solve',evaluate:'Decimal, last',
+        check:'Check in the ORIGINAL',reject:'Reject the extraneous root',answer:'Answer'};
+ var RF={start:'how many logarithms, and is one of them alone?',
+        domain:'every argument of every logarithm must be &gt; 0',
+        isolate:'get the logarithm by itself before converting',
+        condense:'log<sub>b</sub><i>M</i> + log<sub>b</sub><i>N</i> = log<sub>b</sub>(<i>MN</i>)&nbsp; &middot;&nbsp; log<sub>b</sub><i>M</i> &minus; log<sub>b</sub><i>N</i> = log<sub>b</sub>(<i>M</i>/<i>N</i>)&nbsp; &middot;&nbsp; <i>p</i>&thinsp;log<sub>b</sub><i>M</i> = log<sub>b</sub>(<i>M</i><sup><i>p</i></sup>)',
+        expand:'distribute, so the equation becomes polynomial',
+        convert:'log<sub>b</sub><i>M</i> = <i>c</i> &nbsp;means exactly&nbsp; <i>b</i><sup><i>c</i></sup> = <i>M</i>',
+        onetoone:'if log<sub>b</sub><i>M</i> = log<sub>b</sub><i>N</i> then <i>M</i> = <i>N</i>',
+        clear:'multiply both sides by the denominator',
+        rearrange:'a quadratic is solved from the zero form',
+        factor:'find two numbers with the right product and sum',
+        roots:'the zero-product property gives every candidate',
+        solve:'ordinary algebra from here',
+        evaluate:'exact form first, decimal only at the end',
+        check:'substitute into the equation you were <i>given</i>, not a later line',
+        reject:'a candidate outside the domain is discarded',
+        answer:'report only what survived the check'};
+
+ /* ================= LEFT 1: the convert graph ================= */
+ var B=2.0, CC=2.0;
+ function X(x){ return 34+(x+1.5)*(272/11); }
+ function Y(y){ return 107-y*(186/6.4); }
+ function drawGraph(){
+   var b=B, c=CC, s='', gx, gy, px, py, i, yv, xv;
+   s+='<rect x="34" y="14" width="272" height="186" rx="8" fill="#f7f8fd" stroke="#e6e8f5"/>';
+   /* forbidden strip: x is not allowed to be 0 or negative */
+   s+='<rect x="34" y="14" width="'+(X(0)-34).toFixed(1)+'" height="186" fill="#fae5e8" opacity=".75"/>';
+   for(gx=-1;gx<=9;gx++){ px=X(gx);
+     s+='<line x1="'+px.toFixed(1)+'" y1="14" x2="'+px.toFixed(1)+'" y2="200" stroke="'+(gx===0?'#d1495b':'#e9ebf6')+'" stroke-width="'+(gx===0?1.8:1)+'"'+(gx===0?' stroke-dasharray="5 3"':'')+'/>';
+     if(gx%2===0) s+=tx(px,215,(gx<0?'&minus;'+(-gx):''+gx),'#9a9db4',9.5,'middle',600);
+   }
+   for(gy=-3;gy<=3;gy++){ py=Y(gy);
+     s+='<line x1="34" y1="'+py.toFixed(1)+'" x2="306" y2="'+py.toFixed(1)+'" stroke="'+(gy===0?'#c3c6d8':'#e9ebf6')+'" stroke-width="'+(gy===0?1.5:1)+'"/>';
+     s+=tx(29,py+3.4,(gy<0?'&minus;'+(-gy):''+gy),'#9a9db4',9.5,'end',600);
+   }
+   s+=tx(190,233,'x','#7d7f94',11,'middle',700,1);
+   s+=tx(13,105,'y','#7d7f94',11,'middle',700,1);
+   s+=tx(X(0)-4,30,'x = 0','#d1495b',9.6,'end',800);
+   /* the curve y = log_b(x), plotted by walking y and computing x = b^y */
+   var pts=[];
+   for(i=0;i<=360;i++){ yv=-3.2+i*(6.4/360); xv=PW(b,yv); if(xv<=9.5) pts.push(X(xv).toFixed(1)+','+Y(yv).toFixed(1)); }
+   s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="#43458f" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>';
+   s+=tx(X(0)+9,30,'y = log<tspan font-size="8" dy="3">'+b.toFixed(1)+'</tspan><tspan dy="-3"> x</tspan>','#43458f',12.5,'start',800);
+   /* the horizontal target y = c */
+   var cp=Y(c);
+   s+='<line x1="34" y1="'+cp.toFixed(1)+'" x2="306" y2="'+cp.toFixed(1)+'" stroke="#b8862f" stroke-width="2" stroke-dasharray="6 4"/>';
+   s+=tx(303,cp-6,'y = '+f2(c),'#b8862f',10.6,'end',800);
+   /* the crossing: x = b^c */
+   var xs=PW(b,c), off=(xs>9.5);
+   if(!off){
+     var ix=X(xs);
+     s+='<line x1="'+ix.toFixed(1)+'" y1="'+cp.toFixed(1)+'" x2="'+ix.toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" stroke="#2f9e5b" stroke-width="1.6" stroke-dasharray="4 3"/>';
+     s+='<circle cx="'+ix.toFixed(1)+'" cy="'+cp.toFixed(1)+'" r="6" fill="#2f9e5b" stroke="#fff" stroke-width="2.4"/>';
+     s+='<circle cx="'+ix.toFixed(1)+'" cy="'+Y(0).toFixed(1)+'" r="3" fill="#2f9e5b"/>';
+     var rt=(xs<5.5);
+     s+=tx(rt?ix+11:ix-11, cp-10, 'x = '+f3(xs), '#2f9e5b', 11.2, rt?'start':'end', 800);
+   }else{
+     s+=tx(190,40,'the crossing is off the right edge','#7d7f94',10.4,'middle',700);
+     s+=tx(190,56,'at x = '+f3(xs)+' &mdash; still exactly one','#2f9e5b',11.2,'middle',800);
+   }
+   $('art').innerHTML=s;
+
+   var back=LB(b,xs);
+   $('gout').innerHTML='log<sub>'+b.toFixed(1)+'</sub>&thinsp;<i>x</i> = '+f2(c)+' &nbsp;&rarr;&nbsp; <b><i>x</i> = '+b.toFixed(1)+'<sup>'+f2(c)+'</sup> = '+f4(xs)+'</b>'+
+     '<br>check: log<sub>'+b.toFixed(1)+'</sub>&thinsp;'+f4(xs)+' = '+f4(back)+' &nbsp;&#10003;';
+   var w='';
+   if(c<0){ w='<b>The right side is negative &mdash; and that is perfectly legal.</b> A logarithm may <i>output</i> any real number, so log<sub>'+b.toFixed(1)+'</sub><i>x</i> = '+f2(c)+' has a solution. Look where it is: <b>x = '+f4(xs)+'</b>, a number between 0 and 1. Negative on the right of a log equation is normal; negative <i>inside</i> a log is what is forbidden.'; }
+   else if(xs>9.5){ w='<b>x = '+f3(xs)+' sits past the right edge of this window.</b> Nothing is wrong &mdash; the curve keeps climbing forever, just very slowly, so a modest value of <i>c</i> can still demand an enormous <i>x</i>. Exponential form is the only practical way to name it.'; }
+   if(w){ $('gwarn').style.display='block'; $('gwarn').innerHTML=w; } else { $('gwarn').style.display='none'; }
+   $('gcap').innerHTML='The horizontal line is the right-hand side of a log equation; the crossing is the solution. Two features of this curve run the entire section. <b>First, it never repeats a height</b> &mdash; so the line can touch it at most once, and that is why log<sub>b</sub><i>M</i> = log<sub>b</sub><i>N</i> forces <i>M</i> = <i>N</i>. <b>Second, the curve stops dead at the shaded band.</b> No part of it lives at <i>x</i> = 0 or to the left, because no power of '+b.toFixed(1)+' is ever zero or negative. Converting log<sub>'+b.toFixed(1)+'</sub><i>x</i> = '+f2(c)+' into <i>x</i> = '+b.toFixed(1)+'<sup>'+f2(c)+'</sup> is not a trick; it is the definition of a logarithm read from right to left.';
+ }
+ $('slB').oninput=function(){ B=(+this.value)/10; $('labB').innerHTML=B.toFixed(1); drawGraph(); };
+ $('slC').oninput=function(){ CC=(+this.value)/10; $('labC').innerHTML=CC.toFixed(1); drawGraph(); };
+
+ /* ================= LEFT 2: why the rules work (factor counting) ================= */
+ function tile(x,y,w,col,op,slash){
+   var s='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+w+'" rx="3" fill="'+col+'" opacity="'+(op||1)+'"/>';
+   if(slash){ s+='<line x1="'+(x+2.5)+'" y1="'+(y+w-2.5)+'" x2="'+(x+w-2.5)+'" y2="'+(y+2.5)+'" stroke="#b23145" stroke-width="2.2" stroke-linecap="round"/>'; }
+   return s;
+ }
+ function tiles(x,y,n,w,p,col,op,slashFrom){
+   var s=''; for(var i=0;i<n;i++){ s+=tile(x+i*p,y,w,col,op,(slashFrom!=null&&i>=slashFrom)); } return s;
+ }
+ var IND='#43458f', GLD='#b8862f', PRP='#7a5a8a', GRN='#2f9e5b';
+ var RULE={
+  prod:{art:function(){ var s='';
+      s+=tiles(44,22,3,18,21,IND); s+=tiles(126,22,2,18,21,GLD);
+      s+=tiles(188,22,3,18,21,IND); s+=tiles(251,22,2,18,21,GLD);
+      s+=tx(74,15,'2<tspan font-size="8" dy="-4">3</tspan>',IND,12,'middle',800);
+      s+=tx(145.5,15,'2<tspan font-size="8" dy="-4">2</tspan>',GLD,12,'middle',800);
+      s+=tx(237.5,15,'2<tspan font-size="8" dy="-4">5</tspan>','#262a5c',12,'middle',800);
+      s+=tx(114,36,'&#215;','#7d7f94',15,'middle',800);
+      s+=tx(176,36,'=','#7d7f94',15,'middle',800);
+      s+=tx(170,55,'3 factors  +  2 factors  =  5 factors','#7d7f94',10,'middle',700);
+      return s; },
+    txt:'<b>log<sub>b</sub>(<i>MN</i>) = log<sub>b</sub><i>M</i> + log<sub>b</sub><i>N</i>.</b> A logarithm is a <b>factor count</b>: log<sub>2</sub>8 = 3 says &ldquo;8 is three 2&rsquo;s multiplied together.&rdquo; Multiplying 2<sup>3</sup> by 2<sup>2</sup> just shoves the two piles of factors into one pile, so the counts add &mdash; 3 + 2 = 5. And indeed 8 &middot; 4 = 32 = 2<sup>5</sup>, so log<sub>2</sub>32 = 5 = log<sub>2</sub>8 + log<sub>2</sub>4. The rule is nothing but the exponent law <i>b</i><sup><i>m</i></sup> &middot; <i>b</i><sup><i>n</i></sup> = <i>b</i><sup><i>m</i>+<i>n</i></sup> read backwards.<br><br><b>The trap:</b> log(<i>M</i> + <i>N</i>) is <b>not</b> log <i>M</i> + log <i>N</i>. Logarithms convert <i>multiplication</i> into addition, never addition into addition. Test it: log<sub>2</sub>(8 + 8) = log<sub>2</sub>16 = 4, but log<sub>2</sub>8 + log<sub>2</sub>8 = 6.'},
+  quot:{art:function(){ var s='';
+      s+=tiles(44,22,5,18,21,IND,1,3); s+=tiles(168,22,2,18,21,GLD,1,0); s+=tiles(230,22,3,18,21,GRN);
+      s+=tx(95,15,'2<tspan font-size="8" dy="-4">5</tspan>',IND,12,'middle',800);
+      s+=tx(187.5,15,'2<tspan font-size="8" dy="-4">2</tspan>',GLD,12,'middle',800);
+      s+=tx(260,15,'2<tspan font-size="8" dy="-4">3</tspan>','#262a5c',12,'middle',800);
+      s+=tx(157,36,'&#247;','#7d7f94',15,'middle',800);
+      s+=tx(218,36,'=','#7d7f94',15,'middle',800);
+      s+=tx(170,55,'two factors cancel:  5  &minus;  2  =  3','#7d7f94',10,'middle',700);
+      return s; },
+    txt:'<b>log<sub>b</sub>(<i>M</i>/<i>N</i>) = log<sub>b</sub><i>M</i> &minus; log<sub>b</sub><i>N</i>.</b> Dividing removes factors instead of adding them, so the count goes <i>down</i>: 2<sup>5</sup> &divide; 2<sup>2</sup> = 32/4 = 8 = 2<sup>3</sup>, and 5 &minus; 2 = 3. In logarithms, log<sub>2</sub>32 &minus; log<sub>2</sub>4 = 5 &minus; 2 = 3 = log<sub>2</sub>8. Same law, other direction.<br><br><b>The trap:</b> log <i>M</i> &minus; log <i>N</i> is <b>not</b> log(<i>M</i> &minus; <i>N</i>). Check it: log<sub>2</sub>32 &minus; log<sub>2</sub>4 = 3, while log<sub>2</sub>(32 &minus; 4) = log<sub>2</sub>28 &asymp; 4.81. Subtraction of logs becomes <i>division</i> inside.'},
+  pow:{art:function(){ var s='';
+      s+=tiles(40,22,2,15,18,IND); s+=tiles(84,22,2,15,18,GLD); s+=tiles(128,22,2,15,18,PRP);
+      s+=tiles(186,22,2,15,18,IND); s+=tiles(222,22,2,15,18,GLD); s+=tiles(258,22,2,15,18,PRP);
+      s+=tx(98,15,'(2<tspan font-size="8" dy="-4">2</tspan><tspan dy="4">)</tspan><tspan font-size="8" dy="-4">3</tspan>','#4d4f66',12,'middle',800);
+      s+=tx(238,15,'2<tspan font-size="8" dy="-4">6</tspan>','#262a5c',12,'middle',800);
+      s+=tx(172,36,'=','#7d7f94',15,'middle',800);
+      s+=tx(170,55,'3 groups of 2 factors:  2 &#215; 3  =  6','#7d7f94',10,'middle',700);
+      return s; },
+    txt:'<b>log<sub>b</sub>(<i>M</i><sup><i>p</i></sup>) = <i>p</i> &middot; log<sub>b</sub><i>M</i>.</b> A power is repeated multiplication, and the product rule already says multiplication adds counts &mdash; so a power adds the same count over and over, which is multiplication. Written out: log<sub>2</sub>(4<sup>3</sup>) = log<sub>2</sub>(4 &middot; 4 &middot; 4) = log<sub>2</sub>4 + log<sub>2</sub>4 + log<sub>2</sub>4 = 3 &middot; log<sub>2</sub>4 = 3 &middot; 2 = 6. And 4<sup>3</sup> = 64 = 2<sup>6</sup>. &#10003;<br><br><b>The trap that matters most here:</b> reading the rule <i>right to left</i> to condense &mdash; turning 2 ln <i>x</i> into ln(<i>x</i><sup>2</sup>) &mdash; quietly changes what is allowed. ln <i>x</i> demands <i>x</i> &gt; 0; ln(<i>x</i><sup>2</sup>) is content with every <i>x</i> except 0. The condensed equation is <b>less picky than the one you started with</b>, and every extraneous root in this section slips in through exactly that gap.'}
+ };
+ var rcur='prod';
+ function drawRule(){
+   $('rart').innerHTML=RULE[rcur].art();
+   $('rtxt').innerHTML=RULE[rcur].txt;
+   var bs=$('rseg').querySelectorAll('button');
+   for(var i=0;i<bs.length;i++){ bs[i].className=(bs[i].getAttribute('data-r')===rcur)?'on':''; }
+ }
+ (function(){ var bs=$('rseg').querySelectorAll('button');
+   for(var i=0;i<bs.length;i++){ bs[i].onclick=function(){ rcur=this.getAttribute('data-r'); drawRule(); }; } })();
+
+ /* ================= LEFT 3: where extraneous roots are born ================= */
+ var C2=1.0;
+ function X2(x){ return 34+(x+4.5)*(272/15); }
+ function Y2(y){ return 200-(y+2.5)*(186/5.5); }
+ function g5(x){ return LB(5,x*x-4*x); }   /* the condensed function */
+ function drawGraph2(){
+   var c=C2, s='', gx, gy, px, py, i, t, xv, yv;
+   s+='<rect x="34" y="14" width="272" height="186" rx="8" fill="#f7f8fd" stroke="#e6e8f5"/>';
+   /* forbidden band for the ORIGINAL equation: x is not > 4 */
+   s+='<rect x="34" y="14" width="'+(X2(4)-34).toFixed(1)+'" height="186" fill="#fae5e8" opacity=".7"/>';
+   for(gx=-4;gx<=10;gx++){ px=X2(gx);
+     s+='<line x1="'+px.toFixed(1)+'" y1="14" x2="'+px.toFixed(1)+'" y2="200" stroke="'+(gx===0?'#c3c6d8':'#e9ebf6')+'" stroke-width="1"/>';
+     if(gx%2===0) s+=tx(px,215,(gx<0?'&minus;'+(-gx):''+gx),'#9a9db4',9.5,'middle',600);
+   }
+   for(gy=-2;gy<=3;gy++){ py=Y2(gy);
+     s+='<line x1="34" y1="'+py.toFixed(1)+'" x2="306" y2="'+py.toFixed(1)+'" stroke="'+(gy===0?'#c3c6d8':'#e9ebf6')+'" stroke-width="'+(gy===0?1.5:1)+'"/>';
+     s+=tx(29,py+3.4,(gy<0?'&minus;'+(-gy):''+gy),'#9a9db4',9.5,'end',600);
+   }
+   s+='<line x1="'+X2(4).toFixed(1)+'" y1="14" x2="'+X2(4).toFixed(1)+'" y2="200" stroke="#d1495b" stroke-width="1.8" stroke-dasharray="5 3"/>';
+   s+=tx(X2(4)+4,28,'x = 4','#d1495b',9.6,'start',800);
+   s+=tx(X2(4)/2+17,196,'original undefined here','#c07484',9.2,'middle',800);
+   /* ghost branch on the left (condensed form only), dense sampling near x = 0 */
+   var gh=[];
+   for(i=0;i<=300;i++){ t=1-i/300; xv=-4.5*t*t*t; yv=g5(xv);
+     if(!isNaN(yv)&&yv>=-2.5&&yv<=3.0) gh.push(X2(xv).toFixed(1)+','+Y2(yv).toFixed(1)); }
+   s+='<polyline points="'+gh.join(' ')+'" fill="none" stroke="#b23145" stroke-width="2.4" stroke-dasharray="6 4" stroke-linecap="round"/>';
+   /* right branch: the two functions agree here */
+   var rb=[];
+   for(i=0;i<=300;i++){ t=i/300; xv=4+6.5*t*t*t; yv=g5(xv);
+     if(!isNaN(yv)&&yv>=-2.5&&yv<=3.0) rb.push(X2(xv).toFixed(1)+','+Y2(yv).toFixed(1)); }
+   s+='<polyline points="'+rb.join(' ')+'" fill="none" stroke="#43458f" stroke-width="2.8" stroke-linecap="round"/>';
+   /* the line y = c */
+   var cp=Y2(c);
+   s+='<line x1="34" y1="'+cp.toFixed(1)+'" x2="306" y2="'+cp.toFixed(1)+'" stroke="#b8862f" stroke-width="2" stroke-dasharray="6 4"/>';
+   s+=tx(303,cp-6,'y = '+f2(c),'#b8862f',10.6,'end',800);
+   /* the two roots of x^2 - 4x = 5^c */
+   var rad=Math.sqrt(4+PW(5,c)), r1=2+rad, r2=2-rad;
+   s+='<circle cx="'+X2(r1).toFixed(1)+'" cy="'+cp.toFixed(1)+'" r="6" fill="#2f9e5b" stroke="#fff" stroke-width="2.4"/>';
+   s+=tx(X2(r1)+10,cp-8,f3(r1)+'  keep','#2f9e5b',10.6,'start',800);
+   s+='<circle cx="'+X2(r2).toFixed(1)+'" cy="'+cp.toFixed(1)+'" r="6" fill="#fff" stroke="#b23145" stroke-width="2.6"/>';
+   s+='<line x1="'+(X2(r2)-3.6).toFixed(1)+'" y1="'+(cp-3.6).toFixed(1)+'" x2="'+(X2(r2)+3.6).toFixed(1)+'" y2="'+(cp+3.6).toFixed(1)+'" stroke="#b23145" stroke-width="2"/>';
+   s+='<line x1="'+(X2(r2)-3.6).toFixed(1)+'" y1="'+(cp+3.6).toFixed(1)+'" x2="'+(X2(r2)+3.6).toFixed(1)+'" y2="'+(cp-3.6).toFixed(1)+'" stroke="#b23145" stroke-width="2"/>';
+   s+=tx(X2(r2)-10,cp-8,'reject  '+f3(r2),'#b23145',10.6,'end',800);
+   s+=tx(300,30,'solid: log<tspan font-size="7.5" dy="3">5</tspan><tspan dy="-3">x + log</tspan><tspan font-size="7.5" dy="3">5</tspan><tspan dy="-3">(x &minus; 4)</tspan>','#43458f',10,'end',800);
+   s+=tx(300,44,'dashed: log<tspan font-size="7.5" dy="3">5</tspan><tspan dy="-3">(x</tspan><tspan font-size="7.5" dy="-4">2</tspan><tspan dy="4"> &minus; 4x)</tspan>','#b23145',10,'end',800);
+   $('art2').innerHTML=s;
+
+   var lhs1=LB(5,r1)+LB(5,r1-4);
+   $('gout2').innerHTML='<i>x</i><sup>2</sup> &minus; 4<i>x</i> = 5<sup>'+f2(c)+'</sup> = '+f4(PW(5,c))+' &nbsp;&rarr;&nbsp; <i>x</i> = 2 &plusmn; &radic;(4 + 5<sup>'+f2(c)+'</sup>)'+
+     '<br><b>keep <i>x</i> = '+f4(r1)+'</b> &mdash; original reads '+f4(lhs1)+' = '+f2(c)+' &#10003;'+
+     '<br><b>reject <i>x</i> = '+f4(r2)+'</b> &mdash; original needs log<sub>5</sub>('+f4(r2)+'), which does not exist &#10007;';
+   $('gcap2').innerHTML='Both curves are drawn from the same equation &mdash; but only the solid one is the equation you were <b>given</b>. Condensing log<sub>5</sub><i>x</i> + log<sub>5</sub>(<i>x</i> &minus; 4) into log<sub>5</sub>(<i>x</i><sup>2</sup> &minus; 4<i>x</i>) grows a whole extra branch out to the left, because a product of two <i>negatives</i> is positive and the condensed form cannot tell the difference. Every root you find lives on the <b>dashed</b> curve; only the ones that also sit on the <b>solid</b> curve are real solutions. Drag <i>c</i> anywhere you like &mdash; the phantom root on the left never goes away, and it is never a solution. That is why the check is not optional busywork: it is the step that deletes the branch you accidentally created.';
+ }
+ $('slC2').oninput=function(){ C2=(+this.value)/10; $('labC2').innerHTML=C2.toFixed(1); drawGraph2(); };
+
+ /* ================= RIGHT: the worked examples ================= */
+ var EX={
+ conv:[
+  {nm:'log<sub>2</sub>(<i>x</i> &minus; 3) = 4', s:'the plain convert', ans:'<i>x</i> = 19', av:19, xmin:0, xmax:25,
+   dom:'<b>Domain:</b> the argument <i>x</i> &minus; 3 must be positive, so <i>x</i> &gt; 3. The solution 19 clears that easily. <b>Extraneous check:</b> converting is a two-way street &mdash; log<sub>2</sub>(<i>x</i> &minus; 3) = 4 and <i>x</i> &minus; 3 = 2<sup>4</sup> say the same thing about the same numbers &mdash; so with a single logarithm and no condensing, no false root can be manufactured. You still substitute, because a domain violation is possible in general: had the equation been log<sub>2</sub>(<i>x</i> &minus; 3) = 4 with an answer of 1, the argument would be &minus;2 and there would be <b>no solution</b>.',
+   st:[
+    {h:'log<sub>2</sub>(<i>x</i> &minus; 3) = 4', r:'start',
+     w:'One logarithm, sitting alone on the left, with a plain number on the right. That is the ideal shape &mdash; nothing to isolate, nothing to condense. The unknown is locked inside the log, and exactly one move gets it out.',
+     L:function(x){return LB(2,x-3);}, R:function(){return 4;}},
+    {h:'log<sub>2</sub>(<span class="hlr"><i>x</i> &minus; 3</span>) = 4', r:'domain',
+     w:'Before solving, write down what the equation will accept. The <b>argument</b> of a logarithm &mdash; the quantity inside &mdash; must be strictly positive, because no power of 2 is ever zero or negative. So <i>x</i> &minus; 3 &gt; 0, which means <b><i>x</i> &gt; 3</b>. Note this now, while it is cheap; at the end it is the ruler you measure the answer against.',
+     L:function(x){return LB(2,x-3);}, R:function(){return 4;}},
+    {h:'<span class="hl"><i>x</i> &minus; 3 = 2<sup>4</sup></span>', r:'convert',
+     w:'Read the logarithm out loud: &ldquo;the power of 2 that gives <i>x</i> &minus; 3 is 4.&rdquo; Said that way, the exponential form writes itself &mdash; 2 raised to the 4 equals <i>x</i> &minus; 3. <b>The base stays the base</b>, the right-hand side becomes the exponent, and the argument becomes the answer. That single swap is the whole convert step, and the unknown is now out in the open.',
+     L:function(x){return x-3;}, R:function(){return PW(2,4);}},
+    {h:'<i>x</i> &minus; 3 = <span class="hl">16</span>', r:'evaluate',
+     w:'2<sup>4</sup> = 16. Nothing has changed in <b>value</b> &mdash; the number column has not moved &mdash; only in appearance. What is left is a first-day-of-algebra equation.',
+     L:function(x){return x-3;}, R:function(){return 16;}},
+    {h:'<span class="hl"><i>x</i> = 19</span>', r:'solve',
+     w:'Add 3 to both sides. This is a <b>candidate</b>, not yet an answer &mdash; that promotion happens only after it passes the check.',
+     L:function(x){return x;}, R:function(){return 19;}},
+    {h:'log<sub>2</sub>(19 &minus; 3) = log<sub>2</sub>16 = <span class="hl">4</span> &#10003;', r:'check',
+     w:'Substitute into the equation you were <b>given</b>. The argument becomes 16, which is positive, so the logarithm exists &mdash; and log<sub>2</sub>16 = 4 because 2<sup>4</sup> = 16. Both boxes ticked: inside the domain, and it balances. Now it is a solution.',
+     L:function(x){return LB(2,x-3);}, R:function(){return 4;}}
+   ]},
+
+  {nm:'4 + 3&thinsp;log<sub>2</sub><i>x</i> = 13', s:'isolate the log first', ans:'<i>x</i> = 8', av:8, xmin:0, xmax:10,
+   dom:'<b>Domain:</b> log<sub>2</sub><i>x</i> requires <i>x</i> &gt; 0, and 8 &gt; 0. &#10003; <b>Extraneous check:</b> subtracting 4 and dividing by 3 are both reversible, and converting is reversible, so nothing false can be produced. The genuine danger in this problem is procedural &mdash; converting too early. If you try to convert while the log is still buried, you will end up writing something like 2<sup>13</sup> = 4 + 3<i>x</i>, which is not what the equation says at all.',
+   st:[
+    {h:'4 + 3&thinsp;log<sub>2</sub><i>x</i> = 13', r:'start',
+     w:'There is only one logarithm, so no condensing is needed &mdash; but it is <b>not alone</b>. Something is added to it and something multiplies it. Converting now is the single most common error in this section: the definition log<sub>b</sub><i>M</i> = <i>c</i> &rArr; <i>b</i><sup><i>c</i></sup> = <i>M</i> only applies when the logarithm is by itself. Strip the equation down first, exactly as you would to solve for any variable.',
+     L:function(x){return 4+3*LB(2,x);}, R:function(){return 13;}},
+    {h:'4 + 3&thinsp;log<sub>2</sub>(<span class="hlr"><i>x</i></span>) = 13', r:'domain',
+     w:'The argument is just <i>x</i>, so the requirement is simply <b><i>x</i> &gt; 0</b>. Notice that the 4 and the 3 have no say in this &mdash; the domain is decided by what is <i>inside</i> the logarithm, and by nothing else.',
+     L:function(x){return 4+3*LB(2,x);}, R:function(){return 13;}},
+    {h:'<span class="hl">3&thinsp;log<sub>2</sub><i>x</i> = 9</span>', r:'isolate',
+     w:'Subtract 4 from both sides. Treat the entire expression log<sub>2</sub><i>x</i> as if it were a single letter &mdash; call it <i>u</i> if it helps &mdash; and the line reads 4 + 3<i>u</i> = 13, which you would solve without hesitating.',
+     L:function(x){return 3*LB(2,x);}, R:function(){return 9;}},
+    {h:'<span class="hl">log<sub>2</sub><i>x</i> = 3</span>', r:'isolate',
+     w:'Divide both sides by 3. <b>Warning:</b> the 3 does <i>not</i> slide inside to make log<sub>2</sub>(3<i>x</i>) &mdash; a coefficient in front of a log becomes an <b>exponent</b> on the argument, so 3&thinsp;log<sub>2</sub><i>x</i> = log<sub>2</sub>(<i>x</i><sup>3</sup>). You could legitimately go that way instead: log<sub>2</sub>(<i>x</i><sup>3</sup>) = 9 gives <i>x</i><sup>3</sup> = 2<sup>9</sup> = 512, so <i>x</i> = 8. Same answer, more arithmetic.',
+     L:function(x){return LB(2,x);}, R:function(){return 3;}},
+    {h:'<span class="hl"><i>x</i> = 2<sup>3</sup></span>', r:'convert',
+     w:'Now the logarithm is alone, so convert. &ldquo;The power of 2 that gives <i>x</i> is 3&rdquo; becomes <i>x</i> = 2<sup>3</sup>. The base of the log is always the base of the power &mdash; that is the one correspondence worth burning in.',
+     L:function(x){return x;}, R:function(){return PW(2,3);}},
+    {h:'<i>x</i> = <span class="hl">8</span>', r:'evaluate',
+     w:'2<sup>3</sup> = 8. A candidate, pending the check.',
+     L:function(x){return x;}, R:function(){return 8;}},
+    {h:'4 + 3&thinsp;log<sub>2</sub>8 = 4 + 3(3) = <span class="hl">13</span> &#10003;', r:'check',
+     w:'Back to the original line, not to any line you wrote later &mdash; checking against your own algebra would only confirm your own mistakes. 8 &gt; 0, so the logarithm exists; log<sub>2</sub>8 = 3; and 4 + 9 = 13. It survives.',
+     L:function(x){return 4+3*LB(2,x);}, R:function(){return 13;}}
+   ]},
+
+  {nm:'ln(3<i>x</i> &minus; 2) = 4', s:'natural log, exact answer', ans:'<i>x</i> = '+fr('e<sup>4</sup> + 2','3')+' &asymp; 18.8661', av:(Math.exp(4)+2)/3, xmin:0, xmax:25,
+   dom:'<b>Domain:</b> 3<i>x</i> &minus; 2 &gt; 0, so <i>x</i> &gt; <sup>2</sup>&frasl;<sub>3</sub> &asymp; 0.667. The answer 18.8661 is comfortably above it. &#10003; <b>Extraneous check:</b> none can appear &mdash; one logarithm, no condensing, and every step reversible. <b>On form:</b> (e<sup>4</sup> + 2)/3 is the exact answer and is what you report; 18.8661 is a rounded stand-in. Note also that e<sup>4</sup> is simply a positive number near 54.6, so the argument at the solution is positive as required.',
+   st:[
+    {h:'ln(3<i>x</i> &minus; 2) = 4', r:'start',
+     w:'&ldquo;ln&rdquo; is not a different kind of function &mdash; it is log<sub>e</sub>, the logarithm whose base is the constant <i>e</i> &asymp; 2.71828. Everything in this section applies unchanged; the base you convert with is <i>e</i>.',
+     L:function(x){return LNx(3*x-2);}, R:function(){return 4;}},
+    {h:'ln(<span class="hlr">3<i>x</i> &minus; 2</span>) = 4', r:'domain',
+     w:'The argument must be positive: 3<i>x</i> &minus; 2 &gt; 0, so 3<i>x</i> &gt; 2 and <b><i>x</i> &gt; <sup>2</sup>&frasl;<sub>3</sub></b>. Anything at or below two-thirds is disqualified before the algebra even starts &mdash; drag the slider down there and watch the whole equation go undefined.',
+     L:function(x){return LNx(3*x-2);}, R:function(){return 4;}},
+    {h:'<span class="hl">3<i>x</i> &minus; 2 = e<sup>4</sup></span>', r:'convert',
+     w:'Convert with base <i>e</i>: &ldquo;the power of <i>e</i> that gives 3<i>x</i> &minus; 2 is 4,&rdquo; so <i>e</i><sup>4</sup> = 3<i>x</i> &minus; 2. Resist the urge to reach for a calculator here. <b>e<sup>4</sup> is a number</b> &mdash; treat it exactly the way you would treat 16, and carry it symbolically through the rest of the work.',
+     L:function(x){return 3*x-2;}, R:function(){return Math.exp(4);}},
+    {h:'<span class="hl">3<i>x</i> = e<sup>4</sup> + 2</span>', r:'solve',
+     w:'Add 2 to both sides. It looks strange to add 2 to <i>e</i><sup>4</sup> and stop, but that <i>is</i> the sum &mdash; there is nothing to combine, exactly as there is nothing to combine in 5 + &radic;2.',
+     L:function(x){return 3*x;}, R:function(){return Math.exp(4)+2;}},
+    {h:'<span class="hl"><i>x</i> = '+fr('e<sup>4</sup> + 2','3')+'</span>', r:'solve',
+     w:'Divide by 3. This is the <b>exact</b> answer, and it is the form to report. Do not split it into <i>e</i><sup>4</sup> + <sup>2</sup>&frasl;<sub>3</sub> &mdash; the whole numerator is divided by 3, not just the 2.',
+     L:function(x){return x;}, R:function(){return (Math.exp(4)+2)/3;}},
+    {h:'<i>x</i> &asymp; <span class="hl">18.8661</span>', r:'evaluate',
+     w:'Only now, a decimal. Sanity-check the size before trusting it: <i>e</i><sup>4</sup> is a bit under 3<sup>4</sup> = 81 and well above 2<sup>4</sup> = 16 &mdash; about 54.6 &mdash; so (54.6 + 2)/3 should land near 19. It does.',
+     L:function(x){return x;}, R:function(){return (Math.exp(4)+2)/3;}},
+    {h:'ln(3 &middot; 18.8661 &minus; 2) = ln(54.5982) = <span class="hl">4</span> &#10003;', r:'check',
+     w:'Substituting reproduces <i>e</i><sup>4</sup> inside the logarithm, and ln(<i>e</i><sup>4</sup>) = 4 because ln and <i>e</i><sup>x</sup> undo each other. The argument is positive and greater than <sup>2</sup>&frasl;<sub>3</sub> as required, so the answer stands.',
+     L:function(x){return LNx(3*x-2);}, R:function(){return 4;}}
+   ]}
+ ],
+ cond:[
+  {nm:'log<sub>5</sub><i>x</i> + log<sub>5</sub>(<i>x</i> &minus; 4) = 1', s:'product rule &middot; one root dies', ans:'<i>x</i> = 5 &nbsp;only &nbsp;(<i>x</i> = &minus;1 rejected)', av:5, bv:-1, xmin:-2, xmax:8,
+   dom:'<b>Domain:</b> <i>both</i> arguments must be positive &mdash; <i>x</i> &gt; 0 <b>and</b> <i>x</i> &minus; 4 &gt; 0 &mdash; and the equation must satisfy both at once, so <b><i>x</i> &gt; 4</b>. <b>Extraneous root:</b> the condensed equation log<sub>5</sub>(<i>x</i><sup>2</sup> &minus; 4<i>x</i>) = 1 accepts anything with <i>x</i><sup>2</sup> &minus; 4<i>x</i> &gt; 0, which includes all of <i>x</i> &lt; 0 &mdash; a region the original equation never allowed. That is precisely where &minus;1 comes from, and the second graph on the left shows it as the dashed branch. Both candidates satisfy the quadratic; only <i>x</i> = 5 satisfies the equation you were given.',
+   st:[
+    {h:'log<sub>5</sub><i>x</i> + log<sub>5</sub>(<i>x</i> &minus; 4) = 1', r:'start',
+     w:'Two logarithms, same base, joined by a plus sign. Converting is impossible in this shape &mdash; the definition of a logarithm handles exactly <b>one</b> log at a time. So the first job is to fold two logs into one, and the product rule is built for it.',
+     L:function(x){return LB(5,x)+LB(5,x-4);}, R:function(){return 1;}},
+    {h:'log<sub>5</sub>(<span class="hlr"><i>x</i></span>) + log<sub>5</sub>(<span class="hlr"><i>x</i> &minus; 4</span>) = 1', r:'domain',
+     w:'Write the domain down <b>now</b>, from the original equation, before any rule touches it &mdash; this is the single most important habit in the section. Two arguments, two conditions: <i>x</i> &gt; 0 and <i>x</i> &minus; 4 &gt; 0. They must hold simultaneously, and <i>x</i> &gt; 4 is the stricter of the two, so the domain is <b><i>x</i> &gt; 4</b>. Everything at or below 4 is already disqualified.',
+     L:function(x){return LB(5,x)+LB(5,x-4);}, R:function(){return 1;}},
+    {h:'<span class="hl">log<sub>5</sub>(<i>x</i>(<i>x</i> &minus; 4))</span> = 1', r:'condense',
+     w:'The product rule: a sum of logarithms with the <b>same base</b> is the logarithm of the product. The factor-counting picture on the left is why &mdash; multiplying merges two piles of factors, so the counts add. Watch the number column: at legal values of <i>x</i> nothing changes, because this is the same number written differently. At <b>illegal</b> values something has changed, and that is the crack extraneous roots crawl through.',
+     L:function(x){return LB(5,x*(x-4));}, R:function(){return 1;}},
+    {h:'log<sub>5</sub>(<span class="hl"><i>x</i><sup>2</sup> &minus; 4<i>x</i></span>) = 1', r:'expand',
+     w:'Multiply out inside the logarithm. One logarithm, alone on its side, with a number on the other &mdash; the shape the convert step requires.',
+     L:function(x){return LB(5,x*x-4*x);}, R:function(){return 1;}},
+    {h:'<span class="hl"><i>x</i><sup>2</sup> &minus; 4<i>x</i> = 5<sup>1</sup> = 5</span>', r:'convert',
+     w:'&ldquo;The power of 5 that gives <i>x</i><sup>2</sup> &minus; 4<i>x</i> is 1,&rdquo; so <i>x</i><sup>2</sup> &minus; 4<i>x</i> = 5<sup>1</sup> = 5. The logarithm is gone. What remains is a quadratic, and the rest of this problem is Chapter 5 work.',
+     L:function(x){return x*x-4*x;}, R:function(){return 5;}},
+    {h:'<span class="hl"><i>x</i><sup>2</sup> &minus; 4<i>x</i> &minus; 5 = 0</span>', r:'rearrange',
+     w:'Subtract 5 from both sides. A quadratic must be against zero before factoring is of any use &mdash; the zero-product property needs a zero to work with.',
+     L:function(x){return x*x-4*x-5;}, R:function(){return 0;}},
+    {h:'<span class="hl">(<i>x</i> &minus; 5)(<i>x</i> + 1) = 0</span>', r:'factor',
+     w:'Two numbers multiplying to &minus;5 and adding to &minus;4: that is &minus;5 and +1.',
+     L:function(x){return (x-5)*(x+1);}, R:function(){return 0;}},
+    {h:'<i>x</i> = 5 &nbsp;or&nbsp; <i>x</i> = &minus;1', r:'roots', nov:1,
+     w:'Two candidates. Neither is a solution yet. The quadratic is a <b>consequence</b> of the original equation, not a restatement of it &mdash; the condense step made the equation more permissive on the way, so a root of the quadratic may or may not survive contact with the logarithms it came from.',
+     L:function(x){return x;}, R:function(){return 5;}},
+    {h:'<i>x</i> = 5: &nbsp;log<sub>5</sub>5 + log<sub>5</sub>1 = 1 + 0 = <span class="hl">1</span> &#10003;', r:'check',
+     w:'Test it in the <b>original</b>. 5 &gt; 4, so both arguments are positive: 5 and 1. log<sub>5</sub>5 = 1 because 5<sup>1</sup> = 5; log<sub>5</sub>1 = 0 because 5<sup>0</sup> = 1. Their sum is 1, which is what the equation demanded. Accepted.',
+     L:function(x){return LB(5,x)+LB(5,x-4);}, R:function(){return 1;}},
+    {h:'<i>x</i> = &minus;1: &nbsp;<span class="hlr">log<sub>5</sub>(&minus;1)</span> does not exist &#10007;', r:'reject',
+     w:'Test the other one and it collapses at the first symbol. There is no power of 5 that produces &minus;1 &mdash; every power of a positive base is positive &mdash; so log<sub>5</sub>(&minus;1) is undefined, and log<sub>5</sub>(&minus;5) with it. Set the slider to &minus;1 and read the column: the condensed lines are perfectly happy, showing 1 = 1, while the original two lines report <b>undefined</b>. The candidate solves an equation you <i>created</i>, not the one you were <i>asked</i>. Reject it. And notice what would have happened without this step: you would have reported two solutions, and one of them would be meaningless.',
+     L:function(x){return LB(5,x)+LB(5,x-4);}, R:function(){return 1;}},
+    {h:'<span class="hl"><i>x</i> = 5</span>', r:'answer',
+     w:'One candidate survived, so the solution set is a single value. Reporting &ldquo;<i>x</i> = 5 or <i>x</i> = &minus;1&rdquo; here is not a small slip &mdash; it is a false statement about the equation.',
+     L:function(x){return LB(5,x)+LB(5,x-4);}, R:function(){return 1;}}
+   ]},
+
+  {nm:'log(<i>x</i> + 3) &minus; log <i>x</i> = 1', s:'quotient rule &middot; base 10', ans:'<i>x</i> = '+fr('1','3'), av:1/3, xmin:-5, xmax:5,
+   dom:'<b>Domain:</b> <i>x</i> + 3 &gt; 0 and <i>x</i> &gt; 0 together give <b><i>x</i> &gt; 0</b>. The answer <sup>1</sup>&frasl;<sub>3</sub> is positive. &#10003; <b>Extraneous check:</b> the condensed form log((<i>x</i> + 3)/<i>x</i>) = 1 is satisfied wherever (<i>x</i> + 3)/<i>x</i> &gt; 0, which is <i>x</i> &gt; 0 <i>or</i> <i>x</i> &lt; &minus;3 &mdash; wider than the original once again. This time the algebra happens to produce only one root and it lands in the legal region, so nothing is discarded. You could not have known that in advance, which is the argument for checking every time. <b>Note:</b> &ldquo;log&rdquo; with no written base means base 10.',
+   st:[
+    {h:'log(<i>x</i> + 3) &minus; log <i>x</i> = 1', r:'start',
+     w:'Two logarithms again, this time subtracted. Written with no base, &ldquo;log&rdquo; means <b>log<sub>10</sub></b> &mdash; the common logarithm. Same base on both terms, so the quotient rule can condense them.',
+     L:function(x){return L10(x+3)-L10(x);}, R:function(){return 1;}},
+    {h:'log(<span class="hlr"><i>x</i> + 3</span>) &minus; log(<span class="hlr"><i>x</i></span>) = 1', r:'domain',
+     w:'Both arguments positive: <i>x</i> + 3 &gt; 0 gives <i>x</i> &gt; &minus;3, and <i>x</i> &gt; 0 gives <i>x</i> &gt; 0. Both must hold, and <i>x</i> &gt; 0 is stricter, so the domain is <b><i>x</i> &gt; 0</b>. The minus sign in the equation changes nothing here &mdash; it sits between the logs, not inside them.',
+     L:function(x){return L10(x+3)-L10(x);}, R:function(){return 1;}},
+    {h:'<span class="hl">log'+fr('<i>x</i> + 3','<i>x</i>')+'</span> = 1', r:'condense',
+     w:'The quotient rule: a difference of logarithms with the same base is the logarithm of the quotient. <b>Order matters</b> &mdash; whatever is subtracted goes in the denominator. And the trap worth naming: log(<i>x</i> + 3) &minus; log <i>x</i> is <b>not</b> log(<i>x</i> + 3 &minus; <i>x</i>) = log 3. Subtracting logarithms divides the insides; it never subtracts them.',
+     L:function(x){return (x+3)/x>0?L10((x+3)/x):NaN;}, R:function(){return 1;}},
+    {h:'<span class="hl">'+fr('<i>x</i> + 3','<i>x</i>')+' = 10<sup>1</sup> = 10</span>', r:'convert',
+     w:'One logarithm alone, so convert &mdash; with base 10, since that is what the bare &ldquo;log&rdquo; meant. &ldquo;The power of 10 that gives (<i>x</i> + 3)/<i>x</i> is 1,&rdquo; so the fraction equals 10<sup>1</sup> = 10.',
+     L:function(x){return (x+3)/x;}, R:function(){return 10;}},
+    {h:'<span class="hl"><i>x</i> + 3 = 10<i>x</i></span>', r:'clear',
+     w:'Multiply both sides by <i>x</i>. This is legal because the domain already guarantees <i>x</i> &gt; 0, so <i>x</i> is not zero &mdash; the restriction you wrote down two steps ago is quietly paying for this step.',
+     L:function(x){return x+3;}, R:function(x){return 10*x;}},
+    {h:'<span class="hl">3 = 9<i>x</i></span>', r:'solve',
+     w:'Subtract <i>x</i> from both sides: 10<i>x</i> &minus; <i>x</i> = 9<i>x</i>.',
+     L:function(){return 3;}, R:function(x){return 9*x;}},
+    {h:'<span class="hl"><i>x</i> = '+fr('1','3')+'</span>', r:'solve',
+     w:'Divide by 9 and reduce 3/9 to 1/3. A fraction is a perfectly ordinary answer &mdash; and it is positive, so it clears the domain.',
+     L:function(x){return x;}, R:function(){return 1/3;}},
+    {h:'log'+fr('10','3')+' &minus; log'+fr('1','3')+' = log 10 = <span class="hl">1</span> &#10003;', r:'check',
+     w:'Substitute into the original: <sup>1</sup>&frasl;<sub>3</sub> + 3 = <sup>10</sup>&frasl;<sub>3</sub>, and the second term is log(<sup>1</sup>&frasl;<sub>3</sub>). Both arguments are positive. Their difference is log of (<sup>10</sup>&frasl;<sub>3</sub>) &divide; (<sup>1</sup>&frasl;<sub>3</sub>) = 10, and log 10 = 1. It balances exactly. Numerically the two terms are about 0.5229 and &minus;0.4771 &mdash; note the second is <b>negative</b>, which is fine: a negative <i>output</i> just means the input was between 0 and 1.',
+     L:function(x){return L10(x+3)-L10(x);}, R:function(){return 1;}}
+   ]},
+
+  {nm:'2&thinsp;ln <i>x</i> = ln(<i>x</i> + 6)', s:'power rule &middot; log = log', ans:'<i>x</i> = 3 &nbsp;only &nbsp;(<i>x</i> = &minus;2 rejected)', av:3, bv:-2, xmin:-4, xmax:6,
+   dom:'<b>Domain:</b> ln <i>x</i> needs <i>x</i> &gt; 0; ln(<i>x</i> + 6) needs <i>x</i> &gt; &minus;6. Together, <b><i>x</i> &gt; 0</b>. <b>Extraneous root:</b> rewriting 2 ln <i>x</i> as ln(<i>x</i><sup>2</sup>) widens the domain from <i>x</i> &gt; 0 to every <i>x</i> &ne; 0, because squaring destroys the sign. The candidate &minus;2 lives entirely in that new territory: it satisfies <i>x</i><sup>2</sup> = <i>x</i> + 6 (4 = 4) but ln(&minus;2) does not exist, so the original equation cannot even be written down there. Reject it.',
+   st:[
+    {h:'2&thinsp;ln <i>x</i> = ln(<i>x</i> + 6)', r:'start',
+     w:'A logarithm on <b>each</b> side, not both on one &mdash; a different shape from the last two problems, and it has its own ending. There is a coefficient in the way, so condense first; after that, two equal logarithms of the same base can simply have their insides set equal.',
+     L:function(x){return 2*LNx(x);}, R:function(x){return LNx(x+6);}},
+    {h:'2&thinsp;ln(<span class="hlr"><i>x</i></span>) = ln(<span class="hlr"><i>x</i> + 6</span>)', r:'domain',
+     w:'From the original: <i>x</i> &gt; 0 and <i>x</i> + 6 &gt; 0, i.e. <i>x</i> &gt; &minus;6. Both at once means <b><i>x</i> &gt; 0</b>. Fix that in mind, because the very next step is about to lose it.',
+     L:function(x){return 2*LNx(x);}, R:function(x){return LNx(x+6);}},
+    {h:'<span class="hl">ln(<i>x</i><sup>2</sup>)</span> = ln(<i>x</i> + 6)', r:'condense',
+     w:'The power rule backwards: a coefficient in front of a logarithm becomes an exponent on the argument, so 2 ln <i>x</i> = ln(<i>x</i><sup>2</sup>). It is true, and it is exactly where the trouble is born &mdash; ln <i>x</i> insists on <i>x</i> &gt; 0, while ln(<i>x</i><sup>2</sup>) will accept any <i>x</i> except 0. <b>The new equation is more forgiving than the old one</b>, so from here on it may hand you roots the original would never have tolerated.',
+     L:function(x){return x*x>0?Math.log(x*x):NaN;}, R:function(x){return LNx(x+6);}},
+    {h:'<span class="hl"><i>x</i><sup>2</sup> = <i>x</i> + 6</span>', r:'onetoone',
+     w:'One logarithm on each side, same base, nothing else &mdash; so drop the logs. This is legal because the log curve on the left never repeats a height: if two logarithms of the same base are equal, they must have come from the same input. (The alternative route works too: convert ln(<i>x</i><sup>2</sup>) = ln(<i>x</i> + 6) using base <i>e</i> on both sides and you land here anyway.)',
+     L:function(x){return x*x;}, R:function(x){return x+6;}},
+    {h:'<span class="hl"><i>x</i><sup>2</sup> &minus; <i>x</i> &minus; 6 = 0</span>', r:'rearrange',
+     w:'Move everything to one side. Do not divide by <i>x</i> to &ldquo;simplify&rdquo; &mdash; that loses information and is illegal if <i>x</i> could be 0.',
+     L:function(x){return x*x-x-6;}, R:function(){return 0;}},
+    {h:'<span class="hl">(<i>x</i> &minus; 3)(<i>x</i> + 2) = 0</span>', r:'factor',
+     w:'Two numbers with product &minus;6 and sum &minus;1: &minus;3 and +2.',
+     L:function(x){return (x-3)*(x+2);}, R:function(){return 0;}},
+    {h:'<i>x</i> = 3 &nbsp;or&nbsp; <i>x</i> = &minus;2', r:'roots', nov:1,
+     w:'Two candidates from a quadratic that is <b>wider</b> than the equation you started with. Compare them against the domain <i>x</i> &gt; 0 that you recorded at the start: 3 passes, &minus;2 does not. That comparison alone predicts the outcome &mdash; but substitute anyway, because it costs ten seconds and catches arithmetic slips too.',
+     L:function(x){return x;}, R:function(){return 3;}},
+    {h:'<i>x</i> = 3: &nbsp;2&thinsp;ln 3 = ln 9 = ln(3 + 6) &#10003;', r:'check',
+     w:'In the <b>original</b>: 3 &gt; 0, so ln 3 exists, and 2 ln 3 = ln(3<sup>2</sup>) = ln 9. The right side is ln(3 + 6) = ln 9. Identical. Numerically both are about 2.1972. Accepted.',
+     L:function(x){return 2*LNx(x);}, R:function(x){return LNx(x+6);}},
+    {h:'<i>x</i> = &minus;2: &nbsp;<span class="hlr">ln(&minus;2)</span> does not exist &#10007;', r:'reject',
+     w:'The condensed equation adores this root: (&minus;2)<sup>2</sup> = 4 and &minus;2 + 6 = 4, so <i>x</i><sup>2</sup> = <i>x</i> + 6 holds perfectly. But the <b>original</b> opens with 2 ln(&minus;2), and ln(&minus;2) does not exist &mdash; no power of <i>e</i> is negative. Slide <i>x</i> to &minus;2 and watch it happen: the lines from the one-to-one step downward balance beautifully, while the top two lines read <b>undefined</b>. That gap between what the condensed equation allows and what the original allows <i>is</i> the definition of an extraneous root.',
+     L:function(x){return 2*LNx(x);}, R:function(x){return LNx(x+6);}},
+    {h:'<span class="hl"><i>x</i> = 3</span>', r:'answer',
+     w:'One survivor. Three habits make this whole section safe: write the domain from the <b>original</b> before you touch anything, notice every step that widens it, and substitute every candidate back into the line you were given.',
+     L:function(x){return 2*LNx(x);}, R:function(x){return LNx(x+6);}}
+   ]}
+ ]};
+
+ var MN={
+  conv:'<b>Shape 1 &mdash; one logarithm.</b> Get the logarithm <b>alone</b> (undo additions, then coefficients), then convert straight from the definition: log<sub>b</sub><i>M</i> = <i>c</i> becomes <i>b</i><sup><i>c</i></sup> = <i>M</i>. Solve the ordinary equation left behind and check the argument came out positive. The base of the logarithm is always the base of the power &mdash; that is the only correspondence to remember.',
+  cond:'<b>Shape 2 &mdash; two or more logarithms.</b> Combine them into one first, using the same-base rules: sums become products, differences become quotients, coefficients become exponents. Then you are back in Shape 1 &mdash; convert and solve. Because condensing <b>widens</b> what the equation will accept, this shape can produce roots that the original equation cannot even evaluate, so the final check is mandatory rather than merely wise.'
+ };
+
+ /* ================= state ================= */
+ var mode='conv', ei=0, si=0, XV=0;
+ function cur(){ return EX[mode][ei]; }
+
+ function buildPicks(){
+   $('picks').innerHTML=EX[mode].map(function(e,i){
+     return '<button class="it'+(i===ei?' on':'')+'" data-i="'+i+'"><span class="nm">'+e.nm+'</span><span class="s">'+e.s+'</span></button>';
+   }).join('');
+   var b=$('picks').querySelectorAll('.it');
+   for(var i=0;i<b.length;i++){ b[i].onclick=function(){ ei=+this.getAttribute('data-i'); si=0; resetX(); buildPicks(); render(); }; }
+   $('mnem').innerHTML=MN[mode];
+ }
+ function resetX(){ var e=cur(); XV=e.xmin; $('slX').value=0; }
+ function setX(v){ var e=cur(); XV=e.xmin+v*(e.xmax-e.xmin)/400; }
+
+ function vcell(s,i){
+   if(s.nov) return '<span class="vv">&mdash;<small>two candidates</small></span>';
+   var L=s.L(XV), R=s.R(XV);
+   var bad=(isNaN(L)||isNaN(R));
+   if(bad) return '<span class="vv und">undefined<small>this line cannot be evaluated</small></span>';
+   var ok=near(L,R);
+   return '<span class="vv'+(ok?' ok':'')+'">'+f4(L)+(ok?' = ':' &ne; ')+f4(R)+'<small>'+(ok?'balanced':'not equal here')+'</small></span>';
+ }
+
+ function render(){
+   var e=cur(), out='', i, s;
+   for(i=0;i<e.st.length;i++){
+     s=e.st[i];
+     if(i>si){ out+='<div class="pend">&middot;&middot;&middot;</div>'; continue; }
+     out+='<div class="ln '+(i===si?'cur':'done')+'"><span class="eqx">'+s.h+
+       '<span class="rl" style="color:'+C[s.r]+'">'+RLAB[s.r]+'</span></span>'+vcell(s,i)+'</div>';
+   }
+   $('steps').innerHTML=out;
+   s=e.st[si];
+   $('stepTitle').innerHTML='Worked steps &mdash; step '+(si+1)+' of '+e.st.length;
+   $('info').innerHTML='<span class="n">'+RLAB[s.r]+'</span><i style="color:'+C[s.r]+';font-weight:700;font-style:normal">'+RF[s.r]+'</i><div class="dd">'+s.w+'</div>';
+   $('stage').style.background=C[s.r];
+   $('stage').innerHTML=(mode==='conv'?'One logarithm &rarr; convert':'Many logarithms &rarr; condense')+
+     '<small>'+RLAB[s.r].replace(/&mdash;.*/,'')+' &middot; step '+(si+1)+' of '+e.st.length+'</small>';
+   $('ansbox').innerHTML='<b>Answer:</b> '+e.ans;
+   $('dom').innerHTML=e.dom;
+   $('prev').disabled=(si===0); $('next').disabled=(si===e.st.length-1);
+   $('jumpb').style.display=(e.bv===undefined?'none':'');
+   $('labX').innerHTML=f4(XV);
+   var o=e.st[0], L0=o.L(XV), R0=o.R(XV), a=$('agree');
+   if(isNaN(L0)||isNaN(R0)){
+     a.className='agree bad';
+     a.innerHTML='At <i>x</i> = '+f4(XV)+' the <b>original</b> equation cannot even be evaluated &mdash; it asks for the logarithm of a number that is zero or negative, and no such number exists. Whatever the later lines say here, this value is <b>not</b> a solution.';
+   }else if(near(L0,R0)){
+     a.className='agree';
+     a.innerHTML='At <i>x</i> = '+f4(XV)+' the <b>original</b> equation reads '+f4(L0)+' = '+f4(R0)+' &mdash; every argument is positive and both sides agree. <b>This is a genuine solution.</b>';
+   }else{
+     a.className='agree off';
+     a.innerHTML='At <i>x</i> = '+f4(XV)+' the <b>original</b> equation reads '+f4(L0)+' on the left and '+f4(R0)+' on the right &mdash; defined, but not balanced. Keep dragging, or jump to the solution.';
+   }
+ }
+
+ /* ================= wiring ================= */
+ (function(){ var bs=$('mode').querySelectorAll('button');
+   for(var i=0;i<bs.length;i++){ bs[i].onclick=function(){
+     mode=this.getAttribute('data-m'); ei=0; si=0;
+     for(var j=0;j<bs.length;j++){ bs[j].className=(bs[j].getAttribute('data-m')===mode)?'on':''; }
+     resetX(); buildPicks(); render();
+   }; } })();
+ $('prev').onclick=function(){ if(si>0){ si--; render(); } };
+ $('next').onclick=function(){ if(si<cur().st.length-1){ si++; render(); } };
+ $('slX').oninput=function(){ setX(+this.value); render(); };
+ $('jump').onclick=function(){ var e=cur(); XV=e.av; $('slX').value=Math.round((e.av-e.xmin)/(e.xmax-e.xmin)*400); render(); };
+ $('jumpb').onclick=function(){ var e=cur(); if(e.bv===undefined)return; XV=e.bv; $('slX').value=Math.round((e.bv-e.xmin)/(e.xmax-e.xmin)*400); render(); };
+
+ drawGraph(); drawRule(); drawGraph2(); buildPicks(); resetX(); render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f7f2">
+<title>Risk &amp; Resilience: Weigh the Scale</title>
+<meta name="description" content="Interactive balance scale for adolescent resilience — tap risk factors against protective factors and watch the outcome tip. For human development students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_humdev.css">
+<style>.wrap{grid-template-columns:0.96fr 1.04fr;}
+svg text{font-family:var(--sans);}
+.axlab{font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:13px 0 6px;}
+.axlab:first-child{margin-top:0;}
+.axlab.risk{color:var(--coral);} .axlab.prot{color:var(--green);}
+.grid .it{position:relative;padding-right:30px;}
+.grid .it .wt{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:800;opacity:.5;}
+.gr-risk .it.on{background:var(--coral);border-color:var(--coral);color:#fff;}
+.gr-prot .it.on{background:var(--green);border-color:var(--green);color:#fff;}
+.it.on .wt{opacity:.85;}
+#beamword{transform-box:fill-box;transform-origin:center;}
+.rrow{display:flex;gap:8px;margin:11px 0 2px;}
+.rrow .btn{flex:1;font-size:12px;padding:9px 4px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Human Development · Chapter 10</div>
+  <h1>Risk &amp; Resilience: Weigh the Scale</h1>
+  <div class="intro">Resilience isn't the absence of hardship &mdash; it's positive adaptation <b>despite</b> it. Whether a teen thrives depends on the <b>balance</b> between risk factors weighing them down and protective factors holding them up. Tap factors onto the scale and watch which way it tips.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">An empty scale</h2>
+    <svg viewBox="0 0 240 236" aria-label="balance scale weighing risk against protective factors"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">The resilience balance<small>add factors to tip the scale</small></div>
+    <div class="card">
+      <div class="axlab risk">Risk factors &mdash; stressors pushing toward poor outcomes</div>
+      <div class="grid gr-risk" id="gridRisk"></div>
+      <div class="axlab prot">Protective factors &mdash; supports that buffer the risk</div>
+      <div class="grid gr-prot" id="gridProt"></div>
+      <div id="info"></div>
+      <div class="axlab">Or drop in a real teen &mdash; how does the balance settle?</div>
+      <div class="list" id="cases"></div>
+      <div class="rrow"><button class="btn" id="reset">Clear the scale</button></div>
+    </div>
+  </div>
+</div>
+<footer>Human Development · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // Weights (1-3) reflect relative impact; risk/protective factors span
+ // Bronfenbrenner's levels — individual, family, and community.
+ var RISK=[
+  {id:'fam',  ic:'💢', nm:'Family conflict or abuse', w:3},
+  {id:'ace',  ic:'⚡', nm:'Early trauma (ACEs)',       w:3},
+  {id:'par',  ic:'💊', nm:'Parent illness / substance use', w:3},
+  {id:'pov',  ic:'🏚️', nm:'Poverty & instability',     w:2},
+  {id:'viol', ic:'🚨', nm:'Community violence',         w:2},
+  {id:'bully',ic:'😔', nm:'Rejection or bullying',      w:2}
+ ];
+ var PROT=[
+  {id:'adult', ic:'🤝', nm:'A caring, stable adult',    w:3},
+  {id:'eff',   ic:'💪', nm:'Sense of competence',       w:2},
+  {id:'reg',   ic:'🧩', nm:'Self-regulation skills',    w:2},
+  {id:'school',ic:'🏫', nm:'School connectedness',      w:2},
+  {id:'comm',  ic:'🕊️', nm:'Community / faith support', w:2},
+  {id:'temp',  ic:'🙂', nm:'Easygoing temperament',     w:1}
+ ];
+ var cases=[
+  {k:'kai', ic:'🌊', nm:'Kai', s:'High adversity, one steady adult',
+    risk:['pov','par','viol'], prot:['adult','eff','reg','school']},
+  {k:'devon', ic:'🏚️', nm:'Devon', s:'Risks piling up, little support',
+    risk:['fam','ace','par','viol','pov'], prot:['temp']},
+  {k:'rowan', ic:'🌱', nm:'Rowan', s:'A smooth road, few stressors',
+    risk:[], prot:['adult','school','temp']}
+ ];
+ var sel={}; // id -> true
+
+ function total(list){ var t=0; list.forEach(function(f){ if(sel[f.id]) t+=f.w; }); return t; }
+
+ function outcome(rk,pr){
+   var net=pr-rk;
+   if(rk===0 && pr===0) return {w:'',col:'var(--teal)',tag:'balance'};
+   if(rk===0) return {w:'LOW ADVERSITY',col:'#b8862f',tag:'low'};
+   if(pr===0) return rk>=6?{w:'VULNERABLE',col:'#d1495b',tag:'vuln'}:{w:'AT RISK',col:'#d1495b',tag:'atrisk'};
+   if(net>=3) return {w:'RESILIENT',col:'#2f9e5b',tag:'res'};
+   if(net>=1) return {w:'HOLDING',col:'#2e7d52',tag:'hold'};
+   if(net===0) return {w:'BALANCED',col:'#b8862f',tag:'even'};
+   if(net<=-3) return {w:'VULNERABLE',col:'#d1495b',tag:'vuln'};
+   return {w:'STRAINED',col:'#d1495b',tag:'strain'};
+ }
+
+ function pan(cx,y,col,val,label,hot){
+   var w=31,s='';
+   s+='<path d="M'+(cx-w)+' '+y+' Q'+cx+' '+(y+21)+' '+(cx+w)+' '+y+'" fill="'+col+'" opacity="'+(val>0?.92:.26)+'"/>';
+   s+='<line x1="'+(cx-w)+'" y1="'+y+'" x2="'+(cx+w)+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+(hot?4:2)+'" stroke-linecap="round"/>';
+   s+='<text x="'+cx+'" y="'+(y+14)+'" text-anchor="middle" font-size="15" font-weight="800" fill="#fff">'+val+'</text>';
+   s+='<text x="'+cx+'" y="'+(y+36)+'" text-anchor="middle" font-size="9" font-weight="800" fill="'+col+'" letter-spacing="1">'+label+'</text>';
+   return s;
+ }
+ function draw(rk,pr,oc){
+   var net=pr-rk, d=Math.max(-8,Math.min(8,net)), off=d*3.4;
+   var P=72, lx=38, rx=202;
+   var ly=P-off, ry=P+off;      // heavier side sinks: more risk lowers left pan
+   var lpan=ly+30, rpan=ry+30;
+   var s='';
+   // outcome word crowning the scale
+   if(oc.w) s+='<text id="beamword" x="120" y="20" text-anchor="middle" font-size="15" font-weight="800" letter-spacing="1.5" fill="'+oc.col+'">'+oc.w+'</text>';
+   // stand
+   s+='<rect x="78" y="204" width="84" height="9" rx="4" fill="var(--soft)"/>';
+   s+='<rect x="113" y="76" width="14" height="130" rx="4" fill="var(--soft)"/>';
+   // level reference line through the pivot
+   s+='<line x1="18" y1="'+P+'" x2="222" y2="'+P+'" stroke="var(--line)" stroke-dasharray="3 5" stroke-width="1"/>';
+   // beam + pivot hub
+   s+='<line x1="'+lx+'" y1="'+ly+'" x2="'+rx+'" y2="'+ry+'" stroke="var(--teal-dk)" stroke-width="7" stroke-linecap="round"/>';
+   s+='<circle cx="120" cy="72" r="8" fill="var(--teal-dk)"/><circle cx="120" cy="72" r="3.4" fill="#fff"/>';
+   // chains
+   s+='<line x1="'+lx+'" y1="'+ly+'" x2="'+lx+'" y2="'+lpan+'" stroke="var(--muted)" stroke-width="1.6"/>';
+   s+='<line x1="'+rx+'" y1="'+ry+'" x2="'+rx+'" y2="'+rpan+'" stroke="var(--muted)" stroke-width="1.6"/>';
+   // pans (left = risk, right = protection)
+   s+=pan(lx,lpan,'#d1495b',rk,'RISK',rk>pr&&rk>0);
+   s+=pan(rx,rpan,'#2f9e5b',pr,'SUPPORT',pr>rk&&pr>0);
+   return s;
+ }
+
+ function chipRow(list,gid){
+   return list.map(function(f){
+     return '<button class="it'+(sel[f.id]?' on':'')+'" data-id="'+f.id+'">'+f.ic+' '+f.nm+'<span class="wt">+'+f.w+'</span></button>';
+   }).join('');
+ }
+
+ function verdictText(rk,pr,oc){
+   var net=pr-rk;
+   var lead={
+     low:'No risk on the scale means <b>no adversity to overcome</b> &mdash; and that isn\'t resilience. Resilience is defined only when a teen does well <b>in spite of</b> real threat. This is simply an easier road.',
+     atrisk:'Real stressors are loading the risk pan with <b>nothing to buffer them</b>. Without a single protective factor, the odds of poor adaptation climb.',
+     vuln:'Risk factors are <b>accumulating faster than supports can absorb them</b>. Garmezy and Rutter showed it\'s this <i>pile-up</i> of risk &mdash; not any one hardship &mdash; that most predicts poor outcomes.',
+     strain:'The supports are present but <b>not yet keeping pace</b> with the risk. The scale still tips the wrong way &mdash; adaptation is strained.',
+     even:'The scale sits <b>level</b>. On the tipping point, one more risk or one more support decides the outcome &mdash; a reminder that resilience is dynamic, not fixed.',
+     hold:'Protective factors are <b>offsetting the risk</b>. The teen is holding steady &mdash; doing well despite genuine adversity. This is the beginning of resilience.',
+     res:'Protective factors clearly <b>outweigh the risk</b>. This is resilience: positive adaptation despite hardship. Masten called it <b>"ordinary magic"</b> &mdash; it grows from everyday resources, not rare traits.'
+   }[oc.tag]||'Add risk and protective factors to see how the balance settles.';
+   var html='<span class="n">'+(oc.w?oc.w.charAt(0)+oc.w.slice(1).toLowerCase():'The balance')+'</span>'+lead;
+   html+='<div class="ex"><span>Risk load '+rk+'</span><span>Support '+pr+'</span><span>Net '+(net>0?'+':'')+net+'</span></div>';
+   if(sel.adult && rk>=4){
+     html+='<div class="loc"><b>The single strongest buffer:</b> Emmy Werner\'s Kauai study found a close bond with <b>at least one stable, caring adult</b> was the best predictor of which high-risk children thrived.</div>';
+   }
+   html+='<div class="mnem"><b>Resilience research:</b> risk and protective factors <b>accumulate</b> and offset one another; roughly a third of high-risk youth adapt well, powered by relationships, competence, and self-regulation.</div>';
+   return html;
+ }
+
+ function render(){
+   var rk=total(RISK), pr=total(PROT), oc=outcome(rk,pr);
+   $("gridRisk").innerHTML=chipRow(RISK,'gridRisk');
+   $("gridProt").innerHTML=chipRow(PROT,'gridProt');
+   wire('gridRisk'); wire('gridProt');
+   $("art").innerHTML=draw(rk,pr,oc);
+   // case highlight
+   document.querySelectorAll('#cases .it').forEach(function(b){
+     b.className='it'+(matchCase(b.dataset.k)?' on':'');
+   });
+   if(rk===0 && pr===0){
+     $("cardTitle").innerHTML='An empty scale';
+     $("stage").style.background='var(--teal)';
+     $("stage").innerHTML='The resilience balance<small>add factors to tip the scale</small>';
+     $("info").innerHTML='<span class="n">Two sides of every childhood</span>Resilience is not a personality a teen simply has &mdash; it emerges from the <b>tug-of-war</b> between what weighs them down and what holds them up. Load both pans and watch the scale decide.';
+     return;
+   }
+   $("cardTitle").innerHTML=oc.w?(oc.w.charAt(0)+oc.w.slice(1).toLowerCase()):'The balance';
+   $("stage").style.background=oc.col;
+   $("stage").innerHTML=(oc.w||'Balance')+'<small>risk '+rk+' · support '+pr+' · net '+((pr-rk)>0?'+':'')+(pr-rk)+'</small>';
+   $("info").innerHTML=verdictText(rk,pr,oc);
+ }
+
+ function matchCase(k){
+   var c=null; cases.forEach(function(x){ if(x.k===k) c=x; }); if(!c) return false;
+   var ids=c.risk.concat(c.prot);
+   // every selected id must be in this case, and every case id selected
+   var selIds=Object.keys(sel).filter(function(i){return sel[i];});
+   if(selIds.length!==ids.length) return false;
+   for(var i=0;i<ids.length;i++){ if(!sel[ids[i]]) return false; }
+   return true;
+ }
+
+ function wire(gid){
+   document.querySelectorAll('#'+gid+' .it').forEach(function(b){
+     b.onclick=function(){ sel[b.dataset.id]=!sel[b.dataset.id]; render(); };
+   });
+ }
+
+ // case buttons
+ $("cases").innerHTML=cases.map(function(c){
+   return '<button class="it" data-k="'+c.k+'"><span class="ic">'+c.ic+'</span><span><span class="nm">'+c.nm+'</span><br><span class="s">'+c.s+'</span></span></button>';
+ }).join('');
+ document.querySelectorAll('#cases .it').forEach(function(b){
+   b.onclick=function(){
+     var c=null; cases.forEach(function(x){ if(x.k===b.dataset.k) c=x; });
+     sel={}; c.risk.concat(c.prot).forEach(function(id){ sel[id]=true; }); render();
+   };
+ });
+ $("reset").onclick=function(){ sel={}; render(); };
+
+ render();
+})();
+</script>
+</body>
+</html>

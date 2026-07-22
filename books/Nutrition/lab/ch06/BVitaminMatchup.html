@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>The B-Vitamin Matchup</title>
+<meta name="description" content="Wire each B vitamin to its coenzyme and to the deficiency that follows in a tap-to-match game — then calculate niacin equivalents from food live. For nutrition students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>
+.wrap{grid-template-columns:0.95fr 1.05fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.board .hd{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin:2px 0 4px;}
+.it.done{background:#eef7f0;border-color:#bfe3c9;}
+.it.done .nm{color:#237a45;} .it.done .ct{color:#4f9668;}
+.it.wrong{animation:shk .32s;}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.df{display:flex;gap:9px;padding:6px 0;border-top:1px dashed #e3d9c6;}
+.df:first-of-type{border-top:none;padding-top:2px;}
+.df .k{flex:none;width:70px;font-size:9.3px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding-top:2px;}
+.df .v{flex:1;font-size:12.5px;line-height:1.45;color:var(--soft);} .df .v b{color:var(--ink);}
+.etag{display:inline-block;font-size:9.2px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:2px 8px;vertical-align:middle;margin-left:4px;}
+.etag.st{background:#e5f3ea;color:#237a45;} .etag.pr{background:#f0eaf5;color:#6a4a80;}
+.evi{font-size:11.4px;line-height:1.5;color:var(--muted);border-top:1px dashed #ddd2ba;margin-top:8px;padding-top:7px;} .evi b{color:var(--soft);}
+.sl{border:1px solid var(--line);border-radius:11px;background:#fff;padding:9px 12px 10px;} .sl+.sl{margin-top:8px;}
+.sl .top2{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
+.sl .lb{font-size:12.5px;font-weight:700;color:var(--ink);} .sl .lb i{font-style:normal;font-weight:600;color:var(--muted);font-size:10.5px;}
+.sl .vv{font-family:var(--disp);font-weight:700;font-size:16px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.sl input[type=range]{width:100%;margin-top:7px;accent-color:var(--teal);}
+.ne{font-family:var(--disp);font-weight:700;font-size:30px;color:var(--teal-dk);line-height:1;}
+.progress{font-size:11.5px;font-weight:700;color:var(--muted);float:right;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 6</div>
+  <h1>The B-Vitamin Matchup</h1>
+  <div class="intro">Each B vitamin becomes a <b>coenzyme</b> that runs one kind of reaction &mdash; and when it runs short, a specific <b>deficiency</b> follows. Wire up the matches, then calculate niacin equivalents from food.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The wiring diagram</h2>
+    <svg id="viz" viewBox="0 0 260 300" aria-label="visual"><g id="art"></g></svg>
+    <div id="caphint" style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;">Lines appear as you make each correct match.</div>
+  </div></div>
+  <div>
+    <div id="stage">Match the B vitamins<small>tap a vitamin, then tap its partner</small></div>
+    <div class="card">
+      <div class="modeseg" id="mseg"><button class="on" data-m="0">Match game</button><button data-m="1">Niacin math</button></div>
+
+      <div id="paneMatch">
+        <div class="seg" id="rseg" style="margin-bottom:11px;"><button class="on" data-r="0">→ Coenzyme<small>the active form</small></button><button data-r="1">→ Deficiency<small>what runs short</small></button></div>
+        <div class="board">
+          <div><div class="hd">B vitamin <span class="progress" id="prog"></span></div><div class="list" id="vits"></div></div>
+          <div><div class="hd" id="tgtHd">Coenzyme</div><div class="list" id="tgts"></div></div>
+        </div>
+        <div id="info"><span class="n">How it works</span>Pick a vitamin on the left, then tap the coenzyme it becomes on the right. Get all eight, then switch to <b>Deficiency</b>. Every match reveals the full triad and the strength of the evidence behind it.</div>
+      </div>
+
+      <div id="paneCalc" style="display:none;">
+        <div style="font-size:12.5px;color:var(--soft);line-height:1.5;margin-bottom:11px;">Niacin (vitamin B3) reaches the body two ways: as <b>preformed niacin</b> in food, and made from the amino acid <b>tryptophan</b> &mdash; about <b>60 mg tryptophan &rarr; 1 mg niacin</b>. Both are added up as <b>niacin equivalents (NE)</b>. Drag to see the total.</div>
+        <div class="sl"><div class="top2"><span class="lb">Preformed niacin from food <i>mg / day</i></span><span class="vv" id="nv">12</span></div><input type="range" id="niac" min="0" max="35" step="1" value="12"></div>
+        <div class="sl"><div class="top2"><span class="lb">Tryptophan from food <i>mg / day</i></span><span class="vv" id="tv">300</span></div><input type="range" id="tryp" min="0" max="1200" step="30" value="300"></div>
+        <div class="sl" style="text-align:center;"><div style="font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);">Total niacin equivalents</div><div class="ne" id="neOut">17.0 <span style="font-size:14px;color:var(--soft);">mg NE</span></div></div>
+        <div class="seg" id="pseg" style="margin-top:10px;"><button class="on" data-p="0">Adult men<small>RDA 16 mg NE</small></button><button data-p="1">Adult women<small>RDA 14 mg NE</small></button></div>
+        <div id="info"><span class="n" id="calcN">Reading the bar</span><span id="calcTxt">The dashed line is the RDA (recommended dietary allowance) for adults 19+; the shaded band beyond 35 mg marks the tolerable upper intake level, which applies to <b>niacin from supplements and fortified foods</b>, not to niacin made from tryptophan in whole foods.</span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var V=[
+  {id:'b1',gl:'B1',nm:'Thiamin',col:'#b07a1e',
+   coS:'TPP',coF:'TPP (thiamin pyrophosphate)',
+   coR:'Splits off CO<sub>2</sub> in energy metabolism &mdash; pyruvate &amp; &alpha;-ketoglutarate dehydrogenase, plus transketolase.',
+   defS:'Beriberi',def:'Beriberi',
+   defD:'Wet (cardiac) and dry (nerve) beriberi; Wernicke&ndash;Korsakoff syndrome appears with heavy long-term alcohol use.',
+   evi:'st',eviT:'The coenzyme role and the deficiency syndrome are well established.'},
+  {id:'b2',gl:'B2',nm:'Riboflavin',col:'#2f6f9f',
+   coS:'FAD / FMN',coF:'FAD &amp; FMN',
+   coR:'Electron carriers in oxidation&ndash;reduction reactions and the electron transport chain.',
+   defS:'Ariboflavinosis',def:'Ariboflavinosis',
+   defD:'Cracks at the corners of the mouth (angular stomatitis), a sore magenta tongue, and skin inflammation.',
+   evi:'st',eviT:'Established coenzyme role and deficiency signs.'},
+  {id:'b3',gl:'B3',nm:'Niacin',col:'#d1495b',
+   coS:'NAD⁺ / NADP⁺',coF:'NAD&#8314; &amp; NADP&#8314;',
+   coR:'Electron carriers for hundreds of dehydrogenases across energy metabolism.',
+   defS:'Pellagra',def:'Pellagra',
+   defD:'The classic &ldquo;3 D&rsquo;s&rdquo;: dermatitis, diarrhea, dementia &mdash; historically in diets built on maize, where niacin is poorly available.',
+   evi:'st',eviT:'Deficiency is established. High-dose niacin used to alter blood cholesterol is a pharmacologic drug effect (with flushing and possible liver effects), separate from nutrition.'},
+  {id:'b5',gl:'B5',nm:'Pantothenic acid',col:'#2f9e5b',
+   coS:'Coenzyme A',coF:'Coenzyme A (CoA)',
+   coR:'Carries acyl (2-carbon) groups &mdash; fatty-acid synthesis and breakdown and the citric-acid cycle.',
+   defS:'Burning feet (rare)',def:'Deficiency very rare',
+   defD:'So widespread in foods that isolated deficiency is almost never seen; experimental depletion produced a &ldquo;burning feet&rdquo; sensation.',
+   evi:'st',eviT:'Coenzyme role established; clinical deficiency is uncommon.'},
+  {id:'b6',gl:'B6',nm:'Pyridoxine',col:'#7a5a8a',
+   coS:'PLP',coF:'PLP (pyridoxal phosphate)',
+   coR:'Amino-acid metabolism &mdash; transamination and decarboxylation &mdash; and the first step of heme synthesis.',
+   defS:'Microcytic anemia',def:'Microcytic anemia &amp; neuropathy',
+   defD:'Small-cell (microcytic) anemia, skin inflammation, peripheral neuropathy; convulsions in deficient infants.',
+   evi:'st',eviT:'Established. Note: very high supplemental B6 taken over long periods can itself cause a sensory neuropathy, which is why an upper limit exists.'},
+  {id:'b7',gl:'B7',nm:'Biotin',col:'#b8862f',
+   coS:'Biotin',coF:'Biotin (bound to carboxylases)',
+   coR:'Adds CO<sub>2</sub> &mdash; carboxylation reactions such as pyruvate carboxylase and fatty-acid synthesis.',
+   defS:'Hair loss / rash (rare)',def:'Deficiency rare',
+   defD:'Hair loss and a scaly rash; can be induced by consuming very large amounts of raw egg white, whose avidin binds biotin.',
+   evi:'pr',eviT:'The deficiency picture is established but rare. Claims that biotin supplements improve hair and nails in people who are <b>not</b> deficient are preliminary and not well supported.'},
+  {id:'b9',gl:'B9',nm:'Folate',col:'#3f8f8f',
+   coS:'THF',coF:'THF (tetrahydrofolate)',
+   coR:'Transfers single-carbon units for DNA base and nucleotide synthesis.',
+   defS:'Megaloblastic anemia',def:'Megaloblastic anemia',
+   defD:'Large, immature red blood cells (macrocytic / megaloblastic anemia).',
+   evi:'st',eviT:'Established. Adequate folate around the time of conception strongly reduces the risk of neural-tube defects &mdash; supported by trials and population data.'},
+  {id:'b12',gl:'B12',nm:'Cobalamin',col:'#9c5a2f',
+   coS:'Cobalamin CoE',coF:'Methyl- &amp; adenosyl-cobalamin',
+   coR:'Runs methionine synthase and methylmalonyl-CoA mutase; helps regenerate active folate.',
+   defS:'Megaloblastic + nerve',def:'Megaloblastic anemia + nerve damage',
+   defD:'Macrocytic anemia plus neurologic signs; pernicious anemia arises when intrinsic factor is missing and B12 can&rsquo;t be absorbed.',
+   evi:'st',eviT:'Established. Lowering blood homocysteine with B12/folate/B6 has <b>not</b> been shown to prevent heart attacks &mdash; an early hope that later trials did not confirm.'}
+ ];
+
+ // ---- match-game state
+ var rel=0;            // 0 coenzyme, 1 deficiency
+ var sel=null;         // selected vitamin id
+ var matched=[{},{}];  // matched[rel][id]=true
+ var ORD=[shuffle(V.map(function(v){return v.id;})),shuffle(V.map(function(v){return v.id;}))];
+ function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+ function byId(id){for(var i=0;i<V.length;i++){if(V[i].id===id)return V[i];}return null;}
+ function tgtLabel(v){return rel===0?v.coS:v.defS;}
+ function done(id){return !!matched[rel][id];}
+ function relComplete(r){for(var i=0;i<V.length;i++){if(!matched[r][V[i].id])return false;}return true;}
+
+ // ---- wiring SVG
+ var yTop=24,yStep=34;
+ function rowY(i){return yTop+i*yStep;}
+ function drawWire(){
+   var lx=100,rx=160,s='';
+   // connecting lines for matched pairs (draw first, behind nodes)
+   for(var i=0;i<V.length;i++){ var v=V[i]; if(!done(v.id))continue;
+     var yl=rowY(i); var j=ORD[rel].indexOf(v.id); var yr=rowY(j);
+     var mx=(lx+rx)/2;
+     s+='<path d="M'+lx+' '+yl+' C '+mx+' '+yl+', '+mx+' '+yr+', '+rx+' '+yr+'" stroke="'+v.col+'" stroke-width="3" fill="none" opacity=".85"/>';
+   }
+   // left nodes (vitamins, fixed order)
+   for(var i2=0;i2<V.length;i2++){ var v2=V[i2],y=rowY(i2),on=done(v2.id)||sel===v2.id;
+     s+='<circle cx="'+lx+'" cy="'+y+'" r="6" fill="'+(done(v2.id)?v2.col:(sel===v2.id?v2.col:'#fff'))+'" stroke="'+v2.col+'" stroke-width="2.2"/>';
+     s+='<text x="'+(lx-11)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" font-weight="800" fill="'+(on?v2.col:'#8d8270')+'">'+v2.gl+'</text>';
+   }
+   // right nodes (targets, shuffled order)
+   for(var j2=0;j2<ORD[rel].length;j2++){ var tv=byId(ORD[rel][j2]),y2=rowY(j2),md=done(tv.id);
+     s+='<circle cx="'+rx+'" cy="'+y2+'" r="6" fill="'+(md?tv.col:'#fff')+'" stroke="'+(md?tv.col:'#c9bda6')+'" stroke-width="2.2"/>';
+     s+='<text x="'+(rx+11)+'" y="'+(y2+4)+'" font-size="8.6" font-weight="700" fill="'+(md?tv.col:'#8d8270')+'">'+(rel===0?tv.coS:tv.defS)+'</text>';
+   }
+   $('art').innerHTML=s;
+ }
+
+ // ---- board (buttons)
+ function renderBoard(){
+   $('tgtHd').innerHTML=rel===0?'Coenzyme':'Deficiency';
+   $('vits').innerHTML=V.map(function(v){
+     var cls='it'+(sel===v.id?' on':'')+(done(v.id)?' done':'');
+     return '<button class="'+cls+'" data-v="'+v.id+'"><span class="sw" style="background:'+v.col+'"></span><span><span class="nm">'+v.gl+'</span><br><span class="ct">'+v.nm+'</span></span></button>';
+   }).join('');
+   $('tgts').innerHTML=ORD[rel].map(function(id){ var v=byId(id);
+     var cls='it'+(done(v.id)?' done':'');
+     return '<button class="'+cls+'" data-t="'+v.id+'"><span><span class="nm">'+tgtLabel(v)+'</span></span></button>';
+   }).join('');
+   Array.prototype.forEach.call($('vits').querySelectorAll('.it'),function(b){b.onclick=function(){pickV(b.dataset.v);};});
+   Array.prototype.forEach.call($('tgts').querySelectorAll('.it'),function(b){b.onclick=function(){pickT(b.dataset.t);};});
+   var n=0;for(var i=0;i<V.length;i++){if(done(V[i].id))n++;}
+   $('prog').innerHTML=n+' / '+V.length;
+ }
+
+ function showTriad(v,head){
+   $('info').innerHTML='<span class="n">'+v.gl+' &middot; '+v.nm+'</span>'+
+     '<div class="df"><div class="k">Coenzyme</div><div class="v"><b>'+v.coF+'</b></div></div>'+
+     '<div class="df"><div class="k">Runs</div><div class="v">'+v.coR+'</div></div>'+
+     '<div class="df"><div class="k">Deficiency</div><div class="v"><b>'+v.def+'</b> &mdash; '+v.defD+'</div></div>'+
+     '<div class="evi"><span class="etag '+v.evi+'">'+(v.evi==='st'?'Established':'Preliminary')+'</span> '+v.eviT+'</div>';
+ }
+
+ function pickV(id){ var v=byId(id);
+   if(done(id)){ sel=null; renderBoard(); drawWire(); showTriad(v); return; }
+   sel=id; renderBoard(); drawWire();
+   $('stage').style.background=v.col;
+   $('stage').innerHTML='<b>'+v.gl+' '+v.nm+'</b> selected<small>now tap its '+(rel===0?'coenzyme':'deficiency')+' on the right</small>';
+ }
+ function pickT(id){ var v=byId(id);
+   if(done(id)){ showTriad(v); return; }
+   if(!sel){ $('stage').innerHTML='Pick a vitamin first<small>tap one on the left, then its match</small>'; return; }
+   var chosen=byId(sel);
+   if(id===sel){ // correct
+     matched[rel][id]=true; sel=null; renderBoard(); drawWire(); showTriad(v);
+     if(relComplete(rel)){
+       if(rel===0&&!relComplete(1)){ $('stage').style.background='#237a45'; $('stage').innerHTML='All coenzymes matched!<small>switch to &ldquo;Deficiency&rdquo; to finish the triad</small>'; }
+       else if(relComplete(0)&&relComplete(1)){ $('stage').style.background='#237a45'; $('stage').innerHTML='Every triad complete!<small>vitamin &rarr; coenzyme &rarr; deficiency, all eight</small>'; $('info').innerHTML='<span class="n">Nicely wired</span>You matched all eight B vitamins to both their coenzyme form and the deficiency that follows. Tap any locked vitamin to review its triad, or open <b>Niacin math</b> to see how niacin equivalents are counted.'; }
+       else { $('stage').style.background='#237a45'; $('stage').innerHTML='All deficiencies matched!<small>switch to &ldquo;Coenzyme&rdquo; to finish</small>'; }
+     } else {
+       $('stage').style.background=v.col; $('stage').innerHTML='Match! <b>'+v.gl+' &rarr; '+tgtLabel(v)+'</b><small>keep going</small>';
+     }
+   } else { // wrong
+     var btn=$('tgts').querySelector('[data-t="'+id+'"]'); if(btn){btn.classList.add('wrong'); setTimeout(function(){btn.classList.remove('wrong');},340);}
+     $('stage').style.background='#b23145'; $('stage').innerHTML='Not a match<small>'+chosen.gl+' pairs with '+tgtLabel(chosen)+', not that one</small>';
+     showTriad(chosen);
+   }
+ }
+
+ // relation toggle
+ Array.prototype.forEach.call($('rseg').querySelectorAll('button'),function(b){
+   b.onclick=function(){ rel=+b.dataset.r; sel=null;
+     Array.prototype.forEach.call($('rseg').querySelectorAll('button'),function(x){x.className='';}); b.className='on';
+     $('stage').style.background='var(--teal)'; $('stage').innerHTML='Match the '+(rel===0?'coenzymes':'deficiencies')+'<small>tap a vitamin, then its '+(rel===0?'active coenzyme form':'deficiency disease')+'</small>';
+     renderBoard(); drawWire();
+   };
+ });
+
+ // ---- niacin calculator
+ var pop=0; // 0 men (16), 1 women (14)
+ function rda(){return pop===0?16:14;}
+ var UL=35, MAXNE=40;
+ function calc(){
+   var niac=+$('niac').value, tryp=+$('tryp').value;
+   $('nv').innerHTML=niac; $('tv').innerHTML=tryp;
+   var ne=niac+tryp/60; var neR=Math.round(ne*10)/10;
+   $('neOut').innerHTML=neR.toFixed(1)+' <span style="font-size:14px;color:var(--soft);">mg NE</span>';
+   drawBar(niac,tryp,ne);
+   var r=rda(), pct=Math.round(ne/r*100);
+   $('calcN').innerHTML='NE vs the RDA';
+   $('calcTxt').innerHTML='That totals <b>'+neR.toFixed(1)+' mg NE</b> &mdash; about <b>'+pct+'%</b> of the '+(pop===0?'adult-male':'adult-female')+' RDA of <b>'+r+' mg NE/day</b> (adults 19+, not pregnancy or lactation). The dashed line marks the RDA; the shaded band past 35 mg is the tolerable upper limit for niacin from <b>supplements and fortified foods</b> &mdash; niacin made from tryptophan in whole foods is not counted toward it. This is population physiology, not a personal target.';
+ }
+ function drawBar(niac,tryp,ne){
+   var x0=32,x1=232,w=x1-x0, y=150,h=30;
+   function px(mg){return x0+Math.min(mg,MAXNE)/MAXNE*w;}
+   var s='';
+   // upper-limit shaded band (35..40)
+   s+='<rect x="'+px(UL)+'" y="'+(y-6)+'" width="'+(x1-px(UL))+'" height="'+(h+12)+'" fill="#fae5e8"/>';
+   // track
+   s+='<rect x="'+x0+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#f1e7d4"/>';
+   // preformed niacin segment
+   var wN=px(niac)-x0;
+   s+='<rect x="'+x0+'" y="'+y+'" width="'+wN+'" height="'+h+'" rx="6" fill="#d1495b"/>';
+   // tryptophan-derived segment
+   var wT=px(niac+tryp/60)-px(niac);
+   s+='<rect x="'+px(niac)+'" y="'+y+'" width="'+Math.max(0,wT)+'" height="'+h+'" fill="#e79aa5"/>';
+   // RDA marker
+   var rx=px(rda());
+   s+='<line x1="'+rx+'" y1="'+(y-14)+'" x2="'+rx+'" y2="'+(y+h+8)+'" stroke="#6b4710" stroke-width="2" stroke-dasharray="4 3"/>';
+   s+='<text x="'+rx+'" y="'+(y-18)+'" text-anchor="middle" font-size="9.5" font-weight="800" fill="#6b4710">RDA '+rda()+'</text>';
+   // UL label
+   s+='<text x="'+px(UL)+'" y="'+(y+h+22)+'" text-anchor="middle" font-size="9" font-weight="700" fill="#b23145">UL 35</text>';
+   // axis ticks
+   for(var t=0;t<=MAXNE;t+=10){ s+='<text x="'+px(t)+'" y="'+(y-32)+'" text-anchor="middle" font-size="8.5" fill="#b3a58f">'+t+'</text>'; }
+   // legend
+   s+='<rect x="'+x0+'" y="205" width="12" height="12" rx="2" fill="#d1495b"/><text x="'+(x0+17)+'" y="215" font-size="10" fill="#5f5340">preformed niacin</text>';
+   s+='<rect x="'+x0+'" y="225" width="12" height="12" rx="2" fill="#e79aa5"/><text x="'+(x0+17)+'" y="235" font-size="10" fill="#5f5340">from tryptophan (&divide;60)</text>';
+   s+='<text x="'+x0+'" y="262" font-size="10" fill="#8d8270">Total in niacin equivalents (mg NE)</text>';
+   $('art').innerHTML=s;
+ }
+ $('niac').oninput=calc; $('tryp').oninput=calc;
+ Array.prototype.forEach.call($('pseg').querySelectorAll('button'),function(b){
+   b.onclick=function(){ pop=+b.dataset.p;
+     Array.prototype.forEach.call($('pseg').querySelectorAll('button'),function(x){x.className='';}); b.className='on'; calc();
+   };
+ });
+
+ // ---- mode switch
+ var mode=0;
+ Array.prototype.forEach.call($('mseg').querySelectorAll('button'),function(b){
+   b.onclick=function(){ mode=+b.dataset.m;
+     Array.prototype.forEach.call($('mseg').querySelectorAll('button'),function(x){x.className='';}); b.className='on';
+     if(mode===0){ $('paneMatch').style.display=''; $('paneCalc').style.display='none'; $('cardTitle').innerHTML='The wiring diagram'; $('caphint').innerHTML='Lines appear as you make each correct match.'; $('stage').style.background='var(--teal)'; $('stage').innerHTML='Match the '+(rel===0?'coenzymes':'deficiencies')+'<small>tap a vitamin, then its partner</small>'; drawWire(); }
+     else { $('paneMatch').style.display='none'; $('paneCalc').style.display=''; $('cardTitle').innerHTML='Niacin equivalents'; $('caphint').innerHTML='Red is niacin already in food; pink is niacin the body makes from tryptophan.'; $('stage').style.background='var(--teal)'; $('stage').innerHTML='Counting niacin<small>food niacin + tryptophan &divide; 60 = niacin equivalents</small>'; calc(); }
+   };
+ });
+
+ // ---- init
+ renderBoard();
+ drawWire();
+})();
+</script>
+</body>
+</html>

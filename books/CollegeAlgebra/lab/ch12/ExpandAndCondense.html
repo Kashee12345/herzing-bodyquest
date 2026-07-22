@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Expand and Condense</title>
+<meta name="description" content="The product, quotient, and power rules for logarithms — proved with factor tiles, then applied one highlighted step at a time, with a live numeric check that every line stays equal.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+.wrap{grid-template-columns:0.96fr 1.04fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* math typography (no renderer — pure HTML) */
+.rad{border-top:1.4px solid currentColor;padding:0 3px 0 1px;margin-left:-1px;}
+.fr{display:inline-flex;flex-direction:column;vertical-align:-0.58em;text-align:center;font-size:.86em;line-height:1.14;margin:0 3px;}
+.fr .nu{border-bottom:1.5px solid currentColor;padding:0 5px 2px;}
+.fr .de{padding:2px 5px 0;}
+.hl{background:#fbf0cf;border-radius:4px;padding:1px 4px;box-shadow:inset 0 -2px 0 #e8cf8a;}
+/* step machine */
+.ln{border-radius:10px;padding:8px 11px;margin-bottom:5px;border:1px solid transparent;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.ln.done{opacity:.5;}
+.ln.cur{background:#f3f4fb;border-color:#dfe2f2;}
+.ln .eqx{font-size:15px;font-weight:700;color:var(--teal-dk);line-height:1.8;}
+.ln .rl{display:block;font-size:9.6px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;margin-top:3px;}
+.ln .vv{flex:none;font-size:11px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;}
+.ln .vv small{display:block;font-size:8.6px;letter-spacing:.5px;text-transform:uppercase;font-weight:800;opacity:.7;}
+.pend{border-radius:10px;padding:7px 11px;margin-bottom:5px;font-size:12px;font-weight:700;color:#c3c6d8;letter-spacing:2px;}
+/* proof caption */
+#pfcap{font-size:12.6px;line-height:1.55;color:var(--soft);margin-top:9px;}
+#pfcap b{color:var(--ink);} #pfcap .alg{display:block;margin-top:8px;background:#f3f4fb;border:1px solid #dfe2f2;border-radius:9px;padding:8px 11px;font-size:12.4px;color:var(--teal-dk);font-weight:600;line-height:1.65;}
+/* sliders */
+.numhd{font-size:9.8px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:14px 0 2px;border-top:1px solid var(--line);padding-top:11px;}
+.nsl{margin-top:6px;}
+.sld{width:100%;-webkit-appearance:none;appearance:none;height:20px;background:transparent;cursor:pointer;}
+.sld::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-moz-range-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);margin-top:-7px;}
+.sld::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);}
+.sldlab{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--muted);font-weight:600;gap:8px;}
+.sldlab b{font-size:15px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.agree{margin-top:9px;border-radius:9px;padding:8px 11px;font-size:12px;line-height:1.5;background:#e5f3ea;border:1px solid #bfe3cd;color:#237a45;font-weight:600;}
+.agree b{color:#186036;}
+/* misc */
+.badge{display:inline-block;font-size:9.6px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#fff;border-radius:20px;padding:3px 9px;vertical-align:middle;margin-left:7px;}
+.grid .it .nm{display:block;font-size:13.5px;line-height:1.6;}
+.grid .it .s{display:block;margin-top:3px;font-size:10.4px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+.it .ct sub,.it .ct sup{font-size:.78em;}
+#dom{font-size:12px;border-radius:8px;padding:8px 11px;margin-top:11px;line-height:1.5;color:#5a4212;background:#fbf3e2;border:1px solid #ecd9ac;}
+#dom b{color:#42300c;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">&larr; Chapter 12</a></div>
+<header>
+  <div class="kick">College Algebra &middot; Chapter 12</div>
+  <h1>Expand and Condense</h1>
+  <div class="intro">Three properties do all the work: <b>multiply becomes add</b>, <b>divide becomes subtract</b>, <b>exponent becomes a multiplier</b>. They are not arbitrary &mdash; each one is just what happens to a stack of factors. See why first, then watch one worked step at a time.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="pfTitle">Look inside the log first</h2>
+      <div id="pf"></div>
+      <div id="pfcap"></div>
+    </div>
+    <div class="card">
+      <h2>The three properties</h2>
+      <div class="list" id="rules">
+        <button class="it" data-r="product"><span class="sw" style="background:#b8862f"></span><span><span class="nm">Product rule</span><br><span class="ct">log<sub>b</sub>(<i>MN</i>) = log<sub>b</sub><i>M</i> + log<sub>b</sub><i>N</i></span></span></button>
+        <button class="it" data-r="quotient"><span class="sw" style="background:#2f6f9f"></span><span><span class="nm">Quotient rule</span><br><span class="ct">log<sub>b</sub>(<i>M</i>/<i>N</i>) = log<sub>b</sub><i>M</i> &minus; log<sub>b</sub><i>N</i></span></span></button>
+        <button class="it" data-r="power"><span class="sw" style="background:#7a5a8a"></span><span><span class="nm">Power rule</span><br><span class="ct">log<sub>b</sub>(<i>M</i><sup><i>p</i></sup>) = <i>p</i> &middot; log<sub>b</sub><i>M</i></span></span></button>
+      </div>
+      <div class="note">Every one of these needs <b><i>b</i> &gt; 0, <i>b</i> &ne; 1, <i>M</i> &gt; 0, <i>N</i> &gt; 0</b>. And there is <b>no rule for a sum inside a log</b>: log(3 + 5) = log 8 &asymp; 0.9031, but log 3 + log 5 &asymp; 1.1761. Different numbers. Leave sums alone.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">The three properties<small>choose a direction to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="mode"><button data-m="expand" class="on">Expand</button><button data-m="condense">Condense</button></div>
+      <div class="grid" id="picks"></div>
+      <div class="mnem" id="mnem"></div>
+    </div>
+    <div class="card">
+      <h2 id="stepTitle">Worked steps</h2>
+      <div id="steps"></div>
+      <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+      <div id="info"></div>
+      <div id="dom"></div>
+      <div class="numhd">Check it with numbers &mdash; drag and watch every line stay equal</div>
+      <div id="nums"></div>
+      <div class="agree" id="agree"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra &middot; an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- numeric helpers ---------- */
+ var LN=Math.log;
+ function L(b,v){return LN(v)/LN(b);}                 /* log base b of v */
+ function fmt(v){ if(!isFinite(v))return '—'; var t=v.toFixed(4); if(t==='-0.0000')t='0.0000'; return t; }
+ function f1(v){ return v.toFixed(1); }
+
+ /* ---------- palette ---------- */
+ var C={start:'#4d4f66',product:'#b8862f',quotient:'#2f6f9f',power:'#7a5a8a',
+        rewrite:'#2f9e5b',evaluate:'#43458f',distribute:'#d1495b'};
+ var RLAB={start:'Look inside',product:'Product rule',quotient:'Quotient rule',power:'Power rule',
+         rewrite:'Rewrite the radical',evaluate:'Evaluate the exact log',distribute:'Distribute the minus'};
+ var RF={start:'Multiplication, division, and exponents each have a rule. Sums do not.',
+         product:'log<sub>b</sub>(<i>MN</i>) = log<sub>b</sub><i>M</i> + log<sub>b</sub><i>N</i>',
+         quotient:'log<sub>b</sub>(<i>M</i>/<i>N</i>) = log<sub>b</sub><i>M</i> &minus; log<sub>b</sub><i>N</i>',
+         power:'log<sub>b</sub>(<i>M</i><sup><i>p</i></sup>) = <i>p</i> &middot; log<sub>b</sub><i>M</i>',
+         rewrite:'<sup><i>n</i></sup>&radic;<span class="rad"><i>x</i><sup><i>m</i></sup></span> = <i>x</i><sup><i>m</i>/<i>n</i></sup>',
+         evaluate:'log<sub>b</sub>(<i>b</i><sup><i>k</i></sup>) = <i>k</i>',
+         distribute:'<i>A</i> &minus; (<i>B</i> + <i>C</i>) = <i>A</i> &minus; <i>B</i> &minus; <i>C</i>'};
+
+ /* ---------- tiny SVG builders ---------- */
+ function tx(x,y,s,col,sz,anc,wt,it){
+   return '<text x="'+x+'" y="'+y+'" font-size="'+(sz||10.5)+'" fill="'+(col||'#7d7f94')+'" font-weight="'+(wt||600)+'"'+
+     (anc?' text-anchor="'+anc+'"':'')+(it?' font-style="italic"':'')+' font-family="Inter,system-ui,sans-serif">'+s+'</text>';
+ }
+ function SB(a,b,c){return a+'<tspan font-size="7.6" dy="2.6">'+b+'</tspan><tspan dy="-2.6">'+c+'</tspan>';}
+ function tl(x,y,w,h,col,lab,fade){
+   return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="4" fill="'+col+'" opacity="'+(fade?'.2':'1')+'"/>'+
+     '<text x="'+(x+w/2)+'" y="'+(y+h/2+3.8)+'" font-size="'+(w<16?9.5:11)+'" font-weight="700" text-anchor="middle" fill="#fff" opacity="'+(fade?'.45':'1')+'" font-family="Inter,system-ui,sans-serif">'+lab+'</text>';
+ }
+ function row(x0,y,n,col,lab,w,g,fade){var s='';for(var i=0;i<n;i++){s+=tl(x0+i*(w+g),y,w,22,col,lab,fade);}return s;}
+
+ /* ---------- the seven explanation panels ---------- */
+ function pfStart(){
+   var R=[['M &middot; N',C.product,'a <tspan font-weight="800">product</tspan> &rarr; split into a sum'],
+          ['M &divide; N',C.quotient,'a <tspan font-weight="800">quotient</tspan> &rarr; split into a difference'],
+          ['M <tspan font-size="8" dy="-4">p</tspan><tspan dy="4"></tspan>',C.power,'a <tspan font-weight="800">power</tspan> &rarr; move p out in front'],
+          ['M + N',C.distribute,'a <tspan font-weight="800">sum</tspan> &rarr; NO RULE &mdash; leave it alone']];
+   var s=tx(162,16,'Before reaching for a rule, ask what is INSIDE','#22243a',11.5,'middle',800);
+   for(var i=0;i<4;i++){
+     var y=28+i*33;
+     s+='<rect x="10" y="'+y+'" width="84" height="24" rx="7" fill="'+R[i][1]+'"/>';
+     s+=tx(52,y+16,R[i][0],'#fff',12.5,'middle',700);
+     s+='<path d="M100 '+(y+12)+' h11 m-4.5 -4.5 l4.5 4.5 l-4.5 4.5" stroke="#9a9db4" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+     s+=tx(118,y+16,R[i][2],i===3?'#b23145':'#4d4f66',10.8);
+   }
+   return '<svg viewBox="0 0 324 160" aria-label="what is inside the log">'+s+'</svg>';
+ }
+ function pfProduct(){
+   var s='';
+   s+=tx(12,15,'8 = 2 &middot; 2 &middot; 2');
+   s+=row(12,21,3,C.product,'2',20,3);
+   s+=tx(200,37,SB('log','2',' 8 = 3'),C.product,11.5,null,800);
+   s+=tx(12,73,'32 = 2 &middot; 2 &middot; 2 &middot; 2 &middot; 2');
+   s+=row(12,79,5,C.quotient,'2',20,3);
+   s+=tx(200,95,SB('log','2',' 32 = 5'),C.quotient,11.5,null,800);
+   s+=tx(12,131,'8 &times; 32 = 256 &nbsp;&mdash; the two stacks line up end to end');
+   s+=row(12,137,3,C.product,'2',20,3);
+   s+=row(12+3*23,137,5,C.quotient,'2',20,3);
+   s+=tx(200,153,SB('log','2',' 256 = 8'),'#22243a',11.5,null,800);
+   s+=tx(150,182,'3 + 5 = 8 &nbsp;&middot;&nbsp; the exponents ADD','#22243a',12,'middle',800);
+   return '<svg viewBox="0 0 300 192" aria-label="product rule with factor tiles">'+s+'</svg>';
+ }
+ function pfQuotient(){
+   var s='';
+   s+=tx(12,15,'32 = 2 &middot; 2 &middot; 2 &middot; 2 &middot; 2');
+   s+=row(12,21,5,C.quotient,'2',20,3);
+   s+=tx(200,37,SB('log','2',' 32 = 5'),C.quotient,11.5,null,800);
+   s+=tx(12,73,'8 = 2 &middot; 2 &middot; 2 &nbsp;(the divisor)');
+   s+=row(12,79,3,C.product,'2',20,3);
+   s+=tx(200,95,SB('log','2',' 8 = 3'),C.product,11.5,null,800);
+   s+=tx(12,131,'32 &divide; 8 &nbsp;&mdash; three 2s on top cancel the three below');
+   s+=row(12,137,3,C.quotient,'2',20,3,1);
+   for(var i=0;i<3;i++){var x=12+i*23;
+     s+='<line x1="'+(x+4)+'" y1="141" x2="'+(x+16)+'" y2="155" stroke="#d1495b" stroke-width="2.2" stroke-linecap="round"/>'+
+        '<line x1="'+(x+16)+'" y1="141" x2="'+(x+4)+'" y2="155" stroke="#d1495b" stroke-width="2.2" stroke-linecap="round"/>';}
+   s+=row(12+3*23,137,2,C.quotient,'2',20,3);
+   s+=tx(200,153,SB('log','2',' 4 = 2'),'#22243a',11.5,null,800);
+   s+=tx(150,182,'5 &minus; 3 = 2 &nbsp;&middot;&nbsp; the exponents SUBTRACT','#22243a',12,'middle',800);
+   return '<svg viewBox="0 0 300 192" aria-label="quotient rule with factor tiles">'+s+'</svg>';
+ }
+ function pfPower(){
+   var s='';
+   s+=tx(12,15,'8 = 2 &middot; 2 &middot; 2 &nbsp;&mdash; an exponent of 3');
+   s+=row(12,21,3,C.product,'2',20,3);
+   s+=tx(200,37,SB('log','2',' 8 = 3'),C.product,11.5,null,800);
+   s+=tx(12,73,'8<tspan font-size="7.6" dy="-4">4</tspan><tspan dy="4"> = 8 &middot; 8 &middot; 8 &middot; 8 &nbsp;&mdash; four copies of that stack</tspan>');
+   var w=14,g=2,gg=9,gw=3*w+2*g;
+   for(var k=0;k<4;k++){
+     var gx=10+k*(gw+gg);
+     s+=row(gx,79,3,C.power,'2',w,g);
+     s+=tx(gx+gw/2,115,'3',C.power,10,'middle',800);
+     if(k<3)s+=tx(gx+gw+gg/2,95,'&middot;','#9a9db4',12,'middle',800);
+   }
+   s+=tx(12,137,'twelve 2s in all &nbsp;&mdash;&nbsp; so 8<tspan font-size="7.6" dy="-4">4</tspan><tspan dy="4"> = 2</tspan><tspan font-size="7.6" dy="-4">12</tspan><tspan dy="4"> = 4096</tspan>');
+   s+=row(12,143,12,C.power,'2',14,2);
+   s+=tx(212,159,'= 12','#22243a',12,null,800);
+   s+=tx(150,186,'4 &times; 3 = 12 &nbsp;&middot;&nbsp; the exponent MULTIPLIES','#22243a',12,'middle',800);
+   return '<svg viewBox="0 0 300 196" aria-label="power rule with factor tiles">'+s+'</svg>';
+ }
+ function pfRewrite(){
+   var s='';
+   s+='<rect x="10" y="12" width="280" height="52" rx="10" fill="#f3f4fb" stroke="#dfe2f2"/>';
+   s+=tx(62,48,'&radic;','#22243a',24,null,700);
+   s+='<line x1="76" y1="30" x2="93" y2="30" stroke="#22243a" stroke-width="1.8" stroke-linecap="round"/>';
+   s+=tx(79,48,'x','#22243a',20,null,700,1);
+   s+=tx(106,48,'=','#7d7f94',18,null,600);
+   s+=tx(130,48,'x','#22243a',20,null,700,1);
+   s+=tx(143,40,'1/2','#22243a',12,null,700);
+   s+=tx(150,84,'why? because it multiplies by itself to give x:','#7d7f94',10.6,'middle');
+   s+='<rect x="10" y="92" width="280" height="34" rx="9" fill="#fffdf9" stroke="#e0e2ef"/>';
+   s+=tx(150,114,'x<tspan font-size="8" dy="-4">1/2</tspan><tspan dy="4"> &middot; x</tspan><tspan font-size="8" dy="-4">1/2</tspan><tspan dy="4"> = x</tspan><tspan font-size="8" dy="-4">1/2 + 1/2</tspan><tspan dy="4"> = x</tspan><tspan font-size="8" dy="-4">1</tspan><tspan dy="4"> = x</tspan>','#22243a',12.5,'middle',700);
+   s+=tx(150,148,'in general','#7d7f94',10.6,'middle');
+   s+=tx(150,170,'<tspan font-size="9" dy="-6">n</tspan><tspan dy="6">&radic;( x</tspan><tspan font-size="8" dy="-4">m</tspan><tspan dy="4"> )&nbsp; =&nbsp; x</tspan><tspan font-size="8" dy="-4">m/n</tspan><tspan dy="4"></tspan>','#2f9e5b',15,'middle',800);
+   return '<svg viewBox="0 0 300 184" aria-label="radical as a fractional exponent">'+s+'</svg>';
+ }
+ function pfEvaluate(p){
+   var b=p.b,k=p.k,v=p.v,w=26,g=4,tot=k*(w+g)-g,x0=150-tot/2,s='';
+   s+=tx(150,17,SB('log',''+b,' '+v+' asks: what power of '+b+' gives '+v+'?'),'#7d7f94',11,'middle');
+   s+=row(x0,28,k,C.evaluate,''+b,w,g);
+   s+=tx(150,74,b+'<tspan font-size="9" dy="-5">'+k+'</tspan><tspan dy="5"> = '+v+'</tspan>','#22243a',16,'middle',800);
+   s+='<rect x="10" y="86" width="280" height="46" rx="10" fill="#f3f4fb" stroke="#dfe2f2"/>';
+   s+=tx(150,117,SB('log',''+b,' '+v+' = '+k),C.evaluate,20,'middle',800);
+   s+=tx(150,152,'A logarithm IS an exponent &mdash; so an exact one','#7d7f94',10.6,'middle');
+   s+=tx(150,166,'collapses to a plain number. Always finish this way.','#7d7f94',10.6,'middle');
+   return '<svg viewBox="0 0 300 178" aria-label="evaluating an exact logarithm">'+s+'</svg>';
+ }
+ function pfDistribute(){
+   var s='';
+   s+=tx(150,16,'The minus belongs to EVERY term inside','#22243a',11.2,'middle',800);
+   s+='<rect x="10" y="26" width="280" height="82" rx="10" fill="#f3f4fb" stroke="#dfe2f2"/>';
+   s+=tx(150,56,'A &minus; <tspan fill="#d1495b">( B + C )</tspan>','#22243a',18,'middle',700);
+   s+=tx(150,79,'&darr;','#9a9db4',14,'middle',700);
+   s+=tx(150,100,'A <tspan fill="#2f9e5b">&minus; B &minus; C</tspan>','#22243a',18,'middle',700);
+   s+=tx(150,128,'check it with real numbers:','#7d7f94',10.6,'middle');
+   s+=tx(150,150,'10 &minus; (4 + 3) = 10 &minus; 7 = 3 &nbsp;&#10003;','#2f9e5b',13,'middle',800);
+   s+=tx(150,171,'10 &minus; 4 + 3 = 9 &nbsp;&#10007; sign not distributed','#d1495b',13,'middle',800);
+   return '<svg viewBox="0 0 300 182" aria-label="distributing a minus sign">'+s+'</svg>';
+ }
+
+ var CAP={
+  start:'Expanding starts with a question, not a rule: <b>what operation is inside the log?</b> Multiplication, division, and an exponent each have a property. A <b>sum or difference inside</b> a log has no property at all &mdash; that expression is already fully expanded.<span class="alg">Condensing runs the same three rules backwards: many logs collapse into one.</span>',
+  product:'Write each number as a stack of factors: 8 is three 2s, 32 is five 2s. Multiplying them simply lines the two stacks up end to end &mdash; eight 2s. So the exponent of the product is the <b>sum</b> of the exponents, and a logarithm <i>is</i> that exponent.<span class="alg">Let <i>M</i> = <i>b</i><sup><i>x</i></sup> and <i>N</i> = <i>b</i><sup><i>y</i></sup>. Then <i>MN</i> = <i>b</i><sup><i>x</i></sup> &middot; <i>b</i><sup><i>y</i></sup> = <i>b</i><sup><i>x</i>+<i>y</i></sup>, so log<sub>b</sub>(<i>MN</i>) = <i>x</i> + <i>y</i> = log<sub>b</sub><i>M</i> + log<sub>b</sub><i>N</i>.</span>',
+  quotient:'Dividing cancels factors one for one. 32 is five 2s; 8 is three 2s; the three underneath cancel three above, leaving two. The exponent of the quotient is the <b>difference</b> of the exponents.<span class="alg">Let <i>M</i> = <i>b</i><sup><i>x</i></sup> and <i>N</i> = <i>b</i><sup><i>y</i></sup>. Then <i>M</i>/<i>N</i> = <i>b</i><sup><i>x</i></sup> / <i>b</i><sup><i>y</i></sup> = <i>b</i><sup><i>x</i>&minus;<i>y</i></sup>, so log<sub>b</sub>(<i>M</i>/<i>N</i>) = <i>x</i> &minus; <i>y</i> = log<sub>b</sub><i>M</i> &minus; log<sub>b</sub><i>N</i>.</span>',
+  power:'A power just repeats the factor. 8<sup>4</sup> means 8 &middot; 8 &middot; 8 &middot; 8 &mdash; four copies of a stack of three 2s, twelve 2s in all. Four copies of an exponent of 3 is 4 &times; 3 = 12, so the exponent inside becomes a <b>multiplier out front</b>.<span class="alg">Let <i>M</i> = <i>b</i><sup><i>x</i></sup>. Then <i>M</i><sup><i>p</i></sup> = (<i>b</i><sup><i>x</i></sup>)<sup><i>p</i></sup> = <i>b</i><sup><i>xp</i></sup>, so log<sub>b</sub>(<i>M</i><sup><i>p</i></sup>) = <i>xp</i> = <i>p</i> log<sub>b</sub><i>M</i>.</span>',
+  rewrite:'The power rule can only see an <b>exponent</b> &mdash; it cannot see a radical. So rewrite the radical as a fractional exponent first, and the rule reaches it immediately. Read this one backwards when condensing: a coefficient of &frac12; becomes a square root.<span class="alg">A radical index becomes the denominator of the exponent, and the power under it becomes the numerator.</span>',
+  evaluate:'The very last move in any expansion: any log that comes out to an exact number should be replaced by that number. Ask &ldquo;what power of the base gives this?&rdquo; and answer it.<span class="alg">Leaving log<sub>2</sub>8 sitting in your answer is like leaving 6/2 unsimplified &mdash; not wrong, just unfinished.</span>',
+  distribute:'When the quotient rule puts a minus in front of a group, and the product rule then splits that group in two, the minus must reach <b>both</b> pieces. This is the single most common error in expanding logarithms.<span class="alg">Write the parentheses on the line before you distribute. The step that gets skipped is the step that goes wrong.</span>'
+ };
+
+ function drawProof(kind,pd){
+   var fn={start:pfStart,product:pfProduct,quotient:pfQuotient,power:pfPower,
+           rewrite:pfRewrite,distribute:pfDistribute}[kind];
+   $('pf').innerHTML = kind==='evaluate' ? pfEvaluate(pd||{b:2,k:3,v:8}) : fn();
+   $('pfTitle').innerHTML = {start:'Look inside the log first',product:'Why multiply becomes add',
+     quotient:'Why divide becomes subtract',power:'Why an exponent becomes a multiplier',
+     rewrite:'Why a radical is an exponent',evaluate:'Why the log collapses to a number',
+     distribute:'Why the minus must be distributed'}[kind];
+   $('pfcap').innerHTML=CAP[kind];
+   var bs=$('rules').querySelectorAll('.it');
+   for(var i=0;i<bs.length;i++){ bs[i].className='it'+(bs[i].getAttribute('data-r')===kind?' on':''); }
+ }
+
+ /* ---------- worked examples ---------- */
+ var RX='<i>x</i>', RY='<i>y</i>', RZ='<i>z</i>';
+ var SQX='&radic;<span class="rad"><i>x</i></span>';
+ function fr(n,d){return '<span class="fr"><span class="nu">'+n+'</span><span class="de">'+d+'</span></span>';}
+
+ var EX={
+ expand:[
+  {nm:'log<sub>3</sub>(9'+RX+')', s:'product &middot; evaluate', vars:['x'],
+   dom:'The argument 9<i>x</i> must be positive, so this expansion holds for <b><i>x</i> &gt; 0</b>. Outside that domain neither side is defined.',
+   st:[
+    {h:'log<sub>3</sub>(9'+RX+')', r:'start',
+     w:'One log, one argument. Look inside before doing anything: 9<i>x</i> means 9 <b>times</b> <i>x</i>. A product inside is the signal for the product rule.',
+     f:function(v){return L(3,9*v.x);}},
+    {h:'<span class="hl">log<sub>3</sub> 9 + log<sub>3</sub> '+RX+'</span>', r:'product',
+     w:'Product rule: the log of a product is the <b>sum</b> of the logs. Multiplication inside became addition outside, and one logarithm became two.',
+     f:function(v){return L(3,9)+L(3,v.x);}},
+    {h:'<span class="hl">2</span> + log<sub>3</sub> '+RX, r:'evaluate', pd:{b:3,k:2,v:9},
+     w:'log<sub>3</sub>9 is not a mystery &mdash; 3<sup>2</sup> = 9, so it is exactly 2. log<sub>3</sub><i>x</i> stays as it is, because <i>x</i> is unknown.',
+     f:function(v){return 2+L(3,v.x);}}
+   ]},
+  {nm:'log<sub>2</sub>('+fr('8'+RX+'<sup>4</sup>',RY)+')', s:'all three rules', vars:['x','y'],
+   dom:'Requires <b><i>x</i> &gt; 0 and <i>y</i> &gt; 0</b> so that both 8<i>x</i><sup>4</sup> and <i>y</i> are positive and every logarithm below is defined.',
+   st:[
+    {h:'log<sub>2</sub>('+fr('8'+RX+'<sup>4</sup>',RY)+')', r:'start',
+     w:'The outermost operation inside the log is the <b>division</b>. Always peel from the outside in: quotient first, then whatever is left inside the numerator.',
+     f:function(v){return L(2,8*Math.pow(v.x,4)/v.y);}},
+    {h:'log<sub>2</sub>(8'+RX+'<sup>4</sup>) <span class="hl">&minus; log<sub>2</sub> '+RY+'</span>', r:'quotient',
+     w:'Quotient rule: the <b>whole</b> top minus the <b>whole</b> bottom. Keep 8<i>x</i><sup>4</sup> together inside one log for now &mdash; only <i>y</i> gets the minus sign.',
+     f:function(v){return L(2,8*Math.pow(v.x,4))-L(2,v.y);}},
+    {h:'<span class="hl">log<sub>2</sub> 8 + log<sub>2</sub> '+RX+'<sup>4</sup></span> &minus; log<sub>2</sub> '+RY, r:'product',
+     w:'Now look inside that first log: 8<i>x</i><sup>4</sup> is a product, so it splits into a sum. The last term is untouched.',
+     f:function(v){return L(2,8)+L(2,Math.pow(v.x,4))-L(2,v.y);}},
+    {h:'log<sub>2</sub> 8 + <span class="hl">4 log<sub>2</sub> '+RX+'</span> &minus; log<sub>2</sub> '+RY, r:'power',
+     w:'Power rule: the exponent 4 steps out and becomes a coefficient. Note it multiplies <b>only</b> log<sub>2</sub><i>x</i>, not the whole line.',
+     f:function(v){return L(2,8)+4*L(2,v.x)-L(2,v.y);}},
+    {h:'<span class="hl">3</span> + 4 log<sub>2</sub> '+RX+' &minus; log<sub>2</sub> '+RY, r:'evaluate', pd:{b:2,k:3,v:8},
+     w:'Finish by evaluating what is exact: 2<sup>3</sup> = 8, so log<sub>2</sub>8 = 3. Fully expanded &mdash; every log now holds a single variable.',
+     f:function(v){return 3+4*L(2,v.x)-L(2,v.y);}}
+   ]},
+  {nm:'ln('+fr(SQX,RY+'<sup>2</sup>'+RZ)+')', s:'radical &middot; sign trap', vars:['x','y','z'],
+   dom:'State <b><i>x</i> &gt; 0, <i>y</i> &gt; 0, <i>z</i> &gt; 0</b>. Watch the subtlety: <i>y</i><sup>2</sup><i>z</i> &gt; 0 would also allow a negative <i>y</i>, but the moment 2 ln <i>y</i> appears we need <i>y</i> &gt; 0. <b>Expanding can shrink the domain</b>, so declare the restriction up front.',
+   st:[
+    {h:'ln('+fr(SQX,RY+'<sup>2</sup>'+RZ)+')', r:'start',
+     w:'ln is just log<sub>e</sub> &mdash; the rules do not care about the base. Outermost operation inside: division. Start there.',
+     f:function(v){return LN(Math.sqrt(v.x)/(v.y*v.y*v.z));}},
+    {h:'ln('+SQX+') <span class="hl">&minus; ln('+RY+'<sup>2</sup>'+RZ+')</span>', r:'quotient',
+     w:'Quotient rule. The <b>entire</b> denominator <i>y</i><sup>2</sup><i>z</i> goes into one log behind the minus sign. It stays as one block until we are ready to split it.',
+     f:function(v){return LN(Math.sqrt(v.x))-LN(v.y*v.y*v.z);}},
+    {h:'ln(<span class="hl">'+RX+'<sup>1/2</sup></span>) &minus; ln('+RY+'<sup>2</sup>'+RZ+')', r:'rewrite',
+     w:'The power rule can only see exponents, so convert the radical: &radic;<span class="rad"><i>x</i></span> = <i>x</i><sup>1/2</sup>. Nothing changed in value &mdash; only in appearance.',
+     f:function(v){return LN(Math.pow(v.x,0.5))-LN(v.y*v.y*v.z);}},
+    {h:'<span class="hl">&frac12; ln '+RX+'</span> &minus; ln('+RY+'<sup>2</sup>'+RZ+')', r:'power',
+     w:'Power rule: the exponent &frac12; moves out in front. A square root always produces a coefficient of &frac12;.',
+     f:function(v){return 0.5*LN(v.x)-LN(v.y*v.y*v.z);}},
+    {h:'&frac12; ln '+RX+' &minus; <span class="hl">(ln '+RY+'<sup>2</sup> + ln '+RZ+')</span>', r:'product',
+     w:'Product rule splits the denominator &mdash; but the minus sign was in front of that whole block, so <b>parentheses are mandatory</b>. Write them before you go on.',
+     f:function(v){return 0.5*LN(v.x)-(LN(v.y*v.y)+LN(v.z));}},
+    {h:'&frac12; ln '+RX+' &minus; (<span class="hl">2 ln '+RY+'</span> + ln '+RZ+')', r:'power',
+     w:'Power rule again, inside the parentheses: the exponent 2 becomes a coefficient. ln <i>z</i> has no exponent, so it does not change.',
+     f:function(v){return 0.5*LN(v.x)-(2*LN(v.y)+LN(v.z));}},
+    {h:'&frac12; ln '+RX+' <span class="hl">&minus; 2 ln '+RY+' &minus; ln '+RZ+'</span>', r:'distribute',
+     w:'Distribute the minus over both terms. The <b>+ ln <i>z</i></b> becomes <b>&minus; ln <i>z</i></b>. Miss this and your answer is wrong by exactly 2 ln <i>z</i>.',
+     f:function(v){return 0.5*LN(v.x)-2*LN(v.y)-LN(v.z);}}
+   ]}
+ ],
+ condense:[
+  {nm:'2 log '+RX+' + 3 log '+RY, s:'power &middot; product', vars:['x','y'],
+   dom:'Written log with no base shown, this means base 10. Valid for <b><i>x</i> &gt; 0 and <i>y</i> &gt; 0</b>.',
+   st:[
+    {h:'2 log '+RX+' + 3 log '+RY, r:'start',
+     w:'Condensing runs the rules <b>backwards</b>. The order is fixed: clear every coefficient first with the power rule, then combine. Never combine while coefficients are still out front.',
+     f:function(v){return 2*L(10,v.x)+3*L(10,v.y);}},
+    {h:'<span class="hl">log '+RX+'<sup>2</sup> + log '+RY+'<sup>3</sup></span>', r:'power',
+     w:'Power rule read right to left: a coefficient in front becomes an <b>exponent inside</b>. Every term now has a coefficient of 1.',
+     f:function(v){return L(10,Math.pow(v.x,2))+L(10,Math.pow(v.y,3));}},
+    {h:'<span class="hl">log('+RX+'<sup>2</sup>'+RY+'<sup>3</sup>)</span>', r:'product',
+     w:'Product rule read right to left: a <b>sum</b> of logs becomes the log of a <b>product</b>. One logarithm &mdash; condensed.',
+     f:function(v){return L(10,Math.pow(v.x,2)*Math.pow(v.y,3));}}
+   ]},
+  {nm:'4 log<sub>3</sub> '+RX+' &minus; 2 log<sub>3</sub> '+RY, s:'power &middot; quotient', vars:['x','y'],
+   dom:'Both bases must match before you can combine &mdash; here they are both 3. Valid for <b><i>x</i> &gt; 0 and <i>y</i> &gt; 0</b>.',
+   st:[
+    {h:'4 log<sub>3</sub> '+RX+' &minus; 2 log<sub>3</sub> '+RY, r:'start',
+     w:'Check the bases first: both are 3, so these can be combined. Logs with <b>different bases can never be merged</b> by these rules. Then clear the coefficients.',
+     f:function(v){return 4*L(3,v.x)-2*L(3,v.y);}},
+    {h:'<span class="hl">log<sub>3</sub> '+RX+'<sup>4</sup> &minus; log<sub>3</sub> '+RY+'<sup>2</sup></span>', r:'power',
+     w:'Power rule backwards on both terms: 4 becomes an exponent of 4, and 2 becomes an exponent of 2. Careful &mdash; the coefficient becomes an exponent, it does not multiply the argument.',
+     f:function(v){return L(3,Math.pow(v.x,4))-L(3,Math.pow(v.y,2));}},
+    {h:'log<sub>3</sub>('+fr('<span class="hl">'+RX+'<sup>4</sup></span>','<span class="hl">'+RY+'<sup>2</sup></span>')+')', r:'quotient',
+     w:'Quotient rule backwards: the term being <b>subtracted</b> goes in the <b>denominator</b>. Subtraction outside became division inside.',
+     f:function(v){return L(3,Math.pow(v.x,4)/Math.pow(v.y,2));}}
+   ]},
+  {nm:'&frac12; ln '+RX+' + 2 ln '+RY+' &minus; 3 ln '+RZ, s:'all three rules', vars:['x','y','z'],
+   dom:'Valid for <b><i>x</i> &gt; 0, <i>y</i> &gt; 0, <i>z</i> &gt; 0</b> &mdash; exactly the values for which the expanded form was defined.',
+   st:[
+    {h:'&frac12; ln '+RX+' + 2 ln '+RY+' &minus; 3 ln '+RZ, r:'start',
+     w:'Three terms, three coefficients, all base <i>e</i>. Plan: power rule on each, then everything <b>added</b> gathers in the numerator and everything <b>subtracted</b> gathers in the denominator.',
+     f:function(v){return 0.5*LN(v.x)+2*LN(v.y)-3*LN(v.z);}},
+    {h:'<span class="hl">ln '+RX+'<sup>1/2</sup> + ln '+RY+'<sup>2</sup> &minus; ln '+RZ+'<sup>3</sup></span>', r:'power',
+     w:'Power rule backwards on all three terms at once. The fraction &frac12; is a perfectly good exponent &mdash; treat it exactly like 2 and 3.',
+     f:function(v){return LN(Math.pow(v.x,0.5))+LN(Math.pow(v.y,2))-LN(Math.pow(v.z,3));}},
+    {h:'ln <span class="hl">'+SQX+'</span> + ln '+RY+'<sup>2</sup> &minus; ln '+RZ+'<sup>3</sup>', r:'rewrite',
+     w:'An exponent of &frac12; is a square root. Rewriting it now is optional but conventional &mdash; final answers usually show the radical.',
+     f:function(v){return LN(Math.sqrt(v.x))+LN(Math.pow(v.y,2))-LN(Math.pow(v.z,3));}},
+    {h:'<span class="hl">ln('+SQX+' &middot; '+RY+'<sup>2</sup>)</span> &minus; ln '+RZ+'<sup>3</sup>', r:'product',
+     w:'Product rule backwards: the two terms being <b>added</b> merge into one log of their product. The subtracted term waits its turn.',
+     f:function(v){return LN(Math.sqrt(v.x)*Math.pow(v.y,2))-LN(Math.pow(v.z,3));}},
+    {h:'ln('+fr('<span class="hl">'+SQX+' &middot; '+RY+'<sup>2</sup></span>','<span class="hl">'+RZ+'<sup>3</sup></span>')+')', r:'quotient',
+     w:'Quotient rule backwards puts the subtracted log underneath. A single logarithm of a single expression &mdash; fully condensed, and ready to be undone by an exponential.',
+     f:function(v){return LN(Math.sqrt(v.x)*Math.pow(v.y,2)/Math.pow(v.z,3));}}
+   ]}
+ ]};
+
+ var MN={expand:'<b>Expanding</b> runs the three rules left to right &mdash; one logarithm becomes many, and the argument gets simpler. <b>Condensing</b> runs the exact same rules right to left &mdash; many logarithms become one. Same properties, opposite reading direction.',
+         condense:'<b>Condensing</b> has a fixed order of operations: <b>(1)</b> use the power rule to turn every coefficient into an exponent, <b>(2)</b> combine additions into a product, <b>(3)</b> put every subtraction into the denominator. Skipping straight to step 2 is what goes wrong.'};
+
+ /* ---------- state ---------- */
+ var mode='expand', ei=0, si=0, V={x:4,y:2,z:3};
+ function cur(){return EX[mode][ei];}
+
+ function buildPicks(){
+   $('picks').innerHTML=EX[mode].map(function(e,i){
+     return '<button class="it'+(i===ei?' on':'')+'" data-i="'+i+'"><span class="nm">'+e.nm+'</span><span class="s">'+e.s+'</span></button>';
+   }).join('');
+   var b=$('picks').querySelectorAll('.it');
+   for(var i=0;i<b.length;i++){ b[i].onclick=function(){ ei=+this.getAttribute('data-i'); si=0; buildPicks(); buildNums(); render(); }; }
+   $('mnem').innerHTML=MN[mode];
+ }
+ function buildNums(){
+   var vs=cur().vars;
+   $('nums').innerHTML=vs.map(function(k){
+     return '<div class="nsl"><div class="sldlab"><span>let <i>'+k+'</i> =</span><b id="lab_'+k+'">'+f1(V[k])+'</b></div>'+
+       '<input class="sld" type="range" min="5" max="80" step="1" id="sl_'+k+'" value="'+Math.round(V[k]*10)+'" aria-label="value of '+k+'"></div>';
+   }).join('');
+   vs.forEach(function(k){ $('sl_'+k).oninput=function(){ V[k]=(+this.value)/10; render(); }; });
+ }
+
+ function render(){
+   var e=cur(), st=e.st, s=st[si];
+   $('stage').style.background=C[s.r];
+   $('stage').innerHTML=e.nm+'<small>'+(mode==='expand'?'expanding':'condensing')+' &middot; step '+(si+1)+' of '+st.length+'</small>';
+   $('stepTitle').innerHTML=(mode==='expand'?'Expanding':'Condensing')+' &mdash; one step at a time';
+
+   var out='';
+   for(var i=0;i<st.length;i++){
+     if(i>si){ out+='<div class="pend">&middot; &middot; &middot;</div>'; continue; }
+     var val=st[i].f(V), lab=i===0?'start':RLAB[st[i].r];
+     out+='<div class="ln '+(i===si?'cur':'done')+'">'+
+       '<span><span class="eqx">'+st[i].h+'</span>'+
+       (i>0?'<span class="rl" style="color:'+C[st[i].r]+'">'+lab+'</span>':'<span class="rl" style="color:#9a9db4">original expression</span>')+
+       '</span><span class="vv">'+fmt(val)+'<small>value</small></span></div>';
+   }
+   $('steps').innerHTML=out;
+
+   $('info').innerHTML='<span class="n">'+RLAB[s.r]+'<span class="badge" style="background:'+C[s.r]+'">step '+(si+1)+'</span></span>'+s.w+
+     '<div class="loc">'+RF[s.r]+'</div>';
+   $('dom').innerHTML='<b>Domain &middot; excluded values.</b> '+e.dom;
+
+   e.vars.forEach(function(k){ var el=$('lab_'+k); if(el)el.innerHTML=f1(V[k]); });
+   var a=st[0].f(V), b=st[st.length-1].f(V);
+   $('agree').innerHTML='Every revealed line reads <b>'+fmt(st[si].f(V))+'</b>. First line '+fmt(a)+', last line '+fmt(b)+
+     ' &mdash; agreeing to four decimals for <i>any</i> allowed values. Rewriting never changes the number, only the shape.';
+
+   $('prev').disabled=(si===0); $('next').disabled=(si===st.length-1);
+   drawProof(s.r,s.pd);
+ }
+
+ $('prev').onclick=function(){ if(si>0){si--;render();} };
+ $('next').onclick=function(){ if(si<cur().st.length-1){si++;render();} };
+ (function(){
+   var mb=$('mode').querySelectorAll('button');
+   for(var i=0;i<mb.length;i++){ mb[i].onclick=function(){
+     mode=this.getAttribute('data-m'); ei=0; si=0;
+     for(var j=0;j<mb.length;j++){ mb[j].className=(mb[j].getAttribute('data-m')===mode?'on':''); }
+     buildPicks(); buildNums(); render();
+   }; }
+ })();
+ (function(){
+   var rb=$('rules').querySelectorAll('.it');
+   for(var i=0;i<rb.length;i++){ rb[i].onclick=function(){ drawProof(this.getAttribute('data-r')); }; }
+ })();
+
+ buildPicks(); buildNums(); render();
+})();
+</script>
+</body>
+</html>

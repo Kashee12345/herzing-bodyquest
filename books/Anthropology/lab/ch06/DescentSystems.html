@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f8f2ea">
+<title>Descent Systems</title>
+<meta name="description" content="Toggle patrilineal, matrilineal, bilateral, double and ambilineal descent across one four-generation kinship chart and watch who counts as kin light up &mdash; then explore lineage, clan, phratry, moiety and kindred, and match real societies to their rule.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_anthro.css">
+<style>svg text{font-family:'Inter',system-ui,sans-serif;}
+.rgn{cursor:pointer;}
+.cap{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:9px;border-top:1px dashed var(--line);padding-top:8px;}
+.cap b{color:var(--teal-dk);}
+.leg{display:flex;flex-wrap:wrap;gap:5px 12px;margin-bottom:6px;}
+.leg span{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--soft);}
+.leg i{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none;}
+.cnt{font-size:12px;color:var(--teal-dk);background:#f5e9d8;border-radius:8px;padding:7px 11px;line-height:1.45;}
+.cnt b{font-family:var(--disp);font-weight:700;font-size:15px;}
+.lbl{font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);margin:13px 0 7px;}
+.lbl.first{margin-top:0;}
+.it .s2{display:block;font-size:10.5px;color:var(--muted);line-height:1.3;margin-top:1px;}
+.it.on .s2{color:rgba(255,255,255,.85);}
+.it .nm2{font-weight:700;font-size:13px;color:var(--ink);}
+.it.on .nm2{color:#fff;}
+.clue{font-family:var(--disp);font-weight:600;font-size:14.5px;line-height:1.5;color:var(--teal-dk);background:#f5e9d8;border-radius:10px;padding:12px 13px;}
+.clue .w{display:block;font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.clue i{font-style:italic;}
+.stat{display:flex;align-items:center;gap:8px;margin-top:11px;border-top:1px dashed var(--line);padding-top:9px;font-size:11.5px;font-weight:700;color:var(--teal-dk);}
+.stat .bar{flex:1;height:8px;border-radius:4px;background:#eadfd1;overflow:hidden;}
+.stat .bar i{display:block;height:100%;background:var(--teal);border-radius:4px;transition:width .3s;}
+.chip{display:inline-block;font-size:9.6px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-radius:20px;padding:3px 9px;margin-left:6px;vertical-align:2px;}
+.chip.ok{background:#e0efe5;color:#256d43;} .chip.no{background:#f8dde1;color:#a83349;}
+.grid .it{display:block;text-align:left;padding:8px 10px;line-height:1.3;}
+.grid .it .kn{font-weight:800;font-size:12.5px;color:var(--teal-dk);}
+.grid .it .ct{display:block;font-size:10px;margin-top:1px;}
+.grid .it.on .kn{color:#fff;}
+.grid .it.wide{grid-column:1 / -1;}
+#info i,#extra i{font-style:italic;color:var(--teal-dk);}
+#extra .dd{font-size:13px;color:var(--soft);line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Anthropology · Chapter 6</div>
+  <h1>Descent Systems</h1>
+  <div class="intro">Everyone has two parents, four grandparents, eight great-grandparents &mdash; the arithmetic runs away from us within a few generations. No society treats every one of those people as equally its own. A <b>descent rule</b> is the filter each society applies: a socially agreed instruction for which of your ancestors count, and therefore which living people are <b>your group</b>. The chart on the left never changes. Flip the rule and watch the same twenty-two people sort themselves into members, outsiders and in-laws &mdash; and notice, on the way, that your own children are not always on your side of the line.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">One chart, five rules</h2>
+      <svg id="svg" viewBox="0 0 300 276" aria-label="interactive descent diagram"><g id="art"></g></svg>
+      <div class="cap" id="cap"></div>
+    </div>
+  </div>
+  <div>
+    <div class="modeseg" id="mode">
+      <button class="on" data-m="rule">Toggle the rule</button>
+      <button data-m="group">Descent groups</button>
+      <button data-m="quiz">Name the rule</button>
+    </div>
+    <div id="stage">Whose people are you?<small>choose a descent rule to begin</small></div>
+    <div class="card">
+      <div id="ctl"></div>
+      <div id="info"></div>
+      <div id="extra"></div>
+    </div>
+  </div>
+</div>
+<footer>Anthropology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var SVG=$('svg'), ART=$('art');
+
+ var SIE='#9a5834', DK='#5e3418', BLU='#2f6f9f', CRL='#d1495b', GRN='#2f9e5b',
+     GOLD='#b8862f', PUR='#7a5a8a', MUT='#a2968a', LN='#c9b79b', PAPER='#fffdf9', BG='#f4ecdd';
+
+ var mode='rule';
+
+ /* ====================================================================== */
+ /* PEOPLE — one four-generation genealogy, reckoned from EGO              */
+ /* ====================================================================== */
+
+ var P={
+  FF:{s:'m',x:70, y:44, l:'FF', side:'pat',  g:'<b>Father&#39;s father.</b> Where descent runs through men, he is very often the <b>apical ancestor</b> &mdash; the named person a lineage counts itself down from and takes its name from.'},
+  FM:{s:'f',x:102,y:44, l:'FM', side:'pgm',  g:'<b>Father&#39;s mother.</b> She married into your father&#39;s group. In a patrilineal system she bore its next generation without ever becoming a member of it &mdash; her own descent group is somewhere else entirely.'},
+  MF:{s:'m',x:182,y:44, l:'MF', side:'mgf',  g:'<b>Mother&#39;s father.</b> Mirror image of FM: where descent runs through women, he is the man who married in, fathered the line and never belonged to it.'},
+  MM:{s:'f',x:214,y:44, l:'MM', side:'mat',  g:'<b>Mother&#39;s mother.</b> In a matrilineal system she is the ancestress the group is counted from &mdash; the apical ancestor, and often the oldest woman whose name everyone still knows.'},
+
+  FZ:{s:'f',x:50, y:112,l:'FZ', side:'pat',  g:'<b>Father&#39;s sister.</b> The sharpest test of whether you have understood patrilineal descent. She is a <b>full member for life</b> of the same lineage as you &mdash; marriage moves her house, not her descent &mdash; and yet <b>her children are not</b>. In Tonga the father&#39;s sister, the <i>mehekitanga</i>, holds ceremonial authority over her brother&#39;s children that outranks their own parents&#39;.'},
+  FB:{s:'m',x:86, y:112,l:'FB', side:'pat',  g:'<b>Father&#39;s brother.</b> In many patrilineal systems he is not called &ldquo;uncle&rdquo; at all: terminologies of the Iroquois and Omaha types give him the <b>same term as your father</b>, because he stands in the same structural place &mdash; a man of your lineage, of your father&#39;s generation.'},
+  F: {s:'m',x:122,y:112,l:'F',  side:'pat',  g:'<b>Father.</b> In a patrilineal system, the channel: everything you are entitled to arrives through him. In a matrilineal system he may be warm, indulgent and central to your childhood while being, in the formal reckoning, an <b>outsider to your group</b>.'},
+  M: {s:'f',x:162,y:112,l:'M',  side:'mat',  g:'<b>Mother.</b> Under matrilineal descent she is the channel. Under patrilineal descent she is the woman who married in &mdash; your closest relative on earth, and not a member of your lineage.'},
+  MZ:{s:'f',x:198,y:112,l:'MZ', side:'mat',  g:'<b>Mother&#39;s sister.</b> Where descent runs through women she is inside your group, and terminologies very often give her <b>the same term as your mother</b> &mdash; which is why early travellers wrote home about people who &ldquo;have many mothers&rdquo;. They had simply met a system that sorts kin differently.'},
+  MB:{s:'m',x:234,y:112,l:'MB', side:'mat',  g:'<b>Mother&#39;s brother.</b> The pivot of matrilineal systems. He is in your group and your father is not, so it is <b>he</b> who disciplines you, teaches you, and leaves you his land, magic and office &mdash; the relationship anthropologists call the <b>avunculate</b>. Radcliffe-Brown&#39;s 1924 essay on the mother&#39;s brother in South Africa made it a classic problem.'},
+
+  ZH:{s:'m',x:42, y:182,l:'ZH', side:'aff',  g:'<b>Sister&#39;s husband.</b> An <b>affine</b> &mdash; joined to you by marriage and by nothing else. Every mark on this chart is either descent or marriage, and he is on the marriage side of it.'},
+  Z: {s:'f',x:74, y:182,l:'Z',  side:'ego',  g:'<b>Sister.</b> Under every unilineal rule on this page she is in your group, exactly as you are. What differs is what happens next: whether the group continues through <b>her</b> children or through your brother&#39;s.'},
+  EGO:{s:'m',x:134,y:182,l:'EGO',side:'ego', g:'<b>EGO</b> &mdash; you, the vantage point. Not a person, a <b>position</b>. Every label on this chart is measured from here, and shifting the shading one symbol to the left would rewrite all of them without moving a single line.'},
+  SP:{s:'f',x:166,y:182,l:'W',  side:'aff',  g:'<b>Your spouse.</b> An affine. Descent groups are almost always <b>exogamous</b> &mdash; you must marry outside the group &mdash; so this person is, by design, drawn from somewhere else on the map.'},
+  B: {s:'m',x:226,y:182,l:'B',  side:'ego',  g:'<b>Brother.</b> In your group under all three unilineal rules. But only in a patrilineal system does the group carry on through <b>his</b> children; in a matrilineal system his children follow their mother, out and away.'},
+  BW:{s:'f',x:258,y:182,l:'BW', side:'aff',  g:'<b>Brother&#39;s wife.</b> An affine of yours; in a patrilineal system, a woman who has married into your lineage and will bear its next generation from outside it.'},
+
+  ZD:{s:'f',x:44, y:250,l:'ZD', side:'zc',   g:'<b>Sister&#39;s daughter.</b> In a matrilineal system she is your group&#39;s future &mdash; and if you are a man, she and her brother, not your own children, are your heirs.'},
+  ZS:{s:'m',x:72, y:250,l:'ZS', side:'zc',   g:'<b>Sister&#39;s son.</b> In the Trobriand Islands a boy leaves his father&#39;s village around adolescence and moves to the village of his mother&#39;s brother, whose garden land, magic and name will come to him. The move looks strange until you read the descent rule; then it is simply a boy going home.'},
+  S: {s:'m',x:136,y:250,l:'S',  side:'ec',   g:'<b>Your son.</b> The single most revealing symbol on the chart. Whether he is inside your group or outside it depends not on how much you love him but on <b>your own sex</b> and <b>the rule</b> &mdash; flip either and he changes sides.'},
+  D: {s:'f',x:164,y:250,l:'D',  side:'ec',   g:'<b>Your daughter.</b> Same test as her brother. In a patrilineal system she is yours if you are a man; in a matrilineal system she is yours if you are a woman; and where she is yours, she may or may not be able to pass that on.'},
+  BS:{s:'m',x:228,y:250,l:'BS', side:'bc',   g:'<b>Brother&#39;s son.</b> A patrilineage&#39;s continuation. In segmentary systems he is also a political fact: he and your own son are the two branches that will one day be the two sides of a dispute &mdash; and the same two branches that will stand together against a more distant one.'},
+  BD:{s:'f',x:256,y:250,l:'BD', side:'bc',   g:'<b>Brother&#39;s daughter.</b> Inside a patrilineage, outside a matrilineage. Follow the line up through her father to your shared parent and ask which sex the links are &mdash; that question, and only that question, decides it.'}
+ };
+ var ALL=['FF','FM','MF','MM','FZ','FB','F','M','MZ','MB','ZH','Z','EGO','SP','B','BW','ZD','ZS','S','D','BS','BD'];
+ var R=7.5;
+
+ var egoSex='m', amChoice='f', rule=null, selP=null;
+
+ var PATSET=['FF','FZ','FB','F','EGO','Z','B','BS','BD'];
+ var MATSET=['MM','MZ','M','MB','EGO','Z','B','ZD','ZS'];
+ function has(a,v){ return a.indexOf(v)>=0; }
+ function isAff(id){ return id==='SP'||id==='ZH'||id==='BW'; }
+ function inPat(id){ if(id==='S'||id==='D') return egoSex==='m'; return has(PATSET,id); }
+ function inMat(id){ if(id==='S'||id==='D') return egoSex==='f'; return has(MATSET,id); }
+
+ function stateOf(id){
+  if(!rule) return 'out';
+  if(isAff(id)) return 'aff';
+  if(rule==='bi') return 'in';
+  if(rule==='pat') return inPat(id)?'in':'out';
+  if(rule==='mat') return inMat(id)?'in':'out';
+  if(rule==='dbl'){ var p=inPat(id), m=inMat(id); return (p&&m)?'both':(p?'p':(m?'m':'out')); }
+  if(rule==='ambi'){ return (amChoice==='f'?inPat(id):inMat(id))?'in':'elig'; }
+  return 'out';
+ }
+
+ /* ====================================================================== */
+ /* THE FIVE RULES                                                         */
+ /* ====================================================================== */
+
+ var RULES={
+  pat:{nm:'Patrilineal',ct:'through fathers &middot; also called agnatic',col:BLU,tint:'#dce8f2',
+   d:'Group membership passes from a <b>father to all of his children</b>. Sons and daughters are equally members; only sons pass it on. Trace any person on the chart back to you and ask whether the chain runs through men the whole way &mdash; if a single woman appears as a link, the connection is severed.'+
+     '<div class="dd">The consequence students find hardest is the one standing at the far left of the chart. Your father&#39;s sister is a member of your lineage for her entire life, because she is her father&#39;s daughter and marriage does not change that. Her children are not, because they took their own father&#39;s. A patrilineal system therefore has women inside it in every generation, doing its work and carrying its name, whose descendants belong to somebody else.</div>'+
+     '<div class="dd">This is the most common single arrangement in the ethnographic record &mdash; something close to four in ten of the roughly twelve hundred societies coded in George Murdock&#39;s <i>Ethnographic Atlas</i>. It travels with cattle, with land held by named male ancestors, with <b>bridewealth</b> passing from the groom&#39;s people to the bride&#39;s, and very often with <b>virilocal</b> residence, which moves a wife to her husband&#39;s community while leaving her descent untouched.</div>',
+   soc:'Nuer (South Sudan) &middot; Han Chinese <i>zongzu</i> &middot; many Middle Eastern and Central Asian communities',
+   thy:'E. E. Evans-Pritchard, <i>The Nuer</i> (1940)',
+   note:''},
+
+  mat:{nm:'Matrilineal',ct:'through mothers &middot; also called uterine',col:CRL,tint:'#f8dde1',
+   d:'Membership passes from a <b>mother to all of her children</b>. Daughters and sons are equally members; only daughters pass it on. Same test, mirrored: the chain from you to any relative must run through women without interruption.'+
+     '<div class="dd">Run that test on a man&#39;s own son and the answer is <b>no</b>. A man&#39;s children belong to their mother&#39;s group, not his. His heirs are his <b>sister&#39;s</b> children. This is not an oddity at the edge of the system &mdash; it is the engine of it, and it produces the <b>avunculate</b>: the mother&#39;s brother as the figure of authority, discipline and inheritance, and sometimes <b>avunculocal</b> residence, in which boys move to his village to grow up.</div>'+
+     '<div class="dd">Audrey Richards named the resulting tension the <b>matrilineal puzzle</b> in 1950: a man owes authority to his sister&#39;s household and affection to his own, and the two pull in different directions. Societies solve it in different ways &mdash; by moving the boys, by moving the men, by splitting what is inherited from what is merely held.</div>',
+   soc:'Trobriand Islanders (Papua New Guinea) &middot; Hopi &middot; Din&eacute; (Navajo) &middot; Akan <i>abusua</i> (Ghana) &middot; Minangkabau (Indonesia)',
+   thy:'Bronis&#322;aw Malinowski, <i>Argonauts of the Western Pacific</i> (1922); Audrey Richards (1950)',
+   note:'<b>Matrilineal is not matriarchy.</b> Tracing descent through women is a rule about membership, not a claim about who governs. In most matrilineal societies formal authority still rests largely with men &mdash; typically the mother&#39;s brother. Where women do hold decisive political power, as with the Haudenosaunee clan mothers who select and can remove a sachem, that is a further fact about that society, not something the descent rule delivers by itself. Roughly one society in seven in the standard samples is matrilineal.'},
+
+  bi:{nm:'Bilateral',ct:'through both &middot; also called cognatic',col:GRN,tint:'#d9efe2',
+   d:'Descent is reckoned <b>equally through both parents</b>. Nothing is filtered out, so nearly everyone on the chart is kin &mdash; only the three people joined to you purely by marriage stand outside.'+
+     '<div class="dd">What this produces is not a lineage but a <b>kindred</b>: an <b>ego-centred</b> set of relatives with no name, no boundary anyone agrees on, no property and no life of its own. And here is the structural catch. <b>No two people share a kindred</b>, except full siblings &mdash; your cousin&#39;s kindred reaches out to relatives you have never met. A group whose membership is different for every member cannot own land, cannot go to court as one body, cannot outlive anybody. It is a network, not a corporation.</div>'+
+     '<div class="dd">Bilateral reckoning suits societies that need flexibility rather than solidarity: foragers who reshuffle households with the season, and industrial societies where people move for work and the household, not the lineage, is the unit that holds property. Beware one persistent trap &mdash; a surname that runs from father to child is a <b>naming</b> custom, not a descent rule. If you count both grandmothers as your own, your society reckons descent bilaterally whatever the surname does.</div>',
+   soc:'Inuit &middot; Ju/&#39;hoansi &middot; most of contemporary Europe and North America',
+   thy:'',
+   note:''},
+
+  dbl:{nm:'Double descent',ct:'through both, separately',col:PUR,tint:'#ece2f0',
+   d:'Rare and elegant: a person belongs to a <b>patrilineal group and a matrilineal group at the same time</b>, and the two carry <b>different rights</b>. This is not the same as bilateral descent. Nothing is blurred together &mdash; there are two crisp unilineal systems running in parallel, and every person sits in one of each.'+
+     '<div class="dd">Among the Yak&ouml;-speaking communities of Cross River State in Nigeria, described by Daryll Forde, farmland, house sites and residence come down the father&#39;s line, while movable wealth, certain ritual offices and particular obligations come down the mother&#39;s. Ask a man what he owns and the answer depends entirely on which kind of property you mean.</div>'+
+     '<div class="dd">On the chart, you and your siblings appear in <b>both</b> colours &mdash; the only people who do. Everyone else falls into one system or the other, or neither.</div>',
+   soc:'Yak&ouml; communities, Cross River State, Nigeria &middot; Herero (Namibia and Botswana)',
+   thy:'Daryll Forde, fieldwork from the 1930s',
+   note:''},
+
+  ambi:{nm:'Ambilineal',ct:'through either &middot; you choose',col:GOLD,tint:'#f6ead0',
+   d:'Descent may be traced through <b>either</b> parent &mdash; but unlike bilateral reckoning, each person <b>affiliates with one group</b> and that group is real: bounded, named, property-holding, and outliving its members. Eligibility is wide; membership is a choice, and usually a choice you demonstrate rather than declare.'+
+     '<div class="dd">Among the Iban of Sarawak a longhouse is a row of independent family apartments, the <i>bilek</i>; a couple decides at marriage which one to join, and the children belong to the one they grow up in. M&#257;ori <i>whakapapa</i> gives a person many possible <i>hap&#363;</i>, and which claim becomes real depends on <i>ahi k&#257;</i> &mdash; keeping the home fires burning, living there, turning up, doing the work.</div>'+
+     '<div class="dd">Use the switch below and watch the chart. Every consanguine stays <b>eligible</b>, drawn in dashed outline; only the line you activate becomes solid. That picture &mdash; a wide field of possibility with one path lit &mdash; is the whole of ambilineal descent.</div>',
+   soc:'Iban (Sarawak) &middot; M&#257;ori <i>hap&#363;</i> (Aotearoa New Zealand) &middot; Polynesian <i>ramage</i> systems',
+   thy:'Raymond Firth on Tikopia; Marshall Sahlins on Polynesian ramages',
+   note:''}
+ };
+ var RORDER=['pat','mat','bi','dbl','ambi'];
+
+ /* ====================================================================== */
+ /* CHART DRAWING                                                          */
+ /* ====================================================================== */
+
+ function styleFor(st,C,tint){
+  if(st==='in')   return {f:tint, s:C,        w:2.4, d:''};
+  if(st==='p')    return {f:'#dce8f2', s:BLU, w:2.4, d:''};
+  if(st==='m')    return {f:'#f8dde1', s:CRL, w:2.4, d:''};
+  if(st==='both') return {f:'#dce8f2', s:BLU, w:2.4, d:''};
+  if(st==='elig') return {f:PAPER, s:GOLD,   w:1.4, d:'3 2.6'};
+  if(st==='aff')  return {f:'#efe6da', s:'#bcab97', w:1.3, d:'3 2.6'};
+  return {f:PAPER, s:'#cbbdab', w:1.3, d:''};
+ }
+ function shape(sex,x,y,r,c){
+  var d=c.d?' stroke-dasharray="'+c.d+'"':'';
+  if(sex==='m') return '<polygon points="'+x+','+(y-r*1.2).toFixed(1)+' '+(x-r*1.25).toFixed(1)+','+(y+r*0.95).toFixed(1)+' '+(x+r*1.25).toFixed(1)+','+(y+r*0.95).toFixed(1)+'" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="'+c.w+'" stroke-linejoin="round"'+d+'/>';
+  return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="'+c.w+'"'+d+'/>';
+ }
+ function dbl2(x1,x2,y){
+  return '<line x1="'+x1+'" y1="'+(y-2)+'" x2="'+x2+'" y2="'+(y-2)+'" stroke="'+LN+'" stroke-width="1.5"/>'+
+         '<line x1="'+x1+'" y1="'+(y+2)+'" x2="'+x2+'" y2="'+(y+2)+'" stroke="'+LN+'" stroke-width="1.5"/>';
+ }
+ function vline(x,y1,y2){ return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="'+LN+'" stroke-width="1.5"/>'; }
+ function hline(x1,x2,y){ return '<line x1="'+x1+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="'+LN+'" stroke-width="1.5"/>'; }
+ function sibs(bar,xs,cy){
+  var s=hline(Math.min.apply(null,xs),Math.max.apply(null,xs),bar);
+  for(var i=0;i<xs.length;i++) s+=vline(xs[i],bar,cy-8.6);
+  return s;
+ }
+
+ function drawChart(live){
+  SVG.setAttribute('viewBox','0 0 300 276');
+  var C=live&&rule?RULES[rule].col:SIE, tint=live&&rule?RULES[rule].tint:'#f0e6d8';
+  var s='<rect x="0" y="0" width="300" height="276" rx="10" fill="'+BG+'"/>';
+
+  /* generation bands */
+  var bands=[[44,'G+2'],[112,'G+1'],[182,'EGO'],[250,'G&#8722;1']];
+  for(var i=0;i<bands.length;i++){
+   s+='<rect x="0" y="'+(bands[i][0]-16)+'" width="300" height="32" fill="#f6eee2" opacity=".8"/>';
+   s+='<text x="5" y="'+(bands[i][0]+2.4)+'" font-size="6.4" font-weight="800" letter-spacing=".5" fill="'+MUT+'">'+bands[i][1]+'</text>';
+  }
+
+  /* marriage lines */
+  s+=dbl2(P.FF.x+9,  P.FM.x-9,  44);
+  s+=dbl2(P.MF.x+9,  P.MM.x-9,  44);
+  s+=dbl2(P.F.x+9,   P.M.x-9,   112);
+  s+=dbl2(P.ZH.x+9,  P.Z.x-9,   182);
+  s+=dbl2(P.EGO.x+9, P.SP.x-9,  182);
+  s+=dbl2(P.B.x+9,   P.BW.x-9,  182);
+
+  /* descent drops from each couple to the sibling bar below */
+  s+=vline(86, 44, 86);    s+=vline(198, 44, 86);
+  s+=vline(142,112,158);
+  s+=vline(58, 182,228);   s+=vline(150,182,228);  s+=vline(242,182,228);
+
+  /* sibling bars */
+  s+=sibs(86, [P.FZ.x,P.FB.x,P.F.x],   112);
+  s+=sibs(86, [P.M.x,P.MZ.x,P.MB.x],   112);
+  s+=sibs(158,[P.Z.x,P.EGO.x,P.B.x],   182);
+  s+=sibs(228,[P.ZD.x,P.ZS.x],         250);
+  s+=sibs(228,[P.S.x,P.D.x],           250);
+  s+=sibs(228,[P.BS.x,P.BD.x],         250);
+
+  /* people */
+  for(var k=0;k<ALL.length;k++){
+   var id=ALL[k], p=P[id], st=live?stateOf(id):'out', c=styleFor(st,C,tint);
+   var sex = (id==='EGO') ? egoSex : (id==='SP' ? (egoSex==='m'?'f':'m') : p.s);
+   if(id==='EGO'){
+    s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(R+4.5)+'" fill="none" stroke="'+(live&&rule?C:GOLD)+'" stroke-width="1.4" opacity=".55"/>';
+   }
+   s+=shape(sex,p.x,p.y,R,c);
+   if(st==='both'){ s+=shape(sex,p.x,p.y,R*0.52,{f:'#f8dde1',s:CRL,w:1.8,d:''}); }
+   if(id==='EGO'){ s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="2.4" fill="'+(live&&rule?C:DK)+'"/>'; }
+   var lab = (id==='SP') ? (egoSex==='m'?'W':'H') : p.l;
+   var lcol = (st==='in'||st==='p'||st==='m'||st==='both') ? DK : (st==='aff'?'#b0a08c':MUT);
+   s+='<text x="'+p.x+'" y="'+(p.y+18)+'" font-size="'+(id==='EGO'?7.6:7)+'" font-weight="'+(id==='EGO'?800:700)+'" text-anchor="middle" fill="'+(id==='EGO'?DK:lcol)+'">'+lab+'</text>';
+   if(selP===id){ s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(R+7)+'" fill="none" stroke="'+GOLD+'" stroke-width="1.6" stroke-dasharray="2.5 2.5"/>'; }
+   s+='<rect class="rgn" data-p="'+id+'" x="'+(p.x-14)+'" y="'+(p.y-14)+'" width="28" height="30" fill="transparent"/>';
+  }
+  ART.innerHTML=s;
+  bindRegions();
+ }
+
+ /* ====================================================================== */
+ /* MODE 1 — TOGGLE THE RULE                                               */
+ /* ====================================================================== */
+
+ function countIn(){
+  var n=0; for(var i=0;i<ALL.length;i++){ var st=stateOf(ALL[i]); if(st==='in'||st==='p'||st==='m'||st==='both') n++; }
+  return n;
+ }
+
+ function capRule(){
+  if(!rule){
+   $('cap').innerHTML='<div class="cnt">Twenty-two people, four generations, one shaded <b>EGO</b>. Every line here is either <b>descent</b> (vertical) or <b>marriage</b> (the double bar). Choose a rule and the same chart sorts itself.</div>';
+   return;
+  }
+  var R2=RULES[rule], chips='';
+  if(rule==='dbl'){
+   chips='<span><i style="background:'+BLU+'"></i>father&#39;s line</span><span><i style="background:'+CRL+'"></i>mother&#39;s line</span><span><i style="background:#dce8f2;border:2px solid '+BLU+'"></i>both at once</span><span><i style="background:#fffdf9;border:1.5px solid #cbbdab"></i>neither</span><span><i style="background:#efe6da;border:1.5px dashed #bcab97"></i>married in</span>';
+  } else if(rule==='ambi'){
+   chips='<span><i style="background:'+GOLD+'"></i>activated</span><span><i style="background:#fffdf9;border:1.5px dashed '+GOLD+'"></i>eligible, not taken</span><span><i style="background:#efe6da;border:1.5px dashed #bcab97"></i>married in</span>';
+  } else {
+   chips='<span><i style="background:'+R2.col+'"></i>in EGO&#39;s group</span><span><i style="background:#fffdf9;border:1.5px solid #cbbdab"></i>kin &middot; other group</span><span><i style="background:#efe6da;border:1.5px dashed #bcab97"></i>married in</span>';
+  }
+  var n=countIn();
+  var tail = rule==='bi' ? 'form EGO&#39;s <b>kindred</b> &mdash; and it belongs to nobody else.'
+           : rule==='ambi' ? 'are in the group EGO has <b>activated</b>; the rest could have been.'
+           : rule==='dbl' ? 'sit in at least one of EGO&#39;s two groups.'
+           : 'are members of EGO&#39;s '+(rule==='pat'?'patrilineage':'matrilineage')+'.';
+  $('cap').innerHTML='<div class="leg">'+chips+'</div><div class="cnt"><b>'+n+' of 22</b> people on this chart '+tail+' Tap any symbol to see why.</div>';
+ }
+
+ function ruleCtl(){
+  var h='<div class="lbl first">The descent rule</div><div class="list" id="rlist">';
+  for(var i=0;i<RORDER.length;i++){
+   var k=RORDER[i], r=RULES[k];
+   h+='<button class="it'+(rule===k?' on':'')+'" data-r="'+k+'"><span class="sw" style="background:'+r.col+'"></span><span><span class="nm2">'+r.nm+'</span><span class="s2">'+r.ct+'</span></span></button>';
+  }
+  h+='</div><div class="lbl">EGO is</div><div class="seg" id="sexseg">'+
+     '<button data-x="m" class="'+(egoSex==='m'?'on':'')+'">A man<small>triangle</small></button>'+
+     '<button data-x="f" class="'+(egoSex==='f'?'on':'')+'">A woman<small>circle</small></button></div>';
+  $('ctl').innerHTML=h;
+  var bs=$('rlist').querySelectorAll('.it');
+  for(var j=0;j<bs.length;j++) bs[j].onclick=(function(b){ return function(){ rule=b.getAttribute('data-r'); selP=null; renderRule(); }; })(bs[j]);
+  var ss=$('sexseg').querySelectorAll('button');
+  for(var q=0;q<ss.length;q++) ss[q].onclick=(function(b){ return function(){ egoSex=b.getAttribute('data-x'); renderRule(); }; })(ss[q]);
+ }
+
+ function renderRule(){
+  ruleCtl(); drawChart(true); capRule();
+  if(!rule){
+   $('cardTitle').innerHTML='One chart, five rules';
+   $('stage').style.background=SIE;
+   $('stage').innerHTML='Whose people are you?<small>choose a descent rule to begin</small>';
+   $('info').innerHTML='<span class="n">The filter, not the family</span>Descent is not a fact of biology &mdash; biology hands everyone the same doubling tree of ancestors. Descent is a <b>rule</b> a society applies to that tree, deciding which links carry membership and which are ignored. The rule decides who inherits, who you may not marry, who buries you, and who is obliged to fight beside you.<div class="dd">Pick one on the left. The chart will not change; only the answer to <b>&ldquo;who are my people?&rdquo;</b> will.</div>';
+   $('extra').innerHTML='<div class="mnem"><b>The one test that works every time.</b> Pick any relative. Walk the shortest path from EGO up to a shared ancestor and back down. Look at the <b>sex of every person you step through</b>. All male &rarr; patrilineal kin. All female &rarr; matrilineal kin. Mixed &rarr; kin under bilateral reckoning only.</div>';
+   return;
+  }
+  var r=RULES[rule];
+  $('cardTitle').innerHTML=r.nm+' descent';
+  $('stage').style.background=r.col;
+  $('stage').innerHTML=r.nm+'<small>'+r.ct+'</small>';
+  var body='<span class="n">'+r.nm+' descent</span>'+r.d;
+  if(r.soc) body+='<div class="loc"><b>Where you meet it:</b> '+r.soc+'</div>';
+  if(r.thy) body+='<div class="ex"><span>'+r.thy+'</span></div>';
+  $('info').innerHTML=body;
+  var ex='';
+  if(rule==='ambi'){
+   ex+='<div class="lbl first">Affiliate through</div><div class="seg" id="amseg">'+
+       '<button data-a="f" class="'+(amChoice==='f'?'on':'')+'">Father&#39;s line<small>activate that path</small></button>'+
+       '<button data-a="m" class="'+(amChoice==='m'?'on':'')+'">Mother&#39;s line<small>activate that path</small></button></div>';
+  }
+  if(r.note) ex+='<div class="note">'+r.note+'</div>';
+  if(rule==='pat'||rule==='mat'){
+   var own=(rule==='pat')?(egoSex==='m'):(egoSex==='f');
+   ex+='<div class="mnem"><b>Watch your own children.</b> EGO is currently '+(egoSex==='m'?'a man':'a woman')+', so EGO&#39;s son and daughter are <b>'+(own?'inside':'outside')+'</b> EGO&#39;s group. Flip the switch above and they change sides &mdash; the same two people, the same two lines on the page, reassigned by a rule about sex and nothing else.</div>';
+  }
+  $('extra').innerHTML=ex;
+  if(rule==='ambi'){
+   var as=$('amseg').querySelectorAll('button');
+   for(var i=0;i<as.length;i++) as[i].onclick=(function(b){ return function(){ amChoice=b.getAttribute('data-a'); renderRule(); }; })(as[i]);
+  }
+ }
+
+ function showPerson(id){
+  selP=id; drawChart(true); capRule();
+  var p=P[id], st=stateOf(id), r=rule?RULES[rule]:null;
+  var lab=(id==='SP')?(egoSex==='m'?'Wife':'Husband'):p.l;
+  var head='', why='';
+  if(!r){ head='<span class="n">'+lab+'</span>'; why='<div class="dd">Choose a descent rule on the left to see whether this person counts as one of EGO&#39;s own.</div>'; }
+  else if(st==='aff'){ head='<span class="n">'+lab+'<span class="chip no">married in</span></span>';
+   why='<div class="dd"><b>An affine.</b> No chain of descent connects this person to EGO at all &mdash; only a marriage does. Under every rule on this page, affines stand outside the descent group, which is exactly why they can be married in the first place: descent groups are almost always <b>exogamous</b>.</div>'; }
+  else if(st==='in'){ head='<span class="n">'+lab+'<span class="chip ok">in EGO&#39;s group</span></span>';
+   why='<div class="dd"><b>Inside.</b> '+(rule==='bi'?'Bilateral reckoning follows links of either sex, so every consanguine on the chart qualifies. The result is EGO&#39;s <b>kindred</b> &mdash; wide, useful, and shared with nobody except a full sibling.':(rule==='ambi'?'This person sits on the line EGO has <b>activated</b>. Switch the affiliation and they may drop back to merely eligible &mdash; membership here is a choice that has to be lived out, not a fact of birth.':'The chain of links between EGO and this person runs through '+(rule==='pat'?'<b>men</b>':'<b>women</b>')+' without a break.'))+'</div>'; }
+  else if(st==='both'){ head='<span class="n">'+lab+'<span class="chip ok">in both groups</span></span>';
+   why='<div class="dd"><b>In both.</b> Only EGO and EGO&#39;s siblings sit in the patrilineal group <i>and</i> the matrilineal group. They will inherit land and residence down one line and movable wealth and ritual office down the other.</div>'; }
+  else if(st==='p'||st==='m'){ head='<span class="n">'+lab+'<span class="chip ok">'+(st==='p'?'father&#39;s line':'mother&#39;s line')+'</span></span>';
+   why='<div class="dd">This person belongs to <b>one</b> of EGO&#39;s two groups. Under double descent that is not a partial membership &mdash; it is full membership of a real group, which simply happens to control a different kind of property than the other one does.</div>'; }
+  else if(st==='elig'){ head='<span class="n">'+lab+'<span class="chip no">eligible, not activated</span></span>';
+   why='<div class="dd"><b>Could be, is not.</b> Ambilineal descent makes every consanguine a possible group-mate. EGO has taken the other path, so this connection stays dormant &mdash; real enough to be revived by moving, marrying or turning up to the work, and inert until then.</div>'; }
+  else {
+   head='<span class="n">'+lab+'<span class="chip no">kin &middot; other group</span></span>';
+   var s=p.side, txt;
+   if(rule==='pat'){
+    if(s==='mat') txt='Your mother&#39;s people. She married into your father&#39;s lineage; her own group remains hers, and you were never in it.';
+    else if(s==='pgm') txt='She married into your father&#39;s lineage and bore its next generation. The lineage she belongs to is elsewhere, and so you are not in it.';
+    else if(s==='mgf') txt='He married into your mother&#39;s people, who are already outside your lineage. Two steps away from you in the reckoning, however close in life.';
+    else if(s==='zc') txt='Your sister&#39;s children take <b>their father&#39;s</b> lineage. Your sister stays a member all her life; her children were never eligible.';
+    else if(s==='ec') txt='EGO is a woman here, so EGO&#39;s children take <b>their father&#39;s</b> lineage. Make EGO a man and these two symbols change colour instantly.';
+    else txt='No unbroken chain of male links connects this person to EGO.';
+   } else if(rule==='mat'){
+    if(s==='pat'||s==='pgm') txt='Your father&#39;s people. He is not in your matrilineage, so nobody who belongs to him is either &mdash; which is precisely why, in these societies, the affectionate figure and the authoritative figure are often two different men.';
+    else if(s==='mgf') txt='He married into your mother&#39;s matrilineage. He fathered the line and never belonged to it.';
+    else if(s==='bc') txt='Your brother&#39;s children follow <b>their mother&#39;s</b> matriline, away from yours. Your brother stays; his children go.';
+    else if(s==='ec') txt='EGO is a man here, so EGO&#39;s children belong to <b>their mother&#39;s</b> group. This is the fact that produces the avunculate: a man&#39;s heirs are his sister&#39;s children, not his own.';
+    else txt='No unbroken chain of female links connects this person to EGO.';
+   } else txt='Not in the group produced by this rule.';
+   why='<div class="dd"><b>Outside &mdash; but still a relative.</b> '+txt+'</div>';
+  }
+  $('info').innerHTML=head+p.g+why;
+  $('extra').innerHTML='<div class="mnem"><b>Trace it yourself.</b> Follow the lines from <b>EGO</b> up to the nearest ancestor shared with this person, then back down. Every person you step through is a <b>link</b>; the sexes of those links, and nothing else, decide the answer.</div>';
+ }
+
+ /* ====================================================================== */
+ /* MODE 2 — DESCENT GROUPS                                                */
+ /* ====================================================================== */
+
+ var GRP=[
+  {id:'lin',nm:'Lineage',ct:'descent you can actually trace',
+   d:'A group whose members can <b>demonstrate</b>, generation by generation, how each of them descends from a known common ancestor. The links are real and recitable; someone in the group can name every step.'+
+     '<div class="dd">Lineages nest. Evans-Pritchard found among the Nuer of South Sudan a <b>segmentary lineage system</b> running from the minimal lineage of a few households up through minor and major segments to a maximal lineage of thousands, each level a scaled copy of the one below. Its logic is <b>complementary opposition</b>: the segment you fight in one dispute is the segment you stand beside in the next, depending entirely on how distant the opponent is. The genealogy is a political map that redraws itself as needed.</div>'+
+     '<div class="dd">Because everybody knows the steps, a lineage can settle who inherits which field and who owes whose bridewealth. That precision is its strength and its limit &mdash; memory only reaches so far back.</div>'},
+  {id:'clan',nm:'Clan',ct:'descent that is claimed, not traced',
+   d:'A larger group whose members believe they share an ancestor but <b>cannot trace the actual links</b>. The ancestor is <b>stipulated</b> rather than demonstrated &mdash; sometimes a figure from deep in the past, sometimes an animal, plant or natural phenomenon.'+
+     '<div class="dd">That figure is often a <b>totem</b>: the Ojibwe <i>doodem</i> from which the English word comes, the Bear, Badger and Corn clans among the Hopi, the Raven and Eagle of the Tlingit. &Eacute;mile Durkheim built <i>The Elementary Forms of Religious Life</i> (1912) on the argument that in worshipping the totem a society is representing itself to itself; L&eacute;vi-Strauss replied in <i>Totemism</i> (1962) that totems are chosen less because they are good to eat than because they are <b>good to think with</b> &mdash; a set of natural differences borrowed to mark social ones.</div>'+
+     '<div class="dd">Clans are usually <b>exogamous</b>. Since you cannot trace the connection anyway, the clan name alone tells a stranger whether marriage between you is possible &mdash; which is exactly what a name that travels further than memory is for.</div>'},
+  {id:'phr',nm:'Phratry',ct:'clans that claim a common origin',
+   d:'A <b>set of clans</b> that regard themselves as related, without any tracing at all. The word comes from the Greek <i>phratra</i>, brotherhood.'+
+     '<div class="dd">Phratries usually do less work than clans do. They may regulate marriage, group people for ceremony, or seat allies together at a feast &mdash; a level of organisation that exists chiefly to make a large society navigable, so that a person arriving from far away can be placed at once.</div>'},
+  {id:'moi',nm:'Moiety',ct:'the society split in two',
+   d:'From the French <i>moiti&eacute;</i>, half. The entire society is divided into <b>two</b> groups, and every person belongs to one of them by descent.'+
+     '<div class="dd">Moieties are typically <b>exogamous</b>, which makes marriage structurally simple and social life permanently reciprocal: you must marry into the other half, so the other half is always your in-laws, and the two halves owe each other spouses, ceremonies and &mdash; very often &mdash; funerals. Tlingit society is organised into Raven and Eagle; many Aboriginal Australian societies use moieties alongside further sections and subsections that specify marriage possibilities with remarkable precision.</div>'+
+     '<div class="dd">A moiety turns a whole society into a standing exchange between two sides. Nobody can be self-sufficient, and that is the point.</div>'},
+  {id:'kin',nm:'Kindred',ct:'ego-centred, and never the same twice',
+   d:'The group bilateral reckoning produces &mdash; and the odd one out on this diagram, which is why it is drawn as a dashed shape spilling across every boundary.'+
+     '<div class="dd">A kindred is centred on a <b>person</b>, not on an ancestor. It reaches out through both parents as far as anyone finds useful, and it stops wherever people stop bothering. Crucially, <b>no two people have the same kindred</b> except full siblings: your cousin&#39;s kindred includes people you have never met, and excludes some of yours.</div>'+
+     '<div class="dd">So a kindred cannot hold land, cannot sue, cannot have a name, and cannot survive its centre. It assembles for a wedding or a funeral or a crisis and then dissolves. It is a superb instrument for mobilising help and a hopeless one for owning anything.</div>'},
+  {id:'corp',nm:'Corporate group',ct:'the test that separates them',
+   d:'The property that makes lineages, clans, phratries and moieties fundamentally different from kindreds. A <b>corporate group</b> holds rights in common, acts as a single body, and <b>outlives its members</b> &mdash; people pass through it; it persists.'+
+     '<div class="dd">Three questions settle it. Does the group own something jointly &mdash; land, cattle, a title, a set of names, a place in ceremony? Can it act as one, so an offence against a member is an offence against all of it? Does it continue when every current member has died? Answer yes and you are looking at a corporate descent group. Kindreds fail all three, because their membership is different for every person in them.</div>'+
+     '<div class="dd">This is why the descent rule matters far beyond genealogy. A unilineal rule produces bounded, permanent groups that can hold property and go to war; bilateral reckoning produces flexible personal networks that cannot. The rule is not decoration on the kinship chart &mdash; it is the constitution.</div>'}
+ ];
+ var gsel=null;
+ var BOX={
+  soc:{x:10,y:32,w:280,h:182,r:13,t:'THE SOCIETY',tx:16},
+  moiA:{x:18,y:50,w:158,h:156,r:11,t:'MOIETY A',tx:24},
+  moiB:{x:184,y:50,w:98,h:156,r:11,t:'MOIETY B',tx:190},
+  phr:{x:26,y:68,w:142,h:130,r:9,t:'PHRATRY',tx:32},
+  cl1:{x:34,y:86,w:86,h:104,r:8,t:'CLAN',tx:40},
+  cl2:{x:126,y:86,w:34,h:104,r:8,t:'CLAN',tx:130},
+  ln1:{x:42,y:104,w:70,h:40,r:7,t:'LINEAGE',tx:47},
+  ln2:{x:42,y:150,w:70,h:34,r:7,t:'LINEAGE',tx:47}
+ };
+ var HL={ lin:['ln1','ln2'], clan:['cl1','cl2'], phr:['phr'], moi:['moiA','moiB'], kin:[], corp:['ln1','ln2','cl1','cl2','phr','moiA','moiB'] };
+ var TAP={ soc:'corp', moiA:'moi', moiB:'moi', phr:'phr', cl1:'clan', cl2:'clan', ln1:'lin', ln2:'lin' };
+
+ function drawGroups(){
+  SVG.setAttribute('viewBox','0 0 300 276');
+  var hl=gsel?(HL[gsel]||[]):[];
+  var s='<rect x="0" y="0" width="300" height="276" rx="10" fill="'+BG+'"/>';
+  s+='<text x="10" y="17" font-size="8.4" font-weight="800" letter-spacing="1.2" fill="'+MUT+'">TAP A BOX &#183; GROUPS INSIDE GROUPS</text>';
+  var order=['soc','moiA','moiB','phr','cl1','cl2','ln1','ln2'];
+  for(var i=0;i<order.length;i++){
+   var k=order[i], b=BOX[k], on=has(hl,k), fills;
+   fills = on ? '#f5e2b8' : (k==='soc'?'#faf4ea':PAPER);
+   s+='<rect class="rgn" data-g="'+k+'" x="'+b.x+'" y="'+b.y+'" width="'+b.w+'" height="'+b.h+'" rx="'+b.r+'" fill="'+fills+'" fill-opacity="'+(k==='soc'?'.9':'.95')+'" stroke="'+(on?GOLD:'#e0d0ba')+'" stroke-width="'+(on?2.1:1.2)+'"/>';
+   s+='<text x="'+b.tx+'" y="'+(b.y+11)+'" font-size="5.9" font-weight="800" letter-spacing="1" fill="'+(on?DK:MUT)+'">'+b.t+'</text>';
+  }
+  /* people inside the two lineages of clan 1 */
+  var g1=[[54,'m'],[70,'f'],[86,'m'],[102,'f']], g2=[[54,'f'],[70,'m'],[86,'f'],[102,'m']];
+  for(var a=0;a<g1.length;a++){
+   var isE=(a===1);
+   s+=shape(g1[a][1],g1[a][0],128,4.6,{f:isE?'#f5e2b8':PAPER,s:isE?DK:'#b9a68f',w:isE?1.9:1.2,d:''});
+   s+=shape(g2[a][1],g2[a][0],171,4.2,{f:PAPER,s:'#b9a68f',w:1.2,d:''});
+  }
+  s+='<text x="70" y="143" font-size="5.6" font-weight="800" text-anchor="middle" fill="'+DK+'">EGO</text>';
+  /* a few members in the sibling clan and the far moiety */
+  for(var b2=0;b2<4;b2++){ s+=shape(b2%2?'m':'f',143,102+b2*22,4.2,{f:PAPER,s:'#c6b39c',w:1.1,d:''}); }
+  for(var c2=0;c2<8;c2++){ s+=shape(c2%2?'f':'m',204+(c2%3)*24,84+Math.floor(c2/3)*36,4.4,{f:PAPER,s:'#c6b39c',w:1.1,d:''}); }
+  /* the kindred: a dashed shape that ignores every boundary */
+  if(gsel==='kin'){
+   s+='<ellipse cx="140" cy="130" rx="114" ry="36" fill="'+GOLD+'" fill-opacity=".1" stroke="'+GOLD+'" stroke-width="2" stroke-dasharray="5 3.5"/>';
+   s+='<text x="256" y="112" font-size="6.4" font-weight="800" letter-spacing=".8" text-anchor="middle" fill="'+GOLD+'">KINDRED</text>';
+   s+='<text x="150" y="240" font-size="6.8" font-weight="700" text-anchor="middle" fill="'+DK+'">centred on EGO &#183; crosses every boundary &#183; owns nothing</text>';
+  } else {
+   s+='<text x="150" y="240" font-size="6.8" font-weight="700" text-anchor="middle" fill="'+MUT+'">each box is a real group &#183; it owns things and outlives its members</text>';
+  }
+  s+='<text x="150" y="256" font-size="6.2" font-weight="600" text-anchor="middle" fill="'+MUT+'">smaller groups nest inside larger ones; the links get vaguer as you go out</text>';
+  ART.innerHTML=s;
+  bindRegions();
+ }
+
+ function renderGroups(){
+  var h='<div class="lbl first">Levels of grouping</div><div class="list" id="glist">';
+  for(var i=0;i<GRP.length;i++){
+   h+='<button class="it'+(gsel===GRP[i].id?' on':'')+'" data-k="'+GRP[i].id+'"><span class="sw" style="background:'+(GRP[i].id==='kin'?GOLD:(GRP[i].id==='corp'?SIE:BLU))+'"></span><span><span class="nm2">'+GRP[i].nm+'</span><span class="s2">'+GRP[i].ct+'</span></span></button>';
+  }
+  h+='</div>';
+  $('ctl').innerHTML=h;
+  var bs=$('glist').querySelectorAll('.it');
+  for(var j=0;j<bs.length;j++) bs[j].onclick=(function(b){ return function(){ gsel=b.getAttribute('data-k'); renderGroups(); }; })(bs[j]);
+
+  drawGroups();
+  $('cardTitle').innerHTML='What a descent rule builds';
+  if(!gsel){
+   $('stage').style.background=SIE;
+   $('stage').innerHTML='Groups inside groups<small>tap a level to explore it</small>';
+   $('info').innerHTML='<span class="n">From a rule to a society</span>A descent rule is only an instruction. What it <b>builds</b> is a set of nested groups &mdash; and the further out you go, the vaguer the genealogical link becomes, until nobody is even claiming they could trace it.<div class="dd">Work from the inside out: a handful of households who know exactly how they are related; a clan that shares a name and an ancestor nobody can reach; halves of a whole society that must marry each other. Then meet the odd one out, which is centred on a person rather than an ancestor and cannot own a thing.</div>';
+   $('extra').innerHTML='<div class="mnem"><b>The gradient.</b> Lineage &rarr; clan &rarr; phratry &rarr; moiety. Membership gets larger, the ancestor gets hazier, and the group does less specific work &mdash; but every one of them is a <b>corporate</b> group, which is the thing a kindred can never be.</div>';
+   $('cap').innerHTML='<div class="cnt">The boxes are drawn nested because that is how the groups actually sit: a lineage is <i>inside</i> a clan, a clan <i>inside</i> a phratry, a phratry <i>inside</i> a moiety. Tap any box, or any item on the right.</div>';
+   return;
+  }
+  var g=null; for(var q=0;q<GRP.length;q++) if(GRP[q].id===gsel) g=GRP[q];
+  $('stage').style.background=(gsel==='kin'?GOLD:(gsel==='corp'?SIE:BLU));
+  $('stage').innerHTML=g.nm+'<small>'+g.ct+'</small>';
+  $('info').innerHTML='<span class="n">'+g.nm+'</span>'+g.d;
+  var ex='';
+  if(gsel==='lin') ex='<div class="mnem"><b>Test for a lineage:</b> can somebody recite the steps? If a senior member can walk you generation by generation from a living person to the founder, it is a lineage. If they say &ldquo;we are all descended from the Bear&rdquo; and stop, it is a clan.</div>';
+  if(gsel==='clan') ex='<div class="note"><b>Careful with &ldquo;totem&rdquo;.</b> It is an Ojibwe word (<i>doodem</i>) that anthropology borrowed and applied very widely, sometimes to arrangements that have little in common. Use it as shorthand for a clan emblem, not as an explanation of what a particular people believe &mdash; for that, ask them.</div>';
+  if(gsel==='moi') ex='<div class="mnem"><b>Why two halves is such a powerful design.</b> With exogamous moieties every marriage is automatically between the halves, so every household has permanent in-laws on the other side. Reciprocity stops being a virtue anyone has to remember and becomes the shape of the society.</div>';
+  if(gsel==='kin') ex='<div class="note"><b>Why a kindred cannot be corporate.</b> Its membership is different for every member. There is no list two people would agree on, no boundary to defend, and nothing left when EGO dies. Compare a lineage, which has a fixed membership every member would recite the same way, and which was there before any of them.</div>';
+  if(gsel==='corp') ex='<div class="mnem"><b>Three questions.</b> Does it own something together? Can it act as one body? Does it outlive its members? Three yeses and you have a corporate descent group &mdash; the unit that actually holds land, feuds, and passes on office.</div>';
+  $('extra').innerHTML=ex;
+  $('cap').innerHTML='<div class="cnt">'+(gsel==='kin'?'The dashed shape is drawn deliberately in the wrong place &mdash; straddling clans, phratries and both moieties at once. A kindred does not respect the boundaries because it is not built out of them.':(gsel==='corp'?'Every solid box on this diagram is a corporate group. Each owns something, acts as one, and will still exist when everyone currently inside it is gone.':'Highlighted: the '+g.nm.toLowerCase()+' level. Notice what contains it and what it contains.'))+'</div>';
+ }
+
+ /* ====================================================================== */
+ /* MODE 3 — NAME THE RULE                                                 */
+ /* ====================================================================== */
+
+ var Q=[
+  {a:'mat',t:'Trobriand Islands, Papua New Guinea',
+   c:'A boy grows up in his father&#39;s village, then moves as he approaches adolescence to the village of his mother&#39;s brother &mdash; the man whose garden land, magic and name will one day be his. Each harvest a man fills a yam house not for his own household but for his <b>sister&#39;s</b>.',
+   e:'Inheritance from the mother&#39;s brother, and a man&#39;s produce flowing to his sister&#39;s household, are the classic signature of <b>matrilineal</b> descent with <b>avunculocal</b> residence. Malinowski described the yam exchange and the avunculate in <i>Argonauts of the Western Pacific</i> (1922) and <i>The Sexual Life of Savages</i> (1929) &mdash; a title of its period, and a book whose ethnography of Kiriwina still repays reading.'},
+  {a:'pat',t:'Nuer, South Sudan',
+   c:'A man places himself by reciting his father, his father&#39;s father and so on up to the founder of a named group of many thousands. Disputes split the group along those same steps &mdash; and the two segments that fight each other one week will stand together against a more distant segment the next.',
+   e:'Reckoning only through men, with groups that nest and realign by genealogical distance, is a <b>segmentary patrilineal</b> system. Evans-Pritchard&#39;s <i>The Nuer</i> (1940) gave anthropology the idea of <b>complementary opposition</b>: the group is not a fixed team but a scale that expands and contracts against whoever is opposite.'},
+  {a:'bi',t:'Contemporary Europe and North America',
+   c:'A child counts all four grandparents as equally close, divides holidays between two sets of relatives, and inherits from both sides. No named group of relatives owns land together &mdash; only a personal circle that no two people share, except full siblings.',
+   e:'Equal reckoning through both parents produces a <b>kindred</b>, not a lineage: <b>bilateral</b> descent. The surname usually running from father to child is a <b>naming</b> custom, not a descent rule &mdash; the giveaway is that both grandmothers count fully as your own.'},
+  {a:'dbl',t:'Yak&ouml; communities, Cross River State, Nigeria',
+   c:'Every person belongs to two groups at once. Farmland, house sites and residence come through the father&#39;s group; movable wealth, certain ritual offices and particular obligations come through the mother&#39;s. Ask what a man owns and the answer depends on which kind of property you mean.',
+   e:'Two unilineal systems running in parallel, each controlling different assets, is <b>double descent</b> &mdash; not bilateral reckoning, because nothing is merged: there are two crisp groups, and every person is fully in one of each. Daryll Forde documented the arrangement from the 1930s.'},
+  {a:'ambi',t:'Iban, Sarawak, Borneo',
+   c:'A longhouse is a row of independent family apartments. At marriage a couple decides which apartment to join &mdash; the husband&#39;s or the wife&#39;s &mdash; and their children belong to the one they grow up in. Descent can run through either parent, but only one line is ever activated.',
+   e:'Eligibility through either parent plus a choice that produces one real, property-holding group is <b>ambilineal</b> (cognatic) descent. The <i>bilek</i> is corporate in a way a kindred never is: it owns, it endures, and its membership is a list everyone agrees on.'},
+  {a:'mat',t:'Akan, Ghana',
+   c:'The <i>abusua</i> is the group that decides inheritance and office. A chief is succeeded not by his son but by his sister&#39;s son, and candidates are put forward by the <i>ohemaa</i>, the senior woman of the royal line.',
+   e:'Succession passing to the sister&#39;s son is <b>matrilineal</b>. Note that the office itself is usually held by a man &mdash; a clean illustration of why matrilineal descent is not matriarchy. The <i>ohemaa</i>&#39;s power to nominate is real authority, and it is a fact about Akan political organisation rather than an automatic consequence of the descent rule.'},
+  {a:'pat',t:'Lineage villages of southeastern China',
+   c:'A whole village shares one surname and one ancestral hall. A written genealogy records every male descendant of the founder, and land held in the founder&#39;s name funds the rites performed for him.',
+   e:'Membership through men, an ancestral estate and a written record of the male line make this a <b>patrilineal</b> corporate lineage &mdash; the <i>zongzu</i>, with its <i>zupu</i> genealogy. Note the corporate test: the land belongs to the lineage, not to any living person, and it will still be there when they are gone.'},
+  {a:'ambi',t:'M&#257;ori, Aotearoa New Zealand',
+   c:'<i>Whakapapa</i> lets a person trace descent through many ancestral lines, so most people can legitimately claim more than one <i>hap&#363;</i>. Which claim becomes real depends on where you live and take part &mdash; <i>ahi k&#257;</i>, keeping the home fires burning.',
+   e:'Wide eligibility, activated by residence and participation, is <b>ambilineal</b> descent. It is worth noticing what this design achieves: it lets a group grow when there is work to do and shrink when there is not, without anyone ever being told they are not related.'},
+  {a:'bi',t:'Inuit communities of the Arctic',
+   c:'Households join and separate with the season and with the hunt. Relatives are reckoned equally through both parents and the circle extends outward as far as it is useful. No named group holds land, and the set of people someone can call on differs from person to person.',
+   e:'<b>Bilateral</b> reckoning, producing flexible kindreds rather than corporate lineages. The fit is not accidental: where survival depends on regrouping quickly, a wide personal network of people obliged to help is worth more than a fixed group with a boundary.'},
+  {a:'mat',t:'Hopi, northeastern Arizona',
+   c:'A woman owns the house she was born in, and her daughters will own it after her. Clans carry names drawn from the natural world, and a man moves to his wife&#39;s household at marriage while keeping ritual responsibilities in the household of his mother and sisters.',
+   e:'Houses and fields held by women and passed to daughters, with <b>matrilocal</b> residence, mark <b>matrilineal</b> descent. The detail that a man keeps ceremonial duties in his natal household while living in his wife&#39;s is the matrilineal puzzle made visible &mdash; his obligations and his residence point in different directions.'}
+ ];
+ var OPT=[['pat','Patrilineal','through fathers'],['mat','Matrilineal','through mothers'],['bi','Bilateral','through both, no group'],['dbl','Double descent','two groups at once'],['ambi','Ambilineal','either line, you choose']];
+ var qi=0, qans=null, qScore=0, qDone=0, ORD=[];
+
+ function shuffle(){
+  ORD=[]; for(var i=0;i<Q.length;i++) ORD.push(i);
+  for(var j=ORD.length-1;j>0;j--){ var r2=Math.floor(Math.random()*(j+1)), t=ORD[j]; ORD[j]=ORD[r2]; ORD[r2]=t; }
+ }
+
+ function renderQuiz(){
+  var q=Q[ORD[qi]];
+  $('cardTitle').innerHTML=qans?('The rule: '+RULES[q.a].nm):'Which rule is this?';
+  if(qans){ rule=q.a; egoSex='m'; amChoice='f'; }
+  drawChart(!!qans);
+  $('cap').innerHTML= qans
+   ? '<div class="cnt">The chart now shows <b>'+RULES[q.a].nm.toLowerCase()+'</b> descent, so you can see the shape the vignette describes. Return to the first tab to explore it properly.</div>'
+   : '<div class="cnt">Read the vignette and choose. The chart will light up in the shape of the correct answer.</div>';
+
+  var h='<div class="clue"><span class="w">Case '+(qi+1)+' of '+Q.length+' &#183; '+q.t+'</span>'+q.c+'</div>';
+  h+='<div class="lbl">Name the descent rule</div><div class="grid" id="opts">';
+  for(var i=0;i<OPT.length;i++){
+   var o=OPT[i], cls='it';
+   if(qans){
+    if(o[0]===q.a) cls+=' on';
+    else if(o[0]===qans) cls+=' on';
+   }
+   h+='<button class="'+cls+(i===4?' wide':'')+'" data-o="'+o[0]+'"'+(qans?' disabled':'')+' style="'+(qans&&o[0]===q.a?'background:'+GRN+';border-color:'+GRN+';':(qans&&o[0]===qans?'background:'+CRL+';border-color:'+CRL+';':''))+'"><span class="kn"'+(qans&&(o[0]===q.a||o[0]===qans)?' style="color:#fff"':'')+'>'+o[1]+'</span><span class="ct"'+(qans&&(o[0]===q.a||o[0]===qans)?' style="color:rgba(255,255,255,.85)"':'')+'>'+o[2]+'</span></button>';
+  }
+  h+='</div>';
+  $('ctl').innerHTML=h;
+  if(!qans){
+   var bs=$('opts').querySelectorAll('button');
+   for(var j=0;j<bs.length;j++) bs[j].onclick=(function(b){ return function(){ answer(b.getAttribute('data-o')); }; })(bs[j]);
+  }
+
+  if(!qans){
+   $('stage').style.background=SIE;
+   $('stage').innerHTML='Name the rule<small>case '+(qi+1)+' of '+Q.length+'</small>';
+   $('info').innerHTML='<span class="n">Read for the give-away</span>Vignettes like these are how descent rules are actually identified in the field. Look for <b>who inherits from whom</b>, <b>who moves house at marriage</b>, and <b>whether any group owns anything jointly</b>. Those three answers will almost always fix the rule.';
+   $('extra').innerHTML='';
+  } else {
+   var ok=(qans===q.a);
+   $('stage').style.background= ok?GRN:CRL;
+   $('stage').innerHTML=(ok?'Correct':'Not this one')+'<small>'+q.t+'</small>';
+   $('info').innerHTML='<span class="n">'+RULES[q.a].nm+' descent<span class="chip '+(ok?'ok':'no')+'">'+(ok?'you got it':'you said '+RULES[qans].nm.toLowerCase())+'</span></span>'+q.e;
+   var pct=Math.round(qScore/qDone*100);
+   var ex='<div class="stat"><span>'+qScore+' / '+qDone+'</span><span class="bar"><i style="width:'+pct+'%"></i></span><span>'+pct+'%</span></div>';
+   ex+='<div class="row"><button class="btn solid" id="nx">'+(qi<Q.length-1?'Next case &#8250;':'Start again')+'</button></div>';
+   $('extra').innerHTML=ex;
+   $('nx').onclick=function(){
+    if(qi<Q.length-1){ qi++; qans=null; }
+    else { shuffle(); qi=0; qans=null; qScore=0; qDone=0; }
+    renderQuiz();
+   };
+  }
+ }
+ function answer(a){
+  qans=a; qDone++; if(a===Q[ORD[qi]].a) qScore++;
+  renderQuiz();
+ }
+
+ /* ====================================================================== */
+ /* WIRING                                                                 */
+ /* ====================================================================== */
+
+ function bindRegions(){
+  var rs=ART.querySelectorAll('.rgn');
+  for(var i=0;i<rs.length;i++){
+   rs[i].onclick=(function(el){
+    return function(){
+     var pid=el.getAttribute('data-p'), gid=el.getAttribute('data-g');
+     if(mode==='rule'&&pid){ showPerson(pid); }
+     else if(mode==='group'&&gid){ gsel=TAP[gid]; renderGroups(); }
+    };
+   })(rs[i]);
+  }
+ }
+
+ function render(){
+  if(mode==='rule'){ selP=null; renderRule(); }
+  else if(mode==='group'){ renderGroups(); }
+  else { renderQuiz(); }
+ }
+
+ var mb=$('mode').querySelectorAll('button');
+ for(var i=0;i<mb.length;i++){
+  mb[i].onclick=(function(b){
+   return function(){
+    for(var j=0;j<mb.length;j++) mb[j].className='';
+    b.className='on';
+    mode=b.getAttribute('data-m');
+    if(mode==='rule'&&!rule){ rule=null; }
+    if(mode==='quiz'){ qans=null; }
+    if(mode==='group'){ gsel=gsel||null; }
+    render();
+   };
+  })(mb[i]);
+ }
+
+ shuffle();
+ render();
+})();
+</script>
+</body>
+</html>

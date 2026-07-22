@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>The Factor-Pair Hunt: Factoring a Trinomial</title>
+<meta name="description" content="Hunt through the factor pairs of a&middot;c, watch the correct split appear, and see the box model prove why the pair has to multiply to a&middot;c in the first place.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.96fr 1.04fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+
+/* ---- example picker ---- */
+#pick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+#pick button{display:block;text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 9px;cursor:pointer;font-family:var(--sans);transition:.12s;}
+#pick button:hover{border-color:var(--teal);}
+#pick button .nm{display:block;font-weight:700;font-size:11.3px;color:var(--ink);line-height:1.15;}
+#pick button .ct{display:block;font-family:var(--math);font-size:12px;color:var(--muted);margin-top:3px;line-height:1.2;}
+#pick button.on{background:var(--teal);border-color:var(--teal);}
+#pick button.on .nm{color:#fff;} #pick button.on .ct{color:rgba(255,255,255,.92);}
+#pick sup{font-size:.66em;}
+@media (max-width:470px){#pick{grid-template-columns:repeat(2,1fr);}}
+
+/* ---- the hunt ---- */
+.hunthd{font-size:12.5px;color:var(--soft);line-height:1.55;margin-bottom:9px;}
+.hunthd b{color:var(--ink);} .hunthd i{font-family:var(--math);}
+.targets{display:flex;gap:7px;margin-bottom:9px;}
+.targets div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 4px;background:#fff;}
+.targets .lb{font-size:9.3px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+.targets .vv{display:block;font-family:var(--math);font-size:18px;font-weight:700;color:var(--teal-dk);margin-top:1px;}
+.signrule{font-size:11.6px;color:#8a6a20;background:#fbf3e2;border:1px solid #ecd9ac;border-radius:8px;padding:7px 10px;margin-bottom:10px;line-height:1.45;}
+.signrule b{color:#5a4212;}
+#pairs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+@media (max-width:520px){#pairs{grid-template-columns:repeat(3,1fr);}}
+.ch{border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 3px;cursor:pointer;font-family:var(--sans);text-align:center;transition:.14s;line-height:1.2;}
+.ch:hover{border-color:var(--teal);}
+.ch .pr{display:block;font-family:var(--math);font-size:13.5px;font-weight:700;color:var(--ink);}
+.ch .sm{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;letter-spacing:.2px;}
+.ch.no{background:#f4f4f8;border-color:#e4e4ee;opacity:.62;}
+.ch.no .pr{color:var(--muted);font-weight:400;} .ch.no .sm{color:#b23145;}
+.ch.yes{background:#e8f4ec;border-color:var(--green);box-shadow:0 0 0 2px rgba(47,158,91,.2);}
+.ch.yes .pr{color:#1d6b3e;} .ch.yes .sm{color:#237a45;}
+.ch.look{border-color:var(--teal);box-shadow:0 0 0 3px rgba(67,69,143,.18);transform:scale(1.05);}
+
+/* ---- worked steps ---- */
+.work{margin-top:2px;}
+.wr{display:flex;gap:10px;align-items:baseline;padding:7px 8px;border-radius:9px;border-left:4px solid transparent;}
+.wr + .wr{margin-top:2px;}
+.wr .pl{flex:none;width:80px;font-size:9.3px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.wr .mx{font-family:var(--math);font-size:15.5px;color:var(--muted);line-height:1.75;flex:1;min-width:0;}
+.wr.on{background:#eef0fa;border-left-color:var(--teal);}
+.wr.on .mx{font-size:18px;color:var(--ink);font-weight:600;}
+.wr.on .pl{color:var(--teal);}
+.wr.done .mx{color:var(--soft);}
+.wr .ex{font-family:var(--sans);font-size:12.3px;color:var(--soft);line-height:1.6;margin-top:6px;display:block;}
+.wr:not(.on) .ex{display:none;}
+.wr .ex b{color:var(--ink);} .wr .ex i{font-family:var(--math);font-size:13.5px;}
+.mx sub{font-size:.62em;} .mx sup{font-size:.66em;} .mx i{font-family:var(--math);}
+.ex sup{font-size:.66em;}
+.hl{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.wr:not(.on) .hl{background:transparent;box-shadow:none;padding:0;}
+.gl{border-radius:4px;padding:1px 4px;background:#dbe9f5;box-shadow:inset 0 0 0 1.5px #9dc0dc;}
+.wr:not(.on) .gl{background:transparent;box-shadow:none;padding:0;}
+.plan{display:flex;flex-wrap:wrap;gap:4px;margin-top:11px;}
+.plan span{font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:#eceefa;color:var(--muted);border-radius:20px;padding:4px 9px;}
+.plan span.on{background:var(--teal);color:#fff;}
+.plan span.done{background:#dfe2f4;color:var(--teal-dk);}
+
+/* ---- box caption + why card ---- */
+.cap{font-size:12.2px;color:var(--soft);line-height:1.55;margin-top:10px;border-top:1px solid var(--line);padding-top:10px;min-height:58px;}
+.cap b{color:var(--ink);} .cap i{font-family:var(--math);}
+.why{font-size:12.6px;color:var(--soft);line-height:1.62;}
+.why b{color:var(--teal-dk);} .why i{font-family:var(--math);font-size:14px;}
+.why sup{font-size:.66em;}
+.eqline{font-family:var(--math);font-size:14.5px;color:var(--ink);background:#f1f2f9;border-radius:8px;padding:8px 11px;margin:8px 0;text-align:center;line-height:1.7;}
+.eqline sup{font-size:.66em;} .eqline b{color:var(--teal-dk);}
+#info i,.mnem i,.note i{font-family:var(--math);font-size:14px;}
+#info sup,.mnem sup,.note sup{font-size:.66em;}
+#info .n{margin-bottom:4px;}
+.disc{font-size:11.8px;color:var(--soft);background:#f1f2f9;border-radius:8px;padding:7px 11px;margin-top:10px;line-height:1.5;}
+.disc b{color:var(--teal-dk);} .disc i{font-family:var(--math);font-size:13.5px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 6</div>
+  <h1>The Factor-Pair Hunt</h1>
+  <div class="intro">To factor a trinomial you need <b>two numbers</b> &mdash; one product, one sum. There is no trick and no guessing required: you list the candidates and test them. Hunt the pairs below, then watch the correct split fall into place, tile by tile.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The box</h2>
+      <svg viewBox="0 0 300 262" aria-label="area model of the trinomial"><g id="art"></g></svg>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>Why the pair must multiply to <i style="font-family:var(--math)">a</i>&middot;<i style="font-family:var(--math)">c</i></h2>
+      <div class="why">
+        Every tile in the box is (a piece of the top edge) &times; (a piece of the left edge). So multiply the two <b>corner</b> tiles and you use all four edge pieces &mdash; and multiply the two <b>middle</b> tiles and you use those same four edge pieces, just paired up the other way.
+        <div class="eqline">corner &times; corner = (<i>a</i><i>x</i><sup>2</sup>)(<i>c</i>) = <b><i>ac</i> <i>x</i><sup>2</sup></b><br>middle &times; middle = (<i>m</i><i>x</i>)(<i>n</i><i>x</i>) = <b><i>mn</i> <i>x</i><sup>2</sup></b></div>
+        Same four pieces, same product. That forces <b><i>m</i>&middot;<i>n</i> = <i>a</i>&middot;<i>c</i></b>. And since the two middle tiles are what add to the middle term, <b><i>m</i> + <i>n</i> = <i>b</i></b>. That pair of conditions is the whole method &mdash; not a rule to memorize, just the geometry of a rectangle.
+        <div class="disc" id="disc"></div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">The factor-pair hunt<small>pick a trinomial to begin</small></div>
+    <div class="card">
+      <div id="pick"></div>
+      <div class="hunthd" id="hunthd"></div>
+      <div class="targets">
+        <div><span class="lb">product must be</span><span class="vv" id="tprod">—</span></div>
+        <div><span class="lb">sum must be</span><span class="vv" id="tsum">—</span></div>
+      </div>
+      <div class="signrule" id="signrule"></div>
+      <div id="pairs"></div>
+      <div class="row"><button class="btn" id="reset">Reset hunt</button><button class="btn solid" id="search">Search the pairs ▸</button></div>
+    </div>
+    <div class="card">
+      <h2>The work, one line at a time</h2>
+      <div class="work" id="work"></div>
+      <div class="plan" id="plan"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"></div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ============ math formatting helpers (HTML only, no LaTeX) ============ */
+ var X='<i>x</i>', X2='<i>x</i><sup>2</sup>';
+ var MIN='&minus;';
+ function co(k,v){ if(v==='') return ''+k; return (k===1?'':k)+v; }      /* k>0 */
+ function lead(k,v){ return (k<0?MIN:'')+co(Math.abs(k),v); }
+ function op(k){ return k<0?' '+MIN+' ':' + '; }
+ function mag(k,v){ return co(Math.abs(k),v); }
+ function nxt(k,v){ return op(k)+mag(k,v); }
+ function numS(n){ return (n<0?MIN+Math.abs(n):''+n); }
+ function poly(a,b,c){ return lead(a,X2)+nxt(b,X)+nxt(c,''); }
+ function split(a,m,n,c){ return lead(a,X2)+nxt(m,X)+nxt(n,X)+nxt(c,''); }
+ function splitHL(a,m,n,c){ return lead(a,X2)+op(m)+'<span class="hl">'+mag(m,X)+'</span>'+op(n)+'<span class="hl">'+mag(n,X)+'</span>'+nxt(c,''); }
+ function bin(k,j){ return '('+lead(k,X)+nxt(j,'')+')'; }
+ function binHL(k,j){ return '<span class="gl">('+lead(k,X)+nxt(j,'')+')</span>'; }
+ function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=b; b=a%b; a=t; } return a; }
+ function isSq(n){ if(n<0) return false; var r=Math.round(Math.sqrt(n)); return r*r===n; }
+
+ /* ============ the examples ============ */
+ var EX=[
+  {nm:'Both positive', a:1,b:7,c:12,
+   idea:'The friendliest case. <i>c</i> is positive so the two numbers share a sign, and <i>b</i> is positive so that shared sign is positive. Only three pairs of positive whole numbers multiply to 12, so the hunt is over in three tries.'},
+  {nm:'Both negative', a:1,b:-9,c:20,
+   idea:'A positive constant with a negative middle term. Positive product means the numbers match in sign; negative sum means that sign is negative. Notice the answer is <i>(x &minus; 4)(x &minus; 5)</i> &mdash; two minus signs, because two negatives multiply to the positive 20.'},
+  {nm:'Opposite signs', a:1,b:3,c:-28,
+   idea:'A negative constant is the tell: the two numbers must have <b>opposite</b> signs. That doubles the candidate list, since every pair can be arranged two ways. The one that wins puts the negative on the smaller number, because the sum has to come out positive.'},
+  {nm:'Leading 2', a:2,b:11,c:12,
+   idea:'When <i>a</i> is not 1, the target product is no longer just <i>c</i> &mdash; it is <i>a</i>&middot;<i>c</i> = 24. Everything else runs identically. This is usually called the <b>ac-method</b>, and the box on the left is the reason it works.'},
+  {nm:'Leading 6', a:6,b:-7,c:-20,
+   idea:'Sixteen candidate pairs. This is the case where guess-and-check falls apart and the systematic hunt earns its keep &mdash; you simply walk the divisors of 120 in order until the sums reach &minus;7.'},
+  {nm:'No pair (prime)', a:1,b:5,c:9,
+   idea:'Sometimes the hunt genuinely fails, and that is a finished answer, not a mistake. When no integer pair fits, the trinomial is <b>prime over the integers</b> &mdash; it has no factorization with whole-number coefficients.'}
+ ];
+
+ /* build the derived data for each example, and verify it */
+ EX.forEach(function(e){
+   var P=e.a*e.c, S=e.b, A=Math.abs(P), d;
+   e.P=P; e.cands=[];
+   for(d=1;d*d<=A;d++){
+     if(A%d) continue;
+     var f=A/d;
+     if(P>0){ e.cands.push(S>0?[d,f]:[-d,-f]); }
+     else { e.cands.push([d,-f]); e.cands.push([-d,f]); }
+   }
+   e.win=-1;
+   e.cands.forEach(function(p,i){ if(p[0]+p[1]===S && p[0]*p[1]===P) e.win=i; });
+   e.disc=e.b*e.b-4*e.a*e.c;
+   if(e.win<0){ e.f=null; return; }
+   var m=e.cands[e.win][0], n=e.cands[e.win][1];
+   var g1=gcd(e.a,m), p=e.a/g1, q=m/g1, g2=n/p;
+   e.f={m:m,n:n,p:p,q:q,g1:g1,g2:g2};
+ });
+
+ /* ============ step construction ============ */
+ function signRule(e){
+   if(e.P>0 && e.b>0) return 'Product <b>positive</b>, sum <b>positive</b> &rarr; both numbers are <b>positive</b>.';
+   if(e.P>0 && e.b<0) return 'Product <b>positive</b>, sum <b>negative</b> &rarr; both numbers are <b>negative</b>.';
+   return 'Product <b>negative</b> &rarr; the numbers have <b>opposite signs</b>, and the one with the larger size carries the sign of <i>b</i>.';
+ }
+ function signShort(e){
+   if(e.P>0 && e.b>0) return 'both positive';
+   if(e.P>0 && e.b<0) return 'both negative';
+   return 'opposite signs';
+ }
+
+ function build(e){
+   var a=e.a,b=e.b,c=e.c,P=e.P,st=[];
+   st.push({pl:'The trinomial', bx:0,
+     mx:poly(a,b,c),
+     ex:'Factoring is multiplication run backwards. We want two binomials whose product is exactly this. The <b>box</b> on the left is that product laid out as a rectangle: the four tiles inside have to add up to the trinomial, and the two edges are the factors we are hunting for.'});
+
+   st.push({pl:'Two targets', bx:0, diag:1,
+     mx:'<i>m</i> &middot; <i>n</i> = <span class="hl">'+numS(P)+'</span> &nbsp;&nbsp;and&nbsp;&nbsp; <i>m</i> + <i>n</i> = <span class="hl">'+numS(b)+'</span>',
+     ex:'The two corner tiles are known: <i>'+(a===1?'':a)+'x<sup>2</sup></i> and <i>'+numS(c)+'</i>, with product <i>'+numS(P)+'x<sup>2</sup></i>. The two middle tiles must have that same product (dashed lines on the box), and they are also the pieces that add to the middle term. So: multiply to <b>'+numS(P)+'</b>, add to <b>'+numS(b)+'</b>.'
+       +(a===1?' With <i>a</i> = 1 the product target is just <i>c</i> itself.':'')});
+
+   st.push({pl:'Sign rule', bx:0,
+     mx:'<i>m</i>, <i>n</i> &nbsp;&rarr;&nbsp; <span class="hl">'+signShort(e)+'</span>',
+     ex:'Read the signs before you list anything &mdash; it cuts the candidate list roughly in half. '+signRule(e)});
+
+   if(!e.f){
+     st.push({pl:'The hunt fails', bx:0,
+       mx:'<span class="hl">no integer pair</span>',
+       ex:'Every candidate has been tested and none of the sums hit <b>'+numS(b)+'</b>. That is not a dead end you back out of &mdash; it is the answer.'});
+     st.push({pl:'Conclusion', bx:0,
+       mx:poly(a,b,c)+' &nbsp;is&nbsp; <span class="hl">prime</span>',
+       ex:'This trinomial is <b>prime over the integers</b>: it cannot be written as a product of binomials with integer coefficients. The discriminant confirms it independently &mdash; <i>b<sup>2</sup> &minus; 4ac</i> = <b>'+numS(e.disc)+'</b>, which is not a perfect square.'});
+     return st;
+   }
+
+   var f=e.f;
+   st.push({pl:'The pair', bx:1,
+     mx:'<i>m</i> = <span class="hl">'+numS(f.m)+'</span>, &nbsp; <i>n</i> = <span class="hl">'+numS(f.n)+'</span>',
+     ex:'Check both conditions: ('+numS(f.m)+')('+numS(f.n)+') = <b>'+numS(P)+'</b> &check; &nbsp;and&nbsp; ('+numS(f.m)+') + ('+numS(f.n)+') = <b>'+numS(b)+'</b> &check;. Those two numbers are now the middle tiles of the box.'
+       +(a===1?' <b>Shortcut:</b> when <i>a</i> = 1 the pair <i>is</i> the answer &mdash; the factors are <i>'+bin(1,f.m)+bin(1,f.n)+'</i>. The next four lines show why that shortcut is legitimate.':'')});
+
+   st.push({pl:'Split the middle', bx:2,
+     mx:splitHL(a,f.m,f.n,c),
+     ex:'The single middle term <i>'+lead(b,X)+'</i> is rewritten as <i>'+lead(f.m,X)+nxt(f.n,X)+'</i>. Nothing about the expression changed in value, because '+numS(f.m)+' + '+numS(f.n)+' = '+numS(b)+'. But there are now <b>four terms &mdash; one per tile</b>, which is exactly what grouping needs.'});
+
+   st.push({pl:'Group in pairs', bx:3,
+     mx:'<span class="gl">('+lead(a,X2)+nxt(f.m,X)+')</span> + <span class="gl">('+lead(f.n,X)+nxt(c,'')+')</span>',
+     ex:'Take the terms two at a time &mdash; which on the box means taking the rectangle <b>one row at a time</b>. The top row is <i>'+lead(a,X2)+nxt(f.m,X)+'</i>; the bottom row is <i>'+lead(f.n,X)+nxt(c,'')+'</i>.'
+       +(f.n<0?' Note the second group keeps its own signs inside the parentheses.':'')});
+
+   st.push({pl:'GCF each', bx:4,
+     mx:co(f.g1,X)+bin(f.p,f.q)+op(f.g2)+co(Math.abs(f.g2),'')+bin(f.p,f.q),
+     ex:'Pull the greatest common factor out of each group. The top row has height <i>'+co(f.g1,X)+'</i>, the bottom row has height <i>'+numS(f.g2)+'</i> &mdash; and here is the payoff: <b>both rows turn out to be the same width</b>, <i>'+bin(f.p,f.q)+'</i>. That shared width is not luck; it is what the product condition guaranteed.'
+       +(f.g2<0?' Because the bottom row starts negative, we factor out a <b>negative</b> '+Math.abs(f.g2)+' so the binomial inside matches the top row.':'')});
+
+   st.push({pl:'Factor out', bx:5,
+     mx:binHL(f.p,f.q)+bin(f.g1,f.g2),
+     ex:'The common binomial <i>'+bin(f.p,f.q)+'</i> comes out front, and what remains &mdash; the two row heights &mdash; is the second factor. Read it straight off the box: the trinomial is the <b>width times the height</b> of the rectangle.'});
+
+   var ea=lead(f.p*f.g1,X2)+nxt(f.p*f.g2,X)+nxt(f.q*f.g1,X)+nxt(f.q*f.g2,'');
+   st.push({pl:'Check it', bx:5,
+     mx:ea+' = '+poly(a,b,c),
+     ex:'Never leave a factoring problem unchecked &mdash; multiplying back is fast and settles it completely. First times first, outer, inner, last gives <i>'+ea+'</i>, and the two middle terms recombine to <i>'+lead(b,X)+'</i>. That is the original trinomial, so <b>'+bin(f.p,f.q)+bin(f.g1,f.g2)+'</b> is correct.'});
+   return st;
+ }
+
+ /* ============ the box drawing ============ */
+ function stx(k,pow,mut){
+   var col=mut?' fill="#a3a5ba"':'';
+   var s=(k<0?'−':'')+((Math.abs(k)===1&&pow>0)?'':Math.abs(k));
+   var out='<tspan'+col+'>'+s+'</tspan>';
+   if(pow>0){ out+='<tspan font-style="italic"'+col+'>x</tspan>'; if(pow>1) out+='<tspan dy="-6" font-size="11"'+col+'>2</tspan>'; }
+   return out;
+ }
+ function tile(x,y,w,h,fill,txt){
+   return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#fffdf9" stroke-width="2"/>'+
+     '<text x="'+(x+w/2)+'" y="'+(y+h/2+6)+'" text-anchor="middle" font-family="Georgia,serif" font-size="17" fill="#22243a">'+txt+'</text>';
+ }
+ function drawBox(stage,diag){
+   var e=EX[ei], f=e.f, o='';
+   var L=56,T=54,W=232,H=182;
+   var W1,W2,H1,H2, xu=3;
+   if(f){
+     var r1=(f.p*xu)/(f.p*xu+Math.abs(f.q)); r1=Math.max(.3,Math.min(.7,r1)); W1=W*r1; W2=W-W1;
+     var r2=(f.g1*xu)/(f.g1*xu+Math.abs(f.g2)); r2=Math.max(.3,Math.min(.7,r2)); H1=H*r2; H2=H-H1;
+   } else { W1=W*.6; W2=W-W1; H1=H*.6; H2=H-H1; }
+
+   var mid = stage>=1;
+   var rows = stage>=3;
+   var sides= stage>=4;
+
+   /* row highlight behind everything */
+   if(rows){
+     o+='<rect x="'+(L-4)+'" y="'+(T-4)+'" width="'+(W+8)+'" height="'+(H1+8)+'" rx="7" fill="none" stroke="#9dc0dc" stroke-width="2.5"/>';
+     o+='<rect x="'+(L-4)+'" y="'+(T+H1-4)+'" width="'+(W+8)+'" height="'+(H2+8)+'" rx="7" fill="none" stroke="#9dc0dc" stroke-width="2.5" stroke-dasharray="5 3"/>';
+   }
+   /* tiles */
+   o+=tile(L,T,W1,H1,'#dfe2f4', stx(e.a,2));
+   o+=tile(L+W1,T,W2,H1,'#fbf0d3', mid?stx(f.m,1):'<tspan fill="#a3a5ba" font-size="20">?</tspan>');
+   o+=tile(L,T+H1,W1,H2,'#fbf0d3', mid?stx(f.n,1):'<tspan fill="#a3a5ba" font-size="20">?</tspan>');
+   o+=tile(L+W1,T+H1,W2,H2,'#e0efe5', stx(e.c,0));
+
+   /* diagonal product argument */
+   if(diag){
+     o+='<line x1="'+(L+W1/2)+'" y1="'+(T+H1/2)+'" x2="'+(L+W1+W2/2)+'" y2="'+(T+H1+H2/2)+'" stroke="#43458f" stroke-width="2" stroke-dasharray="5 4"/>';
+     o+='<line x1="'+(L+W1+W2/2)+'" y1="'+(T+H1/2)+'" x2="'+(L+W1/2)+'" y2="'+(T+H1+H2/2)+'" stroke="#b8862f" stroke-width="2" stroke-dasharray="5 4"/>';
+     o+='<text x="'+(L+W/2)+'" y="'+(T+H+22)+'" text-anchor="middle" font-family="Georgia,serif" font-size="12.5" fill="#43458f">both diagonals multiply to '+stx(e.P,2)+'</text>';
+   }
+
+   /* edge labels */
+   if(sides && f){
+     o+='<text x="'+(L+W1/2)+'" y="46" text-anchor="middle" font-family="Georgia,serif" font-size="14" fill="#262a5c">'+stx(f.p,1)+'</text>';
+     o+='<text x="'+(L+W1+W2/2)+'" y="46" text-anchor="middle" font-family="Georgia,serif" font-size="14" fill="#262a5c">'+stx(f.q,0)+'</text>';
+     o+='<text x="48" y="'+(T+H1/2+5)+'" text-anchor="end" font-family="Georgia,serif" font-size="14" fill="#262a5c">'+stx(f.g1,1)+'</text>';
+     o+='<text x="48" y="'+(T+H1+H2/2+5)+'" text-anchor="end" font-family="Georgia,serif" font-size="14" fill="#262a5c">'+stx(f.g2,0)+'</text>';
+   }
+   if(stage>=5 && f){
+     o+='<line x1="'+L+'" y1="30" x2="'+(L+W)+'" y2="30" stroke="#43458f" stroke-width="2"/>';
+     o+='<line x1="'+L+'" y1="30" x2="'+L+'" y2="36" stroke="#43458f" stroke-width="2"/>';
+     o+='<line x1="'+(L+W)+'" y1="30" x2="'+(L+W)+'" y2="36" stroke="#43458f" stroke-width="2"/>';
+     o+='<text x="'+(L+W/2)+'" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="14.5" font-weight="bold" fill="#43458f">'+stx(f.p,1)+'<tspan> '+(f.q<0?'−':'+')+' '+Math.abs(f.q)+'</tspan></text>';
+     o+='<line x1="26" y1="'+T+'" x2="26" y2="'+(T+H)+'" stroke="#43458f" stroke-width="2"/>';
+     o+='<line x1="26" y1="'+T+'" x2="32" y2="'+T+'" stroke="#43458f" stroke-width="2"/>';
+     o+='<line x1="26" y1="'+(T+H)+'" x2="32" y2="'+(T+H)+'" stroke="#43458f" stroke-width="2"/>';
+     o+='<text transform="rotate(-90 16 '+(T+H/2)+')" x="16" y="'+(T+H/2)+'" text-anchor="middle" font-family="Georgia,serif" font-size="14.5" font-weight="bold" fill="#43458f">'+stx(f.g1,1)+'<tspan> '+(f.g2<0?'−':'+')+' '+Math.abs(f.g2)+'</tspan></text>';
+   }
+   if(!f){
+     o+='<text x="'+(L+W/2)+'" y="'+(T+H+24)+'" text-anchor="middle" font-family="Georgia,serif" font-size="12.5" fill="#b23145">no integer tiles fit the two blanks</text>';
+   }
+   return o;
+ }
+ var CAPS=[
+  'The rectangle&rsquo;s <b>area</b> is the trinomial; its <b>edges</b> are the factors. Two tiles are known from the start &mdash; the two blanks are what the hunt is for.',
+  'The two dashed diagonals cover the same four edge pieces, so they have the same product. That is what forces <i>m</i>&middot;<i>n</i> = <i>a</i>&middot;<i>c</i>.',
+  'The blanks are filled. Both middle tiles are now known, and together they account for the entire middle term.',
+  'Same four tiles, written out as four terms instead of three.',
+  'Read the rectangle <b>one row at a time</b> &mdash; each row is one group.',
+  'Each row&rsquo;s height factored out; both rows share the same width. That shared width is the common binomial.',
+  'Both edges labelled. Width &times; height = the trinomial, which is exactly the factorization.'
+ ];
+ var CAPI=[0,1,0,2,3,4,5,6,6];
+
+ /* ============ state + render ============ */
+ var ei=0, si=0, tried={}, token=0, hunting=false;
+
+ function chipKey(i){ return i; }
+
+ function renderPick(){
+   $('pick').innerHTML=EX.map(function(e,i){
+     return '<button data-i="'+i+'" class="'+(i===ei?'on':'')+'"><span class="nm">'+e.nm+'</span><span class="ct">'+poly(e.a,e.b,e.c).replace(/<i>/g,'').replace(/<\/i>/g,'')+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call($('pick').querySelectorAll('button'),function(b){
+     b.onclick=function(){ token++; hunting=false; ei=+b.dataset.i; si=0; tried={}; renderAll(); };
+   });
+ }
+
+ function renderPairs(){
+   var e=EX[ei];
+   $('pairs').innerHTML=e.cands.map(function(p,i){
+     var t=tried[i], cls='';
+     if(t){ cls = (i===e.win) ? ' yes' : ' no'; }
+     var sum=p[0]+p[1];
+     return '<button class="ch'+cls+'" data-i="'+i+'"><span class="pr">'+numS(p[0])+' &middot; '+numS(p[1])+'</span>'+
+       '<span class="sm">'+(t?('sum '+numS(sum)+(i===e.win?' &check;':' &times;')):'sum ?')+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call($('pairs').querySelectorAll('.ch'),function(b){
+     b.onclick=function(){
+       if(hunting) return;
+       var i=+b.dataset.i; tried[i]=1;
+       if(i===EX[ei].win && si<3){ si=3; }
+       renderAll();
+     };
+   });
+ }
+
+ function foundYet(){ var e=EX[ei]; return e.win>=0 && tried[e.win]; }
+
+ function renderWork(){
+   var st=build(EX[ei]);
+   if(si>st.length-1) si=st.length-1;
+   $('work').innerHTML=st.map(function(s,i){
+     if(i>si) return '';
+     return '<div class="wr '+(i===si?'on':'done')+'"><div class="pl">'+s.pl+'</div><div class="mx">'+s.mx+
+       '<span class="ex">'+s.ex+'</span></div></div>';
+   }).join('');
+   $('plan').innerHTML=st.map(function(s,i){
+     return '<span class="'+(i===si?'on':(i<si?'done':''))+'">'+s.pl+'</span>';
+   }).join('');
+   $('prev').disabled=(si===0);
+   $('next').disabled=(si===st.length-1);
+   return st;
+ }
+
+ function renderAll(){
+   var e=EX[ei];
+   renderPick();
+   var st=renderWork();
+   var s=st[si];
+
+   /* stage header */
+   $('stage').innerHTML=(e.win<0?'A prime trinomial':'Hunting for two numbers')+
+     '<small>'+poly(e.a,e.b,e.c).replace(/<i>/g,'').replace(/<\/i>/g,'')+' &nbsp;·&nbsp; step '+(si+1)+' of '+st.length+'</small>';
+   $('stage').style.background = (e.win<0? 'var(--coral)' : 'var(--teal)');
+
+   /* the hunt panel */
+   $('hunthd').innerHTML='Every pair below multiplies to <b>'+numS(e.P)+'</b>'+
+     (e.a===1?' (that is just <i>c</i>, since <i>a</i> = 1)':' (that is <i>a</i>&middot;<i>c</i> = '+e.a+' &middot; '+numS(e.c)+')')+
+     '. Tap one to see its <b>sum</b> &mdash; you are looking for the pair that adds to <b>'+numS(e.b)+'</b>.';
+   $('tprod').innerHTML=numS(e.P);
+   $('tsum').innerHTML=numS(e.b);
+   $('signrule').innerHTML=signRule(e);
+   renderPairs();
+   $('search').disabled=hunting;
+   $('cardTitle').innerHTML='The box &mdash; '+(e.a===1?'':'a = '+e.a+', ')+'c = '+numS(e.c);
+
+   /* the box */
+   $('art').innerHTML=drawBox(s.bx, s.diag?1:0);
+   $('cap').innerHTML=CAPS[CAPI[Math.min(si,CAPI.length-1)]] || CAPS[0];
+   if(e.win<0) $('cap').innerHTML='Two blanks, and no pair of integers that fills them while also adding to '+numS(e.b)+'. The rectangle cannot be completed with whole numbers.';
+
+   /* side panels */
+   $('info').innerHTML='<span class="n">'+e.nm+'</span>'+e.idea;
+   $('mnem').innerHTML='<b>The recipe, every time:</b> (1) factor out any GCF from all three terms first, and make the leading coefficient positive. (2) Multiply <i>a</i>&middot;<i>c</i>. (3) List the factor pairs of that product and find the one that adds to <i>b</i>. (4) Split the middle term with that pair. (5) Group and factor. (6) Multiply back to check.';
+   $('note').innerHTML='<b>Two honest cautions.</b> Factoring an expression rewrites it &mdash; there are no excluded values and no extraneous solutions to chase, because nothing was divided away and no side was squared. Those checks belong to <i>equations</i>. But when you go on to <b>solve</b> '+bin(1,-3)+bin(1,2)+' = 0, the zero-product property only applies with <b>zero on one side</b>: from '+bin(1,-3)+bin(1,2)+' = 6 you may not conclude that a factor equals 6.';
+   $('disc').innerHTML='<b>Quick pre-test:</b> a trinomial with integer coefficients factors over the rationals exactly when <i>b<sup>2</sup> &minus; 4ac</i> is a perfect square. Here <i>b<sup>2</sup> &minus; 4ac</i> = ('+numS(e.b)+')<sup>2</sup> &minus; 4('+numS(e.a)+')('+numS(e.c)+') = <b>'+numS(e.disc)+'</b>'+
+     (isSq(e.disc)? ' = '+Math.round(Math.sqrt(e.disc))+'<sup>2</sup> &mdash; a perfect square, so a pair exists and the hunt will succeed.' : ' &mdash; not a perfect square, so no integer pair can exist. The trinomial is prime.');
+ }
+
+ /* ============ the auto-search sweep ============ */
+ $('search').onclick=function(){
+   var e=EX[ei], my=++token, i=0;
+   hunting=true; tried={}; si=Math.min(si,2); renderAll();
+   function stepOne(){
+     if(my!==token) return;
+     if(i>=e.cands.length){
+       hunting=false;
+       if(e.win<0) si=3;
+       renderAll();
+       return;
+     }
+     Array.prototype.forEach.call($('pairs').querySelectorAll('.ch'),function(b){ b.classList.remove('look'); });
+     var node=$('pairs').querySelector('.ch[data-i="'+i+'"]');
+     if(node) node.classList.add('look');
+     tried[i]=1;
+     var hit=(i===e.win);
+     i++;
+     var cur=i;
+     renderPairs();
+     var n2=$('pairs').querySelector('.ch[data-i="'+(cur-1)+'"]');
+     if(n2 && !hit) n2.classList.add('look');
+     if(hit){ hunting=false; si=3; renderAll(); return; }
+     setTimeout(stepOne, 340);
+   }
+   setTimeout(stepOne, 200);
+ };
+ $('reset').onclick=function(){ token++; hunting=false; tried={}; si=0; renderAll(); };
+ $('prev').onclick=function(){ if(si>0){ si--; renderAll(); } };
+ $('next').onclick=function(){
+   var st=build(EX[ei]);
+   if(si<st.length-1){
+     si++;
+     if(si>=3 && EX[ei].win>=0){ EX[ei].cands.forEach(function(p,i){ tried[i]=1; }); }
+     renderAll();
+   }
+ };
+ document.addEventListener('keydown',function(ev){
+   if(ev.key==='ArrowRight'){ $('next').click(); }
+   if(ev.key==='ArrowLeft'){ $('prev').click(); }
+ });
+
+ renderAll();
+})();
+</script>
+</body>
+</html>

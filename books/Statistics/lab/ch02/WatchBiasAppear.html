@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Watch Bias Appear</title>
+<meta name="description" content="Turn nonresponse and voluntary-response bias on and off in a live survey simulation, and watch the estimate slide away from a truth you are allowed to see. Shows why bias is set by the ratio of response rates, why more data never repairs it, and why a margin of error cannot detect it.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15.5px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.hit{border-color:var(--green);background:#f2faf5;} .tiles div.hit .vv{color:#237a45;}
+.tiles div.far{border-color:var(--coral);background:#fdf3f4;} .tiles div.far .vv{color:#b23145;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:10.6px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);white-space:nowrap;width:126px;line-height:1.2;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;min-width:60px;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.warm input[type=range]{background:linear-gradient(90deg,var(--coral),#eec2c8);}
+.sl.warm input[type=range]::-webkit-slider-thumb{background:#a83545;} .sl.warm input[type=range]::-moz-range-thumb{background:#a83545;}
+.sl .nv{font-size:14.5px;font-weight:800;color:var(--teal-dk);min-width:56px;text-align:right;font-variant-numeric:tabular-nums;}
+.lgd{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px;font-size:11px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.cap{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+@media (max-width:520px){.row .btn{font-size:12.5px;padding:10px 4px;}.tiles .lb{font-size:8.8px;}.sl label{font-size:9.6px;width:96px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 2</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 2</div>
+  <h1>Watch Bias Appear</h1>
+  <div class="intro">In this city we are allowed to know the answer: <b>68% of bus riders are satisfied</b>. Now run a survey and see what it reports. Choosing people at random is only half the job &mdash; the other half is <b>who among them chooses to answer</b>. Turn that dial and watch the estimate walk away from a truth that never moved.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="sliceTitle">The mechanism, 200 people at a time</h2>
+      <svg viewBox="0 0 340 118" aria-label="who your method reaches and who actually answers"><g id="slice"></g></svg>
+      <div class="lgd"><span><i style="background:#2f6f8a"></i>satisfied, answered</span><span><i style="background:#d1495b"></i>dissatisfied, answered</span><span><i style="background:#dde8ee"></i><i style="background:#f4dde0;margin-left:-2px"></i>stayed silent</span></div>
+      <div class="cap" id="sliceCap"></div>
+    </div>
+    <div class="card"><h2 id="histTitle">Where the estimates land</h2>
+      <svg viewBox="0 0 340 200" aria-label="distribution of survey estimates against the true value"><g id="hist"></g></svg>
+      <div class="lgd"><span><i style="background:#2f6f8a"></i>one survey&rsquo;s estimate</span><span><i style="background:#1c4454"></i>the truth, 68%</span><span id="lgdTgt" style="display:none"><i style="background:#d1495b"></i>what this method is aimed at</span></div>
+    </div>
+    <div class="card"><h2>The only thing that sets the bias</h2>
+      <svg viewBox="0 0 340 172" aria-label="the estimate a method converges to, as a function of the ratio of response rates"><g id="bend"></g></svg>
+      <div class="cap">Horizontal axis: how many times more likely a <b>dissatisfied</b> rider is to answer than a satisfied one. At <b>1&times;</b> &mdash; and only there &mdash; the method is aimed at the truth.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">68% of riders are satisfied<small>now find out what your survey will say</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="clean" class="on">Everyone answers<small>random sample, no dropout</small></button>
+        <button data-v="nr">Nonresponse<small>you invite; some reply</small></button>
+        <button data-v="vr">Voluntary response<small>whoever feels like it</small></button>
+      </div>
+      <div class="sl" id="rowN"><label for="nSl">Invitations sent</label><input type="range" id="nSl" min="0" max="6" step="1" value="4"><span class="nv" id="nVal">800</span></div>
+      <div class="sl" id="rowRS"><label for="rsSl">Satisfied who reply</label><input type="range" id="rsSl" min="5" max="95" step="5" value="20"><span class="nv" id="rsVal">20%</span></div>
+      <div class="sl warm" id="rowRD"><label for="rdSl">Dissatisfied who reply</label><input type="range" id="rdSl" min="5" max="95" step="5" value="40"><span class="nv" id="rdVal">40%</span></div>
+      <div class="sl" id="rowVS"><label for="vsSl">Satisfied who speak up</label><input type="range" id="vsSl" min="2" max="24" step="1" value="2"><span class="nv" id="vsVal">1.0%</span></div>
+      <div class="sl warm" id="rowVD"><label for="vdSl">Dissatisfied who speak up</label><input type="range" id="vdSl" min="2" max="40" step="1" value="18"><span class="nv" id="vdVal">9.0%</span></div>
+      <div class="row"><button class="btn solid" id="one">Run the survey</button><button class="btn" id="many">+50 more</button><button class="btn" id="rst">Reset</button></div>
+      <div class="tiles">
+        <div><span class="lb">Your estimate</span><span class="vv" id="tP">&mdash;</span></div>
+        <div id="tErrBox"><span class="lb">Off the truth by</span><span class="vv" id="tErr">&mdash;</span></div>
+        <div id="tBiasBox"><span class="lb">Built-in bias</span><span class="vv" id="tBias">&mdash;</span></div>
+        <div><span class="lb">Respondents</span><span class="vv" id="tM">&mdash;</span></div>
+        <div><span class="lb" id="lbRate">Response rate</span><span class="vv" id="tRate">&mdash;</span></div>
+        <div><span class="lb">Margin of error (95%)</span><span class="vv" id="tMoe">&mdash;</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem">How <b>many</b> people answered tells you about the survey&rsquo;s <b>noise</b>. How they were <b>chosen</b> &mdash; and who among them chose to reply &mdash; tells you about its <b>aim</b>. Only one of those two problems is cured by collecting more data.</div>
+      <div class="note"><b>A margin of error cannot see bias.</b> The &plusmn; is built from the respondents alone, as though the method were pointed at the truth. Run the voluntary-response poll: thousands of replies, a margin of error under a single point, and an answer roughly 50 points wrong &mdash; with nothing anywhere in the arithmetic to warn you.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- seeded PRNG so every visit to this page behaves identically ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+ /* ---- the made-up city: exactly 68% of its 200,000 riders are satisfied ---- */
+ var N=200000, TRUTH=0.68;
+ var NS=[50,100,200,400,800,1500,3000];
+
+ var ni=4, mode='clean';
+ var rsat=20, rdis=40;        /* nonresponse: reply rates, in percent */
+ var vsat=1, vdis=9;          /* voluntary response: share who speak up, in percent */
+ var est=[], last=null, lastM=0, lastRate=0, slice=[], zero=false, rnd;
+
+ function reseed(){rnd=mulberry32(20260718);}
+ function n(){return NS[ni];}
+ function pct(v){return(v*100).toFixed(1);}
+ function sgn(v){return(v<0?'&minus;':'+')+Math.abs(v).toFixed(1);}
+
+ /* ---- random machinery ---- */
+ function gauss(){var u=1-rnd(),v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+ /* number of successes in k independent trials of probability q.
+    Exact Bernoulli loop while that is cheap; normal approximation above that,
+    which is extremely accurate once kq and k(1-q) are both in the hundreds. */
+ function binom(k,q){
+   if(k<=0||q<=0)return 0;
+   if(q>=1)return k;
+   if(k<=4000){var c=0,i;for(i=0;i<k;i++)if(rnd()<q)c++;return c;}
+   var x=Math.round(k*q+Math.sqrt(k*q*(1-q))*gauss());
+   return x<0?0:(x>k?k:x);
+ }
+
+ /* ---- the model ----
+    a = probability a SATISFIED rider ends up in your data
+    b = probability a DISSATISFIED rider ends up in your data
+    The proportion this method converges to is
+        p*a / ( p*a + (1-p)*b )  =  p / ( p + (1-p)*(b/a) )
+    which depends only on the RATIO b/a, never on how large a and b are. */
+ function probs(){
+   if(mode==='clean')return{a:1,b:1};
+   if(mode==='nr')return{a:rsat/100,b:rdis/100};
+   return{a:vsat/100,b:vdis/100};
+ }
+ function ratio(){var q=probs();return q.b/q.a;}
+ function target(){return TRUTH/(TRUTH+(1-TRUTH)*ratio());}
+ function targetOf(k){return TRUTH/(TRUTH+(1-TRUTH)*k);}
+ function biasPts(){return(target()-TRUTH)*100;}
+ function mean(){var s=0,j;for(j=0;j<est.length;j++)s+=est[j];return s/est.length;}
+ /* The bell-curve approximation behind a +/- needs roughly ten respondents in
+    each camp. Below that the Wald formula still returns a number -- and when
+    every respondent answers the same way it returns exactly zero, advertising
+    perfect precision built on almost nothing. Refuse to print it instead. */
+ function moeOK(){return last!==null&&lastM>0&&lastM*last>=10&&lastM*(1-last)>=10;}
+ function moe(){
+   if(!moeOK())return null;
+   return 1.96*Math.sqrt(last*(1-last)/lastM);
+ }
+
+ /* a genuine 200-person window on whatever your method does */
+ function makeSlice(){
+   var q=probs(),shown=(mode==='vr')?200:Math.min(n(),200),i,o,r;
+   slice=[];
+   for(i=0;i<shown;i++){o=(rnd()<TRUTH)?1:0;r=(rnd()<(o?q.a:q.b))?1:0;slice.push(o*2+r);}
+ }
+
+ /* one complete survey */
+ function runOne(){
+   var q=probs(),satR,disR,m;
+   if(mode==='vr'){
+     var sp=Math.round(N*TRUTH),dp=N-sp;
+     satR=binom(sp,q.a);disR=binom(dp,q.b);m=satR+disR;
+     lastRate=m/N;
+   }else{
+     var k=n(),si=binom(k,TRUTH),di=k-si;
+     satR=binom(si,q.a);disR=binom(di,q.b);m=satR+disR;
+     lastRate=(k>0)?m/k:0;
+   }
+   lastM=m;
+   if(m>0){zero=false;last=satR/m;est.push(last);}
+   else{zero=true;last=null;}
+   makeSlice();
+ }
+
+ /* ================= chart 1 : the mechanism, 200 people ================= */
+ function drawSlice(){
+   var s='',i,c,r,v,col,resp=[],satN=0,respSat=0;
+   var lab1=(mode==='vr')?'200 riders in the city — anyone may reply, nobody is asked'
+                         :'200 of the riders you invited, chosen at random';
+   s+='<text x="4" y="9" font-size="9.4" fill="#78868d" font-weight="700">'+lab1+'</text>';
+   for(i=0;i<200;i++){
+     c=i%40;r=Math.floor(i/40);
+     if(i<slice.length){
+       v=slice[i];
+       if(v>=2){satN++;if(v===3){col='#2f6f8a';resp.push('#2f6f8a');respSat++;}else col='#dde8ee';}
+       else{if(v===1){col='#d1495b';resp.push('#d1495b');}else col='#f4dde0';}
+     }else col='#f2f6f8';
+     s+='<rect x="'+(6+c*8.2).toFixed(1)+'" y="'+(14+r*8.2).toFixed(1)+'" width="6.6" height="6.6" rx="1.5" fill="'+col+'"/>';
+   }
+   s+='<text x="4" y="68" font-size="9.4" fill="#78868d" font-weight="700">…of whom '+resp.length+' ended up in the data</text>';
+   for(i=0;i<200;i++){
+     c=i%40;r=Math.floor(i/40);
+     col=(i<resp.length)?resp[i]:'#f2f6f8';
+     s+='<rect x="'+(6+c*8.2).toFixed(1)+'" y="'+(73+r*8.2).toFixed(1)+'" width="6.6" height="6.6" rx="1.5" fill="'+col+'"/>';
+   }
+   $("slice").innerHTML=s;
+
+   var tot=slice.length,cap;
+   if(!resp.length){
+     cap='Not one of these '+tot+' people replied. With rates this low a small survey can come back completely empty.';
+   }else{
+     var inShare=satN/tot*100, outShare=respSat/resp.length*100;
+     cap='<b>'+satN+'</b> of these '+tot+' riders are satisfied (<b>'+inShare.toFixed(0)+'%</b>) — the city, faithfully reproduced. '+
+         'But only <b>'+resp.length+'</b> of them answered, and <b>'+respSat+'</b> of those are satisfied (<b>'+outShare.toFixed(0)+'%</b>). '+
+         (Math.abs(inShare-outShare)<3
+           ? 'The two figures match, so nothing was distorted on the way in.'
+           : 'The people who dropped out were not a random handful — they leaned one way, and the number you would report leans with them.');
+   }
+   $("sliceCap").innerHTML=cap;
+   $("sliceTitle").innerHTML=(mode==='vr')?'Who volunteers, 200 riders at a time':'The mechanism, 200 people at a time';
+ }
+
+ /* ================= chart 2 : where the estimates land ================= */
+ var B=100,BW=0.01,X0=22,X1=332,BASE=150,TOP=44;
+ function px(v){return X0+v*(X1-X0);}
+ function drawHist(){
+   var s='',j,h,xl,mx=0,k=est.length,c=[],b;
+   for(j=0;j<B;j++)c.push(0);
+   for(j=0;j<k;j++){b=Math.floor(est[j]/BW);if(b<0)b=0;if(b>B-1)b=B-1;c[b]++;}
+
+   var tg=target(),m=moe();
+   /* the band the estimates should fall in, around whatever this method is aimed at */
+   if(m!==null){
+     var bl=px(Math.max(0,tg-m)),br=px(Math.min(1,tg+m));
+     s+='<rect x="'+bl.toFixed(1)+'" y="'+TOP+'" width="'+Math.max(1,br-bl).toFixed(1)+'" height="'+(BASE-TOP)+'" fill="#2f6f8a" opacity=".10"/>';
+   }
+
+   if(k){
+     for(j=0;j<B;j++)if(c[j]>mx)mx=c[j];
+     if(k<=80){
+       var capH=Math.floor((BASE-TOP)/6.6);
+       for(j=0;j<B;j++){
+         if(!c[j])continue;
+         var cxx=px((j+0.5)*BW),nn=Math.min(c[j],capH),q;
+         for(q=0;q<nn;q++)s+='<circle cx="'+cxx.toFixed(1)+'" cy="'+(BASE-4-q*6.6).toFixed(1)+'" r="3.1" fill="#2f6f8a"/>';
+       }
+     }else{
+       for(j=0;j<B;j++){
+         if(!c[j])continue;
+         h=c[j]/mx*(BASE-TOP);xl=px(j*BW);
+         s+='<rect x="'+(xl+.3).toFixed(1)+'" y="'+(BASE-h).toFixed(1)+'" width="'+Math.max(1.6,(X1-X0)/B-.6).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="#2f6f8a" rx="1"/>';
+       }
+     }
+   }
+
+   /* axis */
+   s+='<line x1="'+X0+'" y1="'+BASE+'" x2="'+X1+'" y2="'+BASE+'" stroke="#b7c7d0" stroke-width="1.4"/>';
+   for(j=0;j<=100;j+=10){
+     var tx=px(j/100);
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+BASE+'" x2="'+tx.toFixed(1)+'" y2="'+(BASE+4)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+     if(j%20===0)s+='<text x="'+tx.toFixed(1)+'" y="'+(BASE+15)+'" font-size="9.5" fill="#78868d" font-weight="600" text-anchor="middle">'+j+'%</text>';
+   }
+
+   /* the truth -- fixed, and it never moves no matter what you do to the survey */
+   var tp=px(TRUTH);
+   s+='<line x1="'+tp.toFixed(1)+'" y1="'+(TOP-24)+'" x2="'+tp.toFixed(1)+'" y2="'+(BASE+4)+'" stroke="#1c4454" stroke-width="2" stroke-dasharray="5 4"/>';
+   s+='<text x="'+tp.toFixed(1)+'" y="'+(TOP-28)+'" font-size="10.5" font-weight="800" fill="#1c4454" text-anchor="middle">truth = 68%</text>';
+
+   /* the number this method is actually homing in on */
+   var showT=Math.abs(tg-TRUTH)>0.005;
+   if(showT){
+     var cp=px(tg),ta=(cp>X1-60)?'end':((cp<X0+60)?'start':'middle');
+     s+='<line x1="'+cp.toFixed(1)+'" y1="'+(TOP-9)+'" x2="'+cp.toFixed(1)+'" y2="'+BASE+'" stroke="#d1495b" stroke-width="2" stroke-dasharray="4 3"/>';
+     s+='<text x="'+cp.toFixed(1)+'" y="'+(TOP-13)+'" font-size="10" font-weight="800" fill="#b23145" text-anchor="'+ta+'">aimed at '+pct(tg)+'%</text>';
+   }
+   $("lgdTgt").style.display=showT?'inline':'none';
+
+   /* the latest estimate */
+   if(last!==null){
+     var bx=px(Math.max(0,Math.min(1,last)));
+     s+='<polygon points="'+bx.toFixed(1)+','+(BASE+19)+' '+(bx-6).toFixed(1)+','+(BASE+30)+' '+(bx+6).toFixed(1)+','+(BASE+30)+'" fill="#b8862f"/>';
+     var la=(bx>X1-26)?'end':((bx<X0+26)?'start':'middle'),lxx=(la==='end')?X1:((la==='start')?X0:bx);
+     s+='<text x="'+lxx.toFixed(1)+'" y="'+(BASE+42)+'" font-size="11" font-weight="800" fill="#8a6a20" text-anchor="'+la+'">'+pct(last)+'%</text>';
+   }
+   $("hist").innerHTML=s;
+   $("histTitle").innerHTML=k?('Where '+k+' survey'+(k===1?'':'s')+' landed'):'Where the estimates land';
+ }
+
+ /* ================= chart 3 : the estimate as a function of the ratio ================= */
+ var KLO=0.05,KHI=20,DX0=34,DX1=330,DBASE=128,DTOP=18;
+ function kx(k){return DX0+(Math.log(k)-Math.log(KLO))/(Math.log(KHI)-Math.log(KLO))*(DX1-DX0);}
+ function ky(p){return DBASE-p*(DBASE-DTOP);}
+ function drawBend(){
+   var s='',j,d='',g,t;
+   for(j=0;j<=5;j++){g=j/5;
+     s+='<line x1="'+DX0+'" y1="'+ky(g).toFixed(1)+'" x2="'+DX1+'" y2="'+ky(g).toFixed(1)+'" stroke="#e7eef2" stroke-width="1"/>';
+     s+='<text x="'+(DX0-5)+'" y="'+(ky(g)+3.4).toFixed(1)+'" font-size="9" fill="#95a3aa" font-weight="600" text-anchor="end">'+(g*100)+'%</text>';
+   }
+   /* the truth, and the single ratio that reaches it */
+   s+='<line x1="'+DX0+'" y1="'+ky(TRUTH).toFixed(1)+'" x2="'+DX1+'" y2="'+ky(TRUTH).toFixed(1)+'" stroke="#1c4454" stroke-width="1.6" stroke-dasharray="5 4"/>';
+   s+='<text x="'+(DX1-2)+'" y="'+(ky(TRUTH)-5).toFixed(1)+'" font-size="9.5" font-weight="800" fill="#1c4454" text-anchor="end">the truth, 68%</text>';
+   var x1=kx(1);
+   s+='<line x1="'+x1.toFixed(1)+'" y1="'+DTOP+'" x2="'+x1.toFixed(1)+'" y2="'+DBASE+'" stroke="#2f9e5b" stroke-width="1.5" stroke-dasharray="3 3"/>';
+   s+='<circle cx="'+x1.toFixed(1)+'" cy="'+ky(TRUTH).toFixed(1)+'" r="4" fill="#2f9e5b"/>';
+   s+='<text x="'+(x1+6).toFixed(1)+'" y="'+(DTOP+10)+'" font-size="9.4" font-weight="800" fill="#237a45">equal rates &rarr; no bias</text>';
+
+   /* the curve, computed point by point */
+   for(j=0;j<=140;j++){t=KLO*Math.pow(KHI/KLO,j/140);
+     d+=(j?' L':'M')+kx(t).toFixed(1)+' '+ky(targetOf(t)).toFixed(1);}
+   s+='<path d="'+d+'" fill="none" stroke="#d1495b" stroke-width="2.4" stroke-linejoin="round"/>';
+
+   /* x axis */
+   s+='<line x1="'+DX0+'" y1="'+DBASE+'" x2="'+DX1+'" y2="'+DBASE+'" stroke="#b7c7d0" stroke-width="1.4"/>';
+   var tk=[0.1,0.25,0.5,1,2,5,10,20],lb=['0.1&times;','','0.5&times;','1&times;','2&times;','5&times;','10&times;','20&times;'];
+   for(j=0;j<tk.length;j++){var xx=kx(tk[j]),ta=(j===0)?'start':((j===tk.length-1)?'end':'middle');
+     s+='<line x1="'+xx.toFixed(1)+'" y1="'+DBASE+'" x2="'+xx.toFixed(1)+'" y2="'+(DBASE+4)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+     if(lb[j])s+='<text x="'+xx.toFixed(1)+'" y="'+(DBASE+15)+'" font-size="9.2" fill="#78868d" font-weight="600" text-anchor="'+ta+'">'+lb[j]+'</text>';}
+   s+='<text x="'+((DX0+DX1)/2)+'" y="'+(DBASE+31)+'" font-size="9.6" fill="#95a3aa" font-weight="700" text-anchor="middle">how much likelier a dissatisfied rider is to answer  (log scale)</text>';
+
+   /* where your dials have put you */
+   var k=Math.max(KLO,Math.min(KHI,ratio())),mx=kx(k),my=ky(target());
+   s+='<line x1="'+mx.toFixed(1)+'" y1="'+DTOP+'" x2="'+mx.toFixed(1)+'" y2="'+DBASE+'" stroke="#b8862f" stroke-width="1.6" stroke-dasharray="3 3"/>';
+   s+='<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="4.8" fill="#b8862f" stroke="#fffdf9" stroke-width="1.8"/>';
+   var lab=ratio().toFixed(2).replace(/\.?0+$/,'')+'× → '+pct(target())+'%',
+       anc=(mx>DX1-90)?'end':'start',lx=(anc==='end')?mx-8:mx+8;
+   s+='<text x="'+lx.toFixed(1)+'" y="'+Math.max(DTOP+22,my-10).toFixed(1)+'" font-size="10.5" font-weight="800" fill="#8a6a20" text-anchor="'+anc+'">'+lab+'</text>';
+   $("bend").innerHTML=s;
+ }
+
+ /* ================= the words ================= */
+ function infoHTML(){
+   var h=infoBody();
+   if(last!==null&&!moeOK()){
+     h+='<div class="dd"><b>No margin of error is shown above.</b> Only <b>'+lastM.toLocaleString()+'</b> '+(lastM===1?'reply':'replies')+' came back'+
+        ((last===0||last===1)?', and every one of them gave the same answer':'')+
+        '. The usual &plusmn; leans on a bell-curve approximation that needs roughly ten respondents on <i>each</i> side; with this few it would print a confidently tiny number resting on almost nothing. Send more invitations, or raise the reply rates.</div>';
+   }
+   return h;
+ }
+ function infoBody(){
+   var k=est.length,tg=target(),bias=biasPts(),q=probs(),h='',
+       err=(last===null)?null:(last-TRUTH)*100,m=moe();
+
+   if(zero){
+     return '<span class="n">Nobody answered</span>Your invitations went out and not a single reply came back, so there is no estimate to report. That is not a bug &mdash; at these reply rates a small survey really can return nothing. Send more invitations, or raise the reply rates, and try again.';
+   }
+
+   if(mode==='clean'){
+     if(last===null){
+       h='<span class="n">Start with nothing wrong</span>You invite <b>'+n().toLocaleString()+'</b> riders at random, and every one of them answers. Nothing is tugging the result in any direction, so it can miss the truth only <b>by luck</b>. Run a few surveys to see how big luck is &mdash; then switch a bias on and watch a very different kind of miss.';
+     }else{
+       h='<span class="n">'+(Math.abs(err)<0.05?'Dead on — this time':'Off by '+Math.abs(err).toFixed(1)+' points')+'</span>'+
+         'All '+n().toLocaleString()+' invited riders replied, so your respondents <b>are</b> a random sample of the city. Your survey reports <b>'+pct(last)+'%</b> against a truth of <b>68%</b>. That gap is <b>sampling variability</b>: random, with no preferred direction, and it shrinks as you invite more people.';
+       if(k>=15)h+='<div class="dd">Your '+k+' surveys are piling up around <b>'+pct(mean())+'%</b> &mdash; sitting on the truth. A method with no bias is <b>right on average</b>. Individual surveys scatter either side, but nothing drags the pile off centre.</div>';
+       else h+='<div class="dd">Press <b>+50 more</b> to watch the scatter become a pile centred on 68%.</div>';
+       h+='<div class="loc">Hold on to this picture. Everything on the next two tabs is what happens when the pile stops being centred on the truth &mdash; and the tell is not that the estimates scatter more, but that they scatter around <b>the wrong place</b>.</div>';
+     }
+     return h;
+   }
+
+   if(mode==='nr'){
+     var rate=(TRUTH*q.a+(1-TRUTH)*q.b)*100;
+     if(last===null){
+       h='<span class="n">You still pick the sample — they pick whether to reply</span>'+
+         'You mail <b>'+n().toLocaleString()+'</b> invitations to riders chosen at random. That part is faultless. But only <b>'+rsat+'%</b> of satisfied riders bother to reply, against <b>'+rdis+'%</b> of dissatisfied ones. Roughly <b>'+rate.toFixed(0)+'%</b> of your invitations will come back, and the returns will be tilted. Run the survey.';
+       return h;
+     }
+     h='<span class="n">'+(Math.abs(bias)<0.5?'Barely bent':'Aimed at '+pct(tg)+'%, not 68%')+'</span>'+
+       'Of your '+n().toLocaleString()+' invitations, <b>'+lastM.toLocaleString()+'</b> came back &mdash; a '+(lastRate*100).toFixed(0)+'% response rate &mdash; and they report <b>'+pct(last)+'%</b> satisfied. The sample you drew was random; the sample you <b>ended up with</b> is not. Dissatisfied riders reply <b>'+ratio().toFixed(2).replace(/\.?0+$/,'')+' times</b> as readily, so the method is no longer chasing 68%. It is chasing <b>'+pct(tg)+'%</b>, and it will keep chasing it forever.';
+     if(k>=15)h+='<div class="dd">Your '+k+' surveys are centred on <b>'+pct(mean())+'%</b> &mdash; essentially the '+pct(tg)+'% the method aims at, and <b>'+Math.abs(bias).toFixed(1)+' points</b> from the city. Now slide <b>Invitations sent</b> up to 3,000. The pile gets narrower and does not move an inch closer. More data buys precision, never accuracy.</div>';
+     else h+='<div class="dd">Press <b>+50 more</b>. Watch where the pile forms &mdash; and note that it is a tidy, well-behaved pile. Bias does not look messy. It looks confident.</div>';
+     h+='<div class="loc">Now test what actually causes it. Set the two reply rates to <b>10%</b> and <b>20%</b>, then to <b>40%</b> and <b>80%</b>. The response rate leaps from 13% to 53% &mdash; and the estimate does not budge from 51.5%. The bias is fixed entirely by the <b>ratio</b> of the two rates, not by how low they are. A 12% response rate with no gap between the groups is unbiased; a 70% response rate with a gap is not. A low response rate is a reason to <b>ask the question</b>, never an answer by itself.</div>';
+     h+='<div class="dd">Set both sliders to the same value and the bias vanishes at any level &mdash; that is the green dot on the third chart. In real work you cannot check this, because the one thing you would need to know about the people who never replied is the very thing you asked them.</div>';
+     return h;
+   }
+
+   /* voluntary response */
+   if(last===null){
+     h='<span class="n">Nobody is chosen at all</span>'+
+       'A notice goes up: <i>tell us what you think of the buses</i>. There is no sample and no sampling frame &mdash; only <b>'+vsat.toFixed(1)+'%</b> of satisfied riders who feel moved to reply and <b>'+vdis.toFixed(1)+'%</b> of dissatisfied ones. Contentment is quiet; a grievance writes in. Run it and see what a very large pile of replies is worth.';
+     return h;
+   }
+   h='<span class="n">'+lastM.toLocaleString()+' replies, and '+Math.abs(err).toFixed(0)+' points wrong</span>'+
+     '<b>'+lastM.toLocaleString()+'</b> riders wrote in &mdash; a far bigger haul than any invitation-based survey on this page &mdash; and they report <b>'+pct(last)+'%</b> satisfied. The city is at <b>68%</b>. Nothing went wrong in the counting. The people who answered simply were not the city: a dissatisfied rider was <b>'+ratio().toFixed(2).replace(/\.?0+$/,'')+' times</b> likelier to bother, so the method is aimed squarely at <b>'+pct(tg)+'%</b>.';
+   if(m!==null)h+='<div class="dd">Look at the margin of error: <b>&plusmn;'+(m*100).toFixed(1)+' points</b>. It is small, it is correctly computed, and it is <b>describing the wrong quantity</b> &mdash; how much this method would wobble if you ran it again, not how far it sits from the truth. A tiny margin of error around a badly aimed estimate makes a wrong answer look authoritative.</div>';
+   if(k>=15)h+='<div class="dd">All '+k+' of your polls cluster around <b>'+pct(mean())+'%</b>. Reproducible, stable, repeatable &mdash; and wrong every single time. Reproducibility is not accuracy.</div>';
+   h+='<div class="loc">Voluntary response is nonresponse taken to its limit, with two extra injuries. You cannot compute a response rate, because nobody knows how many people saw the notice and shrugged &mdash; there is no denominator. And the self-selection gap is usually enormous, not the modest 2&times; of a mailed survey. This is the machinery behind online star ratings, call-in polls, and open comment periods: a real count of real people that describes only the people who volunteered.</div>';
+   return h;
+ }
+
+ /* ================= readouts ================= */
+ function render(){
+   var tg=target(),bias=biasPts(),m=moe(),
+       err=(last===null)?null:(last-TRUTH)*100;
+
+   $("tP").innerHTML=(last===null)?'&mdash;':pct(last)+'%';
+
+   var eb=$("tErrBox");eb.className='';
+   if(err===null)$("tErr").innerHTML='&mdash;';
+   else{$("tErr").innerHTML=sgn(err)+' pts';
+     eb.className=(Math.abs(err)<=3)?'hit':(Math.abs(err)>8?'far':'');}
+
+   var bb=$("tBiasBox");bb.className='';
+   $("tBias").innerHTML=sgn(bias)+' pts';
+   bb.className=(Math.abs(bias)<0.5)?'hit':(Math.abs(bias)>8?'far':'');
+
+   $("tM").innerHTML=lastM?lastM.toLocaleString():'&mdash;';
+   $("lbRate").innerHTML=(mode==='vr')?'Share who wrote in':'Response rate';
+   $("tRate").innerHTML=(last===null&&!zero)?'&mdash;':(lastRate*100).toFixed(mode==='vr'?2:0)+'%';
+   $("tMoe").innerHTML=(m!==null)?('&plusmn;'+(m*100).toFixed(1)+' pts'):((last===null)?'&mdash;':'too few');
+
+   /* stage */
+   var st=$("stage");
+   if(last===null){
+     st.style.background='var(--teal)';
+     st.innerHTML='68% of riders are satisfied'+
+       '<small>'+(mode==='vr'?'no sample, no invitations — just whoever replies':'you will ask '+n().toLocaleString()+' of the city’s 200,000 riders')+'</small>';
+   }else{
+     var ab=Math.abs(bias);
+     st.style.background=(ab<0.5)?'var(--green)':((ab<8)?'var(--gold)':'var(--coral)');
+     st.innerHTML='Your survey says '+pct(last)+'% satisfied'+
+       '<small>truth = 68% &middot; off by '+Math.abs(err).toFixed(1)+' points &middot; '+lastM.toLocaleString()+' respondents &middot; built-in bias '+sgn(bias)+' pts</small>';
+   }
+
+   $("info").innerHTML=infoHTML();
+   drawSlice();drawHist();drawBend();
+ }
+
+ function reset(){est=[];last=null;lastM=0;lastRate=0;zero=false;reseed();makeSlice();render();}
+ function go(t){for(var i=0;i<t;i++)runOne();render();}
+
+ function showRows(){
+   $("rowN").style.display=(mode==='vr')?'none':'flex';
+   $("rowRS").style.display=(mode==='nr')?'flex':'none';
+   $("rowRD").style.display=(mode==='nr')?'flex':'none';
+   $("rowVS").style.display=(mode==='vr')?'flex':'none';
+   $("rowVD").style.display=(mode==='vr')?'flex':'none';
+ }
+
+ $("one").onclick=function(){go(1);};
+ $("many").onclick=function(){go(50);};
+ $("rst").onclick=reset;
+ $("nSl").oninput=function(){ni=+this.value;$("nVal").innerHTML=NS[ni].toLocaleString();reset();};
+ $("rsSl").oninput=function(){rsat=+this.value;$("rsVal").innerHTML=rsat+'%';reset();};
+ $("rdSl").oninput=function(){rdis=+this.value;$("rdVal").innerHTML=rdis+'%';reset();};
+ /* the voluntary sliders run in half-percent steps, so the raw value is doubled */
+ $("vsSl").oninput=function(){vsat=+this.value/2;$("vsVal").innerHTML=vsat.toFixed(1)+'%';reset();};
+ $("vdSl").oninput=function(){vdis=+this.value/2;$("vdVal").innerHTML=vdis.toFixed(1)+'%';reset();};
+
+ var sg=$("seg").getElementsByTagName('button');
+ for(var i=0;i<sg.length;i++){sg[i].onclick=function(){
+   for(var j=0;j<sg.length;j++)sg[j].className='';
+   this.className='on';mode=this.getAttribute('data-v');showRows();reset();};}
+
+ showRows();reset();
+})();
+</script>
+</body>
+</html>

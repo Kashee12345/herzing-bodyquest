@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Conjugation: Spreading Resistance Cell to Cell</title>
+<meta name="description" content="Step through bacterial conjugation to watch a donor cell build a pilus and pump a copy of its antibiotic-resistance plasmid into a recipient — turning a susceptible cell into a new resistant donor. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:1fr 1fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.cap{margin-top:4px;font-size:11px;color:var(--muted);text-align:center;}
+.cells{display:flex;gap:8px;margin-bottom:12px;}
+.cbox{flex:1;border:1px solid var(--line);border-radius:11px;padding:9px 11px;background:#fff;transition:.25s;}
+.cbox .ttl{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.cbox .st{font-size:12px;font-weight:700;color:var(--soft);line-height:1.55;}
+.cbox.res{border-color:var(--green);background:#f2faf5;}
+.cbox.res .ttl{color:#237a45;}
+.st.yes{color:#237a45;} .st.no{color:#b23145;} .st.mid{color:#8a6a20;}
+.dots{display:flex;gap:6px;justify-content:center;margin-bottom:12px;}
+.dots button{flex:1;height:8px;border:none;border-radius:5px;background:var(--line);cursor:pointer;padding:0;font-size:0;}
+.dots button.done{background:#c9b9e0;} .dots button.on{background:var(--teal);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 7</div>
+  <h1>Conjugation: Spreading Resistance Cell to Cell</h1>
+  <div class="intro">Antibiotic resistance doesn&rsquo;t only pass from parent to daughter &mdash; one bacterium can hand a whole resistance kit to a neighbour just by <b>touching</b> it. Step through <b>conjugation</b> to watch a donor copy its <b>R-plasmid</b> into a susceptible cell and turn it into a new resistant donor.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Two cells meet</h2>
+    <svg viewBox="0 0 240 132" aria-label="conjugation between two bacterial cells"><g id="art"></g></svg>
+    <div class="cap">Press <b>Next</b> to walk through conjugation &mdash; or tap a step marker.</div>
+  </div></div>
+  <div>
+    <div id="stage">Conjugation<small>press Next to begin</small></div>
+    <div class="card">
+      <div class="cells">
+        <div class="cbox res">
+          <div class="ttl">Donor · F+</div>
+          <div class="st yes">R-plasmid ✓</div>
+          <div class="st yes">resistant ✓</div>
+        </div>
+        <div class="cbox" id="cbRec">
+          <div class="ttl" id="rTtl">Recipient · F−</div>
+          <div class="st no" id="rPl">no plasmid</div>
+          <div class="st no" id="rRe">susceptible ✗</div>
+        </div>
+      </div>
+      <div class="dots" id="dots"></div>
+      <div id="info"></div>
+      <div id="note"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var W=80,H=46,T=52,CY=75;   // cell geometry
+
+ // ---- drawing helpers -------------------------------------------------
+ function plasmid(cx,mode){
+   if(!mode||mode==='none') return '';
+   var g='#b8862f',o='';
+   if(mode==='full'){
+     o+='<circle cx="'+cx+'" cy="'+CY+'" r="12" fill="none" stroke="'+g+'" stroke-width="3.2"/>';
+     o+='<text x="'+cx+'" y="'+(CY+4)+'" font-size="11" fill="'+g+'" text-anchor="middle" font-weight="800" style="pointer-events:none">R</text>';
+   } else if(mode==='nick'){
+     o+='<circle cx="'+cx+'" cy="'+CY+'" r="12" fill="none" stroke="'+g+'" stroke-width="3.2" stroke-dasharray="64 12" transform="rotate(38 '+cx+' '+CY+')"/>';
+     o+='<text x="'+cx+'" y="'+(CY+4)+'" font-size="11" fill="'+g+'" text-anchor="middle" font-weight="800">R</text>';
+   } else if(mode==='partial'){
+     o+='<circle cx="'+cx+'" cy="'+CY+'" r="12" fill="none" stroke="'+g+'" stroke-width="2.6" stroke-dasharray="5 5" opacity=".8"/>';
+   }
+   return o;
+ }
+ function strand(x1,x2){
+   var d='M '+x1+' '+CY;
+   for(var x=x1+4;x<=x2;x+=4){ d+=' L '+x+' '+(CY+3*Math.sin((x-x1)/3)).toFixed(1); }
+   return '<path d="'+d+'" fill="none" stroke="#b8862f" stroke-width="2.6" stroke-linecap="round"/>';
+ }
+ function cellSvg(x,res,role,fstat,stat,plmode){
+   var fill=res?'#e9f5ee':'#f3eef8', stroke=res?'#2f9e5b':'#a99cc4', cx=x+W/2, B=T+H, o='';
+   o+='<rect x="'+x+'" y="'+T+'" width="'+W+'" height="'+H+'" rx="'+(H/2)+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2.6"/>';
+   o+='<text x="'+cx+'" y="'+(T-9)+'" font-size="9.5" fill="'+(res?'#2f9e5b':'#7a6f90')+'" text-anchor="middle" font-weight="800" letter-spacing=".4">'+role+' ('+fstat+')</text>';
+   o+='<text x="'+cx+'" y="'+(B+15)+'" font-size="10" fill="'+(res?'#237a45':'#b23145')+'" text-anchor="middle" font-weight="700">'+stat+'</text>';
+   o+=plasmid(cx,plmode);
+   return o;
+ }
+ function draw(s){
+   var donX=s.close?26:8, recX=s.close?130:152, donR=donX+W, recL=recX, out='';
+   if(s.pilus){
+     out+='<rect x="'+donR+'" y="'+(CY-4)+'" width="'+(recL-donR)+'" height="8" rx="4" fill="#2f6f9f" opacity=".22"/>';
+     out+='<rect x="'+donR+'" y="'+(CY-4)+'" width="'+(recL-donR)+'" height="8" rx="4" fill="none" stroke="#2f6f9f" stroke-width="1.6"/>';
+     out+='<circle cx="'+recL+'" cy="'+CY+'" r="5" fill="#2f6f9f" opacity=".5"/>';
+   }
+   if(s.bridge){
+     out+='<rect x="'+donR+'" y="'+(CY-6)+'" width="'+(recL-donR)+'" height="12" fill="#b8862f" opacity=".18"/>';
+     out+='<rect x="'+donR+'" y="'+(CY-6)+'" width="'+(recL-donR)+'" height="12" fill="none" stroke="#b8862f" stroke-width="1.4"/>';
+   }
+   out+=cellSvg(donX,true,'DONOR','F+','resistant',s.don);
+   out+=cellSvg(recX,s.recRes,'RECIPIENT',(s.recF||'F−'),(s.recRes?'resistant':'susceptible'),s.rec);
+   if(s.transfer){
+     out+=strand(donR-6,recL+18);
+     out+='<path d="M '+(recL+16)+' '+(CY-4)+' l 6 4 l -6 4" fill="none" stroke="#b8862f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+   }
+   return out;
+ }
+
+ // ---- content ---------------------------------------------------------
+ var S=[
+  {t:'Two cells meet',ih:'A donor and a recipient',col:'#6d3f9c',
+   close:false,pilus:false,bridge:false,transfer:false,don:'full',rec:'none',recRes:false,
+   d:'The cell on the left is a <b>donor (F+)</b>: it carries a small ring of DNA &mdash; an <b>R-plasmid</b> &mdash; loaded with antibiotic-resistance genes, so the drug can&rsquo;t kill it. The cell on the right is a <b>recipient (F&minus;)</b> with no such plasmid, so it is still <b>susceptible</b>. Watch resistance move <b>sideways</b>, without either cell reproducing.',
+   nc:'mnem',note:'<b>Conjugation</b> is DNA transfer between two <b>living, touching</b> bacteria &mdash; the leading way antibiotic resistance spreads through a population.'},
+  {t:'The pilus reaches out',ih:'Making first contact',col:'#2f6f9f',
+   close:false,pilus:true,bridge:false,transfer:false,don:'full',rec:'none',recRes:false,
+   d:'The donor&rsquo;s <b>tra genes</b> build a <b>conjugation pilus</b> (a &ldquo;sex pilus&rdquo;) &mdash; a hollow protein tube that extends out and latches onto the recipient&rsquo;s surface. Only a cell carrying a <b>conjugative plasmid</b> can build this pilus, which is why the <b>donor</b> always starts the contact.',
+   nc:'note',note:'Because transfer needs <b>direct cell contact</b>, conjugation happens readily on skin, in the gut, and on catheters, drains, and other indwelling devices.'},
+  {t:'Cells pulled together',ih:'A stable mating pair',col:'#2f6f9f',
+   close:true,pilus:false,bridge:true,transfer:false,don:'full',rec:'none',recRes:false,
+   d:'The pilus <b>retracts</b>, reeling the two cells into direct contact and forming a stabilized <b>mating pair</b> joined by a cytoplasmic <b>bridge</b>. The plasmid is now poised to cross. Notice the donor still holds its <b>intact</b> R-plasmid.',
+   nc:'mnem',note:'The cells now share a sealed bridge. This <b>direct hand-off</b> is why conjugation spreads genes even where loose, free DNA would be broken down.'},
+  {t:'One strand copies across',ih:'Rolling-circle transfer',col:'#b8862f',
+   close:true,pilus:false,bridge:true,transfer:true,don:'nick',rec:'partial',recRes:false,
+   d:'An enzyme called <b>relaxase</b> nicks the plasmid at its <b>origin of transfer (oriT)</b>. A <b>single strand</b> is pumped through the bridge into the recipient while the ring is copied by <b>rolling-circle replication</b>. Crucially, the donor keeps a full copy &mdash; only a <b>duplicate</b> is sent, so the donor stays resistant.',
+   nc:'mnem',note:'Only <b>one copy</b> travels, and the donor never loses its plasmid &mdash; so a single donor can go on to arm <b>many</b> recipients in turn.'},
+  {t:'Two donors, two survivors',ih:'Resistance has spread',col:'#2f9e5b',
+   close:true,pilus:false,bridge:false,transfer:false,don:'full',rec:'full',recRes:true,recF:'F+',
+   d:'Each cell rebuilds the missing complementary strand, so <b>both</b> now hold a complete R-plasmid. The former recipient is now <b>F+</b> &mdash; itself a <b>donor</b> that is <b>resistant</b> and can pass the plasmid to the next cell. From one resistant bacterium, resistance can sweep through the whole population, <b>even across different species</b>.',
+   nc:'note',note:'<b>At the bedside:</b> R-plasmid conjugation lets resistance jump between gut and hospital bacteria &mdash; a core driver of <b>multidrug-resistant</b> organisms, and why <b>hand hygiene, contact precautions, and antibiotic stewardship</b> matter so much.'}
+ ];
+
+ var i=0;
+
+ function renderDots(){
+   $("dots").innerHTML=S.map(function(s,k){var c=k===i?'on':(k<i?'done':'');return '<button data-i="'+k+'" class="'+c+'" aria-label="step '+(k+1)+'"></button>';}).join('');
+   document.querySelectorAll('#dots button').forEach(function(b){b.onclick=function(){i=+b.dataset.i;render();};});
+ }
+
+ function render(){
+   var s=S[i];
+   $("art").innerHTML=draw(s);
+   $("cardTitle").innerHTML=s.t;
+   $("stage").style.background=s.col;
+   $("stage").innerHTML=s.t+'<small>step '+(i+1)+' of '+S.length+'</small>';
+   // recipient tracker
+   var done=(i>=4);
+   $("rTtl").innerHTML='Recipient · '+(done?'F+':'F−');
+   $("cbRec").className='cbox'+(done?' res':'');
+   var pl,plc,re,rec;
+   if(done){pl='R-plasmid ✓';plc='st yes';re='resistant ✓';rec='st yes';}
+   else if(i===3){pl='R-plasmid copying…';plc='st mid';re='still susceptible';rec='st no';}
+   else {pl='no plasmid';plc='st no';re='susceptible ✗';rec='st no';}
+   $("rPl").className=plc; $("rPl").innerHTML=pl;
+   $("rRe").className=rec; $("rRe").innerHTML=re;
+   // info + note
+   $("info").innerHTML='<span class="n">'+s.ih+'</span>'+s.d;
+   $("note").className=s.nc; $("note").innerHTML=s.note;
+   renderDots();
+   $("prev").disabled=(i===0); $("next").disabled=(i===S.length-1);
+ }
+
+ $("prev").onclick=function(){if(i>0){i--;render();}};
+ $("next").onclick=function(){if(i<S.length-1){i++;render();}};
+ render();
+})();
+</script>
+</body>
+</html>

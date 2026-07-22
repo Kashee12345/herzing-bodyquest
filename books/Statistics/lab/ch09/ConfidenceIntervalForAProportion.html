@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>A Confidence Interval for a Proportion</title>
+<meta name="description" content="Count successes, build p-hat plus or minus z* times its standard error, check the conditions &mdash; and watch the promised confidence level come apart when the success-failure condition fails.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:118px;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:58px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.gk{text-transform:none;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.lgd i.mdl{width:14px;height:0;border-top:2px dashed #2f9e5b;border-radius:0;vertical-align:3px;}
+#info .loc{font-variant-numeric:tabular-nums;font-size:12.2px;line-height:1.75;}
+.grid .it .nm{display:block;} .grid .it .s{display:block;margin-top:2px;font-weight:600;font-variant-numeric:tabular-nums;}
+.chk{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+@media (max-width:520px){.chk{grid-template-columns:repeat(2,1fr);}}
+.chk div{border:1px solid var(--line);border-radius:10px;padding:7px 8px;background:#fff;text-align:center;}
+.chk .ck{display:block;font-size:9.2px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;min-height:22px;}
+.chk .cv{display:block;font-size:13px;font-weight:800;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums;}
+.chk .cs{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:1px;font-variant-numeric:tabular-nums;}
+.chk div.yes{border-color:#bfe3cd;background:#f2faf5;} .chk div.yes .cv{color:#237a45;}
+.chk div.no{border-color:#f0c9d0;background:#fdf2f4;} .chk div.no .cv{color:#b23145;} .chk div.no .cs{color:#b23145;}
+.chk div.ass{border-color:#cfe0e8;background:#f2f8fb;} .chk div.ass .cv{color:var(--teal-dk);}
+.vd{border-radius:10px;padding:9px 12px;margin-top:11px;font-size:12.4px;font-weight:700;line-height:1.5;}
+.vd.hit{background:#e5f3ea;color:#237a45;border:1px solid #bfe3cd;}
+.vd.miss{background:#fae5e8;color:#b23145;border:1px solid #f0c9d0;}
+.vd .sm{display:block;font-weight:600;font-size:11.2px;margin-top:3px;opacity:.92;}
+.eq{font-size:12.6px;color:var(--soft);line-height:1.9;margin-top:4px;font-variant-numeric:tabular-nums;}
+.eq b{color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 9</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 9</div>
+  <h1>A Confidence Interval for a Proportion</h1>
+  <div class="intro">A proportion is the easiest parameter to estimate and the easiest one to get quietly wrong. You count the successes, divide by <b>n</b>, and you have p&#770;. The interval has the same shape as every other one in this chapter &mdash; <b>estimate &plusmn; multiplier &times; standard error</b> &mdash; except that the standard error is now built out of p&#770; itself. What makes proportions their own case is that the normal curve underneath the multiplier can fail. When successes or failures are scarce, the interval still prints, still looks respectable, and captures p far less often than the label on it promises. Draw real samples below, check the conditions as you go, and watch the 95% come apart the moment the conditions do.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">One sample &rarr; one interval</h2>
+      <svg viewBox="0 0 480 262" id="chart" aria-label="the n outcomes you drew shown as a grid of dots, and below it the resulting confidence interval on the proportion scale"></svg>
+      <div class="lgd">
+        <span><i id="lgS" style="background:#2f6f8a"></i><span id="lgSt">successes</span></span>
+        <span><i style="background:#dbe6ec"></i><span id="lgFt">failures</span></span>
+        <span><i style="background:#1c4454;border-radius:50%"></i>p&#770; &mdash; the point estimate</span>
+        <span><i class="mdl"></i>p &mdash; the true proportion</span>
+        <span><i style="background:#fbeef0"></i>impossible values</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>The same recipe, run again and again</h2>
+      <div class="cap" style="margin-top:2px;">Every horizontal line is one whole study: draw n, count, compute, print an interval. Green captured p, coral missed it. In real work you see exactly one of these lines and never learn its color &mdash; which is why the promise has to be about the recipe rather than about your one interval.</div>
+      <svg viewBox="0 0 480 320" id="cover" aria-label="the forty most recent intervals stacked, each drawn green if it captured p and coral if it missed"></svg>
+      <div class="tiles">
+        <div><span class="lb">Intervals<br>built</span><span class="vv" id="tTot">0</span></div>
+        <div><span class="lb">Captured<br>p</span><span class="vv" id="tCap">0</span></div>
+        <div><span class="lb">Simulated<br>coverage</span><span class="vv" id="tEmp">&mdash;</span></div>
+        <div><span class="lb">Exact<br>coverage</span><span class="vv" id="tExa">&mdash;</span><span class="sub" id="tExaS">promised &mdash;</span></div>
+      </div>
+      <div class="cap" id="covcap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Ballot measure support<small>press &ldquo;Draw a new sample&rdquo; to build an interval</small></div>
+    <div class="card">
+      <div class="hd">What you are counting &mdash; p is known here only because this is a simulation</div>
+      <div class="grid" id="ctxs"></div>
+      <div class="hd">Confidence level &mdash; sets the multiplier z*</div>
+      <div class="seg" id="cseg">
+        <button data-c="80">80%<small>z* = 1.282</small></button>
+        <button data-c="90">90%<small>z* = 1.645</small></button>
+        <button data-c="95" class="on">95%<small>z* = 1.960</small></button>
+        <button data-c="99">99%<small>z* = 2.576</small></button>
+      </div>
+      <div class="sl"><label>sample size n</label><input type="range" id="nSl" min="10" max="400" step="1" value="100"><span class="nv" id="nVal">100</span></div>
+      <div class="sl"><label>true proportion p</label><input type="range" id="pSl" min="1" max="99" step="1" value="52"><span class="nv" id="pVal">0.52</span></div>
+      <div class="tiles">
+        <div><span class="lb">Estimate<br><span class="gk">p&#770; = x / n</span></span><span class="vv" id="tPh">&mdash;</span><span class="sub" id="tPhS">&mdash;</span></div>
+        <div><span class="lb">Multiplier<br><span class="gk">z*</span></span><span class="vv" id="tZ">1.960</span></div>
+        <div><span class="lb">Std. error<br><span class="gk">&radic;(p&#770;q&#770;/n)</span></span><span class="vv" id="tSe">&mdash;</span></div>
+        <div><span class="lb">Margin of<br>error</span><span class="vv" id="tMo">&mdash;</span></div>
+      </div>
+      <div class="eq" id="eqn"></div>
+      <div class="hd">Check the conditions &mdash; before you trust a single digit of it</div>
+      <div class="chk">
+        <div id="k1"><span class="ck">Random / independent</span><span class="cv" id="v1">&mdash;</span><span class="cs" id="s1">&nbsp;</span></div>
+        <div id="k2"><span class="ck">n is under 10% of N</span><span class="cv" id="v2">&mdash;</span><span class="cs" id="s2">&nbsp;</span></div>
+        <div id="k3"><span class="ck">At least 10 successes</span><span class="cv" id="v3">&mdash;</span><span class="cs" id="s3">&nbsp;</span></div>
+        <div id="k4"><span class="ck">At least 10 failures</span><span class="cv" id="v4">&mdash;</span><span class="cs" id="s4">&nbsp;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="d1">Draw a new sample</button><button class="btn" id="d100">Run 100</button><button class="btn" id="d1000">Run 1,000</button><button class="btn" id="rst">Reset</button></div>
+      <div class="vd" id="verd"></div>
+      <div id="info"></div>
+    </div>
+    <div class="card">
+      <h2>Why the success&ndash;failure condition exists</h2>
+      <div class="cap" style="margin-top:2px;">The bars are the <b>exact</b> distribution of p&#770; over every sample you could possibly draw &mdash; real binomial probabilities, not a simulation. The smooth curve is the normal approximation the formula quietly assumes. Push p toward 0 or 1, or pull n down, until the two stop agreeing.</div>
+      <svg viewBox="0 0 460 236" id="dist" aria-label="the exact binomial sampling distribution of p-hat drawn as bars with the normal approximation drawn over it as a curve"></svg>
+      <div class="cap" id="distcap"></div>
+    </div>
+    <div class="card">
+      <h2>Where the margin is widest</h2>
+      <div class="cap" style="margin-top:2px;">The standard error is built from p&#770; itself, so the width of the interval depends on the answer you got. The curve below is the margin of error at every possible p&#770;, holding n and the confidence level fixed.</div>
+      <svg viewBox="0 0 460 152" id="dome" aria-label="margin of error plotted against p-hat, a dome peaking at one half"></svg>
+      <div class="cap" id="domecap"></div>
+      <div class="mnem"><b>p&#770; &plusmn; z* &radic;(p&#770;(1&minus;p&#770;)/n).</b> Three ingredients, same as always. The estimate is the count over the sample size. The standard error says how much an estimate like yours typically wobbles from sample to sample, and for a proportion it can be computed from p&#770; alone &mdash; there is no separate spread to measure, because a proportion's spread <i>is</i> its center. The multiplier is set by the confidence level and nothing else. One detail worth carrying: <b>np&#770; is literally the number of successes you observed and n(1&minus;p&#770;) is the number of failures</b>, so the success&ndash;failure condition is not an extra calculation. Look at your two counts. If either is under 10, stop.</div>
+      <div class="note"><b>Five things this interval will not tell you.</b> <b>(1) It is not a probability statement about the interval in front of you.</b> Once the numbers are computed, p is either inside it or it is not; nothing is left to chance. The 95% belongs to the <i>procedure</i> &mdash; repeat the whole study endlessly and 95% of the intervals it produces contain p. The stack of lines above is that sentence drawn out. <b>(2) It is not a statement about individuals.</b> An interval of (0.48, 0.56) does not mean 48% to 56% of anything; it is a claim about one fixed number, the population proportion. <b>(3) It does not cover bias.</b> The whole margin is built from &radic;(p&#770;q&#770;/n), which describes random sampling wobble and nothing else. Volunteers only, one neighborhood, whoever answers the phone, a question worded to lead &mdash; none of that is in the formula. A biased study returns a tight interval centered on the wrong number, and raising n only tightens it. <b>(4) It does not repair a broken condition.</b> When successes or failures are scarce, the arithmetic still runs and still prints an answer &mdash; watch the exact coverage tile fall to the 70s and 80s while the label still says 95%. It can even hand you a lower bound below 0 or an upper bound above 1, which is the approximation telling on itself. In that situation use a method built for it, such as the Wilson or Clopper&ndash;Pearson interval, rather than the formula on this page. <b>(5) It does not settle on 10.</b> Books variously require 5, 10, or 15 successes and failures, and none of the three is a cliff &mdash; the approximation degrades smoothly, which is exactly what the exact-coverage number lets you watch it do. Treat 10 as a working floor, not a law.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- seeded PRNG (mulberry32) so every run reproduces exactly ---------- */
+ var SEED0=20260719, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+
+ /* ---------- inverse standard normal (Acklam), good to ~1e-9 ---------- */
+ function invNorm(p){
+   var a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+   var b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+   var c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+   var d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+   var pl=0.02425, ph=1-pl, q, r;
+   if(p<pl){
+     q=Math.sqrt(-2*Math.log(p));
+     return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+   }
+   if(p<=ph){
+     q=p-0.5; r=q*q;
+     return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+   }
+   q=Math.sqrt(-2*Math.log(1-p));
+   return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+ }
+ function zStar(C){ return invNorm(1-(1-C/100)/2); }
+
+ /* ---------- log-gamma (Lanczos) -> exact binomial probabilities ---------- */
+ var LG=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,
+         -176.61502916214059,12.507343278686905,-0.13857109526572012,
+         9.9843695780195716e-6,1.5056327351493116e-7];
+ function lgamma(z){
+   var x=LG[0], i;
+   z-=1;
+   for(i=1;i<9;i++) x+=LG[i]/(z+i);
+   var t=z+7.5;
+   return 0.5*Math.log(2*Math.PI)+(z+0.5)*Math.log(t)-t+Math.log(x);
+ }
+ function binPmf(nn,x,pp){
+   if(x<0||x>nn) return 0;
+   var lg=lgamma(nn+1)-lgamma(x+1)-lgamma(nn-x+1);
+   if(x>0) lg+=x*Math.log(pp);
+   if(nn-x>0) lg+=(nn-x)*Math.log(1-pp);
+   return Math.exp(lg);
+ }
+
+ /* ---------- the things being counted ---------- */
+ var CTX=[
+  {t:'Ballot measure',s:'p = 0.52 · N = 48,000',nm:'Ballot measure support',
+   p:0.52,N:48000,col:'#2f6f8a',unit:'voters polled',su:'in favor',fa:'opposed',
+   why:'A proportion near one half is where the normal approximation works best and where the interval is at its widest. This is the ordinary case &mdash; and notice how often a 95% interval built from a few hundred voters still straddles 0.50, which is the whole reason a two-point lead in a poll is not a lead.'},
+  {t:'Seed germination',s:'p = 0.88 · N = 12,000',nm:'Seed germination rate',
+   p:0.88,N:12000,col:'#2f9e5b',unit:'seeds planted',su:'germinated',fa:'did not',
+   why:'Successes are plentiful here, so the binding constraint is the other side of the condition: you need at least 10 <i>failures</i> too. Pull n down toward 40 and watch the failure count &mdash; not the success count &mdash; be the one that breaks, and the distribution skew toward the ceiling at 1.'},
+  {t:'Left-handed adults',s:'p = 0.10 · N very large',nm:'Left-handed adults',
+   p:0.10,N:900000,col:'#7a5a8a',unit:'adults sampled',su:'left-handed',fa:'right-handed',
+   why:'A one-in-ten trait sits right on the boundary. At n = 100 you expect exactly 10 successes, which means roughly 45% of your samples will land under 10 and fail the condition outright. This is the case that teaches you to check rather than assume: nothing about n = 100 feels small.'},
+  {t:'Defective units',s:'p = 0.04 · N = 2,500',nm:'Defective units off a line',
+   p:0.04,N:2500,col:'#d1495b',unit:'units inspected',su:'defective',fa:'sound',
+   why:'Rare events are where this formula fails hardest. At n = 50 the exact coverage of a &ldquo;95%&rdquo; interval is under 87%, and the single largest cause is drawing zero defectives &mdash; which hands you p&#770; = 0, a standard error of 0, and an interval of zero width that is certainly wrong. Raise n until np&#770; clears 10 and watch the coverage climb back.'}
+ ];
+
+ /* ---------- state ---------- */
+ var ci=0, conf=95, n=100, p=CTX[0].p;
+ var z=zStar(95);
+ var cur=null, recent=[], total=0, capt=0;
+ var KEEP=40;
+
+ function C(){ return CTX[ci]; }
+ function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+ function com(x){ return String(x).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+ function pr(v){ return v.toFixed(3); }
+ function pct(v){ return (v*100).toFixed(1)+'%'; }
+
+ /* ---------- one real sample -> one real interval ---------- */
+ function drawOne(keep){
+   var x=0, a=keep?[]:null, i, s;
+   for(i=0;i<n;i++){ s=(rnd()<p)?1:0; x+=s; if(a)a.push(s); }
+   return {x:x,a:a};
+ }
+ function makeCI(x,a){
+   var ph=x/n, se=Math.sqrt(ph*(1-ph)/n), m=z*se;
+   return {x:x,a:a,ph:ph,se:se,m:m,lo:ph-m,hi:ph+m,ok:(ph-m<=p&&p<=ph+m)};
+ }
+ function record(c){
+   total++; if(c.ok)capt++;
+   recent.push(c); if(recent.length>KEEP)recent.shift();
+ }
+ function sampleOnce(){
+   var d=drawOne(true); cur=makeCI(d.x,d.a); record(cur);
+ }
+ function runMany(k){
+   var i,d,c;
+   for(i=0;i<k-1;i++){ d=drawOne(false); c=makeCI(d.x,null); record(c); }
+   sampleOnce();
+ }
+
+ /* ---------- exact coverage of this procedure, summed over every possible sample ---------- */
+ function exactCoverage(){
+   var s=0, x, ph, se, m;
+   for(x=0;x<=n;x++){
+     ph=x/n; se=Math.sqrt(ph*(1-ph)/n); m=z*se;
+     if(ph-m<=p && p<=ph+m) s+=binPmf(n,x,p);
+   }
+   return s;
+ }
+
+ function resetRun(){ recent=[]; total=0; capt=0; cur=null; }
+
+ /* ================= chart A : the sample and its interval ================= */
+ var PL=30, PW=422, DL=-0.08, DW=1.16;
+ function X(v){ return PL+(v-DL)/DW*PW; }
+
+ function chartA(){
+   var s='', i;
+   /* the n outcomes as a grid of dots */
+   if(cur && cur.a){
+     var cols=Math.ceil(Math.sqrt(n*3.1)); if(cols<1)cols=1;
+     var rows=Math.ceil(n/cols);
+     var cell=Math.min(PW/cols,134/rows), r=Math.max(1.3,cell*0.33);
+     var gx=PL+(PW-cols*cell)/2, gy=12+(134-rows*cell)/2;
+     for(i=0;i<n;i++){
+       var cxp=gx+(i%cols)*cell+cell/2, cyp=gy+Math.floor(i/cols)*cell+cell/2;
+       s+='<circle cx="'+cxp.toFixed(1)+'" cy="'+cyp.toFixed(1)+'" r="'+r.toFixed(1)+'" fill="'+(cur.a[i]?C().col:'#dbe6ec')+'"/>';
+     }
+     s+='<text x="240" y="168" text-anchor="middle" font-size="10.4" font-weight="700" fill="#4a585f">'+
+        com(cur.x)+' '+C().su+' &middot; '+com(n-cur.x)+' '+C().fa+'  &rarr;  p&#770; = '+com(cur.x)+'/'+com(n)+' = '+pr(cur.ph)+'</text>';
+   } else {
+     s+='<text x="240" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#78868d">press &ldquo;Draw a new sample&rdquo;</text>';
+   }
+   /* the proportion scale */
+   s+='<rect x="'+X(DL)+'" y="184" width="'+(X(0)-X(DL))+'" height="48" fill="#fbeef0"/>';
+   s+='<rect x="'+X(1)+'" y="184" width="'+(X(DL+DW)-X(1))+'" height="48" fill="#fbeef0"/>';
+   s+='<rect x="'+X(0)+'" y="184" width="'+(X(1)-X(0))+'" height="48" fill="#f2f8fb"/>';
+   /* the interval */
+   if(cur){
+     var bl=clamp(cur.lo,DL,DL+DW), bh=clamp(cur.hi,DL,DL+DW);
+     var col=cur.ok?'#2f6f8a':'#d1495b';
+     s+='<rect x="'+X(bl).toFixed(1)+'" y="199" width="'+Math.max(2,X(bh)-X(bl)).toFixed(1)+'" height="14" rx="7" fill="'+col+'" opacity=".28"/>';
+     s+='<line x1="'+X(bl).toFixed(1)+'" y1="196" x2="'+X(bl).toFixed(1)+'" y2="216" stroke="'+col+'" stroke-width="2.4"/>';
+     s+='<line x1="'+X(bh).toFixed(1)+'" y1="196" x2="'+X(bh).toFixed(1)+'" y2="216" stroke="'+col+'" stroke-width="2.4"/>';
+     s+='<line x1="'+X(bl).toFixed(1)+'" y1="206" x2="'+X(bh).toFixed(1)+'" y2="206" stroke="'+col+'" stroke-width="2.4"/>';
+     s+='<circle cx="'+X(cur.ph).toFixed(1)+'" cy="206" r="5.6" fill="#1c4454" stroke="#fff" stroke-width="1.6"/>';
+     if(cur.lo<0||cur.hi>1){
+       s+='<text x="240" y="182" text-anchor="middle" font-size="9.6" font-weight="800" fill="#b23145">the formula returned a bound outside 0 to 1</text>';
+     }
+   }
+   /* the truth */
+   s+='<line x1="'+X(p).toFixed(1)+'" y1="184" x2="'+X(p).toFixed(1)+'" y2="238" stroke="#2f9e5b" stroke-width="2" stroke-dasharray="4 3"/>';
+   s+='<text x="'+X(p).toFixed(1)+'" y="180" text-anchor="middle" font-size="9.8" font-weight="800" fill="#237a45">p = '+p.toFixed(2)+'</text>';
+   /* axis */
+   s+='<line x1="'+X(0)+'" y1="232" x2="'+X(1)+'" y2="232" stroke="#b9ccd6" stroke-width="1.4"/>';
+   var tk=[0,0.25,0.5,0.75,1];
+   for(i=0;i<tk.length;i++){
+     s+='<line x1="'+X(tk[i]).toFixed(1)+'" y1="232" x2="'+X(tk[i]).toFixed(1)+'" y2="237" stroke="#b9ccd6" stroke-width="1.4"/>';
+     s+='<text x="'+X(tk[i]).toFixed(1)+'" y="250" text-anchor="middle" font-size="9.4" font-weight="700" fill="#78868d">'+tk[i].toFixed(2)+'</text>';
+   }
+   $("chart").innerHTML=s;
+ }
+
+ /* ================= chart B : the stack of intervals ================= */
+ function Xb(v){ return 30+clamp(v,0,1)*422; }
+ function chartB(){
+   var s='', i, c, y;
+   if(!recent.length){
+     s+='<text x="240" y="150" text-anchor="middle" font-size="13" font-weight="700" fill="#78868d">no intervals yet</text>';
+   }
+   s+='<line x1="'+Xb(p).toFixed(1)+'" y1="14" x2="'+Xb(p).toFixed(1)+'" y2="300" stroke="#2f9e5b" stroke-width="2" stroke-dasharray="4 3"/>';
+   for(i=0;i<recent.length;i++){
+     c=recent[recent.length-1-i];
+     y=22+i*6.9;
+     var col=c.ok?'#2f9e5b':'#d1495b';
+     s+='<line x1="'+Xb(c.lo).toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+Xb(c.hi).toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+col+'" stroke-width="3" stroke-linecap="round" opacity="'+(i===0?1:0.72)+'"/>';
+     s+='<circle cx="'+Xb(c.ph).toFixed(1)+'" cy="'+y.toFixed(1)+'" r="1.9" fill="#1c4454"/>';
+   }
+   s+='<text x="'+Xb(p).toFixed(1)+'" y="10" text-anchor="middle" font-size="9.8" font-weight="800" fill="#237a45">p = '+p.toFixed(2)+'</text>';
+   s+='<line x1="30" y1="304" x2="452" y2="304" stroke="#b9ccd6" stroke-width="1.4"/>';
+   var tk=[0,0.25,0.5,0.75,1];
+   for(i=0;i<tk.length;i++){
+     s+='<line x1="'+Xb(tk[i]).toFixed(1)+'" y1="304" x2="'+Xb(tk[i]).toFixed(1)+'" y2="309" stroke="#b9ccd6" stroke-width="1.4"/>';
+     s+='<text x="'+Xb(tk[i]).toFixed(1)+'" y="318" text-anchor="middle" font-size="9.4" font-weight="700" fill="#78868d">'+tk[i].toFixed(2)+'</text>';
+   }
+   $("cover").innerHTML=s;
+ }
+
+ /* ================= chart C : exact sampling distribution vs the normal ================= */
+ function chartC(){
+   var SEt=Math.sqrt(p*(1-p)/n), i;
+   var dlo=Math.max(-0.22,p-4.2*SEt), dhi=Math.min(1.22,p+4.2*SEt);
+   if(dhi-dlo<6/n){ var mid=(dlo+dhi)/2; dlo=mid-3/n; dhi=mid+3/n; }
+   var GX=38, GW=400, y0=192, GH=166;
+   var Xc=function(v){ return GX+(v-dlo)/(dhi-dlo)*GW; };
+   /* exact binomial pmf of p-hat */
+   var pm=[], ymax=0, v;
+   for(i=0;i<=n;i++){ v=binPmf(n,i,p); pm.push(v); if(v>ymax)ymax=v; }
+   if(ymax<=0)ymax=1;
+   var Y=function(h){ return y0-h/ymax*GH; };
+   var s='';
+   /* impossible zones */
+   if(dlo<0) s+='<rect x="'+Xc(dlo).toFixed(1)+'" y="20" width="'+(Xc(0)-Xc(dlo)).toFixed(1)+'" height="'+(y0-20).toFixed(1)+'" fill="#fbeef0"/>';
+   if(dhi>1) s+='<rect x="'+Xc(1).toFixed(1)+'" y="20" width="'+(Xc(dhi)-Xc(1)).toFixed(1)+'" height="'+(y0-20).toFixed(1)+'" fill="#fbeef0"/>';
+   /* bars */
+   var bw=Math.max(1,GW/((dhi-dlo)*n));
+   for(i=0;i<=n;i++){
+     var ph=i/n;
+     if(ph<dlo-1/n||ph>dhi+1/n) continue;
+     if(pm[i]/ymax<0.0006) continue;
+     s+='<rect x="'+(Xc(ph)-bw/2).toFixed(1)+'" y="'+Y(pm[i]).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(y0-Y(pm[i])).toFixed(1)+'" fill="'+C().col+'" opacity=".55"/>';
+   }
+   /* the normal approximation the formula assumes: density / n puts it in pmf units */
+   var d='';
+   for(i=0;i<=200;i++){
+     v=dlo+(dhi-dlo)*i/200;
+     var dens=Math.exp(-0.5*Math.pow((v-p)/SEt,2))/(SEt*Math.sqrt(2*Math.PI))/n;
+     d+=(i?'L':'M')+Xc(v).toFixed(1)+' '+Y(dens).toFixed(1)+' ';
+   }
+   s+='<path d="'+d+'" fill="none" stroke="#1c4454" stroke-width="2.1"/>';
+   /* p and the +-2 SE reach */
+   s+='<line x1="'+Xc(p).toFixed(1)+'" y1="20" x2="'+Xc(p).toFixed(1)+'" y2="'+y0+'" stroke="#2f9e5b" stroke-width="2" stroke-dasharray="4 3"/>';
+   s+='<text x="'+Xc(p).toFixed(1)+'" y="15" text-anchor="middle" font-size="9.8" font-weight="800" fill="#237a45">p</text>';
+   if(dlo<0) s+='<text x="'+((GX+Xc(0))/2).toFixed(1)+'" y="34" text-anchor="middle" font-size="9" font-weight="800" fill="#b23145">below 0</text>';
+   if(dhi>1) s+='<text x="'+((Xc(1)+GX+GW)/2).toFixed(1)+'" y="34" text-anchor="middle" font-size="9" font-weight="800" fill="#b23145">above 1</text>';
+   /* axis */
+   s+='<line x1="'+GX+'" y1="'+y0+'" x2="'+(GX+GW)+'" y2="'+y0+'" stroke="#b9ccd6" stroke-width="1.4"/>';
+   var dec=(dhi-dlo)<0.2?3:2;
+   for(i=0;i<=4;i++){
+     v=dlo+(dhi-dlo)*i/4;
+     s+='<line x1="'+Xc(v).toFixed(1)+'" y1="'+y0+'" x2="'+Xc(v).toFixed(1)+'" y2="'+(y0+5)+'" stroke="#b9ccd6" stroke-width="1.4"/>';
+     s+='<text x="'+Xc(v).toFixed(1)+'" y="'+(y0+18)+'" text-anchor="middle" font-size="9.4" font-weight="700" fill="#78868d">'+v.toFixed(dec)+'</text>';
+   }
+   s+='<text x="'+(GX+GW/2)+'" y="'+(y0+34)+'" text-anchor="middle" font-size="9.6" font-weight="800" fill="#78868d">every value p&#770; could take, and how often</text>';
+   $("dist").innerHTML=s;
+ }
+
+ /* ================= chart D : margin of error across p-hat ================= */
+ function chartD(){
+   var GX=40, GW=400, y0=118, GH=96, i, v;
+   var Xd=function(t){ return GX+t*GW; };
+   var mmax=z*0.5/Math.sqrt(n);
+   var Yd=function(m){ return y0-m/mmax*GH; };
+   var s='', d='M'+Xd(0)+' '+y0+' ';
+   for(i=0;i<=100;i++){
+     v=i/100;
+     d+='L'+Xd(v).toFixed(1)+' '+Yd(z*Math.sqrt(v*(1-v)/n)).toFixed(1)+' ';
+   }
+   d+='L'+Xd(1)+' '+y0+' Z';
+   s+='<path d="'+d+'" fill="#dcebf2" stroke="#2f6f8a" stroke-width="2"/>';
+   s+='<line x1="'+Xd(0.5)+'" y1="'+Yd(mmax).toFixed(1)+'" x2="'+Xd(0.5)+'" y2="'+y0+'" stroke="#b9ccd6" stroke-width="1.2" stroke-dasharray="3 3"/>';
+   s+='<text x="'+Xd(0.5)+'" y="'+(Yd(mmax)-6).toFixed(1)+'" text-anchor="middle" font-size="9.6" font-weight="800" fill="#1c4454">widest at 0.50 &mdash; &plusmn;'+pr(mmax)+'</text>';
+   if(cur){
+     var mm=cur.m;
+     s+='<line x1="'+Xd(cur.ph).toFixed(1)+'" y1="'+Yd(mm).toFixed(1)+'" x2="'+Xd(cur.ph).toFixed(1)+'" y2="'+y0+'" stroke="#d1495b" stroke-width="1.8"/>';
+     s+='<circle cx="'+Xd(cur.ph).toFixed(1)+'" cy="'+Yd(mm).toFixed(1)+'" r="4.6" fill="#d1495b" stroke="#fff" stroke-width="1.5"/>';
+     s+='<text x="'+clamp(Xd(cur.ph),64,416).toFixed(1)+'" y="14" text-anchor="middle" font-size="9.6" font-weight="800" fill="#b23145">your p&#770; = '+pr(cur.ph)+' &rarr; &plusmn;'+pr(mm)+'</text>';
+   }
+   s+='<line x1="'+GX+'" y1="'+y0+'" x2="'+(GX+GW)+'" y2="'+y0+'" stroke="#b9ccd6" stroke-width="1.4"/>';
+   var tk=[0,0.25,0.5,0.75,1];
+   for(i=0;i<tk.length;i++){
+     s+='<line x1="'+Xd(tk[i])+'" y1="'+y0+'" x2="'+Xd(tk[i])+'" y2="'+(y0+5)+'" stroke="#b9ccd6" stroke-width="1.4"/>';
+     s+='<text x="'+Xd(tk[i])+'" y="'+(y0+18)+'" text-anchor="middle" font-size="9.4" font-weight="700" fill="#78868d">'+tk[i].toFixed(2)+'</text>';
+   }
+   s+='<text x="'+(GX+GW/2)+'" y="'+(y0+33)+'" text-anchor="middle" font-size="9.6" font-weight="800" fill="#78868d">p&#770;</text>';
+   $("dome").innerHTML=s;
+ }
+
+ /* ================= panels ================= */
+ function setChk(box,val,sub,state){
+   $(box).className=state;
+   $('v'+box.charAt(1)).innerHTML=val;
+   $('s'+box.charAt(1)).innerHTML=sub;
+ }
+
+ function renderCtx(){
+   $("ctxs").innerHTML=CTX.map(function(m,i){
+     return '<button class="it'+(i===ci?' on':'')+'" data-i="'+i+'"><span class="nm">'+m.t+'</span><span class="s">'+m.s+'</span></button>';
+   }).join('');
+   var bs=document.querySelectorAll('#ctxs .it');
+   for(var i=0;i<bs.length;i++){
+     bs[i].onclick=function(){
+       ci=+this.getAttribute('data-i');
+       p=C().p;
+       $("pSl").value=Math.round(p*100);
+       resetRun(); sampleOnce(); render();
+     };
+   }
+ }
+
+ function render(){
+   var c=C();
+   $("pVal").innerHTML=p.toFixed(2);
+   $("nVal").innerHTML=com(n);
+   $("tZ").innerHTML=z.toFixed(3);
+   $("lgS").style.background=c.col;
+   $("lgSt").innerHTML=c.su;
+   $("lgFt").innerHTML=c.fa;
+   $("cardTitle").innerHTML='One sample &rarr; one interval';
+   $("stage").style.background=c.col;
+   $("stage").innerHTML=c.nm+'<small>n = '+com(n)+' '+c.unit+' &middot; '+conf+'% confidence &middot; true p = '+p.toFixed(2)+'</small>';
+
+   chartA(); chartB(); chartC(); chartD();
+
+   if(cur){
+     $("tPh").innerHTML=pr(cur.ph);
+     $("tPhS").innerHTML=com(cur.x)+' / '+com(n);
+     $("tSe").innerHTML=pr(cur.se);
+     $("tMo").innerHTML=pr(cur.m);
+     $("eqn").innerHTML='<b>'+pr(cur.ph)+'</b> &plusmn; <b>'+z.toFixed(3)+'</b> &times; &radic;( '+pr(cur.ph)+' &times; '+pr(1-cur.ph)+' / '+com(n)+' ) = '+
+       pr(cur.ph)+' &plusmn; '+pr(cur.m)+'<br>'+conf+'% confidence interval: <b>( '+pr(cur.lo)+' , '+pr(cur.hi)+' )</b>'+
+       (cur.lo<0||cur.hi>1?' &nbsp;<span style="color:#b23145">&larr; impossible bound</span>':'');
+     $("cap").innerHTML='You drew <b>'+com(n)+'</b> '+c.unit+' and counted <b>'+com(cur.x)+'</b> '+c.su+'. That gives p&#770; = <b>'+pr(cur.ph)+
+       '</b>, a standard error of <b>'+pr(cur.se)+'</b>, and a '+conf+'% interval of <b>('+pr(cur.lo)+', '+pr(cur.hi)+')</b> &mdash; a span of '+pr(cur.hi-cur.lo)+
+       '. The dashed green line is the true p, which you can see here only because this is a simulation. In a real study it is invisible, permanently.';
+     $("verd").className='vd '+(cur.ok?'hit':'miss');
+     $("verd").innerHTML=(cur.ok
+       ? '&#10003; This interval contains p = '+p.toFixed(2)+'.'
+       : '&#10007; This interval misses p = '+p.toFixed(2)+'.')+
+       '<span class="sm">'+(cur.ok
+         ? 'Not evidence that the method worked &mdash; a broken method still lands on p most of the time. The coverage tiles below are what tell you.'
+         : 'Nothing went wrong. A '+conf+'% procedure is supposed to miss about '+(100-conf)+' times in 100, and this was one of them.')+'</span>';
+     /* conditions */
+     setChk('k1','assumed','a design fact, not a sum','ass');
+     var frac=n/c.N;
+     setChk('k2',(frac<=0.10?'&#10003;':'&#10007;'),'n / N = '+(frac*100).toFixed(1)+'%',frac<=0.10?'yes':'no');
+     setChk('k3',com(cur.x),'np&#770; = '+com(cur.x)+(cur.x>=10?' &#8805; 10':' &lt; 10'),cur.x>=10?'yes':'no');
+     setChk('k4',com(n-cur.x),'n(1&minus;p&#770;) = '+com(n-cur.x)+((n-cur.x)>=10?' &#8805; 10':' &lt; 10'),(n-cur.x)>=10?'yes':'no');
+     var bad=(cur.x<10)||((n-cur.x)<10)||(frac>0.10);
+     $("info").innerHTML='<span class="n">'+c.nm+'</span>'+c.why+
+       '<div class="loc">'+(bad
+         ? 'A condition is failing right now. The interval above was still computed &mdash; that is the trap. Arithmetic never refuses.'
+         : 'All the checkable conditions are met, so the normal approximation is doing honest work here.')+'</div>';
+   } else {
+     $("tPh").innerHTML='&mdash;'; $("tPhS").innerHTML='&mdash;';
+     $("tSe").innerHTML='&mdash;'; $("tMo").innerHTML='&mdash;';
+     $("eqn").innerHTML='Draw a sample to build the interval.';
+     $("cap").innerHTML='Nothing drawn yet.';
+     $("verd").className='vd hit'; $("verd").innerHTML='Press &ldquo;Draw a new sample&rdquo;.';
+     setChk('k1','&mdash;','&nbsp;',''); setChk('k2','&mdash;','&nbsp;','');
+     setChk('k3','&mdash;','&nbsp;',''); setChk('k4','&mdash;','&nbsp;','');
+     $("info").innerHTML='<span class="n">'+c.nm+'</span>'+c.why;
+   }
+
+   /* coverage */
+   var ex=exactCoverage();
+   $("tTot").innerHTML=com(total);
+   $("tCap").innerHTML=com(capt);
+   $("tEmp").innerHTML=total?pct(capt/total):'&mdash;';
+   $("tExa").innerHTML=pct(ex);
+   $("tExaS").innerHTML='promised '+conf+'%';
+   var off=Math.abs(ex*100-conf);
+   $("tExa").style.color=off>1.5?'#b23145':'#237a45';
+   $("covcap").innerHTML='The last tile is not a simulation. It sums the exact binomial probability of every one of the '+com(n+1)+
+     ' samples you could possibly draw and adds up the ones whose interval would land on p. At n = '+com(n)+', p = '+p.toFixed(2)+
+     ' and a stated '+conf+'%, this recipe actually captures p <b>'+pct(ex)+'</b> of the time'+
+     (off>1.5? ' &mdash; a gap of '+off.toFixed(1)+' percentage points from what the label claims.'
+             : ' &mdash; within '+off.toFixed(1)+' points of what the label claims.')+
+     ' The simulated coverage on its left should drift toward it as you keep running. '+
+     (total<200?'Run a few hundred intervals and watch it settle.':'');
+
+   $("distcap").innerHTML='Bars: the exact probability of each possible p&#770;. Curve: the normal the formula assumes. '+
+     (Math.min(n*p,n*(1-p))<10
+       ? 'With about '+(n*p).toFixed(1)+' successes and '+(n*(1-p)).toFixed(1)+' failures expected, the bars are visibly lopsided and the curve leaks past the edge of what a proportion can even be. That mismatch is the missing coverage.'
+       : 'With about '+(n*p).toFixed(1)+' successes and '+(n*(1-p)).toFixed(1)+' failures expected, the bars and the curve sit almost on top of each other &mdash; which is exactly the condition being satisfied.');
+
+   $("domecap").innerHTML='At a fixed n, the margin is largest when p&#770; = 0.50 and shrinks toward the edges: &plusmn;'+pr(z*0.5/Math.sqrt(n))+
+     ' at the peak versus &plusmn;'+pr(z*Math.sqrt(0.1*0.9/n))+' at p&#770; = 0.10. That is why the conservative sample-size calculation uses 0.50 &mdash; planning for the worst case guarantees the margin you promised. And because n sits under a square root, quadrupling the sample halves the margin, never better.';
+
+   /* the confidence buttons */
+   var bs=document.querySelectorAll('#cseg button');
+   for(var i=0;i<bs.length;i++) bs[i].className=(+bs[i].getAttribute('data-c')===conf)?'on':'';
+   renderCtx();
+ }
+
+ /* ---------- wiring ---------- */
+ var bs=document.querySelectorAll('#cseg button');
+ for(var i=0;i<bs.length;i++){
+   bs[i].onclick=function(){
+     conf=+this.getAttribute('data-c'); z=zStar(conf);
+     resetRun(); sampleOnce(); render();
+   };
+ }
+ $("nSl").oninput=function(){ n=+this.value; resetRun(); sampleOnce(); render(); };
+ $("pSl").oninput=function(){ p=(+this.value)/100; resetRun(); sampleOnce(); render(); };
+ $("d1").onclick=function(){ sampleOnce(); render(); };
+ $("d100").onclick=function(){ runMany(100); render(); };
+ $("d1000").onclick=function(){ runMany(1000); render(); };
+ $("rst").onclick=function(){ seed=SEED0; resetRun(); sampleOnce(); render(); };
+
+ sampleOnce();
+ render();
+})();
+</script>
+</body>
+</html>

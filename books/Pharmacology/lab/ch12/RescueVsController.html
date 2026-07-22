@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Rescue vs. Controller Inhalers</title>
+<meta name="description" content="Sort inhaled medicines into rescue (quick-relief) vs controller (daily), then step through correct MDI technique. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>
+.wrap{grid-template-columns:0.95fr 1.05fr;}
+#info2{border:1px solid var(--line);border-left:5px solid var(--teal);background:#eff4fb;border-radius:10px;padding:12px 14px;margin-top:12px;font-size:13px;color:var(--soft);line-height:1.5;}
+#info2 b{color:var(--ink);}
+#info2 .n{font-family:var(--disp);font-weight:600;font-size:16px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.qrow{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;}
+.qrow+.qrow{margin-top:6px;}
+.qrow .med{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--ink);}
+.qrow .med .ic{font-size:18px;line-height:1;}
+.pick{display:flex;gap:5px;flex:none;}
+.pick button{border:1px solid var(--line);background:#fff;color:var(--soft);font-weight:700;font-size:11.5px;padding:6px 10px;border-radius:8px;cursor:pointer;font-family:var(--sans);transition:.12s;}
+.pick button:hover{border-color:var(--teal);}
+.qrow.done .pick button{cursor:default;}
+.pick button.right{background:#e5f3ea;border-color:#8fce9f;color:#237a45;}
+.pick button.wrong{background:#fae5e8;border-color:#e6a9b3;color:#b23145;}
+.dots{display:flex;gap:6px;justify-content:center;margin:0 0 6px;}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--line);transition:.2s;cursor:pointer;}
+.dots i.on{background:var(--teal);transform:scale(1.2);}
+.nurse{margin-top:10px;}
+.nurse .h{font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--teal-dk);margin-bottom:4px;}
+.nurse ul{list-style:none;display:flex;flex-direction:column;gap:5px;}
+.nurse li{position:relative;padding-left:16px;font-size:12.5px;color:var(--soft);line-height:1.45;}
+.nurse li:before{content:'▸';position:absolute;left:0;color:var(--teal);top:0;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 12</div>
+  <h1>Rescue vs. Controller Inhalers</h1>
+  <div class="intro">A <b>rescue</b> inhaler is grabbed during an attack; a <b>controller</b> is taken every day to prevent one &mdash; and inhaled corticosteroids are the cornerstone controller. First sort each medicine, then step through correct inhaler technique.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The medicine cabinet</h2>
+    <svg viewBox="0 0 220 210" aria-label="illustration"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">Rescue or controller?<small>tap a shelf for each medicine</small></div>
+    <div class="modeseg">
+      <button id="mode1btn" class="on">Sort the meds</button>
+      <button id="mode2btn">Inhaler technique</button>
+    </div>
+    <div class="card">
+      <div id="m1">
+        <div class="list" id="qlist"></div>
+        <div id="info"></div>
+      </div>
+      <div id="m2" style="display:none;">
+        <div class="dots" id="dots"></div>
+        <div id="info2"></div>
+        <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- MODE 1 DATA: rescue vs controller sorter ---------- */
+ var MEDS=[
+  {k:'albuterol',ic:'💨',cat:'rescue',cls:'SABA — short-acting beta₂ agonist',
+   r:'The classic <b>quick-relief</b> inhaler: β₂ agonist that opens the airway in ~5 minutes for an acute attack or before exercise.',
+   nurse:['Expect tremor and a fast heart rate; these are dose-related, not allergy.','Needing it <b>more than twice a week</b> means asthma is not controlled &mdash; the controller must be stepped up.','Teach the patient to carry it at all times.']},
+  {k:'fluticasone',ic:'🛡️',cat:'controller',cls:'ICS — inhaled corticosteroid',
+   r:'The <b>cornerstone daily controller</b>. It quiets airway inflammation over days; it does <b>nothing</b> for an attack in progress.',
+   nurse:['<b>Rinse the mouth and spit</b> after every dose to prevent oral thrush and hoarseness.','Use a spacer to improve delivery and cut throat deposit.','Take it every day, even when breathing feels fine.']},
+  {k:'salmeterol',ic:'⏱️',cat:'controller',cls:'LABA — long-acting beta₂ agonist',
+   r:'A <b>daily</b> bronchodilator lasting ~12 hours &mdash; slow to act, so it is never a rescue inhaler.',
+   nurse:['<b>Never used alone in asthma</b> (linked to increased asthma deaths) &mdash; always paired with an ICS.','Confirm the patient also has a true rescue inhaler for attacks.']},
+  {k:'montelukast',ic:'🚫',cat:'controller',cls:'LTRA — leukotriene receptor antagonist',
+   r:'An <b>oral daily</b> controller that blocks leukotrienes; helpful for exercise-induced and allergic asthma. Taken in the evening.',
+   nurse:['Boxed warning for <b>neuropsychiatric effects</b> &mdash; teach families to watch for mood, sleep, or behavior changes.','It is preventive; it will not stop an attack.']},
+  {k:'ipratropium',ic:'🌬️',cat:'rescue',cls:'SAMA — short-acting muscarinic antagonist',
+   r:'A <b>quick-relief</b> anticholinergic (onset ~15 min), used mainly in COPD and often combined with albuterol for exacerbations.',
+   nurse:['Causes dry mouth; offer sips of water.','Keep the spray <b>out of the eyes</b> &mdash; it can worsen narrow-angle glaucoma.']},
+  {k:'budesonide',ic:'🛡️',cat:'controller',cls:'ICS — inhaled corticosteroid',
+   r:'Another daily inhaled steroid controller. Anti-inflammatory benefit builds over days &mdash; not for acute wheezing.',
+   nurse:['Same rule as all steroid inhalers: <b>rinse and spit</b> to prevent thrush.','Do not stop it when symptoms improve; that is the point of the drug working.']},
+  {k:'levalbuterol',ic:'💨',cat:'rescue',cls:'SABA — short-acting beta₂ agonist',
+   r:'A close relative of albuterol &mdash; a fast <b>quick-relief</b> bronchodilator for acute symptoms.',
+   nurse:['Sometimes chosen to lessen tremor and tachycardia, but still monitor heart rate.','Overuse remains the warning sign of poor control.']},
+  {k:'tiotropium',ic:'🌀',cat:'controller',cls:'LAMA — long-acting muscarinic antagonist',
+   r:'A <b>once-daily maintenance</b> anticholinergic (mainly COPD). Long-acting, so it is not for an attack.',
+   nurse:['Anticholinergic cautions: dry mouth, glaucoma, and urinary retention / BPH.','Maintenance only &mdash; keep a rescue inhaler on hand.']},
+  {k:'cromolyn',ic:'🧱',cat:'controller',cls:'Mast cell stabilizer',
+   r:'A <b>preventive</b> controller that stabilizes mast cells; can be used before a known trigger. Useless once an attack has started.',
+   nurse:['Must be taken regularly to work.','No role in acute relief &mdash; strictly prophylactic.']}
+ ];
+ var answered={};
+
+ function drawCab(){
+  var s='';
+  /* rescue shelf (top) */
+  s+='<rect x="8" y="16" width="204" height="80" rx="11" fill="#fbeaed"/>';
+  s+='<rect x="8" y="16" width="204" height="21" rx="11" fill="#d1495b"/>';
+  s+='<text x="16" y="31" font-size="10.5" fill="#fff" font-weight="800">RESCUE — grab during an attack</text>';
+  s+='<text x="16" y="49" font-size="9" fill="#a5384a" font-weight="700">fast · used PRN · always carried</text>';
+  /* controller shelf (bottom) */
+  s+='<rect x="8" y="112" width="204" height="90" rx="11" fill="#e9f0fa"/>';
+  s+='<rect x="8" y="112" width="204" height="21" rx="11" fill="#2f5f9e"/>';
+  s+='<text x="16" y="127" font-size="10.5" fill="#fff" font-weight="800">CONTROLLER — take every day</text>';
+  s+='<text x="16" y="145" font-size="9" fill="#3a5a86" font-weight="700">slow · daily · prevents attacks</text>';
+  var rx=18, cx=18, cy2=133;
+  MEDS.forEach(function(m){
+    if(!answered[m.k]) return;
+    if(m.cat==='rescue'){ s+='<text x="'+rx+'" y="88" font-size="22">'+m.ic+'</text>'; rx+=32; }
+    else { if(cx>176){cx=18;cy2=196;} s+='<text x="'+cx+'" y="'+((cy2===133)?178:196)+'" font-size="22">'+m.ic+'</text>'; cx+=32; }
+  });
+  return s;
+ }
+
+ function tally(){ var n=0,c=0; MEDS.forEach(function(m){ if(answered[m.k]){n++; if(answered[m.k]==='right')c++;}}); return {n:n,c:c}; }
+
+ function renderList(){
+  $("qlist").innerHTML=MEDS.map(function(m){
+    var done=!!answered[m.k];
+    var rescueCls='', ctrlCls='';
+    if(done){
+      if(m.cat==='rescue'){ rescueCls=' right'; if(answered[m.k]==='wrong') ctrlCls=' wrong'; }
+      else { ctrlCls=' right'; if(answered[m.k]==='wrong') rescueCls=' wrong'; }
+    }
+    return '<div class="qrow'+(done?' done':'')+'" data-k="'+m.k+'">'+
+      '<div class="med"><span class="ic">'+m.ic+'</span><span>'+m.k+'</span></div>'+
+      '<div class="pick"><button data-ans="rescue" class="'+rescueCls.trim()+'">Rescue</button>'+
+      '<button data-ans="controller" class="'+ctrlCls.trim()+'">Controller</button></div></div>';
+  }).join('');
+  document.querySelectorAll('#qlist .pick button').forEach(function(b){
+    b.onclick=function(){
+      var row=b.parentNode.parentNode, k=row.dataset.k;
+      if(answered[k]) return;
+      var m=MEDS.filter(function(x){return x.k===k;})[0];
+      answered[k]=(b.dataset.ans===m.cat)?'right':'wrong';
+      $("art").innerHTML=drawCab();
+      show(m);
+      renderList();
+      updateStage();
+    };
+  });
+ }
+
+ function show(m){
+  var correct=answered[m.k]==='right';
+  var head='<span class="n">'+m.k+' <span class="pill '+(m.cat==='rescue'?'high':'low')+'">'+(m.cat==='rescue'?'RESCUE':'CONTROLLER')+'</span></span>';
+  var verdict=correct?'<b style="color:#237a45">Correct.</b> ':'<b style="color:#b23145">Not quite &mdash; it is a '+m.cat+'.</b> ';
+  var html=head+'<div class="dd" style="font-weight:700;color:var(--teal-dk);margin-bottom:5px;">'+m.cls+'</div>'+
+    '<div>'+verdict+m.r+'</div>'+
+    '<div class="nurse"><div class="h">What the nurse does</div><ul>'+m.nurse.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>';
+  var t=tally();
+  if(t.n===MEDS.length){
+    html+='<div class="loc" style="margin-top:10px;"><b>All sorted &mdash; '+t.c+' / '+MEDS.length+' correct.</b> The pattern: reach for the fast β₂ agonist (or ipratropium) in an attack; everything taken <b>daily to prevent</b> attacks &mdash; steroids, LABA, LTRA, LAMA, cromolyn &mdash; is a controller.</div>';
+  }
+  $("info").innerHTML=html;
+  $("cardTitle").innerHTML=m.cat==='rescue'?'Sorted to the rescue shelf':'Sorted to the controller shelf';
+ }
+
+ function updateStage(){
+  var t=tally();
+  $("stage").style.background='var(--teal)';
+  $("stage").innerHTML='Rescue or controller?<small>'+t.n+' / '+MEDS.length+' sorted · '+t.c+' correct</small>';
+ }
+
+ /* ---------- MODE 2 DATA: correct MDI technique ---------- */
+ var T=[
+  {id:'shake',t:'Shake & prepare',
+   d:'Remove the cap and <b>shake the inhaler</b> for about 5 seconds. Attach a <b>spacer</b> if you have one &mdash; it drives more medicine into the lungs and less onto the throat.',
+   avoid:'A dry-powder inhaler (DPI) is <b>not</b> shaken and is <b>never</b> paired with a spacer &mdash; moisture ruins the powder.'},
+  {id:'exhale',t:'Breathe out fully',
+   d:'Exhale <b>completely</b>, turning your head <b>away</b> from the inhaler. Emptying the lungs first makes room for a full, deep breath of medicine.',
+   avoid:'Do not breathe out <b>into</b> the mouthpiece &mdash; it can clog the device and waste the dose.'},
+  {id:'actuate',t:'Seal lips & press',
+   d:'Seal your lips around the mouthpiece (or spacer) and <b>press the canister once</b> as you <b>begin</b> to breathe in. The puff and the breath must happen together.',
+   avoid:'Firing the puff before or after the breath is the most common error &mdash; a spacer forgives poor timing.'},
+  {id:'inhale',t:'Inhale slow & deep',
+   d:'Breathe in <b>slowly and deeply</b> over 3&ndash;5 seconds so the mist travels deep into the airways instead of hitting the back of the throat.',
+   avoid:'A fast, hard breath is correct for a DPI, but it slams an MDI mist onto the throat &mdash; slow is right for an MDI.'},
+  {id:'hold',t:'Hold your breath',
+   d:'Hold your breath about <b>10 seconds</b> (count them), then breathe out gently. This lets the medicine settle onto the airway walls rather than being exhaled away.',
+   avoid:''},
+  {id:'wait',t:'Wait, then repeat',
+   d:'If a <b>second puff</b> is ordered, wait about <b>1 minute</b> and repeat. When a rescue bronchodilator and a steroid inhaler are both due, give the <b>bronchodilator first</b>, wait, then the steroid so the opened airways carry it deeper.',
+   avoid:''},
+  {id:'rinse',t:'Rinse your mouth',
+   d:'After an <b>inhaled corticosteroid</b>, <b>rinse the mouth with water and spit</b> &mdash; do not swallow. Then replace the cap.',
+   avoid:'Skipping the rinse after a steroid inhaler is the classic cause of white oral patches &mdash; thrush (candidiasis).'}
+ ];
+ var i2=0;
+
+ function face(id){
+  var f='<rect x="52" y="46" width="96" height="104" rx="36" fill="#f3d9c9"/>'+
+        '<circle cx="48" cy="100" r="8" fill="#eec6ae"/>'+
+        '<circle cx="84" cy="88" r="4.5" fill="#3a2f2a"/><circle cx="116" cy="88" r="4.5" fill="#3a2f2a"/>';
+  var mp='<rect x="90" y="118" width="20" height="12" rx="3" fill="#8a94a3"/>'+
+         '<rect x="93" y="130" width="14" height="34" rx="4" fill="#2f5f9e"/><rect x="95" y="128" width="10" height="6" rx="2" fill="#9fb4d6"/>';
+  if(id==='shake'){
+    f+='<line x1="90" y1="120" x2="110" y2="120" stroke="#b5766a" stroke-width="4" stroke-linecap="round"/>';
+    f+='<g transform="translate(160,58) rotate(14)"><rect x="0" y="14" width="17" height="42" rx="5" fill="#2f5f9e"/><rect x="2" y="2" width="13" height="14" rx="3" fill="#8a94a3"/></g>';
+    f+='<path d="M150 66 q-8 8 0 16" fill="none" stroke="#7a8aa3" stroke-width="3" stroke-linecap="round"/>';
+    f+='<path d="M188 66 q8 8 0 16" fill="none" stroke="#7a8aa3" stroke-width="3" stroke-linecap="round"/>';
+    f+='<text x="176" y="118" font-size="11" fill="#4b5563" text-anchor="middle" font-weight="700">shake 5s</text>';
+  } else if(id==='exhale'){
+    f+='<ellipse cx="100" cy="122" rx="7" ry="9" fill="#7a4b42"/>';
+    f+='<path d="M114 124 q26 4 40 26" fill="none" stroke="#2f5f9e" stroke-width="4" stroke-linecap="round"/>';
+    f+='<path d="M154 150 l0 -12 M154 150 l-12 -2" fill="none" stroke="#2f5f9e" stroke-width="4" stroke-linecap="round"/>';
+    f+='<g transform="translate(168,150) rotate(20)"><rect x="0" y="0" width="15" height="38" rx="5" fill="#2f5f9e"/></g>';
+    f+='<text x="150" y="188" font-size="11" fill="#4b5563" text-anchor="middle" font-weight="700">air out, away</text>';
+  } else if(id==='actuate'){
+    f+=mp;
+    f+='<line x1="100" y1="126" x2="100" y2="110" stroke="#2f5f9e" stroke-width="4" stroke-linecap="round"/>';
+    f+='<path d="M100 110 l-5 7 M100 110 l5 7" fill="none" stroke="#2f5f9e" stroke-width="4" stroke-linecap="round"/>';
+    f+='<circle cx="99" cy="147" r="7" fill="#e6a94a"/>';/* finger pressing */
+    f+='<text x="100" y="207" font-size="11" fill="#4b5563" text-anchor="middle" font-weight="700">press + start breathing in</text>';
+  } else if(id==='inhale'){
+    f+=mp;
+    f+='<path d="M100 178 L100 108" fill="none" stroke="#2f9e5b" stroke-width="5" stroke-linecap="round"/>';
+    f+='<path d="M100 108 l-6 9 M100 108 l6 9" fill="none" stroke="#2f9e5b" stroke-width="5" stroke-linecap="round"/>';
+    f+='<text x="150" y="120" font-size="12" fill="#237a45" text-anchor="middle" font-weight="800">3–5 s</text>';
+    f+='<text x="100" y="207" font-size="11" fill="#4b5563" text-anchor="middle" font-weight="700">slow &amp; deep</text>';
+  } else if(id==='hold'){
+    f+='<line x1="90" y1="121" x2="110" y2="121" stroke="#b5766a" stroke-width="4" stroke-linecap="round"/>';
+    f+='<circle cx="176" cy="70" r="22" fill="#eff4fb" stroke="#2f5f9e" stroke-width="3"/>';
+    f+='<text x="176" y="76" font-size="15" text-anchor="middle" font-weight="800" fill="#1e3a63">10s</text>';
+    f+='<path d="M70 158 q30 -20 60 0" fill="none" stroke="#9fb4d6" stroke-width="4"/>';/* full chest */
+    f+='<text x="100" y="200" font-size="11" fill="#4b5563" text-anchor="middle" font-weight="700">hold — let it settle</text>';
+  } else if(id==='wait'){
+    f+='<line x1="90" y1="121" x2="110" y2="121" stroke="#b5766a" stroke-width="4" stroke-linecap="round"/>';
+    f+='<circle cx="176" cy="70" r="22" fill="#eff4fb" stroke="#2f5f9e" stroke-width="3"/>';
+    f+='<line x1="176" y1="70" x2="176" y2="56" stroke="#1e3a63" stroke-width="3" stroke-linecap="round"/>';
+    f+='<line x1="176" y1="70" x2="187" y2="74" stroke="#1e3a63" stroke-width="3" stroke-linecap="round"/>';
+    f+='<text x="176" y="106" font-size="11" text-anchor="middle" font-weight="800" fill="#1e3a63">wait 1 min</text>';
+    f+='<circle cx="70" cy="176" r="10" fill="#2f5f9e"/><text x="70" y="180" font-size="9" text-anchor="middle" fill="#fff" font-weight="800">1st</text>';
+    f+='<circle cx="100" cy="176" r="10" fill="#fff" stroke="#2f5f9e" stroke-width="2"/><text x="100" y="180" font-size="9" text-anchor="middle" fill="#2f5f9e" font-weight="800">2nd</text>';
+  } else if(id==='rinse'){
+    f+='<ellipse cx="100" cy="122" rx="7" ry="9" fill="#7a4b42"/>';
+    f+='<path d="M150 106 l5 44 h20 l5 -44 z" fill="#cfe4fb" stroke="#2f5f9e" stroke-width="2"/>';
+    f+='<rect x="152" y="120" width="26" height="30" fill="#9fc8f2" opacity=".7"/>';
+    f+='<circle cx="120" cy="132" r="2.5" fill="#2f5f9e"/><circle cx="128" cy="140" r="2.5" fill="#2f5f9e"/><circle cx="134" cy="130" r="2.5" fill="#2f5f9e"/>';
+    f+='<text x="100" y="200" font-size="11" fill="#4b5563" text-anchor="middle" font-weight="700">rinse &amp; spit → no thrush</text>';
+  }
+  return f;
+ }
+
+ function renderStep(){
+  var s=T[i2];
+  $("art").innerHTML=face(s.id);
+  $("cardTitle").innerHTML='Step '+(i2+1)+' — '+s.t;
+  $("stage").style.background='var(--teal)';
+  $("stage").innerHTML='Correct inhaler technique<small>metered-dose inhaler · step '+(i2+1)+' of '+T.length+'</small>';
+  var html='<span class="n">'+s.t+'</span>'+s.d;
+  if(s.avoid) html+='<div class="note"><b>Common error.</b> '+s.avoid+'</div>';
+  $("info2").innerHTML=html;
+  $("dots").innerHTML=T.map(function(x,j){return '<i class="'+(j===i2?'on':'')+'" data-j="'+j+'"></i>';}).join('');
+  document.querySelectorAll('#dots i').forEach(function(d){d.onclick=function(){i2=+d.dataset.j;renderStep();};});
+  $("prev").disabled=(i2===0); $("next").disabled=(i2===T.length-1);
+ }
+ $("prev").onclick=function(){if(i2>0){i2--;renderStep();}};
+ $("next").onclick=function(){if(i2<T.length-1){i2++;renderStep();}};
+
+ /* ---------- MODE SWITCHING ---------- */
+ function setMode(m){
+  $("mode1btn").className=(m===1?'on':''); $("mode2btn").className=(m===2?'on':'');
+  $("m1").style.display=(m===1?'':'none'); $("m2").style.display=(m===2?'':'none');
+  if(m===1){ $("art").innerHTML=drawCab(); $("cardTitle").innerHTML='The medicine cabinet'; updateStage(); }
+  else { renderStep(); }
+ }
+ $("mode1btn").onclick=function(){setMode(1);};
+ $("mode2btn").onclick=function(){setMode(2);};
+
+ /* ---------- INIT ---------- */
+ renderList();
+ $("art").innerHTML=drawCab();
+ updateStage();
+ $("info").innerHTML='<span class="n">Two jobs, two inhalers</span>A <b>rescue</b> inhaler works in minutes and is used only when symptoms flare. A <b>controller</b> works slowly and is taken every day to keep attacks from happening at all. Tap <b>Rescue</b> or <b>Controller</b> for each medicine to sort the cabinet.';
+})();
+</script>
+</body>
+</html>

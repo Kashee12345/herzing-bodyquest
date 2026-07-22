@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f7f2">
+<title>The Pendulum Problem</title>
+<meta name="description" content="Design a fair test to discover what makes a pendulum swing faster — Inhelder &amp; Piaget's classic task for hypothetico-deductive, formal-operational reasoning. Isolate one variable at a time and release both pendulums. For human development students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_humdev.css">
+<style>.wrap{grid-template-columns:0.96fr 1.04fr;}
+svg{background:#f7fbf8;border-radius:12px;}
+.exp{display:grid;grid-template-columns:auto 1fr 1fr;gap:8px 8px;align-items:center;margin-bottom:4px;}
+.exp .hd{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;text-align:center;color:var(--muted);}
+.exp .hd.a{color:var(--blue);} .exp .hd.b{color:var(--coral);}
+.exp .pl{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.15;}
+.exp .seg button{padding:9px 4px;font-size:12px;}
+.seg.seg-a button.on{background:var(--blue);} .seg.seg-b button.on{background:var(--coral);}
+.diffbar{font-size:12px;border-radius:8px;padding:8px 11px;margin:2px 0 11px;line-height:1.5;}
+.diffbar.ok{color:#237a45;background:#e2f2e9;border:1px solid #bfe2cc;} .diffbar.ok b{color:#175c31;}
+.diffbar.warn{color:#8a6a20;background:#fbf3e2;border:1px solid #ecd9ac;} .diffbar.warn b{color:#5a4212;}
+.diffbar.bad{color:#8a2a3a;background:#fae5e8;border:1px solid #f0c9d0;} .diffbar.bad b{color:#7a1f2c;}
+#info .step{font-size:12px;color:var(--soft);line-height:1.55;margin-top:9px;}
+#info .step b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 9</a></div>
+<header>
+  <div class="kick">Human Development · Chapter 9</div>
+  <h1>The Pendulum Problem</h1>
+  <div class="intro">Around <b>age 11 or 12</b>, thinking crosses into Piaget's <b>formal-operational stage</b> &mdash; the mind can now juggle <b>abstract, hypothetical &ldquo;what if&rdquo;</b> ideas and test them systematically. Here is Inhelder &amp; Piaget's classic proof: <b>what makes a pendulum swing faster?</b> Set up the two pendulums, then release them &mdash; but to actually <i>prove</i> anything, you must run a <b>fair test</b>.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Two pendulums</h2>
+    <svg viewBox="0 0 240 222" aria-label="two adjustable pendulums hanging from a beam"><g id="art"></g></svg>
+    <div style="margin-top:8px;font-size:11.5px;color:var(--muted);line-height:1.4;">The <b style="color:var(--blue)">blue</b> and <b style="color:var(--coral)">coral</b> counters tick up once per full swing. If they drift apart, the change you made <b>mattered</b>; if they stay locked together, it didn't.</div>
+  </div></div>
+  <div>
+    <div id="stage">The pendulum problem<small>which variable sets the swing rate?</small></div>
+    <div class="card">
+      <div class="exp" id="exp"></div>
+      <div class="diffbar warn" id="diff"></div>
+      <div class="row"><button class="btn" id="reset">↺ Reset</button><button class="btn solid" id="run">Release both ▸</button></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Human Development &middot; an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var PROPS=[
+   {k:'len', l:'String length', o:['Short','Long'],  effect:true},
+   {k:'wt',  l:'Bob weight',    o:['Light','Heavy'], effect:false},
+   {k:'drop',l:'Drop angle',    o:['Small','Wide'],  effect:false}
+ ];
+ var STATE={A:{len:0,wt:0,drop:0}, B:{len:1,wt:1,drop:1}};
+ var RUN=false, raf=null, t0=0;
+
+ // ---- drawing ----
+ function pen(id,px,p,el,col,dk){
+   var py=24;
+   var L   = p.len ? 150 : 96;
+   var amp = p.drop? 0.72: 0.38;
+   var r   = p.wt  ? 15  : 9;
+   var w   = 38/Math.sqrt(L);
+   var th  = RUN ? amp*Math.cos(w*el) : amp;
+   var cnt = RUN ? Math.floor(w*el/(2*Math.PI)) : 0;
+   var bx  = px + L*Math.sin(th), by = py + L*Math.cos(th);
+   var o='';
+   o+='<text x="'+px+'" y="9" font-size="10" font-weight="800" text-anchor="middle" fill="'+col+'">'+id+'</text>';
+   o+='<circle cx="'+px+'" cy="'+py+'" r="3.4" fill="#6b7d72"/>';
+   o+='<line x1="'+px+'" y1="'+py+'" x2="'+bx.toFixed(1)+'" y2="'+by.toFixed(1)+'" stroke="#7d8f84" stroke-width="2"/>';
+   o+='<circle cx="'+bx.toFixed(1)+'" cy="'+by.toFixed(1)+'" r="'+r+'" fill="'+col+'" stroke="'+dk+'" stroke-width="2"/>';
+   o+='<circle cx="'+(bx-r*0.35).toFixed(1)+'" cy="'+(by-r*0.35).toFixed(1)+'" r="'+(r*0.28).toFixed(1)+'" fill="#fff" opacity=".45"/>';
+   o+='<text x="'+px+'" y="214" font-size="11" font-weight="800" text-anchor="middle" fill="'+col+'">'+(RUN?'swings: '+cnt:'&#8210;')+'</text>';
+   return o;
+ }
+ function scene(el){
+   var s='';
+   s+='<rect x="16" y="12" width="208" height="12" rx="3" fill="#a7bcae"/>';
+   s+='<rect x="16" y="12" width="208" height="4" rx="2" fill="#c3d5c9"/>';
+   s+=pen('A',70, STATE.A, el, '#2f6f9f','#204c6c');
+   s+=pen('B',170,STATE.B, el, '#d1495b','#8f2f3c');
+   $("art").innerHTML=s;
+ }
+ function loop(){ if(!RUN) return; scene((performance.now()-t0)/1000*1.4); raf=requestAnimationFrame(loop); }
+ function stop(){ RUN=false; if(raf){cancelAnimationFrame(raf); raf=null;} scene(0); }
+
+ // ---- controls ----
+ function segHtml(pen,p){
+   var cur=STATE[pen][p.k], s='<div class="seg seg-'+pen.toLowerCase()+'">';
+   p.o.forEach(function(txt,i){
+     s+='<button data-pen="'+pen+'" data-key="'+p.k+'" data-val="'+i+'" class="'+(cur===i?'on':'')+'">'+txt+'</button>';
+   });
+   return s+'</div>';
+ }
+ function renderControls(){
+   var h='<div class="hd"></div><div class="hd a">Pendulum A</div><div class="hd b">Pendulum B</div>';
+   PROPS.forEach(function(p){ h+='<div class="pl">'+p.l+'</div>'+segHtml('A',p)+segHtml('B',p); });
+   $("exp").innerHTML=h;
+   Array.prototype.forEach.call($("exp").querySelectorAll('.seg button'),function(b){
+     b.onclick=function(){ STATE[b.getAttribute('data-pen')][b.getAttribute('data-key')]=+b.getAttribute('data-val'); onChange(); };
+   });
+ }
+ function diffKeys(){ return PROPS.filter(function(p){return STATE.A[p.k]!==STATE.B[p.k];}).map(function(p){return p.k;}); }
+
+ function updateDiff(){
+   var n=diffKeys().length, el=$("diff");
+   if(n===0){ el.className='diffbar warn'; el.innerHTML='<b>0 variables differ.</b> The two setups are identical &mdash; there is nothing to compare yet.'; }
+   else if(n===1){ el.className='diffbar ok'; el.innerHTML='<b>1 variable differs.</b> This is a <b>fair test</b> &mdash; any difference in swing rate must be caused by that one change.'; }
+   else { el.className='diffbar bad'; el.innerHTML='<b>'+n+' variables differ.</b> This test is <b>confounded</b> &mdash; you won’t be able to tell which change caused the result.'; }
+ }
+ function setStage(bg,t,sub){ $("stage").style.background=bg; $("stage").innerHTML=t+'<small>'+sub+'</small>'; }
+
+ function defaultInfo(){
+   setStage('var(--teal)','The pendulum problem','which variable sets the swing rate?');
+   $("info").innerHTML='<span class="n">Your hypothesis to test</span>'
+     +'&ldquo;<b>The string’s length</b> &mdash; not the weight, not how far you drop it &mdash; is what controls how fast a pendulum swings.&rdquo; Configure both pendulums, then press <b>Release</b>.'
+     +'<div class="step"><b>The formal-operational move:</b> to test one idea, change <b>only one thing</b> at a time and hold the rest constant. That is the <i>control of variables</i> &mdash; and reasoning it out in advance, in your head, is <b>hypothetico-deductive</b> thinking.</div>';
+ }
+
+ // ---- run / evaluate ----
+ function run(){
+   var keys=diffKeys(), n=keys.length;
+   t0=performance.now(); RUN=true; if(raf)cancelAnimationFrame(raf); raf=requestAnimationFrame(loop);
+   if(n===0){
+     setStage('#b8862f','Nothing to compare','both pendulums are identical');
+     $("info").innerHTML='<span class="n">Nothing to compare</span>'
+       +'Both pendulums are set up <b>exactly the same</b>, so of course they swing in perfect step. A test needs the two setups to differ by <b>one</b> factor &mdash; otherwise there is no experiment.'
+       +'<div class="step"><b>Try:</b> change just the <b>string length</b> on one pendulum and release again.</div>';
+   } else if(n>=2){
+     setStage('#d1495b','Confounded test','you changed '+n+' things at once');
+     $("info").innerHTML='<span class="n">Confounded &mdash; can’t conclude</span>'
+       +'You changed <b>'+n+' variables</b> between the two pendulums. If they swing differently, you can’t tell <i>which</i> change did it &mdash; length? weight? the drop? Changing everything at once and eyeballing the result is <b>concrete-operational</b> thinking.'
+       +'<div class="step"><b>The formal-operational fix:</b> hold every factor constant and vary <b>exactly one</b>. Isolate the variable, and the answer becomes provable.</div>';
+   } else {
+     var k=keys[0];
+     if(k==='len'){
+       setStage('#2f9e5b','Fair test ✔ length is the answer','the swing rates diverge');
+       $("info").innerHTML='<span class="n">Length is the answer</span>'
+         +'A clean, fair test. You held weight and drop angle constant and varied <b>only the string length</b> &mdash; and the counters <b>pull apart</b>: the shorter string swings faster. <b>Length alone</b> sets a pendulum’s rate.'
+         +'<div class="step">Forming the hypothesis, then isolating one variable to prove it, is <b>hypothetico-deductive reasoning</b> &mdash; the signature achievement of Piaget’s <b>formal-operational stage</b>. A younger, concrete-operational child changes several things at once and can’t crack it.</div>';
+     } else if(k==='wt'){
+       setStage('#2f9e5b','Fair test ✔ weight: no effect','the rates stay locked together');
+       $("info").innerHTML='<span class="n">Weight makes no difference</span>'
+         +'A fair test &mdash; you varied <b>only the bob’s weight</b>. Watch the counters: the heavy and light bobs stay <b>perfectly in step</b>. A pendulum’s swing rate does <b>not</b> depend on how heavy the bob is.'
+         +'<div class="step">Ruling a variable <b>out</b> is just as much a part of systematic reasoning as ruling one in. A formal-operational thinker tests <b>every</b> candidate &mdash; even the ones that turn out not to matter.</div>';
+     } else {
+       setStage('#2f9e5b','Fair test ✔ drop angle: no effect','the rates stay locked together');
+       $("info").innerHTML='<span class="n">Drop angle makes no difference</span>'
+         +'A fair test &mdash; you varied <b>only the drop angle</b>. The wide swing travels farther, but the counters stay <b>locked together</b>: how far you pull it back doesn’t change the rate.'
+         +'<div class="step">Notice you can predict this <b>before</b> looking &mdash; then confirm it. Testing a hypothesis in your head and checking it against reality is exactly what <b>formal-operational</b> reasoning makes possible.</div>';
+     }
+   }
+ }
+
+ function onChange(){ stop(); renderControls(); scene(0); updateDiff(); defaultInfo(); }
+
+ $("run").onclick=run;
+ $("reset").onclick=function(){ STATE={A:{len:0,wt:0,drop:0}, B:{len:1,wt:1,drop:1}}; onChange(); };
+
+ renderControls(); scene(0); updateDiff(); defaultInfo();
+})();
+</script>
+</body>
+</html>

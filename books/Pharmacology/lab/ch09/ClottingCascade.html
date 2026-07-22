@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>The Clotting Cascade: Where Each Anticoagulant Cuts the Chain</title>
+<meta name="description" content="Interactive clotting cascade — tap heparin, warfarin, or a DOAC to see which factors it blocks, which lab monitors it, and which antidote reverses it. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:0.94fr 1.06fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.legend{display:flex;flex-wrap:wrap;gap:11px;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);}
+.legend span{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:var(--muted);}
+.legend i{width:12px;height:12px;border-radius:3px;border:1.5px solid #cfd8e6;background:#fff;display:block;}
+.legend i.bk{background:#fae5e8;border-color:#d1495b;} .legend i.pt{background:#fdf0f2;border-color:#e8a3ad;}
+#cap{font-size:11.5px;line-height:1.45;color:var(--teal-dk);background:#e4eefa;border-radius:8px;padding:7px 10px;margin-top:9px;min-height:32px;}
+.labs{display:flex;gap:6px;margin-top:11px;}
+.labs div{flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 7px;text-align:center;}
+.labs .k{font-size:9px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);}
+.labs .v{font-size:12px;font-weight:800;margin-top:3px;color:var(--ink);line-height:1.25;}
+.labs div.anti{background:#e5f3ea;border-color:#b6ddc6;} .labs div.anti .k{color:#3d8a5c;} .labs div.anti .v{color:#17532e;}
+.labs div.none{background:#fae5e8;border-color:#f0c9d0;} .labs div.none .k{color:#b06070;} .labs div.none .v{color:#7a1f2c;}
+.rst{width:100%;margin-top:8px;border:1px dashed var(--line);background:#fff;color:var(--muted);font-weight:700;font-size:11.5px;padding:8px;border-radius:10px;cursor:pointer;font-family:var(--sans);}
+.rst:hover{border-color:var(--teal);color:var(--teal);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 9</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 9</div>
+  <h1>The Clotting Cascade</h1>
+  <div class="intro">Every anticoagulant does the same thing &mdash; it cuts one link in this chain. Learn <b>where</b> the drug cuts and the rest follows: which lab watches it, which antidote reverses it, and what you teach the patient. Tap a drug, or tap any factor in the diagram.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The cascade, untouched</h2>
+    <svg viewBox="0 0 320 400" aria-label="clotting cascade diagram"><g id="art"></g></svg>
+    <div class="legend"><span><i></i>working factor</span><span><i class="bk"></i>blocked by this drug</span><span><i class="pt"></i>partly blocked</span></div>
+    <div id="cap">Two arms feed one common pathway &mdash; and the drugs cluster where the payoff is biggest.</div>
+  </div></div>
+  <div>
+    <div id="stage">The clotting cascade<small>tap a drug or a factor to begin</small></div>
+    <div class="card">
+      <div class="list" id="list"></div>
+      <button class="rst" id="rst">↺ show the cascade with no drug on board</button>
+      <div class="labs">
+        <div id="L1"><span class="k" id="k1">Monitor</span><span class="v" id="v1">—</span></div>
+        <div id="L2"><span class="k" id="k2">Antidote</span><span class="v" id="v2">—</span></div>
+        <div id="L3"><span class="k" id="k3">Route</span><span class="v" id="v3">—</span></div>
+      </div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var NODES=[
+  {id:'f12',cx:78,cy:32,w:98,t:'XII → XIIa',s:'contact activation'},
+  {id:'f11',cx:78,cy:76,w:98,t:'XI → XIa',s:''},
+  {id:'f9',cx:78,cy:120,w:98,t:'IX → IXa',s:'+ VIIIa'},
+  {id:'f7',cx:248,cy:76,w:106,t:'VII → VIIa',s:'+ tissue factor'},
+  {id:'f10',cx:160,cy:176,w:118,t:'X → Xa',s:'+ Va = prothrombinase'},
+  {id:'f2',cx:160,cy:232,w:130,t:'II → IIa',s:'prothrombin → thrombin'},
+  {id:'f13',cx:266,cy:232,w:78,t:'XIII → XIIIa',s:''},
+  {id:'f1',cx:160,cy:288,w:140,t:'Fibrinogen → Fibrin',s:'factor I'}
+ ];
+
+ var FACT={
+  f12:{nm:'Factor XII (Hageman factor)',pw:'Intrinsic',tst:'aPTT',vk:'No',
+   d:'Activated the moment blood touches an injured, negatively charged surface &mdash; collagen, glass, a catheter. It fires the <b>intrinsic</b> arm, which the <b>aPTT</b> measures.',
+   x:'A quirk worth knowing: factor XII deficiency prolongs the aPTT but causes <b>no bleeding</b>. A long aPTT is not automatically a bleeding patient.'},
+  f11:{nm:'Factor XI',pw:'Intrinsic',tst:'aPTT',vk:'No',
+   d:'XIa carries the signal from XIIa down to factor IX. Thrombin also activates XI &mdash; a feedback loop that amplifies a small trigger into a full clot.',
+   x:'Factor XI deficiency is hemophilia C, and it bleeds mildly. Note that XI is <b>not</b> vitamin K&ndash;dependent: only <b>II, VII, IX, X</b> are.'},
+  f9:{nm:'Factor IX (Christmas factor)',pw:'Intrinsic',tst:'aPTT',vk:'Yes',
+   d:'IXa partners with factor <b>VIIIa</b> on a platelet surface to activate factor X &mdash; the tenase complex, and the busiest route to Xa in a real injury.',
+   x:'Factor IX deficiency is <b>hemophilia B</b>; factor VIII deficiency is <b>hemophilia A</b>. Factor IX is vitamin K&ndash;dependent, so warfarin suppresses it; factor VIII is not.'},
+  f7:{nm:'Factor VII + tissue factor',pw:'Extrinsic',tst:'PT / INR',vk:'Yes',
+   d:'Tissue factor is exposed the instant a vessel wall tears. It grabs factor VII to form VIIa/TF &mdash; the <b>extrinsic</b> arm, measured by the <b>PT/INR</b>. This is the trigger that starts clotting in vivo.',
+   x:'Factor VII has the <b>shortest half-life</b> (~4&ndash;6 h) of the vitamin K&ndash;dependent factors, so it vanishes first on warfarin. The INR climbs within a day or two while factor II is still circulating &mdash; the patient looks anticoagulated on paper but is <b>not yet protected</b>. That gap is the whole reason a heparin bridge exists.'},
+  f10:{nm:'Factor X — the crossroads',pw:'Common',tst:'aPTT and PT',vk:'Yes',
+   d:'Where the two arms meet. Xa assembles with factor Va, calcium, and a platelet surface into the <b>prothrombinase complex</b>, which converts prothrombin to thrombin.',
+   x:'One molecule of Xa drives the production of roughly a thousand molecules of thrombin. That amplification is why Xa is such an efficient place to intervene &mdash; and why the heparins, fondaparinux, and every "-xaban" aim right here.'},
+  f2:{nm:'Factor II → thrombin (IIa)',pw:'Common',tst:'aPTT and PT',vk:'Yes',
+   d:'Prothrombin becomes <b>thrombin</b>, the workhorse: it cleaves fibrinogen into fibrin, activates factors V, VIII, and XI in a feedback loop, activates factor XIII, and activates platelets.',
+   x:'Vitamin K&ndash;dependent, with the <b>longest half-life</b> (~60 h) of the group. Thrombin is the last common target &mdash; unfractionated heparin, dabigatran, and argatroban all end up here.'},
+  f13:{nm:'Factor XIII (fibrin-stabilizing factor)',pw:'Final cross-link',tst:'Neither',vk:'No',
+   d:'Thrombin activates XIII, and <b>XIIIa cross-links</b> the loose fibrin strands into a tough, insoluble clot that will not simply wash away.',
+   x:'Neither the PT nor the aPTT detects factor XIII deficiency &mdash; both are normal, because the clot still forms. It just falls apart afterward.'},
+  f1:{nm:'Fibrinogen (I) → fibrin',pw:'Common',tst:'aPTT and PT',vk:'No',
+   d:'The most abundant clotting protein in plasma. Thrombin snips fibrinogen into fibrin monomers that self-assemble into the mesh.',
+   x:'No anticoagulant blocks this step, and <b>no anticoagulant dissolves the mesh once it exists</b>. Breaking down formed clot is the job of a <b>thrombolytic</b> (alteplase) &mdash; a different class, a different bleeding risk, and a different conversation.'}
+ };
+
+ var D=[
+  {k:'ufh',col:'#2f6f9f',nm:'Heparin (unfractionated)',ct:'Indirect · activates antithrombin · IV or SC',
+   tg:{f2:2,f10:2,f9:1,f11:1,f12:1},lab:'aptt',
+   mon:'aPTT 1.5–2.5× control',ant:'Protamine sulfate',rt:'IV drip or SC',antiOK:1,
+   cap:'Heparin does not touch the factors itself — it supercharges <b>antithrombin</b>, which then chews up thrombin and Xa (and, more weakly, IXa, XIa, XIIa).',
+   d:'Binds <b>antithrombin III</b> and speeds it up roughly a thousandfold. The heparin&ndash;antithrombin complex then inactivates <b>thrombin (IIa)</b> and <b>factor Xa</b> most of all. Onset is immediate by IV, and the effect fades within hours of stopping the drip.',
+   dd:'It <b>prevents a clot from growing</b> and lets the body catch up. It does not dissolve the clot that is already there.',
+   nu:'Baseline aPTT, CBC, and platelets before starting. Heparin is a <b>high-alert drug</b>: independent double-check of the concentration, the units, and the pump rate. Assess for bleeding every shift &mdash; gums, hematuria, melena, bruising, new back pain, new headache or confusion. No IM injections, hold pressure at every puncture site, and use an electric razor.',
+   note:'<b>HIT — heparin-induced thrombocytopenia.</b> A platelet drop of more than 50% from baseline, classically on day 5&ndash;10, and the patient <b>clots</b> rather than bleeds. Stop <b>all</b> heparin including flushes and coated lines, and switch to a non-heparin drug such as argatroban or fondaparinux. Do <b>not</b> transfuse platelets, and do not start warfarin alone until platelets recover.',
+   mn:'<b>Protamine → heparin.</b> Roughly 1 mg reverses 100 units of heparin. Push it <b>slowly</b> &mdash; rapid administration causes hypotension, bradycardia, and anaphylaxis.'},
+
+  {k:'lmwh',col:'#2f9e5b',nm:'Enoxaparin (low-molecular-weight heparin)',ct:'Indirect · mostly anti-Xa · SC',
+   tg:{f10:2,f2:1},lab:'none',
+   mon:'None routinely · anti-Xa if indicated',ant:'Protamine (partial, ~60%)',rt:'Deep SC, abdomen',antiOK:1,
+   cap:'The shorter chain still activates antithrombin, but it can no longer wrap around thrombin — so the block lands almost entirely on <b>factor Xa</b>.',
+   d:'Works through antithrombin like heparin, but the shorter molecule mainly inactivates <b>factor Xa</b> with little effect on thrombin. The result is a <b>predictable</b> dose response, so routine aPTT monitoring is unnecessary &mdash; and patients can take it at home.',
+   dd:'Check an <b>anti-Xa level</b> only in the unpredictable ones: pregnancy, obesity, or renal impairment. Reduce the dose if CrCl is below 30 mL/min.',
+   nu:'<b>Do not expel the air bubble</b> from the prefilled syringe &mdash; it is there to deliver the full dose and seal the track. Give deep SC into the fat of the abdomen, about 2 inches from the umbilicus, alternating sides. <b>Do not aspirate and do not massage</b> the site. Monitor platelets: LMWH still causes HIT, just less often than heparin.',
+   note:'Black box: <b>spinal/epidural hematoma</b> with neuraxial anesthesia or spinal puncture. Watch for new back pain, leg weakness or numbness, and bowel or bladder changes &mdash; report immediately.',
+   mn:'Heparins do <b>not</b> cross the placenta, so LMWH &mdash; never warfarin &mdash; is the anticoagulant of pregnancy.'},
+
+  {k:'fonda',col:'#7a5a8a',nm:'Fondaparinux',ct:'Indirect · pure anti-Xa pentasaccharide · SC',
+   tg:{f10:2},lab:'none',
+   mon:'None routinely',ant:'None — protamine does not work',rt:'SC once daily',antiOK:0,
+   cap:'Sharpen the molecule down to five sugars and only one target is left: <b>factor Xa</b>. Nothing else on the chain is touched.',
+   d:'A synthetic pentasaccharide &mdash; the exact fragment of heparin that binds antithrombin. It produces <b>pure factor Xa inhibition</b> with no thrombin effect whatsoever. Because it contains no animal heparin chains, it does not trigger HIT and is one of the drugs used to <b>treat</b> it.',
+   dd:'Long half-life (~17&ndash;21 h) and renal clearance &mdash; once-daily dosing, but the drug lingers.',
+   nu:'With <b>no reversal agent</b>, prevention is the whole nursing plan: check renal function before every dose, screen fall risk, and hold for any procedure well in advance. Bleeding is managed with supportive care and blood products.',
+   note:'Contraindicated if CrCl is below 30 mL/min, and (for VTE prophylaxis) in patients weighing under 50 kg. Same spinal/epidural hematoma black box as the other heparins.',
+   mn:'Protamine reverses heparin and partly reverses enoxaparin &mdash; but it does <b>nothing</b> for fondaparinux.'},
+
+  {k:'warf',col:'#b8862f',nm:'Warfarin',ct:'Vitamin K antagonist · PO',
+   tg:{f2:2,f7:2,f9:2,f10:2},lab:'pt',
+   mon:'PT / INR — target 2–3',ant:'Vitamin K (phytonadione) · 4-factor PCC for major bleeding',rt:'PO, once daily',antiOK:1,
+   cap:'Warfarin does not block these four factors &mdash; it stops the liver from <b>making</b> them. Whatever is already circulating keeps working, which is why nothing happens for days.',
+   d:'Blocks <b>vitamin K epoxide reductase</b>, so the liver cannot recycle vitamin K into the form it needs to build the vitamin K&ndash;dependent factors: <b>II, VII, IX, X</b>, plus proteins C and S. It has <b>no effect on factors already in the blood</b>, so the full antithrombotic effect takes 3&ndash;5 days.',
+   dd:'INR target is <b>2&ndash;3</b> for atrial fibrillation and VTE; <b>2.5&ndash;3.5</b> for a mechanical mitral valve.',
+   nu:'Because it takes days to work, patients are <b>bridged</b> with heparin or enoxaparin until the INR is therapeutic on two readings. Check the INR before giving the dose; hold and call the prescriber for an INR above range or any active bleeding. Teach <b>consistent</b> vitamin K intake &mdash; steady greens, not zero greens; it is the swings that move the INR. Electric razor, soft toothbrush, no NSAIDs or aspirin unless prescribed, medical alert ID, and tell every dentist and prescriber.',
+   note:'<b>Teratogenic &mdash; contraindicated in pregnancy.</b> Protein C has a short half-life (~8 h) and falls first, so the opening days can be transiently <b>pro</b>-clotting (warfarin-induced skin necrosis). Never start warfarin alone in HIT.',
+   mn:'<b>1972</b> &mdash; warfarin knocks out factors <b>10, 9, 7, 2</b>. And <b>vitamin K → warfarin</b>: give it IV slowly or PO for a high INR; add <b>4-factor PCC</b> when the patient is truly bleeding, because vitamin K alone takes hours.'},
+
+  {k:'xaban',col:'#2f5f9e',nm:'Apixaban · Rivaroxaban · Edoxaban',ct:'DOAC · direct factor Xa inhibitor · PO',
+   tg:{f10:2},lab:'none',
+   mon:'None routinely · check renal function',ant:'Andexanet alfa · 4-factor PCC as alternative',rt:'PO',antiOK:1,
+   cap:'No antithrombin middleman. These sit directly on <b>factor Xa</b> — free Xa and the Xa already tucked inside a clot.',
+   d:'These bind <b>factor Xa directly</b>, needing no antithrombin, and they reach Xa whether it is floating free or already bound within the clot. The stem gives it away: <b>&ldquo;-xaban&rdquo; = Xa ban</b>.',
+   dd:'No INR, no dietary vitamin K restriction, far fewer interactions than warfarin &mdash; the trade is cost and a much shorter margin for error.',
+   nu:'<b>Adherence is the whole safety story.</b> The half-life is short, so a patient who skips a day is unprotected by tomorrow &mdash; there is no INR to catch the drift. <b>Rivaroxaban</b> 15 mg and 20 mg doses must be taken <b>with food</b> or absorption falls; apixaban may be taken with or without. Dose is reduced for renal function, age, and low body weight. Teach the same bleeding precautions as any anticoagulant.',
+   note:'Black box: <b>spinal/epidural hematoma</b>, and <b>increased thrombotic risk if stopped early</b> without another anticoagulant on board. DOACs are <b>not</b> used for mechanical heart valves or moderate-to-severe mitral stenosis &mdash; those patients need warfarin.',
+   mn:'<b>Andexanet alfa → the &ldquo;-xabans.&rdquo;</b> It is a decoy factor Xa: the drug binds it instead of the patient&rsquo;s real Xa.'},
+
+  {k:'dti',col:'#d1495b',nm:'Dabigatran · Argatroban',ct:'Direct thrombin (IIa) inhibitor · PO / IV',
+   tg:{f2:2},lab:'aptt',
+   mon:'Dabigatran: none routinely · Argatroban: aPTT 1.5–3× baseline',ant:'Dabigatran → idarucizumab · Argatroban → none',rt:'Dabigatran PO · Argatroban IV',antiOK:1,
+   cap:'The last possible link. Block <b>thrombin</b> and fibrinogen never becomes fibrin — no matter which arm started the cascade.',
+   d:'These bind <b>thrombin (factor IIa) itself</b>, shutting down the final conversion of fibrinogen to fibrin. Because they hit thrombin directly and need no antithrombin, <b>argatroban is a first-line choice in HIT</b>, where heparin can never be used again.',
+   dd:'Argatroban is cleared by the <b>liver</b>, which makes it useful in renal failure &mdash; and it <b>falsely raises the INR</b>, a trap when transitioning a patient to warfarin.',
+   nu:'<b>Dabigatran capsules are moisture-sensitive</b>: keep them in the <b>original bottle</b>, never in a weekly pill organizer, and discard 4 months after opening. Do not crush, chew, or open the capsule. Dyspepsia and GI upset are common enough to threaten adherence &mdash; take with a full glass of water and food. Argatroban runs as a continuous IV infusion titrated to aPTT.',
+   note:'Dabigatran is renally cleared and <b>contraindicated with mechanical heart valves</b>. Same spinal/epidural hematoma black box, and the same thrombotic risk if stopped abruptly.',
+   mn:'The four pairs, cold: <b>protamine → heparin</b> · <b>vitamin K → warfarin</b> · <b>idarucizumab → dabigatran</b> · <b>andexanet alfa → the &ldquo;-xabans.&rdquo;</b>'}
+ ];
+
+ var sel={t:'none',k:''};
+
+ function arrowDown(x,y){return '<polygon points="'+(x-4.5)+','+(y-7)+' '+(x+4.5)+','+(y-7)+' '+x+','+y+'" fill="#9aa8bb"/>';}
+ function arrowLeft(x,y){return '<polygon points="'+(x+7)+','+(y-4.5)+' '+(x+7)+','+(y+4.5)+' '+x+','+y+'" fill="#9aa8bb"/>';}
+ function arrowRight(x,y){return '<polygon points="'+(x-7)+','+(y-4.5)+' '+(x-7)+','+(y+4.5)+' '+x+','+y+'" fill="#9aa8bb"/>';}
+
+ function chip(cx,t1,t2,on){
+   var w=126,x=cx-w/2;
+   return '<rect x="'+x+'" y="2" width="'+w+'" height="24" rx="7" fill="'+(on?'#e4eefa':'#f2f5f9')+'" stroke="'+(on?'#2f5f9e':'#dfe4ee')+'"/>'+
+     '<text x="'+cx+'" y="12" font-size="7.6" font-weight="800" letter-spacing="1" text-anchor="middle" fill="'+(on?'#1e3a63':'#78828f')+'">'+t1+'</text>'+
+     '<text x="'+cx+'" y="22" font-size="8.4" font-weight="'+(on?'800':'600')+'" text-anchor="middle" fill="'+(on?'#2f5f9e':'#9aa8bb')+'">'+t2+'</text>';
+ }
+
+ function node(n,st,picked){
+   var x=n.cx-n.w/2,y=n.cy,h=26;
+   var fill='#ffffff',stroke='#cfd8e6',tc='#232a36',op=1,sw=1.4,dash='';
+   if(st===2){fill='#fae5e8';stroke='#d1495b';tc='#7a1f2c';sw=2;}
+   else if(st===1){fill='#fdf0f2';stroke='#e8a3ad';tc='#8a2a3a';sw=1.8;dash=' stroke-dasharray="4 2.5"';}
+   else if(st===-1){op=.32;}
+   if(picked){stroke='#1e3a63';sw=2.4;fill='#e4eefa';tc='#1e3a63';op=1;}
+   var o='<g class="rgn" data-f="'+n.id+'" opacity="'+op+'">';
+   o+='<rect x="'+x+'" y="'+y+'" width="'+n.w+'" height="'+h+'" rx="7" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'"'+dash+'/>';
+   o+='<text x="'+n.cx+'" y="'+(y+(n.s?11:17))+'" font-size="10.5" font-weight="800" text-anchor="middle" fill="'+tc+'">'+n.t+'</text>';
+   if(n.s){o+='<text x="'+n.cx+'" y="'+(y+21)+'" font-size="7.4" font-weight="600" text-anchor="middle" fill="'+(st===2?'#b06070':'#9aa8bb')+'">'+n.s+'</text>';}
+   if(st===2||st===1){
+     var bx=x+n.w,by=y+7;
+     o+='<circle cx="'+bx+'" cy="'+by+'" r="8" fill="'+(st===2?'#d1495b':'#e8a3ad')+'" stroke="#fffdfa" stroke-width="1.6"/>';
+     o+='<line x1="'+(bx-3.4)+'" y1="'+(by-3.4)+'" x2="'+(bx+3.4)+'" y2="'+(by+3.4)+'" stroke="#fff" stroke-width="2" stroke-linecap="round"/>';
+     o+='<line x1="'+(bx+3.4)+'" y1="'+(by-3.4)+'" x2="'+(bx-3.4)+'" y2="'+(by+3.4)+'" stroke="#fff" stroke-width="2" stroke-linecap="round"/>';
+   }
+   o+='</g>';
+   return o;
+ }
+
+ function draw(){
+   var tg={},picked='';
+   if(sel.t==='drug'){var dr=D.filter(function(z){return z.k===sel.k;})[0];tg=dr.tg;}
+   if(sel.t==='factor'){picked=sel.k;}
+   var lab=(sel.t==='drug')?D.filter(function(z){return z.k===sel.k;})[0].lab:
+           (sel.t==='factor'?({f12:'aptt',f11:'aptt',f9:'aptt',f7:'pt',f10:'both',f2:'both',f1:'both',f13:'none'})[sel.k]:'none');
+   var apOn=(lab==='aptt'||lab==='both'), ptOn=(lab==='pt'||lab==='both');
+
+   var s='';
+   s+=chip(78,'INTRINSIC PATHWAY','monitored by aPTT',apOn);
+   s+=chip(248,'EXTRINSIC PATHWAY','monitored by PT / INR',ptOn);
+
+   var ln='stroke="#9aa8bb" stroke-width="1.6" fill="none"';
+   s+='<line x1="78" y1="58" x2="78" y2="69" '+ln+'/>'+arrowDown(78,76);
+   s+='<line x1="78" y1="102" x2="78" y2="113" '+ln+'/>'+arrowDown(78,120);
+   s+='<path d="M78 146 L78 160 L160 160" '+ln+'/>';
+   s+='<path d="M248 102 L248 160 L160 160" '+ln+'/>';
+   s+='<line x1="160" y1="160" x2="160" y2="169" '+ln+'/>'+arrowDown(160,176);
+   s+='<line x1="160" y1="202" x2="160" y2="225" '+ln+'/>'+arrowDown(160,232);
+   s+='<line x1="225" y1="253" x2="222" y2="253" '+ln+'/>'+arrowRight(227,253);
+   s+='<line x1="160" y1="258" x2="160" y2="281" '+ln+'/>'+arrowDown(160,288);
+   s+='<path d="M266 258 L266 357 L239 357" '+ln+' stroke-dasharray="4 3"/>'+arrowLeft(231,357);
+   s+='<line x1="160" y1="314" x2="160" y2="337" '+ln+'/>'+arrowDown(160,344);
+
+   s+='<text x="313" y="168" font-size="7.8" font-weight="800" letter-spacing="1" text-anchor="end" fill="#9aa8bb">COMMON PATHWAY</text>';
+
+   for(var i=0;i<NODES.length;i++){
+     var n=NODES[i],st=0;
+     if(sel.t==='drug'){st=tg[n.id]?tg[n.id]:-1;}
+     else if(sel.t==='factor'){st=(n.id===picked)?0:-1;}
+     s+=node(n,st,n.id===picked);
+   }
+
+   var meshDim=(sel.t!=='none')?.4:1;
+   s+='<g opacity="'+meshDim+'"><rect x="90" y="344" width="140" height="28" rx="7" fill="#e4eefa" stroke="#2f5f9e" stroke-width="1.6"/>'+
+      '<text x="160" y="356" font-size="10" font-weight="800" text-anchor="middle" fill="#1e3a63">CROSS-LINKED CLOT</text>'+
+      '<text x="160" y="366" font-size="7.4" font-weight="600" text-anchor="middle" fill="#2f5f9e">stable fibrin mesh</text></g>';
+   s+='<text x="8" y="390" font-size="7.8" font-weight="600" fill="#9aa8bb">Platelet plug (primary hemostasis) happens first — that is where antiplatelets work.</text>';
+
+   $("art").innerHTML=s;
+   var g=$("art").querySelectorAll('[data-f]');
+   for(var j=0;j<g.length;j++){
+     g[j].onclick=(function(id){return function(){pickFactor(id);};})(g[j].getAttribute('data-f'));
+   }
+ }
+
+ function renderList(){
+   $("list").innerHTML=D.map(function(d){
+     return '<button class="it'+(sel.t==='drug'&&sel.k===d.k?' on':'')+'" data-k="'+d.k+'">'+
+       '<span class="sw" style="background:'+d.col+'"></span><span><span class="nm">'+d.nm+'</span><br><span class="ct">'+d.ct+'</span></span></button>';
+   }).join('');
+   var b=$("list").querySelectorAll('.it');
+   for(var i=0;i<b.length;i++){
+     b[i].onclick=(function(k){return function(){pickDrug(k);};})(b[i].getAttribute('data-k'));
+   }
+ }
+
+ function setLabs(a,b,c,d,e,f,cls2){
+   $("k1").innerHTML=a;$("v1").innerHTML=b;
+   $("k2").innerHTML=c;$("v2").innerHTML=d;
+   $("k3").innerHTML=e;$("v3").innerHTML=f;
+   $("L2").className=cls2||'';
+ }
+
+ function blockedBy(id){
+   var out=[];
+   for(var i=0;i<D.length;i++){ if(D[i].tg[id]){ out.push('<span>'+D[i].nm.split(' (')[0]+(D[i].tg[id]===1?' (partial)':'')+'</span>'); } }
+   return out.length?'<div class="ex">'+out.join('')+'</div>':'<div class="loc">No anticoagulant in this chapter acts here.</div>';
+ }
+
+ function pickDrug(k){
+   var d=D.filter(function(z){return z.k===k;})[0];
+   sel={t:'drug',k:k};
+   $("cardTitle").innerHTML='Where '+d.nm.split(' ·')[0].split(' (')[0]+' cuts the chain';
+   $("stage").style.background=d.col;
+   $("stage").innerHTML=d.nm+'<small>'+d.ct+'</small>';
+   $("cap").innerHTML=d.cap;
+   setLabs('Monitor',d.mon,'Antidote',d.ant,'Route',d.rt,d.antiOK?'anti':'none');
+   $("info").innerHTML='<span class="n">How it works</span>'+d.d+
+     '<div class="dd">'+d.dd+'</div>'+
+     '<div class="loc"><b>What the nurse does:</b> '+d.nu+'</div>'+
+     '<div class="note">'+d.note+'</div>'+
+     '<div class="mnem">'+d.mn+'</div>';
+   renderList();draw();
+ }
+
+ function pickFactor(id){
+   var f=FACT[id];
+   sel={t:'factor',k:id};
+   $("cardTitle").innerHTML=f.nm;
+   $("stage").style.background='#1e3a63';
+   $("stage").innerHTML=f.nm+'<small>'+f.pw+' pathway · tap a drug to see what blocks it</small>';
+   $("cap").innerHTML='<b>'+f.nm+'</b> — '+f.pw.toLowerCase()+(f.pw==='Common'?' pathway, so it shows up in <b>both</b> tests.':' pathway.');
+   setLabs('Pathway',f.pw,'Lab test',f.tst,'Vitamin K–dependent',f.vk,'');
+   $("info").innerHTML='<span class="n">'+f.nm+'</span>'+f.d+
+     '<div class="dd">'+f.x+'</div>'+
+     '<div style="font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#78828f;margin-top:11px;">Blocked by</div>'+
+     blockedBy(id);
+   renderList();draw();
+ }
+
+ function reset(){
+   sel={t:'none',k:''};
+   $("cardTitle").innerHTML='The cascade, untouched';
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='The clotting cascade<small>tap a drug or a factor to begin</small>';
+   $("cap").innerHTML='Two arms feed one common pathway &mdash; and the drugs cluster where the payoff is biggest.';
+   setLabs('Monitor','—','Antidote','—','Route','—','');
+   $("info").innerHTML='<span class="n">Hemostasis in two acts</span>'+
+     '<b>Primary hemostasis</b> is the platelet plug: fast, but fragile. That is where <b>antiplatelets</b> (aspirin, clopidogrel) work. <b>Secondary hemostasis</b> is this cascade &mdash; a chain of enzymes ending in a fibrin mesh that glues the plug in place. <b>Anticoagulants</b> work here.'+
+     '<div class="dd">Two arms feed one common pathway. The <b>intrinsic</b> arm is measured by the <b>aPTT</b>; the <b>extrinsic</b> arm by the <b>PT/INR</b>. They converge at <b>factor X</b>, which is why anything wrong in the common pathway shows up in <b>both</b> tests.</div>'+
+     '<div class="loc">Tap a drug below to see which links it cuts &mdash; or tap any factor in the diagram to learn what it does.</div>'+
+     '<div class="mnem">Three words students swap and should not: anticoagulants <b>prevent</b> a clot from growing · antiplatelets stop platelets from <b>sticking</b> · thrombolytics <b>dissolve</b> a clot that already formed.</div>';
+   renderList();draw();
+ }
+
+ $("rst").onclick=reset;
+ reset();
+})();
+</script>
+</body>
+</html>

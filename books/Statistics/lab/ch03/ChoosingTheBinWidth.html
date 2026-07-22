@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Choosing the Bin Width</title>
+<meta name="description" content="Drag the bin width and watch one fixed data set change shape. Live-computed histogram, bin-offset control, six-width comparison strip, apparent-peak counter, and the square-root, Sturges, Scott and Freedman&ndash;Diaconis rules calculated from the data on screen.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:78px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:11px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.45;}
+.hd{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;margin-bottom:6px;}
+.grid .it .s{display:block;margin-top:2px;font-variant-numeric:tabular-nums;}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,1fr);}.sl label{font-size:10px;}.sl .nv{min-width:70px;font-size:13px;}.row .btn{font-size:12px;padding:10px 4px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 3</div>
+  <h1>Choosing the Bin Width</h1>
+  <div class="intro">A histogram has one setting nobody votes on: <b>how wide the bins are</b>. Change not a single data value, drag that width, and the same numbers can look smooth, spiky, two&#8209;humped or flat. Every bar below is counted live from the values actually on screen &mdash; so you can watch the shape move while the data holds still.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="mainTitle">The histogram</h2>
+      <svg viewBox="0 0 340 206" aria-label="histogram of the current data at the chosen bin width"><g id="main"></g></svg>
+      <div class="lgd" id="lgd"></div>
+      <div class="cap" id="mainCap"></div>
+    </div>
+    <div class="card"><h2>The same data at six bin widths</h2>
+      <svg viewBox="0 0 340 226" aria-label="the same values binned six different ways"><g id="mini"></g></svg>
+      <div class="cap">Same <b>n</b> values, same sample, six widths. Nothing changed but the bins. Tap a panel to load that width above.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Choosing the bin width<small>drag the width slider</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="0" class="on">Resting pulse<small>adults, bpm</small></button>
+        <button data-v="1">Task time<small>seconds</small></button>
+        <button data-v="2">Bolt diameter<small>mm</small></button>
+      </div>
+      <div class="sl"><label for="wSl">Bin width h</label><input type="range" id="wSl" min="0" max="14" step="1" value="6"><span class="nv" id="wVal">4 bpm</span></div>
+      <div class="sl"><label for="oSl">Bin offset</label><input type="range" id="oSl" min="0" max="9" step="1" value="0"><span class="nv" id="oVal">0% of h</span></div>
+      <div class="sl"><label for="nSl">Sample size n</label><input type="range" id="nSl" min="0" max="4" step="1" value="2"><span class="nv" id="nVal">150</span></div>
+      <div class="row"><button class="btn" id="samp">&#8635; New sample</button><button class="btn" id="truth">Show true shape</button></div>
+      <div class="tiles">
+        <div><span class="lb">Values n</span><span class="vv" id="tN">150</span></div>
+        <div><span class="lb">Width h</span><span class="vv" id="tW">4</span></div>
+        <div><span class="lb">Bins k</span><span class="vv" id="tK">15</span></div>
+        <div><span class="lb">Peaks seen</span><span class="vv" id="tP">1</span></div>
+      </div>
+      <div class="hd">Rules of thumb &mdash; computed from these values, tap to apply</div>
+      <div class="grid" id="rules"></div>
+      <div id="info"></div>
+      <div class="note" id="comb" style="display:none"></div>
+      <div class="mnem">The rules disagree on purpose. The <b>square-root</b> and <b>Sturges</b> rules pick a <i>number of bins</i> from n alone and then split the range; Sturges was derived for roughly normal data and tends to under-bin large samples. <b>Scott</b> and <b>Freedman&ndash;Diaconis</b> pick a <i>width</i> from how spread out the data actually are, shrinking it like <b>1/&#8731;n</b> &mdash; four times the data buys you only about a 60% narrower bin. Freedman&ndash;Diaconis uses the <b>IQR</b> instead of the standard deviation, so one wild outlier cannot inflate it. All four assume a single smooth hump; none of them knows your data have two.</div>
+      <div class="note"><b>Always report the bin width.</b> A histogram is one view of the data at one resolution, chosen by whoever drew it. Before you believe a feature &mdash; a second hump, a gap, a spike &mdash; check it at two or three widths and in a fresh sample. Structure that is genuinely in the population survives that test. Structure manufactured by the bins does not.</div>
+      <div class="fn" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- seeded PRNG, so the page opens with the same sample every time ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function nrm(r){var u=1-r(),v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+ function npdf(x,m,s){var z=(x-m)/s;return Math.exp(-0.5*z*z)/(s*2.5066282746310002);}
+
+ /* ================= three populations we happen to know the truth about ================= */
+ var DS=[
+  {nm:'resting pulse',ax:'resting pulse (bpm)',un:'bpm',one:'one adult&rsquo;s resting pulse',many:'adults',
+   gran:1,gt:'the nearest whole bpm',dec:0,tp:2,
+   ws:[0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,15,20,25],w0:6,
+   gen:function(r){return (r()<0.45)?(52+4.5*nrm(r)):(74+5.5*nrm(r));},
+   pdf:function(x){return 0.45*npdf(x,52,4.5)+0.55*npdf(x,74,5.5);},
+   truth:'These values were simulated as a <b>mixture of two groups</b>: 45% from a normal distribution centred at <b>52 bpm</b> (SD 4.5) and 55% from one centred at <b>74 bpm</b> (SD 5.5). Two humps is the honest answer. Any width that shows one hump is hiding a real distinction between two kinds of people.',
+   hint:'Somewhere in this sample there is real structure that a wide bin will erase completely. Walk the width down from 25 and watch for the moment it appears.'},
+  {nm:'task completion time',ax:'time to finish the task (seconds)',un:'s',one:'one person&rsquo;s completion time',many:'people',
+   gran:1,gt:'the nearest whole second',dec:0,tp:1,
+   ws:[0.5,1,1.5,2,2.5,3,4,5,6,8,10,12.5,15,20,25],w0:8,
+   gen:function(r){return Math.exp(3.2+0.42*nrm(r));},
+   pdf:function(x){return x<=0?0:npdf(Math.log(x),3.2,0.42)/x;},
+   truth:'Simulated from a <b>lognormal</b> distribution (log-mean 3.2, log-SD 0.42), so the population median is e<sup>3.2</sup> &asymp; <b>24.5 s</b>. One peak, with a genuinely long right tail &mdash; most people finish quickly, a few take far longer.',
+   hint:'This population really is skewed to the right. See how few widths let you show both the crowded left side and the thin tail at once.'},
+  {nm:'bolt diameter',ax:'bolt diameter (mm)',un:'mm',one:'one bolt&rsquo;s measured diameter',many:'bolts',
+   gran:0.01,gt:'the nearest 0.01 mm',dec:2,tp:1,
+   ws:[0.01,0.02,0.025,0.03,0.04,0.05,0.075,0.1,0.125,0.15,0.2,0.25,0.3,0.4,0.5],w0:9,
+   gen:function(r){return 12+0.28*nrm(r);},
+   pdf:function(x){return npdf(x,12,0.28);},
+   truth:'Simulated from a <b>single</b> normal distribution centred at <b>12.00 mm</b> with SD <b>0.28 mm</b>. There is exactly one peak in this population. Every extra peak you can make appear on screen is manufactured by the bins.',
+   hint:'There is nothing but one smooth hump in this population. See how many peaks you can invent anyway.'}
+ ];
+ var NS=[40,80,150,300,600],OFF=[0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9];
+
+ var ds=0,wi=DS[0].w0,oi=0,ni=2,seedN=0,showT=0,pool=[],raw=[],RMIN=0,RMAX=1;
+
+ /* ================= the sample ================= */
+ function gen(){
+  var D=DS[ds],r=mulberry32(20260718+seedN*7919+ds*104729),i,v;
+  pool=[];
+  for(i=0;i<600;i++){
+    v=D.gen(r);
+    v=Math.round(v/D.gran)*D.gran;
+    pool.push(Math.round(v*1e6)/1e6);
+  }
+  resample();
+ }
+ /* the n slider adds and removes values from one fixed pool, so raising n
+    extends the sample instead of replacing it */
+ function resample(){
+  raw=pool.slice(0,NS[ni]);
+  RMIN=raw[0];RMAX=raw[0];
+  for(var i=1;i<raw.length;i++){if(raw[i]<RMIN)RMIN=raw[i];if(raw[i]>RMAX)RMAX=raw[i];}
+ }
+
+ /* ================= binning ================= */
+ /* bins are [left edge, right edge) : the left limit is in, the right limit is out */
+ function build(h){
+  var a=OFF[oi]*h,i,b;
+  var lo0=Math.floor((RMIN-a)/h+1e-9)*h+a;
+  var k=Math.floor((RMAX-lo0)/h+1e-9)+1;
+  if(k<1)k=1;
+  var c=[];
+  for(i=0;i<k;i++)c.push(0);
+  for(i=0;i<raw.length;i++){b=Math.floor((raw[i]-lo0)/h+1e-9);if(b<0)b=0;if(b>k-1)b=k-1;c[b]++;}
+  var fmax=0,bi=0,thin=0;
+  for(i=0;i<k;i++){if(c[i]>fmax){fmax=c[i];bi=i;}if(c[i]<=1)thin++;}
+  return {h:h,k:k,lo0:lo0,hiL:lo0+k*h,c:c,fmax:fmax,bi:bi,thin:thin/k,n:raw.length,p:peaks(c)};
+ }
+ /* an apparent peak = a run of equal bin heights that is taller than the runs
+    on both sides (a bin outside the range counts as zero) and is tall enough
+    to read as a peak at all: at least 2 values and at least 15% of the tallest
+    bar, so a lone value out in a tail is not counted as a mode */
+ function peaks(c){
+  var runs=[],i,L,R,p=0,fmax=0;
+  for(i=0;i<c.length;i++)if(c[i]>fmax)fmax=c[i];
+  var thr=Math.max(2,0.15*fmax);
+  for(i=0;i<c.length;i++){
+    if(runs.length&&runs[runs.length-1]===c[i])continue;
+    runs.push(c[i]);
+  }
+  for(i=0;i<runs.length;i++){
+    L=(i>0)?runs[i-1]:0;R=(i<runs.length-1)?runs[i+1]:0;
+    if(runs[i]>=thr&&runs[i]>L&&runs[i]>R)p++;
+  }
+  return p;
+ }
+
+ /* ================= summary statistics, for the rules ================= */
+ function quant(srt,p){
+  var n=srt.length,idx=(n-1)*p,lo=Math.floor(idx),hi=Math.ceil(idx);
+  if(lo===hi)return srt[lo];
+  return srt[lo]+(idx-lo)*(srt[hi]-srt[lo]);
+ }
+ function sdev(a){
+  var n=a.length,m=0,v=0,i;
+  for(i=0;i<n;i++)m+=a[i];m/=n;
+  for(i=0;i<n;i++)v+=(a[i]-m)*(a[i]-m);
+  return Math.sqrt(v/(n-1));
+ }
+ function rules(){
+  var srt=raw.slice().sort(function(a,b){return a-b;});
+  var n=srt.length,rng=srt[n-1]-srt[0],cb=Math.pow(n,1/3);
+  var iqr=quant(srt,0.75)-quant(srt,0.25),s=sdev(raw);
+  var kS=Math.ceil(Math.sqrt(n)),kT=Math.ceil(1+Math.log(n)/Math.LN2);
+  return [
+   {nm:'Square-root',fo:'k = &#8968;&radic;n&#8969; = '+kS,h:rng/kS},
+   {nm:'Sturges',fo:'k = &#8968;1+log&#8322;n&#8969; = '+kT,h:rng/kT},
+   {nm:'Scott',fo:'h = 3.49s/&#8731;n',h:3.49*s/cb},
+   {nm:'Freedman&ndash;Diaconis',fo:'h = 2&middot;IQR/&#8731;n',h:2*iqr/cb}
+  ];
+ }
+ /* nearest rung on this data set's width ladder, compared on a log scale so
+    that "half as wide" and "twice as wide" count as equally far away */
+ function nearRung(h){
+  var w=DS[ds].ws,best=0,bd=1e9,i,d;
+  for(i=0;i<w.length;i++){d=Math.abs(Math.log(w[i]/h));if(d<bd){bd=d;best=i;}}
+  return best;
+ }
+
+ /* ================= formatting ================= */
+ function fw(x){return String(Math.round(x*1e5)/1e5);}
+ function fv(x){return x.toFixed(DS[ds].dec);}
+ function edge(T,i){return fv(T.lo0+i*T.h);}
+
+ /* ================= main chart ================= */
+ var HX0=38,HX1=326,HBASE=160,HTOP=18;
+ function axisTop(m){
+  var C=[1,2,5,10,20,25,50,100,200,500],i;
+  for(i=0;i<C.length;i++)if(Math.ceil(m/C[i])<=5)return{step:C[i],top:Math.ceil(m/C[i])*C[i]};
+  return{step:1000,top:Math.ceil(m/1000)*1000};
+ }
+ function niceStep(span){
+  var raw0=span/6,mag=Math.pow(10,Math.floor(Math.log(raw0)/Math.LN10)),u=raw0/mag,st;
+  if(u<1.5)st=1;else if(u<3)st=2;else if(u<7)st=5;else st=10;
+  return st*mag;
+ }
+ function drawMain(T){
+  var D=DS[ds],s='',i,ax=axisTop(T.fmax||1),gv,gy,x0,hh;
+  for(i=0;i<=ax.top/ax.step;i++){
+    gv=i*ax.step;gy=HBASE-gv/ax.top*(HBASE-HTOP);
+    s+='<line x1="'+HX0+'" y1="'+gy.toFixed(1)+'" x2="'+HX1+'" y2="'+gy.toFixed(1)+'" stroke="#e7eef2" stroke-width="1"/>';
+    s+='<text x="'+(HX0-6)+'" y="'+(gy+3.4).toFixed(1)+'" font-size="9" fill="#95a3aa" font-weight="600" text-anchor="end">'+gv+'</text>';
+  }
+  s+='<text x="'+(HX0-6)+'" y="'+(HTOP-7)+'" font-size="8.6" fill="#95a3aa" font-weight="700" text-anchor="end">count</text>';
+
+  var bw=(HX1-HX0)/T.k;
+  for(i=0;i<T.k;i++){
+    if(T.c[i]<=0)continue;
+    x0=HX0+i*bw;hh=T.c[i]/ax.top*(HBASE-HTOP);
+    s+='<rect x="'+x0.toFixed(2)+'" y="'+(HBASE-hh).toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+hh.toFixed(2)+'" fill="'+((i===T.bi)?'#1c4454':'#2f6f8a')+'"'+((bw>3.2)?' stroke="#fffdf9" stroke-width="1"':'')+'/>';
+  }
+
+  if(showT){
+    var d='',N=200,xv,yv,px,py;
+    for(i=0;i<=N;i++){
+      xv=T.lo0+(T.hiL-T.lo0)*i/N;
+      yv=T.n*T.h*D.pdf(xv);
+      px=HX0+(HX1-HX0)*i/N;
+      py=HBASE-Math.min(yv,ax.top)/ax.top*(HBASE-HTOP);
+      d+=(i?' L':'M')+px.toFixed(1)+' '+py.toFixed(1);
+    }
+    s+='<path d="'+d+'" fill="none" stroke="#b8862f" stroke-width="2.3" stroke-linejoin="round"/>';
+  }
+
+  s+='<line x1="'+HX0+'" y1="'+HBASE+'" x2="'+HX1+'" y2="'+HBASE+'" stroke="#b7c7d0" stroke-width="1.4"/>';
+  var st=niceStep(T.hiL-T.lo0),t0=Math.ceil(T.lo0/st-1e-9)*st,tv,tx;
+  for(tv=t0;tv<=T.hiL+1e-9;tv+=st){
+    tx=HX0+(tv-T.lo0)/(T.hiL-T.lo0)*(HX1-HX0);
+    s+='<line x1="'+tx.toFixed(1)+'" y1="'+HBASE+'" x2="'+tx.toFixed(1)+'" y2="'+(HBASE+4)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+    s+='<text x="'+tx.toFixed(1)+'" y="'+(HBASE+15)+'" font-size="9.2" fill="#78868d" font-weight="600" text-anchor="middle">'+fv(Math.round(tv*1e6)/1e6)+'</text>';
+  }
+  s+='<text x="'+((HX0+HX1)/2)+'" y="'+(HBASE+33)+'" font-size="9.6" fill="#95a3aa" font-weight="700" text-anchor="middle">'+D.ax+'</text>';
+  $("main").innerHTML=s;
+ }
+
+ /* ================= six widths at once ================= */
+ var MC=[4,116,228],MW=104,MT=[18,140],MH=60;
+ function drawMini(){
+  var D=DS[ds],s='',j,i,idx,T,x,y,b,bw,hh,cur=[];
+  for(j=0;j<6;j++)cur.push(Math.round(j*(D.ws.length-1)/5));
+  for(j=0;j<6;j++){
+    idx=cur[j];T=build(D.ws[idx]);
+    x=MC[j%3];y=MT[Math.floor(j/3)];
+    if(idx===wi)s+='<rect x="'+(x-3)+'" y="'+(y-15)+'" width="'+(MW+6)+'" height="'+(MH+34)+'" rx="8" fill="#fbf3e2" stroke="#ecd9ac" stroke-width="1"/>';
+    s+='<text x="'+(x+MW/2)+'" y="'+(y-5)+'" font-size="9.4" font-weight="800" fill="'+((idx===wi)?'#8a6a20':'#4a585f')+'" text-anchor="middle">h = '+fw(D.ws[idx])+' '+D.un+'</text>';
+    bw=MW/T.k;
+    for(i=0;i<T.k;i++){
+      if(T.c[i]<=0)continue;
+      hh=T.c[i]/(T.fmax||1)*MH;
+      s+='<rect x="'+(x+i*bw).toFixed(2)+'" y="'+(y+MH-hh).toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+hh.toFixed(2)+'" fill="'+((idx===wi)?'#b8862f':'#2f6f8a')+'"'+((bw>2.6)?' stroke="#fffdf9" stroke-width="0.7"':'')+'/>';
+    }
+    s+='<line x1="'+x+'" y1="'+(y+MH)+'" x2="'+(x+MW)+'" y2="'+(y+MH)+'" stroke="#b7c7d0" stroke-width="1.1"/>';
+    s+='<text x="'+(x+MW/2)+'" y="'+(y+MH+13)+'" font-size="8.6" fill="#78868d" font-weight="700" text-anchor="middle">'+T.k+' bins &middot; '+T.p+' peak'+((T.p===1)?'':'s')+'</text>';
+    s+='<rect class="rgn" data-w="'+idx+'" x="'+(x-3)+'" y="'+(y-15)+'" width="'+(MW+6)+'" height="'+(MH+34)+'" fill="transparent"/>';
+  }
+  $("mini").innerHTML=s;
+  var rg=$("mini").getElementsByClassName('rgn');
+  for(i=0;i<rg.length;i++)rg[i].onclick=function(){
+    wi=+this.getAttribute('data-w');$("wSl").value=wi;render();
+  };
+ }
+
+ /* ================= words ================= */
+ function pct(x){return (x*100).toFixed(1);}
+
+ function infoHTML(T,reg,sparse){
+  var D=DS[ds],h='',lo=edge(T,T.bi),hi=edge(T,T.bi+1);
+
+  if(reg===0){
+   h='<span class="n">Too narrow &mdash; you are looking at noise</span>';
+   h+=sparse
+    ? ('<b>'+T.k+'</b> bins are covering <b>'+T.n+'</b> values, so the average bin holds only <b>'+(T.n/T.k).toFixed(1)+'</b> of them and <b>'+Math.round(T.thin*100)+'%</b> of the bins hold one value or none. At that resolution the height of a bar is decided by one or two observations, and the jagged spikes and gaps are mostly the luck of <i>this</i> sample.')
+    : ('The outline has broken into <b>'+T.p+'</b> separate peaks across <b>'+T.k+'</b> bins. A sample of <b>'+T.n+'</b> cannot support that much detail: neighbouring bins now differ by only a value or two, and a difference that small is enough to raise a bump where the population underneath is perfectly smooth.');
+   h+='<div class="dd">There is a quick test, and it is worth doing every time. Press <b>&#8635; New sample</b> twice without touching the width: you are drawing fresh values from the same population. Features that are really out there stay put. Noise reshuffles into a brand-new set of spikes.</div>';
+  }else if(reg===2){
+   h='<span class="n">Too wide &mdash; the detail has been flattened</span>'+
+     'Only <b>'+T.k+'</b> bins now span the whole range. Each bar lumps together everything within <b>'+fw(T.h)+' '+D.un+'</b>, so any structure narrower than that has been averaged out of existence &mdash; and once the bars are drawn there is no way to tell whether the values inside a bar were bunched at one end or spread evenly across it.'+
+     '<div class="dd">Wide bins are the more dangerous mistake, because the result looks <i>reassuring</i>. A noisy histogram at least announces that it is noisy. A smooth two-bar histogram looks authoritative while quietly hiding whatever it swallowed.</div>';
+  }else{
+   h='<span class="n">A workable width</span>'+
+     '<b>'+T.k+'</b> bins over <b>'+T.n+'</b> values: the average bin holds <b>'+(T.n/T.k).toFixed(1)+'</b> of them, enough that a bar&rsquo;s height means something, while the bins stay narrow enough to keep the shape. There is no single correct answer here &mdash; a band of widths all give an honest picture, and inside that band the choice is taste.'+
+     '<div class="dd">Nudge the width a rung either way. If the story you would tell about these data changes, you have not found a feature; you have found an artefact. If it survives, you can report it.</div>';
+  }
+
+  /* what the peak count means against a population we genuinely know */
+  var P=T.p,tp=D.tp,pk='';
+  if(P>tp)pk='The outline currently shows <b>'+P+' apparent peaks</b>. These values were simulated, so we know the population underneath has <b>'+((tp===1)?'exactly one':String(tp))+'</b> &mdash; the other '+((P-tp===1)?'one is':(P-tp)+' are')+' manufactured by this bin width.';
+  else if(P<tp)pk='The outline shows <b>'+P+' peak'+((P===1)?'':'s')+'</b>, but the population these values came from has <b>'+tp+'</b>. This width is smoothing a real distinction away.';
+  else pk='The outline shows <b>'+P+' peak'+((P===1)?'':'s')+'</b>, which is exactly what the population underneath has. This width is telling the truth about the shape.';
+
+  h+='<div class="loc">n = <b>'+T.n+'</b> &middot; h = <b>'+fw(T.h)+' '+D.un+'</b> &middot; <b>'+T.k+'</b> bins from '+edge(T,0)+' to '+edge(T,T.k)+' '+D.un+'. '+
+     'The tallest bar covers <b>'+lo+' &le; x &lt; '+hi+'</b> and holds <b>'+T.fmax+'</b> value'+((T.fmax===1)?'':'s')+' &mdash; '+pct(T.fmax/T.n)+'% of the data. '+pk+'</div>';
+
+  if(OFF[oi]>0)
+   h+='<div class="dd"><b>The bins are shifted '+Math.round(OFF[oi]*100)+'% of a width to the right</b>, and not one data value moved. Sliding the offset back to 0 changes only <i>where the cuts fall</i>, yet the bars change height and the outline can gain or lose a bump. Where a histogram starts is as much of a choice as how wide it is, and it is a choice almost nobody reports.</div>';
+
+  h+='<div class="dd">'+(showT?D.truth:('<b>'+D.hint+'</b> When you want to check yourself, press <b>Show true shape</b>: because these values are simulated, the population that generated them can be drawn on top.'))+'</div>';
+  return h;
+ }
+
+ /* ================= wire it together ================= */
+ function render(){
+  var D=DS[ds],h=D.ws[wi],T=build(h),reg,i;
+
+  /* three regimes: too few bins to keep any detail; too many for this much
+     data to support; or the band in between where the picture is honest */
+  var sparse=(T.thin>0.5||T.n/T.k<8);
+  if(T.k<=6)reg=2;
+  else if(sparse||T.p>Math.max(2,T.k/6))reg=0;
+  else reg=1;
+
+  $("tN").innerHTML=T.n;
+  $("tW").innerHTML=fw(h);
+  $("tK").innerHTML=T.k;
+  $("tP").innerHTML=T.p;
+
+  $("stage").style.background=(reg===0)?'var(--coral)':((reg===2)?'var(--gold)':'var(--green)');
+  $("stage").innerHTML='h = '+fw(h)+' '+D.un+' &rarr; '+T.k+' bins'+
+    '<small>'+((reg===0)?'too narrow &middot; mostly noise':((reg===2)?'too wide &middot; detail flattened':'a workable width'))+' &middot; n = '+T.n+' &middot; '+T.p+' peak'+((T.p===1)?'':'s')+' visible</small>';
+
+  $("mainTitle").innerHTML=T.n+' '+D.many+' &middot; '+D.nm+', binned at h = '+fw(h)+' '+D.un;
+  $("lgd").innerHTML='<span><i style="background:#2f6f8a"></i>bar height = number of values in that bin</span><span><i style="background:#1c4454"></i>tallest bin</span>'+
+    (showT?'<span><i style="background:#b8862f"></i>expected count from the true population, n &times; h &times; density</span>':'');
+  $("mainCap").innerHTML='One bar = one bin; one counted value = '+D.one+'. A bin runs from its <b>left edge, included</b>, to its right edge, <b>excluded</b>, so a value sitting exactly on a boundary is counted in the bin to the right. The bars <b>touch</b>, because the classes touch &mdash; the axis is a continuous measurement, not a set of separate categories.';
+
+  drawMain(T);drawMini();
+
+  var R=rules(),g='';
+  for(i=0;i<R.length;i++){
+    g+='<button class="it'+((nearRung(R[i].h)===wi)?' on':'')+'" data-h="'+R[i].h+'"><span class="nm">'+R[i].nm+'</span>'+
+       '<span class="s">'+R[i].fo+'</span><span class="s">h &asymp; <b>'+R[i].h.toFixed(D.dec+1)+' '+D.un+'</b></span></button>';
+  }
+  $("rules").innerHTML=g;
+  var bt=$("rules").getElementsByTagName('button');
+  for(i=0;i<bt.length;i++)bt[i].onclick=function(){
+    wi=nearRung(+this.getAttribute('data-h'));$("wSl").value=wi;render();
+  };
+
+  $("info").innerHTML=infoHTML(T,reg,sparse);
+
+  /* a width that is not a whole multiple of the recording precision makes a comb */
+  var q=h/D.gran,lo3=Math.floor(q),hi3=Math.ceil(q);
+  if(h>D.gran*1.4&&Math.abs(q-Math.round(q))>0.01){
+    $("comb").style.display='';
+    $("comb").innerHTML='<b>That regular high&ndash;low&ndash;high comb is an artefact.</b> These values are recorded to '+D.gt+', but the bin width <b>'+fw(h)+'</b> is not a whole multiple of that. Some bins therefore contain <b>'+hi3+'</b> of the possible recorded values and their neighbours only <b>'+lo3+'</b>, so the taller bars are simply the bins that were handed more values to catch. Nothing alternates in the data. Pick a width that is a whole multiple of the precision and the comb vanishes.';
+  }else{
+    $("comb").style.display='none';
+  }
+
+  $("fnote").innerHTML='&ldquo;Peaks seen&rdquo; counts bars that are taller than the bars on either side and are at least 2 values high and at least 15% as tall as the tallest bar &mdash; so a single stray value out in a tail is not counted as a mode. It describes the <i>picture</i>, not the population. '+
+   'Quartiles for the Freedman&ndash;Diaconis rule are found by linear interpolation between the ordered values; other software uses slightly different quartile definitions and will report a slightly different h. Scott&rsquo;s rule uses the sample standard deviation (divisor n &minus; 1). The square-root and Sturges rules give a bin <i>count</i>, converted here to a width by dividing the observed range by k.';
+ }
+
+ function updLabels(){
+  $("wVal").innerHTML=fw(DS[ds].ws[wi])+' '+DS[ds].un;
+  $("oVal").innerHTML=Math.round(OFF[oi]*100)+'% of h';
+  $("nVal").innerHTML=NS[ni];
+ }
+ function setDS(v){
+  ds=v;wi=DS[ds].w0;
+  $("wSl").max=DS[ds].ws.length-1;
+  $("wSl").value=wi;
+  gen();updLabels();render();
+ }
+
+ $("wSl").oninput=function(){wi=+this.value;updLabels();render();};
+ $("oSl").oninput=function(){oi=+this.value;updLabels();render();};
+ $("nSl").oninput=function(){ni=+this.value;resample();updLabels();render();};
+ $("samp").onclick=function(){seedN++;gen();render();};
+ $("truth").onclick=function(){
+  showT=showT?0:1;
+  this.className=showT?'btn solid':'btn';
+  this.innerHTML=showT?'Hide true shape':'Show true shape';
+  render();
+ };
+
+ var sg=$("seg").getElementsByTagName('button');
+ for(var j=0;j<sg.length;j++)sg[j].onclick=function(){
+   for(var q2=0;q2<sg.length;q2++)sg[q2].className='';
+   this.className='on';setDS(+this.getAttribute('data-v'));
+ };
+
+ gen();updLabels();render();
+})();
+</script>
+</body>
+</html>

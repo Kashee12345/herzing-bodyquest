@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Conditional Probability: Watch the Denominator Change</title>
+<meta name="description" content="Walk a probability tree for a screening test. Condition on a positive result, a negative result, or the disease itself, and watch the denominator shrink and the answer change. Live calculation plus a real seeded simulation.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.05fr 0.95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;width:74px;line-height:1.2;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:104px;text-align:right;font-variant-numeric:tabular-nums;}
+.sl .nv small{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:1px;letter-spacing:0;text-transform:none;}
+#cond button{font-size:11.6px;padding:10px 3px;} #cond button small{font-size:8.7px;margin-top:2px;}
+.cmp{width:100%;border-collapse:collapse;margin-top:12px;font-size:12.5px;}
+.cmp th,.cmp td{padding:6px 4px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;}
+.cmp th{font-size:9.2px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.cmp td:first-child,.cmp th:first-child{text-align:left;font-weight:700;font-size:11.4px;line-height:1.3;}
+.cmp td{font-weight:700;color:var(--soft);}
+.cmp td .sw{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:0;}
+.cmp tr.out td{opacity:.36;} .cmp tr.out td.cnd{text-decoration:line-through;}
+.cmp td.cnd{color:var(--teal-dk);} .cmp tr.tot td{border-bottom:none;color:var(--teal-dk);font-size:11.6px;}
+.cmp tr.tot td:first-child{color:var(--muted);font-size:10px;letter-spacing:.4px;text-transform:uppercase;}
+.flip{display:flex;align-items:stretch;gap:8px;margin-top:13px;}
+.flip div{flex:1;border:1px solid var(--line);border-radius:11px;padding:9px 10px;background:#fff;text-align:center;}
+.flip div .q{display:block;font-size:10.6px;font-weight:800;color:var(--muted);line-height:1.3;min-height:26px;}
+.flip div .a{display:block;font-size:19px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.flip .neq{flex:0 0 30px;display:flex;align-items:center;justify-content:center;border:none;background:none;font-family:var(--disp);font-size:23px;font-weight:700;color:var(--coral);padding:0;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 8px;background:#fff;}
+.tiles .lb{display:block;font-size:9.2px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;min-height:23px;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11.2px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.5;} .cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px;font-size:10.4px;color:var(--muted);font-weight:700;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.hd{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;margin-bottom:5px;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.5;}
+.grid .it .s{display:block;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 5</div>
+  <h1>Conditional Probability: Watch the Denominator Change</h1>
+  <div class="intro">A conditional probability is an ordinary probability computed inside a smaller world. Every time you say <b>&ldquo;given&hellip;&rdquo;</b> you throw away part of the population &mdash; and the number you divide by shrinks. Set up a screening test, then condition on different branches of the tree and watch the denominator move.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="treeTitle">The probability tree &mdash; 10,000 people</h2>
+      <svg viewBox="0 0 470 300" aria-label="probability tree"><g id="tree"></g></svg>
+      <div class="lgd" id="lgd"></div>
+      <div class="cap">Numbers <b>on the branches</b> are already conditional probabilities &mdash; each one is measured inside the node it leaves. Numbers <b>in the boxes</b> are joint probabilities: multiply along the path.</div>
+    </div>
+    <div class="card"><h2>Where the denominator went</h2>
+      <svg viewBox="0 0 470 168" aria-label="denominator bars"><g id="bars"></g></svg>
+      <div class="cap" id="barcap"></div>
+    </div>
+    <div class="card"><h2>The same test at every prevalence</h2>
+      <svg viewBox="0 0 470 152" aria-label="predictive value curve"><g id="curve"></g></svg>
+      <div class="cap">Sensitivity and specificity are held fixed, so <b>the branch probabilities never move</b>. Only the sizes of the two groups feeding the &ldquo;test +&rdquo; denominator change &mdash; and that alone can swing the answer across almost the entire range. A test is not &ldquo;accurate&rdquo; or &ldquo;inaccurate&rdquo; on its own; the question you ask of it has to name a denominator.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Conditional probability<small>pick a condition below</small></div>
+    <div class="card"><h2>Build the world</h2>
+      <div class="sl"><label>Prevalence</label><input type="range" id="pSl" min="0" max="19" step="1" value="5"><span class="nv" id="pNv"></span></div>
+      <div class="sl"><label>Sensitivity</label><input type="range" id="seSl" min="500" max="999" step="1" value="990"><span class="nv" id="seNv"></span></div>
+      <div class="sl"><label>Specificity</label><input type="range" id="spSl" min="500" max="999" step="1" value="990"><span class="nv" id="spNv"></span></div>
+      <div class="hd">Ready-made worlds</div>
+      <div class="grid" id="pre"></div>
+    </div>
+    <div class="card"><h2>Condition on&hellip;</h2>
+      <div class="seg" id="cond"></div>
+      <table class="cmp" id="tbl"></table>
+      <div class="flip" id="flip"></div>
+      <div id="info"></div>
+      <div class="mnem"><b>The rule:</b> P(A | B) = P(A and B) &divide; P(B). The event <i>after</i> the bar is the new denominator; the joint probability is the numerator. Conditioning never invents probability &mdash; it re-scales what survives so it adds to 100% again.</div>
+      <div class="note"><b>P(A | B) is not P(B | A).</b> &ldquo;Almost every sick person tests positive&rdquo; and &ldquo;almost every positive person is sick&rdquo; are different sentences with different denominators. The two tiles above show them side by side.</div>
+    </div>
+    <div class="card"><h2>Or stop calculating and just count</h2>
+      <div class="cap">Simulate people one at a time from this exact tree, then count them the way a clinic would &mdash; numerator over denominator, no formula. The draws use a fixed seed, so the same world always gives the same run.</div>
+      <div class="tiles" id="simTiles"></div>
+      <div class="row"><button class="btn solid" id="draw">Draw 1,000 people</button><button class="btn" id="rst">Reset</button></div>
+      <div id="simOut" class="cap"></div>
+      <svg viewBox="0 0 470 54" aria-label="observed versus exact"><g id="simbar"></g></svg>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var N=10000;
+ var PREV=[0.001,0.002,0.003,0.005,0.007,0.01,0.015,0.02,0.03,0.04,0.05,0.07,0.10,0.13,0.16,0.20,0.25,0.30,0.40,0.50];
+ var COL=['#d1495b','#b8862f','#2f6f9f','#2f9e5b'];
+ var LSH=['disease · test +','disease · test −','no disease · test +','no disease · test −'];
+ var LTG=['true positive','false negative','false positive','true negative'];
+ var CONDS=[
+  {k:'all', nm:'Everyone', sub:'all 10,000', den:[0,1,2,3], num:[0,2], lab:'P(test +)',                 col:'#2f6f8a', ttl:'No condition yet'},
+  {k:'pos', nm:'Test +',   sub:'positives',  den:[0,2],     num:[0],   lab:'P(disease | test +)',       col:'#d1495b', ttl:'Given a positive test'},
+  {k:'neg', nm:'Test −',   sub:'negatives',  den:[1,3],     num:[1],   lab:'P(disease | test −)',       col:'#2f9e5b', ttl:'Given a negative test'},
+  {k:'dis', nm:'Disease',  sub:'the sick',   den:[0,1],     num:[0],   lab:'P(test + | disease)',       col:'#7a5a8a', ttl:'Given the disease'},
+  {k:'wel', nm:'No disease',sub:'the well',  den:[2,3],     num:[2],   lab:'P(test + | no disease)',    col:'#2f6f9f', ttl:'Given no disease'}
+ ];
+
+ var pi=5, se=0.990, sp=0.990, ck='all';
+
+ /* ---------- helpers ---------- */
+ function fmt(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+ function pc(x){ var v=100*x; if(v>0&&v<0.0005) return '&lt;0.001%';
+   var d=(v<0.1?3:(v<10?2:1)); return v.toFixed(d)+'%'; }
+ function sum(a,ix){ var t=0,i; for(i=0;i<ix.length;i++)t+=a[ix[i]]; return t; }
+ function J(){ var p=PREV[pi]; return [p*se, p*(1-se), (1-p)*(1-sp), (1-p)*sp]; }
+ function counts(j){ var c=[],i,s=0,b=0;
+   for(i=0;i<4;i++){ c.push(Math.round(j[i]*N)); s+=c[i]; if(j[i]>j[b])b=i; }
+   c[b]+=N-s; return c; }
+ function cd(){ var i; for(i=0;i<CONDS.length;i++) if(CONDS[i].k===ck) return CONDS[i]; return CONDS[0]; }
+ function ppvAt(pr){ var a=pr*se, b=(1-pr)*(1-sp); return a/(a+b); }
+
+ /* ---------- the tree ---------- */
+ function drawTree(j,c,C){
+  var x0=44,x1=178,x2=320,y0=150,yD=76,yW=224, ly=[42,112,190,262], p=PREV[pi], i;
+  var live=[]; for(i=0;i<4;i++) live.push(C.den.indexOf(i)>=0);
+  var s='';
+  function br(ax,ay,bx,by,w,col,on){ var mx=(ax+bx)/2;
+   return '<path d="M'+ax+' '+ay+' C'+mx+' '+ay+','+mx+' '+by+','+bx+' '+by+'" fill="none" stroke="'+col+
+          '" stroke-width="'+w.toFixed(2)+'" stroke-linecap="round" opacity="'+(on?'.88':'.11')+'"/>'; }
+  function tx(x,y,t,sz,col,w,an){ return '<text x="'+x+'" y="'+y+'" font-size="'+sz+'" fill="'+col+
+          '" font-weight="'+(w||700)+'" text-anchor="'+(an||'middle')+'" font-family="Inter,sans-serif">'+t+'</text>'; }
+  var W=function(x){ return 1.6+15*x; };
+  s+=br(x0,y0,x1,yD,W(p),'#1c4454',live[0]||live[1]);
+  s+=br(x0,y0,x1,yW,W(1-p),'#1c4454',live[2]||live[3]);
+  s+=br(x1,yD,x2,ly[0],W(j[0]),COL[0],live[0]);
+  s+=br(x1,yD,x2,ly[1],W(j[1]),COL[1],live[1]);
+  s+=br(x1,yW,x2,ly[2],W(j[2]),COL[2],live[2]);
+  s+=br(x1,yW,x2,ly[3],W(j[3]),COL[3],live[3]);
+  /* branch labels */
+  s+=tx(111,(y0+yD)/2-7,'P(disease) = '+pc(p),9.4,'#4a585f');
+  s+=tx(111,(y0+yW)/2+15,'P(no disease) = '+pc(1-p),9.4,'#4a585f');
+  s+=tx(249,(yD+ly[0])/2-17,'P(+ | disease) = '+pc(se),9.4,'#4a585f');
+  s+=tx(249,(yD+ly[0])/2-7,'the sensitivity',8.1,'#78868d',600);
+  s+=tx(249,(yD+ly[1])/2+16,'P(− | disease) = '+pc(1-se),9.4,'#4a585f');
+  s+=tx(249,(yW+ly[2])/2-9,'P(+ | no disease) = '+pc(1-sp),9.4,'#4a585f');
+  s+=tx(249,(yW+ly[3])/2+19,'P(− | no disease) = '+pc(sp),9.4,'#4a585f');
+  s+=tx(249,(yW+ly[3])/2+29,'the specificity',8.1,'#78868d',600);
+  /* nodes */
+  s+='<circle cx="'+x0+'" cy="'+y0+'" r="6" fill="#1c4454"/>';
+  s+=tx(x0,y0-14,'10,000',10,'#1c4454',800)+tx(x0,y0+24,'people',9,'#78868d',600);
+  s+='<circle cx="'+x1+'" cy="'+yD+'" r="5" fill="#1c4454" opacity="'+((live[0]||live[1])?'1':'.2')+'"/>';
+  s+='<circle cx="'+x1+'" cy="'+yW+'" r="5" fill="#1c4454" opacity="'+((live[2]||live[3])?'1':'.2')+'"/>';
+  s+=tx(x1,yD-13,fmt(c[0]+c[1])+' sick',9.3,'#1c4454',800);
+  s+=tx(x1,yW+20,fmt(c[2]+c[3])+' well',9.3,'#1c4454',800);
+  /* leaf boxes */
+  for(i=0;i<4;i++){
+   var op=live[i]?'1':'.2';
+   s+='<g opacity="'+op+'"><rect x="328" y="'+(ly[i]-17)+'" width="136" height="34" rx="8" fill="'+COL[i]+
+      '" fill-opacity=".12" stroke="'+COL[i]+'" stroke-width="'+(live[i]?2:1)+'"/>';
+   s+=tx(396,ly[i]-3,LSH[i],9.4,COL[i],800);
+   s+=tx(396,ly[i]+10,fmt(c[i])+' people · '+pc(j[i]),8.9,'#4a585f',700)+'</g>';
+  }
+  return s;
+ }
+
+ /* ---------- denominator bars ---------- */
+ function drawBars(j,c,C){
+  var X=8,W=454,i,x=X,s='',w;
+  var dj=sum(j,C.den), dc=sum(c,C.den);
+  function tx(xx,yy,t,sz,col,wt,an){ return '<text x="'+xx+'" y="'+yy+'" font-size="'+sz+'" fill="'+col+
+    '" font-weight="'+(wt||700)+'" text-anchor="'+(an||'start')+'" font-family="Inter,sans-serif">'+t+'</text>'; }
+  s+=tx(8,11,'THE WHOLE POPULATION — DENOMINATOR 10,000',9.4,'#78868d',800);
+  for(i=0;i<4;i++){ w=W*j[i];
+   s+='<rect x="'+x.toFixed(2)+'" y="18" width="'+w.toFixed(2)+'" height="30" fill="'+COL[i]+
+       '" opacity="'+(C.den.indexOf(i)>=0?'1':'.13')+'"/>';
+   if(C.den.indexOf(i)>=0) s+='<rect x="'+x.toFixed(2)+'" y="51" width="'+Math.max(w,1).toFixed(2)+'" height="4" rx="2" fill="'+COL[i]+'"/>';
+   x+=w; }
+  s+='<rect x="8" y="18" width="454" height="30" fill="none" stroke="#dfe8ed"/>';
+  s+=tx(8,68,(C.k==='all'?'Keeping everyone: the denominator does not move.'
+       :'Keep only the '+fmt(dc)+' marked below — they are the new whole ('+pc(dj)+' of everyone).'),10,'#4a585f',700);
+  s+=tx(235,88,(C.k==='all'?'↓  nothing to divide away  ↓':'↓  divide every survivor by '+pc(dj)+'  ↓'),10.2,'#1c4454',800,'middle');
+  s+=tx(8,106,'GIVEN '+C.nm.toUpperCase()+' — DENOMINATOR '+fmt(dc),9.4,C.col,800);
+  x=X;
+  for(i=0;i<4;i++){ if(C.den.indexOf(i)<0) continue;
+   w=W*(j[i]/dj);
+   s+='<rect x="'+x.toFixed(2)+'" y="112" width="'+w.toFixed(2)+'" height="30" fill="'+COL[i]+'"/>';
+   if(w>46) s+=tx(x+w/2,131,pc(j[i]/dj),10.4,'#fff',800,'middle');
+   x+=w; }
+  s+='<rect x="8" y="112" width="454" height="30" fill="none" stroke="'+C.col+'" stroke-width="2" rx="2"/>';
+  s+=tx(8,160,'The survivors, re-scaled to add to 100% again.',10,'#78868d',700);
+  return s;
+ }
+
+ /* ---------- PPV vs prevalence curve ---------- */
+ function drawCurve(){
+  var L=46,R=456,T=20,B=112, lo=Math.log(0.001)/Math.LN10, hi=Math.log(0.5)/Math.LN10, i,s='';
+  function xs(v){ return L+(R-L)*((Math.log(v)/Math.LN10)-lo)/(hi-lo); }
+  function ys(v){ return B-(B-T)*v; }
+  function tx(x,y,t,sz,col,wt,an){ return '<text x="'+x+'" y="'+y+'" font-size="'+sz+'" fill="'+col+
+    '" font-weight="'+(wt||700)+'" text-anchor="'+(an||'start')+'" font-family="Inter,sans-serif">'+t+'</text>'; }
+  var gy=[0,0.25,0.5,0.75,1];
+  for(i=0;i<gy.length;i++){ var y=ys(gy[i]);
+   s+='<line x1="'+L+'" y1="'+y+'" x2="'+R+'" y2="'+y+'" stroke="#dfe8ed" stroke-width="1"/>';
+   s+=tx(L-6,y+3,Math.round(gy[i]*100)+'%',8.6,'#78868d',700,'end'); }
+  var xt=[0.001,0.002,0.005,0.01,0.02,0.05,0.10,0.20,0.50], lbl={'0.001':'0.1%','0.01':'1%','0.1':'10%','0.5':'50%'};
+  for(i=0;i<xt.length;i++){ var xx=xs(xt[i]);
+   s+='<line x1="'+xx.toFixed(1)+'" y1="'+B+'" x2="'+xx.toFixed(1)+'" y2="'+(B+4)+'" stroke="#c6d6de"/>';
+   if(lbl[String(xt[i])]) s+=tx(xx,B+16,lbl[String(xt[i])],8.8,'#78868d',700,'middle'); }
+  var d='';
+  for(i=0;i<=160;i++){ var pr=Math.pow(10,lo+(hi-lo)*i/160);
+   d+=(i?'L':'M')+xs(pr).toFixed(2)+' '+ys(ppvAt(pr)).toFixed(2)+' '; }
+  s+='<path d="'+d+'" fill="none" stroke="#d1495b" stroke-width="2.6" stroke-linejoin="round"/>';
+  var p=PREV[pi], v=ppvAt(p), px=xs(p), py=ys(v);
+  s+='<line x1="'+px.toFixed(1)+'" y1="'+T+'" x2="'+px.toFixed(1)+'" y2="'+B+'" stroke="#1c4454" stroke-width="1.2" stroke-dasharray="3 3"/>';
+  s+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="5.5" fill="#1c4454" stroke="#fff" stroke-width="2"/>';
+  s+=tx((px>300?px-9:px+9),(py<34?py+16:py-9),'prevalence '+pc(p)+' → '+pc(v),9.4,'#1c4454',800,(px>300?'end':'start'));
+  s+=tx(L,142,'prevalence (log scale)',9,'#78868d',700);
+  s+=tx(R,142,'vertical axis: P(disease | test +)',9,'#78868d',700,'end');
+  return s;
+ }
+
+ /* ---------- table, stage, info ---------- */
+ function drawTable(j,c,C){
+  var i,s='<tr><th>Leaf of the tree</th><th>Joint P</th><th>People</th><th>P( leaf | '+C.nm.toLowerCase()+' )</th></tr>';
+  var dj=sum(j,C.den);
+  for(i=0;i<4;i++){ var inn=C.den.indexOf(i)>=0;
+   s+='<tr class="'+(inn?'':'out')+'"><td style="color:'+COL[i]+'"><span class="sw" style="background:'+COL[i]+'"></span>'+LSH[i]+'</td>'+
+      '<td>'+pc(j[i])+'</td><td>'+fmt(c[i])+'</td><td class="cnd">'+(inn?pc(j[i]/dj):'0%')+'</td></tr>'; }
+  s+='<tr class="tot"><td>totals</td><td>100.0%</td><td>10,000</td><td class="cnd">100.0%</td></tr>';
+  return s;
+ }
+ function flipStrip(j){
+  var a=se, b=j[0]/(j[0]+j[2]);
+  var eq=Math.abs(a-b)<0.0005;
+  return '<div><span class="q">P(test + | disease)<br>sensitivity</span><span class="a">'+pc(a)+'</span></div>'+
+         '<div class="neq">'+(eq?'=':'≠')+'</div>'+
+         '<div><span class="q">P(disease | test +)<br>predictive value</span><span class="a">'+pc(b)+'</span></div>';
+ }
+ function infoText(j,c,C){
+  var dc=sum(c,C.den), nc=sum(c,C.num), v=sum(j,C.num)/sum(j,C.den), t;
+  if(C.k==='all') t='Every one of the 10,000 people is still in the pool. The four leaves are <b>joint</b> probabilities — P(disease <i>and</i> test +), and so on — and they add to exactly 100%. So <b>P(test +) = '+pc(v)+'</b> is a <b>marginal</b> probability: it pools the sick and the well together. Nothing has been conditioned on yet, so the denominator is still the whole world.';
+  else if(C.k==='pos') t='Conditioning is <b>deleting rows</b>. Everyone who tested negative is gone, so the denominator falls from <b>10,000 to '+fmt(dc)+'</b>. Of those survivors, <b>'+fmt(nc)+'</b> truly have the disease, so P(disease | test +) = '+fmt(nc)+' ÷ '+fmt(dc)+' = <b>'+pc(v)+'</b>. That is the <b>positive predictive value</b> — and unlike sensitivity it moves the moment prevalence moves, because prevalence decides how many well people are pouring false positives into this denominator.';
+  else if(C.k==='neg') t='The denominator is now the <b>'+fmt(dc)+'</b> people who tested negative. <b>'+fmt(nc)+'</b> of them are sick anyway — the false negatives sitting on the lower disease branch. P(disease | test −) = <b>'+pc(v)+'</b>. A negative result does not push risk to zero; it pushes it to this number, and that residual is exactly what a joint probability divided by a smaller denominator looks like.';
+  else if(C.k==='dis') t='Walk the tree from the <i>top</i> instead. The denominator is now the <b>'+fmt(dc)+'</b> people who truly have the disease, and P(test + | disease) = <b>'+pc(v)+'</b> — the <b>sensitivity</b>, already printed on that branch. Drag the prevalence slider and watch: this value <b>does not move</b>. Branch probabilities were conditional all along; prevalence only changes how many people walk down each branch.';
+  else t='Denominator = the <b>'+fmt(dc)+'</b> well people. P(test + | no disease) = <b>'+pc(v)+'</b>, which is 1 − specificity, the false-positive rate. It looks small — but it is charged against the largest group in the tree, which is why those <b>'+fmt(nc)+'</b> false alarms can outnumber the true positives entirely.';
+  return '<span class="n">'+C.ttl+'</span>'+t;
+ }
+
+ /* ---------- simulation (seeded) ---------- */
+ var rng, obs=[0,0,0,0], nSim=0;
+ function mk(seed){ var a=seed>>>0; return function(){ a|=0; a=a+0x6D2B79F5|0;
+   var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+ function resetSim(){ rng=mk(20260718); obs=[0,0,0,0]; nSim=0; }
+ function batch(n){ var p=PREV[pi],k,d,pos;
+  for(k=0;k<n;k++){ d=(rng()<p); pos=d?(rng()<se):(rng()<(1-sp));
+   obs[d?(pos?0:1):(pos?2:3)]++; }
+  nSim+=n; }
+ function drawSim(j,C){
+  var i,s='';
+  var lb=['true +','false −','false +','true −'];
+  for(i=0;i<4;i++) s+='<div style="border-color:'+(C.den.indexOf(i)>=0?COL[i]:'#dfe8ed')+'"><span class="lb">'+lb[i]+
+     '<br>'+(i<2?'sick':'well')+'</span><span class="vv" style="color:'+COL[i]+'">'+fmt(obs[i])+'</span></div>';
+  $('simTiles').innerHTML=s;
+  var ex=sum(j,C.num)/sum(j,C.den);
+  var od=sum(obs,C.den), on=sum(obs,C.num);
+  var ov=od?on/od:0;
+  $('simOut').innerHTML = nSim===0
+   ? '<b>No one drawn yet.</b> Press the button and the tree above will start producing actual people.'
+   : '<b>'+fmt(nSim)+' people drawn.</b> '+fmt(od)+' of them landed in the &ldquo;'+C.nm.toLowerCase()+'&rdquo; group — that count <i>is</i> the denominator, arrived at by counting rather than algebra. '+
+     fmt(on)+' of those '+fmt(od)+' also met the numerator, giving <b>'+(od?pc(ov):'—')+'</b> against an exact value of <b>'+pc(ex)+'</b>.';
+  var t='',x=8,W=454;
+  function tx(xx,yy,tt,sz,col,wt,an){ return '<text x="'+xx+'" y="'+yy+'" font-size="'+sz+'" fill="'+col+
+    '" font-weight="'+(wt||700)+'" text-anchor="'+(an||'start')+'" font-family="Inter,sans-serif">'+tt+'</text>'; }
+  t+='<rect x="8" y="16" width="454" height="18" rx="4" fill="#e6eff4"/>';
+  if(nSim) t+='<rect x="8" y="16" width="'+(W*ov).toFixed(2)+'" height="18" rx="4" fill="'+C.col+'"/>';
+  var ex_x=8+W*ex;
+  t+='<line x1="'+ex_x.toFixed(1)+'" y1="10" x2="'+ex_x.toFixed(1)+'" y2="40" stroke="#1c4454" stroke-width="2"/>';
+  t+=tx(Math.min(ex_x+5,400),9,'exact '+pc(ex),9,'#1c4454',800);
+  t+=tx(8,50,'0%',8.6,'#78868d',700)+tx(462,50,'100%',8.6,'#78868d',700,'end');
+  if(nSim) t+=tx(235,50,'bar = observed '+C.lab,8.8,'#78868d',700,'middle');
+  $('simbar').innerHTML=t;
+ }
+
+ /* ---------- render everything ---------- */
+ var PRE=[
+  {nm:'Rare disease, sharp test', p:5,  se:0.99,  sp:0.99},
+  {nm:'Very rare, superb test',   p:0,  se:0.999, sp:0.99},
+  {nm:'Common condition',         p:17, se:0.90,  sp:0.90},
+  {nm:'Common, blunt test',       p:15, se:0.80,  sp:0.70}
+ ];
+ function all(){
+  var p=PREV[pi], j=J(), c=counts(j), C=cd();
+  $('pNv').innerHTML=pc(p)+'<small>about 1 in '+fmt(Math.round(1/p))+'</small>';
+  $('seNv').innerHTML=pc(se)+'<small>P(+ | disease)</small>';
+  $('spNv').innerHTML=pc(sp)+'<small>P(− | no disease)</small>';
+  $('tree').innerHTML=drawTree(j,c,C);
+  $('bars').innerHTML=drawBars(j,c,C);
+  $('curve').innerHTML=drawCurve();
+  $('tbl').innerHTML=drawTable(j,c,C);
+  $('flip').innerHTML=flipStrip(j);
+  $('info').innerHTML=infoText(j,c,C);
+  var lg='',i;
+  for(i=0;i<4;i++) lg+='<span><i style="background:'+COL[i]+'"></i>'+LTG[i]+'</span>';
+  $('lgd').innerHTML=lg;
+  var dj=sum(j,C.den), dc=sum(c,C.den), v=sum(j,C.num)/dj;
+  $('stage').style.background=C.col;
+  $('stage').innerHTML=C.lab+' = '+pc(v)+'<small>'+fmt(sum(c,C.num))+' of the '+fmt(dc)+' people in the denominator</small>';
+  $('barcap').innerHTML=(C.k==='all'
+   ? 'Conditioning on &ldquo;everyone&rdquo; is no conditioning at all: the two bars are identical because the denominator never changed.'
+   : 'The top bar is all 10,000 people. The bottom bar is the same coloured slices &mdash; only <b>'+pc(dj)+'</b> of the top bar &mdash; stretched until they fill the width again. That stretch <b>is</b> division by the new denominator of '+fmt(dc)+'.');
+  $('cond').innerHTML=CONDS.map(function(x){return '<button data-k="'+x.k+'" class="'+(x.k===ck?'on':'')+'">'+x.nm+'<small>'+x.sub+'</small></button>';}).join('');
+  $('pre').innerHTML=PRE.map(function(x,ix){
+    var pv=PREV[x.p]*x.se/(PREV[x.p]*x.se+(1-PREV[x.p])*(1-x.sp));
+    return '<button class="it" data-i="'+ix+'">'+x.nm+'<span class="s">P(disease | +) = '+pc(pv)+'</span></button>';}).join('');
+  drawSim(j,C);
+ }
+
+ /* ---------- wiring ---------- */
+ $('pSl').oninput=function(){ pi=+this.value; resetSim(); all(); };
+ $('seSl').oninput=function(){ se=+this.value/1000; resetSim(); all(); };
+ $('spSl').oninput=function(){ sp=+this.value/1000; resetSim(); all(); };
+ $('cond').onclick=function(e){ var b=e.target.closest('button'); if(!b)return; ck=b.dataset.k; all(); };
+ $('pre').onclick=function(e){ var b=e.target.closest('button'); if(!b)return;
+  var x=PRE[+b.dataset.i]; pi=x.p; se=x.se; sp=x.sp;
+  $('pSl').value=pi; $('seSl').value=Math.round(se*1000); $('spSl').value=Math.round(sp*1000);
+  resetSim(); all(); };
+ $('draw').onclick=function(){ batch(1000); all(); };
+ $('rst').onclick=function(){ resetSim(); all(); };
+
+ resetSim();
+ all();
+})();
+</script>
+</body>
+</html>

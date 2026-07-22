@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>The Pressure to Comply — Asch's Lines &amp; Milgram's Shocks</title>
+<meta name="description" content="Run Solomon Asch's line-judgment task and Stanley Milgram's obedience experiment to feel the pull of conformity and obedience. An interactive by Dr. Akash Garg &middot; PS 101 &middot; Herzing University.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:0.98fr 1.02fr;}
+.desc{font-size:13.5px;line-height:1.55;color:var(--soft);margin:2px 0 12px;} .desc b{color:var(--teal-dk);}
+.seg button.ok{background:var(--green);color:#fff;} .seg button.no{background:var(--coral);color:#fff;}
+.slab{font-size:12.5px;color:var(--soft);margin:12px 0 5px;font-weight:600;} .slab b{color:var(--teal-dk);font-family:var(--disp);font-size:15px;}
+input[type=range]{width:100%;accent-color:var(--teal);height:22px;cursor:pointer;}
+.mini{display:flex;gap:8px;margin-top:12px;}
+.mini div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 4px;font-size:10.5px;font-weight:700;color:var(--muted);background:#fff;}
+.mini div .v{display:block;font-size:18px;margin-top:2px;color:var(--teal-dk);font-family:var(--disp);}
+.res{font-family:var(--disp);font-weight:600;font-size:15px;display:block;margin-bottom:5px;}
+.res.good{color:#237a45;} .res.trap{color:#b23145;}
+.prod{font-style:italic;color:#b23145;background:#fae5e8;border:1px solid #f0c9d0;border-radius:8px;padding:8px 11px;margin:10px 0;font-size:12.5px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 12</div>
+  <h1>The Pressure to Comply</h1>
+  <div class="intro">Two of psychology's most famous experiments asked a simple question: how far will an ordinary person bend to the group, or to an authority? Run <b>Solomon Asch's</b> line task and <b>Stanley Milgram's</b> shock study, and feel the pressure for yourself.</div>
+</header>
+<div class="wrap">
+  <div><div class="card">
+    <h2 id="cardTitle">The setup</h2>
+    <svg id="svg" viewBox="0 0 240 238" aria-label="experiment scene"><g id="art"></g></svg>
+    <div class="mnem" id="hint"></div>
+  </div></div>
+  <div>
+    <div class="modeseg">
+      <button id="mAsch" class="on">Asch · the lines</button>
+      <button id="mMil">Milgram · the shocks</button>
+    </div>
+    <div id="stage"></div>
+    <div class="card">
+      <div id="aschPanel">
+        <div class="desc" id="aDesc"></div>
+        <div class="slab">Others answering out loud before you: <b id="aN">6</b></div>
+        <input type="range" min="1" max="7" value="6" id="aSlider">
+        <div class="slab" style="margin-top:12px;">Are you truly alone against them?</div>
+        <div class="seg" id="aAlly">
+          <button data-a="0" class="on">Alone vs the group</button>
+          <button data-a="1">One of them says &ldquo;B&rdquo;</button>
+        </div>
+        <div class="slab" style="margin-top:12px;">The right answer is obvious. Your call:</div>
+        <div class="seg" id="aPick">
+          <button data-p="A">A</button><button data-p="B">B</button><button data-p="C">C</button>
+        </div>
+      </div>
+      <div id="milPanel" style="display:none;">
+        <div class="desc" id="mDesc"></div>
+        <div class="row" id="milRow">
+          <button class="btn" id="mRefuse">Refuse</button>
+          <button class="btn solid" id="mContinue">Continue — flip the switch ›</button>
+        </div>
+      </div>
+      <div id="info"></div>
+      <div class="mini" id="mini"></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var mode='asch';
+
+ /* ---------- ASCH ---------- */
+ var aN=6, aAlly=false, aPick=null;
+ function aschRate(n,ally){
+   var base={1:3,2:13,3:33,4:35,5:35,6:37,7:37};
+   var r=base[n]||35;
+   if(ally){ r=Math.max(4,Math.round(r*0.16)); }
+   return r;
+ }
+ function drawAsch(pick,ally,n){
+   var o='', baseY=214;
+   var Hs=100, lines=[{L:'A',x:110,h:64},{L:'B',x:158,h:100},{L:'C',x:206,h:128}];
+   var correct='B', group='C';
+   // confederate strip
+   var total=n+(ally?1:0), sp=240/(total+1);
+   for(var g=0;g<total;g++){
+     var cx=sp*(g+1), isAlly=(ally&&g===total-1);
+     var lab=isAlly?'B':'C', bc=isAlly?'#2f9e5b':'#d1495b', bg=isAlly?'#e5f3ea':'#fae5e8';
+     o+='<rect x="'+(cx-9)+'" y="6" width="18" height="15" rx="4" fill="'+bg+'" stroke="'+bc+'" stroke-width="1"/>';
+     o+='<text x="'+cx+'" y="18" font-size="10" text-anchor="middle" fill="'+bc+'" font-weight="700">'+lab+'</text>';
+     o+='<text x="'+cx+'" y="43" font-size="17" text-anchor="middle">'+(isAlly?'🙂':'🧑')+'</text>';
+   }
+   // standard line
+   o+='<rect x="33" y="'+(baseY-Hs)+'" width="11" height="'+Hs+'" rx="3" fill="#361f2b"/>';
+   o+='<text x="39" y="230" font-size="10" text-anchor="middle" fill="#63505a" font-weight="700">Std</text>';
+   o+='<line x1="70" y1="60" x2="70" y2="222" stroke="#eee0e6" stroke-width="2"/>';
+   // comparison lines
+   lines.forEach(function(ln){
+     var isGroup=(ln.L===group), isPick=(pick===ln.L), ok=(ln.L===correct);
+     var fill=isPick?(ok?'#2f9e5b':'#d1495b'):(isGroup?'#d1495b':'#a1466b');
+     var op=isPick?1:(isGroup?0.85:0.45);
+     o+='<rect x="'+(ln.x-5)+'" y="'+(baseY-ln.h)+'" width="11" height="'+ln.h+'" rx="3" fill="'+fill+'" opacity="'+op+'"/>';
+     o+='<text x="'+ln.x+'" y="230" font-size="11" text-anchor="middle" fill="#63505a" font-weight="700">'+ln.L+'</text>';
+   });
+   o+='<text x="206" y="72" font-size="9" text-anchor="middle" fill="#b23145" font-weight="700">▼ group</text>';
+   if(pick){ var m={A:{x:110,t:150},B:{x:158,t:114},C:{x:206,t:86}}[pick];
+     o+='<text x="'+m.x+'" y="'+(m.t-4)+'" font-size="13" text-anchor="middle">'+(pick===correct?'✔':'✖')+'</text>'; }
+   return o;
+ }
+ function renderAsch(){
+   $("svg").setAttribute('viewBox','0 0 240 238');
+   $("cardTitle").innerHTML='Which line matches the standard?';
+   $("hint").innerHTML='<b>Normative</b> influence = going along to be liked or accepted. <b>Informational</b> influence = going along because you assume the group knows something you don’t.';
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='Asch’s line-judgment task<small>the answer is obvious &mdash; but the group says otherwise</small>';
+   $("art").innerHTML=drawAsch(aPick,aAlly,aN);
+   $("aN").innerHTML=aN;
+   $("aDesc").innerHTML='You sit <b>last</b> in a group judging which comparison line matches the <b>standard</b>. Line <b>B</b> plainly matches. Yet one by one, the '+aN+' '+(aN===1?'person':'people')+' before you confidently answer <b>&ldquo;C.&rdquo;</b>'+(aAlly?' This round, one of them breaks ranks and says <b>&ldquo;B&rdquo;</b> &mdash; you have an ally.':'');
+   document.querySelectorAll('#aAlly button').forEach(function(b){ b.className=(String(aAlly?1:0)===b.getAttribute('data-a'))?'on':''; });
+   document.querySelectorAll('#aPick button').forEach(function(b){ var p=b.getAttribute('data-p'); b.className=(aPick===p)?('on '+(p==='B'?'ok':'no')):''; });
+   var rate=aschRate(aN,aAlly), out='';
+   if(aPick==='C'){ out='<span class="res trap">You conformed.</span>You could see <b>B</b> was right, yet you matched the group’s wrong answer &mdash; a case of <b>normative social influence</b>: the pull to agree so you aren’t the lone dissenter.'; }
+   else if(aPick==='B'){ out='<span class="res good">You stayed independent.</span>You trusted your own eyes over the crowd. Across Asch’s trials, only about <b>1 in 4</b> people resisted on <i>every</i> round.'; }
+   else if(aPick==='A'){ out='<span class="res trap">A different error.</span>You didn’t follow the group, but A doesn’t match either &mdash; an independent mistake, which was rare (people tested alone erred under <b>1%</b> of the time).'; }
+   else { out='<span class="n">Solomon Asch, 1951</span>The task is so easy that people judging <b>alone</b> are wrong less than <b>1%</b> of the time. The only thing that has changed here is the group answering out loud before you. Make your call above.'; }
+   out+='<div class="loc">A group of '+aN+(aAlly?' with one ally':'')+' &rarr; about <b>'+rate+'%</b> of responses conform. Conformity climbs as the majority grows to <b>3&ndash;4</b>, then plateaus &mdash; and a single ally shatters it.</div>';
+   $("info").innerHTML=out;
+   $("mini").innerHTML='<div>Modeled conformity<span class="v">'+rate+'%</span></div><div>Your read<span class="v">'+(aPick||'—')+'</span></div>';
+ }
+
+ /* ---------- MILGRAM ---------- */
+ var M=[
+  {v:75, face:'😐', obey:100, learner:'The learner gives a small grunt — &ldquo;Ugh&rdquo; — but says nothing more.', note:''},
+  {v:150,face:'😖', obey:100, key:true, learner:'&ldquo;That’s all! Get me out of here — I told you I have a heart condition! I refuse to go on!&rdquo;', note:'This is the moment people remember. Surely most participants quit here? In fact, every one of Milgram’s 40 pushed past it.'},
+  {v:210,face:'😫', obey:100, learner:'&ldquo;My heart’s starting to bother me now! Let me out!&rdquo;', note:''},
+  {v:300,face:'😰', obey:100, learner:'An agonized scream. The learner pounds the wall and refuses to answer the next question.', note:'The experimenter says silence counts as a wrong answer &mdash; and must be punished.'},
+  {v:330,face:'😨', obey:78, learner:'Silence. No sound at all comes from the next room.', note:''},
+  {v:375,face:'💀', obey:68, learner:'Still nothing. The dial slides past the label &ldquo;Danger: Severe Shock.&rdquo;', note:''},
+  {v:450,face:'☠️', obey:65, max:true, learner:'The final lever: 450 volts, marked only &ldquo;XXX,&rdquo; delivered into total silence.', note:''}
+ ];
+ var PRODS=['Please continue.','The experiment requires that you continue.','It is absolutely essential that you continue.','You have no other choice, you must go on.'];
+ var mi=0, milProd=0, milEnded=false, milDelivered=0;
+ function drawMil(st,col){
+   var o='';
+   // authority (experimenter)
+   o+='<rect x="14" y="66" width="34" height="44" rx="12" fill="#e7edf2" stroke="#c9d3dc" stroke-width="1.5"/>';
+   o+='<text x="31" y="62" font-size="26" text-anchor="middle">🧑‍🔬</text>';
+   o+='<text x="31" y="126" font-size="9" text-anchor="middle" fill="#5e2846" font-weight="700">experimenter</text>';
+   // learner strapped to chair
+   o+='<rect x="150" y="44" width="60" height="70" rx="8" fill="#efe2ea" stroke="#c9a9bb" stroke-width="2"/>';
+   o+='<rect x="150" y="70" width="60" height="6" fill="#c9a9bb"/>';
+   o+='<rect x="150" y="92" width="60" height="6" fill="#c9a9bb"/>';
+   o+='<text x="180" y="70" font-size="30" text-anchor="middle">'+st.face+'</text>';
+   o+='<text x="180" y="130" font-size="9" text-anchor="middle" fill="#5e2846" font-weight="700">learner</text>';
+   // voltage
+   o+='<text x="120" y="30" font-size="24" text-anchor="middle" fill="'+col+'" font-family="Fraunces,serif" font-weight="700">'+st.v+' V</text>';
+   // generator switch bank
+   var lit=Math.round(st.v/450*15);
+   for(var k=0;k<15;k++){ var x=14+k*15; var c=k<5?'#2f9e5b':(k<10?'#b8862f':'#d1495b');
+     o+='<rect x="'+x+'" y="150" width="11" height="28" rx="2" fill="'+(k<lit?c:'#eadde5')+'"/>'; }
+   o+='<text x="120" y="196" font-size="9" text-anchor="middle" fill="#94818b">15V &mdash;&mdash; shock generator &mdash;&mdash; 450V</text>';
+   return o;
+ }
+ function renderMil(){
+   var st=M[mi], col=(st.v<150?'#2f9e5b':(st.v<300?'#b8862f':'#d1495b'));
+   $("svg").setAttribute('viewBox','0 0 240 205');
+   $("cardTitle").innerHTML='The shock generator';
+   $("hint").innerHTML='<b>Obedience</b> = complying with a direct order from an authority. <b>Conformity</b>, by contrast, needs no order &mdash; only a group.';
+   $("stage").style.background=col;
+   $("stage").innerHTML='Milgram’s obedience experiment<small>you are the &ldquo;teacher.&rdquo; The next switch is '+st.v+' volts.</small>';
+   $("art").innerHTML=drawMil(st,col);
+   if(milEnded){ return; }
+   $("mContinue").disabled=false; $("mRefuse").disabled=false;
+   $("mDesc").innerHTML='Each wrong answer must be punished with the next voltage up. The dial is now at <b>'+st.v+' volts</b>.<br><br>'+st.learner+(st.note?' <b>'+st.note+'</b>':'');
+   var info='<span class="n">'+(st.key?'The moment everyone remembers':(st.max?'The final switch':'Will you flip the switch?'))+'</span>';
+   if(milProd>0){ info+='<div class="prod">The experimenter, calm and firm: &ldquo;'+PRODS[milProd-1]+'&rdquo;</div>'; }
+   info+='In Milgram’s study, about <b>'+st.obey+'%</b> of the 40 participants were still obeying at '+st.v+' volts.';
+   $("info").innerHTML=info;
+   $("mini").innerHTML='<div>Dial<span class="v">'+st.v+'V</span></div><div>Still obeying<span class="v">'+st.obey+'%</span></div>';
+ }
+ function milEnd(obeyed,atV){
+   milEnded=true;
+   $("mContinue").disabled=true; $("mRefuse").disabled=true;
+   var o;
+   if(obeyed){
+     o='<span class="res trap">You went all the way.</span>You delivered the full <b>450 volts</b>. Disturbingly, so did <b>65%</b> (26 of 40) of Milgram’s ordinary participants in 1963 &mdash; not because they were cruel, but because a calm authority kept insisting. Milgram called it the power of the <b>situation</b> over character.';
+   } else if(atV===0){
+     o='<span class="res good">You refused from the start.</span>You broke off before delivering a single shock. Almost no one did: every one of Milgram’s 40 participants continued well past 300 volts before the first person refused.';
+   } else {
+     o='<span class="res good">You broke off at '+atV+' volts.</span>You refused to go on. '+(atV<300?'You stopped earlier than nearly anyone in the real study &mdash; all 40 participants continued past 300 volts before the first refusal.':'Even so, most people pressed further: 65% reached the maximum 450 volts.')+' Defying an insistent authority is far harder than we imagine &mdash; which was Milgram’s whole point.';
+   }
+   o+='<div class="loc">Milgram ran this in 1961, months after the trial of Adolf Eichmann, to ask whether &ldquo;just following orders&rdquo; could lead ordinary people to harm a stranger. His answer unsettled a generation.</div>';
+   $("info").innerHTML=o;
+   $("mDesc").innerHTML='The session is over. <button class="btn" id="mReset" style="margin-top:8px;">↺ Run it again</button>';
+   $("mini").innerHTML='<div>You delivered<span class="v">'+(obeyed?450:atV)+'V</span></div><div>Reached max?<span class="v">'+(obeyed?'Yes':'No')+'</span></div>';
+   $("mReset").onclick=milReset;
+ }
+ function milReset(){ mi=0; milProd=0; milEnded=false; milDelivered=0; renderMil(); }
+
+ /* ---------- WIRING ---------- */
+ function setMode(m){
+   mode=m;
+   $("mAsch").className=(m==='asch')?'on':'';
+   $("mMil").className=(m==='mil')?'on':'';
+   $("aschPanel").style.display=(m==='asch')?'':'none';
+   $("milPanel").style.display=(m==='mil')?'':'none';
+   if(m==='asch'){ renderAsch(); } else { renderMil(); }
+ }
+ $("mAsch").onclick=function(){ setMode('asch'); };
+ $("mMil").onclick=function(){ setMode('mil'); };
+
+ $("aSlider").oninput=function(){ aN=parseInt(this.value,10); aPick=null; renderAsch(); };
+ document.querySelectorAll('#aAlly button').forEach(function(b){
+   b.onclick=function(){ aAlly=(b.getAttribute('data-a')==='1'); aPick=null; renderAsch(); };
+ });
+ document.querySelectorAll('#aPick button').forEach(function(b){
+   b.onclick=function(){ aPick=b.getAttribute('data-p'); renderAsch(); };
+ });
+
+ $("mContinue").onclick=function(){
+   if(milEnded){ return; }
+   if(mi===M.length-1){ milDelivered=450; milEnd(true,450); }
+   else { milDelivered=M[mi].v; mi++; milProd=0; renderMil(); }
+ };
+ $("mRefuse").onclick=function(){
+   if(milEnded){ return; }
+   milProd++;
+   if(milProd>4){ milEnd(false,milDelivered); }
+   else { renderMil(); }
+ };
+
+ renderAsch();
+})();
+</script>
+</body>
+</html>

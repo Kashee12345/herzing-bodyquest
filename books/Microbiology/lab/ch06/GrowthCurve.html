@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>The Bacterial Growth Curve</title>
+<meta name="description" content="Interactive bacterial growth curve — step through the lag, log, stationary, and death phases, or press Play to watch the viable count climb and crash on a live log-scale plot. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:1.06fr 0.94fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.plotcap{font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px;}
+.plotcap b{color:var(--teal-dk);}
+.band{cursor:pointer;transition:fill .25s;}
+.met{display:flex;gap:7px;margin-top:12px;}
+.met .b{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 4px;background:#fff;}
+.met .b .l{font-size:9.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.4px;line-height:1.25;display:block;}
+.met .b .v{display:block;font-size:13px;font-weight:800;margin-top:4px;color:var(--ink);}
+.met .b.y .v{color:#237a45;} .met .b.p .v{color:#8a6a20;} .met .b.n .v{color:#b23145;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 6</div>
+  <h1>The Bacterial Growth Curve</h1>
+  <div class="intro">Grow a culture in a sealed flask and the population climbs, plateaus, and crashes in a predictable four-act pattern. <b>Step</b> through each phase &mdash; or press <b>Play</b> to watch the viable count rise and fall on a live plot.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">A closed culture over time</h2>
+    <svg viewBox="0 0 300 232" aria-label="bacterial growth curve on a log scale"><g id="plot"></g></svg>
+    <div class="plotcap">The y-axis is the <b>number of living (viable) cells on a log scale</b>, so steady doubling shows up as a <b>straight climb</b>. Tap a shaded phase, use the buttons, or press Play.</div>
+  </div></div>
+  <div>
+    <div id="stage">The four phases<small>tap a phase or press Play</small></div>
+    <div class="card">
+      <div class="met" id="mets"></div>
+      <div id="info"></div>
+      <div class="row">
+        <button class="btn" id="prev">‹ Prev</button>
+        <button class="btn solid" id="play">▶ Play</button>
+        <button class="btn" id="next">Next ›</button>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var P=[
+  {k:'lag',nm:'Lag phase',col:'#2f9e5b',t0:0,t1:20,mid:10,
+   div:'None yet',divc:'p', cnt:'Constant',cntc:'p', drug:'Low',drugc:'n',
+   feat:'Cells have just been placed in fresh medium and are <b>gearing up, not dividing</b>. They synthesize enzymes, ribosomes, ATP, and building blocks, and may enlarge &mdash; but the <b>viable count stays flat</b>. A larger, healthier inoculum shortens this phase.',
+   nurse:'A small number of organisms plus a long lag is why a fresh culture can take a day or more to turn positive, and why blood cultures are held before being reported as negative.'},
+  {k:'log',nm:'Log (exponential) phase',col:'#6d3f9c',t0:20,t1:55,mid:37,
+   div:'Maximal, steady',divc:'y', cnt:'↑ Exponential',cntc:'y', drug:'Highest',drugc:'y',
+   feat:'Cells divide by <b>binary fission at a constant generation (doubling) time</b>, so the count climbs exponentially &mdash; a <b>straight line on this log plot</b>. Metabolism peaks and the population is at its most uniform, which is why this phase is used to measure growth rate and to prepare cultures for testing.',
+   nurse:'Bacteria are <b>most vulnerable to antibiotics here</b> &mdash; cell-wall agents such as penicillins only kill actively dividing cells. It is also when an untreated infection tends to escalate.'},
+  {k:'stat',nm:'Stationary phase',col:'#b8862f',t0:55,t1:80,mid:67,
+   div:'= death rate',divc:'p', cnt:'Plateau (peak)',cntc:'p', drug:'Reduced',drugc:'p',
+   feat:'Nutrients run low while acids, toxic wastes, and low oxygen build up, so <b>new cells form about as fast as old cells die</b> and the curve levels off at its maximum. Spore-forming genera (<i>Bacillus</i>, <i>Clostridium</i>) begin <b>endospore</b> formation, and many toxins and secondary metabolites are produced now.',
+   nurse:'Slow-growing, stressed cells here <b>tolerate antibiotics far better</b> &mdash; a major driver of biofilms and stubborn, persistent infections.'},
+  {k:'death',nm:'Death (decline) phase',col:'#d1495b',t0:80,t1:100,mid:90,
+   div:'< death rate',divc:'n', cnt:'↓ Declining',cntc:'n', drug:'—',drugc:'',
+   feat:'With nutrients exhausted and wastes toxic, <b>cells die faster than they are replaced</b>, so the viable count falls &mdash; often log-linearly, a near-mirror of the log phase. Hardy survivors persist as <b>endospores</b> or dormant persister cells long after the rest are gone.',
+   nurse:'This log-linear die-off is the same idea behind <b>sterilization and D-values</b> (the time to kill 90% of a population), and why results read from old cultures can mislead.'}
+ ];
+ // --- geometry: viable-count (log) vs time, piecewise-linear ---
+ function X(t){return 44+t/100*244;}
+ function Y(v){return 190-(v-1)/8*168;}
+ function vval(t){
+   if(t<=20) return 2;
+   if(t<=55) return 2+(t-20)/35*6;
+   if(t<=80) return 8;
+   return 8-(t-80)/20*3.5;
+ }
+ var CORN=[[0,2],[20,2],[55,8],[80,8],[100,4.5]];
+ function fullPath(){ return CORN.map(function(c,i){return (i?'L':'M')+X(c[0]).toFixed(1)+' '+Y(c[1]).toFixed(1);}).join(' '); }
+ function segPath(p){
+   var pts=CORN.filter(function(c){return c[0]>=p.t0-0.01&&c[0]<=p.t1+0.01;});
+   return pts.map(function(c,i){return (i?'L':'M')+X(c[0]).toFixed(1)+' '+Y(c[1]).toFixed(1);}).join(' ');
+ }
+ function phaseFromT(t){ if(t<=20)return 0; if(t<=55)return 1; if(t<=80)return 2; return 3; }
+
+ var cur=0, marker=P[0].mid, timer=null, playing=false;
+
+ function buildStatic(){
+   var s='';
+   // phase bands (clickable)
+   for(var i=0;i<4;i++){ var p=P[i];
+     s+='<rect class="band" id="b'+i+'" data-i="'+i+'" x="'+X(p.t0).toFixed(1)+'" y="18" width="'+(X(p.t1)-X(p.t0)).toFixed(1)+'" height="172" fill="#efe9f5"/>';
+   }
+   // axes
+   s+='<line x1="44" y1="18" x2="44" y2="190" stroke="#b1a1c8" stroke-width="1.6"/>';
+   s+='<line x1="44" y1="190" x2="290" y2="190" stroke="#b1a1c8" stroke-width="1.6"/>';
+   s+='<polygon points="44,12 41,20 47,20" fill="#b1a1c8"/><polygon points="296,190 288,187 288,193" fill="#b1a1c8"/>';
+   // phase labels near top of each band
+   for(var j=0;j<4;j++){ var q=P[j], cx=(X(q.t0)+X(q.t1))/2;
+     s+='<text id="t'+j+'" x="'+cx.toFixed(1)+'" y="33" font-family="Inter,sans-serif" font-size="9" font-weight="800" text-anchor="middle" fill="#a89bbd">'+(j+1)+'</text>';
+   }
+   // full faint curve + highlighted segment + marker
+   s+='<path d="'+fullPath()+'" fill="none" stroke="#c3b4d8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+   s+='<path id="seg" d="" fill="none" stroke="#6d3f9c" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>';
+   s+='<circle id="mark" cx="0" cy="0" r="6.5" fill="#6d3f9c" stroke="#fff" stroke-width="2.4"/>';
+   // axis captions
+   s+='<text x="15" y="108" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#8a5a6f" text-anchor="middle" transform="rotate(-90 15 108)">Viable cells (log)</text>';
+   s+='<text x="166" y="212" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#8a5a6f" text-anchor="middle">Time →</text>';
+   $("plot").innerHTML=s;
+   for(var b=0;b<4;b++){ (function(b){ $("b"+b).onclick=function(){ select(b); }; })(b); }
+ }
+
+ function render(){
+   var p=P[cur];
+   // marker position
+   var mx=X(marker), my=Y(vval(marker));
+   $("mark").setAttribute('cx',mx.toFixed(1));
+   $("mark").setAttribute('cy',my.toFixed(1));
+   $("mark").setAttribute('fill',p.col);
+   $("seg").setAttribute('d',segPath(p));
+   $("seg").setAttribute('stroke',p.col);
+   // bands + labels
+   for(var i=0;i<4;i++){
+     $("b"+i).setAttribute('fill', i===cur ? hexA(P[i].col,0.16) : '#efe9f5');
+     var tl=$("t"+i);
+     tl.setAttribute('fill', i===cur ? P[i].col : '#a89bbd');
+   }
+   // stage
+   $("stage").style.background=p.col;
+   $("stage").innerHTML=p.nm+'<small>phase '+(cur+1)+' of 4</small>';
+   $("cardTitle").innerHTML='A closed culture over time';
+   // metrics
+   $("mets").innerHTML=
+     '<div class="b '+p.divc+'"><span class="l">Cell<br>division</span><span class="v">'+p.div+'</span></div>'+
+     '<div class="b '+p.cntc+'"><span class="l">Viable<br>count</span><span class="v">'+p.cnt+'</span></div>'+
+     '<div class="b '+p.drugc+'"><span class="l">Drug<br>killing</span><span class="v">'+p.drug+'</span></div>';
+   // info
+   $("info").innerHTML='<span class="n">'+p.nm+'</span>'+p.feat+
+     '<div class="loc"><b>At the bedside:</b> '+p.nurse+'</div>';
+   // buttons
+   $("prev").disabled=(cur===0);
+   $("next").disabled=(cur===3);
+ }
+
+ function hexA(hex,a){
+   var n=parseInt(hex.slice(1),16);
+   return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';
+ }
+
+ function select(i){ stopPlay(); cur=i; marker=P[i].mid; render(); }
+ function step(d){ stopPlay(); var n=cur+d; if(n<0||n>3)return; cur=n; marker=P[n].mid; render(); }
+
+ function stopPlay(){ if(timer){clearInterval(timer);timer=null;} playing=false; $("play").innerHTML='▶ Play'; }
+ function startPlay(){
+   playing=true; $("play").innerHTML='⏸ Pause'; marker=0; cur=0; render();
+   timer=setInterval(function(){
+     marker+=1.15;
+     if(marker>=100){ marker=100; cur=3; stopPlay(); render(); return; }
+     cur=phaseFromT(marker); render();
+   },55);
+ }
+
+ $("prev").onclick=function(){ step(-1); };
+ $("next").onclick=function(){ step(1); };
+ $("play").onclick=function(){ if(playing) stopPlay(); else startPlay(); };
+
+ buildStatic();
+ render();
+})();
+</script>
+</body>
+</html>

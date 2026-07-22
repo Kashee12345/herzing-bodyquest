@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Opioids: Analgesia vs. Respiratory Depression</title>
+<meta name="description" content="Interactive opioid dose–response simulator — slide the morphine dose to watch analgesia and respiratory depression rise together, read the sedation scale, and reverse an overdose with naloxone. For pharmacology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:0.94fr 1.06fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.cap{font-size:11.5px;color:var(--muted);text-align:center;margin-top:4px;line-height:1.45;}
+svg text{font-family:var(--sans);}
+.dlab{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;}
+.dlab .k{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:800;}
+.dlab .v{font-family:var(--disp);font-weight:700;font-size:17px;color:var(--teal-dk);}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;margin:0;}
+input[type=range]::-webkit-slider-runnable-track{height:11px;border-radius:6px;border:1px solid var(--line);
+  background:linear-gradient(90deg,#e9c5cd 0 18%,#a8dcbd 18% 58%,#eed9a4 58% 76%,#e6a4ae 76% 100%);}
+input[type=range]::-moz-range-track{height:11px;border-radius:6px;border:1px solid var(--line);
+  background:linear-gradient(90deg,#e9c5cd 0 18%,#a8dcbd 18% 58%,#eed9a4 58% 76%,#e6a4ae 76% 100%);}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;
+  border:3px solid var(--teal);box-shadow:0 2px 7px rgba(30,45,70,.28);margin-top:-8px;}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--teal);box-shadow:0 2px 7px rgba(30,45,70,.28);}
+.ticks{display:flex;justify-content:space-between;margin-top:5px;font-size:9.5px;font-weight:700;color:var(--muted);}
+.vit{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:12px;}
+.vit div{border:1px solid var(--line);border-radius:10px;padding:7px 2px;text-align:center;background:#fff;transition:.2s;}
+.vit .k{font-size:8.6px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;}
+.vit .v{font-size:17px;font-weight:800;color:var(--teal-dk);line-height:1.1;margin-top:2px;}
+.vit .u{font-size:8.6px;color:var(--muted);font-weight:600;}
+.vit div.ok{border-color:#a8dcbd;background:#eff9f3;} .vit div.ok .v{color:#237a45;}
+.vit div.warn{border-color:#e8cf95;background:#fdf8ec;} .vit div.warn .v{color:#8a6a20;}
+.vit div.bad{border-color:#e6a4ae;background:#fdf0f2;} .vit div.bad .v{color:#b23145;}
+.nx{margin-top:12px;border:1px dashed #cadcf1;border-radius:12px;padding:10px 11px;background:#f7fafd;transition:.2s;}
+.nx.live{border-style:solid;border-color:var(--coral);background:#fdf1f3;}
+.nx .h{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:800;margin-bottom:7px;}
+.nx.live .h{color:#b23145;}
+.nx .seg button{padding:9px 6px;font-size:12px;}
+.nx .seg button:disabled{color:var(--muted);cursor:default;background:#f4f6fa;}
+.nx .seg button:disabled small{color:#b7c0cc;}
+.nx .seg button.on{background:var(--coral);color:#fff;} .nx .seg button.on small{color:rgba(255,255,255,.9);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 4</div>
+  <h1>Opioids: Analgesia vs. Respiratory Depression</h1>
+  <div class="intro">Opioids relieve pain and slow breathing through the <b>same mu receptor</b> &mdash; so the two rise together, and there is no dose that gives you one without risking the other. Slide the dose on an opioid-naive adult, watch the pain score fall and the respiratory rate follow it down, then reverse an overdose with <b>naloxone</b>.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Opioid-naive adult, post-op</h2>
+    <svg viewBox="0 0 240 252" aria-label="patient with breathing waveform and pupil size changing with opioid dose"><g id="art"></g></svg>
+    <div class="cap">The chest and the waveform move at the patient&rsquo;s <b>real-time respiratory rate</b>. Watch the pupil.</div>
+  </div></div>
+  <div>
+    <div id="stage">Set the dose<small>drag the slider to give morphine</small></div>
+    <div class="card">
+      <div class="dlab"><span class="k">Morphine, IV</span><span class="v" id="doseV">0 mg</span></div>
+      <input type="range" id="dose" min="0" max="6" step="1" value="0" aria-label="morphine dose">
+      <div class="ticks"><span>none</span><span>therapeutic</span><span>overdose</span></div>
+      <div class="vit">
+        <div id="tPain"><span class="k">Pain</span><span class="v" id="vPain">8</span><span class="u">of 10</span></div>
+        <div id="tRr"><span class="k">Resp</span><span class="v" id="vRr">18</span><span class="u">/min</span></div>
+        <div id="tSp"><span class="k">SpO₂</span><span class="v" id="vSp">98</span><span class="u">%</span></div>
+        <div id="tPoss"><span class="k">Sedation</span><span class="v" id="vPoss">1</span><span class="u">POSS</span></div>
+        <div id="tPup"><span class="k">Pupil</span><span class="v" id="vPup">4.0</span><span class="u">mm</span></div>
+      </div>
+      <div class="nx" id="nxPanel">
+        <div class="h" id="nxH">Naloxone — locked until the patient needs it</div>
+        <div class="seg" id="nxSeg">
+          <button data-n="full" disabled>0.4 mg IV push<small>full dose, undiluted</small></button>
+          <button data-n="titr" disabled>0.04 mg q1–2 min<small>dilute 0.4 mg in 10 mL NS, titrate</small></button>
+        </div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"><b>Sedation comes first.</b> Rising sedation always precedes respiratory depression &mdash; a POSS of <b>3</b> is your warning, and it arrives before the respiratory rate falls and long before the pulse oximeter alarms. Assess the patient, not the monitor.</div>
+      <div class="note" id="note"><b>Overdose triad:</b> pinpoint pupils + respiratory depression + depressed consciousness. Naloxone reverses <b>opioids only</b> &mdash; it does nothing for benzodiazepines, alcohol, or a non-opioid cause.</div>
+      <div class="row"><button class="btn" id="reset">↺ Reset patient</button></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* Illustrative model of an opioid-naive adult after surgery. Doses are teaching
+    anchors, not a dosing chart — real requirements vary enormously with age,
+    renal/hepatic function, opioid tolerance, and concurrent sedatives. */
+ var D=[
+  {mg:'0 mg',pain:8,rr:18,spo2:98,pupil:4.0,depth:1.00,poss:'1',pt:'Awake and alert',col:'#d1495b',
+   st:'No opioid on board',sub:'pain 8/10 — undertreated',cls:'bad',
+   d:'<span class="n">Baseline — pain untreated</span>The patient reports <b>8/10</b>. Self-report is the gold standard for pain; there is no lab value and no vital sign that measures it for you. Untreated pain is not benign &mdash; it splints the chest, blocks deep breathing and coughing, and drives atelectasis, pneumonia, and immobility. <div class="loc">Nurse: assess before and <b>within 30 minutes after</b> an IV opioid (about 60 minutes after an oral dose) — that is when you catch both the relief and the risk.</div>'},
+
+  {mg:'1 mg',pain:6,rr:17,spo2:98,pupil:3.5,depth:1.00,poss:'1',pt:'Awake and alert',col:'#b8862f',
+   st:'Under-dosed',sub:'pain 6/10 — some relief',cls:'warn',
+   d:'<span class="n">1 mg — a toe in the water</span>Mu receptors in the dorsal horn and brain are beginning to fill. Pain drops but stays above the patient&rsquo;s comfort goal. Breathing and alertness are untouched. <div class="loc">Nurse: this is <b>not</b> the moment to stack a second dose &mdash; give the drug its peak time (IV morphine peaks in roughly 15–30 minutes), then reassess and titrate.</div>'},
+
+  {mg:'2 mg',pain:4,rr:16,spo2:97,pupil:3.0,depth:.96,poss:'2',pt:'Slightly drowsy, easily aroused',col:'#2f9e5b',
+   st:'Working',sub:'pain 4/10 — approaching goal',cls:'ok',
+   d:'<span class="n">2 mg — analgesia arrives</span>Pain is more than halved and the patient is <b>slightly drowsy but easily aroused</b> (POSS 2) &mdash; an acceptable, expected level of sedation. Note the pupil: <b>miosis</b> is a reliable mu fingerprint, and unlike sedation and nausea, <b>tolerance never develops to it</b>. <div class="loc">Nurse: acceptable sedation is POSS S, 1, or 2. Keep titrating to the patient&rsquo;s functional goal, not to a number on a scale.</div>'},
+
+  {mg:'4 mg',pain:2,rr:14,spo2:97,pupil:2.5,depth:.90,poss:'2',pt:'Slightly drowsy, easily aroused',col:'#237a45',
+   st:'Therapeutic window',sub:'pain 2/10 · RR 14 · POSS 2',cls:'ok',
+   d:'<span class="n">4 mg — this is the target</span>Comfortable, arousable, breathing well. Look closely: the respiratory rate has <b>already drifted from 18 to 14</b>. Opioids blunt the medulla&rsquo;s response to rising CO₂, so respiratory drive falls the whole way up the curve &mdash; it just has not become dangerous yet. There is no dose that buys analgesia without spending some respiratory drive. <div class="loc">Nurse: while the patient is comfortable, get ahead of the side effects that <b>do not</b> fade &mdash; start a scheduled stimulant laxative (senna) for constipation on day one, and watch for urinary retention, nausea, and pruritus.</div>'},
+
+  {mg:'6 mg',pain:1,rr:11,spo2:95,pupil:2.0,depth:.74,poss:'3',pt:'Frequently drowsy, drifts off mid-sentence',col:'#b8862f',
+   st:'⚠ HOLD THE OPIOID',sub:'RR 11 · POSS 3 — unacceptable sedation',cls:'warn',
+   d:'<span class="n">6 mg — the line has been crossed</span>The patient is <b>frequently drowsy and drifts off during conversation</b> (POSS 3) and the respiratory rate is <b>11 &mdash; under 12</b>. Both are unacceptable. The pulse oximeter still reads 95%, which is exactly the trap: oximetry is a <b>late</b> sign, and supplemental oxygen delays it further by keeping the saturation up while CO₂ climbs. Capnography (end-tidal CO₂) catches this far earlier. <div class="loc">Nurse: <b>hold the next dose</b>, stay at the bedside, stimulate the patient, apply oxygen, reduce the dose 25–50% with the provider, and <b>have naloxone at hand</b>. Remove any other sedatives — benzodiazepines, sleep aids, muscle relaxants — that are stacking on top.</div>'},
+
+  {mg:'8 mg',pain:0,rr:8,spo2:92,pupil:1.5,depth:.55,poss:'4',pt:'Minimal response to voice or touch',col:'#d1495b',
+   st:'⚠ RESPIRATORY DEPRESSION',sub:'RR 8 · POSS 4 · pinpoint pupils',cls:'bad',
+   d:'<span class="n">8 mg — opioid-induced respiratory depression</span>Somnolent with <b>minimal response to voice or touch</b> (POSS 4), respiratory rate <b>8</b>, pupils pinpoint. Notice the waveform is not just slow &mdash; it is <b>shallow</b>. Opioids cut tidal volume as well as rate, so counting breaths alone understates the problem. <div class="loc">Nurse: <b>stop the opioid</b>, call for help, open the airway and support ventilation, oxygen on, and <b>give naloxone</b>. This patient is still breathing and still has an opioid on board for real pain — reverse the breathing, not the analgesia. Use the panel above.</div>'},
+
+  {mg:'10 mg (stacked)',pain:0,rr:4,spo2:84,pupil:1.0,depth:.34,poss:'4',pt:'Unresponsive · agonal breathing',col:'#8a1f2c',
+   st:'⚠⚠ OVERDOSE — EMERGENCY',sub:'RR 4 · unresponsive · SpO₂ 84%',cls:'bad',
+   d:'<span class="n">Stacked doses — full overdose</span>Unresponsive, agonal respirations at <b>4</b>, saturation collapsing. The classic triad is complete: <b>pinpoint pupils, respiratory depression, depressed consciousness</b>. Death in opioid overdose is death from apnea. <div class="loc">Nurse: airway and <b>ventilation first</b> — a bag-valve-mask restores oxygen in seconds; naloxone takes minutes. Call the rapid response, then give <b>full-dose naloxone</b> and repeat every 2–3 minutes until breathing returns. Now use the panel above.</div>'}
+ ];
+
+ var i=0, nx=null;
+ var T={rr:18,depth:1,pupil:4,pain:8,spo2:98};
+ var C={rr:18,depth:1,pupil:4,pain:8,spo2:98};
+ var eyesShut=0, phase=0, last=0;
+
+ /* ---------- naloxone outcomes ---------- */
+ function nalox(mode,lvl){
+  if(mode==='titr'&&lvl<6) return {
+    T:{rr:14,depth:.92,pupil:3.0,pain:3,spo2:97},poss:'2',pt:'Slightly drowsy, easily aroused',
+    col:'#237a45',st:'✓ Reversed and still comfortable',sub:'RR 14 · pain 3/10 · POSS 2',cls:'ok',
+    d:'<span class="n">Titrated naloxone — the right call</span>You diluted <b>0.4 mg in 10 mL of normal saline</b> and pushed <b>0.5 mL (0.04 mg) every 1–2 minutes</b>, watching the respiratory rate. Breathing recovered, the patient is arousable &mdash; and <b>the analgesia largely survived</b> (pain 3/10, not 10/10). In a hospitalized patient who is still breathing and who has an opioid on board for genuine pain, this is how you reverse: titrate to <b>respiratory rate and arousability</b>, then stop. <div class="loc">Nurse: naloxone lasts only <b>30–90 minutes</b> — shorter than morphine, and far shorter than a fentanyl patch, methadone, or any extended-release opioid. <b>Re-sedation is expected.</b> Do not leave the patient; monitor continuously, and anticipate repeat doses or a naloxone infusion.</div>'};
+
+  if(mode==='full'&&lvl<6) return {
+    T:{rr:26,depth:.9,pupil:5.0,pain:10,spo2:98},poss:'1',pt:'Awake — agitated, diaphoretic, vomiting',
+    col:'#b8862f',st:'Over-corrected — precipitated withdrawal',sub:'pain 10/10 · agitated · hypertensive',cls:'warn',
+    d:'<span class="n">Full undiluted dose — it worked, but at a price</span>The breathing came back instantly, because naloxone is a <b>competitive mu antagonist</b> that strips the opioid off every receptor at once. That includes the receptors that were treating the pain. The patient is now awake in <b>10/10 agony</b>, agitated, diaphoretic, tachycardic and hypertensive, and vomiting &mdash; <b>precipitated withdrawal</b>, which in an opioid-dependent patient can also bring seizures and flash pulmonary edema. <div class="loc">Nurse: correct for a patient who is <b>breathing but over-sedated</b> — dilute 0.4 mg in 10 mL NS and give <b>0.04 mg increments</b>, titrating to respiratory rate. Reserve the full undiluted push for the patient who is apneic or unresponsive. Try the other button.</div>'};
+
+  if(mode==='full') return {
+    T:{rr:16,depth:.9,pupil:4.0,pain:6,spo2:96},poss:'2',pt:'Arousable, breathing on his own',
+    col:'#237a45',st:'✓ Overdose reversed',sub:'RR 16 · SpO₂ 96% · arousable',cls:'ok',
+    d:'<span class="n">Full-dose naloxone — the right call here</span>For a patient who is <b>apneic or unresponsive</b>, this is the moment for the full dose: <b>0.4–2 mg IV</b> (IM/SC if there is no line, or <b>4 mg intranasal</b> in the community), repeated every 2–3 minutes until breathing returns &mdash; while you ventilate with a bag-valve-mask. Withdrawal is a price worth paying against apnea. <div class="loc">Nurse: naloxone lasts <b>30–90 minutes</b> and the opioid outlives it. <b>Re-sedation is expected</b> — this patient stays on continuous monitoring, gets repeat doses or an infusion, and is never left alone. Reversal is not the end of the event.</div>'};
+
+  return {
+    T:{rr:9,depth:.6,pupil:2.0,pain:1,spo2:90},poss:'3',pt:'Still barely responsive',
+    col:'#b8862f',st:'Too slow — patient still hypoxic',sub:'RR 9 · SpO₂ 90%',cls:'warn',
+    d:'<span class="n">Micro-dosing an apneic patient wastes the minutes that matter</span>Careful 0.04 mg increments are the right technique for the <b>breathing but over-sedated</b> patient, where the goal is to protect the analgesia. This patient is <b>unresponsive with agonal respirations</b> — protecting his analgesia is not the problem; hypoxic brain injury is. <div class="loc">Nurse: ventilate with a bag-valve-mask <b>first</b>, then give <b>0.4–2 mg IV naloxone</b> and repeat every 2–3 minutes until he breathes. Try the other button.</div>'};
+ }
+
+ /* ---------- drawing ---------- */
+ function art(){
+  var s='';
+  s+='<rect x="4" y="4" width="232" height="244" rx="14" fill="#f5f8fc" stroke="#e3eaf4"/>';
+  /* bed */
+  s+='<rect x="14" y="34" width="150" height="102" rx="11" fill="#e8eef7" stroke="#cddaea"/>';
+  s+='<rect x="20" y="42" width="42" height="34" rx="9" fill="#fff" stroke="#cddaea"/>';
+  /* blanket */
+  s+='<path d="M74 128 L74 84 Q74 76 84 76 L152 76 Q160 76 160 86 L160 128 Q160 134 152 134 L82 134 Q74 134 74 128 Z" fill="#dbe6f5" stroke="#c3d3e8"/>';
+  /* chest — animated */
+  s+='<ellipse id="chest" cx="92" cy="80" rx="24" ry="12" fill="#f3d9c9" stroke="#e0b79f"/>';
+  /* head */
+  s+='<circle cx="41" cy="59" r="17" fill="#f3d9c9" stroke="#e0b79f"/>';
+  s+='<path d="M28 50 q13 -12 26 0 q-13 -5 -26 0 Z" fill="#4b5563"/>';
+  s+='<g id="eyes"></g>';
+  s+='<path d="M35 68 q6 4 12 0" stroke="#c08f78" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
+  /* pupil loupe */
+  s+='<line x1="55" y1="55" x2="168" y2="52" stroke="#c3d3e8" stroke-width="1.4" stroke-dasharray="3 3"/>';
+  s+='<circle cx="199" cy="60" r="29" fill="#fff" stroke="#cddaea" stroke-width="2"/>';
+  s+='<circle cx="199" cy="60" r="19" fill="#7fa3c6"/>';
+  s+='<circle id="pupil" cx="199" cy="60" r="12" fill="#151c28"/>';
+  s+='<circle cx="192" cy="52" r="3.4" fill="#fff" opacity=".75"/>';
+  s+='<text x="199" y="100" font-size="9.6" fill="#78828f" text-anchor="middle" font-weight="700">PUPIL</text>';
+  /* waveform panel */
+  s+='<rect x="14" y="150" width="212" height="86" rx="10" fill="#fff" stroke="#cddaea"/>';
+  s+='<text x="24" y="166" font-size="9.6" fill="#78828f" font-weight="800" letter-spacing=".6">RESPIRATIONS</text>';
+  s+='<text id="rrTxt" x="216" y="166" font-size="10.5" fill="#1e3a63" text-anchor="end" font-weight="800">18/min</text>';
+  s+='<line x1="24" y1="199" x2="216" y2="199" stroke="#eef2f8" stroke-width="1"/>';
+  s+='<path id="wave" d="" fill="none" stroke="#2f5f9e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+  return s;
+ }
+
+ function tick(ts){
+  if(!last) last=ts;
+  var dt=Math.min(.06,(ts-last)/1000); last=ts;
+  var k;
+  /* frame-rate independent easing, so a throttled tab converges too */
+  var e=1-Math.pow(.001,dt);
+  for(k in C){ C[k]+=(T[k]-C[k])*e; }
+  phase+=dt*C.rr/60;
+
+  /* chest rise */
+  var ch=$("chest");
+  if(ch) ch.setAttribute('ry',(10.5+4.2*C.depth*Math.sin(phase*6.2832)).toFixed(2));
+  var pu=$("pupil"); if(pu) pu.setAttribute('r',(C.pupil*2.9).toFixed(2));
+  var rt=$("rrTxt"); if(rt) rt.textContent=Math.round(C.rr)+'/min';
+
+  /* eyes: open when arousable, shut when sedated */
+  var ey=$("eyes");
+  if(ey){ var want=(T.pain<=1&&T.rr<12)||eyesShut?1:0;
+   ey.innerHTML = want
+    ? '<path d="M33 58 q4 3 8 0" stroke="#4b5563" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M45 58 q4 3 8 0" stroke="#4b5563" stroke-width="1.6" fill="none" stroke-linecap="round"/>'
+    : '<circle cx="37" cy="58" r="2.1" fill="#33404f"/><circle cx="49" cy="58" r="2.1" fill="#33404f"/>';
+  }
+
+  /* scrolling waveform: 24 px per second of history */
+  var w=$("wave");
+  if(w){ var d='',x,y,pps=24,amp=17*C.depth;
+   for(x=24;x<=216;x+=2){
+    y=199-amp*Math.sin(6.2832*(phase-(216-x)/pps*C.rr/60));
+    d+=(x===24?'M':'L')+x.toFixed(0)+' '+y.toFixed(1);
+   }
+   w.setAttribute('d',d);
+  }
+
+  /* live vitals */
+  $("vRr").textContent=Math.round(C.rr);
+  $("vPain").textContent=Math.round(C.pain);
+  $("vSp").textContent=Math.round(C.spo2);
+  $("vPup").textContent=C.pupil.toFixed(1);
+ }
+
+ /* rAF drives the animation when the tab is visible; a coarse timer keeps the
+    vitals honest if rAF is throttled (background tab), so the numbers on screen
+    always match the dose that is selected. */
+ function loop(ts){ if(!document.hidden) tick(ts); requestAnimationFrame(loop); }
+ setInterval(function(){ if(document.hidden) tick(performance.now()); },200);
+ document.addEventListener('visibilitychange',function(){ last=0; });
+
+ function tile(id,cls){ $(id).className=cls||''; }
+
+ function render(){
+  var s=D[i], v;
+  v = nx ? nalox(nx,i) : {T:{rr:s.rr,depth:s.depth,pupil:s.pupil,pain:s.pain,spo2:s.spo2},
+       poss:s.poss,pt:s.pt,col:s.col,st:s.st,sub:s.sub,cls:s.cls,d:s.d};
+
+  T.rr=v.T.rr; T.depth=v.T.depth; T.pupil=v.T.pupil; T.pain=v.T.pain; T.spo2=v.T.spo2;
+  eyesShut=(v.poss==='4')?1:0;
+
+  $("doseV").textContent=s.mg;
+  $("stage").style.background=v.col;
+  $("stage").innerHTML=v.st+'<small>'+v.sub+'</small>';
+  $("cardTitle").textContent=nx?'Naloxone given':'Opioid-naive adult, post-op';
+  $("info").innerHTML=v.d;
+
+  $("vPoss").textContent=v.poss;
+  tile('tPain', T.pain>=7?'bad':(T.pain>=4?'warn':'ok'));
+  tile('tRr',   T.rr<10||T.rr>24?'bad':(T.rr<12?'warn':'ok'));
+  tile('tSp',   T.spo2<90?'bad':(T.spo2<95?'warn':'ok'));
+  tile('tPoss', v.poss==='4'?'bad':(v.poss==='3'?'warn':'ok'));
+  tile('tPup',  T.pupil<=1.5?'bad':(T.pupil<=2?'warn':'ok'));
+
+  /* naloxone unlocks only once the patient actually needs reversal */
+  var need=(i>=5);
+  $("nxPanel").className='nx'+(need?' live':'');
+  $("nxH").textContent = nx ? 'Naloxone given — 30–90 min of protection, then re-sedation risk'
+    : (need?'Naloxone — mu antagonist · choose your approach':'Naloxone — locked until the patient needs it');
+  document.querySelectorAll('#nxSeg button').forEach(function(b){
+   b.disabled=!need;
+   b.className=(nx===b.dataset.n)?'on':'';
+  });
+ }
+
+ document.querySelectorAll('#nxSeg button').forEach(function(b){
+  b.onclick=function(){ if(b.disabled)return; nx=b.dataset.n; render(); };
+ });
+ $("dose").oninput=function(){ i=+this.value; nx=null; render(); };
+ $("reset").onclick=function(){ i=0; nx=null; $("dose").value=0;
+  C.rr=18;C.depth=1;C.pupil=4;C.pain=8;C.spo2=98; render(); };
+
+ $("art").innerHTML=art();
+ render();
+ tick(performance.now());
+ requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

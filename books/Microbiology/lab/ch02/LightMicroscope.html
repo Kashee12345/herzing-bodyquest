@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>The Light Microscope</title>
+<meta name="description" content="Interactive tour of the compound light microscope — its parts, and how magnification and resolution actually work. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+svg#scope{max-width:300px;margin:0 auto;}
+.num{display:inline-flex;align-items:center;justify-content:center;width:23px;height:23px;border-radius:50%;background:#efe6f6;color:var(--teal-dk);font-weight:800;font-size:12px;flex:none;}
+.it.on .num{background:rgba(255,255,255,.22);color:#fff;}
+.tagx{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.3px;background:#efe6f6;color:var(--teal-dk);border-radius:20px;padding:2px 9px;vertical-align:middle;margin-left:4px;}
+#stage .big{font-size:23px;font-weight:800;display:block;line-height:1.1;}
+.seg small{white-space:nowrap;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 2</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 2</div>
+  <h1>The Light Microscope</h1>
+  <div class="intro">It's the workhorse of every micro lab &mdash; the instrument that turns an invisible smear into <b>rods, cocci and clusters</b> you can actually name. Explore its parts, then see how magnification and resolution really work.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Compound light microscope</h2>
+    <svg id="scope" viewBox="0 0 240 285" aria-label="light microscope diagram"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">The compound light microscope<small>tap any part to explore it</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg"></div>
+      <div id="controls"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var PARTS=[
+  {k:'ocular', n:'Ocular (eyepiece) lens', tag:'usually 10×',
+   d:'The lens you look through. It <b>magnifies the image a second time</b> &mdash; almost all eyepieces are <b>10×</b>. Its power multiplies with the objective to give the total magnification.'},
+  {k:'nose', n:'Revolving nosepiece', tag:'the turret',
+   d:'The rotating turret that holds the objective lenses. You <b>click it around to swap objectives</b>, moving to a higher power only after the specimen is centred and focused on low power.'},
+  {k:'obj', n:'Objective lenses', tag:'4× · 10× · 40× · 100×',
+   d:'The lenses closest to the specimen &mdash; they do the <b>primary magnification</b>. A standard set is 4× (scanning), 10× (low), 40× (high-dry) and 100× (oil immersion). The 100× lens needs a drop of <b>immersion oil</b>.'},
+  {k:'stage', n:'Stage &amp; clips', tag:'holds the slide',
+   d:'The flat platform the slide rests on. Stage clips (or a mechanical stage) <b>hold and move the slide</b> so you can scan across the smear. Light passes up through the hole in its centre.'},
+  {k:'cond', n:'Condenser &amp; iris diaphragm', tag:'shapes the light',
+   d:'The condenser <b>focuses light up onto the specimen</b>; the iris diaphragm opens and closes to control how much light &mdash; and how much <b>contrast</b> &mdash; you get. Closing it slightly sharpens detail on pale, unstained cells.'},
+  {k:'light', n:'Illuminator (light source)', tag:'brightfield',
+   d:'A built-in lamp or LED in the base that shines light <b>up through</b> the specimen &mdash; this is <b>brightfield</b> microscopy. Stains make the otherwise-transparent microbes stand out against the bright field.'},
+  {k:'focus', n:'Coarse &amp; fine focus knobs', tag:'sharpen the image',
+   d:'The large <b>coarse</b> knob makes big movements &mdash; use it <b>only on low power</b> to first find focus. The small <b>fine</b> knob makes tiny adjustments for a crisp image and is the <b>only</b> knob you touch on high power or oil, so the lens never crashes into the slide.'},
+  {k:'frame', n:'Arm &amp; base', tag:'the frame',
+   d:'The <b>arm</b> supports the body tube and is what you grip to carry the scope &mdash; always with your other hand under the <b>base</b>. The base steadies everything and houses the illuminator.'}
+ ];
+
+ var OBJ=[
+  {x:4, nm:'Scanning', tot:40,
+   d:'The <b>4× scanning</b> objective gives the widest view and the least magnification &mdash; <b>40× total</b>. You start here to <b>find your specimen</b> and scan the whole slide. Bacteria are far too small to make out yet.'},
+  {x:10, nm:'Low power', tot:100,
+   d:'The <b>10× low-power</b> objective gives <b>100× total</b>. Good for larger structures &mdash; tissue fragments, worm eggs, big protozoa. Individual bacteria are still just specks.'},
+  {x:40, nm:'High-dry', tot:400,
+   d:'The <b>40× high-dry</b> objective gives <b>400× total</b> &mdash; enough to study human cells, yeast and protozoa. Bacteria are visible now but small; at this power you only ever touch the <b>fine focus</b>.'},
+  {x:100, nm:'Oil immersion', tot:1000,
+   d:'The <b>100× oil-immersion</b> objective gives <b>1000× total</b>. A drop of <b>immersion oil</b> between lens and slide stops light scattering in the air gap &mdash; this raises the <b>numerical aperture</b> and gives the sharpest, best-resolved image. <b>This is the power you read bacteria at</b> &mdash; Gram stains, cell shape and arrangement.'}
+ ];
+
+ var mode='parts', selK=null, cur=2;
+
+ function partByK(k){for(var i=0;i<PARTS.length;i++){if(PARTS[i].k===k)return PARTS[i];}return null;}
+ function partIdx(k){for(var i=0;i<PARTS.length;i++){if(PARTS[i].k===k)return i;}return -1;}
+
+ function drawParts(sel){
+  var HL='#6d3f9c', ST='#b3a9c4', GLASS='#cfe3f2', s='';
+  function c(k){return k===sel?HL:ST;}
+  // arm + base (frame)
+  s+='<g class="rgn" data-k="frame">';
+  s+='<path d="M150 252 C 204 232 198 148 150 120 C 136 112 122 112 108 116" fill="none" stroke="'+c('frame')+'" stroke-width="15" stroke-linecap="round"/>';
+  s+='<path d="M46 270 h96 q18 0 18 -16 v-3 q0 -9 -9 -9 h-110 q-9 0 -9 9 v3 q0 16 14 16 z" fill="'+c('frame')+'"/>';
+  s+='</g>';
+  // structural body tube (neutral)
+  s+='<rect x="86" y="60" width="22" height="60" rx="6" fill="#9c92b4"/>';
+  // ocular
+  s+='<g class="rgn" data-k="ocular">';
+  s+='<rect x="82" y="40" width="30" height="26" rx="8" fill="'+c('ocular')+'"/>';
+  s+='<rect x="88" y="30" width="18" height="14" rx="5" fill="'+c('ocular')+'"/>';
+  s+='</g>';
+  // nosepiece
+  s+='<g class="rgn" data-k="nose"><ellipse cx="96" cy="122" rx="26" ry="13" fill="'+c('nose')+'"/></g>';
+  // objectives
+  s+='<g class="rgn" data-k="obj">';
+  s+='<rect x="90" y="128" width="13" height="44" rx="3" fill="'+c('obj')+'"/>';
+  s+='<g transform="rotate(-28 79 132)"><rect x="72" y="126" width="11" height="30" rx="3" fill="'+c('obj')+'"/></g>';
+  s+='<g transform="rotate(28 115 132)"><rect x="110" y="126" width="11" height="30" rx="3" fill="'+c('obj')+'"/></g>';
+  s+='</g>';
+  // stage + slide + clips
+  s+='<g class="rgn" data-k="stage">';
+  s+='<rect x="50" y="178" width="94" height="12" rx="2" fill="'+c('stage')+'"/>';
+  s+='<rect x="70" y="173" width="52" height="6" rx="1" fill="'+GLASS+'"/>';
+  s+='<circle cx="96" cy="176" r="2.4" fill="#6d3f9c"/>';
+  s+='<rect x="66" y="171" width="8" height="4" rx="1" fill="#8a7fa6"/><rect x="118" y="171" width="8" height="4" rx="1" fill="#8a7fa6"/>';
+  s+='</g>';
+  // condenser + diaphragm
+  s+='<g class="rgn" data-k="cond">';
+  s+='<path d="M82 190 h28 l-7 15 h-14 z" fill="'+c('cond')+'"/>';
+  s+='<rect x="84" y="205" width="24" height="5" rx="2" fill="'+c('cond')+'"/>';
+  s+='</g>';
+  // illuminator
+  s+='<g class="rgn" data-k="light">';
+  var lc=(sel==='light')?'#f4c430':'#d9cf8f';
+  s+='<circle cx="96" cy="228" r="10" fill="'+lc+'"/>';
+  for(var a=0;a<8;a++){var an=a/8*6.28319;s+='<line x1="'+(96+12*Math.cos(an)).toFixed(1)+'" y1="'+(228+12*Math.sin(an)).toFixed(1)+'" x2="'+(96+17*Math.cos(an)).toFixed(1)+'" y2="'+(228+17*Math.sin(an)).toFixed(1)+'" stroke="'+lc+'" stroke-width="2"/>';}
+  s+='</g>';
+  // focus knobs
+  s+='<g class="rgn" data-k="focus">';
+  s+='<circle cx="185" cy="192" r="16" fill="'+c('focus')+'"/><circle cx="185" cy="192" r="7" fill="#8a7fa6"/>';
+  s+='<circle cx="185" cy="218" r="10" fill="'+c('focus')+'"/><circle cx="185" cy="218" r="4.5" fill="#8a7fa6"/>';
+  s+='</g>';
+  // numbered badges (also clickable)
+  var B=[['1',64,36,'ocular'],['2',56,120,'nose'],['3',48,150,'obj'],['4',32,184,'stage'],['5',130,200,'cond'],['6',58,230,'light'],['7',214,192,'focus'],['8',30,262,'frame']];
+  B.forEach(function(b){
+   var on=b[3]===sel;
+   s+='<g class="rgn" data-k="'+b[3]+'">';
+   s+='<circle cx="'+b[1]+'" cy="'+b[2]+'" r="9" fill="'+(on?HL:'#fffdf9')+'" stroke="'+HL+'" stroke-width="1.5"/>';
+   s+='<text x="'+b[1]+'" y="'+(b[2]+3.6)+'" text-anchor="middle" font-size="10" font-weight="800" fill="'+(on?'#fff':HL)+'" font-family="Inter,sans-serif">'+b[0]+'</text>';
+   s+='</g>';
+  });
+  return s;
+ }
+
+ function drawField(oi){
+  var o=OBJ[oi], tot=o.tot, cx=118, cy=98, R=90, s='';
+  s+='<defs><clipPath id="fov"><circle cx="'+cx+'" cy="'+cy+'" r="'+R+'"/></clipPath></defs>';
+  s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(R+3)+'" fill="none" stroke="#c9bde0" stroke-width="7"/>';
+  s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="#faf8fd"/>';
+  s+='<g clip-path="url(#fov)">';
+  var rodL=tot*0.02, rodW=tot*0.0085;
+  for(var i=0;i<26;i++){
+   var ang=i*2.399963, rad=Math.sqrt((i+0.5)/26)*R*0.9;
+   var px=cx+rad*Math.cos(ang), py=cy+rad*Math.sin(ang), rot=(i*53)%180;
+   s+='<g transform="translate('+px.toFixed(1)+','+py.toFixed(1)+') rotate('+rot+')"><ellipse rx="'+(rodL/2).toFixed(2)+'" ry="'+(rodW/2).toFixed(2)+'" fill="#7a3fa0"/></g>';
+  }
+  var clx=cx-46, cly=cy+34, cr=tot*0.007;
+  var off=[[0,0],[1.6,0.2],[0.8,1.5],[-0.8,1.3],[-1.5,-0.2],[0.2,-1.5],[2.2,1.6]];
+  for(var j=0;j<off.length;j++){
+   s+='<circle cx="'+(clx+off[j][0]*cr*1.8).toFixed(1)+'" cy="'+(cly+off[j][1]*cr*1.8).toFixed(1)+'" r="'+cr.toFixed(2)+'" fill="#b0459a"/>';
+  }
+  s+='</g>';
+  var bar=Math.min(150, tot*0.09);
+  s+='<text x="24" y="177" font-size="10.5" fill="#544b66" font-family="Inter,sans-serif" font-weight="800">10 µm</text>';
+  s+='<rect x="24" y="184" width="'+bar.toFixed(1)+'" height="6" rx="3" fill="#6d3f9c"/>';
+  s+='<line x1="24" y1="181" x2="24" y2="193" stroke="#6d3f9c" stroke-width="2"/><line x1="'+(24+bar).toFixed(1)+'" y1="181" x2="'+(24+bar).toFixed(1)+'" y2="193" stroke="#6d3f9c" stroke-width="2"/>';
+  s+='<text x="'+(cx+R-2)+'" y="'+(cy+R+18)+'" font-size="10.5" fill="#837a94" font-family="Inter,sans-serif" font-weight="700" text-anchor="end">rods &amp; cocci</text>';
+  return s;
+ }
+
+ function renderParts(){
+  $("scope").setAttribute('viewBox','0 0 240 285');
+  $("art").innerHTML=drawParts(selK);
+  $("cardTitle").innerHTML='Compound light microscope';
+  $("stage").style.background='var(--teal)';
+  if(selK){var p=partByK(selK);$("stage").innerHTML='Part '+(partIdx(selK)+1)+' of 8<small>'+p.n+'</small>';}
+  else $("stage").innerHTML='The compound light microscope<small>tap any part to explore it</small>';
+  $("controls").innerHTML=PARTS.map(function(p,idx){return '<button class="it'+(p.k===selK?' on':'')+'" data-k="'+p.k+'"><span class="num">'+(idx+1)+'</span><span><span class="nm">'+p.n+'</span><br><span class="ct">'+p.tag+'</span></span></button>';}).join('');
+  document.querySelectorAll('#controls .it').forEach(function(b){b.onclick=function(){selK=b.dataset.k;renderParts();};});
+  document.querySelectorAll('#art .rgn').forEach(function(g){g.onclick=function(){selK=g.getAttribute('data-k');renderParts();};});
+  if(selK){var q=partByK(selK);$("info").innerHTML='<span class="n">'+q.n+' <span class="tagx">'+q.tag+'</span></span>'+q.d;}
+  else $("info").innerHTML='<span class="n">One instrument, many jobs</span>Every light microscope shares the same working parts &mdash; some <b>gather and shape the light</b>, some <b>magnify</b>, and some <b>hold and focus</b> the specimen. Tap a numbered part on the scope to see what it does.';
+ }
+
+ function renderMag(){
+  $("scope").setAttribute('viewBox','0 0 240 210');
+  $("art").innerHTML=drawField(cur);
+  var o=OBJ[cur];
+  $("cardTitle").innerHTML='What you see down the tube';
+  $("stage").style.background='var(--teal)';
+  $("stage").innerHTML='<span class="big">'+o.tot+'× total</span><small>10× ocular × '+o.x+'× objective &mdash; '+o.nm+'</small>';
+  $("controls").innerHTML='<div class="seg" id="segObj">'+OBJ.map(function(o2,idx){return '<button class="'+(idx===cur?'on':'')+'" data-i="'+idx+'">'+o2.x+'×<small>'+o2.nm+'</small></button>';}).join('')+'</div>';
+  document.querySelectorAll('#segObj button').forEach(function(b){b.onclick=function(){cur=+b.dataset.i;renderMag();};});
+  $("info").innerHTML='<span class="n">'+o.tot+'× &mdash; '+o.nm+'</span>'+o.d+'<div class="mnem"><b>Magnification isn\'t resolution.</b> Magnification just makes the image bigger; <b>resolution</b> is the power to tell two very close points apart. A light microscope resolves down to about <b>0.2 µm</b> &mdash; enough to see bacteria, but never viruses. Enlarging past that limit only gives a bigger blur (&ldquo;empty magnification&rdquo;).</div>';
+ }
+
+ function render(){ if(mode==='parts') renderParts(); else renderMag(); }
+
+ $("modeseg").innerHTML='<button data-m="parts" class="on">The parts</button><button data-m="mag">Magnification &amp; resolution</button>';
+ document.querySelectorAll('#modeseg button').forEach(function(b){b.onclick=function(){mode=b.dataset.m;document.querySelectorAll('#modeseg button').forEach(function(x){x.classList.toggle('on',x===b);});render();};});
+
+ render();
+})();
+</script>
+</body>
+</html>

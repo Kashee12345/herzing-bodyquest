@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Area Under the Curve</title>
+<meta name="description" content="Shade a region under a normal curve and read its probability &mdash; with live numerical integration, draggable boundaries, the subtraction rule shown step by step, and a real simulation that counts how many observations land in the band.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.06fr 0.94fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+#chart{touch-action:none;cursor:ew-resize;}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:106px;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;min-width:60px;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:76px;text-align:right;font-variant-numeric:tabular-nums;}
+.sl.off{opacity:.34;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles.t3{grid-template-columns:repeat(3,1fr);}
+.tiles.t2{grid-template-columns:repeat(2,1fr);}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.lgd i.dash{width:14px;height:0;border-top:2px dashed #1c4454;border-radius:0;vertical-align:3px;}
+.vd{border:1px solid var(--line);border-left:5px solid var(--gold);background:#fbf8f1;border-radius:10px;padding:11px 13px;margin-top:11px;font-size:12.6px;color:var(--soft);line-height:1.55;}
+.vd b{color:var(--teal-dk);}
+.vd .w{display:block;font-family:var(--disp);font-weight:600;font-size:15px;color:#8a6a20;margin-bottom:3px;}
+#info .loc{font-variant-numeric:tabular-nums;font-size:12px;line-height:1.7;}
+.grid .it .nm{display:block;} .grid .it .s{display:block;margin-top:2px;font-weight:600;}
+.seg.four button{font-size:12.4px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 7</div>
+  <h1>Area Under the Curve</h1>
+  <div class="intro">A normal curve is not a picture of data &mdash; it is a picture of <b>where the probability lives</b>. The height of the curve means almost nothing on its own; the <b>area beneath a stretch of it</b> is the whole point. Shade a region and you have asked a question. Measure that region and you have the answer.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Newborn birth weight</h2>
+      <svg viewBox="0 0 480 346" id="chart" aria-label="a normal curve with a shaded region and a strip of simulated observations below it"></svg>
+      <div class="lgd">
+        <span><i style="background:#7fb0c6"></i>the shaded region &mdash; your question</span>
+        <span><i style="background:#d9b25e"></i>simulated sample</span>
+        <span><i style="background:#2f6f8a;border-radius:50%"></i>landed inside</span>
+        <span><i style="background:#c2ced5;border-radius:50%"></i>landed outside</span>
+        <span><i class="dash"></i>&mu;</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>How the number is actually found</h2>
+      <div class="cap" style="margin-top:2px;">No table and no calculator knows how to look up a middle slice directly. Every one of them stores a single thing: the area to the <b>left</b> of a point. Everything else is built from that by <b>subtraction</b> &mdash; which is why the picture below always has the same three panels, whatever region you chose.</div>
+      <svg viewBox="0 0 480 128" id="sub" aria-label="the shaded region rebuilt as one area minus another"></svg>
+      <div class="vd" id="verdict"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Shade a region<small>drag the boundaries</small></div>
+    <div class="card">
+      <div class="hd">The variable</div>
+      <div class="grid" id="ctxs"></div>
+      <div class="hd">Which region do you want?</div>
+      <div class="seg four" id="mseg">
+        <button data-m="inside" class="on">Between<small>a to b</small></button>
+        <button data-m="below">Below<small>left of b</small></button>
+        <button data-m="above">Above<small>right of a</small></button>
+        <button data-m="outside">Outside<small>both tails</small></button>
+      </div>
+      <div class="sl" id="slA"><label>a &mdash; lower edge</label><input type="range" id="aSl"><span class="nv" id="aVal"></span></div>
+      <div class="sl" id="slB"><label>b &mdash; upper edge</label><input type="range" id="bSl"><span class="nv" id="bVal"></span></div>
+      <div class="hd">Or jump to a standard region</div>
+      <div class="seg" id="pseg"></div>
+      <div class="tiles">
+        <div><span class="lb">Shaded area</span><span class="vv" id="tA">&mdash;</span><span class="sub">probability</span></div>
+        <div><span class="lb">As a percent</span><span class="vv" id="tP">&mdash;</span><span class="sub">of the population</span></div>
+        <div><span class="lb">In 1,000 draws</span><span class="vv" id="tK">&mdash;</span><span class="sub">on average</span></div>
+        <div><span class="lb">Everything else</span><span class="vv" id="tR">&mdash;</span><span class="sub">unshaded</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>Area is the answer, height is not.</b> On a density curve the vertical axis carries units of &ldquo;per gram&rdquo; or &ldquo;per mmHg,&rdquo; so a height by itself answers nothing; only <b>height &times; width</b> &mdash; an area &mdash; comes out as a plain proportion. The entire curve encloses an area of exactly <b>1</b>, so any slice of it is automatically a number between 0 and 1, and the slice you shade is simultaneously two things: the <b>probability</b> that one randomly drawn value lands in that range, and the <b>proportion of the whole population</b> sitting there. Those are the same number read two ways.</div>
+      <div class="note"><b>Three ways this goes wrong.</b> First, a single point has <b>no width</b>, so the area above it is exactly <b>0</b> &mdash; the model gives P(X = any one exact value) = 0, and &ldquo;less than&rdquo; and &ldquo;less than or equal to&rdquo; therefore return identical answers. Slide a and b together and watch the area collapse to nothing. Second, areas add only when regions <b>do not overlap</b>: the middle plus the two tails is 1, but P(X &lt; b) and P(X &gt; a) double-count everything between a and b whenever a &lt; b. Third, and most important, <b>every percentage here comes out of the model, not out of the world</b>. It is exactly right about the curve and only approximately right about real newborns, whose weights are somewhat left-skewed. A number this precise is still only as good as the assumption that the variable is normal.</div>
+    </div>
+    <div class="card">
+      <h2>Does the area really predict the count?</h2>
+      <div class="cap" style="margin-top:2px;">An area is a claim you can check. Each draw generates observations from this exact distribution, and every one is tested against the region you shaded &mdash; the dots in the strip below the curve are those observations, sorted by the only thing that matters: <b>in the band, or out of it</b>.</div>
+      <div class="tiles t3">
+        <div><span class="lb">Observations</span><span class="vv" id="sN">0</span><span class="sub">&nbsp;</span></div>
+        <div><span class="lb">Landed inside</span><span class="vv" id="sIn">&mdash;</span><span class="sub" id="sOut">&nbsp;</span></div>
+        <div><span class="lb">Simulated share</span><span class="vv" id="sP">&mdash;</span><span class="sub" id="sE">vs exact &mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="draw">Draw 200 observations</button><button class="btn" id="clear">Clear</button></div>
+      <div class="cap" id="scap"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- the variables on offer ---------- */
+ var CTX=[
+  {k:'bw',nm:'Newborn birth weight',un:'g',short:'newborn',plural:'newborns',col:'#b8862f',
+   mu:3400,sd:500,xmin:1400,xmax:5400,tick:500,td:0,d:0,step:25,
+   a:2500,b:4000,mode:'inside',
+   why:'2,500 g is the clinical threshold for <b>low birth weight</b>, and 4,000 g the threshold for <b>macrosomia</b> &mdash; so the middle band is simply &ldquo;neither.&rdquo;'},
+  {k:'sbp',nm:'Systolic blood pressure',un:'mmHg',short:'reading',plural:'readings',col:'#2f6f8a',
+   mu:120,sd:14,xmin:64,xmax:176,tick:16,td:0,d:0,step:1,
+   a:120,b:140,mode:'inside',
+   why:'120 and 140 mmHg are the conventional cut points, so this band holds the readings that are <b>raised but not yet frankly high</b>.'},
+  {k:'tmp',nm:'Adult body temperature',un:'&#176;F',short:'person',plural:'people',col:'#d1495b',
+   mu:98.2,sd:0.7,xmin:95.4,xmax:101,tick:0.8,td:1,d:1,step:0.1,
+   a:97.5,b:99,mode:'inside',
+   why:'A tight &sigma; of 0.7&#176;F is why a temperature of 100&#176;F is already unusual, even though it sounds like a small change.'},
+  {k:'fil',nm:'Coffee bag fill weight',un:'g',short:'bag',plural:'bags',col:'#7a5a8a',
+   mu:340,sd:4,xmin:324,xmax:356,tick:4,td:0,d:1,step:0.5,
+   a:335,b:345,mode:'inside',
+   why:'335 g and 345 g are the printed tolerance limits, so the <b>outside</b> region is the reject rate the filling line will produce.'}
+ ];
+
+ /* ---------- state ---------- */
+ var C=CTX[0], A=C.a, B=C.b, MODE=C.mode, PRE=-1;
+ var raw=[], seed=20260719, CAP=6000, NSHOW=200;
+
+ /* ---------- seeded PRNG (mulberry32) ---------- */
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ /* Box-Muller: two uniforms in, one standard normal out */
+ function gauss(){
+   var u1=rnd(); if(u1<1e-12)u1=1e-12;
+   var u2=rnd();
+   return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+ }
+
+ /* ---------- densities and areas ---------- */
+ var R2PI=Math.sqrt(2*Math.PI);
+ function phi(z){ return Math.exp(-0.5*z*z)/R2PI; }
+ function dens(x){ return phi((x-C.mu)/C.sd)/C.sd; }
+ /* Simpson's rule, n even */
+ function simp(f,a,b,n){
+   var h=(b-a)/n, s=f(a)+f(b), i;
+   for(i=1;i<n;i++){ s+=(i%2?4:2)*f(a+i*h); }
+   return s*h/3;
+ }
+ /* area to the LEFT of x, integrated from scratch every time */
+ function F(x){
+   var lo=C.mu-8.5*C.sd;
+   if(x<=lo)return 0;
+   if(x>=C.mu+8.5*C.sd)return 1;
+   return simp(dens,lo,x,1200);
+ }
+ /* invert the standard normal by bisection on the area itself */
+ function invZ(p){
+   var lo=-8.5, hi=8.5, m, i;
+   for(i=0;i<34;i++){
+     m=(lo+hi)/2;
+     if(simp(phi,-8.5,m,400)<p){ lo=m; } else { hi=m; }
+   }
+   return (lo+hi)/2;
+ }
+
+ /* ---------- formatting ---------- */
+ function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+ function nf(v,d){
+   if(Math.abs(v)<Math.pow(10,-d)/2)v=0;
+   var s=Math.abs(v).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+   return (v<0?'&#8722;':'')+s;
+ }
+ function uv(v){ return nf(v,C.d)+' '+C.un; }
+ function sz(z){ if(Math.abs(z)<0.005)return '0.00'; return (z<0?'&#8722;':'+')+Math.abs(z).toFixed(2); }
+ function pc(v){ return (v*100).toFixed(2)+'%'; }
+ function pcs(v){
+   if(v>0&&v<0.0001)return 'under 0.01%';
+   if(v<1&&v>0.9999)return 'over 99.99%';
+   return pc(v);
+ }
+ function oneIn(p){
+   if(p<=0)return 'never, under this model';
+   var n=1/p;
+   if(n>1000000)return 'rarer than 1 in a million';
+   if(n>=1000)return 'about 1 in '+nf(Math.round(n/100)*100,0);
+   if(n>=100)return 'about 1 in '+nf(Math.round(n/10)*10,0);
+   if(n>=1.8)return 'about 1 in '+nf(Math.round(n),0);
+   if(n<1.02)return 'very nearly every one';
+   return 'more often than not';
+ }
+
+ /* ---------- what the region IS ---------- */
+ function zeroWidth(){ return MODE==='inside'&&Math.abs(B-A)<C.step/2; }
+ function area(Fa,Fb){
+   if(MODE==='inside')return Math.max(0,Fb-Fa);
+   if(MODE==='below')return Fb;
+   if(MODE==='above')return 1-Fa;
+   return Fa+(1-Fb);
+ }
+ /* the shaded stretches, in raw units */
+ function bands(){
+   var lo=C.mu-9*C.sd, hi=C.mu+9*C.sd;
+   if(MODE==='inside')return [[A,B]];
+   if(MODE==='below')return [[lo,B]];
+   if(MODE==='above')return [[A,hi]];
+   return [[lo,A],[B,hi]];
+ }
+ function inside(v){
+   if(MODE==='inside')return v>=A&&v<=B;
+   if(MODE==='below')return v<=B;
+   if(MODE==='above')return v>=A;
+   return v<A||v>B;
+ }
+ function usesA(){ return MODE!=='below'; }
+ function usesB(){ return MODE!=='above'; }
+
+ /* ---------- chart geometry ---------- */
+ var VW=480, ML=46, MR=14, PW=VW-ML-MR;
+ var MT=34, PH=162, Y1=MT+PH;
+ var SY=294, SH=44;
+ function xs(v){ return ML+(v-C.xmin)/(C.xmax-C.xmin)*PW; }
+ function ymax(){ return 1.10*dens(C.mu); }
+ function ys(d){ return Y1-clamp(d/ymax(),0,1.25)*PH; }
+ function curve(a,b,close){
+   var d='',t,x,N=200;
+   for(t=0;t<=N;t++){ x=a+(b-a)*t/N; d+=(t?'L':'M')+xs(x).toFixed(1)+' '+ys(dens(x)).toFixed(1)+' '; }
+   if(close){ d+='L'+xs(b).toFixed(1)+' '+Y1+' L'+xs(a).toFixed(1)+' '+Y1+' Z'; }
+   return d;
+ }
+ function pill(txt,cx,cy,col){
+   var w=txt.replace(/&#?[a-z0-9]+;/g,'M').length*6.3+12;
+   var x=clamp(cx,ML+w/2,ML+PW-w/2);
+   return '<rect x="'+(x-w/2).toFixed(1)+'" y="'+(cy-10).toFixed(1)+'" width="'+w.toFixed(1)+'" height="14.5" rx="7" fill="#fffdf9" opacity=".9"/>'+
+          '<text x="'+x.toFixed(1)+'" y="'+(cy+0.8).toFixed(1)+'" font-size="10.8" fill="'+col+'" text-anchor="middle" font-weight="800">'+txt+'</text>';
+ }
+ function handle(v,lbl){
+   var x=xs(clamp(v,C.xmin,C.xmax));
+   var s='<line x1="'+x.toFixed(1)+'" y1="'+(SY+SH)+'" x2="'+x.toFixed(1)+'" y2="'+Math.min(ys(dens(v)),Y1-6).toFixed(1)+'" stroke="#1c4454" stroke-width="2"/>';
+   s+='<rect x="'+(x-9).toFixed(1)+'" y="'+(Y1-9)+'" width="18" height="18" rx="6" fill="#1c4454" stroke="#fffdf9" stroke-width="2"/>';
+   s+='<text x="'+x.toFixed(1)+'" y="'+(Y1+3.6)+'" font-size="10.5" fill="#fff" text-anchor="middle" font-weight="800">'+lbl+'</text>';
+   return s;
+ }
+
+ /* ---------- the sample, re-sorted on every render ---------- */
+ var NB=44;
+ function summary(){
+   var n=raw.length, i, bw=(C.xmax-C.xmin)/NB, ix, ins=0, bins=[], j;
+   for(j=0;j<NB;j++)bins[j]=0;
+   for(i=0;i<n;i++){
+     if(inside(raw[i]))ins++;
+     ix=Math.floor((raw[i]-C.xmin)/bw);
+     if(ix>=0&&ix<NB)bins[ix]++;
+   }
+   return {n:n,ins:ins,bins:bins,bw:bw,p:n?ins/n:0};
+ }
+
+ /* ---------- the main chart ---------- */
+ function chart(S,Fa,Fb){
+   var s='', i, g, y, k, BD=bands();
+   s+='<defs><clipPath id="cp"><rect x="'+ML+'" y="'+(MT-18)+'" width="'+PW+'" height="'+(PH+18)+'"/></clipPath></defs>';
+   s+='<text x="'+ML+'" y="14" font-size="10.4" fill="#78868d" font-weight="800" letter-spacing="1.2">'+C.nm.toUpperCase()+' &#183; &#956; = '+nf(C.mu,C.d)+', &#963; = '+nf(C.sd,C.d)+' '+C.un+'</text>';
+
+   for(g=0;g<=3;g++){
+     y=Y1-g/3*PH;
+     s+='<line x1="'+ML+'" y1="'+y.toFixed(1)+'" x2="'+(ML+PW)+'" y2="'+y.toFixed(1)+'" stroke="'+(g===0?'#8fa6b0':'#e6eef2')+'" stroke-width="1"/>';
+   }
+
+   s+='<g clip-path="url(#cp)">';
+   s+='<path d="'+curve(C.xmin,C.xmax,1)+'" fill="#eaf1f5"/>';
+   for(i=0;i<BD.length;i++){
+     var a0=clamp(BD[i][0],C.xmin,C.xmax), a1=clamp(BD[i][1],C.xmin,C.xmax);
+     if(a1>a0)s+='<path d="'+curve(a0,a1,1)+'" fill="#7fb0c6" opacity=".62"/>';
+   }
+   if(S.n>0){
+     for(i=0;i<NB;i++){
+       if(!S.bins[i])continue;
+       var dh=S.bins[i]/(S.n*S.bw);
+       var l0=xs(C.xmin+i*S.bw), l1=xs(C.xmin+(i+1)*S.bw);
+       s+='<rect x="'+(l0+0.5).toFixed(1)+'" y="'+ys(dh).toFixed(1)+'" width="'+Math.max(0.8,l1-l0-1).toFixed(1)+'" height="'+Math.max(0,Y1-ys(dh)).toFixed(1)+'" fill="#d9b25e" opacity=".5"/>';
+     }
+   }
+   for(k=-3;k<=3;k++){
+     var xk=C.mu+k*C.sd;
+     if(xk<C.xmin||xk>C.xmax||k===0)continue;
+     s+='<line x1="'+xs(xk).toFixed(1)+'" y1="'+Y1+'" x2="'+xs(xk).toFixed(1)+'" y2="'+ys(dens(xk)).toFixed(1)+'" stroke="#9db6c2" stroke-width="1" stroke-dasharray="2 4"/>';
+   }
+   s+='<line x1="'+xs(C.mu).toFixed(1)+'" y1="'+Y1+'" x2="'+xs(C.mu).toFixed(1)+'" y2="'+ys(dens(C.mu)).toFixed(1)+'" stroke="#1c4454" stroke-width="1.5" stroke-dasharray="5 4"/>';
+   s+='<path d="'+curve(C.xmin,C.xmax,0)+'" fill="none" stroke="'+C.col+'" stroke-width="2.6" stroke-linejoin="round"/>';
+   s+='</g>';
+
+   /* the area label, printed inside the region it describes */
+   var ar=area(Fa,Fb), lx, ly=MT+22;
+   if(MODE==='inside')lx=xs((clamp(A,C.xmin,C.xmax)+clamp(B,C.xmin,C.xmax))/2);
+   else if(MODE==='below')lx=xs(clamp(Math.min(B,C.mu)-C.sd*0.4,C.xmin,C.xmax));
+   else if(MODE==='above')lx=xs(clamp(Math.max(A,C.mu)+C.sd*0.4,C.xmin,C.xmax));
+   else lx=ML+PW/2;
+   if(!zeroWidth())s+=pill('area = '+pcs(ar),lx,ly,'#1c4454');
+   s+='<text x="'+clamp(xs(C.mu),ML+22,ML+PW-22).toFixed(1)+'" y="'+(MT-6)+'" font-size="10.2" fill="#1c4454" text-anchor="middle" font-weight="800">&#956; = '+nf(C.mu,C.d)+'</text>';
+
+   /* axis */
+   for(i=C.xmin;i<=C.xmax+1e-9;i+=C.tick){
+     s+='<line x1="'+xs(i).toFixed(1)+'" y1="'+Y1+'" x2="'+xs(i).toFixed(1)+'" y2="'+(Y1+4)+'" stroke="#8fa6b0" stroke-width="1"/>';
+     s+='<text x="'+xs(i).toFixed(1)+'" y="'+(Y1+16)+'" font-size="9.8" fill="#78868d" text-anchor="middle" font-weight="600">'+nf(i,C.td)+'</text>';
+   }
+   s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="'+(Y1+30)+'" font-size="10.2" fill="#4a585f" text-anchor="middle" font-weight="700">'+C.nm.toLowerCase()+' ('+C.un+')</text>';
+   s+='<text x="13" y="'+(MT+PH/2).toFixed(1)+'" font-size="10.2" fill="#4a585f" text-anchor="middle" font-weight="700" transform="rotate(-90 13 '+(MT+PH/2).toFixed(1)+')">density</text>';
+
+   /* the strip of simulated observations, on the same axis */
+   s+='<line x1="'+ML+'" y1="'+(SY-16)+'" x2="'+(ML+PW)+'" y2="'+(SY-16)+'" stroke="#e6eef2" stroke-width="1"/>';
+   for(i=0;i<BD.length;i++){
+     var s0=clamp(BD[i][0],C.xmin,C.xmax), s1=clamp(BD[i][1],C.xmin,C.xmax);
+     if(s1>s0)s+='<rect x="'+xs(s0).toFixed(1)+'" y="'+SY+'" width="'+(xs(s1)-xs(s0)).toFixed(1)+'" height="'+SH+'" fill="#7fb0c6" opacity=".22"/>';
+   }
+   var shown=Math.min(S.n,NSHOW), start=S.n-shown, shIn=0;
+   for(i=0;i<shown;i++){
+     var v=raw[start+i], din=inside(v);
+     if(din)shIn++;
+     var px=clamp(xs(v),ML+2,ML+PW-2), py=SY+3+((i*37)%40);
+     s+='<circle cx="'+px.toFixed(1)+'" cy="'+py+'" r="2.6" fill="'+(din?'#2f6f8a':'#c2ced5')+'" opacity="'+(din?'.85':'.7')+'"/>';
+   }
+   var slab=shown?('the most recent '+nf(shown,0)+' observations &#183; '+nf(shIn,0)+' inside, '+nf(shown-shIn,0)+' outside'):'no observations yet &#183; press draw to fill this strip';
+   s+='<text x="'+ML+'" y="'+(SY-5)+'" font-size="9.8" fill="#78868d" font-weight="700" letter-spacing=".6">'+slab.toUpperCase()+'</text>';
+
+   /* the draggable boundaries, drawn last so they sit on top */
+   if(usesA())s+=handle(A,'a');
+   if(usesB())s+=handle(B,'b');
+   var stag=usesA()&&usesB()&&Math.abs(xs(B)-xs(A))<108;
+   if(usesA())s+=pill('a = '+uv(A),xs(clamp(A,C.xmin,C.xmax)),Y1+52,'#1c4454');
+   if(usesB())s+=pill('b = '+uv(B),xs(clamp(B,C.xmin,C.xmax)),stag?Y1+70:Y1+52,'#1c4454');
+
+   $('chart').innerHTML=s;
+ }
+
+ /* ---------- the subtraction picture ---------- */
+ function decomp(Fa,Fb){
+   var big, small, res;
+   if(MODE==='inside'){
+     big ={t:'P(X &lt; b)',       v:Fb, r:[-9,(B-C.mu)/C.sd]};
+     small={t:'P(X &lt; a)',      v:Fa, r:[-9,(A-C.mu)/C.sd]};
+     res ={t:'P(a &lt; X &lt; b)',v:Fb-Fa, r:[(A-C.mu)/C.sd,(B-C.mu)/C.sd]};
+   }else if(MODE==='below'){
+     big ={t:'the whole curve',   v:1,  r:[-9,9]};
+     small={t:'P(X &gt; b)',      v:1-Fb, r:[(B-C.mu)/C.sd,9]};
+     res ={t:'P(X &lt; b)',       v:Fb, r:[-9,(B-C.mu)/C.sd]};
+   }else if(MODE==='above'){
+     big ={t:'the whole curve',   v:1,  r:[-9,9]};
+     small={t:'P(X &lt; a)',      v:Fa, r:[-9,(A-C.mu)/C.sd]};
+     res ={t:'P(X &gt; a)',       v:1-Fa, r:[(A-C.mu)/C.sd,9]};
+   }else{
+     big ={t:'the whole curve',   v:1,  r:[-9,9]};
+     small={t:'P(a &lt; X &lt; b)',v:Fb-Fa, r:[(A-C.mu)/C.sd,(B-C.mu)/C.sd]};
+     res ={t:'outside a and b',   v:Fa+(1-Fb), r:null};
+   }
+   var P=[big,small,res], s='', i;
+   var pw=136, xs0=[6,172,338], yb=98, ht=62;
+   for(i=0;i<3;i++){
+     var px=xs0[i], p=P[i];
+     var mx=function(z){ return px+(z+3.6)/7.2*pw; };
+     var my=function(d){ return yb-d/(1.06*phi(0))*ht; };
+     var pth=function(a,b,close){
+       var d='',t,z,N=90, aa=clamp(a,-3.6,3.6), bb=clamp(b,-3.6,3.6);
+       if(bb<=aa)return '';
+       for(t=0;t<=N;t++){ z=aa+(bb-aa)*t/N; d+=(t?'L':'M')+mx(z).toFixed(1)+' '+my(phi(z)).toFixed(1)+' '; }
+       if(close)d+='L'+mx(bb).toFixed(1)+' '+yb+' L'+mx(aa).toFixed(1)+' '+yb+' Z';
+       return d;
+     };
+     s+='<text x="'+(px+pw/2)+'" y="14" font-size="10.4" fill="#4a585f" text-anchor="middle" font-weight="800">'+p.t+'</text>';
+     s+='<path d="'+pth(-3.6,3.6,1)+'" fill="#eaf1f5"/>';
+     if(p.r){
+       var sh=pth(p.r[0],p.r[1],1);
+       if(sh)s+='<path d="'+sh+'" fill="#7fb0c6" opacity=".7"/>';
+     }else{
+       var s1=pth(-3.6,(A-C.mu)/C.sd,1), s2=pth((B-C.mu)/C.sd,3.6,1);
+       if(s1)s+='<path d="'+s1+'" fill="#7fb0c6" opacity=".7"/>';
+       if(s2)s+='<path d="'+s2+'" fill="#7fb0c6" opacity=".7"/>';
+     }
+     s+='<path d="'+pth(-3.6,3.6,0)+'" fill="none" stroke="'+(i===2?C.col:'#8fa6b0')+'" stroke-width="'+(i===2?2.4:1.8)+'"/>';
+     s+='<line x1="'+px+'" y1="'+yb+'" x2="'+(px+pw)+'" y2="'+yb+'" stroke="#8fa6b0" stroke-width="1"/>';
+     s+='<text x="'+(px+pw/2)+'" y="118" font-size="14" fill="'+(i===2?'#1c4454':'#4a585f')+'" text-anchor="middle" font-weight="800">'+Math.max(0,p.v).toFixed(4)+'</text>';
+   }
+   s+='<text x="157" y="66" font-size="20" fill="#78868d" text-anchor="middle" font-weight="800">&#8722;</text>';
+   s+='<text x="323" y="66" font-size="20" fill="#78868d" text-anchor="middle" font-weight="800">=</text>';
+   $('sub').innerHTML=s;
+   return P;
+ }
+
+ /* ---------- words ---------- */
+ function regionPhrase(){
+   if(MODE==='inside')return 'between <b>'+uv(A)+'</b> and <b>'+uv(B)+'</b>';
+   if(MODE==='below')return 'below <b>'+uv(B)+'</b>';
+   if(MODE==='above')return 'above <b>'+uv(A)+'</b>';
+   return 'outside <b>'+uv(A)+'</b> to <b>'+uv(B)+'</b>';
+ }
+ function notation(){
+   if(MODE==='inside')return 'P('+nf(A,C.d)+' &lt; X &lt; '+nf(B,C.d)+')';
+   if(MODE==='below')return 'P(X &lt; '+nf(B,C.d)+')';
+   if(MODE==='above')return 'P(X &gt; '+nf(A,C.d)+')';
+   return 'P(X &lt; '+nf(A,C.d)+') + P(X &gt; '+nf(B,C.d)+')';
+ }
+ function capText(ar,S){
+   var t='<b>The shading is the question; the area is the answer.</b> Drag either dark handle along the axis, or use the sliders, and the blue region follows. ';
+   t+='Every time it moves, the area is re-integrated from scratch &mdash; the curve is sliced into a thousand thin strips and their areas summed &mdash; so the percentage printed inside the band is computed, not looked up. ';
+   t+='Right now you have asked for the '+C.plural+' '+regionPhrase()+', and the model answers <b>'+pcs(ar)+'</b>.';
+   if(S.n){
+     t+='<br>The gold bars are the simulated sample piled into bins; the dots below the axis are those same observations laid out one by one. Notice that the dots inside the blue band are not a special kind of observation &mdash; they are ordinary draws that happened to land there, in roughly the proportion the area predicts.';
+   }else{
+     t+='<br>The strip beneath the axis is empty until you draw a sample. Fill it and you can count, by hand if you like, whether the area was telling the truth.';
+   }
+   return t;
+ }
+ function infoText(ar,Fa,Fb){
+   var za=(A-C.mu)/C.sd, zb=(B-C.mu)/C.sd;
+   var s='';
+   if(zeroWidth()){
+     s+='<span class="n">An area of exactly zero</span>';
+     s+='You have pulled <b>a</b> and <b>b</b> onto the same point. The region still exists, but it has <b>no width</b> &mdash; and height times zero width is zero, however tall the curve happens to be there. ';
+     s+='This is not a rounding artifact: in a continuous model the probability of hitting any <i>exact</i> value is <b>0</b>, because there are infinitely many values to miss. Probability only accumulates over an <b>interval</b>. ';
+     s+='<div class="loc">'+notation()+' = '+Fb.toFixed(4)+' &#8722; '+Fa.toFixed(4)+' = <b>0.0000</b></div>';
+     s+='It also explains a detail that trips people up: since the single point contributes nothing, <b>P(X &lt; c)</b> and <b>P(X &#8804; c)</b> are the same number. The strict and non-strict inequalities differ only by a region of zero area.';
+     return s;
+   }
+   s+='<span class="n">'+pcs(ar)+' of '+C.plural+'</span>';
+   s+='Under this model, '+pcs(ar)+' of all '+C.plural+' fall '+regionPhrase()+'. Read it either way you like: as a <b>proportion of the population</b>, or as the <b>probability</b> that a single '+C.short+' drawn at random lands in that range. ';
+   s+='They are one number, because the curve is a statement about the population and a single random draw inherits it exactly.';
+   s+='<div class="loc">';
+   if(MODE==='inside'){
+     s+='P(X &lt; '+nf(B,C.d)+') = '+Fb.toFixed(4)+'<br>P(X &lt; '+nf(A,C.d)+') = '+Fa.toFixed(4)+'<br>'+notation()+' = '+Fb.toFixed(4)+' &#8722; '+Fa.toFixed(4)+' = <b>'+ar.toFixed(4)+'</b><br>';
+   }else if(MODE==='below'){
+     s+='P(X &lt; '+nf(B,C.d)+') = <b>'+ar.toFixed(4)+'</b><br>complement: 1 &#8722; '+(1-Fb).toFixed(4)+' = '+ar.toFixed(4)+'<br>';
+   }else if(MODE==='above'){
+     s+='P(X &lt; '+nf(A,C.d)+') = '+Fa.toFixed(4)+'<br>'+notation()+' = 1 &#8722; '+Fa.toFixed(4)+' = <b>'+ar.toFixed(4)+'</b><br>';
+   }else{
+     s+='left tail = '+Fa.toFixed(4)+' &nbsp;&#183;&nbsp; right tail = '+(1-Fb).toFixed(4)+'<br>'+notation()+' = <b>'+ar.toFixed(4)+'</b><br>middle, for comparison = '+(Fb-Fa).toFixed(4)+'<br>';
+   }
+   if(usesA())s+='a = '+uv(A)+' &#8594; z = '+sz(za)+'<br>';
+   if(usesB())s+='b = '+uv(B)+' &#8594; z = '+sz(zb)+'<br>';
+   s+='&#8594; '+pcs(ar)+' &nbsp;&#183;&nbsp; '+oneIn(ar)+'</div>';
+   s+='<div class="dd">'+C.why+'</div>';
+   var far=(usesA()&&Math.abs(za)>2.5)||(usesB()&&Math.abs(zb)>2.5);
+   if(ar<0.02){
+     s+='<div class="dd">This region is <b>thin</b> &mdash; and notice how quickly it thinned. The curve loses height so fast in the tails that pushing a boundary out one more standard deviation can cut the remaining area by a factor of five or more.</div>';
+   }else if(ar>0.98){
+     s+='<div class="dd">This region now swallows nearly the entire curve, so the interesting number has become its <b>complement</b>: '+pcs(1-ar)+' is what remains outside. When an area gets this close to 1, the tail it leaves behind is usually the thing worth quoting.</div>';
+   }else if(far){
+     s+='<div class="dd">One of your boundaries sits more than 2.5 standard deviations from &#956;, out where the curve is nearly flat against the axis. Areas out here are the ones the normal model gets <b>least</b> reliably right, because real distributions rarely have tails as thin as this one.</div>';
+   }
+   return s;
+ }
+ function verdictText(P,ar){
+   var t='<span class="w">Left-hand areas, and nothing else</span>';
+   if(MODE==='inside'){
+     t+='The middle band is not stored anywhere. It is <b>manufactured</b>: take everything to the left of b (<b>'+P[0].v.toFixed(4)+'</b>), then remove everything to the left of a (<b>'+P[1].v.toFixed(4)+'</b>), and what survives the subtraction is exactly the strip between them &#8212; <b>'+Math.max(0,P[2].v).toFixed(4)+'</b>. ';
+     t+='The order matters: <b>always the larger left-area minus the smaller</b>. Subtracting the other way round gives a negative number, which is the surest sign the two boundaries were reversed.';
+   }else if(MODE==='outside'){
+     t+='Two separated tails look like they need two lookups, but they need none. The whole curve is <b>1</b>; take away the middle (<b>'+P[1].v.toFixed(4)+'</b>) and every remaining scrap of area &mdash; left tail and right tail together &mdash; is <b>'+P[2].v.toFixed(4)+'</b>. ';
+     t+='This is the <b>complement rule</b>, and it is almost always less work than chasing each tail separately.';
+   }else{
+     t+='A tail is the cheapest region of all. The whole curve encloses <b>1</b>, so subtracting the opposite side leaves the side you want: 1 &#8722; <b>'+P[1].v.toFixed(4)+'</b> = <b>'+P[2].v.toFixed(4)+'</b>. ';
+     t+='That is the <b>complement rule</b>. Whenever a region is awkward to shade, shade its opposite and subtract from 1 instead.';
+   }
+   t+='<br>Switch the region buttons and watch the three panels rearrange themselves. Whatever you ask for, the machinery underneath never changes: <b>one kind of area, and a subtraction</b>.';
+   return t;
+ }
+ function simText(S,ar){
+   if(!S.n){
+     $('sN').innerHTML='0'; $('sIn').innerHTML='&mdash;'; $('sP').innerHTML='&mdash;';
+     $('sOut').innerHTML='&nbsp;'; $('sE').innerHTML='vs exact '+pc(ar);
+     $('scap').innerHTML='Press draw. Each observation is a genuine random value from this distribution, and the only test applied to it is whether it fell in the shaded region. If area really is probability, then the share landing inside should hover near <b>'+pc(ar)+'</b> &mdash; and should settle closer to it the more you draw.';
+     return;
+   }
+   var p=S.p, se=Math.sqrt(Math.max(1e-9,ar*(1-ar))/S.n), gap=(p-ar)*100;
+   $('sN').innerHTML=nf(S.n,0);
+   $('sIn').innerHTML=nf(S.ins,0);
+   $('sOut').innerHTML=nf(S.n-S.ins,0)+' outside';
+   $('sP').innerHTML=(p*100).toFixed(2)+'%';
+   $('sE').innerHTML='vs exact '+pc(ar);
+   var t='Of the <b>'+nf(S.n,0)+'</b> observations drawn, <b>'+nf(S.ins,0)+'</b> landed inside the shaded region &mdash; a simulated share of <b>'+(p*100).toFixed(2)+'%</b> against an exact area of <b>'+pc(ar)+'</b>, a gap of '+Math.abs(gap).toFixed(2)+' percentage point'+(Math.abs(Math.abs(gap)-1)<0.005?'':'s')+'. ';
+   t+='That gap is <b>not an error in the area</b>. A simulated share is an estimate built from a finite pile of draws, so it wobbles; with n = '+nf(S.n,0)+' it should land within roughly &plusmn;'+(2*se*100).toFixed(1)+' points of the true value about 95 times in 100, and '+(Math.abs(gap)<=2*se*100?'this run comfortably did':'this run happens to sit outside that window &mdash; which by itself is unremarkable, since 1 run in 20 should')+'. ';
+   t+=S.n<1000?'Draw more and watch the wobble shrink: the margin narrows with the square root of n, so quadrupling the sample halves it.':'The estimate is now tight, and every further batch tightens it &mdash; slowly, because halving the margin again would take four times this many draws.';
+   $('scap').innerHTML=t;
+ }
+
+ /* ---------- render ---------- */
+ function render(){
+   var Fa=F(A), Fb=F(B), ar=area(Fa,Fb), S=summary();
+   $('aVal').innerHTML=uv(A);
+   $('bVal').innerHTML=uv(B);
+   $('slA').className='sl'+(usesA()?'':' off');
+   $('slB').className='sl'+(usesB()?'':' off');
+   $('aSl').disabled=!usesA();
+   $('bSl').disabled=!usesB();
+   $('cardTitle').innerHTML=C.nm;
+   $('stage').style.background=C.col;
+   $('stage').innerHTML=(zeroWidth()?'0.00%':pcs(ar))+'<small>'+notation().replace(/<\/?b>/g,'')+' &#183; '+C.nm.toLowerCase()+'</small>';
+   $('tA').innerHTML=ar.toFixed(4);
+   $('tP').innerHTML=pc(ar);
+   $('tK').innerHTML=nf(Math.round(ar*1000),0);
+   $('tR').innerHTML=pc(1-ar);
+   chart(S,Fa,Fb);
+   var P=decomp(Fa,Fb);
+   $('cap').innerHTML=capText(ar,S);
+   $('info').innerHTML=infoText(ar,Fa,Fb);
+   $('verdict').innerHTML=verdictText(P,ar);
+   simText(S,ar);
+ }
+
+ /* ---------- sliders, presets, contexts ---------- */
+ function syncSliders(){
+   var a=$('aSl'), b=$('bSl');
+   a.min=C.xmin; a.max=C.xmax; a.step=C.step; a.value=A;
+   b.min=C.xmin; b.max=C.xmax; b.step=C.step; b.value=B;
+ }
+ var PRESETS=[
+  {lb:'&plusmn;1 SD',   sub:'&rarr; 68.27%', t:'sd', k:1},
+  {lb:'&plusmn;2 SD',   sub:'&rarr; 95.45%', t:'sd', k:2},
+  {lb:'middle 90%',     sub:'z = &plusmn;1.64', t:'c', k:0.90},
+  {lb:'middle 99%',     sub:'z = &plusmn;2.58', t:'c', k:0.99}
+ ];
+ function paintPresets(){
+   $('pseg').innerHTML=PRESETS.map(function(p,i){
+     return '<button data-i="'+i+'"'+(i===PRE?' class="on"':'')+'>'+p.lb+'<small>'+p.sub+'</small></button>';
+   }).join('');
+   var bs=$('pseg').getElementsByTagName('button'), i;
+   for(i=0;i<bs.length;i++){
+     bs[i].onclick=function(){
+       var j=parseInt(this.getAttribute('data-i'),10), p=PRESETS[j];
+       var z=(p.t==='sd')?p.k:invZ(0.5+p.k/2);
+       A=clamp(C.mu-z*C.sd,C.xmin,C.xmax);
+       B=clamp(C.mu+z*C.sd,C.xmin,C.xmax);
+       MODE='inside'; PRE=j;
+       paintMode(); paintPresets(); syncSliders(); render();
+     };
+   }
+ }
+ function paintMode(){
+   var bs=$('mseg').getElementsByTagName('button'), i;
+   for(i=0;i<bs.length;i++){
+     bs[i].className=(bs[i].getAttribute('data-m')===MODE)?'on':'';
+   }
+ }
+ function paintCtx(){
+   $('ctxs').innerHTML=CTX.map(function(c){
+     return '<button class="it'+(c.k===C.k?' on':'')+'" data-k="'+c.k+'"><span class="nm">'+c.nm+'</span><span class="s">&mu; = '+nf(c.mu,c.d)+' &middot; &sigma; = '+nf(c.sd,c.d)+' '+c.un+'</span></button>';
+   }).join('');
+   var bs=$('ctxs').getElementsByTagName('button'), i;
+   for(i=0;i<bs.length;i++){
+     bs[i].onclick=function(){
+       var kk=this.getAttribute('data-k'), j;
+       for(j=0;j<CTX.length;j++){ if(CTX[j].k===kk)C=CTX[j]; }
+       A=C.a; B=C.b; MODE=C.mode; PRE=-1; raw=[]; seed=20260719;
+       paintCtx(); paintMode(); paintPresets(); syncSliders(); render();
+     };
+   }
+ }
+
+ $('aSl').oninput=function(){ A=parseFloat(this.value); if(B<A){B=A;$('bSl').value=B;} PRE=-1; paintPresets(); render(); };
+ $('bSl').oninput=function(){ B=parseFloat(this.value); if(A>B){A=B;$('aSl').value=A;} PRE=-1; paintPresets(); render(); };
+ var mbs=$('mseg').getElementsByTagName('button'), q;
+ for(q=0;q<mbs.length;q++){
+   mbs[q].onclick=function(){
+     MODE=this.getAttribute('data-m'); PRE=-1;
+     paintMode(); paintPresets(); render();
+   };
+ }
+ $('draw').onclick=function(){
+   var i, n=Math.min(200,CAP-raw.length);
+   for(i=0;i<n;i++){ raw.push(C.mu+C.sd*gauss()); }
+   render();
+ };
+ $('clear').onclick=function(){ raw=[]; seed=20260719; render(); };
+
+ /* ---------- dragging the boundaries on the chart ---------- */
+ var drag=null;
+ function valAt(e){
+   var r=$('chart').getBoundingClientRect();
+   var vx=(e.clientX-r.left)/r.width*VW;
+   var v=C.xmin+(vx-ML)/PW*(C.xmax-C.xmin);
+   v=Math.round(v/C.step)*C.step;
+   return clamp(v,C.xmin,C.xmax);
+ }
+ function moveTo(v){
+   if(drag==='a'){ A=v; if(B<A)B=A; }
+   else { B=v; if(A>B)A=B; }
+   PRE=-1; paintPresets(); syncSliders(); render();
+ }
+ $('chart').addEventListener('pointerdown',function(e){
+   var v=valAt(e);
+   if(!usesA())drag='b';
+   else if(!usesB())drag='a';
+   else drag=(Math.abs(v-A)<=Math.abs(v-B))?'a':'b';
+   try{ $('chart').setPointerCapture(e.pointerId); }catch(err){}
+   moveTo(v); e.preventDefault();
+ });
+ $('chart').addEventListener('pointermove',function(e){
+   if(!drag)return;
+   moveTo(valAt(e)); e.preventDefault();
+ });
+ $('chart').addEventListener('pointerup',function(){ drag=null; });
+ $('chart').addEventListener('pointercancel',function(){ drag=null; });
+
+ /* ---------- go ---------- */
+ paintCtx(); paintMode(); paintPresets(); syncSliders(); render();
+})();
+</script>
+</body>
+</html>

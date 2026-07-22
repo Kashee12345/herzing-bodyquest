@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>The Normal Curve</title>
+<meta name="description" content="Drag the mean and the standard deviation and watch a normal curve slide and stretch &mdash; with live areas computed under the curve, the empirical rule, and a real sample that piles up underneath it.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.06fr 0.94fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:112px;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:54px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles.t3{grid-template-columns:repeat(3,1fr);}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.lgd i.dash{width:14px;height:0;border-top:2px dashed #1c4454;border-radius:0;vertical-align:3px;}
+.lgd i.ghost{width:14px;height:0;border-top:2px dashed #7a5a8a;border-radius:0;vertical-align:3px;}
+.hnd{cursor:ew-resize;touch-action:none;}
+#chart{touch-action:pan-y;}
+#info .loc{font-variant-numeric:tabular-nums;font-size:12px;line-height:1.6;}
+.grid .it .nm{display:block;} .grid .it .s{display:block;margin-top:2px;font-weight:600;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 7</div>
+  <h1>The Normal Curve</h1>
+  <div class="intro">One smooth, symmetric, bell-shaped curve describes an enormous amount of real data &mdash; and it is pinned down by just two numbers. The <b>mean</b> says where the bell sits; the <b>standard deviation</b> says how wide it spreads. Drag them and watch the curve slide and stretch.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Normal (&mu; = 100, &sigma; = 15)</h2>
+      <svg viewBox="0 0 480 360" id="chart" aria-label="normal density curve"></svg>
+      <div class="lgd">
+        <span><i style="background:#dcebf2"></i>under the curve</span>
+        <span><i style="background:#7fb0c6"></i>inside the band</span>
+        <span><i style="background:#b8862f"></i>sampled data</span>
+        <span><i class="dash"></i>&mu;</span>
+        <span><i class="ghost"></i>pinned curve</span>
+        <span><i style="background:#d1495b;border-radius:50%"></i>drag handles</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Normal (&mu; = 100, &sigma; = 15)<small>drag the sliders &mdash; or the red dots on the curve</small></div>
+    <div class="card">
+      <div class="hd">The two parameters</div>
+      <div class="sl"><label>&mu; &mdash; the mean</label><input type="range" id="muSl" min="30" max="170" step="1" value="100"><span class="nv" id="muVal">100</span></div>
+      <div class="sl"><label>&sigma; &mdash; the SD</label><input type="range" id="sgSl" min="50" max="380" step="5" value="150"><span class="nv" id="sgVal">15.0</span></div>
+      <div class="tiles">
+        <div><span class="lb">Center<br>&mu; = med = mode</span><span class="vv" id="tMu">100</span></div>
+        <div><span class="lb">Spread<br>&sigma;</span><span class="vv" id="tSd">15.0</span></div>
+        <div><span class="lb">Peak height<br>1 &divide; &sigma;&radic;(2&pi;)</span><span class="vv" id="tPk">.0266</span></div>
+        <div><span class="lb">Total area<br>computed</span><span class="vv" id="tAr">1.000</span></div>
+      </div>
+      <div class="row"><button class="btn" id="pin">Pin this curve</button></div>
+      <div class="hd">Try a move</div>
+      <div class="grid" id="presets"></div>
+      <div class="hd">How much area sits inside &plusmn; k&sigma;?</div>
+      <div class="seg" id="kseg">
+        <button data-k="1" class="on">&plusmn; 1&sigma;<small>one SD out</small></button>
+        <button data-k="2">&plusmn; 2&sigma;<small>two SDs out</small></button>
+        <button data-k="3">&plusmn; 3&sigma;<small>three SDs out</small></button>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>The empirical rule (68&ndash;95&ndash;99.7):</b> in <i>any</i> normal distribution about <b>68%</b> of values fall within 1 SD of the mean, about <b>95%</b> within 2 SDs, and about <b>99.7%</b> within 3. Move &mu; and &sigma; wherever you like &mdash; the endpoints change, the percentages do not.</div>
+      <div class="note"><b>Two things the curve is not.</b> The <b>height</b> of the curve is a <i>density</i>, not a probability &mdash; a single exact value on a continuous scale has probability 0, so probability lives in <b>area</b>, never in height. And "normal" here is only the name of a shape: it does not mean typical, healthy, or correct, and a histogram that merely looks bell-ish is not automatically normal.</div>
+    </div>
+    <div class="card">
+      <h2>Does real data pile up like that?</h2>
+      <div class="cap" style="margin-top:2px;">Each draw generates observations from this exact normal distribution and stacks them into bins. The gold histogram is what actually came out; the blue curve is the model it was drawn from.</div>
+      <div class="tiles t3">
+        <div><span class="lb">Observations</span><span class="vv" id="sCount">0</span><span class="sub">&nbsp;</span></div>
+        <div><span class="lb">Sample mean</span><span class="vv" id="sMean">&mdash;</span><span class="sub" id="sMeanT">&mu; = 100.0</span></div>
+        <div><span class="lb">Sample SD</span><span class="vv" id="sSd">&mdash;</span><span class="sub" id="sSdT">&sigma; = 15.0</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="draw">Draw 200 observations</button><button class="btn" id="reset">Clear</button></div>
+      <div class="cap" id="scap">Draw a batch and the bars will land raggedly around the curve. Keep drawing and the ragged edges smooth out &mdash; the curve was never a promise about any one observation, only about the shape a large pile of them takes.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- state ---------- */
+ var MU=100, SIG=15, K=1, pinned=null, drag=null, SGSIDE=1;
+ var seed=20260718;
+
+ /* sample store */
+ var NB=50, XMIN=0, XMAX=200, BW=(XMAX-XMIN)/NB;
+ var bins=null, nObs=0, sum=0, sumsq=0, offAxis=0;
+
+ /* ---------- seeded PRNG (mulberry32) ---------- */
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ /* Box-Muller: turns two uniforms into one standard normal */
+ function gauss(){
+   var u1=rnd(); if(u1<1e-12)u1=1e-12;
+   var u2=rnd();
+   return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+ }
+
+ /* ---------- the normal density ---------- */
+ function dens(x,mu,sg){
+   var z=(x-mu)/sg;
+   return Math.exp(-0.5*z*z)/(sg*Math.sqrt(2*Math.PI));
+ }
+ /* Simpson's rule: area under the curve from a to b, n even */
+ function area(a,b,n,mu,sg){
+   var h=(b-a)/n, s=dens(a,mu,sg)+dens(b,mu,sg);
+   for(var i=1;i<n;i++){ s+=(i%2?4:2)*dens(a+i*h,mu,sg); }
+   return s*h/3;
+ }
+
+ function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+ function com(x){ return String(x).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+ function pc(v){ return (v*100).toFixed(2)+'%'; }
+
+ /* ---------- chart geometry ---------- */
+ var VW=480, VH=360, ML=46, MR=14, MT=26, MB=72;
+ var PW=VW-ML-MR, PH=VH-MT-MB, Y1=MT+PH, YMAX=0.08;
+ function xOf(v){ return ML+(v-XMIN)/(XMAX-XMIN)*PW; }
+ function yOf(v){ return Y1-clamp(v/YMAX,0,1.4)*PH; }
+ function xData(sx){ return XMIN+(sx-ML)/PW*(XMAX-XMIN); }
+
+ function curvePath(mu,sg,a,b,close){
+   var d='',t,x,steps=180;
+   for(t=0;t<=steps;t++){
+     x=a+(b-a)*t/steps;
+     d+=(t?'L':'M')+xOf(x).toFixed(1)+' '+yOf(dens(x,mu,sg)).toFixed(1)+' ';
+   }
+   if(close){ d+='L'+xOf(b).toFixed(1)+' '+Y1+' L'+xOf(a).toFixed(1)+' '+Y1+' Z'; }
+   return d;
+ }
+
+ function drawChart(){
+   var s='<defs><clipPath id="pclip"><rect x="'+ML+'" y="'+(MT-14)+'" width="'+PW+'" height="'+(PH+14)+'"/></clipPath></defs>';
+   var g,yv,y,i;
+
+   /* gridlines + density axis */
+   for(g=0;g<=4;g++){
+     yv=YMAX*g/4; y=yOf(yv);
+     s+='<line x1="'+ML+'" y1="'+y.toFixed(1)+'" x2="'+(ML+PW)+'" y2="'+y.toFixed(1)+'" stroke="'+(g===0?'#8fa6b0':'#e6eef2')+'" stroke-width="1"/>';
+     s+='<text x="'+(ML-7)+'" y="'+(y+3.5).toFixed(1)+'" font-size="10" fill="#78868d" text-anchor="end" font-weight="600">'+yv.toFixed(2)+'</text>';
+   }
+
+   s+='<g clip-path="url(#pclip)">';
+
+   /* sampled data behind the curve, scaled to density so it can be compared directly */
+   if(bins&&nObs>0){
+     for(i=0;i<NB;i++){
+       if(!bins[i])continue;
+       var d0=bins[i]/(nObs*BW), x0=xOf(XMIN+i*BW), x1=xOf(XMIN+(i+1)*BW);
+       s+='<rect x="'+(x0+0.6).toFixed(1)+'" y="'+yOf(d0).toFixed(1)+'" width="'+Math.max(1,x1-x0-1.2).toFixed(1)+'" height="'+Math.max(0,Y1-yOf(d0)).toFixed(1)+'" fill="#d9b25e" opacity=".85"/>';
+     }
+   }
+
+   /* area under the whole curve */
+   s+='<path d="'+curvePath(MU,SIG,XMIN,XMAX,1)+'" fill="#dcebf2"/>';
+
+   /* the +/- k sigma band */
+   var lo=MU-K*SIG, hi=MU+K*SIG;
+   s+='<path d="'+curvePath(MU,SIG,Math.max(XMIN,lo),Math.min(XMAX,hi),1)+'" fill="#7fb0c6" opacity=".62"/>';
+
+   /* pinned comparison curve */
+   if(pinned){
+     s+='<path d="'+curvePath(pinned.mu,pinned.sg,XMIN,XMAX,0)+'" fill="none" stroke="#7a5a8a" stroke-width="2" stroke-dasharray="6 4" opacity=".85"/>';
+   }
+
+   /* the curve itself */
+   s+='<path d="'+curvePath(MU,SIG,XMIN,XMAX,0)+'" fill="none" stroke="#1c4454" stroke-width="2.6" stroke-linejoin="round"/>';
+
+   /* mean line */
+   var pk=dens(MU,MU,SIG);
+   s+='<line x1="'+xOf(MU).toFixed(1)+'" y1="'+yOf(pk).toFixed(1)+'" x2="'+xOf(MU).toFixed(1)+'" y2="'+Y1+'" stroke="#1c4454" stroke-width="1.6" stroke-dasharray="5 4"/>';
+   s+='<text x="'+xOf(MU).toFixed(1)+'" y="'+(yOf(pk)-9).toFixed(1)+'" font-size="10.5" fill="#1c4454" text-anchor="middle" font-weight="800">&#956; = '+MU+'</text>';
+
+   /* inflection markers at mu +/- sigma; the sigma handle takes whichever side stays on the axis */
+   var di=dens(MU+SIG,MU,SIG), hx=xOf(MU+SGSIDE*SIG), fx=xOf(MU-SGSIDE*SIG);
+   s+='<line x1="'+xOf(MU-SIG).toFixed(1)+'" y1="'+yOf(di).toFixed(1)+'" x2="'+xOf(MU+SIG).toFixed(1)+'" y2="'+yOf(di).toFixed(1)+'" stroke="#1c4454" stroke-width="1" stroke-dasharray="2 3" opacity=".55"/>';
+   s+='<circle cx="'+fx.toFixed(1)+'" cy="'+yOf(di).toFixed(1)+'" r="3.4" fill="#1c4454" opacity=".55"/>';
+   s+='</g>';
+
+   /* drag handles */
+   s+='<circle cx="'+xOf(MU).toFixed(1)+'" cy="'+yOf(pk).toFixed(1)+'" r="6.5" fill="#d1495b" stroke="#fff" stroke-width="2.4"/>';
+   s+='<circle class="hnd" data-h="mu" cx="'+xOf(MU).toFixed(1)+'" cy="'+yOf(pk).toFixed(1)+'" r="17" fill="transparent"/>';
+   s+='<circle cx="'+hx.toFixed(1)+'" cy="'+yOf(di).toFixed(1)+'" r="6.5" fill="#d1495b" stroke="#fff" stroke-width="2.4"/>';
+   s+='<circle class="hnd" data-h="sg" cx="'+hx.toFixed(1)+'" cy="'+yOf(di).toFixed(1)+'" r="17" fill="transparent"/>';
+   s+='<text x="'+(hx+SGSIDE*11).toFixed(1)+'" y="'+(yOf(di)-9).toFixed(1)+'" font-size="10.5" fill="#a4384a" font-weight="800" text-anchor="'+(SGSIDE>0?'start':'end')+'">&#963;</text>';
+
+   /* value axis */
+   for(i=XMIN;i<=XMAX;i+=20){
+     s+='<line x1="'+xOf(i).toFixed(1)+'" y1="'+Y1+'" x2="'+xOf(i).toFixed(1)+'" y2="'+(Y1+4)+'" stroke="#8fa6b0" stroke-width="1"/>';
+     s+='<text x="'+xOf(i).toFixed(1)+'" y="'+(Y1+16)+'" font-size="10" fill="#78868d" text-anchor="middle" font-weight="600">'+i+'</text>';
+   }
+
+   /* sigma ruler */
+   var ry=Y1+34, rl=Math.max(XMIN,MU-3*SIG), rh=Math.min(XMAX,MU+3*SIG);
+   s+='<line x1="'+xOf(rl).toFixed(1)+'" y1="'+ry+'" x2="'+xOf(rh).toFixed(1)+'" y2="'+ry+'" stroke="#b9ccd6" stroke-width="1.4"/>';
+   for(var j=-3;j<=3;j++){
+     var xv=MU+j*SIG;
+     if(xv<XMIN||xv>XMAX)continue;
+     s+='<line x1="'+xOf(xv).toFixed(1)+'" y1="'+(ry-4)+'" x2="'+xOf(xv).toFixed(1)+'" y2="'+(ry+4)+'" stroke="'+(j===0?'#1c4454':'#8fa6b0')+'" stroke-width="'+(j===0?1.8:1.2)+'"/>';
+     s+='<text x="'+xOf(xv).toFixed(1)+'" y="'+(ry+16)+'" font-size="9.6" fill="'+(Math.abs(j)===K?'#1c4454':'#8fa6b0')+'" text-anchor="middle" font-weight="'+(Math.abs(j)===K?'800':'600')+'">'+(j===0?'&#956;':(j>0?'+':'&#8722;')+Math.abs(j)+'&#963;')+'</text>';
+   }
+   s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="'+(Y1+62)+'" font-size="10.5" fill="#4a585f" text-anchor="middle" font-weight="700">value of the variable</text>';
+   s+='<text x="13" y="'+(MT+PH/2).toFixed(1)+'" font-size="10.5" fill="#4a585f" text-anchor="middle" font-weight="700" transform="rotate(-90 13 '+(MT+PH/2).toFixed(1)+')">density</text>';
+
+   $('chart').innerHTML=s;
+ }
+
+ /* ---------- narrative ---------- */
+ function spread(){
+   if(SIG<=10)return 'narrow';
+   if(SIG<=22)return 'moderate';
+   return 'wide';
+ }
+ function stageCol(){
+   var w=spread();
+   return w==='narrow'?'#7a5a8a':(w==='wide'?'#b8862f':'#2f6f8a');
+ }
+ function capText(pk,tot){
+   var t='<b>Two motions, nothing else.</b> Changing &mu; <b>slides</b> the whole bell left or right without altering its shape by a hair; changing &sigma; <b>stretches or squeezes</b> it without moving its center. ';
+   t+='Right now the peak stands at a density of <b>'+pk.toFixed(4)+'</b>, which is exactly 1 &divide; ('+SIG.toFixed(1)+' &times; &radic;2&pi;). ';
+   t+='Squeeze &sigma; smaller and that peak shoots up; widen &sigma; and it flattens &mdash; it has to, because the <b>total area is locked at 1</b> (summing thin strips across the curve here gives '+tot.toFixed(4)+'). Height and width trade off against each other.';
+   t+='<br>The two faint dots sit at &mu; &plusmn; &sigma; = <b>'+(MU-SIG).toFixed(1)+'</b> and <b>'+(MU+SIG).toFixed(1)+'</b>. Those are the <b>inflection points</b> &mdash; the exact spots where the curve stops bending downward and starts bending outward. That is where the standard deviation physically lives on the picture, and it is the handle you are dragging.';
+   return t;
+ }
+ function infoText(){
+   var lo=MU-K*SIG, hi=MU+K*SIG;
+   var a=area(lo,hi,2000,MU,SIG), out=1-a;
+   var s='<span class="n">'+pc(a)+' within &plusmn; '+K+'&sigma;</span>';
+   s+='The shaded band runs from <b>'+lo.toFixed(1)+'</b> to <b>'+hi.toFixed(1)+'</b>. Its area &mdash; computed here by slicing the region into 2,000 thin strips &mdash; is <b>'+a.toFixed(4)+'</b>, so that is the proportion of all values falling in that stretch.';
+   s+='<div class="loc">&mu; &plusmn; '+K+'&sigma; = '+MU+' &plusmn; '+(K*SIG).toFixed(1)+' &rarr; ( '+lo.toFixed(1)+' , '+hi.toFixed(1)+' )<br>inside <b>'+pc(a)+'</b> &nbsp;&middot;&nbsp; outside '+pc(out)+' &nbsp;&middot;&nbsp; '+pc(out/2)+' in each tail</div>';
+   if(K===1){
+     s+='Roughly two values in three land inside one SD of the mean, and about <b>1 in 3</b> lands outside it. Being one SD from the mean is entirely ordinary.';
+   }else if(K===2){
+     s+='Only about <b>1 in 22</b> values falls outside two SDs. Note the precision: the familiar "95%" actually belongs to &plusmn;1.96&sigma;, while a clean &plusmn;2&sigma; captures '+pc(a)+'. Close enough for a rule of thumb, not for a calculation.';
+   }else{
+     s+='Landing outside three SDs happens for only about <b>1 in 370</b> values &mdash; rare, but the tails never actually reach zero. The curve gets arbitrarily close to the axis and never touches it, so no value is ever formally impossible.';
+   }
+   s+='<div class="dd">Now drag &mu; and &sigma; anywhere and watch this percentage: <b>it does not move</b>. The endpoints change, the area does not. That single fact is what makes one curve enough to handle every normal distribution.</div>';
+   return s;
+ }
+
+ /* ---------- simulation ---------- */
+ function resetSim(){ bins=null; nObs=0; sum=0; sumsq=0; offAxis=0; }
+ function drawBatch(n){
+   if(!bins){ bins=[]; for(var b=0;b<NB;b++)bins[b]=0; }
+   for(var e=0;e<n;e++){
+     var x=MU+SIG*gauss();
+     nObs++; sum+=x; sumsq+=x*x;
+     var ix=Math.floor((x-XMIN)/BW);
+     if(ix<0||ix>=NB){ offAxis++; } else { bins[ix]++; }
+   }
+ }
+ function simStats(){
+   $('sMeanT').innerHTML='&mu; = '+MU.toFixed(1);
+   $('sSdT').innerHTML='&sigma; = '+SIG.toFixed(1);
+   if(!nObs){
+     $('sCount').innerHTML='0'; $('sMean').innerHTML='&mdash;'; $('sSd').innerHTML='&mdash;';
+     $('scap').innerHTML='Draw a batch and the bars will land raggedly around the curve. Keep drawing and the ragged edges smooth out &mdash; the curve was never a promise about any one observation, only about the shape a large pile of them takes.';
+     return;
+   }
+   var m=sum/nObs;
+   var sd=nObs>1?Math.sqrt(Math.max(0,(sumsq-nObs*m*m)/(nObs-1))):0;
+   $('sCount').innerHTML=com(nObs);
+   $('sMean').innerHTML=m.toFixed(2);
+   $('sSd').innerHTML=sd.toFixed(2);
+   var t='Across <b>'+com(nObs)+'</b> observations the sample mean came out <b>'+m.toFixed(2)+'</b> (off &mu; by '+Math.abs(m-MU).toFixed(2)+') and the sample SD <b>'+sd.toFixed(2)+'</b> (off &sigma; by '+Math.abs(sd-SIG).toFixed(2)+'). ';
+   t+='The bars are scaled to density, so their total area is 1 too &mdash; that is what lets a histogram and a curve be laid over each other and compared honestly. ';
+   t+=nObs<400?'Draw more and watch the gaps close.':'The fit is already close, and every further batch tightens it.';
+   if(offAxis>0){ t+=' <b>'+com(offAxis)+'</b> observation'+(offAxis===1?'':'s')+' landed off the edge of the axis and could not be binned, though they are still counted in the mean and SD above &mdash; the tails run on past the picture.'; }
+   $('scap').innerHTML=t;
+ }
+
+ /* ---------- render ---------- */
+ function render(){
+   /* keep the sigma handle on the visible axis, but never flip it out from under a live drag */
+   if(drag!=='sg'){ SGSIDE=(MU+SIG<=XMAX-4)?1:-1; }
+   var pk=dens(MU,MU,SIG);
+   var tot=area(MU-8*SIG,MU+8*SIG,2000,MU,SIG);
+   $('muVal').innerHTML=MU;
+   $('sgVal').innerHTML=SIG.toFixed(1);
+   $('tMu').innerHTML=MU;
+   $('tSd').innerHTML=SIG.toFixed(1);
+   $('tPk').innerHTML=pk.toFixed(4).replace(/^0/,'');
+   $('tAr').innerHTML=tot.toFixed(3);
+   var lbl='Normal (&mu; = '+MU+', &sigma; = '+SIG.toFixed(1)+')';
+   $('cardTitle').innerHTML=lbl;
+   $('stage').style.background=stageCol();
+   $('stage').innerHTML=lbl+'<small>bell-shaped &middot; symmetric about '+MU+' &middot; '+spread()+' spread</small>';
+   drawChart();
+   $('cap').innerHTML=capText(pk,tot);
+   $('info').innerHTML=infoText();
+   simStats();
+ }
+
+ /* ---------- presets ---------- */
+ var PRE=[
+  {t:'Start here',s:'&mu; = 100, &sigma; = 15',mu:100,sg:15},
+  {t:'Slide it right',s:'&mu; = 140, &sigma; = 15',mu:140,sg:15},
+  {t:'Tall and narrow',s:'&mu; = 100, &sigma; = 6',mu:100,sg:6},
+  {t:'Short and wide',s:'&mu; = 100, &sigma; = 32',mu:100,sg:32}
+ ];
+ $('presets').innerHTML=PRE.map(function(x,ix){
+   return '<button class="it" data-i="'+ix+'"><span class="nm">'+x.t+'</span><span class="s">'+x.s+'</span></button>';
+ }).join('');
+ var pb=document.querySelectorAll('#presets .it');
+ for(var b=0;b<pb.length;b++){
+   pb[b].onclick=function(){
+     var x=PRE[parseInt(this.getAttribute('data-i'),10)];
+     MU=x.mu; SIG=x.sg;
+     $('muSl').value=MU; $('sgSl').value=Math.round(SIG*10);
+     resetSim(); render();
+   };
+ }
+
+ /* ---------- wiring ---------- */
+ $('muSl').oninput=function(){ MU=parseInt(this.value,10); resetSim(); render(); };
+ $('sgSl').oninput=function(){ SIG=parseInt(this.value,10)/10; resetSim(); render(); };
+ var kb=document.querySelectorAll('#kseg button');
+ for(var m=0;m<kb.length;m++){
+   kb[m].onclick=function(){
+     K=parseInt(this.getAttribute('data-k'),10);
+     for(var z=0;z<kb.length;z++){ kb[z].className=(kb[z]===this?'on':''); }
+     render();
+   };
+ }
+ $('pin').onclick=function(){
+   if(pinned){ pinned=null; this.className='btn'; this.innerHTML='Pin this curve'; }
+   else { pinned={mu:MU,sg:SIG}; this.className='btn solid'; this.innerHTML='Clear pinned (&mu; = '+MU+', &sigma; = '+SIG.toFixed(1)+')'; }
+   render();
+ };
+ $('draw').onclick=function(){ drawBatch(200); render(); };
+ $('reset').onclick=function(){ resetSim(); render(); };
+
+ /* ---------- drag the curve itself ---------- */
+ var chart=$('chart');
+ function svgX(e){
+   var r=chart.getBoundingClientRect();
+   return (e.clientX-r.left)/r.width*VW;
+ }
+ chart.addEventListener('pointerdown',function(e){
+   var h=e.target&&e.target.getAttribute?e.target.getAttribute('data-h'):null;
+   if(!h)return;
+   drag=h;
+   if(chart.setPointerCapture){ chart.setPointerCapture(e.pointerId); }
+   e.preventDefault();
+ });
+ chart.addEventListener('pointermove',function(e){
+   if(!drag)return;
+   var v=xData(svgX(e));
+   if(drag==='mu'){ MU=clamp(Math.round(v),30,170); $('muSl').value=MU; }
+   else { SIG=clamp(Math.round(SGSIDE*(v-MU)*2)/2,5,38); $('sgSl').value=Math.round(SIG*10); }
+   resetSim(); render();
+   e.preventDefault();
+ });
+ function endDrag(){ if(!drag)return; drag=null; render(); }
+ chart.addEventListener('pointerup',endDrag);
+ chart.addEventListener('pointercancel',endDrag);
+
+ render();
+})();
+</script>
+</body>
+</html>

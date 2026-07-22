@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Gestalt Grouping &amp; Depth Illusions</title>
+<meta name="description" content="Toggle Gestalt grouping principles and classic depth illusions on and off to see how the mind organizes what the eye receives — proximity, similarity, closure, figure-ground, Muller-Lyer, Ponzo, and Ebbinghaus.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>
+.wrap{grid-template-columns:0.98fr 1.02fr;}
+#scene{background:#fff;border:1px solid var(--line);border-radius:12px;}
+.cap{font-size:12px;color:var(--muted);margin-top:9px;text-align:center;line-height:1.45;}
+.tgwrap{display:flex;align-items:center;gap:12px;background:#fbf2f6;border:1px solid var(--line);border-radius:12px;padding:12px 15px;margin-top:12px;cursor:pointer;user-select:none;transition:.15s;}
+.tgwrap:hover{border-color:var(--teal);}
+.tgwrap .tl{flex:1;font-size:13px;font-weight:700;color:var(--soft);line-height:1.3;}
+.tgwrap .tl b{color:var(--teal-dk);}
+.tgwrap .tl .st{display:inline-block;min-width:30px;}
+.switch{width:52px;height:28px;border-radius:16px;background:#d9c4d0;position:relative;flex:none;transition:background .2s;}
+.switch i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(70,30,45,.3);transition:left .2s;}
+.tgwrap.on .switch{background:var(--teal);}
+.tgwrap.on .switch i{left:27px;}
+.percept{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-top:11px;}
+.percept .pl{font-weight:800;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;flex:none;}
+.percept .pv{font-size:13.5px;font-weight:600;color:var(--teal-dk);line-height:1.35;}
+.percept .pv b{color:var(--coral);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 5</div>
+  <h1>Gestalt Grouping &amp; Depth Illusions</h1>
+  <div class="intro">Your eyes deliver a flat mosaic of light &mdash; your <b>mind</b> turns it into objects, groups, and depth. Pick a demonstration, then flip the switch to add or remove the cue. Nothing about the raw dots or lines actually changes; only what you <i>perceive</i> does.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Pick a demonstration</h2>
+      <svg id="scene" viewBox="0 0 260 210" aria-label="Perception demonstration"><g id="art"></g></svg>
+      <div class="cap" id="cap">Flip the switch on the right to toggle the cue on and off.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Illusions &amp; Gestalt<small>choose a demonstration to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg">
+        <button data-c="grp" class="on">Gestalt grouping</button>
+        <button data-c="dep">Depth illusions</button>
+      </div>
+      <div class="list" id="list"></div>
+      <div class="tgwrap on" id="tg">
+        <div class="tl"><span id="togLab">Cue</span> <b class="st" id="togState">ON</b></div>
+        <div class="switch"><i></i></div>
+      </div>
+      <div class="percept" id="percept"><span class="pl">You perceive</span><span class="pv" id="perceptV"></span></div>
+      <div id="info"></div>
+      <div class="mnem" id="note"></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- palette ---- */
+ var ROSE='#a1466b', DEEP='#5e2846', BLUE='#2f6f9f', GREY='#d7c3ce', LIGHT='#f3e3ea';
+
+ /* ---- svg helpers ---- */
+ var BG='<rect x="6" y="6" width="248" height="198" rx="12" fill="#faf3f6"/>';
+ function C(cx,cy,r,f,extra){return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+f+'"'+(extra||'')+'/>';}
+ function LN(x1,y1,x2,y2,w,c){return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="'+w+'" stroke-linecap="round"/>';}
+ function T(x,y,s,sz,c,anc){return '<text x="'+x+'" y="'+y+'" font-size="'+(sz||10)+'" fill="'+(c||'#94818b')+'" text-anchor="'+(anc||'middle')+'" font-weight="700">'+s+'</text>';}
+ function pac(cx,cy,r,dir,half,fill){
+   var ax=cx+r*Math.cos(dir+half), ay=cy+r*Math.sin(dir+half);
+   var bx=cx+r*Math.cos(dir-half), by=cy+r*Math.sin(dir-half);
+   return '<path d="M'+cx.toFixed(1)+' '+cy.toFixed(1)+' L'+ax.toFixed(1)+' '+ay.toFixed(1)+' A'+r+' '+r+' 0 1 1 '+bx.toFixed(1)+' '+by.toFixed(1)+' Z" fill="'+fill+'"/>';
+ }
+
+ /* ---- draw functions: each takes (on) and returns svg string ---- */
+ function dProximity(on){
+   var cols = on ? [48,72,120,144,192,216] : [40,76,112,148,184,220];
+   var rows=[70,110,150], s=BG;
+   for(var r=0;r<rows.length;r++) for(var c=0;c<cols.length;c++) s+=C(cols[c],rows[r],8,ROSE);
+   return s;
+ }
+ function dSimilarity(on){
+   var cols=[52,96,140,184,228], rows=[62,98,134,170], s=BG;
+   for(var r=0;r<rows.length;r++) for(var c=0;c<cols.length;c++){
+     var f = on ? (r%2===0?ROSE:BLUE) : ROSE;
+     s+=C(cols[c],rows[r],8,f);
+   }
+   return s;
+ }
+ function dClosure(on){
+   var V=[[130,58],[74,152],[186,152]], cen=[130,120.7], r=25, half=0.82, s=BG;
+   if(on){
+     var p=[];
+     for(var i=0;i<3;i++){ var d=Math.atan2(cen[1]-V[i][1],cen[0]-V[i][0]); p.push([V[i][0]+r*Math.cos(d),V[i][1]+r*Math.sin(d)]); }
+     s+='<path d="M'+p[0][0].toFixed(1)+' '+p[0][1].toFixed(1)+' L'+p[1][0].toFixed(1)+' '+p[1][1].toFixed(1)+' L'+p[2][0].toFixed(1)+' '+p[2][1].toFixed(1)+' Z" fill="'+ROSE+'" opacity="0.16"/>';
+   }
+   for(var j=0;j<3;j++){
+     var dir=Math.atan2(cen[1]-V[j][1],cen[0]-V[j][0]);
+     if(!on) dir+=Math.PI;
+     s+=pac(V[j][0],V[j][1],r,dir,half,DEEP);
+   }
+   s+=T(130,196, on?'a bright triangle appears':'three separate discs',9.5, on?DEEP:'#94818b');
+   return s;
+ }
+ function dFigure(on){
+   var vase = on ? DEEP : LIGHT, bg = on ? LIGHT : DEEP, s=BG;
+   s+='<rect x="62" y="36" width="136" height="156" rx="10" fill="'+bg+'"/>';
+   var right='M130 50 C170 54 150 72 153 86 C156 98 176 106 151 122 C139 132 153 143 150 152 C138 158 138 161 141 165 C151 172 151 176 151 184 L130 184 Z';
+   var left ='M130 50 C90 54 110 72 107 86 C104 98 84 106 109 122 C121 132 107 143 110 152 C122 158 122 161 119 165 C109 172 109 176 109 184 L130 184 Z';
+   s+='<path d="'+right+'" fill="'+vase+'"/><path d="'+left+'" fill="'+vase+'"/>';
+   if(!on){ s+=C(88,96,3.4,LIGHT)+C(172,96,3.4,LIGHT); }
+   s+=T(130,201, on?'a vase (centre = figure)':'two faces (sides = figure)',9.5,DEEP);
+   return s;
+ }
+ function dMuller(on){
+   var x1=66,x2=194, ay=80, by=150, fx=13, fy=12, s=BG;
+   s+=LN(x1,ay,x2,ay,4,ROSE)+LN(x1,by,x2,by,4,ROSE);
+   if(on){
+     /* top line: outward "tail" fins -> looks longer */
+     s+=LN(x1,ay,x1-fx,ay-fy,3,DEEP)+LN(x1,ay,x1-fx,ay+fy,3,DEEP);
+     s+=LN(x2,ay,x2+fx,ay-fy,3,DEEP)+LN(x2,ay,x2+fx,ay+fy,3,DEEP);
+     /* bottom line: inward "arrowhead" fins -> looks shorter */
+     s+=LN(x1,by,x1+fx,by-fy,3,DEEP)+LN(x1,by,x1+fx,by+fy,3,DEEP);
+     s+=LN(x2,by,x2-fx,by-fy,3,DEEP)+LN(x2,by,x2-fx,by+fy,3,DEEP);
+     s+=T(130,63,'appears longer',9.5,BLUE)+T(130,175,'appears shorter',9.5,BLUE);
+   }
+   s+=T(130,116,'both lines are exactly 128 px',10,'#94818b');
+   return s;
+ }
+ function dPonzo(on){
+   var s=BG;
+   if(on){ s+=LN(58,192,112,50,2.5,GREY)+LN(202,192,148,50,2.5,GREY); }
+   s+=LN(96,72,164,72,7,ROSE)+LN(96,150,164,150,7,ROSE);
+   if(on) s+=T(130,62,'appears longer',9.5,BLUE);
+   s+=T(130,192,'both bars are 68 px',10,'#94818b');
+   return s;
+ }
+ function dEbbing(on){
+   var lc=[78,110], rc=[190,110], rC=18, s=BG;
+   if(on){
+     var i,a;
+     for(i=0;i<6;i++){ a=i/6*6.2832; s+=C(lc[0]+46*Math.cos(a),lc[1]+46*Math.sin(a),25,GREY); }
+     for(i=0;i<7;i++){ a=i/7*6.2832; s+=C(rc[0]+30*Math.cos(a),rc[1]+30*Math.sin(a),9,GREY); }
+   }
+   s+=C(lc[0],lc[1],rC,ROSE)+C(rc[0],rc[1],rC,ROSE);
+   if(on){ s+=T(78,166,'looks smaller',9.5,BLUE)+T(190,166,'looks larger',9.5,BLUE); }
+   s+=T(130,196,'both centre circles: r = 18',10,'#94818b');
+   return s;
+ }
+
+ /* ---- content model ---- */
+ var D={
+  proximity:{nm:'Proximity',ct:'grouping by spacing',ic:'⁙',draw:dProximity,
+    tog:'Cluster by proximity',
+    onP:'<b>Three columns</b> &mdash; nearby dots bind into groups.',
+    offP:'One even field of 18 dots &mdash; no grouping.',
+    info:'<span class="n">Proximity</span>Elements that are <b>close together</b> are perceived as one group. Nothing changes but the spacing, yet the moment the dots cluster you stop seeing 18 separate dots and start seeing three columns. This is one of the <b>Gestalt laws of grouping</b> set out by <b>Max Wertheimer</b>, who founded Gestalt psychology in 1912.',
+    note:'Core Gestalt idea &mdash; <b>Pr&auml;gnanz</b>: the mind organizes input into the simplest, most stable whole it can. As <b>Kurt Koffka</b> put it, "the whole is other than the sum of its parts."'},
+  similarity:{nm:'Similarity',ct:'grouping by likeness',ic:'◑',draw:dSimilarity,
+    tog:'Group by colour',
+    onP:'<b>Horizontal rows</b> &mdash; like colours group together.',
+    offP:'A uniform grid &mdash; no grouping emerges.',
+    info:'<span class="n">Similarity</span>Elements that <b>look alike</b> &mdash; in colour, shape, or size &mdash; are grouped together even when evenly spaced. Turn colour on and the identical grid resolves into rows; turn it off and the grouping dissolves. Another of <b>Wertheimer\'s</b> Gestalt grouping laws.',
+    note:'Similarity competes with proximity: designers exploit both to steer the eye through menus, charts, and forms without a single line or box.'},
+  closure:{nm:'Closure',ct:'the Kanizsa triangle',ic:'△',draw:dClosure,
+    tog:'Point notches inward',
+    onP:'A <b>bright triangle</b> appears &mdash; closure fills the gaps.',
+    offP:'Three separate discs &mdash; no triangle.',
+    info:'<span class="n">Closure</span>The mind <b>fills in gaps</b> to perceive a complete, familiar shape. Here three notched discs face inward and you see a crisp white triangle whose edges <b>are not actually drawn</b> &mdash; an <b>illusory contour</b>. This is the <b>Kanizsa triangle</b>, published by <b>Gaetano Kanizsa</b> in 1955. Rotate the notches outward and the triangle vanishes.',
+    note:'Closure is why a dotted outline, or a logo made of broken strokes, still reads as one solid object.'},
+  figure:{nm:'Figure &amp; ground',ct:"Rubin's vase",ic:'⚱',draw:dFigure,
+    tog:'Read centre as figure',
+    onP:'A <b>vase</b> &mdash; the centre is read as the figure.',
+    offP:'<b>Two faces</b> &mdash; now the sides are the figure.',
+    info:'<span class="n">Figure &amp; ground</span>We split every scene into a <b>figure</b> (the object we attend to) and a <b>ground</b> (the backdrop behind it). When a border is shared, one image can flip between two readings. This is <b>Rubin\'s vase</b>, created by the Danish psychologist <b>Edgar Rubin</b> in 1915: read the centre as figure and it is a vase; read the sides as figure and it is two faces. Both cannot be figure at once.',
+    note:'Flip it back and forth: the stimulus never changes &mdash; only which region your brain assigns as figure. Perception is an active interpretation, not a copy of the image.'},
+  muller:{nm:'M&uuml;ller-Lyer illusion',ct:'fins distort length',ic:'⇔',draw:dMuller,
+    tog:'Add the fins',
+    onP:'Top looks longer, bottom shorter &mdash; <b>yet they are equal</b>.',
+    offP:'Fins removed &mdash; the lines are plainly equal.',
+    info:'<span class="n">M&uuml;ller-Lyer illusion</span>Two lines of <b>exactly equal length</b> look different once you add fins. Outward "tail" fins make a line appear <b>longer</b>; inward "arrowhead" fins make it appear <b>shorter</b>. Described by <b>Franz Carl M&uuml;ller-Lyer</b> in 1889. A leading account (<b>Richard Gregory</b>) is that the fins act as depth cues &mdash; like the near and far corners of a room &mdash; so the brain misapplies <b>size constancy</b>.',
+    note:'The illusion holds even after you measure the lines and know they match &mdash; perception does not simply obey what you know.'},
+  ponzo:{nm:'Ponzo illusion',ct:'perspective distorts size',ic:'▤',draw:dPonzo,
+    tog:'Add perspective rails',
+    onP:'The <b>upper bar looks longer</b> &mdash; yet both are equal.',
+    offP:'Rails removed &mdash; the bars are plainly equal.',
+    info:'<span class="n">Ponzo illusion</span>Two identical bars sit between converging lines. The upper bar looks <b>larger</b> because the rails read as <b>linear perspective</b>: a bar that seems farther away yet casts the same image "must" be bigger, so the brain enlarges it. Demonstrated by <b>Mario Ponzo</b> in 1911, and a classic case of misapplied <b>size constancy</b>.',
+    note:'The same cue helps explain the "Moon illusion" &mdash; why a full Moon looks larger near the horizon than high overhead.'},
+  ebbinghaus:{nm:'Ebbinghaus illusion',ct:'context distorts size',ic:'◎',draw:dEbbing,
+    tog:'Add surrounding rings',
+    onP:'The right centre looks bigger &mdash; <b>but they match</b>.',
+    offP:'Rings removed &mdash; the centres are plainly equal.',
+    info:'<span class="n">Ebbinghaus illusion</span>Two centre circles are the <b>same size</b>, but the one ringed by <b>large</b> circles looks smaller and the one ringed by <b>small</b> circles looks larger &mdash; the surroundings set a frame of <b>relative size</b>. Named for <b>Hermann Ebbinghaus</b> and popularized by <b>Edward Titchener</b> (hence "Titchener circles").',
+    note:'Context, not just the object, drives perception &mdash; the same holds for brightness, colour, and loudness.'}
+ };
+ var CATS={
+  grp:{name:'Gestalt grouping',color:'#7a5a8a',items:['proximity','similarity','closure','figure']},
+  dep:{name:'Depth illusions',color:'#2f6f9f',items:['muller','ponzo','ebbinghaus']}
+ };
+
+ /* ---- state ---- */
+ var cat='grp', key='proximity', on=true;
+
+ function renderList(){
+   var items=CATS[cat].items;
+   $("list").innerHTML=items.map(function(k){var d=D[k];
+     return '<button class="it'+(k===key?' on':'')+'" data-k="'+k+'"><span class="ic">'+d.ic+'</span><span><span class="nm">'+d.nm+'</span><br><span class="ct">'+d.ct+'</span></span></button>';
+   }).join('');
+   var b=document.querySelectorAll('#list .it');
+   for(var i=0;i<b.length;i++){ b[i].onclick=function(){ key=this.getAttribute('data-k'); on=true; render(); }; }
+ }
+ function render(){
+   var d=D[key], cc=CATS[cat];
+   $("art").innerHTML=d.draw(on);
+   $("cardTitle").innerHTML=d.nm;
+   $("stage").style.background=cc.color;
+   $("stage").innerHTML=d.nm+'<small>'+cc.name+' · cue '+(on?'ON':'OFF')+'</small>';
+   $("cap").innerHTML= on ? 'The cue is <b>on</b> &mdash; watch what your mind builds. Flip the switch to strip it away.' : 'The cue is <b>off</b> &mdash; this is the raw stimulus. Flip the switch to add the cue back.';
+   $("tg").className='tgwrap'+(on?' on':'');
+   $("togLab").innerHTML=d.tog+' &mdash;';
+   $("togState").textContent=on?'ON':'OFF';
+   $("perceptV").innerHTML= on ? d.onP : d.offP;
+   $("info").innerHTML=d.info;
+   $("note").innerHTML=d.note;
+   renderList();
+ }
+
+ var mb=document.querySelectorAll('#modeseg button');
+ for(var m=0;m<mb.length;m++){ mb[m].onclick=function(){
+   cat=this.getAttribute('data-c');
+   for(var j=0;j<mb.length;j++) mb[j].className=(mb[j]===this)?'on':'';
+   key=CATS[cat].items[0]; on=true; render();
+ }; }
+ $("tg").onclick=function(){ on=!on; render(); };
+
+ render();
+})();
+</script>
+</body>
+</html>

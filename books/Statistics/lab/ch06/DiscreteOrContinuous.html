@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Discrete or Continuous?</title>
+<meta name="description" content="Draw a real sample from ten random variables, record each one to finer and finer precision, and watch which ones run out of new values &mdash; the computed test that separates discrete from continuous.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:104px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.arv .vv{color:var(--teal);}
+.cmp{width:100%;border-collapse:collapse;margin-top:12px;font-size:12.5px;}
+.cmp th,.cmp td{padding:6px 4px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;}
+.cmp th{font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.cmp td:first-child,.cmp th:first-child{text-align:left;font-weight:700;color:var(--teal-dk);}
+.cmp td{font-weight:700;color:var(--soft);}
+.cmp td.dv{color:var(--blue);} .cmp td.pt{color:var(--coral);} .cmp td.iv{color:var(--gold);}
+.cmp tr.on td{background:#e6f0f5;}
+.cmp tr.on td:first-child:before{content:"\25B8\00a0";}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.45;}
+.hd{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;margin-bottom:6px;}
+.grid .it .s{display:block;margin-top:2px;font-weight:600;font-size:10.4px;}
+.grid .it{font-size:12.4px;}
+#vd{font-size:12.5px;font-weight:700;border-radius:9px;padding:8px 11px;margin-top:9px;line-height:1.5;background:#eef4f7;color:var(--muted);border:1px solid var(--line);}
+#vd.ok{background:#e5f3ea;color:#237a45;border-color:#bfe0cb;}
+#vd.no{background:#fae5e8;color:#b23145;border-color:#f0c9d0;}
+#info .eq{font-size:12.5px;color:var(--teal-dk);background:#e2eff5;border-radius:8px;padding:9px 11px;margin-top:9px;line-height:1.7;font-variant-numeric:tabular-nums;}
+#info .eq .r{display:flex;justify-content:space-between;gap:10px;}
+#info .eq .r b{white-space:nowrap;}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,1fr);}.sl label{font-size:10px;}.sl .nv{min-width:88px;font-size:13px;}.cmp{font-size:11.5px;}.grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 6</div>
+  <h1>Discrete or Continuous?</h1>
+  <div class="intro">A <b>random variable</b> is a number produced by chance. Before you can do anything else with one you have to answer a question about the <i>kind</i> of number it is: can you list every value it might take, or does it live on a continuous scale where between any two values there is always another? That single fork decides whether you add up probabilities or integrate an area &mdash; and it is decided by the variable itself, never by the data you happened to write down. Below, ten variables are actually sampled and then <b>recorded at finer and finer precision</b>. Watch which ones keep producing values you have never seen before, and which ones hit a wall.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="hTitle">Every value you recorded</h2>
+      <svg viewBox="0 0 340 206" aria-label="histogram of the sampled values as recorded at the chosen precision"><g id="hist"></g></svg>
+      <div class="lgd" id="hLgd"></div>
+      <div class="cap" id="hCap"></div>
+    </div>
+    <div class="card"><h2>Does measuring more finely find new values?</h2>
+      <svg viewBox="0 0 340 196" aria-label="the number of different values recorded, plotted against how finely the variable was measured"><g id="grow"></g></svg>
+      <div class="lgd">
+        <span><i style="background:#2f6f9f"></i>different values recorded</span>
+        <span><i style="background:#b7c7d0"></i>one different value per observation</span>
+      </div>
+      <div class="cap" id="gCap"></div>
+    </div>
+    <div class="card"><h2>The chance of one exact value</h2>
+      <svg viewBox="0 0 340 196" aria-label="the share of the sample landing on the single most common recorded value, and the share landing in a fixed interval, plotted against measurement precision"><g id="prob"></g></svg>
+      <div class="lgd">
+        <span><i style="background:#d1495b"></i>share at the single commonest value</span>
+        <span><i style="background:#b8862f"></i>share inside a fixed interval</span>
+      </div>
+      <div class="cap" id="pCap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">A random variable<small>pick one to sample it</small></div>
+    <div class="card">
+      <div class="hd">The random variable</div>
+      <div class="grid" id="vGrid"></div>
+      <div class="hd">Your call, before you look at the evidence</div>
+      <div class="modeseg" id="gseg">
+        <button data-v="0">Discrete</button>
+        <button data-v="1">Continuous</button>
+      </div>
+      <div id="vd">Choose one. The three charts are computed from a real sample either way &mdash; the guess only decides whether you get to be right.</div>
+      <div class="sl"><label for="pSl">Record to the nearest</label><input type="range" id="pSl" min="0" max="5" step="1" value="2"><span class="nv" id="pVal">1</span></div>
+      <div class="sl"><label for="nSl">Observations</label><input type="range" id="nSl" min="100" max="1500" step="100" value="600"><span class="nv" id="nVal">600</span></div>
+      <div class="row"><button class="btn" id="fresh">&#8634; A new sample</button><button class="btn solid" id="finest">&#9654; Measure as finely as possible</button></div>
+      <div class="tiles">
+        <div><span class="lb">Observations</span><span class="vv" id="tN">&mdash;</span></div>
+        <div class="arv"><span class="lb">Different values</span><span class="vv" id="tD">&mdash;</span></div>
+        <div><span class="lb">Closest two values</span><span class="vv" id="tG">&mdash;</span></div>
+        <div><span class="lb">Share at one value</span><span class="vv" id="tP">&mdash;</span></div>
+      </div>
+      <table class="cmp">
+        <tr><th>Recorded to the nearest</th><th>Different values</th><th>Commonest value</th><th>Its share</th><th>In the interval</th></tr>
+        <tbody id="lad"></tbody>
+      </table>
+      <div class="cap" id="ladCap"></div>
+      <div id="info"></div>
+      <div class="mnem">The definition is one sentence each. A random variable is <b>discrete</b> if its possible values can be <b>listed</b> &mdash; first value, second value, third value, and so on &mdash; even if that list never ends. It is <b>continuous</b> if its possible values fill an <b>interval</b>, so that between any two of them there is always another, and no list can ever reach them all. Notice what the test is <i>not</i>. It is not &ldquo;are there decimals&rdquo;: shoe sizes go 8, 8&frac12;, 9 and are perfectly discrete, while a height recorded as a flat 170 cm belongs to a continuous variable. It is not &ldquo;is the list short&rdquo;: the number of rolls until your first six could in principle be 1, or 2, or 4,000, and that endless list is still a list. It is not a fact about your dataset at all &mdash; <b>every dataset ever collected is discrete</b>, because every instrument rounds. Ask instead what the quantity could be <i>before anyone measured it</i>. A count answers &ldquo;how many&rdquo; and lands on separated values with gaps between them that nothing can occupy: there is no household with 2.4 children, however often the average says so. A measurement answers &ldquo;how much&rdquo; &mdash; length, weight, time, temperature &mdash; and the gaps are an artefact of the ruler, not of the world. Slide the precision to its finest setting and the difference stops being philosophical: the counts stop yielding new values, and the measurements never do.</div>
+      <div class="note">Five ways this goes wrong. <b>First, judging by the data instead of the variable.</b> Your recorded heights have a finite list of values, so by the letter of the definition your <i>column of numbers</i> is discrete. That tells you about the tape measure, not the human being. The classification is a claim about what the quantity could be, and it decides which mathematics is legitimate later on. <b>Second, equating discrete with whole numbers.</b> Shoe sizes, quarter-point course credits, and prices in cents all step through non-integers and are all discrete; what matters is that the values are <b>separated</b>, with a fixed gap that no value falls inside. <b>Third, equating discrete with finite.</b> Rolls until the first six, calls arriving before noon, defects on a roll of wire &mdash; the list of possible values runs 1, 2, 3, &hellip; forever and is discrete every step of the way. Discrete means <b>listable</b>, not <b>few</b>. <b>Fourth, being startled that a continuous variable gives every single value probability zero.</b> It genuinely does: P(X = 170.000&hellip; cm exactly) = 0, for every value, and yet somebody has a height. Probability zero is not the same as impossible &mdash; it is what is left when you slice a fixed amount of probability into infinitely many pieces. That is precisely why continuous variables are only ever asked about <b>intervals</b>, and why the gold line on the third chart holds steady while the red one falls away. <b>Fifth, forgetting that the model is a choice.</b> Money is discrete &mdash; the register cannot charge you a third of a cent &mdash; but with millions of possible values, treating it as continuous is a harmless and enormously convenient approximation. Conversely a continuous variable coarsely recorded (age in whole years) is often handled as discrete. Classify honestly first; approximate deliberately second.</div>
+      <div class="fn" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- a seeded generator, so the page opens the same way every time ---------- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+ var MAXN=1500,PER=12,pool=[],seed=0;
+ function fillPool(){
+  var r=mulberry32(20260718+seed*7919),i;
+  pool=new Array(MAXN*PER);
+  for(i=0;i<MAXN*PER;i++)pool[i]=r();
+ }
+
+ /* ---------- turning uniform numbers into the quantity in question ---------- */
+ function nrm(p){var u=Math.max(pool[p],1e-12);return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*pool[p+1]);}
+ function pois(u,lam){var L=Math.exp(-lam),pr=L,c=L,k=0;while(u>c&&k<400){k++;pr*=lam/k;c+=pr;}return k;}
+ function pmf(u,a){var c=0,i;for(i=0;i<a.length;i++){c+=a[i];if(u<c)return i;}return a.length-1;}
+ function clamp(x,a,b){return x<a?a:(x>b?b:x);}
+
+ /* ================================ the ten variables ================================
+    ty 0 = discrete, 1 = continuous.  steps = the recording precisions offered,
+    coarsest first.  L0 = the precision such a quantity is normally recorded at. */
+ var V=[
+  {k:'heads',nm:'Heads in 10 flips',s:'how many came up heads',ty:0,un:'',ax:'heads out of ten',L0:1,
+   steps:[2,1,0.5,0.1,0.01,0.001],iv:[4,6],
+   g:function(p){var c=0,i;for(i=0;i<10;i++)if(pool[p+i]<0.5)c++;return c;},
+   poss:'0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 &mdash; eleven values, and the list is finished.',
+   why:'You are counting, and a count of ten flips cannot come out at 6.3. The possible values are separated by a gap of exactly one, and nothing lives inside that gap.',
+   dd:'This is the <b>binomial</b> setting: a fixed number of independent trials, each a success or a failure, and the variable is the number of successes. It is the single most used discrete random variable in applied work, and it is discrete for the plainest of reasons &mdash; you cannot half-succeed at a coin flip.'},
+
+  {k:'kids',nm:'Children in a household',s:'how many live there',ty:0,un:'',ax:'children in the household',L0:1,
+   steps:[2,1,0.5,0.1,0.01,0.001],iv:[1,2],
+   g:function(p){return pmf(pool[p],[0.28,0.24,0.28,0.13,0.05,0.015,0.005]);},
+   poss:'0, 1, 2, 3, 4, &hellip; &mdash; the whole numbers, with no fixed ceiling.',
+   why:'A household has a whole number of children. The list of possibilities has no end, but it is still a list, and that is all discreteness requires.',
+   dd:'The famous embarrassment of this variable is that its <b>mean</b> is something like 1.5 children, a value it can never take. That is not a paradox and not an error: an average is a balance point of the possible values, not one of them. A discrete variable’s expected value is very often impossible.'},
+
+  {k:'cars',nm:'Cars past a corner in a minute',s:'arrivals in a fixed window',ty:0,un:'',ax:'cars in the minute',L0:1,
+   steps:[2,1,0.5,0.1,0.01,0.001],iv:[6,8],
+   g:function(p){return pois(pool[p],7);},
+   poss:'0, 1, 2, 3, &hellip; &mdash; every whole number, however large.',
+   why:'Cars arrive one at a time. However long you watch, what you write down is a count, and counts step.',
+   dd:'Here is a pairing worth holding on to. The <b>number</b> of cars in a minute is discrete; the <b>waiting time</b> until the next one is continuous. The same stream of traffic yields a discrete variable or a continuous one depending only on which question you ask of it &mdash; which is the clearest possible proof that the classification belongs to the variable, not to the phenomenon.'},
+
+  {k:'rolls',nm:'Rolls until the first six',s:'the list that never ends',ty:0,un:'',ax:'rolls needed',L0:1,
+   steps:[2,1,0.5,0.1,0.01,0.001],iv:[1,3],
+   g:function(p){return Math.floor(Math.log(1-Math.min(pool[p],0.999999999))/Math.log(5/6))+1;},
+   poss:'1, 2, 3, 4, 5, &hellip; &mdash; an infinite list, and still a list.',
+   why:'You could get a six on the first roll, or the fortieth, or in principle never. The possible values go on forever, yet they can be put in order and numbered off one by one. <b>Countably infinite is still discrete.</b>',
+   dd:'This is the standard counterexample to &ldquo;discrete means a small, finite set&rdquo;. There is no largest possible value here &mdash; and yet the values are separated by gaps of one, you can list them, and every probability question is answered by adding terms rather than integrating. Note also how lopsided the histogram is: the majority of the probability sits in the first few values while a long thin tail runs off to the right.'},
+
+  {k:'shoe',nm:'Shoe size sold',s:'discrete, but not whole',ty:0,un:'',ax:'shoe size',L0:2,
+   steps:[2,1,0.5,0.1,0.01,0.001],iv:[8,10],
+   g:function(p){return clamp(Math.round((9+1.35*nrm(p))/0.5)*0.5,5,15);},
+   poss:'5, 5.5, 6, 6.5, 7, &hellip; &mdash; a list with a gap of one half between neighbours.',
+   why:'Half sizes are decimals, and this variable is still firmly discrete. The manufacturer makes an 8 and an 8&frac12; and nothing whatsoever in between, so there are values &mdash; 8.3, say &mdash; that simply cannot occur.',
+   dd:'Watch the second chart carefully on this one. The count of different values keeps climbing until the precision reaches <b>a half</b>, and then stops dead: measuring shoe sizes to the nearest hundredth discovers nothing, because there was never anything there to discover. The plateau begins exactly at the natural gap, and the &ldquo;closest two values&rdquo; tile reads it off for you.'},
+
+  {k:'price',nm:'Amount on the receipt',s:'discrete in principle',ty:0,un:' dollars',ax:'dollars on the receipt',L0:4,
+   steps:[1,0.5,0.1,0.05,0.01,0.001],iv:[20,30],
+   g:function(p){return Math.round(Math.exp(3.15+0.45*nrm(p))*100)/100;},
+   poss:'0.01, 0.02, 0.03, &hellip; &mdash; every whole number of cents. A very long list, but a list.',
+   why:'A register cannot charge a third of a cent. The possible values are separated by exactly one cent, so this is discrete &mdash; technically, unarguably, and almost uselessly.',
+   dd:'This is the honest borderline case, and it teaches the most. The variable <b>is</b> discrete: refine past a cent and the second chart flattens out, exactly as it did for shoe sizes. But with thousands of possible values packed a cent apart, the steps are far too small to matter, every individual price has a minuscule probability, and every practical question is about a range rather than an exact amount. So money is nearly always <b>modelled as continuous</b>. Classifying it correctly and then approximating it deliberately is not a contradiction &mdash; it is what a statistician actually does.'},
+
+  {k:'height',nm:'Adult height',s:'a measurement',ty:1,un:' cm',ax:'height in centimetres',L0:2,
+   steps:[10,5,1,0.5,0.1,0.01],iv:[168,172],
+   g:function(p){return 170+9*nrm(p);},
+   poss:'every value in an interval &mdash; 170, 170.4, 170.42, 170.418, and on without end.',
+   why:'Height is a length. Between any two heights there is another height, and the only reason your data looks stepped is that the tape measure has marks on it. Buy a better tape and new values appear.',
+   dd:'The most common objection: &ldquo;but nobody is 170.4183 cm tall, we always write 170&rdquo;. That is a statement about the ruler. The person had a definite length before you measured, and it was not obliged to land on one of your marks. Every value you record is really shorthand for <b>an interval</b> &mdash; &ldquo;170 cm&rdquo; means somewhere between 169.5 and 170.5 &mdash; which is exactly why probabilities for continuous variables are areas over intervals and never heights at points.'},
+
+  {k:'bus',nm:'Minutes until the next bus',s:'a duration',ty:1,un:' min',ax:'minutes waited',L0:2,
+   steps:[5,2,1,0.5,0.1,0.01],iv:[2,6],
+   g:function(p){return -7*Math.log(Math.max(pool[p],1e-12));},
+   poss:'any positive amount of time &mdash; 4 minutes, 4.3, 4.28, 4.2837&hellip;',
+   why:'Time flows. The wait can be any positive real number, and the number of decimal places you bother to write down is a choice you make, not a property of the waiting.',
+   dd:'Compare this directly with the cars: same street, same traffic. <b>How many</b> buses arrive in ten minutes is discrete; <b>how long</b> you stand there is continuous. Note the shape too &mdash; waiting times pile up near zero and trail off to the right, so the mean sits well above the typical wait. That skew is a feature of the variable, not of the sample.'},
+
+  {k:'temp',nm:'Body temperature',s:'a measurement',ty:1,un:' °F',ax:'temperature in °F',L0:3,
+   steps:[2,1,0.5,0.1,0.01,0.001],iv:[98,99],
+   g:function(p){return 98.4+0.62*nrm(p);},
+   poss:'every value in an interval &mdash; the thermometer’s digits are its limit, not the body’s.',
+   why:'Temperature varies smoothly and never jumps from one reading to the next without passing through everything between. A digital thermometer showing one decimal place is rounding, and a better one shows two.',
+   dd:'This variable is a good test of whether you have understood the definition, because the recorded data looks so convincingly discrete: pages of readings that are all 98.2, 98.4, 98.6. Slide the precision finer and the illusion dissolves &mdash; the values keep splitting apart, because they were never really sitting on those marks.'},
+
+  {k:'flour',nm:'Weight of a 1 kg bag of flour',s:'a measurement',ty:1,un:' g',ax:'grams in the bag',L0:2,
+   steps:[10,5,1,0.5,0.1,0.01],iv:[999,1005],
+   g:function(p){return 1002+3.5*nrm(p);},
+   poss:'every value in an interval around a kilogram.',
+   why:'Weight is a continuous physical quantity. The filling machine aims at 1000 g and misses by a smear of amounts, none of which is obliged to be a whole number of grams.',
+   dd:'This is the quality-control shape of the question. Nobody in the factory ever asks for the probability that a bag weighs <b>exactly</b> 1000.000 g &mdash; that probability is zero. They ask for the probability that it falls <b>between</b> 995 and 1005 g, which is a real number that the third chart shows holding perfectly steady no matter how finely the scale reads.'}
+ ];
+
+ /* ================================ state ================================ */
+ var vi=6,L=2,n=600,guess=-1,done={},ans={},score=0,tries=0;
+ var raw=[],lev=[],minGap=0,XL=0,XH=1,plat=0;
+
+ /* ================================ computation ================================ */
+ function decOf(st){return Math.max(0,Math.ceil(-Math.log(st)/Math.LN10-1e-9));}
+ function fmtV(x,st){return x.toFixed(decOf(st));}
+ function fmt(x,dc){
+  var v=x.toFixed(dc===undefined?0:dc),p=v.split('.');
+  p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return p.join('.');
+ }
+ function pc(p,dc){return (p*100).toFixed(dc===undefined?1:dc)+'%';}
+ function sig(x){
+  if(!(x>0))return '&mdash;';
+  var s=x.toPrecision(3);
+  if(s.indexOf('e')>=0)s=(+s).toFixed(8);
+  /* 1.00 reads as a typo where a count is meant; 0.0100 likewise for money */
+  if(s.indexOf('.')>=0)s=s.replace(/0+$/,'').replace(/\.$/,'');
+  return s;
+ }
+
+ /* the whole sample is generated, then recorded six different ways.  nothing is
+    looked up: every count below is a genuine pass over the n observations. */
+ function compute(){
+  var v=V[vi],i,j;
+  raw=new Array(n);
+  for(i=0;i<n;i++)raw[i]=v.g(i*PER);
+
+  var sd=raw.slice().sort(function(a,b){return a-b;});
+  minGap=Infinity;
+  for(i=1;i<n;i++){var d=sd[i]-sd[i-1];if(d>1e-12&&d<minGap)minGap=d;}
+  if(!isFinite(minGap))minGap=0;
+
+  /* one fixed horizontal range for all six precisions, so the pictures compare.
+     a quantity that cannot go below zero does not get a negative axis. */
+  XL=sd[0]-v.steps[0]/2;XH=sd[n-1]+v.steps[0]/2;
+  if(sd[0]>=0&&XL<0)XL=0;
+  if(XH-XL<1e-9){XL-=1;XH+=1;}
+
+  lev=[];
+  for(j=0;j<6;j++){
+   var st=v.steps[j],mp={},dis=0,mk=0,mc=0,ivc=0,a=v.iv[0],b=v.iv[1];
+   for(i=0;i<n;i++){
+    /* recording an observation IS rounding it onto a grid of width st */
+    var key=Math.round(raw[i]/st);
+    if(mp[key]===undefined){mp[key]=0;dis++;}
+    mp[key]++;
+    if(mp[key]>mc){mc=mp[key];mk=key;}
+    var rec=key*st;
+    if(rec>=a-1e-9&&rec<=b+1e-9)ivc++;
+   }
+   lev.push({st:st,mp:mp,dis:dis,mk:mk,mc:mc,iv:ivc});
+  }
+  /* the first precision at which refining stops finding anything new: for a
+     discrete variable this is where its own grain has been reached, for a
+     continuous one it never arrives before the finest setting offered. */
+  plat=5;
+  for(j=0;j<6;j++)if(lev[j].dis===lev[5].dis){plat=j;break;}
+ }
+
+ /* ============================ card 1: the recorded values ============================ */
+ var HX0=36,HW=294,HY0=24,HY1=158;
+ function drawHist(){
+  var v=V[vi],Lv=lev[L],s='',k,i,j;
+  var px=function(x){return HX0+(x-XL)/(XH-XL)*HW;};
+  var mx=1;
+  for(k in Lv.mp)if(Lv.mp[k]>mx)mx=Lv.mp[k];
+  var py=function(c){return HY1-c/mx*(HY1-HY0);};
+  var col=v.ty?'#7a5a8a':'#2f6f9f';
+  var bw=Lv.st/(XH-XL)*HW;
+
+  /* the fixed interval, shaded, so the gold line on the third chart has a picture */
+  var ia=clamp(px(v.iv[0]),HX0,HX0+HW),ib=clamp(px(v.iv[1]),HX0,HX0+HW);
+  if(ib>ia)s+='<rect x="'+ia.toFixed(1)+'" y="'+HY0+'" width="'+(ib-ia).toFixed(1)+'" height="'+(HY1-HY0)+'" fill="#f6ecd6"/>';
+
+  if(bw>=1.2){
+   for(k in Lv.mp){
+    var c=Lv.mp[k],xc=px(k*Lv.st);
+    /* a bar straddling the edge of the axis is trimmed, never drawn outside it */
+    var x1=Math.max(HX0,xc-bw/2+0.35),x2=Math.min(HX0+HW,xc+bw/2-0.35);
+    if(x2-x1<0.8)x2=x1+0.8;
+    s+='<rect x="'+x1.toFixed(1)+'" y="'+py(c).toFixed(1)+'" width="'+(x2-x1).toFixed(1)+'" height="'+(HY1-py(c)).toFixed(1)+'" fill="'+col+'"/>';
+   }
+  }else{
+   /* finer than one pixel: each column shows the tallest bar standing inside it */
+   var cm=new Array(HW);
+   for(j=0;j<HW;j++)cm[j]=0;
+   for(k in Lv.mp){
+    var q=Math.floor(px(k*Lv.st)-HX0);
+    if(q<0)q=0;if(q>=HW)q=HW-1;
+    if(Lv.mp[k]>cm[q])cm[q]=Lv.mp[k];
+   }
+   for(j=0;j<HW;j++){
+    if(!cm[j])continue;
+    s+='<rect x="'+(HX0+j)+'" y="'+py(cm[j]).toFixed(1)+'" width="1" height="'+(HY1-py(cm[j])).toFixed(1)+'" fill="'+col+'"/>';
+   }
+  }
+
+  s+='<line x1="'+HX0+'" y1="'+HY1+'" x2="'+(HX0+HW)+'" y2="'+HY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<line x1="'+HX0+'" y1="'+HY0+'" x2="'+HX0+'" y2="'+HY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  for(i=0;i<=4;i++){
+   var xv=XL+(XH-XL)*i/4;
+   s+='<text x="'+px(xv).toFixed(1)+'" y="'+(HY1+15)+'" font-size="8.6" font-weight="700" fill="#78868d" text-anchor="middle">'+xv.toFixed(Math.abs(XH-XL)<12?1:0)+'</text>';
+  }
+  s+='<text x="'+(HX0+HW/2).toFixed(1)+'" y="'+(HY1+33)+'" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">'+v.ax+'</text>';
+  s+='<text x="'+(HX0-5)+'" y="'+(HY0+4)+'" font-size="8.4" font-weight="700" fill="#a3b0b7" text-anchor="end">'+fmt(mx)+'</text>';
+  s+='<text x="'+(HX0-5)+'" y="'+(HY1)+'" font-size="8.4" font-weight="700" fill="#a3b0b7" text-anchor="end">0</text>';
+  s+='<text x="'+HX0+'" y="14" font-size="9" font-weight="700" fill="#a3b0b7" text-anchor="start">bar height = how many of the '+fmt(n)+' observations recorded that value</text>';
+  $("hist").innerHTML=s;
+
+  $("hLgd").innerHTML='<span><i style="background:'+col+'"></i>'+(v.ty?'a continuous variable, recorded':'a discrete variable, recorded')+' to the nearest '+fmtV(Lv.st,Lv.st)+v.un+'</span><span><i style="background:#f6ecd6"></i>the fixed interval '+fmtV(v.iv[0],1)+' to '+fmtV(v.iv[1],1)+v.un+'</span>';
+
+  var tall=mx;
+  $("hCap").innerHTML='Recorded to the nearest <b>'+fmtV(Lv.st,Lv.st)+v.un+'</b>, these '+fmt(n)+' observations landed on <b>'+fmt(Lv.dis)+'</b> different values, and the tallest bar holds <b>'+fmt(tall)+'</b> of them. '+
+   (v.ty
+    ? 'Drag the precision slider and watch the picture come apart. Coarsely recorded, a continuous variable looks exactly like a discrete one &mdash; a few tall bars with clean gaps &mdash; and that resemblance is the reason this section confuses people. Keep refining and the bars keep splitting, because there was always something between them.'
+    : 'Drag the precision slider. Past the natural gap of this variable the bars stop splitting: they only spread apart, with dead space between them that no observation can ever occupy. That empty space is what discreteness looks like.')+
+   (bw<1.2?' <b>The bins are now finer than a screen pixel</b>, so each column is drawn at the height of the tallest bar inside it.':'');
+ }
+
+ /* ===================== card 2: does refining find new values? ===================== */
+ var GX0=42,GW=284,GY0=22,GY1=146;
+ function drawGrow(){
+  var v=V[vi],s='',j;
+  var gx=function(j2){return GX0+j2/5*GW;};
+  var gy=function(c){return GY1-c/n*(GY1-GY0);};
+
+  for(j=0;j<=4;j++){
+   var yy=GY1-(GY1-GY0)*j/4;
+   s+='<line x1="'+GX0+'" y1="'+yy.toFixed(1)+'" x2="'+(GX0+GW)+'" y2="'+yy.toFixed(1)+'" stroke="#eff4f7" stroke-width="1"/>';
+   s+='<text x="'+(GX0-5)+'" y="'+(yy+3).toFixed(1)+'" font-size="8.2" font-weight="700" fill="#a3b0b7" text-anchor="end">'+fmt(n*j/4)+'</text>';
+  }
+  s+='<line x1="'+GX0+'" y1="'+gy(n).toFixed(1)+'" x2="'+(GX0+GW)+'" y2="'+gy(n).toFixed(1)+'" stroke="#b7c7d0" stroke-width="1.6" stroke-dasharray="5 4"/>';
+  s+='<text x="'+(GX0+GW)+'" y="'+(gy(n)+11).toFixed(1)+'" font-size="8.6" font-weight="700" fill="#93a1a8" text-anchor="end">every observation a different value</text>';
+
+  var pth='';
+  for(j=0;j<6;j++)pth+=(j?' L':'M')+gx(j).toFixed(1)+' '+gy(lev[j].dis).toFixed(1);
+  s+='<path d="'+pth+'" fill="none" stroke="#2f6f9f" stroke-width="2.2"/>';
+  for(j=0;j<6;j++){
+   s+='<circle cx="'+gx(j).toFixed(1)+'" cy="'+gy(lev[j].dis).toFixed(1)+'" r="'+(j===L?5:3)+'" fill="'+(j===L?'#1c4454':'#2f6f9f')+'" stroke="#fff" stroke-width="1.6"/>';
+   s+='<text x="'+gx(j).toFixed(1)+'" y="'+(GY1+15)+'" font-size="8.2" font-weight="'+(j===L?800:700)+'" fill="'+(j===L?'#1c4454':'#78868d')+'" text-anchor="middle">'+fmtV(lev[j].st,lev[j].st)+'</text>';
+  }
+  s+='<text x="'+gx(L).toFixed(1)+'" y="'+(gy(lev[L].dis)-10).toFixed(1)+'" font-size="9.4" font-weight="800" fill="#1c4454" text-anchor="middle">'+fmt(lev[L].dis)+'</text>';
+  s+='<line x1="'+GX0+'" y1="'+GY1+'" x2="'+(GX0+GW)+'" y2="'+GY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<line x1="'+GX0+'" y1="'+GY0+'" x2="'+GX0+'" y2="'+GY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<text x="'+(GX0+GW/2).toFixed(1)+'" y="'+(GY1+33)+'" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">recorded to the nearest &hellip; (coarse on the left, fine on the right)</text>';
+  $("grow").innerHTML=s;
+
+  var d0=lev[4].dis,d1=lev[5].dis,grew=d1-d0;
+  var msg;
+  if(v.ty){
+   msg='<b>The line never stops climbing.</b> Every time the measurement gets finer, values that had been sharing a mark separate and become distinguishable &mdash; the last refinement alone uncovered <b>'+fmt(grew)+'</b> more. At the finest setting offered here it has reached <b>'+fmt(d1)+'</b> of the '+fmt(n)+' observations, and it is still rising; there is no setting at which it would stop. Measured exactly, all '+fmt(n)+' would differ, because two draws from a continuous variable landing on precisely the same number is an event of probability zero. This refusal to level off is the signature of continuity: <b>there is always something in between</b>.';
+  }else{
+   msg='<b>The line flattens and stops.</b> It rises while the recording is still coarser than the variable&rsquo;s own grain, because you are undoing your own rounding &mdash; but once the precision is finer than the natural gap of <b>'+sig(minGap)+v.un+'</b>, refining further discovers nothing at all. The last refinement added <b>'+(grew===0?'not a single new value':fmt(grew)+' new value'+(grew===1?'':'s'))+'</b>. The line stalls far below the dashed ceiling because the same values keep recurring, which is exactly what it means for the possible values to be listable.';
+  }
+  $("gCap").innerHTML=msg+' Each dot is a genuine recount of all '+fmt(n)+' observations at that precision, not a formula.';
+ }
+
+ /* ================== card 3: point probability against interval probability ================== */
+ var PX0=42,PW=284,PY0=22,PY1=146;
+ function drawProb(){
+  var v=V[vi],s='',j;
+  var px2=function(j2){return PX0+j2/5*PW;};
+  var py2=function(p){return PY1-p*(PY1-PY0);};
+
+  for(j=0;j<=4;j++){
+   var yy=PY1-(PY1-PY0)*j/4;
+   s+='<line x1="'+PX0+'" y1="'+yy.toFixed(1)+'" x2="'+(PX0+PW)+'" y2="'+yy.toFixed(1)+'" stroke="#eff4f7" stroke-width="1"/>';
+   s+='<text x="'+(PX0-5)+'" y="'+(yy+3).toFixed(1)+'" font-size="8.2" font-weight="700" fill="#a3b0b7" text-anchor="end">'+(j*25)+'%</text>';
+  }
+  var p1='',p2='';
+  for(j=0;j<6;j++){
+   p1+=(j?' L':'M')+px2(j).toFixed(1)+' '+py2(lev[j].mc/n).toFixed(1);
+   p2+=(j?' L':'M')+px2(j).toFixed(1)+' '+py2(lev[j].iv/n).toFixed(1);
+  }
+  s+='<path d="'+p2+'" fill="none" stroke="#b8862f" stroke-width="2.2"/>';
+  s+='<path d="'+p1+'" fill="none" stroke="#d1495b" stroke-width="2.2"/>';
+  for(j=0;j<6;j++){
+   s+='<circle cx="'+px2(j).toFixed(1)+'" cy="'+py2(lev[j].iv/n).toFixed(1)+'" r="'+(j===L?4.6:2.8)+'" fill="#b8862f" stroke="#fff" stroke-width="1.5"/>';
+   s+='<circle cx="'+px2(j).toFixed(1)+'" cy="'+py2(lev[j].mc/n).toFixed(1)+'" r="'+(j===L?4.6:2.8)+'" fill="#d1495b" stroke="#fff" stroke-width="1.5"/>';
+   s+='<text x="'+px2(j).toFixed(1)+'" y="'+(PY1+15)+'" font-size="8.2" font-weight="'+(j===L?800:700)+'" fill="'+(j===L?'#1c4454':'#78868d')+'" text-anchor="middle">'+fmtV(lev[j].st,lev[j].st)+'</text>';
+  }
+  s+='<line x1="'+PX0+'" y1="'+PY1+'" x2="'+(PX0+PW)+'" y2="'+PY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<line x1="'+PX0+'" y1="'+PY0+'" x2="'+PX0+'" y2="'+PY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<text x="'+(PX0+PW/2).toFixed(1)+'" y="'+(PY1+33)+'" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">recorded to the nearest &hellip; (coarse on the left, fine on the right)</text>';
+  $("prob").innerHTML=s;
+
+  var a=lev[0].mc/n,b=lev[5].mc/n,iv0=lev[0].iv/n,iv1=lev[5].iv/n;
+  /* name the commonest value at the variable's own grain, not at the current
+     slider setting -- "5" is a shoe size, "5.000" is a typographical accident */
+  var gdec=minGap>0?decOf(minGap):0;
+  var modeAt=(lev[5].mk*lev[5].st).toFixed(gdec);
+  var msg;
+  if(v.ty){
+   msg='This is the chart with the theorem in it. The <b>red</b> line is the share of the sample sitting on the single commonest recorded value: <b>'+pc(a)+'</b> when the recording is crude, <b>'+pc(b,2)+'</b> when it is fine. It is being driven to the floor, and nothing stops it &mdash; for a continuous random variable <b>P(X = x) = 0 for every single value of x</b>, because a fixed supply of probability is being shared out among infinitely many values. The <b>gold</b> line is the share landing inside one fixed interval, and it does the opposite: it <b>converges</b>. Compare the last two settings. The gold line went from '+pc(lev[4].iv/n)+' to '+pc(iv1)+' &mdash; it has stopped moving &mdash; while over the same two settings the red line fell from '+pc(lev[4].mc/n,2)+' to '+pc(b,2)+' and is still falling. (Further left the gold line is unreliable rather than wrong: a recording grid coarser than the interval itself drags in values from outside it.) That asymmetry is the whole thing. Refine the measurement forever and the chance of an exact value goes to zero, while the chance of landing in an interval settles on a definite number. <b>All the probability of a continuous variable lives in intervals</b>, which is why its picture is a curve with area underneath rather than a row of bars with heights.';
+  }else{
+   msg='<b>The red line stops falling and holds.</b> It is the share of the sample sitting on the single commonest recorded value, and from the &ldquo;nearest '+fmtV(v.steps[plat],v.steps[plat])+v.un+'&rdquo; mark rightwards it is pinned at <b>'+pc(lev[plat].mc/n)+'</b> and will not move again, however fine the recording gets. That is because <b>'+modeAt+v.un+'</b> is a real destination &mdash; a value the variable genuinely lands on, '+fmt(lev[5].mc)+' times in these '+fmt(n)+' observations. For a discrete random variable <b>P(X = x) is an honest positive number</b> for each value in the list, those numbers add to 1, and every probability question is answered by adding the relevant ones up.'+
+    (plat>0?' To the left of that mark the line is higher, at '+pc(a)+' at its coarsest, but that is not a bigger probability &mdash; it is crude recording heaping genuinely different values onto the same mark. You were measuring your own rounding, not the variable.':'')+
+    ' The <b>gold</b> interval line settles at about '+pc(iv1)+'. Now switch to a continuous variable and watch the red line fall away to nothing while the gold one refuses to.';
+  }
+  $("pCap").innerHTML=msg;
+ }
+
+ /* ============================ the reading panel ============================ */
+ function drawInfo(){
+  var v=V[vi],Lv=lev[L],tx='';
+  tx+='<span class="n">'+v.nm+' &mdash; '+(v.ty?'continuous':'discrete')+'</span>';
+  tx+='<b>Possible values:</b> '+v.poss+'<div class="dd">'+v.why+'</div>';
+  tx+='<div class="dd">'+v.dd+'</div>';
+  tx+='<div class="eq">'+
+      '<div class="r"><span>observations drawn</span><b>'+fmt(n)+'</b></div>'+
+      '<div class="r"><span>recorded to the nearest</span><b>'+fmtV(Lv.st,Lv.st)+v.un+'</b></div>'+
+      '<div class="r"><span>different values recorded</span><b>'+fmt(Lv.dis)+'</b></div>'+
+      '<div class="r"><span>closest two values in the sample</span><b>'+sig(minGap)+v.un+'</b></div>'+
+      '<div class="r"><span>landed on exactly '+fmtV(Lv.mk*Lv.st,Lv.st)+v.un+'</span><b>'+fmt(Lv.mc)+' of '+fmt(n)+' = '+pc(Lv.mc/n,2)+'</b></div>'+
+      '<div class="r"><span>landed in '+fmtV(v.iv[0],1)+' to '+fmtV(v.iv[1],1)+v.un+'</span><b>'+fmt(Lv.iv)+' of '+fmt(n)+' = '+pc(Lv.iv/n,2)+'</b></div>'+
+      '</div>';
+  tx+='<div class="loc">'+(v.ty
+   ? 'Because this variable is continuous, its probabilities will be described by a <b>density curve</b>, and a probability is an <b>area</b> under a stretch of it. Asking for the chance of one exact value is asking for the area of a line, which is zero &mdash; so the only meaningful questions are about ranges. Chapter 6 is not about this kind of variable; it is the chapter that comes after.'
+   : 'Because this variable is discrete, it will have a <b>probability distribution</b>: a list of its possible values, each with a probability of its own, and those probabilities must be non-negative and add to exactly 1. Its mean and standard deviation are then found by weighting each value by its probability. That list is what the rest of Chapter 6 is built on.')+'</div>';
+  $("info").innerHTML=tx;
+ }
+
+ /* ================================ chrome ================================ */
+ function render(){
+  var v=V[vi];
+  compute();
+  drawHist();drawGrow();drawProb();drawInfo();
+
+  var Lv=lev[L],col=v.ty?'#7a5a8a':'#2f6f9f';
+  $("tN").innerHTML=fmt(n);
+  $("tD").innerHTML=fmt(Lv.dis);
+  $("tG").innerHTML=sig(minGap);
+  $("tP").innerHTML=pc(Lv.mc/n,2);
+
+  $("pVal").innerHTML=fmtV(Lv.st,Lv.st)+v.un;
+  $("nVal").innerHTML=fmt(n);
+  $("pSl").value=L;
+
+  $("hTitle").innerHTML='Every value you recorded, to the nearest '+fmtV(Lv.st,Lv.st)+v.un;
+
+  if(guess<0){
+   $("stage").style.background='#4a585f';
+   $("stage").innerHTML=v.nm+'<small>'+v.s+' &nbsp;·&nbsp; discrete or continuous?</small>';
+  }else{
+   $("stage").style.background=col;
+   $("stage").innerHTML=(v.ty?'CONTINUOUS':'DISCRETE')+'<small>'+v.nm+' &nbsp;·&nbsp; '+fmt(Lv.dis)+' different values in '+fmt(n)+' observations</small>';
+  }
+
+  $("vGrid").innerHTML=V.map(function(x,i){
+   return '<button class="it'+(i===vi?' on':'')+'" data-v="'+i+'"><span class="nm">'+x.nm+'</span><span class="s">'+(done[x.k]?(done[x.k]===2?'✓ got it':'✕ missed it'):x.s)+'</span></button>';
+  }).join('');
+  document.querySelectorAll('#vGrid .it').forEach(function(b){
+   b.onclick=function(){vi=+b.dataset.v;L=V[vi].L0;guess=done[V[vi].k]?ans[V[vi].k]:-1;render();};
+  });
+
+  document.querySelectorAll('#gseg button').forEach(function(b){
+   b.className=(+b.dataset.v===guess)?'on':'';
+  });
+
+  if(guess<0){
+   $("vd").className='';
+   $("vd").innerHTML='Make a call first. The three charts are computed from a real sample either way &mdash; the guess only decides whether you get to be right.';
+  }else{
+   var ok=(guess===v.ty);
+   $("vd").className=ok?'ok':'no';
+   $("vd").innerHTML=(ok?'✓ Correct &mdash; ':'✕ Not quite &mdash; ')+'<b>'+v.nm.toLowerCase()+'</b> is '+(v.ty?'continuous':'discrete')+'. '+
+     (v.ty?'Refining the measurement keeps turning up values you have never seen before.':'Refine past '+sig(minGap)+v.un+' and no new value ever appears again.')+
+     (tries?' &nbsp;·&nbsp; '+score+' of '+tries+' right so far.':'');
+  }
+
+  var rows='',j;
+  for(j=0;j<6;j++){
+   var Q=lev[j];
+   rows+='<tr'+(j===L?' class="on"':'')+'><td>'+fmtV(Q.st,Q.st)+v.un+'</td>'+
+     '<td class="dv">'+fmt(Q.dis)+'</td>'+
+     '<td>'+fmtV(Q.mk*Q.st,Q.st)+'</td>'+
+     '<td class="pt">'+pc(Q.mc/n,2)+'</td>'+
+     '<td class="iv">'+pc(Q.iv/n,1)+'</td></tr>';
+  }
+  $("lad").innerHTML=rows;
+  $("ladCap").innerHTML='The same '+fmt(n)+' observations, written down six different ways. Read the <b>different values</b> column downwards: if it climbs all the way to the bottom row, nothing you do to the ruler exhausts the variable, and it is <b>continuous</b>. If it stops climbing, you have found the variable&rsquo;s own grain, and it is <b>discrete</b>. Read the last two columns as a pair: for a continuous variable the exact-value share is squeezed toward zero while the interval share stands still.';
+
+  $("fnote").innerHTML='Nothing on this page is a stored answer. The '+fmt(n)+' observations are generated from the model named on the button &mdash; a binomial count, a Poisson count, a geometric wait, a normal measurement, an exponential wait &mdash; using a seeded pseudo-random generator, so the page opens identically every time while <b>A new sample</b> really does draw a new one. The samples are nested: enlarging the sample keeps the observations you already had and adds to them. Each of the six precision rows is produced by rounding every observation onto a grid of that width and recounting from scratch. One honest caveat about the refinement test: on <i>real</i> data it eventually stalls for every variable, because a real instrument has a finest reading of its own &mdash; so what it detects is the grain of the <b>recording</b>. Here the recording is exact and the grain you find is the variable&rsquo;s. In practice you settle the question the way this page settles it in prose: by asking whether the quantity is something you <b>count</b> or something you <b>measure</b>, and whether a finer instrument would find something new.';
+ }
+
+ /* ================================ wiring ================================ */
+ $("pSl").oninput=function(){L=+this.value;render();};
+ $("nSl").oninput=function(){n=+this.value;render();};
+ $("fresh").onclick=function(){seed++;fillPool();render();};
+ $("finest").onclick=function(){L=5;render();};
+ document.querySelectorAll('#gseg button').forEach(function(b){
+  b.onclick=function(){
+   var g=+b.dataset.v,v=V[vi];
+   if(!done[v.k]){tries++;if(g===v.ty)score++;done[v.k]=(g===v.ty)?2:1;ans[v.k]=g;}
+   guess=g;
+   render();
+  };
+ });
+
+ fillPool();
+ L=V[vi].L0;
+ render();
+})();
+</script>
+</body>
+</html>

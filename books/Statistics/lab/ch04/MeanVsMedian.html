@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Mean vs Median</title>
+<meta name="description" content="Drag one data point away from the crowd and watch the mean chase it while the median holds still. Live dot plot, live balance point, a trace of both statistics against the dragged value, and the exact arithmetic behind every number on screen.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+#plotSvg{touch-action:pan-y;cursor:ew-resize;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:86px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.mn .vv{color:var(--coral);} .tiles div.md .vv{color:var(--green);}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px;font-size:11px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.45;}
+.hd{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;margin-bottom:6px;}
+.grid .it .s{display:block;margin-top:2px;font-variant-numeric:tabular-nums;}
+#info .eq{font-size:12.5px;color:var(--teal-dk);background:#e2eff5;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.6;font-variant-numeric:tabular-nums;}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,1fr);}.sl label{font-size:10px;}.sl .nv{min-width:74px;font-size:13px;}.row .btn{font-size:12px;padding:10px 4px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 4</div>
+  <h1>Mean vs Median</h1>
+  <div class="intro">Two numbers both answer to the name <b>&ldquo;average&rdquo;</b>, and most of the time they agree closely enough that nobody asks which one was used. Drag a single value away from the crowd and they stop agreeing. The <b>mean</b> follows the runaway point, a fixed fraction of the way for every step it takes; the <b>median</b> does not move at all. Every dot, marker, curve and number below is computed live from the values currently on screen.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="plotTitle">The data</h2>
+      <svg id="plotSvg" viewBox="0 0 340 176" aria-label="dot plot of the current values with the mean and median marked"><g id="plot"></g></svg>
+      <div class="lgd" id="lgd"></div>
+      <div class="cap" id="plotCap"></div>
+    </div>
+    <div class="card"><h2>Where each statistic goes as you drag</h2>
+      <svg viewBox="0 0 340 196" aria-label="the mean and the median plotted against the value the point is dragged to"><g id="trace"></g></svg>
+      <div class="cap" id="traceCap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Mean vs median<small>drag the gold point</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="0" class="on">Household income<small>a street, $ thousands</small></button>
+        <button data-v="1">Commute time<small>minutes</small></button>
+        <button data-v="2">Reaction time<small>seconds</small></button>
+      </div>
+      <div class="sl"><label for="vSl">Drag to</label><input type="range" id="vSl" min="0" max="500" step="1" value="100"><span class="nv" id="vVal">&mdash;</span></div>
+      <div class="sl"><label for="kSl">Points moved</label><input type="range" id="kSl" min="1" max="25" step="1" value="1"><span class="nv" id="kVal">1 of 25</span></div>
+      <div class="sl"><label for="nSl">Sample size n</label><input type="range" id="nSl" min="0" max="4" step="1" value="2"><span class="nv" id="nVal">25</span></div>
+      <div class="row"><button class="btn" id="reset">&#8634; Put it back</button><button class="btn" id="samp">&#8635; New sample</button></div>
+      <div class="tiles">
+        <div><span class="lb">Values n</span><span class="vv" id="tN">25</span></div>
+        <div class="mn"><span class="lb">Mean</span><span class="vv" id="tMean">&mdash;</span></div>
+        <div class="md"><span class="lb">Median</span><span class="vv" id="tMed">&mdash;</span></div>
+        <div><span class="lb">Mean &minus; median</span><span class="vv" id="tGap">&mdash;</span></div>
+      </div>
+      <div class="hd">Send the point somewhere &mdash; tap to jump</div>
+      <div class="grid" id="jump"></div>
+      <div id="info"></div>
+      <div class="mnem">The <b>mean</b> is the <b>balance point</b>. Line the values up on a plank and it is the spot where the plank tips level, because the distances above it and below it cancel exactly. It therefore feels <i>how far</i> every value sits, and a value dragged twice as far pulls twice as hard. The <b>median</b> is the <b>middle address</b>. It only counts <i>how many</i> values lie on each side, never how far away they are, so a point at the edge of town and a point on the next continent are the same single vote. That one difference explains everything else on this page.</div>
+      <div class="note">Two things people say that are not quite right. First, <b>&ldquo;right-skewed means the mean is above the median&rdquo;</b> is a dependable rule of thumb, not a theorem &mdash; distributions exist whose long tail runs right while the mean still sits below the median. Read it off the picture rather than deducing it. Second, <b>the median is not automatically the better number.</b> The mean is the one that multiplies: mean income &times; number of households recovers the total money on the street, and no median can do that. Use the median when you want a typical case, the mean when you want a total, and report both whenever they disagree &mdash; the size of the gap is itself a finding.</div>
+      <div class="fn" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- seeded PRNG, so the page opens with the same sample every time ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function nrm(r){var u=1-r(),v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+
+ /* ================= three situations where the choice actually matters ================= */
+ var DS=[
+  {nm:'household income',ax:'household income ($ thousands per year)',un:'$ thousands',
+   pre:'$',suf:'k',dec:0,st:1,gran:1,A0:0,A1:500,
+   one:'one household',many:'households',where:'on one street',
+   gen:function(r){return Math.exp(4.1271+0.34*nrm(r));},
+   story:'One buyer with a very large income takes the last house on a street of teachers, mechanics and nurses. The street&rsquo;s <b>mean</b> income can climb by tens of thousands; its <b>median</b> household is exactly the household it was yesterday. This is precisely why income, house prices and salaries are almost always published as medians.'},
+  {nm:'commute time',ax:'time from door to desk (minutes)',un:'minutes',
+   pre:'',suf:' min',dec:0,st:1,gran:1,A0:0,A1:150,
+   one:'one person&rsquo;s morning',many:'people',where:'in one office',
+   gen:function(r){return Math.exp(3.2581+0.30*nrm(r));},
+   story:'One person meets a closed bridge and spends two hours in the car. That single morning lifts the office&rsquo;s <b>mean</b> commute for everybody, while the <b>median</b> commute &mdash; what the person in the middle of the queue actually experienced &mdash; does not move. Which number belongs in the staffing report depends on whether you are describing a typical morning or budgeting total hours lost.'},
+  {nm:'reaction time',ax:'time to press the button (seconds)',un:'seconds',
+   pre:'',suf:' s',dec:2,st:0.01,gran:0.01,A0:0.15,A1:1,
+   one:'one trial',many:'trials',where:'from one participant',
+   gen:function(r){return 0.29+0.038*nrm(r);},
+   story:'One trial where attention wandered and the button was pressed a full second late. Reaction-time data are famous for this, and it is why researchers so often report a <b>median</b> reaction time: a handful of lapses would otherwise decide the <b>mean</b> for a run of hundreds of clean trials.'}
+ ];
+ var NS=[9,15,25,51,101],BIG=1e12;
+
+ var ds=0,ni=2,k=1,V=0,seedN=0;
+ var pool=[],srt=[],kept=[],sumKept=0,cleanMean=0,cleanMed=0,curMean=0,curMed=0;
+
+ /* ================= the sample ================= */
+ function med(a){
+  var s=a.slice().sort(function(p,q){return p-q;}),m=s.length>>1;
+  if(!s.length)return 0;
+  return (s.length%2)?s[m]:(s[m-1]+s[m])/2;
+ }
+ function gen(){
+  var D=DS[ds],r=mulberry32(20260718+seedN*7919+ds*104729),i,v;
+  pool=[];
+  for(i=0;i<101;i++){
+    v=D.gen(r);
+    v=Math.round(v/D.gran)*D.gran;
+    if(v<D.A0)v=D.A0; if(v>D.A1)v=D.A1;
+    pool.push(Math.round(v*1e6)/1e6);
+  }
+  build();
+ }
+ /* the n slider takes a prefix of one fixed pool, so raising n extends the
+    sample rather than replacing it */
+ function build(){
+  var n=NS[ni],i,s=0;
+  srt=pool.slice(0,n).sort(function(p,q){return p-q;});
+  for(i=0;i<n;i++)s+=srt[i];
+  cleanMean=s/n; cleanMed=med(srt);
+  if(k>n)k=n;
+  keptSet();
+ }
+ /* the k highest values in the sample are the ones you drag; everything
+    below them stays exactly where the sample put it */
+ function keptSet(){
+  var n=NS[ni],i;
+  kept=srt.slice(0,n-k);
+  sumKept=0;
+  for(i=0;i<kept.length;i++)sumKept+=kept[i];
+ }
+ function meanAt(v){return (sumKept+k*v)/NS[ni];}
+ function medAt(v){
+  var a=kept.slice(),i;
+  for(i=0;i<k;i++)a.push(v);
+  return med(a);
+ }
+
+ /* ================= formatting ================= */
+ function fv(x){var D=DS[ds];return D.pre+x.toFixed(D.dec)+D.suf;}          /* a data value */
+ function fs(x){var D=DS[ds];return D.pre+x.toFixed(D.dec+1)+D.suf;}        /* a computed statistic */
+ function fd(x){var D=DS[ds],s=(x<0?'&minus;':'')+D.pre+Math.abs(x).toFixed(D.dec+1)+D.suf;return s;}
+ function ax(x){return x.toFixed(DS[ds].dec);}
+ function pc(x){return (x*100)<0.05?'under 0.1':(x*100).toFixed(1);}
+ function niceStep(span){
+  var raw=span/6,mag=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10)),u=raw/mag,st;
+  if(u<1.5)st=1;else if(u<3)st=2;else if(u<7)st=5;else st=10;
+  return st*mag;
+ }
+
+ /* ================= the dot plot ================= */
+ var PX0=34,PX1=328,BASE=118,DTOP=44,COLW=5.6;
+ function xOf(v){var D=DS[ds];return PX0+(v-D.A0)/(D.A1-D.A0)*(PX1-PX0);}
+ function chip(x,y,txt,col){
+  var w=11+txt.length*5.1,cx=x;
+  if(cx-w/2<PX0-14)cx=PX0-14+w/2;
+  if(cx+w/2>PX1+8)cx=PX1+8-w/2;
+  return '<rect x="'+(cx-w/2).toFixed(1)+'" y="'+y+'" width="'+w.toFixed(1)+'" height="15" rx="7.5" fill="'+col+'"/>'+
+         '<text x="'+cx.toFixed(1)+'" y="'+(y+10.6)+'" font-size="9.4" font-weight="800" fill="#fff" text-anchor="middle">'+txt+'</text>'+
+         '<line x1="'+x.toFixed(1)+'" y1="'+(y+15)+'" x2="'+x.toFixed(1)+'" y2="'+(y+21)+'" stroke="'+col+'" stroke-width="1.2"/>';
+ }
+ function drawPlot(){
+  var D=DS[ds],n=NS[ni],s='',i,c,pts=[],cnt={},maxs=0;
+
+  for(i=0;i<kept.length;i++)pts.push({v:kept[i],m:0});
+  for(i=0;i<k;i++)pts.push({v:V,m:1});
+  pts.sort(function(a,b){return (a.v-b.v)||(a.m-b.m);});
+  for(i=0;i<pts.length;i++){
+    c=Math.round((xOf(pts[i].v)-PX0)/COLW);
+    pts[i].c=c;
+    cnt[c]=(cnt[c]||0)+1;
+    pts[i].s=cnt[c]-1;
+    if(cnt[c]>maxs)maxs=cnt[c];
+  }
+  var avail=BASE-6-DTOP,dy=Math.min(5.8,avail/Math.max(1,maxs)),r=Math.min(2.6,dy*0.46);
+
+  /* the untouched sample's mean, for comparison */
+  s+='<line x1="'+xOf(cleanMean).toFixed(1)+'" y1="'+DTOP+'" x2="'+xOf(cleanMean).toFixed(1)+'" y2="'+BASE+'" stroke="#b7c7d0" stroke-width="1.4" stroke-dasharray="3 3"/>';
+
+  /* markers behind the dots */
+  s+='<line x1="'+xOf(curMed).toFixed(1)+'" y1="'+(DTOP-2)+'" x2="'+xOf(curMed).toFixed(1)+'" y2="'+BASE+'" stroke="#2f9e5b" stroke-width="2"/>';
+  s+='<line x1="'+xOf(curMean).toFixed(1)+'" y1="'+(DTOP-2)+'" x2="'+xOf(curMean).toFixed(1)+'" y2="'+BASE+'" stroke="#d1495b" stroke-width="2" stroke-dasharray="5 3"/>';
+
+  for(i=0;i<pts.length;i++){
+    s+='<circle cx="'+(PX0+pts[i].c*COLW).toFixed(2)+'" cy="'+(BASE-5-pts[i].s*dy).toFixed(2)+'" r="'+r.toFixed(2)+'" fill="'+(pts[i].m?'#b8862f':'#2f6f8a')+'"'+(pts[i].m?' stroke="#fffdf9" stroke-width="0.8"':'')+'/>';
+  }
+
+  /* the number line */
+  s+='<line x1="'+PX0+'" y1="'+BASE+'" x2="'+PX1+'" y2="'+BASE+'" stroke="#b7c7d0" stroke-width="1.4"/>';
+  var st=niceStep(D.A1-D.A0),t0=Math.ceil(D.A0/st-1e-9)*st,tv,tx;
+  for(tv=t0;tv<=D.A1+1e-9;tv+=st){
+    tx=xOf(Math.round(tv*1e6)/1e6);
+    s+='<line x1="'+tx.toFixed(1)+'" y1="'+BASE+'" x2="'+tx.toFixed(1)+'" y2="'+(BASE+4)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+    s+='<text x="'+tx.toFixed(1)+'" y="'+(BASE+29)+'" font-size="9.2" fill="#78868d" font-weight="600" text-anchor="middle">'+ax(Math.round(tv*1e6)/1e6)+'</text>';
+  }
+  /* the balance point, drawn as a fulcrum under the line */
+  var mx=xOf(curMean);
+  s+='<polygon points="'+mx.toFixed(1)+','+(BASE+1)+' '+(mx-6).toFixed(1)+','+(BASE+13)+' '+(mx+6).toFixed(1)+','+(BASE+13)+'" fill="#d1495b"/>';
+  s+='<text x="'+((PX0+PX1)/2)+'" y="'+(BASE+47)+'" font-size="9.6" fill="#95a3aa" font-weight="700" text-anchor="middle">'+D.ax+'</text>';
+
+  s+=chip(xOf(curMean),4,'mean '+fs(curMean),'#d1495b');
+  s+=chip(xOf(curMed),22,'median '+fs(curMed),'#2f9e5b');
+  $("plot").innerHTML=s;
+ }
+
+ /* ================= the trace: both statistics as functions of the dragged value ================= */
+ var TX0=44,TX1=330,TBASE=148,TTOP=18,NG=180;
+ function drawTrace(){
+  var D=DS[ds],s='',i,v,a=[],b=[],lo=1e18,hi=-1e18;
+  for(i=0;i<=NG;i++){
+    v=D.A0+(D.A1-D.A0)*i/NG;
+    a.push(meanAt(v)); b.push(medAt(v));
+    if(a[i]<lo)lo=a[i]; if(a[i]>hi)hi=a[i];
+    if(b[i]<lo)lo=b[i]; if(b[i]>hi)hi=b[i];
+  }
+  var pad=(hi-lo)*0.12||1; lo-=pad; hi+=pad;
+  var ys=niceStep(hi-lo),y0=Math.ceil(lo/ys-1e-9)*ys,yv,gy;
+  function px(v){return TX0+(v-D.A0)/(D.A1-D.A0)*(TX1-TX0);}
+  function py(v){return TBASE-(v-lo)/(hi-lo)*(TBASE-TTOP);}
+
+  for(yv=y0;yv<=hi+1e-9;yv+=ys){
+    gy=py(yv);
+    s+='<line x1="'+TX0+'" y1="'+gy.toFixed(1)+'" x2="'+TX1+'" y2="'+gy.toFixed(1)+'" stroke="#e7eef2" stroke-width="1"/>';
+    s+='<text x="'+(TX0-6)+'" y="'+(gy+3.4).toFixed(1)+'" font-size="9" fill="#95a3aa" font-weight="600" text-anchor="end">'+ax(Math.round(yv*1e6)/1e6)+'</text>';
+  }
+  s+='<text x="'+(TX0-6)+'" y="'+(TTOP-7)+'" font-size="8.6" fill="#95a3aa" font-weight="700" text-anchor="end">statistic</text>';
+
+  /* where you currently have the point */
+  s+='<line x1="'+px(V).toFixed(1)+'" y1="'+TTOP+'" x2="'+px(V).toFixed(1)+'" y2="'+TBASE+'" stroke="#b8862f" stroke-width="1.6"/>';
+
+  var d1='',d2='';
+  for(i=0;i<=NG;i++){
+    v=D.A0+(D.A1-D.A0)*i/NG;
+    d1+=(i?' L':'M')+px(v).toFixed(1)+' '+py(a[i]).toFixed(1);
+    d2+=(i?' L':'M')+px(v).toFixed(1)+' '+py(b[i]).toFixed(1);
+  }
+  s+='<path d="'+d1+'" fill="none" stroke="#d1495b" stroke-width="2.4" stroke-linejoin="round"/>';
+  s+='<path d="'+d2+'" fill="none" stroke="#2f9e5b" stroke-width="2.4" stroke-linejoin="round"/>';
+  s+='<circle cx="'+px(V).toFixed(1)+'" cy="'+py(curMean).toFixed(1)+'" r="4" fill="#d1495b" stroke="#fffdf9" stroke-width="1.6"/>';
+  s+='<circle cx="'+px(V).toFixed(1)+'" cy="'+py(curMed).toFixed(1)+'" r="4" fill="#2f9e5b" stroke="#fffdf9" stroke-width="1.6"/>';
+
+  s+='<line x1="'+TX0+'" y1="'+TBASE+'" x2="'+TX1+'" y2="'+TBASE+'" stroke="#b7c7d0" stroke-width="1.4"/>';
+  var xs=niceStep(D.A1-D.A0),x0=Math.ceil(D.A0/xs-1e-9)*xs,tv,tx;
+  for(tv=x0;tv<=D.A1+1e-9;tv+=xs){
+    tx=px(Math.round(tv*1e6)/1e6);
+    s+='<line x1="'+tx.toFixed(1)+'" y1="'+TBASE+'" x2="'+tx.toFixed(1)+'" y2="'+(TBASE+4)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+    s+='<text x="'+tx.toFixed(1)+'" y="'+(TBASE+15)+'" font-size="9.2" fill="#78868d" font-weight="600" text-anchor="middle">'+ax(Math.round(tv*1e6)/1e6)+'</text>';
+  }
+  s+='<text x="'+((TX0+TX1)/2)+'" y="'+(TBASE+33)+'" font-size="9.6" fill="#95a3aa" font-weight="700" text-anchor="middle">value you drag the point'+((k>1)?'s':'')+' to &mdash; '+D.ax+'</text>';
+  $("trace").innerHTML=s;
+ }
+
+ /* ================= words ================= */
+ function bandInfo(){
+  var D=DS[ds],mLo=medAt(-BIG),mHi=medAt(BIG),unb=(mLo<=-1e11||mHi>=1e11);
+  var w=Math.max(0,Math.min(mHi,D.A1)-Math.max(mLo,D.A0));
+  return {lo:mLo,hi:mHi,unb:unb,flat:1-w/(D.A1-D.A0)};
+ }
+
+ function infoHTML(){
+  var D=DS[ds],n=NS[ni],B=bandInfo(),bd=Math.ceil(n/2),h='';
+  var orig=srt[n-1],still=(k===1&&Math.abs(V-orig)<D.st*0.5);
+  var dMean=curMean-cleanMean,dMed=curMed-cleanMed;
+
+  if(still){
+   h='<span class="n">Nothing has been dragged yet</span>'+
+     'These are <b>'+n+'</b> untouched values, '+D.where+'. The mean is <b>'+fs(cleanMean)+'</b>, the median <b>'+fs(cleanMed)+'</b> &mdash; near neighbours, which is what you should expect whenever no value sits far from the crowd. With the two so close, arguing about which one to report is not worth anybody&rsquo;s time.'+
+     '<div class="dd">Now take the <b style="color:#b8862f">gold dot</b> on the right of the pile and pull it. Drag it on the plot, use the <b>Drag to</b> slider, or tap one of the jump buttons above. Watch the coral marker and the green marker separately.</div>';
+  }else if(B.unb){
+   h='<span class="n">The median has broken too</span>'+
+     'You are moving <b>'+k+'</b> of the <b>'+n+'</b> values together, and <b>'+k+' &ge; '+bd+'</b> &mdash; more than half the sample. Past that point the moved values <i>are</i> the majority, so whichever value they sit at is the middle value, and the median follows your finger exactly. The green curve below is no longer flat anywhere.'+
+     '<div class="dd">That threshold is the whole story of resistance. To send the mean anywhere you like you need to corrupt <b>one</b> value out of '+n+'. To send the median anywhere you like you need <b>'+bd+'</b> of them. Neither statistic is magic; the median just costs far more to fool.</div>';
+  }else{
+   var dir=(V>orig)?'out to the right':'down to the left';
+   h='<span class="n">The mean chased it. The median did not.</span>'+
+     'The '+((k===1)?'highest value':'top <b>'+k+'</b> values')+' in the sample '+((k===1)?'has':'have')+' been dragged '+dir+' to <b>'+fv(V)+'</b>. '+
+     'The mean moved from <b>'+fs(cleanMean)+'</b> to <b>'+fs(curMean)+'</b> &mdash; a shift of <b>'+fd(dMean)+'</b>. '+
+     (Math.abs(dMed)<1e-9
+       ? 'The median is <b>'+fs(curMed)+'</b>, which is exactly what it was before you touched anything. It did not move by a hair.'
+       : 'The median moved from <b>'+fs(cleanMed)+'</b> to <b>'+fs(curMed)+'</b> &mdash; a shift of only <b>'+fd(dMed)+'</b>, because you have dragged the point <i>through</i> the narrow window where it is itself the middle value.')+
+     '<div class="dd">Notice what the mean is reporting. It is a perfectly correct arithmetic average, and it is now a number that describes <i>nobody</i>: '+
+     (function(){var i,c=0;for(i=0;i<kept.length;i++)if(kept[i]>curMean)c++; if(V>curMean)c+=k;
+       return '<b>'+c+'</b> of the '+n+' values lie above it and <b>'+(n-c)+'</b> lie below, so it is not even close to the middle of this batch.';})()+'</div>';
+  }
+
+  h+='<div class="eq"><b>Mean</b> = (sum of the '+(n-k)+' untouched value'+((n-k===1)?'':'s')+' + '+k+' &times; '+fv(V)+') &divide; '+n+
+     ' = ('+sumKept.toFixed(D.dec)+' + '+(k*V).toFixed(D.dec)+') &divide; '+n+' = <b>'+fs(curMean)+'</b>.<br>'+
+     'Because '+(n-k)+' of the values are being held still, this is a <i>straight line</i> in the number you are dragging: raise that number by any amount at all and the mean rises by exactly k&#8725;n = '+k+'&#8725;'+n+' = <b>'+(k/n).toFixed(4)+'</b> times as much. That fraction is the slope of the coral line below, and it never reaches zero &mdash; which is why the mean can always be carried further.</div>';
+
+  h+='<div class="loc"><b>Where the median can go.</b> '+
+     (B.unb
+      ? 'With '+k+' of '+n+' values moving together, nowhere is off limits &mdash; the median now runs the full length of the scale with them.'
+      : 'No matter where you drag &mdash; off the end of the scale, off the end of the street &mdash; the median can only ever land between <b>'+fv(B.lo)+'</b> and <b>'+fv(B.hi)+'</b>. Those are two of the values already sitting in the pile, and they hem it in. Across <b>'+pc(B.flat)+'%</b> of the scale below, dragging changes the median by nothing at all.')+'</div>';
+
+  h+='<div class="dd">'+D.story+'</div>';
+  return h;
+ }
+
+ /* ================= wire it together ================= */
+ function jumpTargets(){
+  var D=DS[ds],n=NS[ni];
+  var cl=function(x){return Math.max(D.A0,Math.min(D.A1,Math.round(x/D.st)*D.st));};
+  return [
+   {nm:'Back to the top of the pile',v:cl(srt[n-1])},
+   {nm:'Twice the typical value',v:cl(2*cleanMed)},
+   {nm:'Five times the typical value',v:cl(5*cleanMed)},
+   {nm:'Far end of the scale',v:cl(D.A1)}
+  ];
+ }
+
+ function render(){
+  var D=DS[ds],n=NS[ni],B;
+  curMean=meanAt(V); curMed=medAt(V);
+  B=bandInfo();
+
+  var still=(k===1&&Math.abs(V-srt[n-1])<D.st*0.5);
+  $("stage").style.background=B.unb?'var(--coral)':(still?'var(--teal)':'var(--gold)');
+  $("stage").innerHTML=(still?'Untouched sample':(B.unb?'Both statistics have moved':'Mean '+fs(curMean)+' &middot; median '+fs(curMed)))+
+    '<small>'+(still
+      ? 'n = '+n+' &middot; the two sit '+fd(cleanMean-cleanMed).replace('&minus;','')+' apart &mdash; now drag the gold point'
+      : (B.unb
+         ? k+' of '+n+' values moved &mdash; past the halfway mark, so the median follows too'
+         : 'the mean has shifted '+fd(curMean-cleanMean)+' &middot; the median '+((Math.abs(curMed-cleanMed)<1e-9)?'has not moved at all':'has shifted only '+fd(curMed-cleanMed))))+'</small>';
+
+  $("tN").innerHTML=n;
+  $("tMean").innerHTML=fs(curMean);
+  $("tMed").innerHTML=fs(curMed);
+  $("tGap").innerHTML=fd(curMean-curMed);
+
+  $("plotTitle").innerHTML=n+' '+D.many+' '+D.where+' &middot; '+D.nm;
+  $("lgd").innerHTML='<span><i style="background:#2f6f8a"></i>one dot = '+D.one+'</span>'+
+    '<span><i style="background:#b8862f"></i>'+((k===1)?'the point you are dragging':'the '+k+' points you are dragging')+'</span>'+
+    '<span><i style="background:#d1495b"></i>mean &mdash; the balance point</span>'+
+    '<span><i style="background:#2f9e5b"></i>median &mdash; the middle value</span>'+
+    '<span><i style="background:#b7c7d0"></i>mean of the untouched sample</span>';
+  $("plotCap").innerHTML='Dots are stacked in narrow columns, so values that are nearly equal pile up rather than hide behind one another; the height of a stack is just how many '+D.many+' landed there. <b>Drag anywhere on this plot</b> to move the gold point'+((k===1)?'':'s')+'. The coral triangle marks the balance point: the pile would tip level on a knife-edge placed exactly there.';
+
+  drawPlot(); drawTrace();
+
+  $("traceCap").innerHTML='Each curve answers &ldquo;if the dragged point'+((k===1)?' were':'s were')+' at <i>that</i> value, what would this statistic be?&rdquo; &mdash; recomputed from the '+(n-k)+' untouched value'+((n-k===1)?'':'s')+' at '+(NG+1)+' positions across the scale. '+
+   'The <b style="color:#d1495b">coral</b> line is straight, with slope k&#8725;n = <b>'+(k/n).toFixed(4)+'</b>: it never stops rising, so there is no limit to how far one dragged point can carry the mean. '+
+   (B.unb
+    ? 'The <b style="color:#2f9e5b">green</b> line is no longer flat &mdash; with '+k+' of '+n+' points moving together you have passed the halfway mark and the median tracks the drag exactly.'
+    : 'The <b style="color:#2f9e5b">green</b> line is flat across <b>'+pc(B.flat)+'%</b> of the scale, rising only inside the short window where the dragged point'+((k===1)?' is':'s are')+' themselves the middle of the batch. Outside that window it is pinned by the values on either side of it.');
+
+  var J=jumpTargets(),g='',i;
+  for(i=0;i<J.length;i++)
+    g+='<button class="it'+((Math.abs(J[i].v-V)<D.st*0.5)?' on':'')+'" data-v="'+J[i].v+'"><span class="nm">'+J[i].nm+'</span><span class="s">&rarr; '+fv(J[i].v)+'</span></button>';
+  $("jump").innerHTML=g;
+  var bt=$("jump").getElementsByTagName('button');
+  for(i=0;i<bt.length;i++)bt[i].onclick=function(){
+    V=+this.getAttribute('data-v'); $("vSl").value=V; updLabels(); render();
+  };
+
+  $("info").innerHTML=infoHTML();
+
+  $("fnote").innerHTML='Every sample size here is odd, so the median is always an actual observed value &mdash; the ('+((n+1)/2)+')th smallest of the '+n+'. With an even number of values the convention is to average the two middle ones, which means the median need not be a value anyone recorded. '+
+   'The values are simulated with a seeded generator, so the page opens identically every time and <b>&#8635; New sample</b> draws a genuinely new set from the same population; raising n extends the sample rather than replacing it. '+
+   '&ldquo;Mean &minus; median&rdquo; is reported in the units of the data and is signed: positive means the mean sits above the median.';
+ }
+
+ function updLabels(){
+  var n=NS[ni];
+  $("vVal").innerHTML=fv(V);
+  $("kVal").innerHTML=k+' of '+n;
+  $("nVal").innerHTML=n;
+ }
+ function setSliders(){
+  var D=DS[ds],n=NS[ni];
+  $("vSl").min=D.A0; $("vSl").max=D.A1; $("vSl").step=D.st; $("vSl").value=V;
+  $("kSl").max=n; $("kSl").value=k;
+ }
+ function setDS(v){
+  ds=v; k=1; seedN=0; gen();
+  V=srt[NS[ni]-1];
+  setSliders(); updLabels(); render();
+ }
+
+ /* ---- dragging the point straight on the plot ---- */
+ var svg=$("plotSvg"),down=false;
+ function fromX(cx){
+  var D=DS[ds],r=svg.getBoundingClientRect();
+  var t=((cx-r.left)/r.width*340-PX0)/(PX1-PX0);
+  if(t<0)t=0; if(t>1)t=1;
+  var v=Math.round((D.A0+t*(D.A1-D.A0))/D.st)*D.st;
+  v=Math.round(v*1e6)/1e6;
+  if(v<D.A0)v=D.A0; if(v>D.A1)v=D.A1;
+  if(v!==V){V=v; $("vSl").value=V; updLabels(); render();}
+ }
+ svg.addEventListener('pointerdown',function(e){down=true; if(svg.setPointerCapture)svg.setPointerCapture(e.pointerId); fromX(e.clientX); e.preventDefault();});
+ svg.addEventListener('pointermove',function(e){if(down)fromX(e.clientX);});
+ svg.addEventListener('pointerup',function(){down=false;});
+ svg.addEventListener('pointercancel',function(){down=false;});
+
+ $("vSl").oninput=function(){V=Math.round(+this.value*1e6)/1e6; updLabels(); render();};
+ $("kSl").oninput=function(){k=+this.value; keptSet(); updLabels(); render();};
+ $("nSl").oninput=function(){
+   /* if the point has not been dragged yet, keep it undragged at the new n
+      instead of leaving it stranded below the new top value */
+   var fresh=(k===1&&Math.abs(V-srt[NS[ni]-1])<DS[ds].st*0.5);
+   ni=+this.value; build();
+   if(fresh)V=srt[NS[ni]-1];
+   if(V>DS[ds].A1)V=DS[ds].A1;
+   setSliders(); updLabels(); render();
+ };
+ $("reset").onclick=function(){k=1; keptSet(); V=srt[NS[ni]-1]; setSliders(); updLabels(); render();};
+ $("samp").onclick=function(){seedN++; gen(); V=srt[NS[ni]-1]; setSliders(); updLabels(); render();};
+
+ var sg=$("seg").getElementsByTagName('button');
+ for(var j=0;j<sg.length;j++)sg[j].onclick=function(){
+   for(var q=0;q<sg.length;q++)sg[q].className='';
+   this.className='on'; setDS(+this.getAttribute('data-v'));
+ };
+
+ gen(); V=srt[NS[ni]-1]; setSliders(); updLabels(); render();
+})();
+</script>
+</body>
+</html>

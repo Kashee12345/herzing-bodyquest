@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Primary vs Secondary Response</title>
+<meta name="description" content="Drag across the timeline to watch antibody titer rise, fall, and surge on re-exposure — the primary vs secondary immune response. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:1.06fr 0.94fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+input[type=range]#sl{width:100%;height:24px;margin-top:6px;accent-color:var(--teal);cursor:pointer;}
+.srow{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted);margin-top:3px;}
+.srow b{color:var(--teal-dk);} #phaseval{font-weight:800;}
+.cmp{display:grid;grid-template-columns:0.82fr 1fr 1.12fr;gap:6px 7px;margin-bottom:4px;}
+.cmp .h{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);padding:6px 3px;text-align:center;border:1px solid transparent;border-radius:9px;line-height:1.15;}
+.cmp .h small{display:block;font-weight:600;opacity:.8;font-size:9px;margin-top:1px;}
+.cmp .rl{font-weight:700;font-size:11.5px;color:var(--soft);display:flex;align-items:center;}
+.cmp .cell{border:1px solid var(--line);border-radius:9px;padding:7px 5px;text-align:center;font-size:11.5px;font-weight:700;color:var(--soft);background:#fff;line-height:1.25;transition:.2s;}
+.cmp .pri.on{border-color:var(--gold);background:#fbf3e2;color:#7a5c14;}
+.cmp .sec.on{border-color:var(--teal);background:#f1eafa;color:var(--teal-dk);}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.chips button{border:1px solid var(--line);background:#fff;color:var(--soft);font-weight:700;font-size:11px;padding:6px 10px;border-radius:20px;cursor:pointer;font-family:var(--sans);transition:.12s;}
+.chips button:hover{border-color:var(--teal);color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 13</div>
+  <h1>Primary vs Secondary Response</h1>
+  <div class="intro">The first time the body meets an antigen it answers <b>slowly</b> and modestly. The next time, it <b>remembers</b> &mdash; responding faster and far more strongly. Drag the slider across the timeline to watch the antibody titer rise, fall, and surge on re-exposure.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Antibody titer over time</h2>
+    <svg viewBox="0 0 360 226" aria-label="graph of antibody titer over time on first and second exposure"><g id="static"></g><g id="art"></g></svg>
+    <input type="range" id="sl" min="0" max="180" value="0" step="1" aria-label="days since first exposure">
+    <div class="srow"><span>Day <b id="dayval">0</b> of 180</span><span id="phaseval">First exposure</span></div>
+  </div></div>
+  <div>
+    <div id="stage">The two responses<small>drag the slider to begin</small></div>
+    <div class="card">
+      <div class="cmp" id="cmp">
+        <div class="h rl" style="text-align:left;">Feature</div>
+        <div class="h pri">Primary<small>1st exposure</small></div>
+        <div class="h sec">Secondary<small>re-exposure</small></div>
+        <div class="rl">Lag time</div><div class="cell pri">5&ndash;10 days</div><div class="cell sec">1&ndash;3 days</div>
+        <div class="rl">Onset speed</div><div class="cell pri">Slow</div><div class="cell sec">Rapid</div>
+        <div class="rl">Peak titer</div><div class="cell pri">Lower</div><div class="cell sec">10&ndash;100&times; higher</div>
+        <div class="rl">Main antibody</div><div class="cell pri">IgM &rarr; IgG</div><div class="cell sec">IgG (high affinity)</div>
+      </div>
+      <div id="info"></div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- plot geometry ---- */
+ var LX=36, RX=346, SPAN=RX-LX, DMAX=180, TYp=16, BYp=196, HSP=BYp-TYp, Y0=196;
+ function X(t){return LX+(t/DMAX)*SPAN;}
+ function lg(v){return Math.log(v)/Math.LN10;}
+ function Y(l){return BYp-(l/3)*HSP;}
+
+ /* ---- antibody level samples (relative titer); log-interpolated ---- */
+ var S=[[0,1],[4,1.3],[7,3],[10,22],[12,55],[14,90],[16,100],[20,96],[30,72],[45,48],[65,28],[90,15],[110,10],[120,8],[121,9],[122,16],[123,70],[125,320],[127,720],[129,950],[131,1000],[136,985],[148,900],[164,760],[180,640]];
+ function levLog(t){
+   if(t<=S[0][0]) return lg(S[0][1]);
+   if(t>=S[S.length-1][0]) return lg(S[S.length-1][1]);
+   for(var i=0;i<S.length-1;i++){
+     if(t>=S[i][0] && t<=S[i+1][0]){
+       var f=(t-S[i][0])/(S[i+1][0]-S[i][0]);
+       return lg(S[i][1])+(lg(S[i+1][1])-lg(S[i][1]))*f;
+     }
+   }
+   return 0;
+ }
+ function titer(t){return Math.round(Math.pow(10,levLog(t)));}
+
+ /* ---- phases ---- */
+ function phase(t){
+   if(t<=4)   return {nm:'First exposure',era:'primary',col:'#2f9e5b',
+     d:'The antigen arrives for the very first time &mdash; a natural infection or a first vaccine dose. Na&iuml;ve B and T lymphocytes have never seen it, so almost <b>no antibody</b> is present yet. Clonal selection is only just beginning.'};
+   if(t<=9)   return {nm:'Primary lag phase',era:'primary',col:'#b8862f',
+     d:'The <b>lag phase</b>: roughly 5&ndash;10 days pass while the selected B cells proliferate and mature into antibody-secreting plasma cells. Titer stays very low, so the patient can genuinely feel sick during this window.'};
+   if(t<=18)  return {nm:'Primary rise &amp; peak',era:'primary',col:'#b8862f',
+     d:'Antibody climbs to a <b>modest peak</b> around 1&ndash;2 weeks. <b>IgM</b> appears first; then class-switching yields <b>IgG</b>. Crucially, long-lived <b>memory B and T cells</b> are created and set aside.'};
+   if(t<120)  return {nm:'Decline &amp; immune memory',era:'primary',col:'#7a5a8a',
+     d:'Plasma cells are short-lived, so the titer falls over weeks to months. Circulating antibody wanes &mdash; but <b>memory cells persist for years</b>. The body now remembers this antigen even though measurable protection has dropped.'};
+   if(t<=122) return {nm:'Second exposure',era:'secondary',col:'#6d3f9c',
+     d:'The <b>same antigen returns</b> &mdash; a booster dose or a re-infection. Memory cells recognize it almost instantly, so there is barely any lag this time.'};
+   if(t<=135) return {nm:'Secondary response',era:'secondary',col:'#6d3f9c',
+     d:'The <b>secondary response</b>: memory cells reactivate within <b>1&ndash;3 days</b> and pour out antibody, driving the titer <b>10&ndash;100&times; higher</b> than the primary peak. It is predominantly <b>high-affinity IgG</b>.'};
+   return {nm:'Sustained protection',era:'secondary',col:'#6d3f9c',
+     d:'The secondary peak far exceeds the first, and the higher-affinity antibody lasts longer. The microbe is often cleared <b>before symptoms appear</b> &mdash; exactly why vaccine series rely on <b>booster doses</b>.'};
+ }
+
+ /* ---- curve builders ---- */
+ function polyStr(a,b){
+   var p='';
+   for(var t=a;t<b;t+=2){ p+=X(t).toFixed(1)+','+Y(levLog(t)).toFixed(1)+' '; }
+   p+=X(b).toFixed(1)+','+Y(levLog(b)).toFixed(1);
+   return p;
+ }
+ function areaPath(b){
+   var d='M'+X(0).toFixed(1)+','+Y0+' ';
+   for(var t=0;t<b;t+=2){ d+='L'+X(t).toFixed(1)+','+Y(levLog(t)).toFixed(1)+' '; }
+   d+='L'+X(b).toFixed(1)+','+Y(levLog(b)).toFixed(1)+' L'+X(b).toFixed(1)+','+Y0+' Z';
+   return d;
+ }
+
+ /* ---- static backdrop ---- */
+ function buildStatic(){
+   var s='';
+   s+='<rect x="36" y="16" width="310" height="180" rx="8" fill="#fbf9fd" stroke="#ece6f4"/>';
+   var gl=[[1,'10'],[2,'100'],[3,'1000']];
+   for(var g=0;g<gl.length;g++){
+     var yy=Y(gl[g][0]);
+     s+='<line x1="36" y1="'+yy.toFixed(1)+'" x2="346" y2="'+yy.toFixed(1)+'" stroke="#ece6f4" stroke-width="1"/>';
+     s+='<text x="32" y="'+(yy+3).toFixed(1)+'" font-size="8.5" fill="#837a94" text-anchor="end">'+gl[g][1]+'</text>';
+   }
+   s+='<text x="32" y="'+(Y(0)+3).toFixed(1)+'" font-size="8.5" fill="#837a94" text-anchor="end">1</text>';
+   s+='<text x="13" y="106" font-size="8.8" fill="#837a94" transform="rotate(-90 13 106)" text-anchor="middle">antibody titer (relative)</text>';
+   s+='<line x1="36" y1="196" x2="346" y2="196" stroke="#c9bfda" stroke-width="1.5"/>';
+   var dd=[0,30,60,90,120,150,180];
+   for(var i=0;i<dd.length;i++){
+     var xx=X(dd[i]);
+     s+='<line x1="'+xx.toFixed(1)+'" y1="196" x2="'+xx.toFixed(1)+'" y2="200" stroke="#c9bfda" stroke-width="1"/>';
+     s+='<text x="'+xx.toFixed(1)+'" y="210" font-size="8" fill="#9a90ab" text-anchor="middle">'+dd[i]+'</text>';
+   }
+   s+='<text x="191" y="222" font-size="8.8" fill="#837a94" text-anchor="middle">days since first exposure &rarr;</text>';
+   /* exposure markers */
+   s+='<line x1="'+X(0).toFixed(1)+'" y1="16" x2="'+X(0).toFixed(1)+'" y2="196" stroke="#2f9e5b" stroke-width="1.4" stroke-dasharray="4 3" opacity=".8"/>';
+   s+='<text x="'+(X(0)+2).toFixed(1)+'" y="13" font-size="8.6" fill="#237a45" text-anchor="start" font-weight="700">&#9312; 1st exposure</text>';
+   s+='<line x1="'+X(120).toFixed(1)+'" y1="16" x2="'+X(120).toFixed(1)+'" y2="196" stroke="#6d3f9c" stroke-width="1.4" stroke-dasharray="4 3" opacity=".8"/>';
+   s+='<text x="'+X(120).toFixed(1)+'" y="13" font-size="8.6" fill="#3d2a5c" text-anchor="middle" font-weight="700">&#9313; 2nd exposure</text>';
+   /* ghost of full curve */
+   s+='<polyline points="'+polyStr(0,180)+'" fill="none" stroke="#d9cfe6" stroke-width="2" opacity=".85"/>';
+   $("static").innerHTML=s;
+ }
+
+ /* ---- dynamic reveal ---- */
+ function drawArt(day){
+   var s='';
+   s+='<path d="'+areaPath(day)+'" fill="'+(day<=120?'#f6efe0':'#efe8f8')+'" opacity=".7"/>';
+   var gEnd=Math.min(day,120);
+   s+='<polyline points="'+polyStr(0,gEnd)+'" fill="none" stroke="#b8862f" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+   if(day>120){
+     s+='<polyline points="'+polyStr(120,day)+'" fill="none" stroke="#6d3f9c" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"/>';
+   }
+   var dx=X(day), dy=Y(levLog(day)), col=day>=120?'#6d3f9c':'#b8862f';
+   s+='<line x1="'+dx.toFixed(1)+'" y1="196" x2="'+dx.toFixed(1)+'" y2="'+dy.toFixed(1)+'" stroke="'+col+'" stroke-width="1.4" stroke-dasharray="3 3" opacity=".55"/>';
+   s+='<circle cx="'+dx.toFixed(1)+'" cy="'+dy.toFixed(1)+'" r="5.5" fill="'+col+'" stroke="#fff" stroke-width="2"/>';
+   $("art").innerHTML=s;
+ }
+
+ /* ---- compare highlight ---- */
+ function setEra(era){
+   var pri=document.querySelectorAll('#cmp .pri'), sec=document.querySelectorAll('#cmp .sec');
+   pri.forEach(function(e){e.classList.toggle('on',era==='primary');});
+   sec.forEach(function(e){e.classList.toggle('on',era==='secondary');});
+ }
+
+ var NOTE='<div class="loc">Nursing link: antibody <b>titer</b> blood tests &mdash; such as hepatitis&nbsp;B surface antibody after the vaccine series &mdash; confirm the immune system is primed for a fast secondary response. A low titer may warrant a <b>booster dose</b>.</div>';
+
+ function render(day){
+   var ph=phase(day), tv=titer(day);
+   $("dayval").textContent=day;
+   $("phaseval").textContent=ph.nm.replace('&amp;','&');
+   $("phaseval").style.color=ph.col;
+   $("stage").style.background=ph.col;
+   $("stage").innerHTML=ph.nm+'<small>Day '+day+' &middot; relative titer ~'+tv.toLocaleString()+'&times;</small>';
+   setEra(ph.era);
+   $("info").innerHTML='<span class="n">'+ph.nm+'</span>'+ph.d+NOTE;
+   drawArt(day);
+ }
+
+ /* ---- jump chips ---- */
+ var J=[['&#9312; First exposure',0],['Primary peak',15],['Memory dip',105],['&#9313; Second exposure',120],['Secondary peak',131]];
+ $("chips").innerHTML=J.map(function(j,i){return '<button data-d="'+j[1]+'">'+j[0]+'</button>';}).join('');
+ document.querySelectorAll('#chips button').forEach(function(b){
+   b.onclick=function(){ var d=+b.dataset.d; $("sl").value=d; render(d); };
+ });
+
+ $("sl").addEventListener('input',function(){ render(+this.value); });
+
+ buildStatic();
+ render(0);
+})();
+</script>
+</body>
+</html>

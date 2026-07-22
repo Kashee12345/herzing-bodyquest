@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Anatomy of a Polynomial</title>
+<meta name="description" content="Slide the coefficients and watch a polynomial rebuild itself in real time — degree, leading coefficient, and number of terms, with the graph, the naming, and a step-by-step take-it-apart machine.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.modeseg button{font-size:12.5px;padding:10px 4px;line-height:1.25;}
+.modeseg button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:2px;}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+#stage .big{font-family:var(--math);font-size:21px;font-weight:700;letter-spacing:.3px;line-height:1.3;display:block;}
+#stage .big sup{font-size:.62em;}
+/* HTML-only fractions and radicals — there is no math renderer on this page */
+.fr{display:inline-flex;flex-direction:column;vertical-align:-0.52em;text-align:center;margin:0 3px;}
+.fr .fn{border-bottom:1.7px solid currentColor;padding:0 4px 1px;line-height:1.16;}
+.fr .fd{padding:1px 4px 0;line-height:1.16;}
+.rad{border-top:1.4px solid currentColor;padding:0 3px 0 1px;margin-left:-1px;}
+/* term strip */
+.strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px;}
+.tm{flex:1 1 auto;min-width:70px;border:1px solid var(--line);border-radius:9px;padding:7px 8px 6px;text-align:center;background:#fbfbfe;}
+.tm .t{display:block;font-family:var(--math);font-size:19px;font-weight:600;color:var(--ink);line-height:1.2;}
+.tm .t sup{font-size:.62em;}
+.tm .lb{display:block;font-size:9.3px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-top:3px;}
+.tm.lead{border-color:#e5c46a;background:#fdf6e4;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.tm.lead .lb{color:#8a6a20;}
+.cap{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5;text-align:center;}
+.cap b{color:var(--soft);}
+.why{font-family:var(--math);font-size:14.5px;color:var(--teal-dk);text-align:center;background:#f1f2f9;border:1px solid var(--line);border-radius:9px;padding:9px 10px;margin-top:11px;line-height:1.6;}
+.why em{font-family:var(--sans);font-style:normal;font-size:10.5px;font-weight:800;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.leg{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:11px;color:var(--muted);font-weight:700;margin-top:7px;}
+.leg span{display:flex;align-items:center;gap:5px;}
+.leg i{width:17px;height:0;border-top-width:3px;border-top-style:solid;display:inline-block;}
+/* sliders */
+.sld{margin-top:9px;}
+.sld .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:1px;}
+.sld .lab .nmx{font-family:var(--math);font-size:15px;color:var(--soft);letter-spacing:0;text-transform:none;font-weight:400;}
+.sld .lab .nmx sup{font-size:.62em;}
+.sld .lab b{font-family:var(--math);font-size:19px;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;display:block;}
+input[type=range]:focus{outline:none;}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);margin-top:-8px;}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);}
+.hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:11px;line-height:1.5;}
+.sub{font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:13px 0 6px;}
+.sub:first-child{margin-top:2px;}
+#pre .it,#plist .it{font-family:var(--math);font-size:15px;font-weight:600;line-height:1.35;}
+#pre .it small,#plist .it small{display:block;font-family:var(--sans);font-size:9.6px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-top:3px;}
+#pre .it.on small,#plist .it.on small{color:rgba(255,255,255,.85);}
+#dl .it,#tl .it{cursor:default;justify-content:space-between;}
+#dl .it .nm,#tl .it .nm{font-size:12.5px;}
+#dl .it .s,#tl .it .s{font-family:var(--math);font-size:13px;}
+#dl .it:hover,#tl .it:hover{border-color:var(--line);}
+/* dominance table */
+.dom{width:100%;border-collapse:collapse;margin-top:9px;font-size:12px;}
+.dom th{font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);text-align:right;padding:0 4px 5px;border-bottom:1px solid var(--line);}
+.dom th:first-child{text-align:left;}
+.dom td{font-family:var(--math);font-size:13px;text-align:right;padding:6px 4px;border-bottom:1px dashed var(--line);color:var(--soft);white-space:nowrap;}
+.dom td:first-child{text-align:left;color:var(--ink);font-weight:600;}
+.dom td.ld{color:var(--teal-dk);font-weight:700;}
+.dom tr:last-child td{border-bottom:none;}
+.shr{font-family:var(--sans);font-size:10.5px;font-weight:800;background:#e6e8f5;color:var(--teal-dk);border-radius:20px;padding:2px 8px;}
+.domhd{font-family:var(--math);font-size:14px;color:var(--teal-dk);text-align:center;background:#f1f2f9;border:1px solid var(--line);border-radius:9px;padding:8px 10px;line-height:1.6;}
+/* verdict */
+.vd{border:1px solid var(--line);border-left:5px solid var(--green);background:#f1f2f9;border-radius:10px;padding:11px 13px;margin-top:11px;font-size:12.8px;color:var(--soft);line-height:1.55;}
+.vd.no{border-left-color:var(--coral);}
+.vd b{color:var(--ink);}
+.vd .n{font-family:var(--disp);font-weight:600;font-size:15px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.vd .n span{font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-radius:20px;padding:3px 9px;margin-left:6px;vertical-align:2px;}
+.vd .yes-p{background:#e5f3ea;color:#237a45;}
+.vd .no-p{background:#fae5e8;color:#b23145;}
+/* stepper */
+#mb{min-height:150px;display:flex;flex-direction:column;justify-content:center;margin-top:12px;}
+.dl2{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:7px 2px;border-bottom:1px dashed var(--line);}
+.dl2:last-child{border-bottom:none;}
+.mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.55;}
+.mx sup{font-size:.62em;}
+.dl2.cur .mx{font-size:18px;color:var(--ink);font-weight:600;}
+.pl{flex:none;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);white-space:nowrap;}
+.dl2.cur .pl{color:var(--gold);}
+.tg{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.dl2:not(.cur) .tg{background:transparent;box-shadow:none;padding:0;}
+.exlab{font-size:12.5px;color:var(--soft);margin-top:11px;line-height:1.6;border-top:1px solid var(--line);padding-top:10px;}
+.exlab b{color:var(--ink);}
+.seg button{font-size:11.5px;padding:9px 3px;}
+.seg button small{font-family:var(--math);font-size:10.5px;display:block;font-weight:500;color:var(--muted);margin-top:2px;}
+.seg button.on small{color:rgba(255,255,255,.9);}
+@media (max-width:600px){
+  #picker{display:grid;grid-template-columns:1fr 1fr;}
+  .seg button{font-size:12px;padding:10px 6px;}
+}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 6</div>
+  <h1>Anatomy of a Polynomial</h1>
+  <div class="intro">Before you can factor one, you have to be able to <b>read</b> one. Three questions do almost all the work: what is the highest power (the <b>degree</b>), what number rides on that highest power (the <b>leading coefficient</b>), and how many pieces are joined by plus and minus signs (the <b>number of terms</b>). Move the sliders and watch all three answers &mdash; and the graph &mdash; change together.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="artTitle">Your polynomial, drawn</h2>
+      <svg id="graph" viewBox="0 0 250 250" aria-label="graph of the current polynomial with its leading term drawn alongside it"><g id="art"></g></svg>
+      <div class="leg">
+        <span><i style="border-color:#43458f"></i>the whole polynomial</span>
+        <span><i style="border-color:#b8862f;border-top-style:dashed"></i>the leading term alone</span>
+      </div>
+      <div class="strip" id="strip"></div>
+      <div class="cap" id="cap"></div>
+      <div class="why" id="why"></div>
+    </div>
+    <div class="card"><h2>Why the leading term gets its own name</h2>
+      <div class="domhd" id="domhd"></div>
+      <table class="dom" id="domtbl"></table>
+      <div class="mnem" id="dommn"></div>
+    </div>
+    <div class="card"><h2>Is it even a polynomial?</h2>
+      <div class="grid" id="plist"></div>
+      <div class="vd" id="pv"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage"><span class="big">0</span><small>move a slider to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="modes">
+        <button data-m="0" class="on">Build one<small>slide the coefficients</small></button>
+        <button data-m="1">Name it<small>degree &amp; term count</small></button>
+        <button data-m="2">Take it apart<small>step by step</small></button>
+      </div>
+      <div id="p0">
+        <div class="sld">
+          <div class="lab"><span class="nmx">coefficient of <i>x</i><sup>4</sup></span><b id="o_4">0</b></div>
+          <input type="range" id="r_4" min="-4" max="4" step="1" value="0" aria-label="coefficient of x to the fourth">
+        </div>
+        <div class="sld">
+          <div class="lab"><span class="nmx">coefficient of <i>x</i><sup>3</sup></span><b id="o_3">2</b></div>
+          <input type="range" id="r_3" min="-5" max="5" step="1" value="2" aria-label="coefficient of x cubed">
+        </div>
+        <div class="sld">
+          <div class="lab"><span class="nmx">coefficient of <i>x</i><sup>2</sup></span><b id="o_2">&minus;3</b></div>
+          <input type="range" id="r_2" min="-6" max="6" step="1" value="-3" aria-label="coefficient of x squared">
+        </div>
+        <div class="sld">
+          <div class="lab"><span class="nmx">coefficient of <i>x</i></span><b id="o_1">&minus;3</b></div>
+          <input type="range" id="r_1" min="-10" max="10" step="1" value="-3" aria-label="coefficient of x">
+        </div>
+        <div class="sld">
+          <div class="lab"><span class="nmx">constant term</span><b id="o_0">2</b></div>
+          <input type="range" id="r_0" min="-12" max="12" step="1" value="2" aria-label="constant term">
+        </div>
+        <div class="row"><button class="btn" id="shuffle">Shuffle</button><button class="btn" id="reset">Reset</button></div>
+        <div class="hint">Set a coefficient to <b>0</b> and that term disappears entirely &mdash; watch the term count and, if it was the top one, the degree drop with it.</div>
+      </div>
+      <div id="p1" style="display:none">
+        <div class="sub">Tap an example</div>
+        <div class="grid" id="pre"></div>
+        <div class="sub">Named by degree &mdash; the highest exponent</div>
+        <div class="list" id="dl"></div>
+        <div class="sub">Named by how many terms</div>
+        <div class="list" id="tl"></div>
+      </div>
+      <div id="p2" style="display:none">
+        <div class="seg" id="picker"></div>
+        <div id="mb"></div>
+        <div class="exlab" id="exlab"></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"></div>
+      <div class="note" id="note"></div>
+      <div class="row" id="nav" style="display:none"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var INK='#22243a', MUT='#7d7f94', LINE='#e0e2ef', TEAL='#43458f', TDK='#262a5c',
+     GOLD='#b8862f', CORAL='#d1495b', BLUE='#2f6f9f', GREEN='#2f9e5b', PURP='#7a5a8a',
+     PALE='#c6c9de', CARD='#fffdf9';
+ var MIN='&#8722;';
+
+ /* ---------------- formatting: HTML only, no math renderer on this page ------- */
+ function h(n){ return n<0 ? '&minus;'+(-n) : ''+n; }
+ function cm(n){                                    /* 1234567 -> 1,234,567 */
+   var s=Math.abs(n).toFixed(0), out='', c=0, i;
+   for(i=s.length-1;i>=0;i--){ out=s.charAt(i)+out; c++; if(c%3===0 && i>0) out=','+out; }
+   return (n<0?'&minus;':'')+out;
+ }
+ function pw(k){ return k===0 ? '' : (k===1 ? '<i>x</i>' : '<i>x</i><sup>'+k+'</sup>'); }
+ function term(c,k,first){                          /* one term, signed */
+   var a=Math.abs(c), s='';
+   if(first){ if(c<0) s+='&minus;'; } else { s += (c<0 ? ' &minus; ' : ' + '); }
+   if(a!==1 || k===0) s+=a;
+   return s+pw(k);
+ }
+ function bare(c,k){ return term(c,k,true); }       /* standalone term, e.g. -3x^2 */
+ function poly(C){                                  /* descending powers */
+   var s='', first=true, k;
+   for(k=C.length-1;k>=0;k--){ if(C[k]!==0){ s+=term(C[k],k,first); first=false; } }
+   return first ? '0' : s;
+ }
+ function tg(s){ return '<span class="tg">'+s+'</span>'; }
+
+ /* ---------------- the polynomial ---------------- */
+ var C=[2,-3,-3,2,0];                               /* C[k] = coefficient of x^k */
+ var HOME=[2,-3,-3,2,0];
+ var mode=0, exi=0, step=0, pvi=0;
+
+ function degOf(){ var k; for(k=C.length-1;k>=0;k--){ if(C[k]!==0) return k; } return -1; }
+ function nterms(){ var n=0,k; for(k=0;k<C.length;k++){ if(C[k]!==0) n++; } return n; }
+ /* plain evaluation, written out so it is easy to check by hand */
+ function P(x){ var y=0,k; for(k=0;k<C.length;k++){ y+=C[k]*Math.pow(x,k); } return y; }
+ function lead(x){ var d=degOf(); return d<0 ? 0 : C[d]*Math.pow(x,d); }
+
+ var DNAME={0:'constant',1:'linear',2:'quadratic',3:'cubic',4:'quartic'};
+ var DCOL={0:BLUE,1:GREEN,2:GOLD,3:PURP,4:CORAL};
+ var TNAME={1:'monomial',2:'binomial',3:'trinomial'};
+ function tname(n){ return TNAME[n] || 'polynomial'; }
+
+ /* ---------------- graph ---------------- */
+ var XR=3, U=33, X0=125, Y0=125, HH=99;
+ var NIC=[4,8,20,40,100,200,400,1000,2000,4000];
+ function nice(m){ var i; for(i=0;i<NIC.length;i++){ if(NIC[i]>=m*1.06) return NIC[i]; } return NIC[NIC.length-1]; }
+ function sx(x){ return X0+U*x; }
+ function sy(y,M){ return Y0-HH*(y/M); }
+ function curve(f,M){
+   var d='', pen=false, N=520, i, x, y;
+   for(i=0;i<=N;i++){
+     x=-XR+i*(2*XR/N); y=f(x);
+     if(y>=-M && y<=M){ d+=(pen?'L':'M')+sx(x).toFixed(2)+' '+sy(y,M).toFixed(2)+' '; pen=true; }
+     else { pen=false; }
+   }
+   return d;
+ }
+ function halo(x,y,anch,size,col,txt){
+   return '<text x="'+x+'" y="'+y+'" text-anchor="'+anch+'" font-family="Georgia,serif" font-size="'+size+
+          '" font-weight="700" fill="'+col+'" stroke="'+CARD+'" stroke-width="3.2" paint-order="stroke" stroke-linejoin="round">'+txt+'</text>';
+ }
+ function grid(M){
+   var s='<rect x="26" y="26" width="198" height="198" fill="#fbfbfe"/>', i, j, yy;
+   for(i=-XR;i<=XR;i++){ s+='<line x1="'+sx(i)+'" y1="26" x2="'+sx(i)+'" y2="224" stroke="'+LINE+'" stroke-width="0.8"/>'; }
+   for(j=-4;j<=4;j++){ yy=Y0-HH*(j/4); s+='<line x1="26" y1="'+yy+'" x2="224" y2="'+yy+'" stroke="'+LINE+'" stroke-width="0.8"/>'; }
+   s+='<line x1="18" y1="'+Y0+'" x2="232" y2="'+Y0+'" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<line x1="'+X0+'" y1="18" x2="'+X0+'" y2="232" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<polygon points="238,125 230,121 230,129" fill="'+INK+'"/><polygon points="12,125 20,121 20,129" fill="'+INK+'"/>';
+   s+='<polygon points="125,12 121,20 129,20" fill="'+INK+'"/><polygon points="125,238 121,230 129,230" fill="'+INK+'"/>';
+   s+='<text x="234" y="116" text-anchor="end" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">x</text>';
+   s+='<text x="132" y="21" text-anchor="start" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">y</text>';
+   var T=[-3,-2,-1,1,2,3];
+   for(i=0;i<T.length;i++){ s+='<text x="'+sx(T[i])+'" y="'+(Y0+11)+'" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="'+PALE+'">'+(T[i]<0?MIN+(-T[i]):T[i])+'</text>'; }
+   s+='<text x="'+(X0-5)+'" y="'+(sy(M,M)+3)+'" text-anchor="end" font-family="Georgia,serif" font-size="8" fill="'+PALE+'">'+cm(M)+'</text>';
+   s+='<text x="'+(X0-5)+'" y="'+(sy(M/2,M)+3)+'" text-anchor="end" font-family="Georgia,serif" font-size="8" fill="'+PALE+'">'+cm(M/2)+'</text>';
+   s+='<text x="'+(X0-5)+'" y="'+(sy(-M/2,M)+3)+'" text-anchor="end" font-family="Georgia,serif" font-size="8" fill="'+PALE+'">'+MIN+cm(M/2)+'</text>';
+   s+='<text x="'+(X0-5)+'" y="'+(sy(-M,M)+3)+'" text-anchor="end" font-family="Georgia,serif" font-size="8" fill="'+PALE+'">'+MIN+cm(M)+'</text>';
+   return s;
+ }
+ function art(){
+   var i, x, mx=0, d=degOf();
+   for(i=0;i<=520;i++){ x=-XR+i*(2*XR/520); mx=Math.max(mx,Math.abs(P(x))); }
+   var M=nice(mx), s=grid(M);
+   if(d>=1){ s+='<path d="'+curve(lead,M)+'" fill="none" stroke="'+GOLD+'" stroke-width="2.2" stroke-dasharray="5 4" stroke-linecap="round" opacity=".9"/>'; }
+   s+='<path d="'+curve(P,M)+'" fill="none" stroke="'+TEAL+'" stroke-width="2.7" stroke-linecap="round"/>';
+   var iy=sy(C[0],M);
+   s+='<circle cx="'+X0+'" cy="'+iy.toFixed(1)+'" r="5.4" fill="'+CORAL+'" stroke="#fff" stroke-width="2"/>';
+   s+=halo(X0+9, iy+(iy<40?16:-9), 'start', 10, CORAL, '(0, '+(C[0]<0?MIN+(-C[0]):C[0])+')');
+   return s;
+ }
+
+ /* ---------------- term strip ---------------- */
+ function strip(){
+   var d=degOf(), s='', k;
+   if(d<0) return '<div class="tm lead"><span class="t">0</span><span class="lb">the zero polynomial</span></div>';
+   for(k=C.length-1;k>=0;k--){
+     if(C[k]===0) continue;
+     s+='<div class="tm'+(k===d?' lead':'')+'"><span class="t">'+bare(C[k],k)+'</span><span class="lb">degree '+k+(k===0?' · constant':'')+'</span></div>';
+   }
+   return s;
+ }
+
+ /* ---------------- end behavior, stated from degree + leading coefficient ---- */
+ function endBeh(){
+   var d=degOf();
+   if(d<0) return 'Every coefficient is zero, so the graph is the <i>x</i>-axis itself.';
+   if(d===0) return 'Degree 0: the graph is a <b>flat horizontal line</b> at <i>y</i> = '+h(C[0])+'. With no <i>x</i> anywhere, nothing can grow.';
+   var pos=C[d]>0, ev=(d%2===0);
+   if(ev) return 'Even degree ('+d+') with a '+(pos?'<b>positive</b>':'<b>negative</b>')+' leading coefficient: <b>both ends '+(pos?'rise':'fall')+'</b>. An even power turns any large <i>x</i> &mdash; left or right &mdash; into a large positive number, and the sign of '+h(C[d])+' then decides which way it goes.';
+   return 'Odd degree ('+d+') with a '+(pos?'<b>positive</b>':'<b>negative</b>')+' leading coefficient: the graph <b>'+(pos?'falls to the left and rises to the right':'rises to the left and falls to the right')+'</b>. An odd power keeps the sign of <i>x</i>, so the two ends must point opposite ways.';
+ }
+
+ /* ---------------- the dominance table (why "leading" matters) --------------- */
+ function pct(v){
+   if(v===0) return '0%';
+   if(v<0.1) return '&lt;0.1%';
+   if(v>=10) return Math.round(v)+'%';
+   return v.toFixed(1)+'%';
+ }
+ function dominance(){
+   var d=degOf();
+   if(d<1){
+     $("domhd").innerHTML='This one has no <i>x</i> in it at all.';
+     $("domtbl").innerHTML='';
+     $("dommn").innerHTML='<b>Nothing to race.</b> A constant polynomial has a single term, so there is no competition between powers. Slide any of the other coefficients away from 0 and the race begins.';
+     return;
+   }
+   var LT=bare(C[d],d);
+   $("domhd").innerHTML='<i>P</i>(<i>x</i>) = <span style="color:'+GOLD+';font-weight:700">'+LT+'</span> + <span style="color:'+MUT+'">everything else</span>';
+   var XS=[2,10,100], rows='', i, x, L, R;
+   rows+='<tr><th><i>x</i></th><th>leading term</th><th>everything else</th><th>its share</th></tr>';
+   for(i=0;i<XS.length;i++){
+     x=XS[i]; L=C[d]*Math.pow(x,d); R=P(x)-L;
+     rows+='<tr><td>'+x+'</td><td class="ld">'+cm(L)+'</td><td>'+cm(R)+'</td><td><span class="shr">'+
+       (L===0?'&mdash;':pct(Math.abs(R)/Math.abs(L)*100))+'</span></td></tr>';
+   }
+   $("domtbl").innerHTML=rows;
+   var big=Math.abs(P(100)-C[d]*Math.pow(100,d))/Math.abs(C[d]*Math.pow(100,d))*100;
+   var closer = (nterms()===1)
+     ? 'This one is a single term, so it <b>is</b> its own leading term &mdash; the share column is 0% everywhere. Add another term and watch that share shrink as <i>x</i> grows.'
+     : 'By <i>x</i> = 100 everything else has shrunk to about <b>'+pct(big)+'</b> of the leading term, and it keeps shrinking from there.';
+   $("dommn").innerHTML='<b>Double <i>x</i> and the terms do not grow at the same rate.</b> The constant does not change at all. The <i>x</i> term doubles. The <i>x</i><sup>2</sup> term quadruples. The <i>x</i><sup>3</sup> term multiplies by 8. So the highest power always pulls ahead, and past some point it alone decides the <b>size</b> and the <b>sign</b> of the whole expression. '+closer+' That is exactly why the top term earns a name of its own &mdash; and why the two far ends of the graph copy the gold dashed curve.';
+ }
+
+ /* ---------------- is it a polynomial? ---------------- */
+ var FR=function(n,d){ return '<span class="fr"><span class="fn">'+n+'</span><span class="fd">'+d+'</span></span>'; };
+ var RAD=function(s){ return '&radic;<span class="rad">'+s+'</span>'; };
+ var PL=[
+  {e:'3<i>x</i><sup>2</sup> &minus; 5<i>x</i> + 1', ok:1, t:'yes',
+   d:'Every exponent on <i>x</i> is a whole number &mdash; 2, then 1, then 0 hiding inside the constant &mdash; and every coefficient is an ordinary number. Degree 2, leading coefficient 3, three terms: a <b>quadratic trinomial</b>.'},
+  {e:'4<i>x</i><sup>&minus;2</sup> + 7', ok:0, t:'no',
+   d:'The exponent &minus;2 is <b>not a whole number</b>. Rewrite it and you see the real problem: 4<i>x</i><sup>&minus;2</sup> means '+FR('4','<i>x</i><sup>2</sup>')+', which puts the variable <b>in a denominator</b>. Polynomials never do that.'},
+  {e:FR('5','<i>x</i>'), ok:0, t:'no',
+   d:'Same offence in different clothing: '+FR('5','<i>x</i>')+' is 5<i>x</i><sup>&minus;1</sup>. Dividing <b>by</b> a variable is what breaks it. (Dividing by a plain number is perfectly fine &mdash; see the next one.)'},
+  {e:'2<i>x</i><sup>3</sup> &minus; '+FR('<i>x</i>','4')+' + 9', ok:1, t:'yes',
+   d:'Here the variable is on top and only a <b>number</b> is underneath, so '+FR('<i>x</i>','4')+' is just '+FR('1','4')+'<i>x</i> &mdash; exponent 1, coefficient one quarter. Coefficients are allowed to be fractions. Degree 3, leading coefficient 2, three terms.'},
+  {e:RAD('<i>x</i>')+' + 2', ok:0, t:'no',
+   d:'A square root is a <b>fractional exponent</b>: '+RAD('<i>x</i>')+' is <i>x</i><sup>1/2</sup>, and one half is not a whole number. Exponents on the variable must come from 0, 1, 2, 3, &hellip;'},
+  {e:'3<i>x</i><sup>4</sup> &minus; 2<i>x</i> + '+RAD('5'), ok:1, t:'yes',
+   d:'The root here is on a <b>number</b>, not on the variable. '+RAD('5')+' is an irrational number, but a number all the same, and coefficients may be any real number. The test looks only at the exponents on <i>x</i>. Degree 4, leading coefficient 3.'},
+  {e:'2<sup><i>x</i></sup>', ok:0, t:'no',
+   d:'The variable is <b>in the exponent</b>. In a polynomial the variable sits in the base with a fixed whole-number exponent on top; flip those roles and you have an <b>exponential</b> function, which behaves completely differently.'},
+  {e:'7', ok:1, t:'yes',
+   d:'A lone number counts. Since <i>x</i><sup>0</sup> = 1 for every <i>x</i> &ne; 0, we can read 7 as 7<i>x</i><sup>0</sup> &mdash; a <b>constant monomial of degree 0</b>. This is the reason a plain number is called a degree-0 term.'}
+ ];
+ function renderPL(){
+   $("plist").innerHTML=PL.map(function(p,i){
+     return '<button class="it'+(i===pvi?' on':'')+'" data-i="'+i+'">'+p.e+'<small>'+(p.ok?'polynomial':'not a polynomial')+'</small></button>';
+   }).join('');
+   Array.prototype.forEach.call($("plist").querySelectorAll('.it'),function(b){
+     b.onclick=function(){ pvi=parseInt(b.dataset.i,10); renderPL(); };
+   });
+   var p=PL[pvi];
+   $("pv").className='vd'+(p.ok?'':' no');
+   $("pv").innerHTML='<span class="n">'+p.e+'<span class="'+(p.ok?'yes-p':'no-p')+'">'+(p.ok?'polynomial':'not one')+'</span></span>'+p.d;
+ }
+
+ /* ---------------- naming reference ---------------- */
+ var PRE=[
+  {c:[7,0,0,0,0], nm:'7'},
+  {c:[-9,4,0,0,0], nm:'4<i>x</i> &minus; 9'},
+  {c:[9,-6,1,0,0], nm:'<i>x</i><sup>2</sup> &minus; 6<i>x</i> + 9'},
+  {c:[0,0,0,-2,0], nm:'&minus;2<i>x</i><sup>3</sup>'},
+  {c:[-1,0,0,0,1], nm:'<i>x</i><sup>4</sup> &minus; 1'},
+  {c:[-4,5,-1,2,0], nm:'2<i>x</i><sup>3</sup> &minus; <i>x</i><sup>2</sup> + 5<i>x</i> &minus; 4'}
+ ];
+ var DEGN=[
+  {d:0,nm:'Constant',s:'7'},
+  {d:1,nm:'Linear',s:'4<i>x</i> &minus; 9'},
+  {d:2,nm:'Quadratic',s:'<i>x</i><sup>2</sup> &minus; 6<i>x</i> + 9'},
+  {d:3,nm:'Cubic',s:'&minus;2<i>x</i><sup>3</sup>'},
+  {d:4,nm:'Quartic',s:'<i>x</i><sup>4</sup> &minus; 1'},
+  {d:5,nm:'Quintic',s:'<i>x</i><sup>5</sup> + <i>x</i>'}
+ ];
+ var TRMN=[
+  {n:1,nm:'Monomial',s:'one term'},
+  {n:2,nm:'Binomial',s:'two terms'},
+  {n:3,nm:'Trinomial',s:'three terms'},
+  {n:4,nm:'no special name',s:'four or more'}
+ ];
+ function renderName(){
+   var d=degOf(), n=nterms();
+   $("pre").innerHTML=PRE.map(function(p,i){
+     var same=true,k; for(k=0;k<5;k++){ if(p.c[k]!==C[k]) same=false; }
+     return '<button class="it'+(same?' on':'')+'" data-i="'+i+'">'+p.nm+'<small>'+(DNAME[degOfArr(p.c)]||'')+' '+tname(cnt(p.c))+'</small></button>';
+   }).join('');
+   Array.prototype.forEach.call($("pre").querySelectorAll('.it'),function(b){
+     b.onclick=function(){ var p=PRE[parseInt(b.dataset.i,10)], k; for(k=0;k<5;k++){ C[k]=p.c[k]; } render(); };
+   });
+   $("dl").innerHTML=DEGN.map(function(g){
+     return '<div class="it'+(g.d===d?' on':'')+'"><span class="nm">degree '+g.d+' &nbsp;&middot;&nbsp; '+g.nm+'</span><span class="s">'+g.s+'</span></div>';
+   }).join('');
+   $("tl").innerHTML=TRMN.map(function(g){
+     var on=(g.n===4 ? n>=4 : g.n===n);
+     return '<div class="it'+(on?' on':'')+'"><span class="nm">'+g.nm+'</span><span class="s">'+g.s+'</span></div>';
+   }).join('');
+ }
+ function degOfArr(a){ var k; for(k=a.length-1;k>=0;k--){ if(a[k]!==0) return k; } return -1; }
+ function cnt(a){ var n=0,k; for(k=0;k<a.length;k++){ if(a[k]!==0) n++; } return n; }
+
+ /* ---------------- take it apart: the worked-step machine ------------------- */
+ var EX=[
+  {nm:'Scrambled', T:[[5,0],[-3,2],[4,4],[-1,1]]},
+  {nm:'Two terms', T:[[9,1],[-4,3]]},
+  {nm:'Just a number', T:[[7,0]]},
+  {nm:'Invisible 1', T:[[1,2],[-6,1],[9,0]]}
+ ];
+ function origHTML(T,wrap){
+   var s='', i;
+   for(i=0;i<T.length;i++){
+     var piece=term(T[i][0],T[i][1],i===0);
+     s += wrap ? tg(piece) : piece;
+   }
+   return s;
+ }
+ function toC(T){ var a=[0,0,0,0,0], i; for(i=0;i<T.length;i++){ a[T[i][1]]+=T[i][0]; } return a; }
+ function buildSteps(e){
+   var T=e.T, a=toC(T), d=degOfArr(a), n=T.length, L=[], i;
+   var lc=a[d], sorted=poly(a);
+
+   L.push({p:'as written', m:origHTML(T,false),
+     d:'Here it is exactly as it arrives. Nothing has been reordered yet &mdash; and that matters, because <b>every</b> question you are about to answer depends on the highest power, not on whatever happens to be printed first.'});
+
+   var pieces=T.map(function(t,i){ return tg(term(t[0],t[1],i===0).replace(/^\s+/,'')); }).join('&nbsp;');
+   var neg=null; for(i=0;i<T.length;i++){ if(T[i][0]<0){ neg=T[i]; break; } }
+   L.push({p:'find the terms', m:pieces,
+     d:'<b>Terms are the pieces joined by + and &minus; signs.</b> Each highlighted box above is one term'
+       +(neg ? ' &mdash; and notice the sign sits <b>inside</b> the box, because a sign belongs to the term that follows it. So '+bare(neg[0],neg[1])+' is a single term carrying its own minus, not a subtraction waiting to happen.' : '.')
+       +' Count them: <b>'+n+' term'+(n===1?'':'s')+'</b>.'});
+
+   var deglist=T.map(function(t){
+     return '<span style="white-space:nowrap">'+tg(bare(t[0],t[1]))+' &rarr; '+t[1]+'</span>';
+   }).join('&nbsp; ');
+   L.push({p:'degree of each term', m:deglist,
+     d:'A term&rsquo;s degree is simply the exponent on its <i>x</i>. Two cases look like exceptions and are not: a plain number is degree <b>0</b> because 7 means 7<i>x</i><sup>0</sup>, and a lone <i>x</i> is degree <b>1</b> because <i>x</i> means <i>x</i><sup>1</sup>. The 1 and the 0 are simply not written.'});
+
+   L.push({p:'standard form', m:tg(sorted),
+     d:'Now rewrite the terms from the <b>highest</b> power down to the lowest. This is called <b>standard form</b>, and it is not decoration: it puts the term that controls the polynomial&rsquo;s behavior at the front where you can see it, and it lines up like terms when you later add, subtract, or factor.'
+       +(sameOrder(T)?' This one already arrived in order, so nothing moved.':'')});
+
+   L.push({p:'the degree', m:sorted+' &nbsp;&rarr;&nbsp; degree '+tg(''+d),
+     d:'The <b>degree of the polynomial</b> is the largest of those term degrees &mdash; here <b>'+d+'</b>. Standard form hands it to you for free: it is the exponent on the very first term'
+       +(d===0 ? ', and with no <i>x</i> written at all that exponent is 0.' : '.')
+       +' In name terms this makes it a <b>'+(DNAME[d]||('degree-'+d))+'</b> polynomial.'});
+
+   L.push({p:'leading coefficient', m:'leading term '+tg(bare(lc,d))+' &nbsp;&middot;&nbsp; coefficient '+tg(h(lc)),
+     d:'The <b>leading term</b> is the highest-degree term, and the number multiplying it is the <b>leading coefficient</b>: <b>'+h(lc)+'</b>. '
+       +(Math.abs(lc)===1 && d>0
+          ? 'Look carefully &mdash; nothing is printed in front of '+pw(d)+'. An unwritten coefficient is <b>'+(lc>0?'1':'&minus;1')+'</b>, never 0 and never &ldquo;nothing&rdquo;, because '+(lc>0?'1':'&minus;1')+' times '+pw(d)+' is '+bare(lc,d)+'.'
+          : (d>0 && T[0][1]!==d
+             ? 'Notice it is <b>not</b> the first number in the original line &mdash; that was '+h(T[0][0])+'. &ldquo;Leading&rdquo; means highest power, not printed first.'
+             : 'Read it with its sign attached; a minus sign in front of the term belongs to this coefficient.'))});
+
+   var k0 = a[0];
+   L.push({p:'the constant term', m:'constant term '+tg(h(k0)),
+     d: (k0!==0
+       ? 'The <b>constant term</b> is the piece with no <i>x</i>: <b>'+h(k0)+'</b>. It has a second job worth knowing &mdash; substitute <i>x</i> = 0 and every other term dies, so the graph crosses the <i>y</i>-axis at exactly this height.'
+       : 'There is no plain number here, which means the constant term is <b>0</b>. Substituting <i>x</i> = 0 gives 0, so this graph passes straight through the origin.')});
+
+   L.push({p:'name it', m:tg(sorted),
+     d:'Put the two readings together: degree '+d+' makes it <b>'+(DNAME[d]||('degree '+d))+'</b>, and '+n+' term'+(n===1?'':'s')+' makes it '+(TNAME[n]?'a <b>'+TNAME[n]+'</b>':'<b>just &ldquo;a polynomial&rdquo;</b> &mdash; the special names stop at three')+'. So: <b>'+sorted+'</b> is a '+(DNAME[d]||('degree-'+d))+' '+tname(n)+' with leading coefficient '+h(lc)+'.'});
+   return L;
+ }
+ function sameOrder(T){
+   var i; for(i=1;i<T.length;i++){ if(T[i][1]>T[i-1][1]) return false; } return true;
+ }
+ function renderPicker(){
+   $("picker").innerHTML=EX.map(function(e,i){
+     return '<button class="'+(i===exi?'on':'')+'" data-i="'+i+'">'+e.nm+'<small>'+origHTML(e.T,false)+'</small></button>';
+   }).join('');
+   Array.prototype.forEach.call($("picker").querySelectorAll('button'),function(b){
+     b.onclick=function(){ exi=parseInt(b.dataset.i,10); step=0; applyEx(); render(); };
+   });
+ }
+ function applyEx(){ var a=toC(EX[exi].T), k; for(k=0;k<5;k++){ C[k]=a[k]; } }
+ function renderSteps(){
+   var L=buildSteps(EX[exi]), out='', i;
+   for(i=0;i<=step;i++){
+     out+='<div class="dl2'+(i===step?' cur':'')+'"><span class="mx">'+L[i].m+'</span><span class="pl">'+L[i].p+'</span></div>';
+   }
+   $("mb").innerHTML=out;
+   $("exlab").innerHTML=L[step].d;
+   $("prev").disabled=(step===0);
+   $("next").disabled=(step===L.length-1);
+ }
+
+ /* ---------------- info copy ---------------- */
+ function liveInfo(){
+   var d=degOf(), n=nterms();
+   if(d<0){
+     return '<span class="n">The zero polynomial</span>Every coefficient is 0, so there is no highest power to point at and the degree is left <b>undefined</b> &mdash; this single expression is the one exception to the rule. Slide any coefficient away from 0 to get out of it.';
+   }
+   var lc=C[d];
+   var s='<span class="n">Degree '+d+' &nbsp;&middot;&nbsp; leading coefficient '+h(lc)+' &nbsp;&middot;&nbsp; '+n+' term'+(n===1?'':'s')+'</span>';
+   s+='Three separate readings of the same expression. The <b>degree</b> is the highest exponent that survives with a nonzero coefficient &mdash; '
+     +(d===0 ? 'there is no <i>x</i> left at all, and a plain number counts as degree <b>0</b>' : 'the top term is '+bare(lc,d)+', so the degree is <b>'+d+'</b>')
+     +'. The <b>leading coefficient</b> is the number riding on that top term: <b>'+h(lc)+'</b>. The <b>number of terms</b> is how many pieces are joined by + and &minus; signs: <b>'+n+'</b>.';
+   if(Math.abs(lc)===1 && d>0){
+     s+='<div class="loc">Nothing is written in front of '+pw(d)+', but the leading coefficient is <b>'+(lc>0?'1':'&minus;1')+'</b> &mdash; an unwritten coefficient is always 1 (or &minus;1 if a minus sign sits out front).</div>';
+   } else if(C[0]===0){
+     s+='<div class="loc">There is no plain number here, so the <b>constant term is 0</b> &mdash; and sure enough the red dot sits at the origin.</div>';
+   } else {
+     s+='<div class="loc">Standard form: <b>'+poly(C)+'</b> &nbsp;·&nbsp; a '+(DNAME[d]||('degree-'+d))+' '+tname(n)+'</div>';
+   }
+   return s;
+ }
+ var MN={
+  0:'<b>Three questions, three different places to look.</b> Degree looks at the <b>exponents</b>. Leading coefficient looks at the <b>number in front of the biggest exponent</b>. Term count looks at the <b>+ and &minus; signs</b>. Answer them in that order and they never tangle. One bonus you get for free: a degree-<i>n</i> polynomial can turn at most <i>n</i> &minus; 1 times, which is why the cubic on the left never manages more than two bends.',
+  1:'<b>Mono-, bi-, tri- are the same prefixes as monorail, bicycle, tricycle</b> &mdash; one, two, three. There is no fourth word in common use: four terms or more and we simply say &ldquo;a polynomial.&rdquo; The degree names run constant, linear, quadratic, cubic, quartic, quintic; past that, people just say &ldquo;a sixth-degree polynomial.&rdquo;',
+  2:'<b>Sort first, then answer.</b> Rewriting in descending powers costs you five seconds and removes almost every chance of naming the wrong term as the leader. Once the polynomial is in standard form, the degree is the first exponent you see and the leading coefficient is the first number you see &mdash; but only once it is sorted.'
+ };
+ var NT={
+  0:'<b>The trap.</b> A coefficient of <b>0</b> deletes its term &mdash; it does not sit there as an empty placeholder. Slide the <i>x</i><sup>4</sup> coefficient to 0 and the degree instantly becomes 3, because degree is defined by the highest power with a <b>nonzero</b> coefficient. This is also why 0<i>x</i><sup>4</sup> + 2<i>x</i><sup>3</sup> is a cubic, not a quartic.',
+  1:'<b>The trap.</b> &ldquo;Quadratic&rdquo; sounds like it should mean four, and it does not &mdash; it comes from the Latin <i>quadratus</i>, meaning <b>squared</b>, so quadratic is degree <b>2</b>. Meanwhile &ldquo;binomial&rdquo; counts <b>terms</b>, not degree: <i>x</i><sup>4</sup> &minus; 1 is a binomial and a quartic at the same time. Degree and term count are independent readings.',
+  2:'<b>The trap.</b> The leading coefficient is <b>not</b> the first number written down. In 5 &minus; 3<i>x</i><sup>2</sup> + 4<i>x</i><sup>4</sup> &minus; <i>x</i> the first number is 5, but the leading coefficient is <b>4</b>. And the sign travels with it: in &minus;4<i>x</i><sup>3</sup> + 9<i>x</i> the leading coefficient is <b>&minus;4</b>, not 4. Sort into standard form before you answer, every time.'
+ };
+
+ /* ---------------- render ---------------- */
+ function render(){
+   var d=degOf(), n=nterms(), k;
+   $("art").innerHTML=art();
+   $("strip").innerHTML=strip();
+   $("cap").innerHTML=(d<0)
+     ? 'Every coefficient is 0 &mdash; slide one to bring a term back.'
+     : 'The gold box is the <b>leading term</b>: highest power, not first written. The red dot is the <b>constant term</b>, where the curve meets the <i>y</i>-axis.';
+   $("why").innerHTML='<em>what the degree and leading coefficient predict</em>'+endBeh();
+   dominance();
+
+   for(k=0;k<5;k++){ $("r_"+k).value=C[k]; $("o_"+k).innerHTML=h(C[k]); }
+
+   $("stage").style.background=(d<0?MUT:DCOL[d]);
+   $("stage").innerHTML='<span class="big">'+poly(C)+'</span><small>'+
+     (d<0 ? 'the zero polynomial &mdash; degree undefined'
+          : 'degree '+d+' &nbsp;·&nbsp; leading coefficient '+h(C[d])+' &nbsp;·&nbsp; '+n+' term'+(n===1?'':'s')+' &nbsp;·&nbsp; '+(DNAME[d]||('degree-'+d))+' '+tname(n))+'</small>';
+
+   if(mode===1) renderName();
+   if(mode===2){
+     renderPicker(); renderSteps();
+     $("info").innerHTML='<span class="n">'+EX[exi].nm+': '+origHTML(EX[exi].T,false)+'</span>'+
+       'The graph on the left is this very polynomial, so you can watch the shape that the degree and leading coefficient are predicting while you walk the steps.';
+   } else {
+     $("info").innerHTML=liveInfo();
+   }
+   $("mnem").innerHTML=MN[mode];
+   $("note").innerHTML=NT[mode];
+   $("artTitle").innerHTML=(mode===2 ? 'The polynomial being taken apart' : 'Your polynomial, drawn');
+ }
+
+ /* ---------------- wiring ---------------- */
+ for(var k=0;k<5;k++){
+   (function(kk){
+     $("r_"+kk).addEventListener('input',function(){ C[kk]=parseInt(this.value,10); render(); });
+   })(k);
+ }
+ Array.prototype.forEach.call($("modes").querySelectorAll('button'),function(b){
+   b.onclick=function(){
+     mode=parseInt(b.dataset.m,10);
+     Array.prototype.forEach.call($("modes").querySelectorAll('button'),function(o){ o.className=(o===b?'on':''); });
+     $("p0").style.display=(mode===0?'':'none');
+     $("p1").style.display=(mode===1?'':'none');
+     $("p2").style.display=(mode===2?'':'none');
+     $("nav").style.display=(mode===2?'':'none');
+     if(mode===2){ step=0; applyEx(); }
+     render();
+   };
+ });
+ $("prev").onclick=function(){ if(step>0){ step--; renderSteps(); } };
+ $("next").onclick=function(){ var n=buildSteps(EX[exi]).length; if(step<n-1){ step++; renderSteps(); } };
+ $("reset").onclick=function(){ var i; for(i=0;i<5;i++){ C[i]=HOME[i]; } render(); };
+ $("shuffle").onclick=function(){
+   var lim=[12,10,6,5,4], i, guard=0;
+   do{
+     for(i=0;i<5;i++){ C[i]=Math.round(Math.random()*(2*lim[i]))-lim[i]; }
+     guard++;
+   } while(degOf()<1 && guard<40);
+   if(degOf()<1){ C[3]=2; }
+   render();
+ };
+
+ renderPL();
+ render();
+})();
+</script>
+</body>
+</html>

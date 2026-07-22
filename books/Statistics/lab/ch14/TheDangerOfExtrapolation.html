@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>The Danger of Extrapolation</title>
+<meta name="description" content="Fit a least-squares line to childhood height data, then slide a prediction age from inside the data out to adulthood. Inside the range the line is trustworthy; far outside it, it predicts an 11-foot-tall adult. Every number is computed live from the fitted line and the true growth curve.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.05fr 0.95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,#2f9e5b 0%,#2f9e5b 19%,#e6d3a3 19%,#e6d3a3 31%,#e8b0ba 31%,var(--coral) 100%);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:60px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:13px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.pred .vv{color:var(--coral);} .tiles div.tru .vv{color:var(--green);}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px;font-size:11px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.lgd i.ln{width:16px;height:0;border-top:2.4px solid var(--teal-dk);border-radius:0;vertical-align:3px;}
+.lgd i.dsh{width:16px;height:0;border-top:2.4px dashed var(--coral);border-radius:0;vertical-align:3px;}
+.lgd i.cv{width:16px;height:0;border-top:2.4px solid var(--green);border-radius:0;vertical-align:3px;}
+.lgd i.bnd{background:rgba(47,111,138,.14);border:1px solid #9cc0cf;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.45;}
+#info .eq{font-size:12.5px;color:var(--teal-dk);background:#e2eff5;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.6;font-variant-numeric:tabular-nums;}
+.zone{display:flex;gap:6px;margin-top:12px;}
+.zone div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 4px;font-size:10.5px;font-weight:800;letter-spacing:.3px;color:var(--muted);background:#fff;line-height:1.25;}
+.zone div.on.a{border-color:var(--green);color:#155f31;background:#e5f3ea;}
+.zone div.on.b{border-color:#b8862f;color:#7a5a12;background:#fbf3e2;}
+.zone div.on.c{border-color:var(--coral);color:#8a1f2c;background:#fae5e8;}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(3,1fr);}.tiles .vv{font-size:13.5px;}.sl label{font-size:10px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 14</div>
+  <h1>The Danger of Extrapolation</h1>
+  <div class="intro">A pediatrician measures children ages <b>2 to 9</b> and fits a straight line to height &mdash; and within that window the line is superb. But a regression line only knows the data it was built from. <b>Slide the prediction age</b> below and watch what happens when the line is pushed past the last data point: inside the range it tracks reality almost perfectly, yet extended to adulthood it insists a grown-up should be <b>over eleven feet tall</b>. The line hasn't changed &mdash; only how far you dared to trust it. Every prediction, error, and reality-check is computed live.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="scTitle">Height vs age &mdash; the fitted line, extended</h2>
+      <svg viewBox="0 0 340 300" aria-label="scatterplot of childhood height against age with a least-squares line extended far beyond the data, next to the true growth curve"><g id="scat"></g></svg>
+      <div class="lgd" id="lgd"></div>
+      <div class="cap" id="scCap"></div>
+    </div>
+    <div class="card"><h2>How wrong the line is, at every age</h2>
+      <svg viewBox="0 0 340 156" aria-label="a curve of the line's prediction error against age, near zero inside the data range and ballooning outside it"><g id="err"></g></svg>
+      <div class="cap" id="eCap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Predicting inside the data<small>slide the age to leave the safe zone</small></div>
+    <div class="card">
+      <div class="modeseg" id="mode">
+        <button data-m="1" class="on">Reveal reality</button>
+        <button data-m="0">Trust the line only</button>
+      </div>
+      <div class="sl"><label for="tSl">Predict at age</label><input type="range" id="tSl" min="1" max="42" step="0.5" value="5"><span class="nv" id="tVal">5.0 yr</span></div>
+      <div class="zone" id="zone">
+        <div class="a" id="zA">Interpolation<br>ages 2&ndash;9</div>
+        <div class="b" id="zB">Mild<br>extrapolation</div>
+        <div class="c" id="zC">Extreme<br>extrapolation</div>
+      </div>
+      <div class="tiles">
+        <div class="pred"><span class="lb">Line predicts</span><span class="vv" id="tPred">&mdash;</span></div>
+        <div class="tru"><span class="lb">Truth</span><span class="vv" id="tTrue">&mdash;</span></div>
+        <div><span class="lb">Off by</span><span class="vv" id="tErr">&mdash;</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>Interpolation vs extrapolation.</b> Predicting <b>inside</b> the range of the x-values used to build the line is <b>interpolation</b> &mdash; the data vouch for it. Predicting <b>outside</b> that range is <b>extrapolation</b>, and it rests on a promise the data never made: that the same straight-line pattern keeps going. Here the real relationship <i>bends</i> &mdash; children stop growing &mdash; so the further out you push, the more the line's rigid slope betrays you.</div>
+      <div class="note"><b>A high R&sup2; does not license extrapolation.</b> The line fits the childhood data beautifully, and no amount of that good fit tells you what happens at age 30 &mdash; because there is no age-30 data underneath it. Trust a regression line for prediction only across the span of x it was actually shown.</div>
+      <div class="fn" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- seeded PRNG so the data are identical every visit ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function nrm(r){var u=1-r(),v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+
+ /* ================= the TRUE relationship (a saturating growth curve) =================
+    Real height keeps rising then plateaus; it is NOT a straight line. Children ages 2-9
+    happen to fall on the near-linear early stretch, which is exactly what fools the line. */
+ function trueH(age){ return 50 + 130*age/(age+5); }   /* centimetres */
+
+ /* ================= the OBSERVED data: ages 2..9 only ================= */
+ var XMIN=2, XMAX=9;                                     /* the range the line is built from */
+ var P=(function(){
+   var r=mulberry32(20260720), out=[], age, y;
+   for(age=XMIN; age<=XMAX; age++){ y=trueH(age)+nrm(r)*2.0; y=Math.round(y*10)/10; out.push({x:age,y:y}); }
+   return out;
+ })();
+
+ /* ================= least-squares fit to the observed data ================= */
+ var n=P.length,i,sx=0,sy=0;
+ for(i=0;i<n;i++){sx+=P[i].x;sy+=P[i].y;}
+ var mx=sx/n,my=sy/n,sxx=0,syy=0,sxy=0,dx,dy;
+ for(i=0;i<n;i++){dx=P[i].x-mx;dy=P[i].y-my;sxx+=dx*dx;syy+=dy*dy;sxy+=dx*dy;}
+ var b=sxy/sxx, a=my-b*mx;                               /* fitted line  y-hat = a + b*age */
+ var r=sxy/Math.sqrt(sxx*syy), R2=r*r;                   /* fit quality inside the range   */
+ function lineH(age){ return a+b*age; }
+
+ /* ================= state ================= */
+ var t=5, reveal=1;                                      /* prediction age, and reveal-reality toggle */
+
+ /* ================= zone classification ================= */
+ var RW=XMAX-XMIN;                                        /* data-range width = 7 */
+ function zoneOf(age){
+   if(age>=XMIN-0.001 && age<=XMAX+0.001) return 0;       /* interpolation      */
+   var d = age>XMAX ? age-XMAX : XMIN-age;                /* distance past the nearest edge */
+   return d <= 0.5*RW ? 1 : 2;                            /* mild vs extreme    */
+ }
+
+ /* ================= plot geometry ================= */
+ var AGEMAX=42, HMAX=360;
+ var PX0=42,PX1=330,PYT=14,PYB=250;
+ function xOf(age){return PX0+age/AGEMAX*(PX1-PX0);}
+ function yOf(h){var v=PYB-h/HMAX*(PYB-PYT); if(v<PYT-30)v=PYT-30; return v;}
+
+ function drawScatter(){
+  var s='',k,tv,tx,ty;
+  /* extrapolation zones (behind everything) */
+  s+='<rect x="'+xOf(XMIN).toFixed(1)+'" y="'+PYT+'" width="'+(xOf(XMAX)-xOf(XMIN)).toFixed(1)+'" height="'+(PYB-PYT)+'" fill="rgba(47,111,138,.10)"/>';
+  s+='<rect x="'+PX0+'" y="'+PYT+'" width="'+(xOf(XMIN)-PX0).toFixed(1)+'" height="'+(PYB-PYT)+'" fill="rgba(209,73,91,.05)"/>';
+  s+='<rect x="'+xOf(XMAX).toFixed(1)+'" y="'+PYT+'" width="'+(PX1-xOf(XMAX)).toFixed(1)+'" height="'+(PYB-PYT)+'" fill="rgba(209,73,91,.05)"/>';
+  /* gridlines + ticks */
+  for(tv=0;tv<=AGEMAX;tv+=6){ tx=xOf(tv);
+    s+='<line x1="'+tx.toFixed(1)+'" y1="'+PYT+'" x2="'+tx.toFixed(1)+'" y2="'+PYB+'" stroke="#eef3f6" stroke-width="1"/>';
+    s+='<text x="'+tx.toFixed(1)+'" y="'+(PYB+13)+'" font-size="8.6" fill="#95a3aa" font-weight="600" text-anchor="middle">'+tv+'</text>';
+  }
+  for(tv=0;tv<=HMAX;tv+=60){ ty=yOf(tv);
+    s+='<line x1="'+PX0+'" y1="'+ty.toFixed(1)+'" x2="'+PX1+'" y2="'+ty.toFixed(1)+'" stroke="#eef3f6" stroke-width="1"/>';
+    s+='<text x="'+(PX0-6)+'" y="'+(ty+3).toFixed(1)+'" font-size="8.6" fill="#95a3aa" font-weight="600" text-anchor="end">'+tv+'</text>';
+  }
+  s+='<rect x="'+PX0+'" y="'+PYT+'" width="'+(PX1-PX0)+'" height="'+(PYB-PYT)+'" fill="none" stroke="#b7c7d0" stroke-width="1.3"/>';
+
+  /* clip so nothing spills out of the frame */
+  s+='<clipPath id="pc"><rect x="'+PX0+'" y="'+PYT+'" width="'+(PX1-PX0)+'" height="'+(PYB-PYT)+'"/></clipPath>';
+  s+='<g clip-path="url(#pc)">';
+
+  /* the TRUE growth curve (only when reality is revealed) */
+  if(reveal){
+    var d='';
+    for(var ag=0;ag<=AGEMAX+0.001;ag+=0.5){ d+=(d===''?'M':'L')+xOf(ag).toFixed(1)+' '+yOf(trueH(ag)).toFixed(1)+' '; }
+    s+='<path d="'+d+'" fill="none" stroke="#2f9e5b" stroke-width="2.4"/>';
+  }
+
+  /* the fitted line: solid within the data range, dashed (coral) where it is extrapolated */
+  s+='<line x1="'+xOf(XMIN).toFixed(1)+'" y1="'+yOf(lineH(XMIN)).toFixed(1)+'" x2="'+xOf(XMAX).toFixed(1)+'" y2="'+yOf(lineH(XMAX)).toFixed(1)+'" stroke="#1c4454" stroke-width="2.6"/>';
+  s+='<line x1="'+xOf(XMAX).toFixed(1)+'" y1="'+yOf(lineH(XMAX)).toFixed(1)+'" x2="'+xOf(AGEMAX).toFixed(1)+'" y2="'+yOf(lineH(AGEMAX)).toFixed(1)+'" stroke="#d1495b" stroke-width="2.4" stroke-dasharray="6 4"/>';
+  s+='<line x1="'+xOf(0).toFixed(1)+'" y1="'+yOf(lineH(0)).toFixed(1)+'" x2="'+xOf(XMIN).toFixed(1)+'" y2="'+yOf(lineH(XMIN)).toFixed(1)+'" stroke="#d1495b" stroke-width="2.4" stroke-dasharray="6 4"/>';
+
+  /* the prediction marker */
+  var mxx=xOf(t), pH=lineH(t), pY=yOf(pH), trY=yOf(trueH(t));
+  s+='<line x1="'+mxx.toFixed(1)+'" y1="'+PYT+'" x2="'+mxx.toFixed(1)+'" y2="'+PYB+'" stroke="#78868d" stroke-width="1" stroke-dasharray="2 3"/>';
+  /* error connector between line prediction and truth */
+  if(reveal){
+    s+='<line x1="'+mxx.toFixed(1)+'" y1="'+pY.toFixed(1)+'" x2="'+mxx.toFixed(1)+'" y2="'+trY.toFixed(1)+'" stroke="#b8862f" stroke-width="2.6"/>';
+    s+='<circle cx="'+mxx.toFixed(1)+'" cy="'+trY.toFixed(1)+'" r="5.4" fill="#2f9e5b" stroke="#fffdf9" stroke-width="1.5"/>';
+  }
+  s+='<circle cx="'+mxx.toFixed(1)+'" cy="'+pY.toFixed(1)+'" r="5.4" fill="#d1495b" stroke="#fffdf9" stroke-width="1.5"/>';
+  s+='</g>';
+
+  /* the observed data points, on top */
+  for(k=0;k<n;k++){
+    s+='<circle cx="'+xOf(P[k].x).toFixed(1)+'" cy="'+yOf(P[k].y).toFixed(1)+'" r="4.4" fill="#2f6f8a" stroke="#fffdf9" stroke-width="1.3"/>';
+  }
+  /* axis titles */
+  s+='<text x="'+((PX0+PX1)/2)+'" y="'+(300-4)+'" font-size="9.4" fill="#78868d" font-weight="700" text-anchor="middle">Age (years) &rarr;</text>';
+  s+='<text transform="translate(11 '+((PYT+PYB)/2)+') rotate(-90)" font-size="9.4" fill="#78868d" font-weight="700" text-anchor="middle">Height (cm) &rarr;</text>';
+  $("scat").innerHTML=s;
+ }
+
+ /* ================= the error chart: |line - truth| across all ages ================= */
+ var GX0=42,GX1=330,GYT=12,GYB=118,GVB=156;
+ var EVMAX=(function(){var m=0,ag,e;for(ag=0;ag<=AGEMAX;ag+=0.5){e=Math.abs(lineH(ag)-trueH(ag));if(e>m)m=e;}return m*1.08;})();
+ function egx(age){return GX0+age/AGEMAX*(GX1-GX0);}
+ function egy(e){var v=e/EVMAX;if(v<0)v=0;if(v>1)v=1;return GYB-v*(GYB-GYT);}
+ function drawErr(){
+  var s='',ag,tv,tx,d='';
+  /* data-range band */
+  s+='<rect x="'+egx(XMIN).toFixed(1)+'" y="'+GYT+'" width="'+(egx(XMAX)-egx(XMIN)).toFixed(1)+'" height="'+(GYB-GYT)+'" fill="rgba(47,111,138,.12)"/>';
+  s+='<rect x="'+GX0+'" y="'+GYT+'" width="'+(GX1-GX0)+'" height="'+(GYB-GYT)+'" fill="none" stroke="#b7c7d0" stroke-width="1.2"/>';
+  for(tv=0;tv<=AGEMAX;tv+=6){ tx=egx(tv);
+    s+='<line x1="'+tx.toFixed(1)+'" y1="'+GYB+'" x2="'+tx.toFixed(1)+'" y2="'+(GYB+4)+'" stroke="#b7c7d0" stroke-width="1"/>';
+    s+='<text x="'+tx.toFixed(1)+'" y="'+(GYB+14)+'" font-size="8.4" fill="#95a3aa" font-weight="600" text-anchor="middle">'+tv+'</text>';
+  }
+  /* the error curve */
+  for(ag=0;ag<=AGEMAX+0.001;ag+=0.5){ d+=(d===''?'M':'L')+egx(ag).toFixed(1)+' '+egy(Math.abs(lineH(ag)-trueH(ag))).toFixed(1)+' '; }
+  s+='<path d="'+d+'" fill="none" stroke="#b8862f" stroke-width="2"/>';
+  /* marker at the chosen age */
+  var e=Math.abs(lineH(t)-trueH(t));
+  s+='<line x1="'+egx(t).toFixed(1)+'" y1="'+GYT+'" x2="'+egx(t).toFixed(1)+'" y2="'+GYB+'" stroke="#78868d" stroke-width="1" stroke-dasharray="2 3"/>';
+  s+='<circle cx="'+egx(t).toFixed(1)+'" cy="'+egy(e).toFixed(1)+'" r="5" fill="#d1495b" stroke="#fff" stroke-width="1.4"/>';
+  /* axis titles */
+  s+='<text x="'+((GX0+GX1)/2)+'" y="'+(GVB-1)+'" font-size="9" fill="#78868d" font-weight="700" text-anchor="middle">Age (years) &rarr;</text>';
+  s+='<text transform="translate(11 '+((GYT+GYB)/2)+') rotate(-90)" font-size="9" fill="#78868d" font-weight="700" text-anchor="middle">| error | (cm) &rarr;</text>';
+  $("err").innerHTML=s;
+ }
+
+ /* ================= formatting ================= */
+ function ftin(cm){ var inch=cm/2.54, f=Math.floor(inch/12), ii=Math.round(inch-f*12); if(ii===12){f++;ii=0;} return f+'&#8242;'+ii+'&#8243;'; }
+
+ /* ================= words ================= */
+ function infoHTML(){
+  var z=zoneOf(t), pred=lineH(t), truth=trueH(t), err=pred-truth, pctBad=Math.abs(err)/truth*100;
+  var h='';
+  if(z===0){
+    h='<span class="n">Interpolation &mdash; the line is trustworthy here</span>'+
+      'Age '+t.toFixed(1)+' sits <b>inside</b> the ages 2&ndash;9 the line was built from, so its prediction of <b>'+pred.toFixed(1)+' cm</b> ('+ftin(pred)+') lands almost exactly on the true height of <b>'+truth.toFixed(1)+' cm</b> &mdash; off by only <b>'+Math.abs(err).toFixed(1)+' cm</b>. Across this window a straight line really is a fine description of how these children grow, and the data stand behind every point on the solid segment.';
+  } else if(z===1){
+    h='<span class="n">Mild extrapolation &mdash; leaving the safe zone</span>'+
+      'Age '+t.toFixed(1)+' is just <b>past</b> the data (which stop at age '+(t>XMAX?XMAX:XMIN)+'). The line now predicts <b>'+pred.toFixed(1)+' cm</b> ('+ftin(pred)+') while the truth is <b>'+truth.toFixed(1)+' cm</b> &mdash; already off by <b>'+Math.abs(err).toFixed(1)+' cm</b> ('+pctBad.toFixed(0)+'%). The line assumes the childhood slope keeps going; reality has started to bend away from it. A prediction this close out might be tolerable, but it is a guess the data cannot vouch for.';
+  } else {
+    h='<span class="n">Extreme extrapolation &mdash; the prediction is meaningless</span>'+
+      'Age '+t.toFixed(1)+' is far outside the data. The line marches on at its childhood slope and declares this person should be <b>'+pred.toFixed(1)+' cm tall &mdash; that is '+ftin(pred)+'</b>, while the true height is about <b>'+truth.toFixed(1)+' cm</b> ('+ftin(truth)+'). The line is now wrong by <b>'+Math.abs(err).toFixed(0)+' cm</b>, roughly <b>'+pctBad.toFixed(0)+'%</b>. Nothing broke in the math &mdash; the slope that was right for toddlers is simply nonsense for adults, because growth levels off and the line never learned that.';
+    if(pred>272){ h+=' For scale, the tallest human ever recorded stood about 272 cm; the line has sailed clean past that.'; }
+  }
+  h+='<div class="eq"><b>Fitted line:</b> &nbsp;height&#770; = '+a.toFixed(1)+' + '+b.toFixed(2)+'&middot;age &nbsp; <span style="color:#78868d">(built from ages 2&ndash;9,&nbsp; R&sup2; = '+(R2*100).toFixed(1)+'%)</span><br>'+
+    '<b>At age '+t.toFixed(1)+':</b> &nbsp;line says '+pred.toFixed(1)+' cm, &nbsp; truth &asymp; '+truth.toFixed(1)+' cm, &nbsp; error = '+(err>=0?'+':'&minus;')+Math.abs(err).toFixed(1)+' cm.</div>';
+  return h;
+ }
+
+ /* ================= render ================= */
+ function render(){
+  var z=zoneOf(t), pred=lineH(t), truth=trueH(t), err=pred-truth;
+
+  /* stage banner */
+  var col = z===0?'var(--green)': z===1?'var(--gold)':'var(--coral)';
+  var lab = z===0?'Predicting inside the data': z===1?'Mild extrapolation': 'Extreme extrapolation';
+  var sub = z===0?'the line is standing on real data here'
+           : z===1?'past the last data point &mdash; proceed with caution'
+           : 'the line has nothing underneath it';
+  $("stage").style.background=col;
+  $("stage").innerHTML=lab+'<small>'+sub+'</small>';
+
+  /* zone strip */
+  $("zA").className='a'+(z===0?' on':''); $("zB").className='b'+(z===1?' on':''); $("zC").className='c'+(z===2?' on':'');
+
+  /* tiles */
+  $("tPred").innerHTML=pred.toFixed(1)+'<span style="font-size:10px;font-weight:700;color:var(--muted)"> cm</span>';
+  if(reveal){
+    $("tTrue").innerHTML=truth.toFixed(1)+'<span style="font-size:10px;font-weight:700;color:var(--muted)"> cm</span>';
+    $("tErr").innerHTML=(Math.abs(err)<0.05?'0':(err>=0?'+':'&minus;')+Math.abs(err).toFixed(1))+'<span style="font-size:10px;font-weight:700;color:var(--muted)"> cm</span>';
+  } else {
+    $("tTrue").innerHTML='<span style="color:var(--muted)">hidden</span>';
+    $("tErr").innerHTML='<span style="color:var(--muted)">?</span>';
+  }
+
+  drawScatter(); drawErr();
+
+  $("scCap").innerHTML='Blue dots are the <b>observed</b> ages 2&ndash;9 (shaded band). The line is <b>solid</b> where data support it and <b>dashed red</b> where it is extrapolated. '+(reveal?'The <b>green curve</b> is the true relationship; the <b>gold bar</b> at your age is the gap between the line and the truth.':'The true curve is hidden &mdash; you are seeing only what the line promises.');
+  $("eCap").innerHTML='The line’s error is <b>tiny inside the band</b> and grows without limit as you extrapolate &mdash; the plot literally maps out the danger.';
+  $("lgd").innerHTML='<span><i style="background:#2f6f8a"></i>observed data</span>'+
+    '<span><i class="bnd"></i>data range (ages 2&ndash;9)</span>'+
+    '<span><i class="ln"></i>line (supported)</span>'+
+    '<span><i class="dsh"></i>line (extrapolated)</span>'+
+    (reveal?'<span><i class="cv"></i>true growth curve</span>':'');
+
+  $("info").innerHTML=reveal?infoHTML():trustHTML();
+  $("fnote").innerHTML='The eight childhood points are drawn once from a seeded generator, so this data set is identical on every visit. Heights come from a realistic saturating growth model, and the line is the exact least-squares fit to ages 2&ndash;9. Foot-and-inch conversions and percentages are computed live.';
+ }
+
+ function trustHTML(){
+  var z=zoneOf(t), pred=lineH(t);
+  var h='<span class="n">What the line tells you</span>'+
+    'With reality hidden, the fitted line confidently predicts <b>'+pred.toFixed(1)+' cm</b> ('+ftin(pred)+') at age '+t.toFixed(1)+'. From the line alone you have <b>no way to know</b> whether that is trustworthy &mdash; the equation looks just as happy at age 40 as at age 5. '+
+    (z===0?'Here it happens to be reliable, because the age is inside the data the line was fit to.'
+      :'But this age is <b>outside</b> the data, and the line has quietly stopped describing anything it ever measured. Press <b>Reveal reality</b> to see how far off it is.');
+  h+='<div class="eq"><b>Fitted line:</b> &nbsp;height&#770; = '+a.toFixed(1)+' + '+b.toFixed(2)+'&middot;age &nbsp; <span style="color:#78868d">(ages 2&ndash;9,&nbsp; R&sup2; = '+(R2*100).toFixed(1)+'%)</span></div>';
+  return h;
+ }
+
+ /* ================= controls ================= */
+ $("tSl").oninput=function(){ t=+this.value; $("tVal").innerHTML=t.toFixed(1)+' yr'; render(); };
+ var mg=$("mode").getElementsByTagName('button');
+ for(var m=0;m<mg.length;m++) mg[m].onclick=function(){
+   for(var q=0;q<mg.length;q++) mg[q].className='';
+   this.className='on'; reveal=+this.getAttribute('data-m'); render();
+ };
+
+ render();
+})();
+</script>
+</body>
+</html>

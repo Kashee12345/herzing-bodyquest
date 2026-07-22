@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Explicit vs Recursive: Two Ways to Build a Sequence</title>
+<meta name="description" content="Generate the same sequence two ways — an explicit formula that jumps to any term, and a recursive rule that chains from the term before. For College Algebra students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>.wrap{grid-template-columns:1fr 1.05fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.rules{display:flex;gap:8px;margin-bottom:12px;}
+.rule{flex:1;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#f7f6fc;}
+.rule .lb{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;margin-bottom:4px;}
+.rule.exp{border-left:4px solid var(--blue);} .rule.exp .lb{color:var(--blue);}
+.rule.rec{border-left:4px solid var(--gold);} .rule.rec .lb{color:var(--gold);}
+.rule .fm{font-size:13px;color:var(--teal-dk);font-weight:700;line-height:1.5;}
+.calc{display:flex;flex-direction:column;gap:9px;margin-top:2px;}
+.cbox{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff;}
+.cbox .lb{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;margin-bottom:4px;}
+.cbox.exp{border-left:4px solid var(--blue);} .cbox.exp .lb{color:var(--blue);}
+.cbox.rec{border-left:4px solid var(--gold);} .cbox.rec .lb{color:var(--gold);}
+.cbox .eq{font-size:14px;color:var(--soft);line-height:1.65;}
+.cbox .eq b{color:var(--teal-dk);background:#eef0fb;border-radius:5px;padding:1px 5px;}
+.cbox .gv{font-size:11px;color:var(--muted);font-style:italic;}
+.match{margin-top:10px;font-size:12.5px;line-height:1.5;color:#237a45;background:#e5f3ea;border:1px solid #bfe3cd;border-radius:9px;padding:9px 12px;}
+.match b{color:#16603a;}
+sub{font-size:.72em;} sup{font-size:.72em;}
+.seqrow{display:flex;gap:2px;flex-wrap:wrap;margin-top:9px;font-size:14px;color:var(--muted);font-weight:700;}
+.seqrow span{padding:2px 4px;border-radius:6px;transition:.2s;}
+.seqrow span.done{color:var(--teal-dk);} .seqrow span.now{background:var(--teal);color:#fff;}
+.seqrow .dots{color:var(--line);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 14</div>
+  <h1>Explicit vs Recursive</h1>
+  <div class="intro">A sequence is just an ordered list of numbers. There are <b>two ways to describe the same list</b>: an <b>explicit</b> formula that jumps straight to any term, and a <b>recursive</b> rule that builds each term from the one before. Watch both routes land on the identical value.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The sequence, plotted</h2>
+    <svg viewBox="0 0 240 200" aria-label="sequence graph"><g id="art"></g></svg>
+    <div class="seqrow" id="seqrow"></div>
+  </div></div>
+  <div>
+    <div class="seg" id="seg">
+      <button data-i="0" class="on">Add 2<small>arithmetic</small></button>
+      <button data-i="1">Double<small>geometric ↑</small></button>
+      <button data-i="2">Halve<small>geometric ↓</small></button>
+    </div>
+    <div id="stage" style="margin-top:12px;">Term 1 of 6<small>press Next to grow the sequence</small></div>
+    <div class="card">
+      <div class="rules">
+        <div class="rule exp"><div class="lb">Explicit rule</div><div class="fm" id="ruleE"></div></div>
+        <div class="rule rec"><div class="lb">Recursive rule</div><div class="fm" id="ruleR"></div></div>
+      </div>
+      <div class="calc">
+        <div class="cbox exp"><div class="lb">Explicit · plug in <i>n</i> directly</div><div class="eq" id="calcE"></div></div>
+        <div class="cbox rec"><div class="lb">Recursive · use the term before</div><div class="eq" id="calcR"></div></div>
+      </div>
+      <div class="match" id="match"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var N=6; // number of terms
+ // Each sequence: type 'arith' (a1 + d(n-1)) or 'geo' (a1 * r^(n-1))
+ var SEQ=[
+  {nm:'Add 2 each time',kind:'Arithmetic',type:'arith',a1:3,d:2,col:'#2f6f9f',ymax:14,
+   ruleE:'a<sub>n</sub> = 3 + 2(n &minus; 1)',
+   ruleR:'a<sub>1</sub> = 3,&nbsp; a<sub>n</sub> = a<sub>n&minus;1</sub> + 2',
+   idea:'Arithmetic sequences <b>add a constant</b> (here +2). The explicit form is really the line <i>y</i> = 2<i>n</i> + 1 sampled at whole numbers &mdash; that is why the dots fall in a <b>straight line</b>.'},
+  {nm:'Double each time',kind:'Geometric ↑',type:'geo',a1:2,r:2,col:'#7a5a8a',ymax:66,
+   ruleE:'a<sub>n</sub> = 2 &times; 2<sup>n&minus;1</sup>',
+   ruleR:'a<sub>1</sub> = 2,&nbsp; a<sub>n</sub> = 2 &times; a<sub>n&minus;1</sub>',
+   idea:'Geometric sequences <b>multiply by a constant ratio</b> (here &times;2). Repeated multiplication is exponential growth, so the dots <b>curve upward</b> faster and faster.'},
+  {nm:'Halve each time',kind:'Geometric ↓',type:'geo',a1:48,r:0.5,col:'#b8862f',ymax:50,
+   ruleE:'a<sub>n</sub> = 48 &times; (&frac12;)<sup>n&minus;1</sup>',
+   ruleR:'a<sub>1</sub> = 48,&nbsp; a<sub>n</sub> = &frac12; &times; a<sub>n&minus;1</sub>',
+   idea:'A ratio between 0 and 1 <b>shrinks</b> the terms. They fall toward zero but never reach it &mdash; a <b>decay curve</b> flattening out along the axis.'}
+ ];
+ var si=0, step=1; // step = current term number (1..N)
+
+ function term(s,n){ return s.type==='arith' ? s.a1+s.d*(n-1) : s.a1*Math.pow(s.r,n-1); }
+ function fmt(v){ return (Math.round(v)===v) ? String(v) : String(Math.round(v*100)/100); }
+
+ // ---- build the term-by-term computation strings ----
+ function explicitStr(s,n){
+   var v=term(s,n);
+   if(s.type==='arith'){
+     var inner=n-1, prod=s.d*inner;
+     return 'a<sub>'+n+'</sub> = '+s.a1+' + '+s.d+'('+n+' &minus; 1) = '+s.a1+' + '+s.d+'('+inner+') = '+s.a1+' + '+prod+' = <b>'+fmt(v)+'</b>';
+   } else {
+     var exp=n-1;
+     if(Math.abs(s.r-0.5)<1e-9){ // halving — show as a fraction
+       var mid = exp===0 ? '1' : '1/'+Math.pow(2,exp);
+       return 'a<sub>'+n+'</sub> = 48 &times; (&frac12;)<sup>'+exp+'</sup> = 48 &times; '+mid+' = <b>'+fmt(v)+'</b>';
+     } else {
+       return 'a<sub>'+n+'</sub> = '+s.a1+' &times; '+s.r+'<sup>'+exp+'</sup> = '+s.a1+' &times; '+Math.pow(s.r,exp)+' = <b>'+fmt(v)+'</b>';
+     }
+   }
+ }
+ function recursiveStr(s,n){
+   var v=term(s,n);
+   if(n===1) return 'a<sub>1</sub> = <b>'+fmt(s.a1)+'</b> <span class="gv">&mdash; the given starting seed</span>';
+   var prev=term(s,n-1);
+   if(s.type==='arith'){
+     return 'a<sub>'+n+'</sub> = a<sub>'+(n-1)+'</sub> + '+s.d+' = '+fmt(prev)+' + '+s.d+' = <b>'+fmt(v)+'</b>';
+   } else if(Math.abs(s.r-0.5)<1e-9){
+     return 'a<sub>'+n+'</sub> = &frac12; &times; a<sub>'+(n-1)+'</sub> = &frac12; &times; '+fmt(prev)+' = <b>'+fmt(v)+'</b>';
+   } else {
+     return 'a<sub>'+n+'</sub> = '+s.r+' &times; a<sub>'+(n-1)+'</sub> = '+s.r+' &times; '+fmt(prev)+' = <b>'+fmt(v)+'</b>';
+   }
+ }
+
+ // ---- draw the coordinate plane and revealed points ----
+ var X0=30,X1=230,Y0=12,Y1=174; // plot box; y=174 is the value-0 baseline
+ function px(n){ return X0+(n-1)/(N-1)*(X1-X0); }
+ function py(s,v){ return Y0+(1-v/s.ymax)*(Y1-Y0); }
+ function draw(){
+   var s=SEQ[si], out='';
+   // axes
+   out+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#c9ccdf" stroke-width="1.5"/>';
+   out+='<line x1="'+X0+'" y1="'+Y0+'" x2="'+X0+'" y2="'+Y1+'" stroke="#c9ccdf" stroke-width="1.5"/>';
+   // y ticks (0 and ymax)
+   out+='<text x="'+(X0-5)+'" y="'+(Y1+3)+'" font-size="8" fill="#9a9cb2" text-anchor="end">0</text>';
+   out+='<text x="'+(X0-5)+'" y="'+(Y0+8)+'" font-size="8" fill="#9a9cb2" text-anchor="end">'+s.ymax+'</text>';
+   out+='<text x="14" y="'+((Y0+Y1)/2)+'" font-size="8.5" fill="#7d7f94" text-anchor="middle" transform="rotate(-90 14 '+((Y0+Y1)/2)+')" font-weight="700">value  aₙ</text>';
+   // x ticks n=1..N
+   for(var n=1;n<=N;n++){
+     out+='<line x1="'+px(n)+'" y1="'+Y1+'" x2="'+px(n)+'" y2="'+(Y1+3)+'" stroke="#c9ccdf" stroke-width="1.5"/>';
+     out+='<text x="'+px(n)+'" y="'+(Y1+13)+'" font-size="8.5" fill="'+(n<=step?'#22243a':'#b7b9cc')+'" text-anchor="middle" font-weight="700">'+n+'</text>';
+   }
+   out+='<text x="'+((X0+X1)/2)+'" y="199" font-size="8.5" fill="#7d7f94" text-anchor="middle" font-weight="700">term number  n</text>';
+   // connecting path through revealed points
+   if(step>=2){
+     var d='';
+     for(var k=1;k<=step;k++){ d+=(k===1?'M':'L')+px(k).toFixed(1)+' '+py(s,term(s,k)).toFixed(1)+' '; }
+     out+='<path d="'+d+'" fill="none" stroke="'+s.col+'" stroke-width="2" stroke-dasharray="4 3" opacity=".55"/>';
+   }
+   // points
+   for(var j=1;j<=step;j++){
+     var v=term(s,j), cx=px(j), cy=py(s,v), newest=(j===step);
+     if(newest) out+='<circle cx="'+cx+'" cy="'+cy+'" r="9" fill="'+s.col+'" opacity=".18"/>';
+     out+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(newest?5.5:4)+'" fill="'+s.col+'"/>';
+     out+='<text x="'+cx+'" y="'+(cy-9)+'" font-size="9.5" fill="'+s.col+'" text-anchor="middle" font-weight="800">'+fmt(v)+'</text>';
+   }
+   $("art").innerHTML=out;
+ }
+
+ function render(){
+   var s=SEQ[si];
+   $("ruleE").innerHTML=s.ruleE;
+   $("ruleR").innerHTML=s.ruleR;
+   $("stage").style.background=s.col;
+   $("stage").innerHTML='Term '+step+' of '+N+'<small>'+s.kind+' &mdash; '+s.nm+'</small>';
+   $("calcE").innerHTML=explicitStr(s,step);
+   $("calcR").innerHTML=recursiveStr(s,step);
+   var v=fmt(term(s,step));
+   if(step===1){
+     $("match").innerHTML='<b>Both rules must agree on a<sub>1</sub> = '+v+'.</b> The explicit formula computes it from n=1; the recursive rule is simply <i>handed</i> it as the seed. From here they part ways &mdash; but they never disagree.';
+   } else {
+     $("match").innerHTML='Explicit jumped straight to term '+step+'; recursive walked one step from a<sub>'+(step-1)+'</sub>. <b>Both give a<sub>'+step+'</sub> = '+v+'.</b> Same sequence, two honest methods.';
+   }
+   // sequence strip
+   var strip='';
+   for(var n=1;n<=N;n++){
+     if(n>1) strip+='<span class="dots">,</span>';
+     var cls=n===step?'now':(n<step?'done':'');
+     strip+='<span class="'+cls+'">'+(n<=step?fmt(term(s,n)):'&#8226;')+'</span>';
+   }
+   $("seqrow").innerHTML=strip;
+   $("prev").disabled=(step===1);
+   $("next").disabled=(step===N);
+   draw();
+ }
+
+ // ---- controls ----
+ document.querySelectorAll('#seg button').forEach(function(b){
+   b.onclick=function(){
+     document.querySelectorAll('#seg button').forEach(function(x){x.classList.remove('on');});
+     b.classList.add('on'); si=+b.dataset.i; step=1; render();
+   };
+ });
+ $("prev").onclick=function(){ if(step>1){step--;render();} };
+ $("next").onclick=function(){ if(step<N){step++;render();} };
+ render();
+})();
+</script>
+</body>
+</html>

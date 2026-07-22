@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>The Addition Rule</title>
+<meta name="description" content="Drag the overlap between two events and watch an area-true Venn diagram redraw itself. Add the two probabilities and the shared outcomes get counted twice; subtract them once and the answer is right. A live simulation converges on the corrected value, never on the naive sum.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]:disabled{background:#dfe8ed;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:104px;text-align:right;font-variant-numeric:tabular-nums;}
+.sl .nv small{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:1px;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .fr{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:1px;font-variant-numeric:tabular-nums;}
+.tiles div.arv .vv{color:var(--teal);}
+.cmp{width:100%;border-collapse:collapse;margin-top:12px;font-size:12.5px;}
+.cmp th,.cmp td{padding:6px 5px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;}
+.cmp th{font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.cmp td:first-child,.cmp th:first-child{text-align:left;font-weight:700;color:var(--teal-dk);}
+.cmp td{font-weight:700;color:var(--soft);}
+.cmp td.bad{color:var(--coral);} .cmp td.good{color:var(--teal-dk);} .cmp td.sm{color:var(--blue);}
+.cmp td .d{display:block;font-size:9.2px;font-weight:700;color:var(--muted);margin-top:1px;}
+.cmp tr.hi td{background:#eff5f8;}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.45;}
+.hd{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;margin-bottom:6px;}
+.grid.g4{grid-template-columns:repeat(4,1fr);}
+.grid .it .s{display:block;margin-top:2px;font-weight:600;}
+.grid.g4 .it{text-align:center;font-size:12.5px;}
+#info .eq{font-size:12.5px;color:var(--teal-dk);background:#e2eff5;border-radius:8px;padding:9px 11px;margin-top:9px;line-height:1.7;font-variant-numeric:tabular-nums;}
+#info .eq .r{display:flex;justify-content:space-between;gap:10px;}
+#info .eq .r b{white-space:nowrap;}
+#info .eq .r.tot{border-top:1px solid #bcd6e2;margin-top:4px;padding-top:4px;}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,1fr);}.sl label{font-size:10px;}.sl .nv{min-width:88px;font-size:13px;}.row .btn{font-size:12px;padding:10px 4px;}.cmp{font-size:11.5px;}.grid.g4{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 5</div>
+  <h1>The Addition Rule</h1>
+  <div class="intro">You want the probability that <b>one thing or another</b> happens. The obvious move is to add the two probabilities together &mdash; and the obvious move is wrong, because any outcome that satisfies <i>both</i> events has just been counted twice, once in each total. The fix is a single subtraction: <b>P(A or B) = P(A) + P(B) &minus; P(A and B)</b>. Drag the overlap below and the Venn diagram redraws itself with <b>areas that are genuinely proportional</b> to the probabilities, the sum is taken apart to expose the double count, and a real simulation runs to see which answer the world actually agrees with.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="vennTitle">The two events, drawn to scale</h2>
+      <div class="modeseg" id="vseg">
+        <button data-v="0" class="on">Venn diagram</button>
+        <button data-v="1">Every outcome</button>
+      </div>
+      <svg viewBox="0 0 340 250" aria-label="a Venn diagram of two events, with circle areas proportional to their probabilities and the shared area proportional to the probability of both"><g id="venn"></g></svg>
+      <div class="lgd" id="vlgd"></div>
+      <div class="cap" id="vennCap"></div>
+    </div>
+    <div class="card"><h2>Why the subtraction is there</h2>
+      <svg viewBox="0 0 340 232" aria-label="bar decomposition showing that adding two probabilities counts the overlap twice"><g id="bars"></g></svg>
+      <div class="cap" id="barsCap"></div>
+    </div>
+    <div class="card"><h2 id="simTitle">A run of real draws</h2>
+      <svg viewBox="0 0 340 212" aria-label="running proportion of simulated draws falling in A or B, converging on the addition-rule value"><g id="sim"></g></svg>
+      <div class="lgd">
+        <span><i style="background:#2f6f9f"></i>running proportion so far</span>
+        <span><i style="background:#1c4454"></i>the rule&rsquo;s answer</span>
+        <span><i style="background:#d1495b"></i>just adding them</span>
+        <span><i style="background:#dbe7ee"></i>ordinary sampling wobble</span>
+      </div>
+      <div class="cap" id="simCap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">The addition rule<small>drag the overlap and watch</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="0" class="on">One card<small>52 outcomes</small></button>
+        <button data-v="1">Two dice<small>36 outcomes</small></button>
+        <button data-v="2">A group of 200<small>200 people</small></button>
+      </div>
+      <div class="sl"><label for="aSl">Event A</label><input type="range" id="aSl" min="0" max="52" step="1" value="13"><span class="nv" id="aVal">&mdash;</span></div>
+      <div class="sl"><label for="bSl">Event B</label><input type="range" id="bSl" min="0" max="52" step="1" value="12"><span class="nv" id="bVal">&mdash;</span></div>
+      <div class="sl"><label for="oSl">A <i>and</i> B</label><input type="range" id="oSl" min="0" max="12" step="1" value="3"><span class="nv" id="oVal">&mdash;</span></div>
+      <div class="row"><button class="btn" id="reset">&#8634; Back to the real figures</button><button class="btn solid" id="samp">&#8635; Draw a new run</button></div>
+      <div class="hd">Send the overlap to</div>
+      <div class="grid g4" id="snap"></div>
+      <div class="sl"><label for="nSl">Draws</label><input type="range" id="nSl" min="0" max="4" step="1" value="2"><span class="nv" id="nVal">200</span></div>
+      <div class="tiles">
+        <div><span class="lb">P(A)</span><span class="vv" id="tA">&mdash;</span><span class="fr" id="fA">&mdash;</span></div>
+        <div><span class="lb">P(B)</span><span class="vv" id="tB">&mdash;</span><span class="fr" id="fB">&mdash;</span></div>
+        <div><span class="lb">P(A and B)</span><span class="vv" id="tAnd">&mdash;</span><span class="fr" id="fAnd">&mdash;</span></div>
+        <div class="arv"><span class="lb">P(A or B)</span><span class="vv" id="tOr">&mdash;</span><span class="fr" id="fOr">&mdash;</span></div>
+      </div>
+      <table class="cmp">
+        <tr><th>Way of answering</th><th>P(A or B)</th><th>Off by</th></tr>
+        <tr><td>Just add them</td><td class="bad" id="mNaive">&mdash;</td><td class="bad" id="dNaive">&mdash;</td></tr>
+        <tr class="hi"><td>Addition rule</td><td class="good" id="mRule">&mdash;</td><td id="dRule">&mdash;</td></tr>
+        <tr><td id="lSim">This run</td><td class="sm" id="mSim">&mdash;</td><td class="sm" id="dSim">&mdash;</td></tr>
+      </table>
+      <div class="cap">The middle row is the truth for this sample space &mdash; it is arithmetic on outcomes, not an estimate, so it has no error to report. The top row is what you get by forgetting the subtraction. The bottom row is what a finite run of draws actually delivered, and it should hover around the middle row and never around the top one.</div>
+      <div id="info"></div>
+      <div class="mnem">The whole rule is a <b>counting</b> idea wearing probability clothing, and it is worth holding it in that plainer form. Suppose two lists have been handed to you: everyone who owns a car, and everyone who owns a bicycle. You want to know how many distinct people appear on at least one list. If you simply add the lengths of the two lists you have not counted the people, you have counted the <b>list entries</b> &mdash; and anyone who owns both appears as two entries while remaining one person. Striking out one of each duplicate pair is the entire correction, and <b>P(A and B)</b> is precisely the number of duplicate pairs. Everything else follows from that single observation. When the lists share nobody, there is nothing to strike out and adding works unchanged &mdash; which is why &ldquo;mutually exclusive&rdquo; is not a different rule but the same rule with a zero in it. And when the two lists are long enough that their lengths sum past the size of the whole group, you have <b>proved</b> there are duplicates without inspecting a single name.</div>
+      <div class="note">Five ways this goes wrong. <b>First, &ldquo;or&rdquo; here is inclusive.</b> P(A or B) counts outcomes where A happens, where B happens, <i>and</i> where both happen together. If you actually want exactly one of the two and not both, that is a different quantity &mdash; P(A) + P(B) &minus; 2&thinsp;P(A and B) &mdash; because the shared outcomes must be removed twice, not once, to take them out altogether. <b>Second, mutually exclusive is not the same as independent</b>, and this is the single most common confusion in the chapter. Mutually exclusive means the two events cannot both occur; independent means learning that one occurred tells you nothing about the other. They are close to opposites: if two events with non-zero probability are mutually exclusive, then knowing A happened tells you B definitely did <i>not</i>, which is about as far from &ldquo;tells you nothing&rdquo; as information gets. <b>Third, a sum above 1 is not a probability</b>, it is a receipt for a mistake. Nothing can happen more often than always, so any time adding gives you more than 100% you have proved the events overlap &mdash; and by at least the amount of the excess. <b>Fourth, you cannot get the overlap out of P(A) and P(B).</b> Two events with the same individual probabilities can overlap completely, not at all, or anywhere in between, and the diagram beside you will show you all three on demand. The joint probability is separate information: you either count it, or you are given it, or you assume something (like independence) that lets you compute it. <b>Fifth, subtracting when there is no overlap costs nothing.</b> Some students learn two rules and then agonise over which applies. There is only one rule; when the events are disjoint the term you subtract is zero and it quietly disappears.</div>
+      <div class="fn" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- seeded PRNG, so the page opens with the same run every time ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+ /* ================= three sample spaces of equally likely outcomes ================= */
+ var SC=[
+  {k:'card',N:52,cols:13,nA:13,nB:12,nAB:3,
+   A:'a heart',B:'a face card',As:'heart',Bs:'face card',
+   unit:'card',units:'cards',act:'draw one card from a well-shuffled deck',
+   space:'the 52 cards of a shuffled deck',
+   story:'Draw one card. Thirteen of the 52 are hearts and twelve are face cards &mdash; jack, queen, king in each suit &mdash; and three cards are both, the jack, queen and king of hearts. Add the counts and you get 25, but only <b>22</b> cards in the deck are a heart or a face card. The three royal hearts were counted once among the hearts and once again among the face cards. Something else is true here that has nothing to do with the addition rule: 13/52 &times; 12/52 = 3/52 exactly, so suit and rank are also <b>independent</b>. Independence is about multiplying; the addition rule never touches it.'},
+  {k:'dice',N:36,cols:6,nA:6,nB:5,nAB:1,
+   A:'a double',B:'a total of 8',As:'double',Bs:'total of 8',
+   unit:'roll',units:'rolls',act:'roll two dice you can tell apart',
+   space:'the 36 equally likely outcomes of two dice',
+   story:'Roll two dice you can tell apart and there are 36 equally likely ordered outcomes. Six are doubles; five total eight &mdash; (2,6), (3,5), (4,4), (5,3), (6,2). Exactly one outcome, the pair of fours, is in both lists. So <b>6 + 5 &minus; 1 = 10</b> of the 36 rolls give a double or an eight, and the answer is 10/36. Forget the subtraction and you claim 11/36, which means you have counted (4,4) as two different rolls. Switch to the outcome grid and it is one square, sitting there being one square.'},
+  {k:'ppl',N:200,cols:20,nA:122,nB:84,nAB:62,
+   A:'owns a car',B:'owns a bicycle',As:'car owner',Bs:'bicycle owner',
+   unit:'person',units:'people',act:'pick one person at random from the group',
+   space:'a surveyed group of 200 people',
+   story:'A group of 200 is surveyed: 122 own a car, 84 own a bicycle, 62 own both. Pick one person at random and the careless answer is 122/200 + 84/200 = <b>103%</b>. That is not a near miss, it is impossible &mdash; and it is proof, before you look at any overlap figure, that the two groups must share at least 6 people. They share 62. Strike out one copy of each and <b>144</b> of the 200 own a car or a bicycle, so the probability is 72%. Note that the excess over 100% only tells you the <i>minimum</i> overlap; the real overlap can be, and here is, far larger.'}
+ ];
+
+ var NS=[20,60,200,600,2000],POOL=2000;
+ var COL={a:'#2f6f8a',ab:'#b8862f',b:'#7a5a8a',no:'#ccd6dc'};
+
+ var sc=0,nA=13,nB=12,nAB=3,ni=2,seed=0,vw=0;
+ var U=[];
+
+ function N(){return SC[sc].N;}
+ function LO(){return Math.max(0,nA+nB-N());}
+ function HI(){return Math.min(nA,nB);}
+ function nOr(){return nA+nB-nAB;}
+
+ /* ================= the run of draws =================
+    one pool of 2,000 uniforms is generated once; the draws are mapped onto
+    outcome numbers, so moving the event sliders re-classifies the SAME run
+    rather than quietly drawing a new one */
+ function genPool(){
+  var r=mulberry32(20260718+seed*7919),i;
+  U=[];
+  for(i=0;i<POOL;i++)U.push(r());
+ }
+ /* outcomes are laid out in blocks: both, then A only, then B only, then neither */
+ function reg(o){
+  if(o<nAB)return 1;
+  if(o<nA)return 0;
+  if(o<nOr())return 2;
+  return 3;
+ }
+ function runStats(){
+  var n=NS[ni],i,c=[0,0,0,0],un=0;
+  for(i=0;i<n;i++){c[reg(Math.floor(U[i]*N()))]++;}
+  un=c[0]+c[1]+c[2];
+  return {n:n,c:c,un:un,p:un/n};
+ }
+
+ /* ================= formatting ================= */
+ function fmt(x,d){
+  var v=x.toFixed(d),p=v.split('.');
+  p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return p.join('.');
+ }
+ function pc(p,d){return (p*100).toFixed(d===undefined?2:d)+'%';}
+ function fr(k){return fmt(k,0)+'/'+fmt(N(),0);}
+ function chip(x,y,txt,col,lo,hi){
+  /* measure the glyphs, not the markup: an entity like &mdash; is one character wide */
+  var w=11+txt.replace(/&[a-z]+;/g,'x').length*5.0,cx=x;
+  if(lo===undefined){lo=2;hi=338;}
+  if(cx-w/2<lo)cx=lo+w/2;
+  if(cx+w/2>hi)cx=hi-w/2;
+  return '<rect x="'+(cx-w/2).toFixed(1)+'" y="'+y+'" width="'+w.toFixed(1)+'" height="14" rx="7" fill="'+col+'"/>'+
+         '<text x="'+cx.toFixed(1)+'" y="'+(y+10.1)+'" font-size="9.1" font-weight="800" fill="#fff" text-anchor="middle">'+txt+'</text>';
+ }
+
+ /* ================= area-true Venn geometry =================
+    the circles are sized so their areas are in exact proportion to P(A) and
+    P(B); then the distance between the centres is solved by bisection so the
+    lens where they cross has exactly the area that P(A and B) deserves on the
+    same scale. nothing here is eyeballed. */
+ function lensArea(r1,r2,d){
+  var mn=Math.min(r1,r2);
+  if(d>=r1+r2)return 0;
+  if(d<=Math.abs(r1-r2))return Math.PI*mn*mn;
+  var c1=(d*d+r1*r1-r2*r2)/(2*d*r1),c2=(d*d+r2*r2-r1*r1)/(2*d*r2);
+  if(c1>1)c1=1; if(c1<-1)c1=-1;
+  if(c2>1)c2=1; if(c2<-1)c2=-1;
+  var t=(-d+r1+r2)*(d+r1-r2)*(d-r1+r2)*(d+r1+r2);
+  if(t<0)t=0;
+  return r1*r1*Math.acos(c1)+r2*r2*Math.acos(c2)-0.5*Math.sqrt(t);
+ }
+ function solveD(r1,r2,tgt){
+  var mn=Math.min(r1,r2),dlo=Math.abs(r1-r2),dhi=r1+r2,m,i;
+  if(tgt<=1e-9)return dhi;
+  if(tgt>=Math.PI*mn*mn-1e-9)return dlo;
+  for(i=0;i<70;i++){m=(dlo+dhi)/2;if(lensArea(r1,r2,m)>tgt)dlo=m;else dhi=m;}
+  return (dlo+dhi)/2;
+ }
+
+ function drawVenn(){
+  var n=N(),pA=nA/n,pB=nB/n,pAB=nAB/n,s='',i;
+  var RX0=12,RX1=328,RY0=30,RY1=228,cx=(RX0+RX1)/2,cy=(RY0+RY1)/2;
+  var K=0.37*(RX1-RX0)*(RY1-RY0)/Math.PI;   /* area of a circle = p * pi * K */
+  var r1=Math.sqrt(pA*K),r2=Math.sqrt(pB*K);
+  var d=(r1<=0.01||r2<=0.01)?(r1+r2+14):solveD(r1,r2,pAB*Math.PI*K);
+  if(nAB===0&&r1>0.01&&r2>0.01)d+=4;        /* a hairline gap so "no overlap" reads as none */
+
+  /* uniform shrink if the pair is wider or taller than the frame; ratios survive */
+  var needW=d+r1+r2,needH=2*Math.max(r1,r2),k=1;
+  if(needW>RX1-RX0-10)k=Math.min(k,(RX1-RX0-10)/needW);
+  if(needH>RY1-RY0-10)k=Math.min(k,(RY1-RY0-10)/needH);
+  r1*=k;r2*=k;d*=k;
+  var c1=cx-(d+r1+r2)/2+r1,c2=c1+d;
+
+  s+='<rect x="'+RX0+'" y="'+RY0+'" width="'+(RX1-RX0)+'" height="'+(RY1-RY0)+'" rx="10" fill="#eef4f7" stroke="#c8d8e0" stroke-width="1.2"/>';
+  s+='<text x="'+(RX0+9)+'" y="'+(RY0+15)+'" font-size="9" font-weight="800" fill="#93a4ad">ALL '+fmt(n,0)+' OUTCOMES</text>';
+
+  if(r1>0.01)s+='<defs><clipPath id="clipA"><circle cx="'+c1.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+r1.toFixed(2)+'"/></clipPath></defs>';
+  if(r1>0.01)s+='<circle cx="'+c1.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+r1.toFixed(2)+'" fill="'+COL.a+'"/>';
+  if(r2>0.01)s+='<circle cx="'+c2.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+r2.toFixed(2)+'" fill="'+COL.b+'"/>';
+  if(r1>0.01&&r2>0.01&&nAB>0)s+='<circle cx="'+c2.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+r2.toFixed(2)+'" fill="'+COL.ab+'" clip-path="url(#clipA)"/>';
+  if(r1>0.01)s+='<circle cx="'+c1.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+r1.toFixed(2)+'" fill="none" stroke="#1c4454" stroke-width="1.6"/>';
+  if(r2>0.01)s+='<circle cx="'+c2.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+r2.toFixed(2)+'" fill="none" stroke="#43305a" stroke-width="1.6"/>';
+
+  /* counts, placed at the visual centre of each region */
+  var xl=d>0?(d*d+r1*r1-r2*r2)/(2*d):0;      /* signed distance from c1 to the radical line */
+  function lab(x,txt,sub,col){
+   return '<text x="'+x.toFixed(1)+'" y="'+(cy-1).toFixed(1)+'" font-size="16" font-weight="800" fill="'+col+'" text-anchor="middle">'+txt+'</text>'+
+          '<text x="'+x.toFixed(1)+'" y="'+(cy+12).toFixed(1)+'" font-size="8.6" font-weight="700" fill="'+col+'" text-anchor="middle" opacity=".85">'+sub+'</text>';
+  }
+  if(nA-nAB>0&&r1>0.01)s+=lab(c1-r1*0.45,fmt(nA-nAB,0),'A only','#ffffff');
+  if(nB-nAB>0&&r2>0.01)s+=lab(c2+r2*0.45,fmt(nB-nAB,0),'B only','#ffffff');
+  if(nAB>0&&r1>0.01&&r2>0.01)s+=lab(c1+xl,fmt(nAB,0),'both','#3c2c05');
+  s+='<text x="'+(RX1-9)+'" y="'+(RY1-10)+'" font-size="11" font-weight="800" fill="#8c9ba3" text-anchor="end">'+fmt(n-nOr(),0)+' neither</text>';
+
+  $("venn").innerHTML=s;
+ }
+
+ function drawGrid(){
+  var n=N(),cols=SC[sc].cols,rows=Math.ceil(n/cols),i,s='';
+  var cs=Math.min(316/cols,196/rows),gx=(340-cols*cs)/2,gy=28+(196-rows*cs)/2;
+  var cl=[COL.a,COL.ab,COL.b,COL.no];
+  for(i=0;i<n;i++){
+   var c=i%cols,r=Math.floor(i/cols);
+   s+='<rect x="'+(gx+c*cs+0.8).toFixed(1)+'" y="'+(gy+r*cs+0.8).toFixed(1)+'" width="'+(cs-1.6).toFixed(1)+'" height="'+(cs-1.6).toFixed(1)+'" rx="2" fill="'+cl[reg(i)]+'"/>';
+  }
+  s+='<text x="170" y="18" font-size="9.4" font-weight="700" fill="#78868d" text-anchor="middle">every one of the '+fmt(n,0)+' outcomes, sorted into the four regions</text>';
+  s+='<text x="170" y="242" font-size="9.4" font-weight="700" fill="#78868d" text-anchor="middle">'+fmt(nOr(),0)+' squares are coloured in &mdash; that is the whole of &ldquo;A or B&rdquo;</text>';
+  $("venn").innerHTML=s;
+ }
+
+ /* ================= the double count, taken apart ================= */
+ function drawBars(){
+  var n=N(),pA=nA/n,pB=nB/n,pAB=nAB/n,pU=nOr()/n,s='';
+  var BX0=78,BX1=334,BW=BX1-BX0,sum=pA+pB,sk=BW/Math.max(1,sum),H=24;
+  function X(v){return BX0+v*sk;}
+  var Y=[30,68,120,172];
+  function track(y){return '<rect x="'+BX0+'" y="'+y+'" width="'+(X(1)-BX0).toFixed(1)+'" height="'+H+'" rx="4" fill="#eef4f7"/>';}
+  function seg(x0,w,y,col){return w<=0.05?'':'<rect x="'+x0.toFixed(1)+'" y="'+y+'" width="'+w.toFixed(1)+'" height="'+H+'" fill="'+col+'"/>';}
+  function rowLab(y,t,sub){
+   return '<text x="70" y="'+(y+11)+'" font-size="10.4" font-weight="800" fill="#1c4454" text-anchor="end">'+t+'</text>'+
+          '<text x="70" y="'+(y+21)+'" font-size="8.4" font-weight="700" fill="#a3b0b7" text-anchor="end">'+sub+'</text>';
+  }
+  function endVal(v,y,col){return chip(X(v)+22,y+5,pc(v,1),col,BX0,336);}
+
+  var i;
+  for(i=0;i<4;i++)s+=track(Y[i]);
+
+  /* row 1 - P(A) */
+  s+=seg(X(0),X(pA-pAB)-X(0),Y[0],COL.a)+seg(X(pA-pAB),X(pA)-X(pA-pAB),Y[0],COL.ab);
+  s+=rowLab(Y[0],'P(A)','event A alone')+endVal(pA,Y[0],'#2f6f8a');
+  /* row 2 - P(B) */
+  s+=seg(X(0),X(pAB)-X(0),Y[1],COL.ab)+seg(X(pAB),X(pB)-X(pAB),Y[1],COL.b);
+  s+=rowLab(Y[1],'P(B)','event B alone')+endVal(pB,Y[1],'#7a5a8a');
+  /* row 3 - the two laid end to end */
+  s+=seg(X(0),X(pA-pAB)-X(0),Y[2],COL.a);
+  s+=seg(X(pA-pAB),X(pA+pAB)-X(pA-pAB),Y[2],COL.ab);
+  s+=seg(X(pA+pAB),X(sum)-X(pA+pAB),Y[2],COL.b);
+  if(pAB>0.0005){
+   s+='<line x1="'+X(pA).toFixed(1)+'" y1="'+Y[2]+'" x2="'+X(pA).toFixed(1)+'" y2="'+(Y[2]+H)+'" stroke="#fff" stroke-width="2"/>';
+   s+='<line x1="'+X(pA-pAB).toFixed(1)+'" y1="'+(Y[2]-7)+'" x2="'+X(pA+pAB).toFixed(1)+'" y2="'+(Y[2]-7)+'" stroke="#b8862f" stroke-width="1.4"/>';
+   s+='<text x="'+X(pA).toFixed(1)+'" y="'+(Y[2]-11)+'" font-size="9" font-weight="800" fill="#8a6a20" text-anchor="middle">the overlap, twice over</text>';
+  }
+  s+=rowLab(Y[2],'add them','P(A) + P(B)')+endVal(sum,Y[2],'#d1495b');
+  /* row 4 - the corrected union */
+  s+=seg(X(0),X(pA-pAB)-X(0),Y[3],COL.a);
+  s+=seg(X(pA-pAB),X(pA)-X(pA-pAB),Y[3],COL.ab);
+  s+=seg(X(pA),X(pU)-X(pA),Y[3],COL.b);
+  if(pAB>0.0005){
+   s+='<rect x="'+X(pU).toFixed(1)+'" y="'+Y[3]+'" width="'+(X(pU+pAB)-X(pU)).toFixed(1)+'" height="'+H+'" fill="none" stroke="#b8862f" stroke-width="1.3" stroke-dasharray="3 3"/>';
+   s+='<text x="'+((X(pU)+X(pU+pAB))/2).toFixed(1)+'" y="'+(Y[3]+H+11)+'" font-size="8.6" font-weight="800" fill="#b8862f" text-anchor="middle">one copy taken back out</text>';
+  }
+  s+=rowLab(Y[3],'the rule','&minus; P(A and B)')+endVal(pU,Y[3],'#1c4454');
+
+  /* the impossible line */
+  s+='<line x1="'+X(1).toFixed(1)+'" y1="18" x2="'+X(1).toFixed(1)+'" y2="210" stroke="#1c4454" stroke-width="1.3" stroke-dasharray="4 3"/>';
+  s+='<text x="'+(X(1)+4).toFixed(1)+'" y="16" font-size="8.8" font-weight="800" fill="#1c4454">1.00 &mdash; nothing can go past here</text>';
+  $("bars").innerHTML=s;
+
+  $("barsCap").innerHTML=(nAB===0
+   ? 'With no shared outcomes the third and fourth rows are <b>identical</b>: there is no gold block to remove, the subtracted term is zero, and adding happens to be right. This is the mutually exclusive case, and it is not a second rule &mdash; it is this one rule with nothing to subtract.'
+   : 'Row three is rows one and two laid end to end, which is exactly what &ldquo;P(A) + P(B)&rdquo; means. Look at the gold block: it is <b>'+pc(2*nAB/n,1)+'</b> wide when the shared outcomes are only worth <b>'+pc(nAB/n,1)+'</b>. Every outcome in the overlap was collected once as part of A and once more as part of B. Row four removes a single copy, and the coloured bar now covers each outcome exactly once.')+
+   (nA+nB>n?' Notice that row three has run <b>past the 1.00 line</b> to '+pc((nA+nB)/n,1)+'. A probability cannot do that, so the sum is not merely inaccurate here, it is impossible &mdash; and the size of the excess, '+pc((nA+nB-n)/n,1)+', is a guaranteed lower bound on the overlap.':'');
+ }
+
+ /* ================= the run ================= */
+ function drawSim(){
+  var n=N(),pU=nOr()/n,sum=(nA+nB)/n,R=runStats(),m=R.n,s='',i;
+  var PX0=40,PX1=332,PY0=18,PY1=162;
+  function X(t){return PX0+(m<=1?0:(t-1)/(m-1))*(PX1-PX0);}
+  function Y(p){return PY1-p*(PY1-PY0);}
+
+  for(i=0;i<=4;i++){
+   var gy=Y(i/4);
+   s+='<line x1="'+PX0+'" y1="'+gy.toFixed(1)+'" x2="'+PX1+'" y2="'+gy.toFixed(1)+'" stroke="#eff4f7" stroke-width="1"/>';
+   s+='<text x="'+(PX0-5)+'" y="'+(gy+3).toFixed(1)+'" font-size="8.2" font-weight="700" fill="#a3b0b7" text-anchor="end">'+(i*25)+'%</text>';
+  }
+
+  /* the band that ordinary sampling wobble should keep you inside */
+  var up='',dn='',t,se;
+  for(i=0;i<=120;i++){
+   t=1+(m-1)*i/120;
+   se=Math.sqrt(pU*(1-pU)/Math.max(1,t));
+   up+=(i?' L':'M')+X(t).toFixed(1)+' '+Y(Math.min(1,pU+2*se)).toFixed(1);
+  }
+  for(i=120;i>=0;i--){
+   t=1+(m-1)*i/120;
+   se=Math.sqrt(pU*(1-pU)/Math.max(1,t));
+   dn+=' L'+X(t).toFixed(1)+' '+Y(Math.max(0,pU-2*se)).toFixed(1);
+  }
+  s+='<path d="'+up+dn+' Z" fill="#dbe7ee"/>';
+
+  /* the two candidate answers */
+  s+='<line x1="'+PX0+'" y1="'+Y(pU).toFixed(1)+'" x2="'+PX1+'" y2="'+Y(pU).toFixed(1)+'" stroke="#1c4454" stroke-width="2"/>';
+  var over=sum>1;
+  s+='<line x1="'+PX0+'" y1="'+Y(Math.min(1,sum)).toFixed(1)+'" x2="'+PX1+'" y2="'+Y(Math.min(1,sum)).toFixed(1)+'" stroke="#d1495b" stroke-width="1.7" stroke-dasharray="5 3"/>';
+
+  /* the running proportion, one honest pass through the draws */
+  var hit=0,pth='',step=Math.max(1,Math.floor(m/170));
+  for(i=0;i<m;i++){
+   if(reg(Math.floor(U[i]*n))!==3)hit++;
+   if(i%step===0||i===m-1)pth+=(pth?' L':'M')+X(i+1).toFixed(1)+' '+Y(hit/(i+1)).toFixed(1);
+  }
+  s+='<path d="'+pth+'" fill="none" stroke="#2f6f9f" stroke-width="1.8"/>';
+  s+='<circle cx="'+X(m).toFixed(1)+'" cy="'+Y(R.p).toFixed(1)+'" r="4.4" fill="#2f6f9f" stroke="#fff" stroke-width="1.8"/>';
+
+  /* keep both labels inside the plot however extreme the probabilities get */
+  function clampY(y){return Math.max(PY0+1,Math.min(PY1-15,y));}
+  s+=chip(PX1-46,clampY(Y(pU)-19),'rule '+pc(pU,1),'#1c4454',PX0,336);
+  s+=chip(PX0+58,clampY(Y(Math.min(1,sum))+(sum-pU>0.02?5:-19)),'sum '+pc(sum,1)+(over?' &mdash; impossible':''),'#d1495b',PX0,336);
+
+  s+='<line x1="'+PX0+'" y1="'+PY1+'" x2="'+PX1+'" y2="'+PY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  s+='<line x1="'+PX0+'" y1="'+PY0+'" x2="'+PX0+'" y2="'+PY1+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+  for(i=0;i<=4;i++){
+   var dv=Math.round(1+(m-1)*i/4),gx=X(dv);
+   s+='<line x1="'+gx.toFixed(1)+'" y1="'+PY1+'" x2="'+gx.toFixed(1)+'" y2="'+(PY1+5)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+   s+='<text x="'+gx.toFixed(1)+'" y="'+(PY1+16)+'" font-size="8.4" font-weight="700" fill="#78868d" text-anchor="middle">'+fmt(dv,0)+'</text>';
+  }
+  s+='<text x="186" y="'+(PY1+34)+'" font-size="9.2" font-weight="700" fill="#78868d" text-anchor="middle">number of draws so far</text>';
+  s+='<text x="186" y="'+(PY1+47)+'" font-size="9.2" font-weight="700" fill="#a3b0b7" text-anchor="middle">each draw: '+SC[sc].act+'</text>';
+  $("sim").innerHTML=s;
+
+  var gap=R.p-pU,se2=Math.sqrt(pU*(1-pU)/m);
+  $("simCap").innerHTML='Of <b>'+fmt(m,0)+'</b> draws, <b>'+fmt(R.un,0)+'</b> gave '+SC[sc].A+' or '+SC[sc].B+' or both &mdash; a proportion of <b>'+pc(R.p,1)+'</b>, against the rule&rsquo;s <b>'+pc(pU,1)+'</b>'+
+   (Math.abs(gap)<1e-9?' &mdash; dead on.':' &mdash; a gap of '+(gap>0?'+':'&minus;')+pc(Math.abs(gap),1)+', which is '+(Math.abs(gap)/(se2||1)).toFixed(1)+' standard errors and '+(Math.abs(gap)<2*se2?'well inside ordinary wobble.':'a large gap for this many draws, though runs like it do happen.'))+
+   ' The shaded band is where about nineteen runs in twenty of each length should sit &mdash; a normal approximation, so treat it loosely near the left edge where only a handful of draws have happened. Press <b>Draw a new run</b> a few times. The blue line rattles about early and then settles, and what it settles onto is the dark line every time. It never approaches the red one'+((nA+nB)/n>1?', which it could not reach in any case.':'.');
+ }
+
+ /* ================= the reading panel ================= */
+ function drawInfo(){
+  var S=SC[sc],n=N(),pA=nA/n,pB=nB/n,pAB=nAB/n,pU=nOr()/n,sum=pA+pB,t='';
+  var ind=nA*nB/n,lo=LO(),hi=HI();
+  var hdr=nAB===0?'Mutually exclusive':(nAB===hi&&hi>0?(nA<=nB?'A sits entirely inside B':'B sits entirely inside A'):'Two overlapping events');
+  if(nA===0||nB===0)hdr='One event is empty';
+  t+='<span class="n">'+hdr+'</span>';
+
+  if(nA===0||nB===0){
+   t+='One of the events contains no outcomes at all, so it has probability zero and it can never happen alongside anything. &ldquo;A or B&rdquo; collapses to whichever event is left. The rule still runs perfectly &mdash; it just has nothing to subtract and nothing to add.';
+  } else if(nAB===0){
+   t+='These two events share <b>no outcomes</b>. No single '+S.unit+' can be '+S.A+' and '+S.B+' at once here, so the events are <b>mutually exclusive</b> and the term you subtract is zero. Adding gives the right answer, <b>'+pc(pU,2)+'</b>, and this is the one case where the careless method and the careful method agree. '+
+     (lo>0?'':'Push the overlap slider up by a single notch and watch the two rows of the bar chart come apart again. ')+
+     'It is worth being clear about what mutually exclusive does <i>not</i> mean: these events are about as far from independent as two events can be, because learning that '+S.A+' came up tells you with certainty that '+S.B+' did not.';
+  } else {
+   t+='Of the '+fmt(n,0)+' equally likely outcomes, <b>'+fmt(nA,0)+'</b> give '+S.A+' and <b>'+fmt(nB,0)+'</b> give '+S.B+'. Add those and you have '+fmt(nA+nB,0)+' &mdash; but only <b>'+fmt(nOr(),0)+'</b> outcomes are actually in one event or the other, because <b>'+fmt(nAB,0)+'</b> of them are in both and were collected twice. Subtract that one duplicate copy and the answer is <b>'+fr(nOr())+' = '+pc(pU,2)+'</b>.';
+   if(sum>1)t+=' Notice what the careless sum produced: <b>'+pc(sum,2)+'</b>. Above 100%, and therefore not a probability at all.';
+   if(nAB===hi)t+=' At this setting one event is completely contained in the other, so &ldquo;A or B&rdquo; is just the larger event and the smaller one adds nothing new &mdash; the union has stopped growing.';
+  }
+
+  t+='<div class="eq">'+
+     '<div class="r"><span>P(A) &mdash; '+S.A+'</span><b>'+fr(nA)+' = '+pc(pA,2)+'</b></div>'+
+     '<div class="r"><span>+ P(B) &mdash; '+S.B+'</span><b>'+fr(nB)+' = '+pc(pB,2)+'</b></div>'+
+     '<div class="r"><span>&minus; P(A and B) &mdash; both</span><b>'+fr(nAB)+' = '+pc(pAB,2)+'</b></div>'+
+     '<div class="r tot"><span>= P(A or B)</span><b>'+fr(nOr())+' = '+pc(pU,2)+'</b></div>'+
+     '<div class="r"><span>P(neither) = 1 &minus; P(A or B)</span><b>'+fr(n-nOr())+' = '+pc(1-pU,2)+'</b></div>'+
+     '<div class="r"><span>P(exactly one, not both)</span><b>'+fr(nOr()-nAB)+' = '+pc((nOr()-nAB)/n,2)+'</b></div>'+
+     '</div>';
+
+  t+='<div class="dd">The union is boxed in from both sides no matter what the overlap does. It can never be smaller than the bigger of the two events &mdash; <b>'+pc(Math.max(pA,pB),1)+'</b> here &mdash; and never larger than the sum, capped at 1, which is <b>'+pc(Math.min(1,sum),1)+'</b>. Everything the overlap slider can do to P(A or B) happens between those two numbers, and the width of that window, '+pc(Math.min(1,sum)-Math.max(pA,pB),1)+', is exactly how much you still do not know when you know only P(A) and P(B).</div>';
+
+  if(lo>0)t+='<div class="dd">These two events <b>cannot be made mutually exclusive</b>. Together they claim '+fmt(nA+nB,0)+' of only '+fmt(n,0)+' outcomes, so at least <b>'+fmt(lo,0)+'</b> outcomes must belong to both &mdash; there is nowhere else for them to go. That is the arithmetic behind the overlap slider refusing to reach zero.</div>';
+
+  t+='<div class="dd">For a sense of scale, if these two events were <b>independent</b> the shared region would hold P(A) &times; P(B) &times; '+fmt(n,0)+' = <b>'+ind.toFixed(2)+'</b> outcomes, against the '+fmt(nAB,0)+' set now. '+
+   (Math.abs(ind-nAB)<0.005?'They match exactly, so these events happen to be independent as well &mdash; a separate fact that the addition rule neither needs nor uses.':
+    (nAB>ind?'The real overlap is larger, so these events tend to arrive together more than chance alone would arrange.':'The real overlap is smaller, so these events crowd each other out somewhat.'))+
+   ' Independence is a statement about <i>multiplying</i>, and it is a different question from whether the events overlap at all.</div>';
+
+  t+='<div class="loc">'+S.story+'</div>';
+  $("info").innerHTML=t;
+ }
+
+ /* ================= chrome ================= */
+ function render(){
+  var S=SC[sc],n=N(),lo=LO(),hi=HI(),R;
+  if(nAB<lo)nAB=lo;
+  if(nAB>hi)nAB=hi;
+  var pA=nA/n,pB=nB/n,pAB=nAB/n,pU=nOr()/n,sum=pA+pB;
+
+  if(vw===0)drawVenn(); else drawGrid();
+  drawBars();drawSim();drawInfo();
+  R=runStats();
+
+  $("aSl").max=n; $("bSl").max=n;
+  $("aSl").value=nA; $("bSl").value=nB;
+  $("oSl").min=lo; $("oSl").max=hi; $("oSl").value=nAB;
+  $("oSl").disabled=(lo>=hi);
+  $("aVal").innerHTML=fmt(nA,0)+'<small>'+pc(pA,1)+'</small>';
+  $("bVal").innerHTML=fmt(nB,0)+'<small>'+pc(pB,1)+'</small>';
+  $("oVal").innerHTML=fmt(nAB,0)+'<small>'+pc(pAB,1)+'</small>';
+  $("nVal").innerHTML=fmt(NS[ni],0);
+
+  $("tA").innerHTML=pc(pA,1); $("fA").innerHTML=fr(nA);
+  $("tB").innerHTML=pc(pB,1); $("fB").innerHTML=fr(nB);
+  $("tAnd").innerHTML=pc(pAB,1); $("fAnd").innerHTML=fr(nAB);
+  $("tOr").innerHTML=pc(pU,1); $("fOr").innerHTML=fr(nOr());
+
+  $("mNaive").innerHTML=pc(sum,2)+(sum>1?'<span class="d">not a probability</span>':'');
+  $("dNaive").innerHTML=(nAB===0?'&mdash;':'+'+pc(pAB,2)+'<span class="d">the overlap, again</span>');
+  $("mRule").innerHTML=pc(pU,2)+'<span class="d">'+fr(nOr())+'</span>';
+  $("dRule").innerHTML='&mdash;<span class="d">exact</span>';
+  $("lSim").innerHTML='This run of '+fmt(NS[ni],0);
+  $("mSim").innerHTML=pc(R.p,2)+'<span class="d">'+fmt(R.un,0)+' of '+fmt(R.n,0)+'</span>';
+  $("dSim").innerHTML=(R.p-pU>=0?'+':'&minus;')+pc(Math.abs(R.p-pU),2)+'<span class="d">sampling noise</span>';
+
+  $("vennTitle").innerHTML=vw===0?'The two events, drawn to scale':'The sample space, one square per outcome';
+  $("simTitle").innerHTML=fmt(NS[ni],0)+' draws, and where they land';
+  $("vlgd").innerHTML='<span><i style="background:'+COL.a+'"></i>'+S.A+' only &mdash; '+fmt(nA-nAB,0)+'</span>'+
+   '<span><i style="background:'+COL.ab+'"></i>both &mdash; '+fmt(nAB,0)+'</span>'+
+   '<span><i style="background:'+COL.b+'"></i>'+S.B+' only &mdash; '+fmt(nB-nAB,0)+'</span>'+
+   '<span><i style="background:'+COL.no+'"></i>neither &mdash; '+fmt(n-nOr(),0)+'</span>';
+  $("vennCap").innerHTML=vw===0
+   ? 'The circles are not decoration: their areas are in <b>exact proportion</b> to P(A) and P(B), and the distance between their centres is solved numerically so the shared lens has exactly the area that P(A and B) is worth on the same scale. Slide the overlap and the circles really do drift together and apart. The outer rectangle stands for the whole sample space but is not to scale &mdash; no circle can fill a rectangle.'
+   : 'The same information with nothing hidden: '+fmt(n,0)+' squares, one per equally likely outcome, grouped by which region they fall in. Count the gold squares and you have counted the outcomes that get double-billed when you add P(A) and P(B) without thinking. There is nothing subtle happening here, which is rather the point.';
+
+  var col=(nA===0||nB===0)?'#78868d':(nAB===0?'#2f9e5b':(nAB===hi?'#7a5a8a':'#2f6f8a'));
+  $("stage").style.background=col;
+  $("stage").innerHTML='P(A or B) = '+pc(pU,1)+
+   '<small>'+fmt(nA,0)+' + '+fmt(nB,0)+' &minus; '+fmt(nAB,0)+' = '+fmt(nOr(),0)+' of '+fmt(n,0)+' outcomes'+(nAB===0?' &nbsp;·&nbsp; nothing to subtract':'')+'</small>';
+
+  var SNAP=[
+   {v:lo,t:lo===0?'None':'Least',s:lo===0?'disjoint':'forced '+fmt(lo,0)},
+   {v:Math.round(nA*nB/n),t:'Chance',s:'if independent'},
+   {v:hi,t:'Most',s:hi===0?'none possible':'one inside the other'},
+   {v:S.nAB,t:'Real',s:'as counted'}
+  ];
+  $("snap").innerHTML=SNAP.map(function(x,j){
+   var v=Math.max(lo,Math.min(hi,x.v));
+   return '<button class="it'+(v===nAB?' on':'')+'" data-v="'+v+'"><span class="nm">'+x.t+'</span><span class="s">'+x.s+'</span></button>';
+  }).join('');
+  document.querySelectorAll('#snap .it').forEach(function(b){b.onclick=function(){nAB=+b.dataset.v;render();};});
+
+  $("fnote").innerHTML='Every probability on this page is a count divided by '+fmt(n,0)+', because every outcome in '+S.space+' is equally likely &mdash; so the figures are exact rather than estimated, and the fractions under the tiles are the raw counts. The Venn diagram is solved, not sketched: circle areas are set proportional to the probabilities and the centre-to-centre distance is found by bisection on the circular-lens area formula, to seventy halvings, so the shaded overlap is area-true to well past the width of a pixel. The run of draws uses a seeded pseudo-random generator, which is why the page opens the same way every time and why &ldquo;Draw a new run&rdquo; genuinely produces a different one. The same pool of draws is re-used as you move the event sliders &mdash; the draws do not change, only which region each one is counted in &mdash; so what you see moving is the rule, not the randomness.';
+ }
+
+ /* ================= wiring ================= */
+ $("aSl").oninput=function(){nA=+this.value;render();};
+ $("bSl").oninput=function(){nB=+this.value;render();};
+ $("oSl").oninput=function(){nAB=+this.value;render();};
+ $("nSl").oninput=function(){ni=+this.value;render();};
+ $("reset").onclick=function(){nA=SC[sc].nA;nB=SC[sc].nB;nAB=SC[sc].nAB;render();};
+ $("samp").onclick=function(){seed++;genPool();render();};
+ document.querySelectorAll('#seg button').forEach(function(b){
+  b.onclick=function(){
+   sc=+b.dataset.v;
+   nA=SC[sc].nA;nB=SC[sc].nB;nAB=SC[sc].nAB;
+   document.querySelectorAll('#seg button').forEach(function(x){x.className='';});
+   b.className='on';
+   render();
+  };
+ });
+ document.querySelectorAll('#vseg button').forEach(function(b){
+  b.onclick=function(){
+   vw=+b.dataset.v;
+   document.querySelectorAll('#vseg button').forEach(function(x){x.className='';});
+   b.className='on';
+   render();
+  };
+ });
+
+ genPool();render();
+})();
+</script>
+</body>
+</html>

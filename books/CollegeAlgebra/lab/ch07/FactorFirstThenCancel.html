@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Factor First, Then Cancel: Multiplying &amp; Dividing Rational Expressions</title>
+<meta name="description" content="A worked-step machine for multiplying and dividing rational expressions — factor every piece, lay the whole product on one board, and watch each factor pair off with its twin.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.94fr 1.06fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* ---- example picker ---- */
+#pick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+#pick .it{display:block;text-align:left;padding:8px 9px;}
+#pick .it .nm{display:block;font-size:11.6px;line-height:1.15;}
+#pick .it .ct{display:block;font-size:10.3px;line-height:1.25;margin-top:2px;}
+@media (max-width:470px){#pick{grid-template-columns:repeat(2,1fr);}}
+/* ---- the worked-step trail ---- */
+.work{margin-top:2px;}
+.wr{display:flex;gap:10px;align-items:baseline;padding:7px 8px;border-radius:9px;border-left:4px solid transparent;transition:.18s;}
+.wr + .wr{margin-top:2px;}
+.wr .pl{flex:none;width:84px;font-size:9.3px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.wr .mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.85;flex:1;min-width:0;}
+.wr.on{background:#eef0fa;border-left-color:var(--teal);}
+.wr.on .mx{font-size:17.5px;color:var(--ink);}
+.wr.on .pl{color:var(--teal);}
+.wr.ans.on{background:#fbf3e2;border-left-color:var(--gold);}
+.wr.ans.on .pl{color:#8a6a20;}
+.mx sub{font-size:.62em;} .mx sup{font-size:.66em;} .mx i{font-style:italic;}
+/* stacked fraction, HTML only */
+.fr{display:inline-block;vertical-align:middle;text-align:center;line-height:1.3;margin:0 3px;}
+.fr .nu{display:block;padding:0 7px 2px;border-bottom:1.5px solid currentColor;}
+.fr .de{display:block;padding:2px 7px 0;}
+/* highlight what just changed / what just left */
+.hl{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.wr:not(.on) .hl{background:transparent;box-shadow:none;padding:0;}
+.cx{color:var(--muted);background-image:linear-gradient(to top right,transparent 44%,#d1495b 44%,#d1495b 56%,transparent 56%);}
+/* ---- left column ---- */
+.cap{font-size:12.3px;color:var(--soft);line-height:1.55;margin-top:10px;border-top:1px solid var(--line);padding-top:9px;min-height:52px;}
+.cap b{color:var(--ink);} .cap i{font-family:var(--math);font-style:italic;} .cap sup{font-size:.66em;}
+.key{display:flex;flex-wrap:wrap;gap:11px;margin-top:9px;font-size:10.2px;color:var(--muted);align-items:center;}
+.key i{font-style:normal;display:inline-flex;align-items:center;gap:5px;}
+.key .s1{width:15px;height:11px;border-radius:3px;background:#eef0fa;border:1.5px solid #c9cde8;display:inline-block;}
+.key .s2{width:15px;height:11px;border-radius:3px;background:#fae5e8;border:1.5px solid #e8a9b4;display:inline-block;}
+.key .s3{width:15px;height:11px;border-radius:3px;background:#e6e8f5;border:1.5px solid #43458f;display:inline-block;}
+/* ---- numeric checker ---- */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:4px;background:#dfe1f0;outline:none;margin:4px 0 0;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:21px;height:21px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.4);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.4);cursor:pointer;}
+.xline{display:flex;justify-content:space-between;align-items:baseline;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+.xline b{font-family:var(--math);font-size:16px;font-weight:700;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+.xline b i{font-style:italic;}
+.ticks{position:relative;height:19px;margin:1px 10px 0;}
+.ticks i{position:absolute;top:0;transform:translateX(-50%);font-family:var(--math);font-size:10.5px;font-weight:700;color:#b23145;font-style:normal;text-align:center;white-space:nowrap;}
+.ticks i:before{content:'';display:block;width:2px;height:6px;background:#d1495b;margin:0 auto 1px;border-radius:1px;}
+.vals{display:flex;gap:8px;margin-top:6px;}
+.vals div{flex:1;border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 6px;text-align:center;}
+.vals div b{display:block;font-size:9.3px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+.vals div span{display:block;font-family:var(--math);font-size:19px;font-weight:700;color:var(--teal-dk);margin-top:3px;}
+.vals div span.und{font-size:14px;color:#b23145;}
+.vals div.match{border-color:#8fbf9f;background:#f2f9f4;}
+.vals div.und{border-color:#e8a9b4;background:#fdf4f5;}
+.vd{font-size:12.3px;line-height:1.55;color:var(--soft);margin-top:9px;border-radius:9px;padding:9px 11px;background:#f1f2f9;border:1px solid var(--line);}
+.vd b{color:var(--ink);} .vd i{font-family:var(--math);font-style:italic;} .vd sup{font-size:.66em;}
+.vd.warn{background:#fdf4f5;border-color:#f0c9d0;color:#8a2a3a;} .vd.warn b{color:#7a1f2c;}
+/* ---- phase chips ---- */
+.plan{display:flex;flex-wrap:wrap;gap:4px;margin-top:11px;}
+.plan span{font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:#eceefa;color:var(--muted);border-radius:20px;padding:4px 9px;}
+.plan span.done{background:#dfe2f4;color:var(--teal-dk);}
+.plan span.on{background:var(--teal);color:#fff;}
+#info .n{margin-bottom:4px;}
+#info i,.mnem i,.note i,#info .loc i{font-family:var(--math);font-style:italic;}
+#info sup,.mnem sup,.note sup,.loc sup{font-size:.66em;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 7</div>
+  <h1>Factor First, Then Cancel</h1>
+  <div class="intro">Multiplying rational expressions looks like the hardest thing in the chapter and is secretly the easiest &mdash; <b>if</b> you factor before you do anything else. Factoring turns every top and bottom into a <b>product</b>, and once everything is a product, matching factors pair off and become 1. Step through five problems and watch each pair leave the board.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="boardTitle">The factor board</h2>
+      <svg viewBox="0 0 340 142" aria-label="factors of the product, top and bottom"><g id="art"></g></svg>
+      <div class="key">
+        <i><span class="s1"></span> a factor still in the product</i>
+        <i><span class="s2"></span> divided out &mdash; it made a 1</i>
+        <i><span class="s3"></span> survives into the answer</i>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>Check it with a number</h2>
+      <div class="xline"><span>test value</span><b><i>x</i> = <span id="xv">1</span></b></div>
+      <input type="range" id="xs" min="-6" max="6" step="0.5" value="1">
+      <div class="ticks" id="ticks"></div>
+      <div class="vals">
+        <div id="bo"><b>original</b><span id="vo">&mdash;</span></div>
+        <div id="bs"><b>simplified</b><span id="vs">&mdash;</span></div>
+      </div>
+      <div class="vd" id="vd"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Five products<small>pick one, then press Next</small></div>
+    <div class="card">
+      <div id="pick"></div>
+      <div class="work" id="work"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div class="plan" id="plan"></div>
+      <div id="info"></div>
+      <div class="mnem"><b>Why cancelling is allowed at all.</b> Crossing out a factor is not magic &mdash; it is division. <i>(x</i> + 5<i>)</i> divided by <i>(x</i> + 5<i>)</i> is 1, and multiplying by 1 changes nothing. But division only reaches things that are <b>multiplied</b>. That is the entire reason we factor first: factoring is what turns a sum into a product so that division can get at it.</div>
+      <div class="note"><b>The one fatal error.</b> Never cancel a <b>term</b>. In <i>(x</i> + 5<i>)</i>/<i>x</i> you may not cross out the <i>x</i>&rsquo;s &mdash; the top is a sum, not a product. Test it at <i>x</i> = 5: the true value is 10/5 = 2, but &ldquo;cancelling&rdquo; would claim 5. If a factor is not multiplied against <b>everything</b> above the bar, it cannot leave.</div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i);};
+
+/* ---------- tiny math formatter: HTML only, no LaTeX ---------- */
+/*  x -> italic x   ^2 -> sup 2   - -> minus   * -> dot   ~ -> divide
+    != -> not-equal   {..} -> highlight span   [..] -> cancelled span   */
+function M(s){
+  s=s.replace(/x/g,'\u0001').replace(/\^2/g,'\u0002').replace(/!=/g,'\u0003')
+     .replace(/\*/g,'\u0004').replace(/~/g,'\u0005').replace(/-/g,'\u0006')
+     .replace(/\{/g,'\u0007').replace(/\}/g,'\u0008')
+     .replace(/\[/g,'\u000b').replace(/\]/g,'\u000c');
+  return s.replace(/\u0001/g,'<i>x</i>').replace(/\u0002/g,'<sup>2</sup>')
+     .replace(/\u0003/g,' &ne; ').replace(/\u0004/g,' &middot; ')
+     .replace(/\u0005/g,' &divide; ').replace(/\u0006/g,'&minus;')
+     .replace(/\u0007/g,'<span class="hl">').replace(/\u0008/g,'</span>')
+     .replace(/\u000b/g,'<span class="cx">').replace(/\u000c/g,'</span>');
+}
+function F(a,b){return '<span class="fr"><span class="nu">'+M(a)+'</span><span class="de">'+M(b)+'</span></span>';}
+var GAP='&nbsp;&nbsp;&nbsp;&nbsp;';
+
+/* ---------- the five worked problems ---------- */
+var EX=[
+{k:'e1',nm:'Multiply',ct:'four factors, two leave',col:'#43458f',x0:1,excl:[-5,-2,2],
+ fo:function(x){return (x+5)/(x*x-4)*(x-2)/(x*x+7*x+10);},
+ fs:function(x){return 1/((x+2)*(x+2));},
+ steps:[
+ {ph:'problem',pl:'The problem',
+  mx:F('x + 5','x^2 - 4')+M(' * ')+F('x - 2','x^2 + 7x + 10'),
+  cp:'Four pieces on the board. Two of them are <b>sums</b>, not products &mdash; so nothing can cancel yet, no matter how similar things look.',
+  ex:'Two rational expressions, multiplied. The instinct is to multiply everything out. Resist it &mdash; expanding gives you a fourth-degree mess that you would only have to factor again. <b>Factor first, every single time.</b>'},
+ {ph:'factor',pl:'Factor every piece',
+  mx:F('x + 5','{(x - 2)(x + 2)}')+M(' * ')+F('x - 2','{(x + 2)(x + 5)}'),
+  cp:'Each denominator tile just <b>split in two</b>. Everything on the board is now a factor.',
+  ex:'<i>x</i><sup>2</sup> &minus; 4 is a difference of squares, so it is (<i>x</i> &minus; 2)(<i>x</i> + 2). For <i>x</i><sup>2</sup> + 7<i>x</i> + 10 you need two numbers that multiply to 10 and add to 7 &mdash; that is 2 and 5, giving (<i>x</i> + 2)(<i>x</i> + 5). Both numerators are already single factors, so they stay put.'},
+ {ph:'restrict',pl:'Record the restrictions',
+  mx:M('x != -5,')+GAP+M('x != -2,')+GAP+M('x != 2'),
+  cp:'Every denominator tile is now labelled with the <i>x</i> that would make it zero. Read them <b>now</b> &mdash; some of these tiles are about to disappear.',
+  ex:'A denominator may never be zero. Set each factored denominator factor to zero: <i>x</i> &minus; 2 = 0 gives <i>x</i> = 2, <i>x</i> + 2 = 0 gives <i>x</i> = &minus;2, <i>x</i> + 5 = 0 gives <i>x</i> = &minus;5. Do this <b>before</b> you cancel. After cancelling, some of these factors are gone and the evidence with them &mdash; but the restriction still applies, because it came from the expression you were <b>given</b>.'},
+ {ph:'combine',pl:'One long product',
+  mx:F('(x + 5)(x - 2)','(x - 2)(x + 2)(x + 2)(x + 5)'),
+  cp:'The two fractions have merged into one. Every factor is now multiplied against every other &mdash; which is exactly the condition that lets a factor cancel.',
+  ex:'Multiplying fractions means top times top over bottom times bottom. Notice what this buys you: a factor that was stuck in the <b>first</b> numerator can now cancel with one from the <b>second</b> denominator. That is what &ldquo;cancel across the product&rdquo; means &mdash; once it is one fraction, position stops mattering.'},
+ {ph:'cancel',pl:'Divide out (x + 5)',
+  mx:F('[(x + 5)](x - 2)','(x - 2)(x + 2)(x + 2)[(x + 5)]'),
+  cp:'(<i>x</i> + 5) over (<i>x</i> + 5) is <b>1</b>. The pair is linked and both tiles leave.',
+  ex:'This is division, not deletion: (<i>x</i> + 5) &divide; (<i>x</i> + 5) = 1 for every <i>x</i> except &minus;5, which we already banned. The factor came from the <b>first</b> numerator and the <b>second</b> denominator &mdash; they never touched until we wrote one fraction.'},
+ {ph:'cancel',pl:'Divide out (x &minus; 2)',
+  mx:F('[(x + 5)][(x - 2)]','[(x - 2)](x + 2)(x + 2)[(x + 5)]'),
+  cp:'Second pair gone. The whole numerator has now left the board.',
+  ex:'Same move: (<i>x</i> &minus; 2)/(<i>x</i> &minus; 2) = 1 for <i>x</i> &ne; 2. Two copies of (<i>x</i> + 2) are left below with no partners above, so they stay.'},
+ {ph:'answer',pl:'What survives',
+  mx:F('1','(x + 2)(x + 2)')+M(' = ')+F('1','(x + 2)^2')+GAP+M('x != -5, -2, 2'),
+  cp:'Nothing survives on top, so the numerator is <b>1</b>. Two (<i>x</i> + 2)&rsquo;s survive below.',
+  ex:'When every factor on top cancels, the numerator is <b>1, not 0</b> &mdash; an empty product is 1, the same way an empty sum is 0. So the answer is 1/(<i>x</i> + 2)<sup>2</sup>. And carry all three restrictions: <i>x</i> = &minus;5 and <i>x</i> = 2 are completely invisible in this final form, yet the original expression has no value there. Drag the slider to &minus;5 and see it.'}
+ ],
+ bd:[
+ {g:[{n:['x + 5'],d:['x^2 - 4']},{n:['x - 2'],d:['x^2 + 7x + 10']}],op:'*'},
+ {g:[{n:['x + 5'],d:['*x - 2','*x + 2']},{n:['x - 2'],d:['*x + 2','*x + 5']}],op:'*'},
+ {g:[{n:['x + 5'],d:['x - 2|2','x + 2|-2']},{n:['x - 2'],d:['x + 2|-2','x + 5|-5']}],op:'*',rt:1},
+ {g:[{n:['x + 5','x - 2'],d:['x - 2','x + 2','x + 2','x + 5']}]},
+ {g:[{n:['x + 5','x - 2'],d:['x - 2','x + 2','x + 2','x + 5']}],pr:[[0,3]],hot:0},
+ {g:[{n:['x + 5','x - 2'],d:['x - 2','x + 2','x + 2','x + 5']}],pr:[[0,3],[1,0]],hot:1},
+ {g:[{n:['x + 5','x - 2'],d:['x - 2','x + 2','x + 2','x + 5']}],pr:[[0,3],[1,0]],hot:-1,gl:1}
+ ]},
+
+{k:'e2',nm:'Pull the GCF',ct:'numbers cancel too',col:'#2f6f9f',x0:2,excl:[-3,-1],
+ fo:function(x){return (3*x*x-3)/(x*x+4*x+3)*(x*x+6*x+9)/(6*x+6);},
+ fs:function(x){return (x-1)*(x+3)/(2*(x+1));},
+ steps:[
+ {ph:'problem',pl:'The problem',
+  mx:F('3x^2 - 3','x^2 + 4x + 3')+M(' * ')+F('x^2 + 6x + 9','6x + 6'),
+  cp:'Every one of the four pieces has something hiding in it &mdash; a common number, a square pattern, or both.',
+  ex:'Numbers count as factors too. Two of these pieces have a numerical common factor sitting in front, and pulling it out is what exposes the pattern underneath.'},
+ {ph:'factor',pl:'Factor every piece',
+  mx:F('{3(x - 1)(x + 1)}','{(x + 1)(x + 3)}')+M(' * ')+F('{(x + 3)(x + 3)}','{6(x + 1)}'),
+  cp:'One tile became three. The bare <b>3</b> and <b>6</b> are factors just like the binomials are.',
+  ex:'<b>Always take the number out first.</b> 3<i>x</i><sup>2</sup> &minus; 3 = 3(<i>x</i><sup>2</sup> &minus; 1), and now <i>x</i><sup>2</sup> &minus; 1 is visibly a difference of squares: 3(<i>x</i> &minus; 1)(<i>x</i> + 1). If you had skipped the 3 you would never have seen it. Likewise 6<i>x</i> + 6 = 6(<i>x</i> + 1). And <i>x</i><sup>2</sup> + 6<i>x</i> + 9 is a perfect square: (<i>x</i> + 3)(<i>x</i> + 3), because 3 &middot; 3 = 9 and 3 + 3 = 6.'},
+ {ph:'restrict',pl:'Record the restrictions',
+  mx:M('x != -3,')+GAP+M('x != -1'),
+  cp:'Only the tiles containing <i>x</i> get a red label. A plain number can never be zero.',
+  ex:'<i>x</i> + 1 = 0 gives <i>x</i> = &minus;1; <i>x</i> + 3 = 0 gives <i>x</i> = &minus;3. The 6 on the bottom contributes nothing &mdash; 6 is never zero, so it restricts nothing. Only factors that <b>contain the variable</b> can create a forbidden value.'},
+ {ph:'combine',pl:'One long product',
+  mx:F('3(x - 1)(x + 1)(x + 3)(x + 3)','(x + 1)(x + 3) * 6(x + 1)'),
+  cp:'Five factors on top, four on the bottom. Now hunt for twins.',
+  ex:'Top times top, bottom times bottom. Do not multiply the numbers together yet &mdash; leaving 3 and 6 separate is what lets you see that they share something.'},
+ {ph:'cancel',pl:'Divide out (x + 1)',
+  mx:F('3(x - 1)[(x + 1)](x + 3)(x + 3)','[(x + 1)](x + 3) * 6(x + 1)'),
+  cp:'There are <b>two</b> (<i>x</i> + 1)&rsquo;s below but only <b>one</b> above. Cancelling is <b>pairing</b>, so only one pair leaves.',
+  ex:'This is the step where people over-cancel. Each factor above can only knock out <b>one</b> factor below, because (<i>x</i> + 1)/(<i>x</i> + 1)<sup>2</sup> = 1/(<i>x</i> + 1), not 1. One partner each &mdash; the spare (<i>x</i> + 1) on the bottom stays.'},
+ {ph:'cancel',pl:'Divide out (x + 3)',
+  mx:F('3(x - 1)[(x + 1)][(x + 3)](x + 3)','[(x + 1)][(x + 3)] * 6(x + 1)'),
+  cp:'Mirror image: two (<i>x</i> + 3)&rsquo;s on top, one below. One pair leaves, one spare survives on top.',
+  ex:'One (<i>x</i> + 3) from the bottom pairs with one of the two on top. The extra (<i>x</i> + 3) has no partner, so it becomes part of the answer.'},
+ {ph:'num',pl:'Reduce the numbers',
+  mx:F('{1}(x - 1)[(x + 1)][(x + 3)](x + 3)','[(x + 1)][(x + 3)] * {2}(x + 1)'),
+  cp:'3 and 6 are not identical, so they do not vanish &mdash; they <b>shrink</b>.',
+  ex:'Numbers reduce by exactly the same rule, you just have to see the shared factor first: 3 = 3 &middot; 1 and 6 = 3 &middot; 2. The shared 3 divides out, leaving 1 on top and 2 on the bottom. A 1 in a product can simply be dropped.'},
+ {ph:'answer',pl:'What survives',
+  mx:F('(x - 1)(x + 3)','2(x + 1)')+GAP+M('x != -3, -1'),
+  cp:'Three survivors on top, two below. That is the answer &mdash; and it stays factored.',
+  ex:'<b>Leave it factored.</b> Expanding to (<i>x</i><sup>2</sup> + 2<i>x</i> &minus; 3)/(2<i>x</i> + 2) is not more finished, it is less useful: the factored form shows the zeros, the restrictions, and whether anything else could still cancel. Both restrictions survive here, since (<i>x</i> + 1) and (<i>x</i> + 3) are both still visible.'}
+ ],
+ bd:[
+ {g:[{n:['3x^2 - 3'],d:['x^2 + 4x + 3']},{n:['x^2 + 6x + 9'],d:['6x + 6']}],op:'*'},
+ {g:[{n:['*3','*x - 1','*x + 1'],d:['*x + 1','*x + 3']},{n:['*x + 3','*x + 3'],d:['*6','*x + 1']}],op:'*'},
+ {g:[{n:['3','x - 1','x + 1'],d:['x + 1|-1','x + 3|-3']},{n:['x + 3','x + 3'],d:['6','x + 1|-1']}],op:'*',rt:1},
+ {g:[{n:['3','x - 1','x + 1','x + 3','x + 3'],d:['x + 1','x + 3','6','x + 1']}]},
+ {g:[{n:['3','x - 1','x + 1','x + 3','x + 3'],d:['x + 1','x + 3','6','x + 1']}],pr:[[2,0]],hot:0},
+ {g:[{n:['3','x - 1','x + 1','x + 3','x + 3'],d:['x + 1','x + 3','6','x + 1']}],pr:[[2,0],[3,1]],hot:1},
+ {g:[{n:['*1','x - 1','x + 1','x + 3','x + 3'],d:['x + 1','x + 3','*2','x + 1']}],pr:[[2,0],[3,1]],hot:-1},
+ {g:[{n:['1','x - 1','x + 1','x + 3','x + 3'],d:['x + 1','x + 3','2','x + 1']}],pr:[[2,0],[3,1]],hot:-1,gl:1}
+ ]},
+
+{k:'e3',nm:'Divide',ct:'flip, then cancel',col:'#7a5a8a',x0:1,excl:[-4,-2,0,5],
+ fo:function(x){return ((x*x-25)/(x*x+6*x+8))/((x*x-5*x)/(x*x+2*x));},
+ fs:function(x){return (x+5)/(x+4);},
+ steps:[
+ {ph:'problem',pl:'The problem',
+  mx:F('x^2 - 25','x^2 + 6x + 8')+M(' ~ ')+F('x^2 - 5x','x^2 + 2x'),
+  cp:'A division. Count the danger spots: <b>three</b> of these four pieces can hurt you, not two.',
+  ex:'Division adds a trap. Two denominators obviously cannot be zero &mdash; but the <b>numerator of the divisor</b> cannot be zero either, because you may not divide <b>by</b> zero. That restriction is the one almost everybody drops.'},
+ {ph:'flip',pl:'Flip and multiply',
+  mx:F('x^2 - 25','x^2 + 6x + 8')+M(' * ')+F('{x^2 + 2x}','{x^2 - 5x}'),
+  cp:'The <b>second</b> fraction turned upside down. The &divide; became a &middot;. From here it is an ordinary multiplication.',
+  ex:'Dividing by a fraction is multiplying by its reciprocal. Why that works: asking &ldquo;how many <sup>3</sup>&frasl;<sub>4</sub> fit into 6?&rdquo; is the same as asking for 6 &middot; <sup>4</sup>&frasl;<sub>3</sub>. More formally, <i>A</i> &divide; <i>B</i> = <i>A</i> &middot; (1/<i>B</i>), and flipping a fraction is exactly how you write 1 over it. <b>Flip only the second fraction</b> &mdash; the one you are dividing by.'},
+ {ph:'factor',pl:'Factor every piece',
+  mx:F('{(x - 5)(x + 5)}','{(x + 2)(x + 4)}')+M(' * ')+F('{x(x + 2)}','{x(x - 5)}'),
+  cp:'Two of the tiles factor into a bare <b>x</b> times a binomial. That lonely <i>x</i> is a real factor and it will cancel.',
+  ex:'<i>x</i><sup>2</sup> &minus; 25 is a difference of squares: (<i>x</i> &minus; 5)(<i>x</i> + 5). For <i>x</i><sup>2</sup> + 6<i>x</i> + 8 you want two numbers multiplying to 8 and adding to 6 &mdash; 2 and 4. The last two each have a common <i>x</i>: <i>x</i><sup>2</sup> + 2<i>x</i> = <i>x</i>(<i>x</i> + 2) and <i>x</i><sup>2</sup> &minus; 5<i>x</i> = <i>x</i>(<i>x</i> &minus; 5). Pulling out a single <i>x</i> feels too easy to count as factoring, which is why it gets skipped.'},
+ {ph:'restrict',pl:'Record the restrictions',
+  mx:M('x != -4,')+GAP+M('x != -2,')+GAP+M('x != 0,')+GAP+M('x != 5'),
+  cp:'Four forbidden values &mdash; and two of them came from a tile that was on <b>top</b> before you flipped.',
+  ex:'Read them off the <b>flipped</b> denominators: (<i>x</i> + 2)(<i>x</i> + 4) bans &minus;2 and &minus;4; <i>x</i>(<i>x</i> &minus; 5) bans 0 and 5. Then double-check the divisor&rsquo;s <b>original</b> denominator, <i>x</i>(<i>x</i> + 2), which bans 0 and &minus;2 &mdash; already covered here, but not always. The pair <i>x</i> = 0 and <i>x</i> = 5 is the interesting one: those came from <i>x</i><sup>2</sup> &minus; 5<i>x</i>, which started life as a <b>numerator</b>. It was the thing you were dividing by, so it was never allowed to be zero in the first place.'},
+ {ph:'combine',pl:'One long product',
+  mx:F('(x - 5)(x + 5) * x(x + 2)','(x + 2)(x + 4) * x(x - 5)'),
+  cp:'Four factors up, four down. Three of them have twins.',
+  ex:'Now the two fractions are one, and factors are free to pair with anything on the opposite side of the bar.'},
+ {ph:'cancel',pl:'Divide out (x &minus; 5)',
+  mx:F('[(x - 5)](x + 5) * x(x + 2)','(x + 2)(x + 4) * x[(x - 5)]'),
+  cp:'First pair. (<i>x</i> &minus; 5)/(<i>x</i> &minus; 5) = 1 for <i>x</i> &ne; 5.',
+  ex:'It began in the first numerator and met its twin in what used to be the divisor&rsquo;s numerator, dragged below the bar by the flip. Without flipping first, these two would never have met.'},
+ {ph:'cancel',pl:'Divide out x',
+  mx:F('[(x - 5)](x + 5) * [x](x + 2)','(x + 2)(x + 4) * [x][(x - 5)]'),
+  cp:'The bare <i>x</i> cancels exactly like a binomial does &mdash; it is just a shorter factor.',
+  ex:'<i>x</i>/<i>x</i> = 1 whenever <i>x</i> &ne; 0. Nothing special about it being one character long; what matters is that it is <b>multiplied</b> against everything else on its side.'},
+ {ph:'cancel',pl:'Divide out (x + 2)',
+  mx:F('[(x - 5)](x + 5) * [x][(x + 2)]','[(x + 2)](x + 4) * [x][(x - 5)]'),
+  cp:'Third pair. One factor survives on top, one on the bottom.',
+  ex:'(<i>x</i> + 2)/(<i>x</i> + 2) = 1 for <i>x</i> &ne; &minus;2. Only (<i>x</i> + 5) and (<i>x</i> + 4) have no partner left.'},
+ {ph:'answer',pl:'What survives',
+  mx:F('x + 5','x + 4')+GAP+M('x != -4, -2, 0, 5'),
+  cp:'A clean little fraction &mdash; carrying four restrictions, only one of which you can still see in it.',
+  ex:'Only <i>x</i> = &minus;4 is readable from the answer. The other three &mdash; &minus;2, 0 and 5 &mdash; are <b>holes</b>: single missing points where the original had no value but (<i>x</i> + 5)/(<i>x</i> + 4) happily returns a number. Slide to <i>x</i> = 5 and watch the two columns disagree. Writing the restrictions is the only thing that keeps the two expressions honestly equal.'}
+ ],
+ bd:[
+ {g:[{n:['x^2 - 25'],d:['x^2 + 6x + 8']},{n:['x^2 - 5x'],d:['x^2 + 2x']}],op:'~'},
+ {g:[{n:['x^2 - 25'],d:['x^2 + 6x + 8']},{n:['*x^2 + 2x'],d:['*x^2 - 5x']}],op:'*'},
+ {g:[{n:['*x - 5','*x + 5'],d:['*x + 2','*x + 4']},{n:['*x','*x + 2'],d:['*x','*x - 5']}],op:'*'},
+ {g:[{n:['x - 5','x + 5'],d:['x + 2|-2','x + 4|-4']},{n:['x','x + 2'],d:['x|0','x - 5|5']}],op:'*',rt:1},
+ {g:[{n:['x - 5','x + 5','x','x + 2'],d:['x + 2','x + 4','x','x - 5']}]},
+ {g:[{n:['x - 5','x + 5','x','x + 2'],d:['x + 2','x + 4','x','x - 5']}],pr:[[0,3]],hot:0},
+ {g:[{n:['x - 5','x + 5','x','x + 2'],d:['x + 2','x + 4','x','x - 5']}],pr:[[0,3],[2,2]],hot:1},
+ {g:[{n:['x - 5','x + 5','x','x + 2'],d:['x + 2','x + 4','x','x - 5']}],pr:[[0,3],[2,2],[3,0]],hot:2},
+ {g:[{n:['x - 5','x + 5','x','x + 2'],d:['x + 2','x + 4','x','x - 5']}],pr:[[0,3],[2,2],[3,0]],hot:-1,gl:1}
+ ]},
+
+{k:'e4',nm:'Everything goes',ct:'the answer is 1',col:'#2f9e5b',x0:1,excl:[-3,-2,0,3],
+ fo:function(x){return (x*x-9)/(x*x+5*x+6)*(x*x+2*x)/(x*x-3*x);},
+ fs:function(x){return 1;},
+ steps:[
+ {ph:'problem',pl:'The problem',
+  mx:F('x^2 - 9','x^2 + 5x + 6')+M(' * ')+F('x^2 + 2x','x^2 - 3x'),
+  cp:'Nothing looks unusual yet. Watch what happens once every tile is a factor.',
+  ex:'An ordinary-looking product. Its answer is one of the most useful surprises in the chapter.'},
+ {ph:'factor',pl:'Factor every piece',
+  mx:F('{(x - 3)(x + 3)}','{(x + 2)(x + 3)}')+M(' * ')+F('{x(x + 2)}','{x(x - 3)}'),
+  cp:'Eight factors, and every single one appears exactly <b>twice</b> &mdash; once above the bar, once below.',
+  ex:'<i>x</i><sup>2</sup> &minus; 9 = (<i>x</i> &minus; 3)(<i>x</i> + 3). For <i>x</i><sup>2</sup> + 5<i>x</i> + 6, two numbers multiplying to 6 and adding to 5 are 2 and 3. The last two share a common <i>x</i>: <i>x</i>(<i>x</i> + 2) and <i>x</i>(<i>x</i> &minus; 3).'},
+ {ph:'restrict',pl:'Record the restrictions',
+  mx:M('x != -3,')+GAP+M('x != -2,')+GAP+M('x != 0,')+GAP+M('x != 3'),
+  cp:'Four labels. In a moment, <b>every one of these tiles will be gone</b> &mdash; which is exactly why you write them down first.',
+  ex:'From (<i>x</i> + 2)(<i>x</i> + 3): <i>x</i> &ne; &minus;2 and <i>x</i> &ne; &minus;3. From <i>x</i>(<i>x</i> &minus; 3): <i>x</i> &ne; 0 and <i>x</i> &ne; 3. This example is the argument for the habit: skip this step here and the final answer will contain <b>no trace whatsoever</b> of the restrictions.'},
+ {ph:'combine',pl:'One long product',
+  mx:F('(x - 3)(x + 3) * x(x + 2)','(x + 2)(x + 3) * x(x - 3)'),
+  cp:'Top and bottom hold the same four factors, just shuffled into a different order.',
+  ex:'Order never matters in a product, so a top factor can pair with a bottom factor sitting anywhere. All four will find a partner.'},
+ {ph:'cancel',pl:'Divide out (x &minus; 3)',
+  mx:F('[(x - 3)](x + 3) * x(x + 2)','(x + 2)(x + 3) * x[(x - 3)]'),
+  cp:'One down.',
+  ex:'(<i>x</i> &minus; 3)/(<i>x</i> &minus; 3) = 1 for <i>x</i> &ne; 3.'},
+ {ph:'cancel',pl:'Divide out (x + 3)',
+  mx:F('[(x - 3)][(x + 3)] * x(x + 2)','(x + 2)[(x + 3)] * x[(x - 3)]'),
+  cp:'Two down.',
+  ex:'(<i>x</i> + 3)/(<i>x</i> + 3) = 1 for <i>x</i> &ne; &minus;3.'},
+ {ph:'cancel',pl:'Divide out x',
+  mx:F('[(x - 3)][(x + 3)] * [x](x + 2)','(x + 2)[(x + 3)] * [x][(x - 3)]'),
+  cp:'Three down.',
+  ex:'<i>x</i>/<i>x</i> = 1 for <i>x</i> &ne; 0.'},
+ {ph:'cancel',pl:'Divide out (x + 2)',
+  mx:F('[(x - 3)][(x + 3)] * [x][(x + 2)]','[(x + 2)][(x + 3)] * [x][(x - 3)]'),
+  cp:'Four down. The board is empty on both sides.',
+  ex:'(<i>x</i> + 2)/(<i>x</i> + 2) = 1 for <i>x</i> &ne; &minus;2. Nothing is left anywhere.'},
+ {ph:'answer',pl:'What survives',
+  mx:M('1')+GAP+M('x != -3, -2, 0, 3'),
+  cp:'Everything paired off, so the answer is <b>1</b> &mdash; but only at the points where the original was ever defined.',
+  ex:'An empty product is <b>1, never 0</b>: 1/1 = 1. But this is not the constant function 1. At <i>x</i> = &minus;3, &minus;2, 0 and 3 the original expression has no value at all, so its graph is the horizontal line <i>y</i> = 1 with <b>four points punched out of it</b>. Move the slider onto any red mark: the simplified side reports 1, the original side reports nothing. Those two expressions are equal <b>everywhere except four places</b>, and the restriction list is the only record of it.'}
+ ],
+ bd:[
+ {g:[{n:['x^2 - 9'],d:['x^2 + 5x + 6']},{n:['x^2 + 2x'],d:['x^2 - 3x']}],op:'*'},
+ {g:[{n:['*x - 3','*x + 3'],d:['*x + 2','*x + 3']},{n:['*x','*x + 2'],d:['*x','*x - 3']}],op:'*'},
+ {g:[{n:['x - 3','x + 3'],d:['x + 2|-2','x + 3|-3']},{n:['x','x + 2'],d:['x|0','x - 3|3']}],op:'*',rt:1},
+ {g:[{n:['x - 3','x + 3','x','x + 2'],d:['x + 2','x + 3','x','x - 3']}]},
+ {g:[{n:['x - 3','x + 3','x','x + 2'],d:['x + 2','x + 3','x','x - 3']}],pr:[[0,3]],hot:0},
+ {g:[{n:['x - 3','x + 3','x','x + 2'],d:['x + 2','x + 3','x','x - 3']}],pr:[[0,3],[1,1]],hot:1},
+ {g:[{n:['x - 3','x + 3','x','x + 2'],d:['x + 2','x + 3','x','x - 3']}],pr:[[0,3],[1,1],[2,2]],hot:2},
+ {g:[{n:['x - 3','x + 3','x','x + 2'],d:['x + 2','x + 3','x','x - 3']}],pr:[[0,3],[1,1],[2,2],[3,0]],hot:3},
+ {g:[{n:['x - 3','x + 3','x','x + 2'],d:['x + 2','x + 3','x','x - 3']}],pr:[[0,3],[1,1],[2,2],[3,0]],hot:-1,gl:1}
+ ]},
+
+{k:'e5',nm:'Opposites',ct:'(4 &minus; x) hides a &minus;1',col:'#d1495b',x0:1,excl:[-2,4],
+ fo:function(x){return (x*x-16)/(3*x+6)*(x*x-4)/(4-x);},
+ fs:function(x){return -(x+4)*(x-2)/3;},
+ steps:[
+ {ph:'problem',pl:'The problem',
+  mx:F('x^2 - 16','3x + 6')+M(' * ')+F('x^2 - 4','4 - x'),
+  cp:'Look at (4 &minus; <i>x</i>) on the last denominator and <i>x</i><sup>2</sup> &minus; 16 up top. Those two are heading for a collision.',
+  ex:'This one hides a sign. (4 &minus; <i>x</i>) is <b>not</b> a factor of anything above it &mdash; but it is one small rewrite away from being one.'},
+ {ph:'factor',pl:'Factor every piece',
+  mx:F('{(x - 4)(x + 4)}','{3(x + 2)}')+M(' * ')+F('{(x - 2)(x + 2)}','4 - x'),
+  cp:'(4 &minus; <i>x</i>) refuses to factor further &mdash; it is left alone on the board for now.',
+  ex:'<i>x</i><sup>2</sup> &minus; 16 = (<i>x</i> &minus; 4)(<i>x</i> + 4) and <i>x</i><sup>2</sup> &minus; 4 = (<i>x</i> &minus; 2)(<i>x</i> + 2), both differences of squares. 3<i>x</i> + 6 = 3(<i>x</i> + 2). Now compare (4 &minus; <i>x</i>) with the (<i>x</i> &minus; 4) sitting on top: same two numbers, opposite order, so they are <b>not</b> the same factor. Cancelling them as if they were is a genuine error.'},
+ {ph:'opp',pl:'Pull out the &minus;1',
+  mx:F('(x - 4)(x + 4)','3(x + 2)')+M(' * ')+F('(x - 2)(x + 2)','{(-1)(x - 4)}'),
+  cp:'(4 &minus; <i>x</i>) has split into <b>&minus;1</b> and <b>(<i>x</i> &minus; 4)</b> &mdash; and now there is a genuine twin on the board.',
+  ex:'(4 &minus; <i>x</i>) and (<i>x</i> &minus; 4) are <b>opposites</b>: each is &minus;1 times the other. Check it by distributing: &minus;1(<i>x</i> &minus; 4) = &minus;<i>x</i> + 4 = 4 &minus; <i>x</i>. So factoring out &minus;1 rewrites the denominator as (&minus;1)(<i>x</i> &minus; 4) &mdash; the same quantity, written so the shared factor is visible. The (<i>x</i> &minus; 4) can now cancel and the &minus;1 stays behind. Worth memorising: <b>(<i>a</i> &minus; <i>b</i>)/(<i>b</i> &minus; <i>a</i>) = &minus;1</b>.'},
+ {ph:'restrict',pl:'Record the restrictions',
+  mx:M('x != -2,')+GAP+M('x != 4'),
+  cp:'Rewriting changed how the tile looks, not where it is zero.',
+  ex:'3(<i>x</i> + 2) = 0 gives <i>x</i> = &minus;2. The rewritten (&minus;1)(<i>x</i> &minus; 4) is zero at <i>x</i> = 4 &mdash; exactly where 4 &minus; <i>x</i> was zero, as it must be, since they are the same number. The 3 and the &minus;1 restrict nothing: neither is ever zero.'},
+ {ph:'combine',pl:'One long product',
+  mx:F('(x - 4)(x + 4)(x - 2)(x + 2)','3(x + 2)(-1)(x - 4)'),
+  cp:'Four factors up; a 3, a &minus;1 and two binomials down.',
+  ex:'The &minus;1 rides along in the denominator like any other factor. Do not lose it &mdash; it is about to decide the sign of the whole answer.'},
+ {ph:'cancel',pl:'Divide out (x + 2)',
+  mx:F('(x - 4)(x + 4)(x - 2)[(x + 2)]','3[(x + 2)](-1)(x - 4)'),
+  cp:'The easy pair goes first.',
+  ex:'(<i>x</i> + 2)/(<i>x</i> + 2) = 1 for <i>x</i> &ne; &minus;2.'},
+ {ph:'cancel',pl:'Divide out (x &minus; 4)',
+  mx:F('[(x - 4)](x + 4)(x - 2)[(x + 2)]','3[(x + 2)](-1)[(x - 4)]'),
+  cp:'The pair that only existed because you pulled out the &minus;1.',
+  ex:'(<i>x</i> &minus; 4)/(<i>x</i> &minus; 4) = 1 for <i>x</i> &ne; 4. If you had cancelled (<i>x</i> &minus; 4) straight against (4 &minus; <i>x</i>) without extracting the &minus;1, your answer would have come out with the wrong sign.'},
+ {ph:'answer',pl:'What survives',
+  mx:F('(x + 4)(x - 2)','3(-1)')+M(' = ')+M('-')+F('(x + 4)(x - 2)','3')+GAP+M('x != -2, 4'),
+  cp:'A lone <b>&minus;1</b> survives on the bottom. It moves out front as a minus sign.',
+  ex:'Dividing by &minus;1 is the same as multiplying by &minus;1, so 3 &middot; (&minus;1) = &minus;3 in the denominator and the whole fraction takes a minus sign: the answer is &minus;(<i>x</i> + 4)(<i>x</i> &minus; 2)/3. Losing that &minus;1 is the single most common way this problem fails &mdash; the answer comes out perfectly right except for being backwards. Slide to any value and check the sign against the original.'}
+ ],
+ bd:[
+ {g:[{n:['x^2 - 16'],d:['3x + 6']},{n:['x^2 - 4'],d:['4 - x']}],op:'*'},
+ {g:[{n:['*x - 4','*x + 4'],d:['*3','*x + 2']},{n:['*x - 2','*x + 2'],d:['4 - x']}],op:'*'},
+ {g:[{n:['x - 4','x + 4'],d:['3','x + 2']},{n:['x - 2','x + 2'],d:['*-1','*x - 4']}],op:'*'},
+ {g:[{n:['x - 4','x + 4'],d:['3','x + 2|-2']},{n:['x - 2','x + 2'],d:['-1','x - 4|4']}],op:'*',rt:1},
+ {g:[{n:['x - 4','x + 4','x - 2','x + 2'],d:['3','x + 2','-1','x - 4']}]},
+ {g:[{n:['x - 4','x + 4','x - 2','x + 2'],d:['3','x + 2','-1','x - 4']}],pr:[[3,1]],hot:0},
+ {g:[{n:['x - 4','x + 4','x - 2','x + 2'],d:['3','x + 2','-1','x - 4']}],pr:[[3,1],[0,3]],hot:1},
+ {g:[{n:['x - 4','x + 4','x - 2','x + 2'],d:['3','x + 2','-1','x - 4']}],pr:[[3,1],[0,3]],hot:-1,gl:1}
+ ]}
+];
+
+var PH={problem:'problem',flip:'flip',factor:'factor',opp:'opposites',restrict:'restrict',combine:'one product',cancel:'cancel',num:'numbers',answer:'answer'};
+var BT={problem:'The pieces you were given',flip:'Flipped &mdash; now it is a product',factor:'Every piece is now a product',restrict:'Where a bottom hits zero',combine:'One long product',cancel:'A factor over its twin = 1',num:'Numbers reduce the same way',answer:'What survives'};
+
+/* ---------- SVG factor board ---------- */
+var VW=340, VH=142, FS=14, PADX=14, CW=7.2, SEP=11, GGAP=24;
+var NY=28, NH=28, NTY=47, BARY=72, DY=88, DTY=107, RTY=127;
+
+function slen(s){return s.replace(/\^2/g,'2').length;}
+function ptile(s){var hi=0,r='';
+  if(s.charAt(0)==='*'){hi=1;s=s.slice(1);}
+  var i=s.indexOf('|'); if(i>=0){r=s.slice(i+1);s=s.slice(0,i);}
+  return {t:s,hi:hi,r:r,w:PADX+CW*slen(s)};}
+function S(s){
+  return s.replace(/x/g,'\u0001').replace(/\^2/g,'\u0002').replace(/-/g,'\u0003')
+   .replace(/\u0001/g,'<tspan font-style="italic">x</tspan>')
+   .replace(/\u0002/g,'&#178;').replace(/\u0003/g,'&#8722;');
+}
+function sumw(a){var t=0;for(var i=0;i<a.length;i++)t+=a[i].w;return t+SEP*(a.length-1);}
+
+function drawBoard(b){
+  var gs=[],i,j;
+  for(i=0;i<b.g.length;i++){
+    var n=b.g[i].n.map(ptile), d=b.g[i].d.map(ptile);
+    var nw=sumw(n), dw=sumw(d);
+    gs.push({n:n,d:d,nw:nw,dw:dw,w:Math.max(nw,dw)});
+  }
+  var total=0; for(i=0;i<gs.length;i++) total+=gs[i].w;
+  total+=GGAP*(gs.length-1);
+  var sc=total>318?318/total:1;
+  var out='', cx=0;
+  var pr=b.pr||[], hot=(b.hot===undefined?-1:b.hot);
+  var cn={}, cd={};
+  for(i=0;i<pr.length;i++){cn[pr[i][0]]=(i===hot?2:1); cd[pr[i][1]]=(i===hot?2:1);}
+  var pos={n:[],d:[]};
+
+  for(i=0;i<gs.length;i++){
+    var g=gs[i], gx=cx;
+    var x=gx+(g.w-g.nw)/2;
+    for(j=0;j<g.n.length;j++){
+      var t=g.n[j], st=(gs.length===1?(cn[j]||0):0);
+      out+=tile(x,NY,t,st,t.hi,b.gl&&!st);
+      pos.n.push(x+t.w/2);
+      x+=t.w; if(j<g.n.length-1){out+=dot(x+SEP/2,NTY);x+=SEP;}
+    }
+    x=gx+(g.w-g.dw)/2;
+    for(j=0;j<g.d.length;j++){
+      var u=g.d[j], sd=(gs.length===1?(cd[j]||0):0);
+      out+=tile(x,DY,u,sd,u.hi,b.gl&&!sd);
+      pos.d.push(x+u.w/2);
+      if(b.rt&&u.r!==''){
+        out+='<line x1="'+(x+u.w/2)+'" y1="'+(DY+NH+2)+'" x2="'+(x+u.w/2)+'" y2="'+(RTY-9)+'" stroke="#d1495b" stroke-width="1.4"/>';
+        out+='<text x="'+(x+u.w/2)+'" y="'+RTY+'" text-anchor="middle" font-family="Georgia,serif" font-size="10.5" font-weight="700" fill="#b23145"><tspan font-style="italic">x</tspan> &#8800; '+u.r.replace(/-/g,'&#8722;')+'</text>';
+      }
+      x+=u.w; if(j<g.d.length-1){out+=dot(x+SEP/2,DTY);x+=SEP;}
+    }
+    out+='<line x1="'+gx+'" y1="'+BARY+'" x2="'+(gx+g.w)+'" y2="'+BARY+'" stroke="#22243a" stroke-width="2.2" stroke-linecap="round"/>';
+    cx+=g.w;
+    if(i<gs.length-1){
+      out+='<text x="'+(cx+GGAP/2)+'" y="'+(BARY+6)+'" text-anchor="middle" font-family="Georgia,serif" font-size="19" fill="#4d4f66">'+(b.op==='~'?'&#247;':'&#183;')+'</text>';
+      cx+=GGAP;
+    }
+  }
+  /* connector for the pair that just left */
+  if(gs.length===1 && hot>=0 && pr[hot]){
+    var ax=pos.n[pr[hot][0]], bx=pos.d[pr[hot][1]], mx=(ax+bx)/2;
+    out+='<path d="M '+ax+' '+(NY+NH)+' C '+ax+' '+(BARY-2)+' '+bx+' '+(BARY+2)+' '+bx+' '+DY+'" fill="none" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="3 3"/>';
+    out+='<circle cx="'+mx+'" cy="'+BARY+'" r="9.5" fill="#fff" stroke="#d1495b" stroke-width="1.6"/>';
+    out+='<text x="'+mx+'" y="'+(BARY+4)+'" text-anchor="middle" font-family="Georgia,serif" font-size="12" font-weight="700" fill="#b23145">1</text>';
+  }
+  var tx=(VW-total*sc)/2, ty=(VH-VH*sc)/2;
+  return '<g transform="translate('+tx.toFixed(1)+','+ty.toFixed(1)+') scale('+sc.toFixed(4)+')">'+out+'</g>';
+}
+function dot(x,y){return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#9698ac">&#183;</text>';}
+function tile(x,y,t,st,hi,glow){
+  var f='#eef0fa',s='#c9cde8',c='#22243a',sw=1.4,fw='400';
+  if(hi){f='#fff5d6';s='#e5c46a';}
+  if(glow){f='#e6e8f5';s='#43458f';c='#262a5c';sw=2;fw='700';}
+  if(st===1){f='#f4f4f7';s='#dcdce4';c='#a9aab8';}
+  if(st===2){f='#fae5e8';s='#e8a9b4';c='#b23145';sw=1.8;}
+  var o='<rect x="'+x+'" y="'+y+'" width="'+t.w+'" height="'+NH+'" rx="8" fill="'+f+'" stroke="'+s+'" stroke-width="'+sw+'"/>';
+  o+='<text x="'+(x+t.w/2)+'" y="'+(y+19)+'" text-anchor="middle" font-family="Georgia,serif" font-size="'+FS+'" font-weight="'+fw+'" fill="'+c+'">'+S(t.t)+'</text>';
+  if(st){o+='<line x1="'+(x+5)+'" y1="'+(y+NH-4)+'" x2="'+(x+t.w-5)+'" y2="'+(y+4)+'" stroke="'+(st===2?'#d1495b':'#c9c9d4')+'" stroke-width="'+(st===2?2.2:1.6)+'" stroke-linecap="round"/>';}
+  return o;
+}
+
+/* ---------- state ---------- */
+var ei=0, si=0;
+
+function pickRow(){
+  $('pick').innerHTML=EX.map(function(e,n){
+    var on=(n===ei);
+    return '<button class="it'+(on?' on':'')+'" data-n="'+n+'"'+(on?' style="background:'+e.col+';border-color:'+e.col+'"':'')+
+      '><span class="nm">'+e.nm+'</span><span class="ct">'+e.ct+'</span></button>';
+  }).join('');
+  var bs=document.querySelectorAll('#pick .it');
+  for(var i=0;i<bs.length;i++){bs[i].onclick=function(){ei=+this.getAttribute('data-n');si=0;$('xs').value=EX[ei].x0;render();};}
+}
+
+function fmt(v){
+  if(!isFinite(v))return 'undefined';
+  var r=Math.round(v*10000)/10000;
+  if(r===0)r=0;
+  return (r<0?'&minus;':'')+Math.abs(r);
+}
+function isExcl(E,x){for(var i=0;i<E.excl.length;i++){if(Math.abs(x-E.excl[i])<1e-9)return true;}return false;}
+
+function numeric(){
+  var E=EX[ei], x=parseFloat($('xs').value);
+  $('xv').innerHTML=(x<0?'&minus;':'')+Math.abs(x);
+  var bad=isExcl(E,x);
+  var o=bad?NaN:E.fo(x), s=E.fs(x);
+  var sBad=!isFinite(s);
+  $('vo').innerHTML=bad?'undefined':fmt(o);
+  $('vo').className=bad?'und':'';
+  $('vs').innerHTML=sBad?'undefined':fmt(s);
+  $('vs').className=sBad?'und':'';
+  $('bo').className=bad?'und':'match';
+  $('bs').className=sBad?'und':(bad?'':'match');
+  var v=$('vd');
+  if(!bad){
+    v.className='vd';
+    v.innerHTML='<b>Same number, both times.</b> Cancelling did not change what the expression <i>is</i> &mdash; it only changed how it is written. That is the whole promise of simplifying, and it holds at every legal value of <i>x</i>.';
+  } else if(!sBad){
+    v.className='vd warn';
+    v.innerHTML='<b>They disagree here.</b> The original is <b>undefined</b> at <i>x</i> = '+((x<0?'&minus;':'')+Math.abs(x))+' &mdash; a denominator in the problem you were given is zero there. The simplified form quietly hands back '+fmt(s)+'. That single missing point is a <b>hole</b>, and the restriction is the only thing that records it.';
+  } else {
+    v.className='vd warn';
+    v.innerHTML='<b>Both are undefined here.</b> This factor never found a partner, so it is still sitting in the denominator of the answer. That makes <i>x</i> = '+((x<0?'&minus;':'')+Math.abs(x))+' a <b>vertical asymptote</b> rather than a hole &mdash; you can read this restriction straight off the simplified form.';
+  }
+}
+
+function render(){
+  var E=EX[ei], S0=E.steps, n=S0.length;
+  if(si>n-1)si=n-1;
+  var st=S0[si];
+
+  $('stage').style.background=E.col;
+  $('stage').innerHTML=E.nm+'<small>step '+(si+1)+' of '+n+' &middot; '+E.ct+'</small>';
+
+  var rows='';
+  for(var i=0;i<=si;i++){
+    var r=S0[i];
+    rows+='<div class="wr'+(i===si?' on':'')+(r.ph==='answer'?' ans':'')+'"><div class="pl">'+r.pl+'</div><div class="mx">'+r.mx+'</div></div>';
+  }
+  $('work').innerHTML=rows;
+
+  $('art').innerHTML=drawBoard(E.bd[si]);
+  $('boardTitle').innerHTML=BT[st.ph];
+  $('cap').innerHTML=st.cp;
+
+  $('info').innerHTML='<span class="n">'+st.pl+'</span>'+st.ex;
+
+  var seen={},order=[];
+  for(i=0;i<n;i++){if(!seen[S0[i].ph]){seen[S0[i].ph]=1;order.push(S0[i].ph);}}
+  $('plan').innerHTML=order.map(function(p){
+    var ai=-1,li=-1;
+    for(var j=0;j<n;j++){if(S0[j].ph===p){if(ai<0)ai=j;li=j;}}
+    var cls=(si>=ai&&si<=li)?'on':(si>li?'done':'');
+    return '<span class="'+cls+'">'+PH[p]+'</span>';
+  }).join('');
+
+  $('ticks').innerHTML=E.excl.map(function(v){
+    return '<i style="left:'+((v+6)/12*100)+'%">'+(v<0?'&minus;':'')+Math.abs(v)+'</i>';
+  }).join('');
+
+  $('prev').disabled=(si===0);
+  $('next').disabled=(si===n-1);
+  pickRow();
+  numeric();
+}
+
+$('prev').onclick=function(){if(si>0){si--;render();}};
+$('next').onclick=function(){if(si<EX[ei].steps.length-1){si++;render();}};
+$('xs').oninput=numeric;
+document.addEventListener('keydown',function(e){
+  if(e.target&&e.target.tagName==='INPUT')return;
+  if(e.key==='ArrowRight'){if(si<EX[ei].steps.length-1){si++;render();}}
+  if(e.key==='ArrowLeft'){if(si>0){si--;render();}}
+});
+$('xs').value=EX[0].x0;
+render();
+})();
+</script>
+</body>
+</html>

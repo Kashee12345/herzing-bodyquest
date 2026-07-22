@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Why Sampling Works</title>
+<meta name="description" content="Draw real random samples from a city of millions and watch the estimates cluster around the truth. A live simulation of sampling variability, margin of error, the square-root-of-n law, and why a biased method never gets better.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15.5px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.hit{border-color:var(--green);background:#f2faf5;} .tiles div.hit .vv{color:#237a45;}
+.tiles div.far{border-color:var(--coral);background:#fdf3f4;} .tiles div.far .vv{color:#b23145;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:15px;font-weight:800;color:var(--teal-dk);min-width:62px;text-align:right;font-variant-numeric:tabular-nums;}
+.lgd{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:11px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;}
+@media (max-width:520px){.row{align-items:stretch;}.row .btn{font-size:12.5px;padding:10px 4px;}.tiles .lb{font-size:8.8px;}.sl label{font-size:10px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 2</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 2</div>
+  <h1>Why Sampling Works</h1>
+  <div class="intro">A city has millions of households. You will ask a few hundred of them one question &mdash; and get remarkably close to the right answer. That is not luck. Draw sample after sample below and watch the estimates <b>cluster around the truth</b>, then find out what makes the whole trick collapse.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="histTitle">Where the estimates land</h2>
+      <svg viewBox="0 0 340 200" aria-label="distribution of sample estimates around the true value"><g id="hist"></g></svg>
+      <div class="lgd"><span><i style="background:#2f6f8a"></i>one sample&rsquo;s estimate</span><span><i style="background:#1c4454"></i>the truth, 62%</span><span><i style="background:#b8862f"></i>your latest sample</span></div>
+    </div>
+    <div class="card"><h2>Your latest sample, household by household</h2>
+      <svg viewBox="0 0 340 38" aria-label="the households in the latest sample"><g id="strip"></g></svg>
+      <div class="cap" id="stripCap">Press &ldquo;Draw one sample&rdquo; to knock on some doors.</div>
+    </div>
+    <div class="card"><h2>How precision grows with sample size</h2>
+      <svg viewBox="0 0 340 172" aria-label="margin of error as a function of sample size"><g id="curve"></g></svg>
+      <div class="lgd"><span><i style="background:#2f6f8a"></i>margin of error (95%)</span><span id="lgdBias" style="display:none"><i style="background:#d1495b"></i>bias &mdash; the part n cannot fix</span></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Ask a few hundred households<small>press the button below</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="srs" class="on">Random sample<small>every household equally likely</small></button>
+        <button data-v="con">Convenience sample<small>only whoever picks up</small></button>
+      </div>
+      <div class="sl"><label for="nSl">Sample size n</label><input type="range" id="nSl" min="0" max="16" step="1" value="9"><span class="nv" id="nVal">200</span></div>
+      <div class="sl"><label for="pSl">City size N</label><input type="range" id="pSl" min="0" max="5" step="1" value="2"><span class="nv" id="pVal">1 million</span></div>
+      <div class="row"><button class="btn solid" id="one">Draw one sample</button><button class="btn" id="many">+50 more</button><button class="btn" id="rst">Reset</button></div>
+      <div class="tiles">
+        <div><span class="lb">Samples drawn</span><span class="vv" id="tK">0</span></div>
+        <div><span class="lb">Latest estimate</span><span class="vv" id="tP">&mdash;</span></div>
+        <div id="tErrBox"><span class="lb">Off the truth by</span><span class="vv" id="tErr">&mdash;</span></div>
+        <div><span class="lb">Centre of the pile</span><span class="vv" id="tCtr">&mdash;</span></div>
+        <div><span class="lb">Margin of error (95%)</span><span class="vv" id="tMoe">&mdash;</span></div>
+        <div id="tCovBox"><span class="lb">Within MoE of truth</span><span class="vv" id="tCov">&mdash;</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem">Precision comes from <b>n</b>, not from <b>N</b>. A spoonful tells you about the pot whether the pot holds a litre or a swimming pool &mdash; provided you <b>stirred first</b>. Stirring is what randomness does.</div>
+      <div class="note"><b>Randomness is not a formality.</b> Switch to <b>Convenience sample</b> and slide n up to 2,000. The estimates get tighter and tighter &mdash; around the wrong number. A biased method does not become less wrong with more data; it becomes <b>more confidently wrong</b>.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- tiny seeded PRNG so every run of this page behaves identically ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+ /* ---- the made-up city: exactly 62% of households own a pet ---- */
+ var TRUTH=0.62;                 /* the parameter we are chasing */
+ var CONV_FRAC=0.30;             /* share of households a daytime call can reach */
+ var CONV_P=0.74;                /* pet ownership among only those households */
+ var NS=[10,15,20,30,40,50,75,100,150,200,300,400,500,750,1000,1500,2000];
+ var POPS=[20000,100000,1000000,10000000,100000000,330000000];
+ var POPL=['20 thousand','100 thousand','1 million','10 million','100 million','330 million'];
+
+ var ni=9,pi=2,mode='srs';
+ var est=[],last=null,strip=[],rs;
+ function reseed(){rs=mulberry32(4172026);}
+ reseed();
+
+ function n(){return NS[ni];}
+ /* the frame actually being sampled: its size M and its true proportion q */
+ function frame(){var N=POPS[pi];
+   if(mode==='srs')return{M:N,q:TRUTH};
+   return{M:Math.round(N*CONV_FRAC),q:CONV_P};}
+
+ /* SD of a sample proportion under simple random sampling WITHOUT replacement:
+    sqrt( q(1-q)/k ) * sqrt( (M-k)/(M-1) )   -- the second factor is the finite-population correction */
+ function seAt(k){var f=frame();return Math.sqrt(f.q*(1-f.q)/k)*Math.sqrt((f.M-k)/(f.M-1));}
+ function moeAt(k){return 1.96*seAt(k);}
+
+ /* exact simple random sample without replacement, done sequentially so a
+    population of 330 million never has to be built in memory */
+ function drawOne(){
+   var f=frame(),k=n(),rem=f.M,remK=Math.round(f.M*f.q),s=0,i,hit;
+   strip=[];
+   for(i=0;i<k;i++){
+     hit=rs()<remK/rem;
+     if(hit){s++;remK--;}
+     rem--;
+     if(i<120)strip.push(hit?1:0);
+   }
+   last=s/k;est.push(last);
+ }
+
+ function pts(v){return(v*100).toFixed(1);}
+ function sgn(v){return(v<0?'&minus;':'+')+Math.abs(v*100).toFixed(1);}
+
+ /* ================= chart 1 : where the estimates land ================= */
+ var LO=0.24,HI=1.00,B=76,BW=0.01;
+ var X0=24,X1=332,BASE=150,TOP=40;
+ function px(v){return X0+(v-LO)/(HI-LO)*(X1-X0);}
+ function bins(){
+   var c=[],j,b;for(j=0;j<B;j++)c.push(0);
+   for(j=0;j<est.length;j++){b=Math.floor((est[j]-LO)/BW);if(b<0)b=0;if(b>B-1)b=B-1;c[b]++;}
+   return c;
+ }
+ function drawHist(){
+   var s='',f=frame(),m=moeAt(n()),j,h,xl,mx=0,c=bins(),k=est.length;
+
+   /* the +/- margin-of-error band around whatever this method actually centres on */
+   var bl=px(Math.max(LO,f.q-m)),br=px(Math.min(HI,f.q+m));
+   s+='<rect x="'+bl.toFixed(1)+'" y="'+TOP+'" width="'+Math.max(1,br-bl).toFixed(1)+'" height="'+(BASE-TOP)+'" fill="#2f6f8a" opacity=".10"/>';
+
+   if(k){
+     for(j=0;j<B;j++)if(c[j]>mx)mx=c[j];
+     if(k<=80){
+       /* few enough to see one dot per sample stacking up */
+       var cap=Math.floor((BASE-TOP)/6.6);
+       for(j=0;j<B;j++){
+         if(!c[j])continue;
+         var cx=px(LO+(j+0.5)*BW),nn=Math.min(c[j],cap),q;
+         for(q=0;q<nn;q++)s+='<circle cx="'+cx.toFixed(1)+'" cy="'+(BASE-4-q*6.6).toFixed(1)+'" r="3.1" fill="#2f6f8a"/>';
+       }
+     }else{
+       for(j=0;j<B;j++){
+         if(!c[j])continue;
+         h=c[j]/mx*(BASE-TOP);xl=px(LO+j*BW);
+         s+='<rect x="'+(xl+.4).toFixed(1)+'" y="'+(BASE-h).toFixed(1)+'" width="'+Math.max(1.6,(X1-X0)/B-.8).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="#2f6f8a" rx="1"/>';
+       }
+     }
+   }
+
+   /* axis, ticks every 10 points, labels every 20 */
+   s+='<line x1="'+X0+'" y1="'+BASE+'" x2="'+X1+'" y2="'+BASE+'" stroke="#b7c7d0" stroke-width="1.4"/>';
+   for(j=30;j<=100;j+=10){
+     var tx=px(j/100);
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+BASE+'" x2="'+tx.toFixed(1)+'" y2="'+(BASE+4)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+     if(j===30||j===50||j===70||j===90)s+='<text x="'+tx.toFixed(1)+'" y="'+(BASE+15)+'" font-size="9.5" fill="#78868d" font-weight="600" text-anchor="middle">'+j+'%</text>';
+   }
+
+   /* the truth -- fixed, and never moves no matter what you do */
+   var tp=px(TRUTH);
+   s+='<line x1="'+tp.toFixed(1)+'" y1="'+(TOP-22)+'" x2="'+tp.toFixed(1)+'" y2="'+(BASE+4)+'" stroke="#1c4454" stroke-width="2" stroke-dasharray="5 4"/>';
+   s+='<text x="'+tp.toFixed(1)+'" y="'+(TOP-26)+'" font-size="10.5" font-weight="800" fill="#1c4454" text-anchor="middle">truth = 62%</text>';
+
+   /* in convenience mode, the number this method is actually homing in on */
+   if(mode==='con'){
+     var cp=px(CONV_P);
+     s+='<line x1="'+cp.toFixed(1)+'" y1="'+(TOP-8)+'" x2="'+cp.toFixed(1)+'" y2="'+BASE+'" stroke="#d1495b" stroke-width="2" stroke-dasharray="4 3"/>';
+     s+='<text x="'+cp.toFixed(1)+'" y="'+(TOP-12)+'" font-size="10" font-weight="800" fill="#b23145" text-anchor="middle">this method finds 74%</text>';
+   }
+
+   /* the latest estimate */
+   if(last!==null){
+     var bx=px(Math.max(LO,Math.min(HI,last)));
+     s+='<polygon points="'+bx.toFixed(1)+','+(BASE+19)+' '+(bx-6).toFixed(1)+','+(BASE+30)+' '+(bx+6).toFixed(1)+','+(BASE+30)+'" fill="#b8862f"/>';
+     /* keep the label inside the viewBox when the estimate lands at either extreme */
+     var la=(bx>X1-26)?'end':((bx<X0+26)?'start':'middle'),lxx=(la==='end')?X1:((la==='start')?X0:bx);
+     s+='<text x="'+lxx.toFixed(1)+'" y="'+(BASE+42)+'" font-size="11" font-weight="800" fill="#8a6a20" text-anchor="'+la+'">'+pts(last)+'%</text>';
+   }
+   $("hist").innerHTML=s;
+   $("histTitle").innerHTML=k?('Where '+k+' sample'+(k===1?'':'s')+' landed'):'Where the estimates land';
+ }
+
+ /* ================= chart 2 : precision vs sample size ================= */
+ var CX0=34,CX1=330,CBASE=130,CTOP=16,YMAX=32;
+ function cx(k){return CX0+(Math.log(k)-Math.log(10))/(Math.log(2000)-Math.log(10))*(CX1-CX0);}
+ function cy(p){return CBASE-p/YMAX*(CBASE-CTOP);}
+ function drawCurve(){
+   var s='',j,t,k,d='';
+   for(j=0;j<=4;j++){var g=j*8;
+     s+='<line x1="'+CX0+'" y1="'+cy(g).toFixed(1)+'" x2="'+CX1+'" y2="'+cy(g).toFixed(1)+'" stroke="#e7eef2" stroke-width="1"/>';
+     s+='<text x="'+(CX0-5)+'" y="'+(cy(g)+3.4).toFixed(1)+'" font-size="9" fill="#95a3aa" font-weight="600" text-anchor="end">'+g+'</text>';
+   }
+   s+='<text x="'+(CX0-5)+'" y="'+(CTOP-4)+'" font-size="8.6" fill="#95a3aa" font-weight="700" text-anchor="end">pts</text>';
+
+   /* the margin-of-error curve, computed point by point */
+   for(j=0;j<=120;j++){t=10*Math.pow(200,j/120);
+     d+=(j?' L':'M')+cx(t).toFixed(1)+' '+cy(moeAt(t)*100).toFixed(1);}
+   s+='<path d="'+d+'" fill="none" stroke="#2f6f8a" stroke-width="2.4" stroke-linejoin="round"/>';
+
+   /* in convenience mode the bias sits underneath as a floor that n never lowers */
+   if(mode==='con'){
+     var bp=(CONV_P-TRUTH)*100;
+     s+='<line x1="'+CX0+'" y1="'+cy(bp).toFixed(1)+'" x2="'+CX1+'" y2="'+cy(bp).toFixed(1)+'" stroke="#d1495b" stroke-width="2" stroke-dasharray="5 4"/>';
+     s+='<text x="'+(CX1-2)+'" y="'+(cy(bp)-5).toFixed(1)+'" font-size="9.5" font-weight="800" fill="#b23145" text-anchor="end">bias = 12.0 pts, whatever n you choose</text>';
+   }
+
+   /* x axis */
+   s+='<line x1="'+CX0+'" y1="'+CBASE+'" x2="'+CX1+'" y2="'+CBASE+'" stroke="#b7c7d0" stroke-width="1.4"/>';
+   var tk=[10,30,100,300,1000,2000];
+   for(j=0;j<tk.length;j++){var xx=cx(tk[j]),ta=(j===0)?'start':((j===tk.length-1)?'end':'middle');
+     s+='<line x1="'+xx.toFixed(1)+'" y1="'+CBASE+'" x2="'+xx.toFixed(1)+'" y2="'+(CBASE+4)+'" stroke="#b7c7d0" stroke-width="1.2"/>';
+     s+='<text x="'+xx.toFixed(1)+'" y="'+(CBASE+15)+'" font-size="9.2" fill="#78868d" font-weight="600" text-anchor="'+ta+'">'+tk[j]+'</text>';}
+   s+='<text x="'+((CX0+CX1)/2)+'" y="'+(CBASE+31)+'" font-size="9.6" fill="#95a3aa" font-weight="700" text-anchor="middle">sample size n  (log scale)</text>';
+
+   /* where you are standing right now */
+   k=n();var mx=cx(k),my=cy(moeAt(k)*100);
+   s+='<line x1="'+mx.toFixed(1)+'" y1="'+CTOP+'" x2="'+mx.toFixed(1)+'" y2="'+CBASE+'" stroke="#b8862f" stroke-width="1.6" stroke-dasharray="3 3"/>';
+   s+='<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="4.6" fill="#b8862f" stroke="#fffdf9" stroke-width="1.8"/>';
+   var lab='n = '+k+' → ±'+(moeAt(k)*100).toFixed(1)+' pts',anc=(mx>CX1-100)?'end':'start',lx=(anc==='end')?mx-8:mx+8;
+   s+='<text x="'+lx.toFixed(1)+'" y="'+Math.max(CTOP+10,my-10).toFixed(1)+'" font-size="10.5" font-weight="800" fill="#8a6a20" text-anchor="'+anc+'">'+lab+'</text>';
+   $("curve").innerHTML=s;
+ }
+
+ /* ================= the households you actually knocked on ================= */
+ function drawStrip(){
+   var s='',j,c,r;
+   for(j=0;j<120;j++){
+     c=j%40;r=Math.floor(j/40);
+     var col=(j<strip.length)?(strip[j]?'#1c4454':'#dfe8ed'):'#f2f6f8';
+     s+='<rect x="'+(6+c*8.2).toFixed(1)+'" y="'+(6+r*8.2).toFixed(1)+'" width="6.6" height="6.6" rx="1.5" fill="'+col+'"/>';
+   }
+   $("strip").innerHTML=s;
+   if(!strip.length){$("stripCap").innerHTML='Press &ldquo;Draw one sample&rdquo; to knock on some doors.';return;}
+   var yes=0;for(j=0;j<strip.length;j++)yes+=strip[j];
+   $("stripCap").innerHTML='<b style="color:#1c4454">'+yes+'</b> of these '+strip.length+' households own a pet'+(n()>120?' &mdash; the first 120 of your '+n().toLocaleString()+'.':'.')+' Real people, one question each.';
+ }
+
+ /* ================= readouts ================= */
+ function render(){
+   var k=est.length,f=frame(),m=moeAt(n()),err=(last===null)?null:last-TRUTH,j;
+
+   $("tK").innerHTML=k;
+   $("tP").innerHTML=(last===null)?'&mdash;':pts(last)+'%';
+   $("tMoe").innerHTML='&plusmn;'+(m*100).toFixed(1)+' pts';
+
+   var eb=$("tErrBox");eb.className='';
+   if(err===null){$("tErr").innerHTML='&mdash;';}
+   else{$("tErr").innerHTML=sgn(err)+' pts';
+     eb.className=(Math.abs(err)<=m)?'hit':(Math.abs(err)>2*m?'far':'');}
+
+   if(k){var sm=0;for(j=0;j<k;j++)sm+=est[j];sm/=k;$("tCtr").innerHTML=pts(sm)+'%';}
+   else $("tCtr").innerHTML='&mdash;';
+
+   var cb=$("tCovBox");cb.className='';
+   if(k){var inb=0;for(j=0;j<k;j++)if(Math.abs(est[j]-TRUTH)<=m)inb++;
+     var cov=inb/k*100;$("tCov").innerHTML=Math.round(cov)+'%';
+     cb.className=(k>=20)?((cov>=85)?'hit':(cov<60?'far':'')):'';}
+   else $("tCov").innerHTML='&mdash;';
+
+   /* stage */
+   var st=$("stage");
+   if(last===null){st.style.background='var(--teal)';
+     st.innerHTML='Ask '+n().toLocaleString()+' of '+POPL[pi]+' households<small>the true answer is 62% &mdash; can a sample find it?</small>';}
+   else{var a=Math.abs(err);
+     st.style.background=(a<=m)?'var(--green)':((a<=2*m)?'var(--gold)':'var(--coral)');
+     st.innerHTML='Your estimate: '+pts(last)+'%<small>n = '+n().toLocaleString()+' &middot; truth = 62% &middot; off by '+Math.abs(err*100).toFixed(1)+' points ('+(a/seAt(n())).toFixed(1)+' standard errors)</small>';}
+
+   /* info */
+   var h='',small=(n()*Math.min(f.q,1-f.q)<10);
+   if(last===null){
+     h='<span class="n">The one experiment you can never run</span>In this made-up city we are allowed to know the answer: <b>exactly 62%</b> of households own a pet. In real research that number is invisible &mdash; which is why you cannot check whether sampling worked. Here you can. Draw a sample and see how close '+n().toLocaleString()+' households get you.'+
+       '<div class="dd">Notice what you are <b>not</b> asked to set: how many households the city has. Try moving the <b>City size</b> slider all the way to 330 million and watch the margin of error barely twitch.</div>';
+   }else if(mode==='srs'){
+     var a2=Math.abs(err*100);
+     h='<span class="n">'+(a2<0.05?'Dead on &mdash; this time':'Off by '+a2.toFixed(1)+' percentage points')+'</span>'+
+       'Your '+n().toLocaleString()+' households came back at <b>'+pts(last)+'%</b>; the city is at <b>62%</b>. The gap is not a mistake &mdash; the sample was genuinely random. It is <b>sampling variability</b>, and unlike a mistake it is <b>predictable</b>: for this n, estimates typically stray about <b>'+(seAt(n())*100).toFixed(1)+' points</b>, and about 95% of them land within <b>&plusmn;'+(m*100).toFixed(1)+' points</b> of the truth.';
+     if(k>=15){
+       var sm2=0;for(j=0;j<k;j++)sm2+=est[j];sm2/=k;
+       var ss=0;for(j=0;j<k;j++)ss+=(est[j]-sm2)*(est[j]-sm2);
+       var sd=Math.sqrt(ss/(k-1));
+       h+='<div class="dd">Look at the pile of '+k+' estimates. It is centred on <b>'+pts(sm2)+'%</b> &mdash; essentially the truth, because a random sample is <b>right on average</b>, with no tendency to run high or low. Its spread is <b>'+(sd*100).toFixed(1)+' points</b>, against the <b>'+(seAt(n())*100).toFixed(1)+'</b> the formula predicted. Sampling is not just approximately right; it is <b>wrong in a way we can measure in advance</b>. That is the whole reason it is trustworthy.</div>';
+     }else{
+       h+='<div class="dd">Press <b>+50 more</b> to see the estimates stop being a scatter and become a shape.</div>';
+     }
+     if(small)h+='<div class="dd">At n = '+n()+' the bell-curve approximation behind that &plusmn; figure is still rough, so treat the 95% as a loose guide until n is a few dozen.</div>';
+     h+='<div class="loc">The 95% belongs to <b>the procedure</b>, not to any one interval you build from one sample. &ldquo;95% confident&rdquo; means: repeat this whole exercise forever and 95% of the intervals would cover the truth. It never means there is a 95% chance the truth sits inside the interval you happen to be holding.</div>';
+   }else{
+     h='<span class="n">Tight, confident, and wrong</span>'+
+       'Only about 30% of households answer a daytime call, and pet owners are more likely to be home: among the reachable ones, <b>74%</b> own a pet. So this method is not estimating the city &mdash; it is estimating that reachable slice, and it does so <b>beautifully</b>. Your estimate came in at <b>'+pts(last)+'%</b>, <b>'+Math.abs(err*100).toFixed(1)+' points</b> from the real answer.';
+     if(k>=15){
+       var sm3=0;for(j=0;j<k;j++)sm3+=est[j];sm3/=k;
+       h+='<div class="dd">Your '+k+' estimates are piling up around <b>'+pts(sm3)+'%</b>, not 62%. Every extra household narrows that pile &mdash; onto the wrong centre. This gap is <b>bias</b>, and it is a completely different animal from sampling variability: variability shrinks like 1/&radic;n, while bias does not move at all.</div>';
+     }
+     h+='<div class="loc">This is why &ldquo;we surveyed 50,000 people&rdquo; is not, by itself, reassuring. A huge biased sample reports a <b>tiny margin of error around the wrong number</b> &mdash; and the small margin of error makes it look more credible, not less. Ask how people were chosen before you ask how many.</div>';
+   }
+   $("info").innerHTML=h;
+   $("lgdBias").style.display=(mode==='con')?'inline':'none';
+
+   drawHist();drawCurve();drawStrip();
+ }
+
+ function reset(){est=[];last=null;strip=[];reseed();render();}
+ function go(times){for(var t=0;t<times;t++)drawOne();render();}
+
+ $("one").onclick=function(){go(1);};
+ $("many").onclick=function(){go(50);};
+ $("rst").onclick=reset;
+ $("nSl").oninput=function(){ni=+this.value;$("nVal").innerHTML=NS[ni].toLocaleString();reset();};
+ $("pSl").oninput=function(){pi=+this.value;$("pVal").innerHTML=POPL[pi];reset();};
+ var sg=$("seg").getElementsByTagName('button');
+ for(var i=0;i<sg.length;i++){sg[i].onclick=function(){
+   for(var j=0;j<sg.length;j++)sg[j].className='';
+   this.className='on';mode=this.getAttribute('data-v');reset();};}
+
+ render();
+})();
+</script>
+</body>
+</html>

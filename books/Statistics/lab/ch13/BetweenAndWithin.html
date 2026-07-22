@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Between and Within</title>
+<meta name="description" content="Drag each group's mean up or down and watch the F statistic respond as the between-group and within-group variances trade places.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:9px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:138px;line-height:1.3;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.g input[type=range]::-webkit-slider-thumb{background:#b8862f;} .sl.g input[type=range]::-moz-range-thumb{background:#b8862f;}
+.sl.r input[type=range]::-webkit-slider-thumb{background:#d1495b;} .sl.r input[type=range]::-moz-range-thumb{background:#d1495b;}
+.sl .nv{font-size:15px;font-weight:800;color:var(--teal-dk);min-width:74px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;line-height:1.3;}
+.tiles div.warn{border-color:#e2adb7;background:#fdf1f3;} .tiles div.warn .vv{color:#b23145;}
+.tiles div.good{border-color:#b6d8c4;background:#f0f8f3;} .tiles div.good .vv{color:#237a45;}
+.tiles div.gold{border-color:#ecd9ac;background:#fbf3e2;} .tiles div.gold .vv{color:#8a6a20;}
+.cap{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.55;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.sent{border:1px solid #bcd6e2;border-left:5px solid var(--teal);background:#eef6f9;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:13.2px;line-height:1.6;color:var(--soft);}
+.sent b{color:var(--teal-dk);}
+.sent .big{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.sent.warn{border-color:#e2adb7;border-left-color:#d1495b;background:#fdf1f3;} .sent.warn .big{color:#b23145;}
+.sent.good{border-color:#b6d8c4;border-left-color:#2f9e5b;background:#f0f8f3;} .sent.good .big{color:#237a45;}
+.sent.gold{border-color:#ecd9ac;border-left-color:#b8862f;background:#fbf3e2;} .sent.gold .big{color:#8a6a20;}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.strip div{border:1px solid var(--line);border-radius:10px;padding:7px 8px;background:#fff;text-align:center;}
+.strip .lb{display:block;font-size:9.1px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.strip .vv{display:block;font-size:14.5px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.strip div.warn{border-color:#e2adb7;background:#fdf1f3;} .strip div.warn .vv{color:#b23145;}
+.strip div.good{border-color:#b6d8c4;background:#f0f8f3;} .strip div.good .vv{color:#237a45;}
+table.tv{width:100%;border-collapse:collapse;margin-top:9px;font-variant-numeric:tabular-nums;}
+table.tv th,table.tv td{padding:6px 4px;font-size:11.8px;text-align:right;border-bottom:1px solid var(--line);color:var(--soft);font-weight:600;}
+table.tv th{font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.3;}
+table.tv td:first-child,table.tv th:first-child{text-align:left;font-weight:800;color:var(--teal-dk);}
+table.tv tr.tot td{border-bottom:none;border-top:2px solid #cfe0e8;color:var(--teal-dk);}
+table.tv .ch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;}
+.mnem,.note{font-size:12px;border-radius:8px;padding:9px 12px;margin-top:10px;line-height:1.6;}
+.mnem{color:#8a6a20;background:#fbf3e2;border:1px solid #ecd9ac;} .mnem b{color:#5a4212;}
+.note{color:#8a2a3a;background:#fae5e8;border:1px solid #f0c9d0;} .note b{color:#7a1f2c;}
+.list .it .s{display:block;margin-top:2px;line-height:1.35;}
+.list .it .nm{line-height:1.4;}
+.modeseg + .cap{margin-top:2px;}
+.wrap > div{min-width:0;}
+.tw{overflow-x:auto;}
+.hnd{cursor:ns-resize;touch-action:none;}
+.hnd:focus{outline:none;} .hnd:focus .mh{stroke:#12303c;stroke-width:2.6;}
+#dots{-webkit-user-select:none;user-select:none;}
+@media (max-width:560px){
+  .tiles,.strip{grid-template-columns:repeat(2,1fr);}
+  .sl label{min-width:0;flex:0 0 96px;white-space:normal;}
+  .sl .nv{min-width:56px;font-size:13.5px;}
+  .seg{flex-wrap:wrap;} .seg button{flex:1 0 46%;}
+  .modeseg{flex-wrap:wrap;} .modeseg button{flex:1 0 100%;}
+  table.tv th,table.tv td{padding:5px 2px;font-size:11px;}
+}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 13</div>
+  <h1>Between and Within</h1>
+  <div class="intro">Three groups come back with three different averages. They always will &mdash; averages taken from different people never land on the same number, even when nothing at all distinguishes the groups. So the useful question is never <i>are the group means different?</i> It is <b>are they further apart than the ordinary churn inside the groups can explain?</b> That comparison needs two numbers, not one: a measure of how far the group means sit from the overall average, and a measure of how much individuals scatter around their own group's average. Analysis of variance builds exactly those two, puts the first over the second, and calls the result <b>F</b>. Below, the group means are handles you can grab. <b>Drag them apart</b> and only the top of the ratio moves. Widen the scatter with the slider on the right and only the bottom moves. Everything &mdash; the sums of squares, the table, the p&#8209;value, the curve &mdash; recomputes from the arrangement you build.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Grab a mean and move it</h2>
+      <div class="cap" style="margin-top:2px;">Each dot is one person's outcome; each thick bar is that group's <b>mean</b>, and each bar is a handle &mdash; <b>drag it up or down</b> (or tab to it and use the arrow keys). The dots travel rigidly with their bar, so dragging changes how far apart the groups sit <b>without disturbing the scatter inside any of them</b>. That is the whole point: you are moving the <i>between</i> part while holding the <i>within</i> part perfectly still, and F responds to that alone. The dashed line is the grand mean of everyone pooled together.</div>
+      <div class="modeseg" id="viewSeg">
+        <button data-v="between">Show the between part</button>
+        <button data-v="within">Show the within part</button>
+        <button data-v="total">Show total variation</button>
+      </div>
+      <div class="cap" id="viewcap"></div>
+      <svg viewBox="0 0 480 300" id="dots" aria-label="dot plot of every observation by group, with a draggable mean bar for each group and the grand mean marked"></svg>
+      <div class="lgd">
+        <span><i style="background:#b8862f"></i>group mean vs grand mean &mdash; between</span>
+        <span><i style="background:#d1495b"></i>person vs own group mean &mdash; within</span>
+        <span><i style="background:#8fa8b4"></i>grand mean</span>
+      </div>
+      <div class="row"><button class="btn solid" id="bnew">Draw a new sample</button><button class="btn" id="bflat">Line the means up</button><button class="btn" id="bfan">Fan them out</button></div>
+      <div class="sent" id="dotsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>One ratio, assembled</h2>
+      <div class="cap" style="margin-top:2px;">Both halves start as <b>sums of squared deviations</b>, and the two of them add up exactly to the total spread of all the data around the grand mean: <b>SS<sub>total</sub> = SS<sub>between</sub> + SS<sub>within</sub></b>. That identity is the reason the method is called analysis of <i>variance</i> rather than analysis of means. But sums of squares cannot be compared directly &mdash; one is built from k numbers, the other from N &mdash; so each is divided by its own degrees of freedom to become a <b>mean square</b>, which is an honest average squared deviation. F is the ratio of those two averages.</div>
+      <svg viewBox="0 0 480 268" id="decomp" aria-label="the total sum of squares split into between and within, each divided by its degrees of freedom to give mean squares, and their ratio F"></svg>
+      <div class="sent" id="decsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>How surprising is that F?</h2>
+      <div class="cap" style="margin-top:2px;">Here is the quiet fact that makes the whole method work. <b>MS<sub>within</sub> estimates the common within-group variance no matter what</b> &mdash; whether the groups truly differ or not, it just pools the scatter inside them. <b>MS<sub>between</sub> estimates that same variance <i>only if</i> every population mean is equal</b>; any real separation inflates it. So under the null hypothesis the two are estimating the same thing and their ratio hovers around 1, and the curve below is the exact distribution that ratio follows, with <b>df<sub>1</sub> = k &minus; 1</b> on top and <b>df<sub>2</sub> = N &minus; k</b> underneath. Shaded is the p&#8209;value: the chance of an F this big or bigger when nothing separates the groups.</div>
+      <svg viewBox="0 0 480 214" id="dist" aria-label="the F distribution for the current degrees of freedom, with the observed F marked and the upper tail shaded"></svg>
+      <div class="lgd">
+        <span><i style="background:#cfdde4"></i>F when all population means are equal</span>
+        <span><i style="background:#e6b3bd"></i>this big or bigger &mdash; the p&#8209;value</span>
+        <span><i style="background:#1c4454"></i>your F</span>
+        <span><i style="background:#b8862f"></i>reject beyond here</span>
+      </div>
+      <div class="sent" id="distsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Run the whole study a thousand times</h2>
+      <div class="cap" style="margin-top:2px;">Until now the handles have been <b>sample</b> means you arranged by hand. Promote them: treat the values you dragged them to as the <b>true population means</b>, then draw a fresh sample of n people from each group, compute F, throw the data away and keep only that number. The bars are those F values. The dark curve is the F distribution for these degrees of freedom &mdash; drawn from the formula, fitted to nothing, and correct <b>only when the true means are all equal</b>. Line the means up and the bars settle onto the curve with about one run in twenty past the cut&#8209;off. Fan them apart and the whole pile marches right, off the curve. That march is <b>power</b>.</div>
+      <svg viewBox="0 0 480 240" id="hist" aria-label="histogram of F values from many simulated studies with the null F curve overlaid"></svg>
+      <div class="lgd">
+        <span><i style="background:#bcd9e6"></i>simulated studies</span>
+        <span><i style="background:#1c4454"></i>the null curve, not fitted</span>
+        <span><i style="background:#b8862f"></i>rejection cut&#8209;off</span>
+      </div>
+      <div class="strip">
+        <div><span class="lb">Studies<br>run</span><span class="vv" id="rN">0</span></div>
+        <div><span class="lb">Mean F<br>observed</span><span class="vv" id="rM">&mdash;</span></div>
+        <div><span class="lb">Mean F<br>under the null</span><span class="vv" id="rT">&mdash;</span></div>
+        <div><span class="lb" id="rPl">Share<br>rejecting</span><span class="vv" id="rP">&mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="run1">Run 1,000 studies</button><button class="btn" id="run2">Add 4,000 more</button><button class="btn" id="rrs">Reset</button></div>
+      <div class="cap" id="histcap"></div>
+    </div>
+  </div>
+
+  <div>
+    <div id="stage">A trial with several arms<small>drag a mean bar on the left to begin</small></div>
+
+    <div class="card">
+      <h2>The study you are running</h2>
+      <div class="cap" style="margin-top:2px;">A trial with <b>k</b> arms and <b>n</b> people in each. The outcome is a symptom score six weeks in, where lower is better. Move these and the arrangement on the left rebuilds around them.</div>
+      <div class="hd">The design</div>
+      <div class="sl"><label>arms in the trial, k</label><input type="range" id="sK" min="2" max="6" step="1" value="3" aria-label="number of groups"><span class="nv" id="vK">3</span></div>
+      <div class="sl"><label>people per arm, n</label><input type="range" id="sN" min="3" max="40" step="1" value="8" aria-label="sample size within each group"><span class="nv" id="vN">8</span></div>
+      <div class="hd">The between part &mdash; the top of the ratio</div>
+      <div class="sl g"><label>fan the means apart by</label><input type="range" id="sD" min="0" max="22" step="0.5" value="6" aria-label="how far apart to spread the group means"><span class="nv" id="vD">6.0</span></div>
+      <div class="cap">This slider re-arranges every handle into an even fan. Dragging a single bar afterwards moves only that one, and the slider re-reads itself from whatever you built.</div>
+      <div class="hd">The within part &mdash; the bottom of the ratio</div>
+      <div class="sl r"><label>scatter inside each arm, s</label><input type="range" id="sS" min="2" max="16" step="0.5" value="8" aria-label="standard deviation within each group"><span class="nv" id="vS">8.0</span></div>
+      <div class="sl r"><label>make the spreads unequal</label><input type="range" id="sU" min="0" max="150" step="1" value="0" aria-label="how unequal the group standard deviations are"><span class="nv" id="vU">off</span></div>
+      <div class="hd">Jump to a situation worth seeing</div>
+      <div class="seg" id="preSeg">
+        <button data-v="0">Nothing there<small>means identical</small></button>
+        <button data-v="1">Clear separation<small>wide gaps, tight arms</small></button>
+        <button data-v="2">Same gaps, noisy<small>scatter swallows them</small></button>
+        <button data-v="3">Same gaps, more people<small>n = 30</small></button>
+        <button data-v="4">One arm apart<small>five agree, one does not</small></button>
+      </div>
+      <div class="row"><button class="btn" id="brst">Reset everything</button></div>
+    </div>
+
+    <div class="card">
+      <h2>This arrangement, computed live</h2>
+      <div class="tiles">
+        <div><span class="lb">People<br>total N</span><span class="vv" id="tN">&mdash;</span><span class="sub" id="tNs">&nbsp;</span></div>
+        <div><span class="lb">Grand<br>mean</span><span class="vv" id="tG">&mdash;</span><span class="sub">all N pooled</span></div>
+        <div><span class="lb">df<br>between</span><span class="vv" id="tD1">&mdash;</span><span class="sub">k &minus; 1</span></div>
+        <div><span class="lb">df<br>within</span><span class="vv" id="tD2">&mdash;</span><span class="sub">N &minus; k</span></div>
+        <div class="gold"><span class="lb">MS<br>between</span><span class="vv" id="tMB">&mdash;</span><span class="sub">SS<sub>b</sub> &divide; df<sub>1</sub></span></div>
+        <div><span class="lb">MS<br>within</span><span class="vv" id="tMW">&mdash;</span><span class="sub">SS<sub>w</sub> &divide; df<sub>2</sub></span></div>
+        <div><span class="lb">F<br>statistic</span><span class="vv" id="tF">&mdash;</span><span class="sub">MS<sub>b</sub> &divide; MS<sub>w</sub></span></div>
+        <div><span class="lb">Reject<br>beyond</span><span class="vv" id="tC">&mdash;</span><span class="sub">&alpha; = 0.05</span></div>
+        <div id="bxP"><span class="lb">p&#8209;value<br>upper tail</span><span class="vv" id="tP">&mdash;</span><span class="sub" id="tPs">&nbsp;</span></div>
+        <div><span class="lb">&eta;&sup2; share<br>explained</span><span class="vv" id="tE">&mdash;</span><span class="sub">SS<sub>b</sub> &divide; SS<sub>tot</sub></span></div>
+        <div><span class="lb">Widest gap<br>between arms</span><span class="vv" id="tR">&mdash;</span><span class="sub" id="tRs">&nbsp;</span></div>
+        <div><span class="lb">Pooled SD<br>&radic;MS<sub>within</sub></span><span class="vv" id="tSD">&mdash;</span><span class="sub">the common scatter</span></div>
+      </div>
+      <div class="sent" id="sent"></div>
+      <div class="hd">The table you would actually report</div>
+      <div class="tw"><table class="tv"><thead><tr><th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p</th></tr></thead><tbody id="atab"></tbody></table></div>
+      <div class="cap">Every cell above is computed from the dots on the left, and every row is forced to be consistent: the two SS values add to the total, and the two df values add to N &minus; 1. If a printed table ever fails those two additions, something has been mistyped.</div>
+    </div>
+
+    <div class="card">
+      <h2>Is the F test entitled to this data?</h2>
+      <div class="cap" style="margin-top:2px;">Three conditions sit behind the curve. <b>Independence</b> is a fact about how the data were collected and cannot be recovered from the numbers &mdash; one person's outcome must not sway another's, which rules out measuring the same person in two arms. <b>Roughly normal within each arm</b> matters most when the arms are small; with a healthy n the sampling behaviour of the means smooths out anyway. <b>Comparable spreads</b> is the one you can inspect here: MS<sub>within</sub> pools every arm into a single estimate, which only makes sense if there is a single scatter to estimate. The working rule of thumb is that the largest group SD should be less than about twice the smallest.</div>
+      <div class="strip">
+        <div id="cA"><span class="lb">Smallest<br>arm SD</span><span class="vv" id="cAv">&mdash;</span></div>
+        <div id="cB"><span class="lb">Largest<br>arm SD</span><span class="vv" id="cBv">&mdash;</span></div>
+        <div id="cC"><span class="lb">Largest &divide;<br>smallest</span><span class="vv" id="cCv">&mdash;</span></div>
+        <div id="cD"><span class="lb">People<br>per arm</span><span class="vv" id="cDv">&mdash;</span></div>
+      </div>
+      <div class="sent" id="condsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Say it right</h2>
+      <div class="cap" style="margin-top:2px;">Nine things people say after an ANOVA. Four of them are correct. Tap each one.</div>
+      <div class="list" id="claims"></div>
+      <div id="info"><span class="n">Pick a statement</span>Each one is either a fair reading of F or a habit worth breaking. The four correct ones are the sentences you can safely write down.</div>
+    </div>
+
+    <div class="card">
+      <h2>What to carry out of this section</h2>
+      <div class="mnem"><b>F is a signal-to-noise ratio, and you can see both halves on screen.</b> The numerator asks how far the group means have wandered from the grand mean; the denominator asks how far individuals wander from their own group's mean. Neither number means anything alone. A gap of six points between arms is enormous if people within an arm sit within a point or two of each other, and invisible if they are scattered over thirty. That is why dragging the bars apart and widening the scatter can leave F exactly where it was &mdash; the two moves cancel. F only ever reports the <i>comparison</i>.</div>
+      <div class="mnem"><b>Under the null, F sits near 1 &mdash; not near 0.</b> Both mean squares are estimating the same variance when no arm truly differs, so their ratio is a number divided by a slightly different estimate of itself. Its long-run average is df<sub>2</sub>&nbsp;/&nbsp;(df<sub>2</sub>&nbsp;&minus;&nbsp;2), a hair above 1. This is the single most useful sanity check you have: an F of 0.8 is not weak evidence of a difference, it is a perfectly ordinary null result, and an F below 1 means the group means are actually closer together than chance alone typically puts them.</div>
+      <div class="mnem"><b>Only the upper tail is used, and not because the alternative is one-sided.</b> Every kind of separation between arms &mdash; in any direction, in any arm &mdash; makes the numerator larger, because the deviations from the grand mean are squared before they are added. There is no arrangement of means that produces a small F for an interesting reason. So a big F is the only signal of difference there is, and the lower tail is not a rejection region.</div>
+      <div class="note"><b>Sample size lives in the numerator, and it changes the verdict without changing the world.</b> SS<sub>between</sub> is n multiplied by the squared distances between the means, so holding the arrangement fixed and adding people drives F up roughly in proportion to n. Load <i>Same gaps, more people</i> and then drag n back down to 5: the arms are exactly as far apart as they were, the scatter is identical, and the test now shrugs. A large p&#8209;value never means the arms are the same. It means this study could not resolve the difference at hand. Effect size &mdash; &eta;&sup2;, the share of total variation the grouping accounts for &mdash; is the number that stays put when n moves, which is exactly why it belongs beside every F you report.</div>
+      <div class="note"><b>A significant F does not say which arms differ.</b> ANOVA is an <b>omnibus</b> test: one question, "is anything going on among these means?", answered with one number. It will not tell you that arm A beat arm C, and reading the largest and smallest means off the chart after the fact is exactly the fishing expedition the omnibus test was designed to protect you from. Follow-up comparisons &mdash; Tukey's procedure and its relatives &mdash; exist precisely because they adjust for how many pairs you are inspecting. Which is also why running a separate t&#8209;test on every pair is not a substitute: with six arms there are fifteen pairs, and at 5% apiece the chance of at least one false alarm climbs above 50%.</div>
+      <div class="note"><b>Nor does it say the grouping caused anything.</b> F compares variances; it knows nothing about how people ended up in the arms they are in. If they were randomly assigned, the difference is attributable to the assignment, and a causal reading is earned by the design rather than by the statistic. If the groups were merely observed &mdash; people who already differ, sorted by something they chose &mdash; then anything that travels with the grouping is a live alternative explanation, and the same F is the same number carrying far less freight.</div>
+      <div class="cap">One thing worth doing before you leave. Press <i>Line the means up</i>, so every population mean is genuinely identical, and run five thousand studies. The bars land on the curve, the mean F settles near 1, and roughly one study in twenty crosses the rejection line anyway. Nothing is wrong with those studies. They are honest samples from a world with no difference in it, and they are the advertised, agreed-upon price of drawing a line at 5%.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ================= seeded PRNG (mulberry32) — reproducible every session ================= */
+ var SEED0=20260214, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ function nrm(){                                  /* standard normal, Box–Muller */
+   var u=rnd(); if(u<1e-12) u=1e-12;
+   var v=rnd();
+   return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);
+ }
+
+ /* ================= special functions ================= */
+ function lgam(xx){
+   var cof=[76.18009172947146,-86.50532032941677,24.01409824083091,
+            -1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+   var x=xx,y=xx,tmp=x+5.5,ser=1.000000000190015,j;
+   tmp-=(x+0.5)*Math.log(tmp);
+   for(j=0;j<6;j++){ y+=1; ser+=cof[j]/y; }
+   return -tmp+Math.log(2.5066282746310005*ser/x);
+ }
+ function lbeta(a,b){ return lgam(a)+lgam(b)-lgam(a+b); }
+ /* continued fraction for the incomplete beta (Lentz) */
+ function betacf(a,b,x){
+   var MAXIT=400, EPS=3e-16, FPMIN=1e-300;
+   var qab=a+b, qap=a+1, qam=a-1;
+   var c=1, d=1-qab*x/qap;
+   if(Math.abs(d)<FPMIN) d=FPMIN;
+   d=1/d;
+   var h=d,m,m2,aa,del;
+   for(m=1;m<=MAXIT;m++){
+     m2=2*m;
+     aa=m*(b-m)*x/((qam+m2)*(a+m2));
+     d=1+aa*d; if(Math.abs(d)<FPMIN) d=FPMIN;
+     c=1+aa/c; if(Math.abs(c)<FPMIN) c=FPMIN;
+     d=1/d; h*=d*c;
+     aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+     d=1+aa*d; if(Math.abs(d)<FPMIN) d=FPMIN;
+     c=1+aa/c; if(Math.abs(c)<FPMIN) c=FPMIN;
+     d=1/d; del=d*c; h*=del;
+     if(Math.abs(del-1)<EPS) break;
+   }
+   return h;
+ }
+ function betai(a,b,x){                            /* regularised I_x(a,b) */
+   if(x<=0) return 0;
+   if(x>=1) return 1;
+   var bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));
+   if(x<(a+1)/(a+b+2)) return bt*betacf(a,b,x)/a;
+   return 1-bt*betacf(b,a,1-x)/b;
+ }
+ /* F distribution: cdf, upper tail, density, critical value */
+ function fcdf(f,d1,d2){ if(f<=0) return 0; return betai(d1/2,d2/2,d1*f/(d1*f+d2)); }
+ function fsf(f,d1,d2){  if(f<=0) return 1; return betai(d2/2,d1/2,d2/(d1*f+d2)); }
+ function fpdf(f,d1,d2){
+   if(f<=0) return d1>2?0:1e9;
+   var lp=(d1/2)*Math.log(d1/d2)+(d1/2-1)*Math.log(f)
+         -((d1+d2)/2)*Math.log(1+d1*f/d2)-lbeta(d1/2,d2/2);
+   return Math.exp(lp);
+ }
+ function critF(d1,d2,al){
+   var lo=1e-5, hi=400, i, mid;
+   for(i=0;i<160;i++){ mid=(lo+hi)/2; if(fsf(mid,d1,d2)>al) lo=mid; else hi=mid; }
+   return (lo+hi)/2;
+ }
+
+ /* ================= formatting ================= */
+ function f1(x){ return (Math.round(x*10)/10).toFixed(1); }
+ function f2(x){ return (Math.round(x*100)/100).toFixed(2); }
+ function f3(x){ return (Math.round(x*1000)/1000).toFixed(3); }
+ function pTxt(p){
+   if(p<0.0001) return '&lt; 0.0001';
+   if(p<0.001)  return p.toFixed(5);
+   return p.toFixed(4);
+ }
+ function niceStep(x){
+   var e=Math.pow(10,Math.floor(Math.log(x)/Math.LN10)), m=x/e;
+   var s=m<1.5?1:(m<3?2:(m<7?5:10));
+   return s*e;
+ }
+
+ /* ================= state ================= */
+ var BASE=60, MLIM=26;                    /* means live in BASE ± MLIM */
+ var COL=['#2f6f8a','#b8862f','#2f9e5b','#7a5a8a','#d1495b','#2f6f9f'];
+ var NAME=['Arm A','Arm B','Arm C','Arm D','Arm E','Arm F'];
+ var K=3, N=8, SPR=6, SD=8, IMB=0;
+ var MEAN=[], Z=[], JIT=[], VIEW='between';
+ var SIM=[], simN=0, simRej=0, simSum=0;
+ var kbFocus=-1, dragJ=-1;
+
+ /* group standard deviations: equal at IMB = 0, fanned in log space above it */
+ function sds(){
+   var out=[],j,t,u=IMB/100;
+   for(j=0;j<K;j++){
+     t=(K===1)?0.5:j/(K-1);
+     out.push(SD*Math.exp((t-0.5)*2*Math.log(1+u)));
+   }
+   return out;
+ }
+
+ /* residuals, standardised so each group has sample mean exactly 0 and sample SD exactly 1 */
+ function newSample(){
+   Z=[]; JIT=[];
+   var j,i,a,m,ss,sd,jt;
+   for(j=0;j<K;j++){
+     a=[]; for(i=0;i<N;i++) a.push(nrm());
+     m=0; for(i=0;i<N;i++) m+=a[i]; m/=N;
+     for(i=0;i<N;i++) a[i]-=m;
+     ss=0; for(i=0;i<N;i++) ss+=a[i]*a[i];
+     sd=Math.sqrt(ss/(N-1)); if(sd<1e-9) sd=1;
+     for(i=0;i<N;i++) a[i]/=sd;
+     Z.push(a);
+     jt=[]; for(i=0;i<N;i++) jt.push(rnd()-0.5);
+     JIT.push(jt);
+   }
+ }
+ function fanMeans(){
+   MEAN=[];
+   var j,t;
+   for(j=0;j<K;j++){
+     t=(K===1)?0:(j-(K-1)/2)/Math.max(1,(K-1)/2);
+     MEAN.push(BASE+SPR*t);
+   }
+ }
+
+ /* ================= the whole computation ================= */
+ function calc(){
+   var j,i,S=sds();
+   var grand=0; for(j=0;j<K;j++) grand+=MEAN[j]; grand/=K;
+   var ssb=0; for(j=0;j<K;j++) ssb+=N*(MEAN[j]-grand)*(MEAN[j]-grand);
+   var ssw=0; for(j=0;j<K;j++) ssw+=(N-1)*S[j]*S[j];
+   var d1=K-1, d2=K*(N-1);
+   var msb=ssb/d1, msw=ssw/d2;
+   var F=msw>0?msb/msw:0;
+   var pts=[];
+   for(j=0;j<K;j++){ var g=[]; for(i=0;i<N;i++) g.push(MEAN[j]+S[j]*Z[j][i]); pts.push(g); }
+   var lo=MEAN[0], hi=MEAN[0];
+   for(j=1;j<K;j++){ if(MEAN[j]<lo) lo=MEAN[j]; if(MEAN[j]>hi) hi=MEAN[j]; }
+   return { S:S, pts:pts, grand:grand, ssb:ssb, ssw:ssw, sst:ssb+ssw,
+            d1:d1, d2:d2, msb:msb, msw:msw, F:F,
+            p:fsf(F,d1,d2), Fc:critF(d1,d2,0.05),
+            eta:(ssb+ssw)>0?ssb/(ssb+ssw):0,
+            lo:lo, hi:hi, range:hi-lo, Ntot:K*N };
+ }
+
+ /* ================= panel 1 — the draggable dot plot ================= */
+ var VBW=480, PX0=62, PX1=464, PY0=16, PY1=248;
+ var dom={lo:0,hi:1};
+ function setDomain(C){
+   var mx=C.S[0],j; for(j=1;j<K;j++) if(C.S[j]>mx) mx=C.S[j];
+   var R=Math.ceil((MLIM+2.2*mx)/5)*5;
+   dom.lo=BASE-R; dom.hi=BASE+R;
+ }
+ function yOf(v){ return PY1-(v-dom.lo)/(dom.hi-dom.lo)*(PY1-PY0); }
+ function vOf(y){ return dom.lo+(PY1-y)/(PY1-PY0)*(dom.hi-dom.lo); }
+
+ function drawDots(C){
+   var s='',j,i,bw=(PX1-PX0)/K, cx, step=niceStep((dom.hi-dom.lo)/5), t;
+   var gy=yOf(C.grand);
+   /* gridlines and value axis */
+   for(t=Math.ceil(dom.lo/step)*step; t<=dom.hi+1e-9; t+=step){
+     var yy=yOf(t);
+     if(yy<PY0-0.5||yy>PY1+0.5) continue;
+     s+='<line x1="'+PX0+'" y1="'+f1(yy)+'" x2="'+PX1+'" y2="'+f1(yy)+'" stroke="#e8f0f4" stroke-width="1"/>';
+     s+='<text x="'+(PX0-8)+'" y="'+f1(yy+3.4)+'" font-size="9.4" fill="#9aa9b1" text-anchor="end" font-weight="700">'+Math.round(t)+'</text>';
+   }
+   s+='<text x="14" y="'+((PY0+PY1)/2)+'" font-size="9.4" fill="#9aa9b1" font-weight="800" text-anchor="middle" transform="rotate(-90 14 '+((PY0+PY1)/2)+')">SYMPTOM SCORE</text>';
+   s+='<line x1="'+PX0+'" y1="'+PY1+'" x2="'+PX1+'" y2="'+PY1+'" stroke="#cfe0e8" stroke-width="1.4"/>';
+
+   /* grand mean */
+   s+='<line x1="'+PX0+'" y1="'+f1(gy)+'" x2="'+PX1+'" y2="'+f1(gy)+'" stroke="#8fa8b4" stroke-width="1.7" stroke-dasharray="7 5"/>';
+   s+='<text x="'+(PX1-2)+'" y="'+f1(gy-6)+'" font-size="9.6" fill="#6f858f" text-anchor="end" font-weight="800">grand mean '+f1(C.grand)+'</text>';
+
+   /* deviation overlays, drawn under the dots */
+   for(j=0;j<K;j++){
+     cx=PX0+bw*(j+0.5);
+     var my=yOf(MEAN[j]);
+     if(VIEW==='between' && Math.abs(MEAN[j]-C.grand)>0.01){
+       s+='<line x1="'+f1(cx)+'" y1="'+f1(gy)+'" x2="'+f1(cx)+'" y2="'+f1(my)+'" stroke="#b8862f" stroke-width="7" stroke-linecap="round" opacity=".62"/>';
+       var mid=(gy+my)/2, dv=MEAN[j]-C.grand;
+       s+='<text x="'+f1(cx+9)+'" y="'+f1(mid+3.4)+'" font-size="9.8" fill="#8a6a20" font-weight="800">'+(dv>0?'+':'')+f1(dv)+'</text>';
+     }
+     for(i=0;i<N;i++){
+       var px=cx+JIT[j][i]*bw*0.60, py=yOf(C.pts[j][i]);
+       if(VIEW==='within'){
+         s+='<line x1="'+f1(px)+'" y1="'+f1(py)+'" x2="'+f1(px)+'" y2="'+f1(my)+'" stroke="#d1495b" stroke-width="1.15" opacity=".55"/>';
+       } else if(VIEW==='total'){
+         s+='<line x1="'+f1(px)+'" y1="'+f1(py)+'" x2="'+f1(px)+'" y2="'+f1(gy)+'" stroke="#7d94a0" stroke-width="1.15" opacity=".5"/>';
+       }
+     }
+   }
+   /* dots */
+   for(j=0;j<K;j++){
+     cx=PX0+bw*(j+0.5);
+     for(i=0;i<N;i++){
+       var qx=cx+JIT[j][i]*bw*0.60, qy=yOf(C.pts[j][i]);
+       if(qy<PY0-4||qy>PY1+4) continue;
+       s+='<circle cx="'+f1(qx)+'" cy="'+f1(qy)+'" r="3.3" fill="'+COL[j]+'" opacity=".72"/>';
+     }
+   }
+   /* draggable mean handles */
+   for(j=0;j<K;j++){
+     cx=PX0+bw*(j+0.5);
+     var hy=yOf(MEAN[j]), hw=Math.min(bw*0.78,92);
+     s+='<g class="hnd" data-h="'+j+'" tabindex="0" role="slider" aria-label="'+NAME[j]+' mean"'
+       +' aria-valuemin="'+(BASE-MLIM)+'" aria-valuemax="'+(BASE+MLIM)+'" aria-valuenow="'+f1(MEAN[j])+'">';
+     s+='<rect x="'+f1(cx-hw/2)+'" y="'+f1(hy-11)+'" width="'+f1(hw)+'" height="22" fill="transparent"/>';
+     s+='<rect class="mh" x="'+f1(cx-hw/2)+'" y="'+f1(hy-4)+'" width="'+f1(hw)+'" height="8" rx="4" fill="'+COL[j]+'"/>';
+     s+='<circle cx="'+f1(cx)+'" cy="'+f1(hy)+'" r="6.6" fill="#fff" stroke="'+COL[j]+'" stroke-width="2.6"/>';
+     s+='<path d="M'+f1(cx-3)+' '+f1(hy-2.2)+'l3-3 3 3M'+f1(cx-3)+' '+f1(hy+2.2)+'l3 3 3-3" stroke="'+COL[j]+'" stroke-width="1.5" fill="none" stroke-linecap="round"/>';
+     s+='</g>';
+     s+='<text x="'+f1(cx)+'" y="266" font-size="10.4" fill="'+COL[j]+'" text-anchor="middle" font-weight="800">'+NAME[j]+'</text>';
+     s+='<text x="'+f1(cx)+'" y="280" font-size="9.6" fill="#8b99a1" text-anchor="middle" font-weight="700">mean '+f1(MEAN[j])+'</text>';
+     s+='<text x="'+f1(cx)+'" y="293" font-size="9.6" fill="#8b99a1" text-anchor="middle" font-weight="700">SD '+f1(C.S[j])+'</text>';
+   }
+   $("dots").innerHTML=s;
+   if(kbFocus>=0 && kbFocus<K){
+     var el=$("dots").querySelector('[data-h="'+kbFocus+'"]');
+     if(el && document.activeElement!==el) el.focus();
+   }
+ }
+
+ /* ================= panel 2 — the decomposition diagram ================= */
+ function drawDecomp(C){
+   var s='', X0=22, X1=458, W=X1-X0;
+   var wb=C.sst>0?W*C.ssb/C.sst:0;
+   if(wb<1.2 && C.ssb>0) wb=1.2;
+   /* total bar */
+   s+='<text x="'+X0+'" y="16" font-size="9.4" fill="#9aa9b1" font-weight="800" letter-spacing="1">TOTAL VARIATION AROUND THE GRAND MEAN &mdash; SS = '+f1(C.sst)+'</text>';
+   s+='<rect x="'+X0+'" y="24" width="'+W+'" height="30" rx="6" fill="#dde8ee"/>';
+   s+='<rect x="'+X0+'" y="24" width="'+f1(wb)+'" height="30" rx="6" fill="#b8862f"/>';
+   s+='<rect x="'+f1(X0+wb)+'" y="24" width="'+f1(W-wb)+'" height="30" rx="6" fill="#5f8598"/>';
+   if(wb>76) s+='<text x="'+f1(X0+wb/2)+'" y="43" font-size="11" fill="#fff" text-anchor="middle" font-weight="800">between '+f1(C.ssb)+'</text>';
+   if(W-wb>76) s+='<text x="'+f1(X0+wb+(W-wb)/2)+'" y="43" font-size="11" fill="#fff" text-anchor="middle" font-weight="800">within '+f1(C.ssw)+'</text>';
+   s+='<text x="'+X0+'" y="70" font-size="10" fill="#8a6a20" font-weight="800">SS between = '+f1(C.ssb)+'   ('+(C.eta*100).toFixed(1)+'% of the total)</text>';
+   s+='<text x="'+X1+'" y="70" font-size="10" fill="#3f606f" font-weight="800" text-anchor="end">SS within = '+f1(C.ssw)+'</text>';
+
+   /* division arrows */
+   s+='<path d="M120 78 L120 96" stroke="#c6d6de" stroke-width="1.6"/><path d="M116 92 l4 5 4-5" fill="none" stroke="#c6d6de" stroke-width="1.6"/>';
+   s+='<path d="M360 78 L360 96" stroke="#c6d6de" stroke-width="1.6"/><path d="M356 92 l4 5 4-5" fill="none" stroke="#c6d6de" stroke-width="1.6"/>';
+   s+='<text x="128" y="90" font-size="10" fill="#8a6a20" font-weight="800">&divide; df&#8321; = k &minus; 1 = '+C.d1+'</text>';
+   s+='<text x="368" y="90" font-size="10" fill="#3f606f" font-weight="800">&divide; df&#8322; = N &minus; k = '+C.d2+'</text>';
+
+   /* mean-square bars on a shared scale */
+   var mx=Math.max(C.msb,C.msw); if(mx<=0) mx=1;
+   var wB=W*C.msb/mx, wW=W*C.msw/mx;
+   s+='<text x="'+X0+'" y="116" font-size="9.4" fill="#9aa9b1" font-weight="800" letter-spacing="1">MEAN SQUARES &mdash; AVERAGE SQUARED DEVIATION, ON A SHARED SCALE</text>';
+   s+='<rect x="'+X0+'" y="124" width="'+f1(Math.max(wB,2))+'" height="26" rx="5" fill="#b8862f"/>';
+   s+='<text x="'+f1(X0+Math.max(wB,2)+8)+'" y="142" font-size="11.5" fill="#8a6a20" font-weight="800">MS between = '+f1(C.msb)+'</text>';
+   s+='<rect x="'+X0+'" y="160" width="'+f1(Math.max(wW,2))+'" height="26" rx="5" fill="#5f8598"/>';
+   s+='<text x="'+f1(X0+Math.max(wW,2)+8)+'" y="178" font-size="11.5" fill="#3f606f" font-weight="800">MS within = '+f1(C.msw)+'</text>';
+
+   /* the ratio */
+   s+='<line x1="'+X0+'" y1="200" x2="'+X1+'" y2="200" stroke="#e3ecf1" stroke-width="1"/>';
+   s+='<text x="'+X0+'" y="224" font-size="12.5" fill="#4a585f" font-weight="700">F  =  MS between  &divide;  MS within  =  '+f1(C.msb)+' &divide; '+f1(C.msw)+'  =</text>';
+   s+='<text x="'+X1+'" y="230" font-size="30" fill="#1c4454" font-weight="800" text-anchor="end" font-family="Fraunces,Georgia,serif">'+f2(C.F)+'</text>';
+   s+='<text x="'+X0+'" y="248" font-size="10.2" fill="#9aa9b1" font-weight="700">A ratio of 1 would mean the arms sit no further apart than the churn inside them already explains.</text>';
+   s+='<text x="'+X0+'" y="262" font-size="10.2" fill="#9aa9b1" font-weight="700">Check: '+f1(C.ssb)+' + '+f1(C.ssw)+' = '+f1(C.sst)+'   and   '+C.d1+' + '+C.d2+' = '+(C.Ntot-1)+' = N &minus; 1</text>';
+   $("decomp").innerHTML=s;
+ }
+
+ /* ================= panel 3 — the F curve ================= */
+ function drawDist(C){
+   var s='', X0=46, X1=466, Y0=18, Y1=170;
+   var xmax=Math.max(4.2, C.Fc*1.7, C.F*1.28);
+   var i,f,y,mxp=0, GN=300;
+   for(i=1;i<=GN;i++){ f=xmax*i/GN; y=fpdf(f,C.d1,C.d2); if(isFinite(y)&&y>mxp) mxp=y; }
+   var mtail=0;
+   for(i=1;i<=GN;i++){ f=xmax*i/GN; if(f<0.42) continue; y=fpdf(f,C.d1,C.d2); if(isFinite(y)&&y>mtail) mtail=y; }
+   if(mtail<=0) mtail=mxp;
+   var ymax=Math.min(mxp,Math.max(mtail*1.9,0.05))*1.12;
+   if(!(ymax>0)) ymax=1;
+   var xs=function(f){ return X0+f/xmax*(X1-X0); };
+   var ys=function(v){ var yy=Y1-Math.min(v,ymax)/ymax*(Y1-Y0); return yy<Y0?Y0:yy; };
+
+   /* shaded tail beyond the observed F */
+   if(C.F<xmax){
+     var pth='M'+f1(xs(C.F))+' '+Y1;
+     for(i=0;i<=160;i++){ f=C.F+(xmax-C.F)*i/160; pth+=' L'+f1(xs(f))+' '+f1(ys(fpdf(f,C.d1,C.d2))); }
+     pth+=' L'+f1(xs(xmax))+' '+Y1+' Z';
+     s+='<path d="'+pth+'" fill="#e6b3bd" opacity=".82"/>';
+   }
+   /* the curve, filled */
+   var cv='M'+X0+' '+Y1;
+   for(i=0;i<=GN;i++){ f=xmax*i/GN; if(i===0) f=xmax/(GN*6); cv+=' L'+f1(xs(f))+' '+f1(ys(fpdf(f,C.d1,C.d2))); }
+   cv+=' L'+X1+' '+Y1+' Z';
+   s+='<path d="'+cv+'" fill="#cfdde4" opacity=".55"/>';
+   var ln='';
+   for(i=0;i<=GN;i++){ f=xmax*i/GN; if(i===0) f=xmax/(GN*6); ln+=(i===0?'M':' L')+f1(xs(f))+' '+f1(ys(fpdf(f,C.d1,C.d2))); }
+   s+='<path d="'+ln+'" fill="none" stroke="#6f93a5" stroke-width="1.8"/>';
+
+   /* axis */
+   s+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#cfe0e8" stroke-width="1.4"/>';
+   var st=niceStep(xmax/6), t;
+   for(t=0;t<=xmax+1e-9;t+=st){
+     s+='<line x1="'+f1(xs(t))+'" y1="'+Y1+'" x2="'+f1(xs(t))+'" y2="'+(Y1+4)+'" stroke="#cfe0e8" stroke-width="1.2"/>';
+     s+='<text x="'+f1(xs(t))+'" y="'+(Y1+16)+'" font-size="9.4" fill="#9aa9b1" text-anchor="middle" font-weight="700">'+(st<1?t.toFixed(1):Math.round(t))+'</text>';
+   }
+   s+='<text x="'+((X0+X1)/2)+'" y="'+(Y1+32)+'" font-size="9.6" fill="#9aa9b1" text-anchor="middle" font-weight="800" letter-spacing="1">F  &mdash;  df&#8321; = '+C.d1+',  df&#8322; = '+C.d2+'</text>';
+
+   /* the 1.00 marker, the cut-off, and the observed F */
+   if(1<xmax){
+     s+='<line x1="'+f1(xs(1))+'" y1="'+Y1+'" x2="'+f1(xs(1))+'" y2="'+(Y1-9)+'" stroke="#8fa8b4" stroke-width="1.4"/>';
+     s+='<text x="'+f1(xs(1))+'" y="'+(Y1-13)+'" font-size="9" fill="#8fa8b4" text-anchor="middle" font-weight="800">1</text>';
+   }
+   if(C.Fc<xmax){
+     s+='<line x1="'+f1(xs(C.Fc))+'" y1="'+Y0+'" x2="'+f1(xs(C.Fc))+'" y2="'+Y1+'" stroke="#b8862f" stroke-width="1.7" stroke-dasharray="6 4"/>';
+     s+='<text x="'+f1(xs(C.Fc)+4)+'" y="'+(Y0+11)+'" font-size="9.6" fill="#8a6a20" font-weight="800">F* = '+f2(C.Fc)+'</text>';
+   }
+   var fx=Math.min(C.F,xmax);
+   s+='<line x1="'+f1(xs(fx))+'" y1="'+(Y0-2)+'" x2="'+f1(xs(fx))+'" y2="'+Y1+'" stroke="#1c4454" stroke-width="2.4"/>';
+   var lx=xs(fx), anch=(lx>X1-80)?'end':'start', off=(lx>X1-80)?-5:5;
+   s+='<text x="'+f1(lx+off)+'" y="'+(Y0+26)+'" font-size="11.4" fill="#1c4454" font-weight="800" text-anchor="'+anch+'">F = '+f2(C.F)+'</text>';
+   s+='<text x="'+f1(lx+off)+'" y="'+(Y0+39)+'" font-size="10" fill="#b23145" font-weight="800" text-anchor="'+anch+'">p = '+pTxt(C.p)+'</text>';
+   if(C.F>=xmax) s+='<text x="'+(X1-4)+'" y="'+(Y1-8)+'" font-size="9.4" fill="#1c4454" text-anchor="end" font-weight="800">F is off the right edge</text>';
+   $("dist").innerHTML=s;
+ }
+
+ /* ================= panel 4 — simulate whole studies ================= */
+ function simOne(C){
+   var j,i,x,sum,mj,gm=[],ssw=0,ssb=0,all=0;
+   for(j=0;j<K;j++){
+     sum=0; var v=[];
+     for(i=0;i<N;i++){ x=MEAN[j]+C.S[j]*nrm(); v.push(x); sum+=x; }
+     mj=sum/N; gm.push(mj); all+=sum;
+     for(i=0;i<N;i++) ssw+=(v[i]-mj)*(v[i]-mj);
+   }
+   var g=all/(K*N);
+   for(j=0;j<K;j++) ssb+=N*(gm[j]-g)*(gm[j]-g);
+   if(ssw<=0) return 0;
+   return (ssb/(K-1))/(ssw/(K*(N-1)));
+ }
+ function runSim(m,C){
+   var i,f;
+   for(i=0;i<m;i++){
+     f=simOne(C);
+     SIM.push(f); simN++; simSum+=f;
+     if(f>C.Fc) simRej++;
+   }
+ }
+ function drawHist(C){
+   var s='', X0=46, X1=466, Y0=16, Y1=196, NB=44;
+   var XH=Math.max(5, Math.ceil(C.Fc*1.7));
+   var bw=XH/NB, bins=new Array(NB), i, j;
+   for(i=0;i<NB;i++) bins[i]=0;
+   for(i=0;i<SIM.length;i++){
+     j=Math.floor(SIM[i]/bw); if(j>=NB) j=NB-1; if(j<0) j=0;
+     bins[j]++;
+   }
+   var mxb=0; for(i=0;i<NB;i++) if(bins[i]>mxb) mxb=bins[i];
+   var mxc=0, cf;
+   if(simN>0){ for(i=0;i<NB;i++){ cf=fpdf((i+0.5)*bw,C.d1,C.d2)*bw*simN; if(isFinite(cf)&&cf>mxc) mxc=cf; } }
+   var top=Math.max(mxb,mxc*0.85,1);
+   var xs=function(f){ return X0+Math.min(f,XH)/XH*(X1-X0); };
+   var ys=function(c){ var y=Y1-c/top*(Y1-Y0); return y<Y0?Y0:y; };
+
+   var bwp=(X1-X0)/NB;
+   for(i=0;i<NB;i++){
+     if(bins[i]<=0) continue;
+     var h=Y1-ys(bins[i]);
+     var over=((i+0.5)*bw)>C.Fc;
+     s+='<rect x="'+f1(X0+i*bwp+0.5)+'" y="'+f1(ys(bins[i]))+'" width="'+f1(bwp-1)+'" height="'+f1(h)+'" fill="'+(over?'#dfa9b4':'#bcd9e6')+'"/>';
+   }
+   if(simN>0){
+     var pth='';
+     for(i=0;i<=280;i++){
+       var f=XH*i/280; if(i===0) f=XH/2000;
+       var c=fpdf(f,C.d1,C.d2)*bw*simN;
+       if(!isFinite(c)) c=top*3;
+       pth+=(i===0?'M':' L')+f1(xs(f))+' '+f1(ys(c));
+     }
+     s+='<path d="'+pth+'" fill="none" stroke="#1c4454" stroke-width="2"/>';
+   }
+   /* cut-off */
+   if(C.Fc<XH){
+     s+='<line x1="'+f1(xs(C.Fc))+'" y1="'+Y0+'" x2="'+f1(xs(C.Fc))+'" y2="'+Y1+'" stroke="#b8862f" stroke-width="1.7" stroke-dasharray="6 4"/>';
+     s+='<text x="'+f1(xs(C.Fc)+4)+'" y="'+(Y0+11)+'" font-size="9.6" fill="#8a6a20" font-weight="800">F* = '+f2(C.Fc)+'</text>';
+   }
+   s+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#cfe0e8" stroke-width="1.4"/>';
+   var st=niceStep(XH/6), t;
+   for(t=0;t<=XH+1e-9;t+=st){
+     s+='<text x="'+f1(xs(t))+'" y="'+(Y1+15)+'" font-size="9.4" fill="#9aa9b1" text-anchor="middle" font-weight="700">'+(st<1?t.toFixed(1):Math.round(t))+'</text>';
+   }
+   s+='<text x="'+((X0+X1)/2)+'" y="'+(Y1+31)+'" font-size="9.6" fill="#9aa9b1" text-anchor="middle" font-weight="800" letter-spacing="1">F FROM EACH SIMULATED STUDY  (LAST BIN HOLDS EVERYTHING ABOVE '+XH+')</text>';
+   if(simN===0) s+='<text x="'+((X0+X1)/2)+'" y="110" font-size="12" fill="#9aa9b1" text-anchor="middle" font-weight="700">Press &ldquo;Run 1,000 studies&rdquo; to fill this in.</text>';
+   $("hist").innerHTML=s;
+
+   $("rN").innerHTML=simN?simN.toLocaleString():'0';
+   $("rM").innerHTML=simN?f2(simSum/simN):'&mdash;';
+   $("rT").innerHTML=(C.d2>2)?f2(C.d2/(C.d2-2)):'&mdash;';
+   var flat=C.range<1e-9;
+   $("rPl").innerHTML=flat?'False alarm<br>rate':'Power<br>at &alpha; = .05';
+   $("rP").innerHTML=simN?((simRej/simN*100).toFixed(1)+'%'):'&mdash;';
+
+   var cap='';
+   if(simN===0){
+     cap='Nothing simulated yet. Whatever you have built on the left is treated as the truth, and each run draws '+N+' fresh people per arm from it.';
+   } else if(flat){
+     cap='Every population mean is identical here, so the null hypothesis is <b>true</b> and the bars should hug the curve. About 5% of studies land past F* anyway &mdash; those are false alarms, and there is no way to run this test without them. Observed so far: <b>'+(simRej/simN*100).toFixed(1)+'%</b>.';
+   } else {
+     cap='The population means genuinely differ, so the null is <b>false</b> and the bars no longer follow the curve &mdash; they follow a shifted (noncentral) F. The share past the cut&#8209;off is <b>power</b>: <b>'+(simRej/simN*100).toFixed(1)+'%</b> of studies this size would detect this arrangement.';
+     if(IMB===0){
+       var lam=C.ssb/(SD*SD);
+       cap+=' The size of that shift has a name &mdash; the noncentrality &lambda; = n&nbsp;&Sigma;(&mu;<sub>j</sub>&nbsp;&minus;&nbsp;&mu;&#772;)&sup2;&nbsp;/&nbsp;&sigma;&sup2; = <b>'+f1(lam)+'</b> &mdash; and it is the single number that decides how much power you have.';
+     }
+   }
+   $("histcap").innerHTML=cap;
+ }
+
+ /* ================= readouts ================= */
+ function drawTiles(C){
+   $("tN").innerHTML=C.Ntot;
+   $("tNs").innerHTML='k = '+K+' &times; n = '+N;
+   $("tG").innerHTML=f1(C.grand);
+   $("tD1").innerHTML=C.d1;
+   $("tD2").innerHTML=C.d2;
+   $("tMB").innerHTML=f1(C.msb);
+   $("tMW").innerHTML=f1(C.msw);
+   $("tF").innerHTML=f2(C.F);
+   $("tC").innerHTML=f2(C.Fc);
+   $("tP").innerHTML=pTxt(C.p);
+   $("tPs").innerHTML=(C.p<0.05)?'reject at .05':'do not reject';
+   $("bxP").className=(C.p<0.05)?'warn':'good';
+   $("tE").innerHTML=(C.eta*100).toFixed(1)+'%';
+   $("tR").innerHTML=f1(C.range);
+   $("tRs").innerHTML=f1(C.range/Math.sqrt(C.msw))+' pooled SDs';
+   $("tSD").innerHTML=f1(Math.sqrt(C.msw));
+
+   var rows='';
+   rows+='<tr><td><span class="ch" style="background:#b8862f"></span>Between</td><td>'+f1(C.ssb)+'</td><td>'+C.d1+'</td><td>'+f1(C.msb)+'</td><td>'+f2(C.F)+'</td><td>'+pTxt(C.p)+'</td></tr>';
+   rows+='<tr><td><span class="ch" style="background:#5f8598"></span>Within</td><td>'+f1(C.ssw)+'</td><td>'+C.d2+'</td><td>'+f1(C.msw)+'</td><td></td><td></td></tr>';
+   rows+='<tr class="tot"><td>Total</td><td>'+f1(C.sst)+'</td><td>'+(C.Ntot-1)+'</td><td></td><td></td><td></td></tr>';
+   $("atab").innerHTML=rows;
+
+   /* stage */
+   var st=$("stage");
+   if(C.range<1e-9){
+     st.style.background='#5f8598';
+     st.innerHTML='Every arm sits at the same mean<small>SS between = 0, so F = 0 &mdash; drag a bar to break the tie</small>';
+   } else if(C.p<0.05){
+     st.style.background='#b8862f';
+     st.innerHTML='F = '+f2(C.F)+', p = '+pTxt(C.p)+'<small>further apart than the within-arm scatter can explain</small>';
+   } else {
+     st.style.background='#2f6f8a';
+     st.innerHTML='F = '+f2(C.F)+', p = '+pTxt(C.p)+'<small>within reach of ordinary sampling noise</small>';
+   }
+
+   /* dot-plot sentence */
+   var ds=$("dotsent"), body;
+   if(C.range<1e-9){
+     ds.className='sent';
+     body='<span class="big">Nothing between, everything within</span>All '+K+' bars are level, so every group mean equals the grand mean and <b>SS between is exactly zero</b>. The dots still scatter &mdash; that scatter is entirely the within part. F = 0.00, the smallest value it can take. Drag any bar and watch the numerator lift off the floor.';
+   } else {
+     ds.className='sent'+(C.p<0.05?' gold':'');
+     body='<span class="big">'+f1(C.range)+' points from the lowest arm to the highest</span>That gap is <b>'+f1(C.range/Math.sqrt(C.msw))+' pooled standard deviations</b> wide, which is the only scale on which a gap means anything. With '+N+' people per arm it produces <b>F = '+f2(C.F)+'</b> against a cut-off of '+f2(C.Fc)+'. '+
+       (C.p<0.05
+         ? 'That clears the line: an F at least this large turns up in about '+(C.p*100<0.01?'fewer than 1 in 10,000':('1 in '+Math.round(1/C.p)))+' studies when the arms are truly identical.'
+         : 'That falls short: roughly '+Math.round(C.p*100)+' studies in 100 would produce an F at least this large even if all the arms were identical.');
+   }
+   ds.innerHTML=body;
+
+   /* decomposition sentence */
+   var de=$("decsent");
+   de.className='sent';
+   de.innerHTML='<span class="big">'+(C.eta*100).toFixed(1)+'% of the variation is between arms</span>'+
+     'Of the '+f1(C.sst)+' total squared points of variation, <b>'+f1(C.ssb)+'</b> is attributable to which arm someone is in and <b>'+f1(C.ssw)+'</b> is the differences between people inside the same arm. That first share is <b>&eta;&sup2;</b>, and unlike F it barely moves when you change n &mdash; slide the sample size and watch F climb while &eta;&sup2; holds nearly still. F answers &ldquo;could this be noise?&rdquo;; &eta;&sup2; answers &ldquo;how much does the grouping actually account for?&rdquo; A study can easily answer the first with a resounding no and the second with &ldquo;hardly any.&rdquo;';
+
+   /* distribution sentence */
+   var di=$("distsent");
+   di.className='sent'+(C.p<0.05?' warn':'');
+   di.innerHTML='<span class="big">p = '+pTxt(C.p)+'</span>'+
+     'If every arm had the same population mean, an F of '+f2(C.F)+' or larger would arise in <b>'+(C.p*100<0.01?'under 0.01%':(C.p*100).toFixed(2)+'%')+'</b> of studies with '+C.d1+' and '+C.d2+' degrees of freedom. '+
+     (C.p<0.05
+       ? 'That is below .05, so the arms are declared to differ somewhere. <b>The p-value is not the probability that the arms are identical</b> &mdash; it is computed by assuming exactly that and asking how ordinary this data would be.'
+       : 'That is above .05, so the data are compatible with all arms being identical. <b>Compatible is not the same as identical</b> &mdash; a study this size is also compatible with a real difference it simply cannot resolve.');
+
+   /* conditions */
+   var mn=C.S[0], mx=C.S[0], j;
+   for(j=1;j<K;j++){ if(C.S[j]<mn) mn=C.S[j]; if(C.S[j]>mx) mx=C.S[j]; }
+   var ratio=mn>0?mx/mn:1;
+   $("cAv").innerHTML=f1(mn); $("cBv").innerHTML=f1(mx);
+   $("cCv").innerHTML=f2(ratio); $("cDv").innerHTML=N;
+   $("cC").className=ratio>2?'warn':'good';
+   $("cD").className=N<10?'warn':'good';
+   var cs=$("condsent");
+   if(ratio>2){
+     cs.className='sent warn';
+     cs.innerHTML='<span class="big">The spreads are too unequal to pool</span>The widest arm scatters <b>'+f2(ratio)+'&times;</b> as much as the tightest, past the usual limit of about 2. MS<sub>within</sub> averages them into one number anyway, which flatters the tight arms and punishes the wide one, and the p-value drifts away from its stated meaning. A Welch-corrected ANOVA, which never pools, is the standard repair. Note that equal n across arms &mdash; which you have here &mdash; makes the ordinary F noticeably more forgiving of this than an unbalanced design would be.';
+   } else if(N<10){
+     cs.className='sent';
+     cs.innerHTML='<span class="big">Spreads comparable; arms are small</span>Largest-to-smallest SD ratio is <b>'+f2(ratio)+'</b>, comfortably inside the rule of thumb, so pooling into a single MS<sub>within</sub> is defensible. With only <b>'+N+'</b> people per arm, though, the normality condition is doing real work: there are not enough observations for the means to smooth out a badly skewed outcome, and there are not enough to check the shape either. Small arms are where the F test is most fragile and where it has the least power.';
+   } else {
+     cs.className='sent good';
+     cs.innerHTML='<span class="big">Nothing here objects to the F test</span>The spreads are within <b>'+f2(ratio)+'&times;</b> of each other, so a single pooled MS<sub>within</sub> is a fair summary, and <b>'+N+'</b> per arm is enough that mild non-normality will not move the p-value much. Independence remains the one condition no panel on this page can check for you: it is bought at the design stage, by making sure no person appears in two arms and no one’s outcome influences anyone else’s.';
+   }
+ }
+
+ /* ================= claims ================= */
+ var CL=[
+  {t:'F is a ratio: how far apart the group means sit, measured against how much individuals scatter inside their own group.',ok:1,
+   d:'Correct, and it is the whole idea. The numerator, MS<sub>between</sub>, grows when the group means separate; the denominator, MS<sub>within</sub>, measures the ordinary churn among people in the same group. Neither number is interpretable alone — you can watch that on the left by moving the bars apart and then widening the scatter until F returns to where it started.'},
+  {t:'If no group truly differs, F should come out near 1 rather than near 0.',ok:1,
+   d:'Correct. Both mean squares estimate the same variance when the null is true, so their ratio is a number divided by an independent estimate of itself; its long-run average is df<sub>2</sub>/(df<sub>2</sub>&minus;2), just above 1. An F of 0.9 is not weak evidence of anything, it is exactly what a true null produces.'},
+  {t:'A small p-value says the data would be surprising if every group had the same population mean — not which groups differ.',ok:1,
+   d:'Correct on both counts. The p-value is computed under the assumption of equal population means, and the test is <b>omnibus</b>: it reports that something is going on among the means, and stops there. Identifying which pairs differ takes a follow-up procedure that adjusts for how many pairs you inspect.'},
+  {t:'MS<sub>within</sub> estimates the common within-group variance whether or not the null hypothesis is true.',ok:1,
+   d:'Correct, and this is the hinge the entire method turns on. MS<sub>within</sub> only ever looks at deviations from each group’s own mean, so shifting a whole group up or down leaves it untouched. MS<sub>between</sub> estimates that same variance <i>only</i> when the means are equal, and is inflated otherwise — which is why their ratio is a test.'},
+  {t:'The p-value is the probability that all the group means are actually equal.',ok:0,
+   d:'No — the most common misreading there is. The p-value is computed <i>by assuming</i> the means are equal; a probability conditioned on that assumption cannot also be a probability about it. It answers &ldquo;how ordinary would this data be in a world with no difference?&rdquo;, not &ldquo;how likely is that world?&rdquo;'},
+  {t:'A large F proves that the grouping caused the difference in outcomes.',ok:0,
+   d:'No. F is a statement about variances and knows nothing about how people arrived in their groups. Random assignment is what licenses a causal reading, and it comes from the design, not the arithmetic. With merely observed groups, anything that travels alongside the grouping remains a live explanation for the same F.'},
+  {t:'F can come out negative when the later groups have smaller means than the earlier ones.',ok:0,
+   d:'No. Both mean squares are built from <b>squared</b> deviations, so both are non-negative and F is never below zero. Direction is erased in the squaring: a group far below the grand mean contributes exactly as much to the numerator as one equally far above it.'},
+  {t:'Since ANOVA compares several groups at once, a significant result tells you the largest and smallest means differ.',ok:0,
+   d:'No. The test produces one number for the whole set, and picking the two extreme means <i>after</i> seeing the chart is precisely the kind of after-the-fact selection the omnibus test guards against. The most extreme pair is the most likely to look impressive by chance alone, and it needs a procedure that accounts for having been chosen that way.'},
+  {t:'Running a separate t-test on every pair of groups gets you to the same place, with no extra risk.',ok:0,
+   d:'No, and this is why ANOVA exists. With k groups there are k(k&minus;1)/2 pairs — six arms means fifteen tests — and at 5% apiece the chance of at least one false alarm climbs past 50%. One omnibus test holds the overall error rate at 5%, and the follow-up procedures that come after it are built to keep it there.'}
+ ];
+ function renderClaims(sel){
+   $("claims").innerHTML=CL.map(function(c,i){
+     return '<button class="it'+(i===sel?' on':'')+'" data-i="'+i+'"><span class="sw" style="background:'+(i===sel?(c.ok?'#7ee0a5':'#ffb3bf'):'#dfe8ed')+'"></span><span><span class="nm">'+c.t+'</span></span></button>';
+   }).join('');
+   var bs=$("claims").querySelectorAll('.it'), z;
+   for(z=0;z<bs.length;z++){
+     bs[z].onclick=(function(el){ return function(){ pickClaim(+el.getAttribute('data-i')); }; })(bs[z]);
+   }
+ }
+ function pickClaim(i){
+   var c=CL[i];
+   renderClaims(i);
+   $("info").innerHTML='<span class="n">'+(c.ok?'✓ Fair to say':'✕ Not so')+'</span><b>&ldquo;'+c.t+'&rdquo;</b><div class="dd">'+c.d+'</div>';
+ }
+
+ /* ================= master render ================= */
+ var C=null;
+ function render(){
+   C=calc();
+   setDomain(C);
+   drawDots(C);
+   drawDecomp(C);
+   drawDist(C);
+   drawTiles(C);
+   drawHist(C);
+ }
+ function resetSim(){ SIM=[]; simN=0; simRej=0; simSum=0; }
+ function changed(){ resetSim(); render(); }
+
+ /* ================= controls ================= */
+ function syncLabels(){
+   $("vK").innerHTML=K;
+   $("vN").innerHTML=N;
+   $("vD").innerHTML=f1(SPR);
+   $("vS").innerHTML=f1(SD);
+   $("vU").innerHTML=IMB===0?'off':('&times;'+f2(1+IMB/100)+' ends');
+ }
+ $("sK").oninput=function(){ K=+this.value; SPR=Math.min(SPR,MLIM); fanMeans(); newSample(); syncLabels(); changed(); };
+ $("sN").oninput=function(){ N=+this.value; newSample(); syncLabels(); changed(); };
+ $("sD").oninput=function(){ SPR=+this.value; fanMeans(); syncLabels(); changed(); };
+ $("sS").oninput=function(){ SD=+this.value; syncLabels(); changed(); };
+ $("sU").oninput=function(){ IMB=+this.value; syncLabels(); changed(); };
+
+ $("bnew").onclick=function(){ newSample(); changed(); };
+ $("bflat").onclick=function(){ SPR=0; $("sD").value=0; fanMeans(); syncLabels(); changed(); };
+ $("bfan").onclick=function(){ SPR=12; $("sD").value=12; fanMeans(); syncLabels(); changed(); };
+ $("brst").onclick=function(){
+   seed=SEED0;
+   K=3; N=8; SPR=6; SD=8; IMB=0;
+   $("sK").value=3; $("sN").value=8; $("sD").value=6; $("sS").value=8; $("sU").value=0;
+   var bs=$("preSeg").querySelectorAll('button'), z;
+   for(z=0;z<bs.length;z++) bs[z].className='';
+   fanMeans(); newSample(); syncLabels(); setView('between'); changed();
+ };
+
+ var VIEWCAP={
+  between:'Gold bars run from the grand mean to each arm’s mean. Square those distances, weight each by the n people standing behind it, and add them up: that is <b>SS between</b>. Level the arms and every gold bar vanishes.',
+  within:'Coral threads run from each person to their own arm’s mean, ignoring the other arms entirely. Square them all and add: that is <b>SS within</b>. Notice it does not flinch when you drag a bar — only the scatter slider touches it.',
+  total:'Grey threads run from each person all the way to the grand mean, ignoring which arm they are in. Square and add for <b>SS total</b>. Every one of those threads is exactly the between piece plus the within piece, which is why the two sums add up to this one.'
+ };
+ function setView(v){
+   VIEW=v;
+   var bs=$("viewSeg").querySelectorAll('button'), z;
+   for(z=0;z<bs.length;z++) bs[z].className=(bs[z].getAttribute('data-v')===v)?'on':'';
+   $("viewcap").innerHTML=VIEWCAP[v];
+   if(C) drawDots(C);
+ }
+ (function(){
+   var bs=$("viewSeg").querySelectorAll('button'), z;
+   for(z=0;z<bs.length;z++){
+     bs[z].onclick=(function(el){ return function(){ setView(el.getAttribute('data-v')); }; })(bs[z]);
+   }
+ })();
+
+ var PRE=[
+  {k:3,n:8, s:8,  u:0, m:[60,60,60]},
+  {k:3,n:10,s:5,  u:0, m:[52,60,68]},
+  {k:3,n:10,s:15, u:0, m:[52,60,68]},
+  {k:3,n:30,s:8,  u:0, m:[56,60,64]},
+  {k:6,n:9, s:7,  u:0, m:[58,59,60,60,61,74]}
+ ];
+ function applyPreset(i){
+   var P=PRE[i];
+   K=P.k; N=P.n; SD=P.s; IMB=P.u;
+   MEAN=P.m.slice(0,K);
+   SPR=(MEAN[K-1]-MEAN[0])/2;
+   $("sK").value=K; $("sN").value=N; $("sS").value=SD; $("sU").value=IMB;
+   $("sD").value=Math.min(Math.max(SPR,0),22);
+   newSample(); syncLabels();
+   var bs=$("preSeg").querySelectorAll('button'), z;
+   for(z=0;z<bs.length;z++) bs[z].className=(+bs[z].getAttribute('data-v')===i)?'on':'';
+   changed();
+ }
+ (function(){
+   var bs=$("preSeg").querySelectorAll('button'), z;
+   for(z=0;z<bs.length;z++){
+     bs[z].onclick=(function(el){ return function(){ applyPreset(+el.getAttribute('data-v')); }; })(bs[z]);
+   }
+ })();
+
+ $("run1").onclick=function(){ runSim(1000,C); drawHist(C); };
+ $("run2").onclick=function(){ runSim(4000,C); drawHist(C); };
+ $("rrs").onclick=function(){ resetSim(); drawHist(C); };
+
+ /* ================= dragging the mean bars ================= */
+ function clampMean(v){
+   if(v<BASE-MLIM) return BASE-MLIM;
+   if(v>BASE+MLIM) return BASE+MLIM;
+   return v;
+ }
+ function yFromEvent(e){
+   var svg=$("dots"), r=svg.getBoundingClientRect();
+   if(r.width<=0) return 0;
+   var sc=r.width/VBW;
+   return (e.clientY-r.top)/sc;
+ }
+ function reFan(){                       /* keep the fan slider honest after a free drag */
+   var lo=MEAN[0], hi=MEAN[0], j;
+   for(j=1;j<K;j++){ if(MEAN[j]<lo) lo=MEAN[j]; if(MEAN[j]>hi) hi=MEAN[j]; }
+   SPR=Math.min(Math.max((hi-lo)/2,0),22);
+   $("sD").value=SPR;
+   syncLabels();
+ }
+ var pend=false;
+ function schedule(){
+   if(pend) return;
+   pend=true;
+   requestAnimationFrame(function(){
+     pend=false;
+     C=calc();
+     drawDots(C); drawDecomp(C); drawDist(C); drawTiles(C);
+   });
+ }
+ var svgEl=$("dots");
+ svgEl.addEventListener('pointerdown',function(e){
+   var t=e.target, g=(t&&t.closest)?t.closest('[data-h]'):null;
+   if(!g) return;
+   dragJ=+g.getAttribute('data-h');
+   kbFocus=dragJ;
+   e.preventDefault();
+   try{ svgEl.setPointerCapture(e.pointerId); }catch(err){}
+   resetSim();
+ });
+ svgEl.addEventListener('pointermove',function(e){
+   if(dragJ<0) return;
+   e.preventDefault();
+   MEAN[dragJ]=clampMean(vOf(yFromEvent(e)));
+   schedule();
+ });
+ function endDrag(){
+   if(dragJ<0) return;
+   dragJ=-1;
+   reFan();
+   render();
+ }
+ svgEl.addEventListener('pointerup',endDrag);
+ svgEl.addEventListener('pointercancel',endDrag);
+ window.addEventListener('pointerup',endDrag);        /* fallback if capture was refused */
+ svgEl.addEventListener('focusin',function(e){
+   var t=e.target, g=(t&&t.closest)?t.closest('[data-h]'):null;
+   if(g) kbFocus=+g.getAttribute('data-h');
+ });
+ svgEl.addEventListener('keydown',function(e){
+   var t=e.target, g=(t&&t.closest)?t.closest('[data-h]'):null;
+   if(!g) return;
+   var j=+g.getAttribute('data-h'), step=e.shiftKey?4:1, moved=false;
+   if(e.key==='ArrowUp'||e.key==='ArrowRight'){ MEAN[j]=clampMean(MEAN[j]-step); moved=true; }
+   else if(e.key==='ArrowDown'||e.key==='ArrowLeft'){ MEAN[j]=clampMean(MEAN[j]+step); moved=true; }
+   if(!moved) return;
+   e.preventDefault();
+   kbFocus=j;
+   resetSim();
+   reFan();
+   render();
+ });
+
+ /* ================= go ================= */
+ fanMeans();
+ newSample();
+ syncLabels();
+ setView('between');
+ renderClaims(-1);
+ render();
+})();
+</script>
+</body>
+</html>

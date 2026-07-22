@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Same Base, Same Exponent</title>
+<meta name="description" content="Solving exponential equations two ways — matching the bases, or taking a logarithm of both sides — with a live graph of the one-to-one property and a worked-step machine that balances every line at once.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+.wrap{grid-template-columns:0.98fr 1.02fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* math typography (no renderer — pure HTML) */
+.fr{display:inline-flex;flex-direction:column;vertical-align:-0.58em;text-align:center;font-size:.86em;line-height:1.14;margin:0 3px;}
+.fr .nu{border-bottom:1.5px solid currentColor;padding:0 5px 2px;}
+.fr .de{padding:2px 5px 0;}
+.hl{background:#fbf0cf;border-radius:4px;padding:1px 4px;box-shadow:inset 0 -2px 0 #e8cf8a;}
+/* step machine */
+.ln{border-radius:10px;padding:8px 11px;margin-bottom:5px;border:1px solid transparent;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px;}
+.ln.done{opacity:.52;}
+.ln.cur{background:#f3f4fb;border-color:#dfe2f2;}
+.ln .eqx{font-size:15.5px;font-weight:700;color:var(--teal-dk);line-height:1.9;}
+.ln .rl{display:block;font-size:9.6px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;margin-top:3px;}
+.ln .vv{flex:none;font-size:10.6px;font-weight:800;color:#a4a7bb;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;}
+.ln .vv small{display:block;font-size:8.4px;letter-spacing:.5px;text-transform:uppercase;font-weight:800;opacity:.75;}
+.ln .vv.ok{color:#237a45;}
+.pend{border-radius:10px;padding:7px 11px;margin-bottom:5px;font-size:12px;font-weight:700;color:#c3c6d8;letter-spacing:2px;}
+/* graph caption + readout */
+#gcap{font-size:12.6px;line-height:1.55;color:var(--soft);margin-top:9px;}
+#gcap b{color:var(--ink);}
+#gout{font-size:12.5px;color:var(--teal-dk);background:#e6e8f5;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.6;font-variant-numeric:tabular-nums;}
+#gwarn{font-size:12px;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.5;color:#8a2a3a;background:#fae5e8;border:1px solid #f0c9d0;}
+#gwarn b{color:#7a1f2c;}
+/* powers strip */
+.pw{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+.pw span{font-size:11.6px;font-weight:700;background:#eef0f9;color:var(--teal-dk);border:1px solid #dfe2f2;border-radius:8px;padding:5px 8px;font-variant-numeric:tabular-nums;}
+.pw span.on{background:var(--gold);border-color:var(--gold);color:#fff;}
+.pw span.br{background:#fdf0f2;border-color:#f0c9d0;color:#b23145;}
+#ptxt{font-size:12.4px;line-height:1.55;color:var(--soft);margin-top:10px;}
+#ptxt b{color:var(--ink);}
+/* sliders */
+.numhd{font-size:9.8px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:15px 0 2px;border-top:1px solid var(--line);padding-top:12px;}
+.nsl{margin-top:7px;}
+.sld{width:100%;-webkit-appearance:none;appearance:none;height:20px;background:transparent;cursor:pointer;}
+.sld::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-moz-range-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);margin-top:-7px;}
+.sld::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);}
+.sldlab{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--muted);font-weight:600;gap:8px;}
+.sldlab b{font-size:15px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.agree{margin-top:10px;border-radius:9px;padding:9px 11px;font-size:12.2px;line-height:1.55;background:#e5f3ea;border:1px solid #bfe3cd;color:#237a45;font-weight:600;}
+.agree b{color:#186036;}
+.agree.off{background:#fbf3e2;border-color:#ecd9ac;color:#8a6a20;} .agree.off b{color:#5a4212;}
+/* misc */
+.badge{display:inline-block;font-size:9.6px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#fff;border-radius:20px;padding:3px 9px;vertical-align:middle;margin-left:7px;}
+.grid .it .nm{display:block;font-size:13.5px;line-height:1.7;}
+.grid .it .s{display:block;margin-top:3px;font-size:10.4px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+#dom{font-size:12px;border-radius:8px;padding:9px 11px;margin-top:11px;line-height:1.55;color:#5a4212;background:#fbf3e2;border:1px solid #ecd9ac;}
+#dom b{color:#42300c;}
+#ansbox{font-size:13px;border-radius:9px;padding:9px 12px;margin-top:11px;line-height:1.6;color:#255f8a;background:#e5eef6;border:1px solid #c9dcea;font-weight:600;}
+#ansbox b{color:#1c4a6d;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">&larr; Chapter 13</a></div>
+<header>
+  <div class="kick">College Algebra &middot; Chapter 13</div>
+  <h1>Same Base, Same Exponent</h1>
+  <div class="intro">Every exponential equation gets the same first question: <b>can both sides be written as powers of one base?</b> If yes, the bases cancel and you read the exponents off &mdash; exactly, no calculator. If no, you take a <b>logarithm of both sides</b> and pull the unknown down out of the exponent. Two methods, one idea underneath.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2>One curve, one crossing</h2>
+      <svg viewBox="0 0 320 240" aria-label="graph of an exponential curve meeting a horizontal line"><g id="art"></g></svg>
+      <div class="nsl">
+        <div class="sldlab"><span>base <i>b</i> =</span><b id="labB">2.0</b></div>
+        <input class="sld" type="range" min="4" max="50" step="1" id="slB" value="20" aria-label="base b">
+      </div>
+      <div class="nsl">
+        <div class="sldlab"><span>height <i>k</i> =</span><b id="labK">7.0</b></div>
+        <input class="sld" type="range" min="3" max="75" step="1" id="slK" value="70" aria-label="height k">
+      </div>
+      <div id="gout"></div>
+      <div id="gwarn"></div>
+      <div id="gcap"></div>
+    </div>
+    <div class="card">
+      <h2>Powers worth recognizing</h2>
+      <div class="seg" id="pseg">
+        <button data-b="2">base 2<small>2, 4, 8, 16, 32</small></button>
+        <button data-b="3">base 3<small>3, 9, 27, 81</small></button>
+        <button data-b="5">base 5<small>5, 25, 125</small></button>
+      </div>
+      <div class="pw" id="pw"></div>
+      <div id="ptxt"></div>
+      <div class="mnem">A reciprocal is just a negative exponent: <b>1/2 = 2<sup>&minus;1</sup></b>, <b>1/8 = 2<sup>&minus;3</sup></b>, <b>1/9 = 3<sup>&minus;2</sup></b>. And a root is a fractional one: <b>&radic;2 = 2<sup>1/2</sup></b>. Both are fair game when you are hunting for a common base.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Two ways to solve<small>choose a method to begin</small></div>
+    <div class="card">
+      <div class="modeseg" id="mode"><button data-m="match" class="on">Match the bases</button><button data-m="log">Take a log</button></div>
+      <div class="grid" id="picks"></div>
+      <div class="mnem" id="mnem"></div>
+    </div>
+    <div class="card">
+      <h2 id="stepTitle">Worked steps</h2>
+      <div id="steps"></div>
+      <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+      <div id="info"></div>
+      <div id="ansbox"></div>
+      <div id="dom"></div>
+      <div class="numhd">Substitute a value of <i>x</i> &mdash; every line balances at the same moment</div>
+      <div class="nsl">
+        <div class="sldlab"><span>let <i>x</i> =</span><b id="labX">0.0000</b></div>
+        <input class="sld" type="range" min="0" max="400" step="1" id="slX" value="0" aria-label="value of x">
+      </div>
+      <div class="row"><button class="btn" id="jump">Jump to the solution</button></div>
+      <div class="agree off" id="agree"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra &middot; an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var LN=Math.log, PW=Math.pow;
+
+ /* ---------- number formatting ---------- */
+ function fmt(v){
+   if(!isFinite(v))return '&mdash;';
+   var a=Math.abs(v);
+   if(a!==0&&(a<0.001||a>=100000))return v.toExponential(3);
+   var t=v.toFixed(4); if(t==='-0.0000')t='0.0000';
+   return t.replace('-','&minus;');
+ }
+ function f4(v){var t=v.toFixed(4); if(t==='-0.0000')t='0.0000'; return t.replace('-','&minus;');}
+ function near(a,b){var m=Math.max(1,Math.abs(a),Math.abs(b));return Math.abs(a-b)<=1e-9*m;}
+ function fr(n,d){return '<span class="fr"><span class="nu">'+n+'</span><span class="de">'+d+'</span></span>';}
+
+ /* ---------- palette + rule names ---------- */
+ var C={start:'#4d4f66',rewrite:'#b8862f',powerpower:'#7a5a8a',onetoone:'#43458f',
+        isolate:'#2f6f9f',takelog:'#2f9e5b',power:'#7a5a8a',distribute:'#d1495b',
+        collect:'#2f6f9f',factor:'#b8862f',solve:'#262a5c',evaluate:'#43458f'};
+ var RLAB={start:'Look at both sides',rewrite:'Rewrite as powers of one base',powerpower:'Power of a power',
+        onetoone:'One-to-one property',isolate:'Isolate the exponential',takelog:'Take a log of both sides',
+        power:'Power rule brings it down',distribute:'Distribute',collect:'Collect the x terms',
+        factor:'Factor out x',solve:'Solve',evaluate:'Decimal, last'};
+ var RF={start:'first question: is there a common base?',
+        rewrite:'find <i>n</i> with <i>a</i> = <i>b</i><sup><i>n</i></sup>',
+        powerpower:'(<i>b</i><sup><i>m</i></sup>)<sup><i>n</i></sup> = <i>b</i><sup><i>mn</i></sup>',
+        onetoone:'if <i>b</i><sup><i>M</i></sup> = <i>b</i><sup><i>N</i></sup> with <i>b</i> &gt; 0 and <i>b</i> &ne; 1, then <i>M</i> = <i>N</i>',
+        isolate:'get <i>b</i><sup><i>x</i></sup> alone before any log',
+        takelog:'if <i>A</i> = <i>B</i> and both are positive, then ln <i>A</i> = ln <i>B</i>',
+        power:'ln(<i>M</i><sup><i>p</i></sup>) = <i>p</i> &middot; ln <i>M</i>',
+        distribute:'<i>c</i>(<i>M</i> + <i>N</i>) = <i>cM</i> + <i>cN</i>',
+        collect:'same operation on both sides keeps equality',
+        factor:'<i>xA</i> &minus; <i>xB</i> = <i>x</i>(<i>A</i> &minus; <i>B</i>)',
+        solve:'divide by the number multiplying <i>x</i>',
+        evaluate:'exact form first, decimal only at the end'};
+
+ /* ================= LEFT: the live graph ================= */
+ var B=2.0, K=7.0;
+ function X(x){return 34+(x+3)*(272/6);}
+ function Y(y){return 200-y*(186/8);}
+ function tx(x,y,s,col,sz,anc,wt,it){
+   return '<text x="'+x+'" y="'+y+'" font-size="'+(sz||10.5)+'" fill="'+(col||'#7d7f94')+'" font-weight="'+(wt||600)+'"'+
+     (anc?' text-anchor="'+anc+'"':'')+(it?' font-style="italic"':'')+' font-family="Inter,system-ui,sans-serif">'+s+'</text>';
+ }
+ function drawGraph(){
+   var b=B,k=K,one=Math.abs(b-1)<1e-9,s='';
+   s+='<rect x="34" y="14" width="272" height="186" rx="8" fill="#f7f8fd" stroke="#e6e8f5"/>';
+   for(var gx=-3;gx<=3;gx++){ var px=X(gx);
+     s+='<line x1="'+px.toFixed(1)+'" y1="14" x2="'+px.toFixed(1)+'" y2="200" stroke="'+(gx===0?'#c3c6d8':'#e9ebf6')+'" stroke-width="'+(gx===0?1.5:1)+'"/>';
+     s+=tx(px,215,(gx<0?'&minus;'+(-gx):''+gx),'#9a9db4',9.5,'middle',600);
+   }
+   for(var gy=0;gy<=8;gy+=2){ var py=Y(gy);
+     s+='<line x1="34" y1="'+py.toFixed(1)+'" x2="306" y2="'+py.toFixed(1)+'" stroke="'+(gy===0?'#c3c6d8':'#e9ebf6')+'" stroke-width="'+(gy===0?1.5:1)+'"/>';
+     s+=tx(29,py+3.4,''+gy,'#9a9db4',9.5,'end',600);
+   }
+   s+=tx(170,233,'x','#7d7f94',11,'middle',700,1);
+   s+=tx(13,105,'y','#7d7f94',11,'middle',700,1);
+   /* the horizontal target line y = k */
+   var kp=Y(k);
+   s+='<line x1="34" y1="'+kp.toFixed(1)+'" x2="306" y2="'+kp.toFixed(1)+'" stroke="#b8862f" stroke-width="2" stroke-dasharray="6 4"/>';
+   s+=tx(303,kp-6,'y = '+k.toFixed(1),'#b8862f',10.6,'end',800);
+   /* the curve y = b^x, plotted point by point */
+   var pts=[],i,xv,yv;
+   for(i=0;i<=300;i++){ xv=-3+i*0.02; yv=PW(b,xv);
+     if(yv>=-0.02&&yv<=8) pts.push(X(xv).toFixed(1)+','+Y(yv).toFixed(1)); }
+   s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+(one?'#d1495b':'#43458f')+'" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>';
+   s+=tx(40,30,'y = '+b.toFixed(1)+'<tspan font-size="8.5" dy="-4.5" font-style="italic">x</tspan>',(one?'#d1495b':'#43458f'),12.5,'start',800);
+   /* the crossing */
+   if(one){
+     s+=tx(170,72,'flat &mdash; every x gives 1','#d1495b',11.5,'middle',800);
+     s+=tx(170,88,'no crossing to read off','#d1495b',11.5,'middle',800);
+   }else{
+     var xs=LN(k)/LN(b);
+     if(xs>=-2.95&&xs<=2.95){
+       var ix=X(xs);
+       s+='<line x1="'+ix.toFixed(1)+'" y1="'+kp.toFixed(1)+'" x2="'+ix.toFixed(1)+'" y2="200" stroke="#2f9e5b" stroke-width="1.6" stroke-dasharray="4 3"/>';
+       s+='<circle cx="'+ix.toFixed(1)+'" cy="'+kp.toFixed(1)+'" r="6" fill="#2f9e5b" stroke="#fff" stroke-width="2.4"/>';
+       s+='<circle cx="'+ix.toFixed(1)+'" cy="200" r="3" fill="#2f9e5b"/>';
+       var rt=(xs<1.2);
+       s+=tx(rt?ix+12:ix-12, kp-10, 'x = '+xs.toFixed(3), '#2f9e5b', 11.2, rt?'start':'end', 800);
+       s+=tx(170,59,'the only place the two meet','#7d7f94',10.4,'middle',700);
+     }else{
+       s+=tx(170,59,'the crossing sits off this window','#7d7f94',10.6,'middle',700);
+       s+=tx(170,75,'at x = '+xs.toFixed(3)+' &mdash; still exactly one','#2f9e5b',11.2,'middle',800);
+     }
+   }
+   $('art').innerHTML=s;
+
+   /* readouts */
+   if(one){
+     $('gout').innerHTML='<b>b = 1.0</b> &nbsp;&middot;&nbsp; 1<sup>x</sup> = 1 for every <i>x</i>, so log<sub>1</sub><i>k</i> does not exist.';
+     $('gwarn').style.display='block';
+     $('gwarn').innerHTML='<b>This is why the rule says <i>b</i> &ne; 1.</b> With base 1 the curve is a flat line. If <i>k</i> = 1, every real number is a solution; if <i>k</i> &ne; 1, there is none. Either way you can never recover the exponent from the value &mdash; so 1<sup>M</sup> = 1<sup>N</sup> tells you <i>nothing</i> about <i>M</i> and <i>N</i>. Base 1 is barred from every rule in this section, and so are bases <b>&le; 0</b>.';
+   }else{
+     var xs2=LN(k)/LN(b), back=PW(b,xs2);
+     $('gout').innerHTML='b<sup>x</sup> = k &nbsp;&rarr;&nbsp; <b>x = log<sub>'+b.toFixed(1)+'</sub>&thinsp;'+k.toFixed(1)+' = '+
+       (LN(k)/LN(b)).toFixed(4).replace('-','&minus;')+'</b><br>check: '+b.toFixed(1)+'<sup>'+xs2.toFixed(4).replace('-','&minus;')+'</sup> = '+back.toFixed(4)+' &nbsp;&#10003;';
+     $('gwarn').style.display='none';
+   }
+   var dir=(B>1)?'rises without ever repeating a value':'falls without ever repeating a value';
+   $('gcap').innerHTML = one
+     ? 'Drag the base off 1.0 and the curve tilts &mdash; and the instant it tilts, a horizontal line can touch it in <b>only one place</b>. That single crossing is the whole engine of this section.'
+     : 'The curve '+dir+', so a horizontal line meets it <b>exactly once</b>. Two consequences, and they are the two methods on the right. <b>One:</b> if two powers of the same base come out equal, they were sitting at the same height, so they must be the <i>same</i> exponent &mdash; that is the one-to-one property, and it lets you cancel matching bases. <b>Two:</b> the <i>x</i>-coordinate of that crossing is exactly log<sub>'+B.toFixed(1)+'</sub>'+K.toFixed(1)+' &mdash; a logarithm is nothing more than the name of the crossing point, which is what you compute when the bases refuse to match.';
+ }
+ $('slB').oninput=function(){B=(+this.value)/10; $('labB').innerHTML=B.toFixed(1); drawGraph();};
+ $('slK').oninput=function(){K=(+this.value)/10; $('labK').innerHTML=K.toFixed(1); drawGraph();};
+
+ /* ================= LEFT: powers strip ================= */
+ var PRANGE={2:[-3,5],3:[-2,4],5:[-2,3]};
+ var pbase=2;
+ function pval(b,n){ return n<0 ? '1/'+Math.round(PW(b,-n)) : ''+Math.round(PW(b,n)); }
+ function drawPowers(){
+   var e=cur(), r=PRANGE[pbase], out='', n;
+   var hi=(pbase===e.pb)?(e.st[si].hi||[]):[];
+   var br=(pbase===e.pb)?(e.br||[]):[];
+   for(n=r[0];n<=r[1];n++){
+     var cl = hi.indexOf(n)>=0 ? ' class="on"' : (br.indexOf(n)>=0 ? ' class="br"' : '');
+     out+='<span'+cl+'>'+pbase+'<sup>'+(n<0?'&minus;'+(-n):n)+'</sup> = '+pval(pbase,n)+'</span>';
+   }
+   $('pw').innerHTML=out;
+   $('ptxt').innerHTML=e.ptxt;
+   var bs=$('pseg').querySelectorAll('button');
+   for(var i=0;i<bs.length;i++){ bs[i].className=(+bs[i].getAttribute('data-b')===pbase)?'on':''; }
+ }
+
+ /* ================= the worked examples ================= */
+ var RX='<i>x</i>';
+ var EX={
+ match:[
+  {nm:'2<sup><i>x</i>+3</sup> = 32', s:'rewrite one side', pb:2, br:[], ans:'<i>x</i> = 2', av:2, xmin:-1, xmax:5,
+   ptxt:'32 is on the list &mdash; it is <b>2<sup>5</sup></b>. That is the entire trick of this example: recognize the number, and the logarithm never has to appear.',
+   dom:'2<sup><i>x</i>+3</sup> is positive for every real <i>x</i>, and 32 &gt; 0, so a solution is possible. Every step here is <b>reversible</b> &mdash; rewriting 32 as 2<sup>5</sup> changes nothing, and the one-to-one property reads in both directions &mdash; so no extraneous roots can appear. Unlike radical or logarithmic equations, exponential equations solved this way never manufacture false solutions. Substitute anyway: 2<sup>2+3</sup> = 2<sup>5</sup> = 32. &#10003;',
+   st:[
+    {h:'2<sup><i>x</i>+3</sup> = 32', r:'start',
+     w:'Before anything else, ask the matching question: <b>can both sides be written as powers of the same base?</b> The left side is already a power of 2, so stare at 32. And 32 = 2&middot;2&middot;2&middot;2&middot;2. Both sides can become powers of 2, which means no logarithm is needed at all &mdash; and the answer will be exact.',
+     L:function(x){return PW(2,x+3);}, R:function(){return 32;}},
+    {h:'2<sup><i>x</i>+3</sup> = <span class="hl">2<sup>5</sup></span>', r:'rewrite', hi:[5],
+     w:'Replace 32 with 2<sup>5</sup>. Nothing has changed in <b>value</b> &mdash; 2<sup>5</sup> <i>is</i> 32, as the number column on the right confirms &mdash; only in <b>appearance</b>. The equation now reads: one power of 2 equals another power of 2.',
+     L:function(x){return PW(2,x+3);}, R:function(){return PW(2,5);}},
+    {h:'<span class="hl"><i>x</i> + 3 = 5</span>', r:'onetoone',
+     w:'Here is the move the section is named for. The graph on the left shows why it is legal: an exponential curve with base 2 never returns to a height it has already used, so two powers of 2 can be equal <b>only</b> if their exponents are equal. Cancel the matching bases and set the exponents equal.',
+     L:function(x){return x+3;}, R:function(){return 5;}},
+    {h:'<span class="hl"><i>x</i> = 2</span>', r:'solve',
+     w:'What is left is an ordinary linear equation. Subtract 3 from both sides. Exact answer, no calculator, no decimals &mdash; that is the reward for matching bases when you can.',
+     L:function(x){return x;}, R:function(){return 2;}}
+   ]},
+
+  {nm:'9<sup>2<i>x</i>&minus;1</sup> = 27', s:'rewrite both sides', pb:3, br:[], ans:'<i>x</i> = '+fr('5','4')+' = 1.25', av:1.25, xmin:-0.5, xmax:2.5,
+   ptxt:'Neither 9 nor 27 is a power of the other, but both are powers of <b>3</b>: 9 = 3<sup>2</sup> and 27 = 3<sup>3</sup>. When two bases will not match each other, look for a <b>smaller base underneath them both</b>.',
+   dom:'The base 9 is positive and not 1, so the one-to-one property applies. There is no restriction on <i>x</i> whatever &mdash; the exponent of an exponential may be any real number &mdash; and no step here can create an extraneous root. Check: 9<sup>2(1.25)&minus;1</sup> = 9<sup>1.5</sup> = (3<sup>2</sup>)<sup>1.5</sup> = 3<sup>3</sup> = 27. &#10003;',
+   st:[
+    {h:'9<sup>2<i>x</i>&minus;1</sup> = 27', r:'start',
+     w:'27 is not a power of 9: 9<sup>1</sup> = 9 and 9<sup>2</sup> = 81, and 27 falls between them. So the two bases will not match directly. Look one level down instead &mdash; 9 = 3<sup>2</sup> and 27 = 3<sup>3</sup>. Both are powers of 3.',
+     L:function(x){return PW(9,2*x-1);}, R:function(){return 27;}},
+    {h:'<span class="hl">(3<sup>2</sup>)</span><sup>2<i>x</i>&minus;1</sup> = <span class="hl">3<sup>3</sup></span>', r:'rewrite', hi:[2,3],
+     w:'Swap each base for its power of 3. The exponent that was already there stays exactly where it was &mdash; keep it in place and keep the parentheses. You now have a power raised to a power on the left.',
+     L:function(x){return PW(PW(3,2),2*x-1);}, R:function(){return 27;}},
+    {h:'3<sup><span class="hl">4<i>x</i>&minus;2</span></sup> = 3<sup>3</sup>', r:'powerpower',
+     w:'A power of a power <b>multiplies</b> the exponents: (<i>b</i><sup><i>m</i></sup>)<sup><i>n</i></sup> = <i>b</i><sup><i>mn</i></sup>. So the new exponent is 2(2<i>x</i> &minus; 1). Now <b>distribute</b> that 2 across both terms: 4<i>x</i> &minus; 2. Multiplying only the first term and writing 4<i>x</i> &minus; 1 is the classic slip here.',
+     L:function(x){return PW(3,4*x-2);}, R:function(){return 27;}},
+    {h:'<span class="hl">4<i>x</i> &minus; 2 = 3</span>', r:'onetoone',
+     w:'The same base 3 now sits on both sides, and 3 is positive and not 1, so the one-to-one property applies. Cancel the bases and set the exponents equal.',
+     L:function(x){return 4*x-2;}, R:function(){return 3;}},
+    {h:'<span class="hl">4<i>x</i> = 5</span>', r:'solve',
+     w:'An ordinary linear equation again. Add 2 to both sides.',
+     L:function(x){return 4*x;}, R:function(){return 5;}},
+    {h:'<span class="hl"><i>x</i> = '+fr('5','4')+'</span>', r:'solve',
+     w:'Divide both sides by 4. Leave it as the exact fraction 5/4 &mdash; it happens to equal 1.25 exactly here, but the fraction is the honest form and is what you would report.',
+     L:function(x){return x;}, R:function(){return 1.25;}}
+   ]},
+
+  {nm:'8<sup><i>x</i>+1</sup> = ('+fr('1','4')+')<sup>2<i>x</i></sup>', s:'reciprocal base', pb:2, br:[], ans:'<i>x</i> = &minus;'+fr('3','7'), av:-3/7, xmin:-2.5, xmax:1.5,
+   ptxt:'A fraction is no obstacle. <b>1/4 = 2<sup>&minus;2</sup></b> &mdash; a reciprocal is simply a negative exponent. With 8 = 2<sup>3</sup>, both sides are powers of 2 after all.',
+   dom:'Both bases, 8 and 1/4, are positive and neither is 1, so the one-to-one property is valid. The answer is negative, and that is completely fine: the <b>base</b> must be positive, but the <b>exponent</b> may be any real number. No extraneous roots are possible. Check: 8<sup>4/7</sup> = 2<sup>12/7</sup> and (1/4)<sup>&minus;6/7</sup> = 4<sup>6/7</sup> = 2<sup>12/7</sup> &mdash; the same number, about 3.2813. &#10003;',
+   st:[
+    {h:'8<sup><i>x</i>+1</sup> = ('+fr('1','4')+')<sup>2<i>x</i></sup>', r:'start',
+     w:'Different bases, and one of them is a fraction. Neither fact matters: 8 = 2<sup>3</sup>, and 1/4 = 2<sup>&minus;2</sup> because a <b>reciprocal is a negative exponent</b>. Both sides are powers of 2.',
+     L:function(x){return PW(8,x+1);}, R:function(x){return PW(0.25,2*x);}},
+    {h:'<span class="hl">(2<sup>3</sup>)</span><sup><i>x</i>+1</sup> = <span class="hl">(2<sup>&minus;2</sup>)</span><sup>2<i>x</i></sup>', r:'rewrite', hi:[3,-2],
+     w:'Replace both bases with powers of 2. Write the minus sign <b>inside</b> the parentheses where it belongs, attached to the 2. Losing that minus sign is what wrecks this problem, and it is easy to lose.',
+     L:function(x){return PW(PW(2,3),x+1);}, R:function(x){return PW(PW(2,-2),2*x);}},
+    {h:'2<sup><span class="hl">3<i>x</i>+3</span></sup> = 2<sup><span class="hl">&minus;4<i>x</i></span></sup>', r:'powerpower',
+     w:'Multiply the exponents on each side. Left: 3(<i>x</i> + 1) = 3<i>x</i> + 3. Right: (&minus;2)(2<i>x</i>) = &minus;4<i>x</i>. Two negatives were never multiplied together here, so the right exponent stays negative.',
+     L:function(x){return PW(2,3*x+3);}, R:function(x){return PW(2,-4*x);}},
+    {h:'<span class="hl">3<i>x</i> + 3 = &minus;4<i>x</i></span>', r:'onetoone',
+     w:'Same base 2 on both sides, so the exponents must be equal. The exponential part of the problem is finished; everything from here is Chapter 1 algebra.',
+     L:function(x){return 3*x+3;}, R:function(x){return -4*x;}},
+    {h:'<span class="hl">7<i>x</i> = &minus;3</span>', r:'solve',
+     w:'Add 4<i>x</i> to both sides, which gathers the <i>x</i> terms on the left as 3<i>x</i> + 4<i>x</i> = 7<i>x</i>, and subtract 3 from both sides to move the constant across.',
+     L:function(x){return 7*x;}, R:function(){return -3;}},
+    {h:'<span class="hl"><i>x</i> = &minus;'+fr('3','7')+'</span>', r:'solve',
+     w:'Divide by 7. The answer is an ugly-looking fraction and a negative one at that &mdash; both are perfectly legitimate. Drag the slider to it and watch every line above snap into balance at once.',
+     L:function(x){return x;}, R:function(){return -3/7;}}
+   ]}
+ ],
+ log:[
+  {nm:'2<sup><i>x</i></sup> = 7', s:'the basic log move', pb:2, br:[2,3], ans:'<i>x</i> = '+fr('ln 7','ln 2')+' = log<sub>2</sub>7 &asymp; 2.8074', av:LN(7)/LN(2), xmin:0, xmax:5,
+   ptxt:'7 lands <b>between 2<sup>2</sup> = 4 and 2<sup>3</sup> = 8</b>. No whole-number exponent reaches it, and no fraction you could spot by eye does either. Matching bases is a dead end &mdash; so the answer must be <i>named</i> by a logarithm rather than read off a list.',
+   dom:'2<sup><i>x</i></sup> is positive for every real <i>x</i>, so an equation like 2<sup><i>x</i></sup> = 0 or 2<sup><i>x</i></sup> = &minus;7 would have <b>no solution at all</b>, and no log step could rescue it &mdash; ln of a number &le; 0 is undefined. Here the right side is 7 &gt; 0, so the log is defined and a solution exists. Taking ln of both sides neither adds nor loses roots, because ln is itself one-to-one, so nothing extraneous appears.',
+   st:[
+    {h:'2<sup><i>x</i></sup> = 7', r:'start',
+     w:'Run the matching test first, every single time. Powers of 2 go 2, 4, 8, 16 &mdash; and 7 sits between 4 and 8. There is no exponent you can write down by inspection, so no amount of rewriting will match these bases. <b>That</b> is the signal to reach for a logarithm. Note in passing that 7 &gt; 0, which the next step needs.',
+     L:function(x){return PW(2,x);}, R:function(){return 7;}},
+    {h:'<span class="hl">ln</span>(2<sup><i>x</i></sup>) = <span class="hl">ln</span> 7', r:'takelog',
+     w:'You are allowed to apply the same function to both sides of a true equation. Choose a <b>logarithm</b>, because a logarithm is the one function that can reach into an exponent and bring the variable down. Any base of log would work; ln is chosen only because a calculator has a button for it. Two things make this safe: both sides are positive, and ln is one-to-one, so no solutions are gained or lost.',
+     L:function(x){return LN(PW(2,x));}, R:function(){return LN(7);}},
+    {h:'<span class="hl"><i>x</i> &middot; ln 2</span> = ln 7', r:'power',
+     w:'The power rule for logarithms: ln(<i>M</i><sup><i>p</i></sup>) = <i>p</i> &middot; ln <i>M</i>. The exponent steps down in front and becomes an ordinary multiplier. <b>The unknown has left the exponent</b> &mdash; that was the entire purpose of the log step, and what remains is arithmetic you already know.',
+     L:function(x){return x*LN(2);}, R:function(){return LN(7);}},
+    {h:'<i>x</i> = <span class="hl">'+fr('ln 7','ln 2')+'</span>', r:'solve',
+     w:'ln 2 is just a number, roughly 0.693. Divide both sides by it. This is the <b>exact</b> answer &mdash; and by the change-of-base formula, this quotient of two logarithms is precisely log<sub>2</sub>7, which reads &ldquo;the power of 2 that gives 7.&rdquo; Exactly the question the original equation asked.',
+     L:function(x){return x;}, R:function(){return LN(7)/LN(2);}},
+    {h:'<i>x</i> &asymp; <span class="hl">2.8074</span>', r:'evaluate',
+     w:'Only now reach for a decimal. Then sanity-check the size: 2<sup>2</sup> = 4 and 2<sup>3</sup> = 8, and 7 lies between them and near the top, so <i>x</i> must be between 2 and 3 and near 3. It is. On the graph at left, set <i>b</i> = 2.0 and <i>k</i> = 7.0 to see this very number as the crossing point.',
+     L:function(x){return x;}, R:function(){return LN(7)/LN(2);}}
+   ]},
+
+  {nm:'4 &middot; 3<sup><i>x</i></sup> = 100', s:'isolate first', pb:3, br:[2,3], ans:'<i>x</i> = '+fr('ln 25','ln 3')+' = log<sub>3</sub>25 &asymp; 2.9299', av:LN(25)/LN(3), xmin:0, xmax:5,
+   ptxt:'After dividing by 4 the target is 25, which sits <b>between 3<sup>2</sup> = 9 and 3<sup>3</sup> = 27</b> &mdash; and much nearer 27. No exponent on the list works, so a log is required; but the size check already tells you the answer must be a little under 3.',
+   dom:'Isolate <b>before</b> you check anything: it is the isolated constant, 25, whose sign decides whether a solution exists. Since 25 &gt; 0, ln 25 is defined and a solution exists. Had the equation been 4 &middot; 3<sup><i>x</i></sup> = &minus;100, isolating would give 3<sup><i>x</i></sup> = &minus;25, and you would stop there and write <b>no solution</b> &mdash; a positive base raised to any real power is always positive. Dividing by the nonzero constant 4 is fully reversible, so no extraneous roots arise.',
+   st:[
+    {h:'4 &middot; 3<sup><i>x</i></sup> = 100', r:'start',
+     w:'The exponential is not alone &mdash; it is multiplied by 4. Do not take a log yet. Strip away everything that is not the exponential first, exactly the way you would isolate a variable before solving for it. (You <i>can</i> log both sides right now and use the product rule; it works, but it is a longer road to the same place.)',
+     L:function(x){return 4*PW(3,x);}, R:function(){return 100;}},
+    {h:'<span class="hl">3<sup><i>x</i></sup> = 25</span>', r:'isolate',
+     w:'Divide both sides by 4. Now inspect the constant that appeared: 25 is <b>positive</b>, so the equation is possible and a log will be defined. Then run the matching test on it &mdash; 3<sup>2</sup> = 9, 3<sup>3</sup> = 27, and 25 falls between. No match, so a logarithm it is.',
+     L:function(x){return PW(3,x);}, R:function(){return 25;}},
+    {h:'<span class="hl">ln</span>(3<sup><i>x</i></sup>) = <span class="hl">ln</span> 25', r:'takelog',
+     w:'Apply ln to each side. Both sides are positive, so this is legal, and ln is one-to-one, so the solution set is unchanged. Watch the number column: the two values are no longer 25 and 25 but their logarithms &mdash; different numbers than before, still equal to each other exactly when the original equation held.',
+     L:function(x){return LN(PW(3,x));}, R:function(){return LN(25);}},
+    {h:'<span class="hl"><i>x</i> &middot; ln 3</span> = ln 25', r:'power',
+     w:'The power rule brings the exponent down in front. The unknown is now a plain coefficient multiplier, not an exponent.',
+     L:function(x){return x*LN(3);}, R:function(){return LN(25);}},
+    {h:'<i>x</i> = <span class="hl">'+fr('ln 25','ln 3')+'</span>', r:'solve',
+     w:'Divide by ln 3, which is about 1.0986. The exact answer is log<sub>3</sub>25 &mdash; and notice that the 100 and the 4 have both vanished into that single 25. Isolating early is what kept the algebra this short.',
+     L:function(x){return x;}, R:function(){return LN(25)/LN(3);}},
+    {h:'<i>x</i> &asymp; <span class="hl">2.9299</span>', r:'evaluate',
+     w:'Decimal last. Size check: 9 &lt; 25 &lt; 27, so <i>x</i> belongs between 2 and 3, close to 3 &mdash; and 2.93 is exactly that. A prediction that lands is the cheapest error-check you own.',
+     L:function(x){return x;}, R:function(){return LN(25)/LN(3);}}
+   ]},
+
+  {nm:'3<sup><i>x</i>+1</sup> = 5<sup><i>x</i></sup>', s:'unknown on both sides', pb:3, br:[], ans:'<i>x</i> = '+fr('ln 3','ln 5 &minus; ln 3')+' &asymp; 2.1507', av:LN(3)/(LN(5)-LN(3)), xmin:-1, xmax:5,
+   ptxt:'3 and 5 are both <b>prime</b>. No base has whole-number powers producing both of them, so matching is impossible in principle, not merely inconvenient. Nothing on this list will ever help &mdash; take a log immediately.',
+   dom:'Both 3<sup><i>x</i>+1</sup> and 5<sup><i>x</i></sup> are positive for every real <i>x</i>, so ln of each side is always defined and there is <b>no restriction on <i>x</i> at all</b> &mdash; nothing to exclude, nothing extraneous to discard. The only traps here are algebraic: the parentheses in (<i>x</i> + 1)ln 3, and remembering that ln 5 &minus; ln 3 is a single number (about 0.5108) that you may divide by because it is not zero.',
+   st:[
+    {h:'3<sup><i>x</i>+1</sup> = 5<sup><i>x</i></sup>', r:'start',
+     w:'Different bases on both sides, and the unknown is in both exponents. 3 and 5 are both prime, so there is no common base to be found &mdash; matching is not just hard here, it is impossible. Take a logarithm of both sides.',
+     L:function(x){return PW(3,x+1);}, R:function(x){return PW(5,x);}},
+    {h:'<span class="hl">ln</span>(3<sup><i>x</i>+1</sup>) = <span class="hl">ln</span>(5<sup><i>x</i></sup>)', r:'takelog',
+     w:'Apply ln to each side. Both sides are positive for every real <i>x</i>, so there is nothing to restrict and no case to check.',
+     L:function(x){return LN(PW(3,x+1));}, R:function(x){return LN(PW(5,x));}},
+    {h:'<span class="hl">(<i>x</i> + 1)</span> ln 3 = <i>x</i> ln 5', r:'power',
+     w:'Power rule on both sides at once. <b>The parentheses on the left are mandatory:</b> the <i>entire</i> exponent <i>x</i> + 1 comes down, not just the <i>x</i>. Writing <i>x</i> + 1 &middot; ln 3 would mean something else entirely and would give a wrong answer.',
+     L:function(x){return (x+1)*LN(3);}, R:function(x){return x*LN(5);}},
+    {h:'<span class="hl"><i>x</i> ln 3 + ln 3</span> = <i>x</i> ln 5', r:'distribute',
+     w:'Distribute ln 3 across both terms in the parentheses. It helps enormously to remember what ln 3 and ln 5 actually are: <b>plain numbers</b>, about 1.0986 and 1.6094. If they were written as 1.1 and 1.6 you would not hesitate for a second on the rest of this problem.',
+     L:function(x){return x*LN(3)+LN(3);}, R:function(x){return x*LN(5);}},
+    {h:'<span class="hl">ln 3</span> = <span class="hl"><i>x</i> ln 5 &minus; <i>x</i> ln 3</span>', r:'collect',
+     w:'The unknown now appears on both sides, so gather it on one side. Subtract <i>x</i> ln 3 from both sides. That leaves the constant ln 3 alone on the left and every <i>x</i> term on the right.',
+     L:function(){return LN(3);}, R:function(x){return x*LN(5)-x*LN(3);}},
+    {h:'ln 3 = <span class="hl"><i>x</i>(ln 5 &minus; ln 3)</span>', r:'factor',
+     w:'Factor <i>x</i> out of the right side. This is the step most often skipped, and skipping it is fatal &mdash; without a single factor of <i>x</i> there is nothing to divide by and the problem stalls.',
+     L:function(){return LN(3);}, R:function(x){return x*(LN(5)-LN(3));}},
+    {h:'<i>x</i> = <span class="hl">'+fr('ln 3','ln 5 &minus; ln 3')+'</span>', r:'solve',
+     w:'Divide both sides by (ln 5 &minus; ln 3). That whole parenthesis is one number, about 0.5108 &mdash; nonzero, so dividing is allowed. This is the exact answer. Using the quotient rule backwards it can also be written as ln 3 / ln(5/3), or log<sub>5/3</sub>3.',
+     L:function(x){return x;}, R:function(){return LN(3)/(LN(5)-LN(3));}},
+    {h:'<i>x</i> &asymp; <span class="hl">2.1507</span>', r:'evaluate',
+     w:'Decimal last, as always. A rough check: at <i>x</i> = 2 the left side is 3<sup>3</sup> = 27 and the right is 5<sup>2</sup> = 25, so the left is still ahead; by <i>x</i> = 3 the right side (125) has overtaken the left (81). The crossing therefore sits between 2 and 3, nearer 2. It does.',
+     L:function(x){return x;}, R:function(){return LN(3)/(LN(5)-LN(3));}}
+   ]}
+ ]};
+
+ var MN={
+  match:'<b>Method 1 &mdash; match the bases.</b> Ask whether both sides can be written as powers of one base. If they can, rewrite them, use (<i>b</i><sup><i>m</i></sup>)<sup><i>n</i></sup> = <i>b</i><sup><i>mn</i></sup> to tidy the exponents, then cancel the bases and set the exponents equal. The payoff is an <b>exact</b> answer with no calculator. Hunt among 2, 4, 8, 16, 32; 9, 27, 81; 25, 125 &mdash; and remember reciprocals and roots count too.',
+  log:'<b>Method 2 &mdash; take a log of both sides.</b> Use it when no common base exists. The order never varies: <b>(1)</b> isolate the exponential, <b>(2)</b> confirm the other side is positive, <b>(3)</b> take ln (or log) of both sides, <b>(4)</b> use the power rule to bring the exponent down, <b>(5)</b> solve the ordinary equation that is left. Report the exact log form first; the decimal is the very last thing you write.'
+ };
+
+ /* ================= state ================= */
+ var mode='match', ei=0, si=0, XV=0;
+ function cur(){return EX[mode][ei];}
+
+ function buildPicks(){
+   $('picks').innerHTML=EX[mode].map(function(e,i){
+     return '<button class="it'+(i===ei?' on':'')+'" data-i="'+i+'"><span class="nm">'+e.nm+'</span><span class="s">'+e.s+'</span></button>';
+   }).join('');
+   var b=$('picks').querySelectorAll('.it');
+   for(var i=0;i<b.length;i++){ b[i].onclick=function(){ ei=+this.getAttribute('data-i'); si=0; pbase=cur().pb; resetX(); buildPicks(); render(); }; }
+   $('mnem').innerHTML=MN[mode];
+ }
+ function resetX(){ var e=cur(); XV=e.xmin; $('slX').value=0; }
+ function setX(v){ var e=cur(); XV=e.xmin+v*(e.xmax-e.xmin)/400; }
+
+ function render(){
+   var e=cur(), st=e.st, s=st[si], i;
+   $('stage').style.background=C[s.r];
+   $('stage').innerHTML=e.nm+'<small>'+(mode==='match'?'matching bases':'taking a log')+' &middot; step '+(si+1)+' of '+st.length+'</small>';
+   $('stepTitle').innerHTML=(mode==='match'?'Matching the bases':'Taking a log')+' &mdash; one step at a time';
+
+   var out='', nEq=0;
+   for(i=0;i<st.length;i++){
+     if(i>si){ out+='<div class="pend">&middot; &middot; &middot;</div>'; continue; }
+     var lv=st[i].L(XV), rv=st[i].R(XV), eq=near(lv,rv);
+     if(eq)nEq++;
+     out+='<div class="ln '+(i===si?'cur':'done')+'">'+
+       '<span><span class="eqx">'+st[i].h+'</span>'+
+       '<span class="rl" style="color:'+C[st[i].r]+'">'+RLAB[st[i].r]+'</span></span>'+
+       '<span class="vv'+(eq?' ok':'')+'">'+fmt(lv)+' '+(eq?'=':'&ne;')+' '+fmt(rv)+
+       '<small>left '+(eq?'=':'vs')+' right</small></span></div>';
+   }
+   $('steps').innerHTML=out;
+
+   $('info').innerHTML='<span class="n">'+RLAB[s.r]+'<span class="badge" style="background:'+C[s.r]+'">step '+(si+1)+'</span></span>'+s.w+
+     '<div class="loc">'+RF[s.r]+'</div>';
+   $('ansbox').innerHTML='<b>Solution:</b> &nbsp;'+e.ans;
+   $('dom').innerHTML='<b>Excluded values &middot; checking the answer.</b> '+e.dom;
+
+   $('labX').innerHTML=f4(XV);
+   var atSol=near(XV,e.av);
+   $('agree').className='agree'+(atSol?'':' off');
+   $('agree').innerHTML = atSol
+     ? 'At <i>x</i> = <b>'+f4(XV)+'</b> every revealed line balances &mdash; all <b>'+nEq+' of '+(si+1)+'</b> of them, at the same instant. That is what &ldquo;equivalent equations&rdquo; means: each step changed the <i>shape</i> of the equation without changing which numbers satisfy it. The solution of the last line is the solution of the first.'
+     : 'At <i>x</i> = <b>'+f4(XV)+'</b>, <b>'+nEq+' of '+(si+1)+'</b> revealed lines balance. Drag the slider, or press <b>Jump to the solution</b> &mdash; and watch every line click into balance together, not one at a time.';
+
+   $('prev').disabled=(si===0); $('next').disabled=(si===st.length-1);
+   drawPowers();
+ }
+
+ /* ================= wiring ================= */
+ $('prev').onclick=function(){ if(si>0){si--;render();} };
+ $('next').onclick=function(){ if(si<cur().st.length-1){si++;render();} };
+ $('slX').oninput=function(){ setX(+this.value); render(); };
+ $('jump').onclick=function(){ var e=cur(); XV=e.av;
+   $('slX').value=Math.round((e.av-e.xmin)/(e.xmax-e.xmin)*400); render(); };
+ (function(){
+   var mb=$('mode').querySelectorAll('button');
+   for(var i=0;i<mb.length;i++){ mb[i].onclick=function(){
+     mode=this.getAttribute('data-m'); ei=0; si=0; pbase=cur().pb; resetX();
+     for(var j=0;j<mb.length;j++){ mb[j].className=(mb[j].getAttribute('data-m')===mode?'on':''); }
+     buildPicks(); render();
+   }; }
+ })();
+ (function(){
+   var pb=$('pseg').querySelectorAll('button');
+   for(var i=0;i<pb.length;i++){ pb[i].onclick=function(){ pbase=+this.getAttribute('data-b'); drawPowers(); }; }
+ })();
+
+ pbase=cur().pb; resetX(); buildPicks(); render(); drawGraph();
+})();
+</script>
+</body>
+</html>

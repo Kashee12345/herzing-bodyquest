@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Build the Rectangle: Multiplying with an Area Model</title>
+<meta name="description" content="Multiply polynomials by building a rectangle whose area is the product. Cut the sides, fill one piece at a time, and watch FOIL appear as nothing more than the order you read the grid.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.95fr 1.05fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* example picker */
+#pick{display:grid;grid-template-columns:repeat(3,1fr);}
+#pick button{font-size:12px;padding:9px 4px;line-height:1.2;}
+#pick button small{display:block;font-family:var(--math);font-weight:500;font-size:11px;color:var(--muted);margin-top:3px;line-height:1.15;}
+#pick button.on small{color:rgba(255,255,255,.92);}
+#pick button small sup{font-size:.66em;}
+@media (max-width:430px){#pick{grid-template-columns:repeat(2,1fr);}}
+/* the work column */
+.work{margin-top:2px;}
+.wr{display:flex;gap:10px;align-items:baseline;padding:7px 8px;border-radius:9px;border-left:4px solid transparent;transition:.18s;}
+.wr + .wr{margin-top:2px;}
+.wr .pl{flex:none;width:80px;font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.wr .mx{font-family:var(--math);font-size:16px;color:var(--muted);line-height:1.75;flex:1;min-width:0;}
+.wr.on{background:#eef0fa;border-left-color:var(--teal);}
+.wr.on .mx{font-size:18.5px;color:var(--ink);font-weight:600;}
+.wr.on .pl{color:var(--teal);}
+.wr .ex{font-family:var(--math);font-size:13px;color:var(--soft);line-height:1.65;margin-top:4px;display:block;}
+.wr:not(.on) .ex{display:none;}
+.wr .ex u{font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;display:block;margin-bottom:1px;}
+.mx sub{font-size:.62em;vertical-align:sub;} .mx sup{font-size:.66em;} .ex sup{font-size:.66em;}
+/* highlighting the part that changed */
+.hl{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.wr:not(.on) .hl{background:transparent;box-shadow:none;padding:0;}
+.chip{font-family:var(--sans);font-size:9.6px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:3px 9px;margin-left:7px;white-space:nowrap;vertical-align:2px;}
+.chip.t{background:#dff0e4;color:#237a45;} .chip.f{background:#fae5e8;color:#b23145;}
+/* legend + caption under the picture */
+.leg{display:flex;flex-wrap:wrap;gap:5px 12px;margin-top:10px;}
+.leg div{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--soft);}
+.leg .sw{width:15px;height:15px;border-radius:4px;flex:none;border:1.4px solid;}
+.leg i{font-family:var(--math);}
+.cap{font-size:12px;color:var(--soft);line-height:1.55;margin-top:11px;border-top:1px solid var(--line);padding-top:10px;min-height:56px;}
+.cap b{color:var(--ink);}
+.plan{display:flex;flex-wrap:wrap;gap:4px;margin-top:11px;}
+.plan span{font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:#eceefa;color:var(--muted);border-radius:20px;padding:4px 9px;}
+.plan span.on{background:var(--teal);color:#fff;}
+.plan span.done{background:#dfe2f4;color:var(--teal-dk);}
+#info .n{margin-bottom:4px;}
+#info i,.cap i,.wr i{font-family:var(--math);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 6</div>
+  <h1>Build the Rectangle</h1>
+  <div class="intro">You already trust one fact from geometry: a rectangle's area is its width times its height. So to multiply two polynomials, <b>build the rectangle</b> &mdash; width one factor, height the other. Its area <i>is</i> the product, before a single calculation. Cut the sides into their terms, and the rectangle falls into pieces you can measure one at a time. Do that with two binomials and something familiar appears in the grid: <b>FOIL</b> turns out to be nothing but the order you read four little rectangles.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The rectangle</h2>
+    <svg viewBox="0 0 300 282" aria-label="area model rectangle for the product"><g id="art"></g></svg>
+    <div class="leg" id="leg"></div>
+    <div class="cap" id="cap"></div>
+  </div></div>
+  <div>
+    <div id="stage">Area model<small>pick a product</small></div>
+    <div class="card">
+      <h2>Choose a product</h2>
+      <div class="seg" id="pick"></div>
+      <div class="plan" id="plan"></div>
+    </div>
+    <div class="card">
+      <div class="work" id="work"></div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ==================== polynomial helpers ====================
+    A term is [coefficient, exponent of x]. A polynomial is a list
+    of terms, written highest power first.                        */
+ function mag(c,e){ var a=Math.abs(c);
+   if(e===0) return ''+a;
+   return (a===1?'':a)+'<i>x</i>'+(e>1?'<sup>'+e+'</sup>':''); }
+ function lead(c,e){ return (c<0?'&minus;':'')+mag(c,e); }
+ function more(c,e){ return (c<0?' &minus; ':' + ')+mag(c,e); }
+ function polyZ(ts){ return ts.map(function(t,k){ return k===0?lead(t[0],t[1]):more(t[0],t[1]); }).join(''); }
+ function poly(ts){ var f=ts.filter(function(t){return t[0]!==0;});
+   return f.length?polyZ(f):'0'; }
+ function par(ts){ return '('+poly(ts)+')'; }
+ function nk(k){ return (k<0?'&minus;':'')+Math.abs(k); }
+ function hl(s){ return '<span class="hl">'+s+'</span>'; }
+ function tval(t,X){ return t[0]*Math.pow(X,t[1]); }
+ function evalp(ts,X){ var s=0; ts.forEach(function(t){ s+=tval(t,X); }); return s; }
+ /* every term of A against every term of B, collected by power */
+ function mul(A,B){ var m={},ks=[];
+   A.forEach(function(a){ B.forEach(function(b){ var e=a[1]+b[1];
+     if(m[e]===undefined){ m[e]=0; ks.push(e); } m[e]+=a[0]*b[0]; }); });
+   ks.sort(function(p,q){ return q-p; });
+   var out=[]; ks.forEach(function(e){ if(m[e]!==0) out.push([m[e],e]); });
+   return out.length?out:[[0,0]]; }
+ /* x^n written the long way, so the exponent rule is visible, not asserted */
+ function expand(n){ var p=[],i; for(i=0;i<n;i++) p.push('<i>x</i>'); return p.join('&middot;'); }
+
+ /* ==================== geometry of the model ====================
+    Each factor becomes a set of slots along one side. Positive terms
+    are laid end to end. A NEGATIVE term is drawn as a strip laid back
+    over the far end of the positive run — because it is length being
+    taken away, not length being added. What is left uncovered is the
+    true side, so the uncovered rectangle really does have the area of
+    the product.                                                     */
+ var MINF=0.10;                      /* thinnest a strip may be drawn */
+ function slots(F,X){
+   var raw=F.map(function(t){ return tval(t,X); }), v=raw.slice();
+   var sch=false, P=0, m=0, i, pass, changed;
+   /* Widening one hair-thin strip grows the total, which lowers every other
+      strip's share — so the clamp has to be run to a fixed point, not once. */
+   for(pass=0;pass<12;pass++){
+     P=0; for(i=0;i<v.length;i++) if(v[i]>0) P+=v[i];
+     m=P*MINF; changed=false;
+     for(i=0;i<v.length;i++){
+       if(Math.abs(v[i])<m-1e-9){ v[i]=(v[i]<0?-m:m); changed=true; sch=true; }
+     }
+     if(!changed) break;
+   }
+   P=0; for(i=0;i<v.length;i++) if(v[i]>0) P+=v[i];
+   var sl=[], pos=0, neg=P, N=0;
+   for(i=0;i<v.length;i++){
+     if(v[i]>0){ sl.push({s:pos,len:v[i],neg:false}); pos+=v[i]; }
+     else { N+=-v[i]; neg-=(-v[i]); sl.push({s:neg,len:-v[i],neg:true}); }
+   }
+   return {sl:sl,P:P,N:N,T:P-N,sch:sch};
+ }
+ /* the pieces, in FOIL order: first factor outer loop, second inner */
+ function cells(A,B){ var out=[],i,j;
+   for(i=0;i<A.length;i++) for(j=0;j<B.length;j++)
+     out.push({i:i,j:j,c:A[i][0]*B[j][0],e:A[i][1]+B[j][1]});
+   return out; }
+
+ /* colour by DEGREE, so like terms are literally the same colour */
+ var TONE={
+   0:{bg:'#f6ecd8',hi:'#efdcae',ink:'#8a6a20',st:'#d9bd7f',nm:'plain numbers'},
+   1:{bg:'#ece3f3',hi:'#dccbeb',ink:'#5f4470',st:'#c1abd3',nm:'<i>x</i> pieces'},
+   2:{bg:'#e3e5f5',hi:'#ccd0ee',ink:'#33366f',st:'#a8aedd',nm:'<i>x</i><sup>2</sup> pieces'},
+   3:{bg:'#dfeaf4',hi:'#c6dbef',ink:'#255f8a',st:'#9fc1da',nm:'<i>x</i><sup>3</sup> pieces'}
+ };
+ function tone(e){ return TONE[e]||TONE[3]; }
+
+ /* ==================== the six products ==================== */
+ var EX=[
+  {id:'A',lab:'The classic',sm:'(<i>x</i>+3)(<i>x</i>+5)',A:[[1,1],[3,0]],B:[[1,1],[5,0]],X:8,chk:2,
+   nm:'(<i>x</i> + 3)(<i>x</i> + 5)'},
+  {id:'B',lab:'A coefficient',sm:'(2<i>x</i>+3)(<i>x</i>+4)',A:[[2,1],[3,0]],B:[[1,1],[4,0]],X:6,chk:3,
+   nm:'(2<i>x</i> + 3)(<i>x</i> + 4)'},
+  {id:'C',lab:'A minus sign',sm:'(<i>x</i>+4)(<i>x</i>&minus;7)',A:[[1,1],[4,0]],B:[[1,1],[-7,0]],X:12,chk:2,
+   nm:'(<i>x</i> + 4)(<i>x</i> &minus; 7)'},
+  {id:'D',lab:'Squares differ',sm:'(<i>x</i>+5)(<i>x</i>&minus;5)',A:[[1,1],[5,0]],B:[[1,1],[-5,0]],X:12,chk:3,
+   nm:'(<i>x</i> + 5)(<i>x</i> &minus; 5)'},
+  {id:'E',lab:'A square',sm:'(<i>x</i>+4)<sup>2</sup>',A:[[1,1],[4,0]],B:[[1,1],[4,0]],X:12,chk:2,sq:true,
+   nm:'(<i>x</i> + 4)<sup>2</sup>'},
+  {id:'F',lab:'Beyond FOIL',sm:'(<i>x</i>+2)(<i>x</i><sup>2</sup>+3<i>x</i>+1)',A:[[1,1],[2,0]],B:[[1,2],[3,1],[1,0]],X:3,chk:2,
+   nm:'(<i>x</i> + 2)(<i>x</i><sup>2</sup> + 3<i>x</i> + 1)'}
+ ];
+
+ /* everything below is derived — no answer is typed in by hand */
+ EX.forEach(function(E){
+   E.cw=slots(E.A,E.X); E.rw=slots(E.B,E.X);
+   E.cells=cells(E.A,E.B);
+   E.P=mul(E.A,E.B);
+   E.sch=E.cw.sch||E.rw.sch;
+   E.foil=(E.A.length===2&&E.B.length===2);
+   E.neg=E.cells.some(function(c){ return c.c<0; });
+   /* every power that shows up among the pieces, high to low, zeros kept */
+   var m={},ks=[];
+   E.cells.forEach(function(c){ if(m[c.e]===undefined){ m[c.e]=0; ks.push(c.e); } m[c.e]+=c.c; });
+   ks.sort(function(p,q){ return q-p; });
+   E.all=ks.map(function(e){ return [m[e],e]; });
+   E.merged={}; ks.forEach(function(e){
+     var n=E.cells.filter(function(c){ return c.e===e; }).length;
+     if(n>1) E.merged[e]=n; });
+ });
+
+ /* ==================== SVG drawing ==================== */
+ var X0=54, Y0=50, W=234, H=216;
+ function sMag(c,e){ var a=Math.abs(c);
+   if(e===0) return ''+a;
+   return (a===1?'':a)+'<tspan font-style="italic">x</tspan>'+(e>1?'<tspan font-size="8" dy="-4">'+e+'</tspan>':''); }
+ function sLead(c,e){ return (c<0?'&minus;':'')+sMag(c,e); }
+ function sMore(c,e){ return (c<0?'&minus; ':'+ ')+sMag(c,e); }
+ function txt(x,y,s,col,size,anch,wt,fam){
+   return '<text x="'+x+'" y="'+y+'" font-size="'+size+'" fill="'+col+'" text-anchor="'+(anch||'middle')+
+     '" font-family="'+(fam||'Georgia,serif')+'" font-weight="'+(wt||600)+'">'+s+'</text>'; }
+
+ function paint(E,st){
+   var sx=W/E.cw.P, sy=H/E.rw.P, o='', k, c, C, R, x, y, w, h, T;
+   function px(u){ return (X0+u*sx).toFixed(1); }
+   function py(u){ return (Y0+u*sy).toFixed(1); }
+
+   o+='<defs><pattern id="cut" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'+
+      '<line x1="0" y1="0" x2="0" y2="8" stroke="#d1495b" stroke-width="2.4" opacity=".38"/></pattern></defs>';
+
+   /* pieces already discovered — positives first, removals painted over them */
+   function piece(c,k,removal){
+     C=E.cw.sl[c.i]; R=E.rw.sl[c.j]; T=tone(c.e);
+     var isRem=(c.c<0);
+     if(isRem!==removal) return '';
+     x=px(C.s); y=py(R.s); w=(C.len*sx).toFixed(1); h=(R.len*sy).toFixed(1);
+     var cur=(k===st.cur), s='';
+     s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+(cur?T.hi:T.bg)+'"/>';
+     if(isRem) s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="url(#cut)"/>';
+     return s;
+   }
+   for(k=0;k<E.cells.length;k++){ if(k<st.k) o+=piece(E.cells[k],k,false); }
+   for(k=0;k<E.cells.length;k++){ if(k<st.k) o+=piece(E.cells[k],k,true); }
+
+   /* outlines of every discovered piece, plus any gold-flagged pair */
+   for(k=0;k<E.cells.length;k++){
+     if(k>=st.k) continue;
+     c=E.cells[k]; C=E.cw.sl[c.i]; R=E.rw.sl[c.j]; T=tone(c.e);
+     var flag=(st.glow&&st.glow.indexOf(k)>=0), cur=(k===st.cur);
+     var stroke=flag?'#b8862f':(c.c<0?'#d1495b':T.st);
+     o+='<rect x="'+px(C.s)+'" y="'+py(R.s)+'" width="'+(C.len*sx).toFixed(1)+'" height="'+(R.len*sy).toFixed(1)+
+        '" fill="none" stroke="'+stroke+'" stroke-width="'+(flag||cur?2.4:1.1)+'"'+(flag?' stroke-dasharray="5 3"':'')+'/>';
+   }
+
+   /* the labels inside the pieces — a positive piece is labelled in the
+      part of it that survives, so its text never hides under a removal */
+   for(k=0;k<st.k&&k<E.cells.length;k++){
+     c=E.cells[k]; C=E.cw.sl[c.i]; R=E.rw.sl[c.j]; T=tone(c.e);
+     var ax0=C.s, ax1=C.s+C.len, ay0=R.s, ay1=R.s+R.len;
+     if(c.c>0){
+       var vx1=Math.min(ax1,E.cw.T), vy1=Math.min(ay1,E.rw.T);
+       if(vx1-ax0>(ax1-ax0)*0.3) ax1=vx1;
+       if(vy1-ay0>(ay1-ay0)*0.3) ay1=vy1;
+     }
+     var mx=(ax0+ax1)/2, my=(ay0+ay1)/2;
+     var fs=Math.min(15,Math.max(9,Math.min(C.len*sx,R.len*sy)*0.42));
+     o+=txt(px(mx),(parseFloat(py(my))+fs*0.34).toFixed(1),sLead(c.c,c.e),
+            c.c<0?'#a8334a':T.ink,fs.toFixed(1),'middle',700);
+   }
+
+   /* the rectangle that actually equals the product */
+   if(st.keep){
+     o+='<rect x="'+px(0)+'" y="'+py(0)+'" width="'+(E.cw.T*sx).toFixed(1)+'" height="'+(E.rw.T*sy).toFixed(1)+
+        '" fill="none" stroke="#b8862f" stroke-width="2.6" stroke-dasharray="7 4"/>';
+   }
+
+   /* the outer rectangle and the cuts */
+   o+='<rect x="'+px(0)+'" y="'+py(0)+'" width="'+(E.cw.P*sx).toFixed(1)+'" height="'+(E.rw.P*sy).toFixed(1)+
+      '" fill="'+(st.k?'none':'#f7f8fd')+'" stroke="#43458f" stroke-width="2"/>';
+   if(st.cw) E.cw.sl.forEach(function(S,i){ if(i===0) return;
+     o+='<line x1="'+px(S.s)+'" y1="'+py(0)+'" x2="'+px(S.s)+'" y2="'+py(E.rw.P)+
+        '" stroke="'+(S.neg?'#d1495b':'#43458f')+'" stroke-width="1.6"'+(S.neg?' stroke-dasharray="5 3"':'')+'/>'; });
+   if(st.rw) E.rw.sl.forEach(function(S,j){ if(j===0) return;
+     o+='<line x1="'+px(0)+'" y1="'+py(S.s)+'" x2="'+px(E.cw.P)+'" y2="'+py(S.s)+
+        '" stroke="'+(S.neg?'#d1495b':'#43458f')+'" stroke-width="1.6"'+(S.neg?' stroke-dasharray="5 3"':'')+'/>'; });
+
+   /* side labels */
+   o+=txt(X0+W/2,20,'width &nbsp;'+polySvg(E.A),'#43458f',12,'middle',700);
+   o+='<text x="16" y="'+(Y0+H/2)+'" font-size="12" fill="#43458f" text-anchor="middle" font-family="Georgia,serif" font-weight="700" transform="rotate(-90 16 '+(Y0+H/2)+')">height &nbsp;'+polySvg(E.B)+'</text>';
+   if(st.cw) E.cw.sl.forEach(function(S,i){
+     var lab=(i===0)?sLead(E.A[i][0],E.A[i][1]):sMore(E.A[i][0],E.A[i][1]);
+     var mid=S.neg?(S.s+S.len/2):(S.s+S.len/2);
+     o+=txt(px(mid),Y0-11,lab,S.neg?'#a8334a':'#33366f',12.5,'middle',700); });
+   if(st.rw) E.rw.sl.forEach(function(S,j){
+     var lab=(j===0)?sLead(E.B[j][0],E.B[j][1]):sMore(E.B[j][0],E.B[j][1]);
+     var a0=S.s, a1=S.s+S.len;
+     if(!S.neg){ var v1=Math.min(a1,E.rw.T); if(v1-a0>(a1-a0)*0.3) a1=v1; }
+     o+=txt(X0-8,(parseFloat(py((a0+a1)/2))+4).toFixed(1),lab,S.neg?'#a8334a':'#33366f',12.5,'end',700); });
+   return o;
+ }
+ /* a whole factor, written for SVG text */
+ function polySvg(ts){ return ts.map(function(t,k){
+   return (k===0?sLead(t[0],t[1]):' '+sMore(t[0],t[1])); }).join(''); }
+
+ /* ==================== the steps ==================== */
+ var PLAN=['rectangle','cut width','cut height','pieces','add','combine','product','check','pattern'];
+
+ function build(E){
+   var steps=[], rows=[], mark=0;
+   function add(pl,mx,ex,chip){ rows.push({pl:pl,mx:mx,ex:ex||'',chip:chip||''}); }
+   function snap(o){ o.rows=rows.slice(); o.from=mark; mark=rows.length; steps.push(o); }
+   var nA=E.A.length, nB=E.B.length, nC=E.cells.length;
+   var FA=poly(E.A), FB=poly(E.B), PR=poly(E.P);
+
+   /* ---------- 0. the rectangle ---------- */
+   add('the product', E.nm);
+   snap({t:'Start with a rectangle',s:'the answer, drawn before it is computed',p:0,k:0,cw:false,rw:false,
+     why:'Area is the one piece of geometry nobody argues with: a rectangle&rsquo;s area is its width times its height. So build a rectangle <b>'+FA+'</b> wide and <b>'+FB+'</b> tall. Its area is, by definition, '+E.nm+' &mdash; the very thing we were asked for. Nothing has been calculated yet, and yet the answer is already on the page. It is a shape. All that is left is to measure it.'+
+       (E.sq?' <b>Squaring means two copies.</b> (<i>x</i> + 4)<sup>2</sup> is shorthand for (<i>x</i> + 4)(<i>x</i> + 4), so the width and the height are the same length and the rectangle is a genuine square.':''),
+     tip:{c:'mnem',h:'<b>Why bother with a picture?</b> Because the picture cannot forget a term. Rules can be misremembered; a rectangle either has been fully covered or it has not, and you can see which.'},
+     cap:'Width <b>'+FA+'</b>, height <b>'+FB+'</b>. Area = width &times; height. That sentence is the entire method; everything after this is measuring.'});
+
+   /* ---------- 1. cut the width ---------- */
+   add('width', hl(FA), '<u>'+nA+' lengths, end to end</u>'+E.A.map(function(t,i){
+       return (i===0?lead(t[0],t[1]):more(t[0],t[1])); }).join('')+' &mdash; so the top edge gets '+(nA-1)+' cut'+(nA>2?'s':'')+'.');
+   snap({t:'Cut the width into its terms',s:FA+' is '+nA+' lengths laid end to end',p:1,k:0,cw:true,rw:false,
+     why:'The width is not one length; it is '+nA+' lengths joined together. '+FA+' means &ldquo;a length of '+mag(E.A[0][0],E.A[0][1])+', then '+E.A.slice(1).map(function(t){ return (t[0]<0?'take away ':'add ')+mag(t[0],t[1]); }).join(', then ')+'.&rdquo; Mark those junctions on the top edge and drop a line from each. Cutting a side cuts the rectangle into strips, and the strips must add back to the whole &mdash; drawing a line destroys no area and creates none.'+
+       (E.A.some(function(t){return t[0]<0;})?' A <b>subtracted</b> length is drawn as a dashed red strip folded back over the end, because it is length being removed, not length being added on.':''),
+     cap:'The top edge is divided. The rectangle is now '+nA+' vertical strips &mdash; still the same total area, just described in more detail.'});
+
+   /* ---------- 2. cut the height ---------- */
+   add('height', hl(FB), '<u>'+nB+' lengths, stacked</u>'+E.B.map(function(t,j){
+       return (j===0?lead(t[0],t[1]):more(t[0],t[1])); }).join('')+' &mdash; so the left edge gets '+(nB-1)+' cut'+(nB>2?'s':'')+'.');
+   snap({t:'Cut the height too',s:nA+' &times; '+nB+' = '+nC+' pieces',p:2,k:0,cw:true,rw:true,
+     why:'Do the same to the height, and the strips break into a grid of <b>'+nC+'</b> pieces. Look at what the grid guarantees: each little rectangle is (one term of the width) &times; (one term of the height), and <b>every possible pairing appears exactly once</b> &mdash; '+nA+' choices across times '+nB+' choices down. That is the distributive law, standing there as a floor plan. Multiplying out means nothing more than adding up these '+nC+' areas.'+
+       (E.neg?' Two of these pieces sit under the dashed red band. They are areas that will be <b>subtracted</b>, and we will come back to exactly what that means.':''),
+     tip:{c:'mnem',h:'Count first, multiply second. '+nA+' terms times '+nB+' terms must give <b>'+nC+'</b> pieces. If your written work ends up with fewer than '+nC+' products, you dropped one &mdash; and this is where nearly all sign-and-term errors are born.'},
+     cap:'A '+nA+' &times; '+nB+' grid. Every piece is a term of the width meeting a term of the height, and no pairing is missing or repeated.'});
+
+   /* ---------- 3..n. one piece at a time ---------- */
+   var FOIL=[{n:'First',l:'F',d:'the <b>first</b> term of each factor'},
+             {n:'Outer',l:'O',d:'the two <b>outer</b> terms, at the ends of the written product'},
+             {n:'Inner',l:'I',d:'the two <b>inner</b> terms, the ones standing next to each other'},
+             {n:'Last',l:'L',d:'the <b>last</b> term of each factor'}];
+   E.cells.forEach(function(c,k){
+     var a=E.A[c.i], b=E.B[c.j], ca=Math.abs(a[0]), cb=Math.abs(b[0]);
+     var nmStep=E.foil?FOIL[k].n:('Piece '+(k+1)+' of '+nC);
+     var plLab=E.foil?(FOIL[k].l+' &middot; '+FOIL[k].n.toLowerCase()):('piece '+(k+1));
+
+     var why='This piece is '+ (a[0]<0?'a removed width of ':'a width of ') + mag(a[0],a[1]) +
+       (b[0]<0?' meeting a removed height of ':' meeting a height of ') + mag(b[0],b[1]) + '. ';
+     why+='<b>The numbers first:</b> '+ca+' &times; '+cb+' = '+(ca*cb)+'. ';
+     if(a[1]>0&&b[1]>0){
+       why+='<b>Now the <i>x</i>&rsquo;s:</b> '+mag(1,a[1])+' &middot; '+mag(1,b[1])+' = ('+expand(a[1])+')('+expand(b[1])+') = '+mag(1,a[1]+b[1])+
+         '. The exponents add because an exponent is only a tally of how many <i>x</i>&rsquo;s are being multiplied together: set '+a[1]+' of them beside '+b[1]+' of them and you are holding '+(a[1]+b[1])+'. That is the whole of the rule <i>x</i><sup>m</sup> &middot; <i>x</i><sup>n</sup> = <i>x</i><sup>m+n</sup> &mdash; counting, not magic. ';
+       if(a[1]===1&&b[1]===1&&ca===1&&cb===1) why+='And notice the shape: a square with side <i>x</i>. <i>x</i><sup>2</sup> is not a symbol here, it is a picture. ';
+     } else if(a[1]>0||b[1]>0){
+       var xs=(a[1]>0?a:b), ns=(a[1]>0?b:a);
+       why+='Only one side carries an <i>x</i>, so the <i>x</i> rides along untouched: a strip '+mag(xs[0],xs[1])+' long and '+Math.abs(ns[0])+' unit'+(Math.abs(ns[0])===1?'':'s')+' thick has area '+mag(c.c,c.e)+'. Unlike the corner piece, a strip like this <b>grows as <i>x</i> grows</b> &mdash; its length is not fixed. ';
+     } else {
+       why+='Neither side carries an <i>x</i>, so this corner piece is a plain number &mdash; the same size no matter what <i>x</i> turns out to be. ';
+     }
+     if(c.c<0) why+='<b>The sign:</b> one of the two sides is a length being <i>taken away</i>, so this rectangle counts <b>against</b> the total. Positive times negative is negative &mdash; not by decree, but because you are removing '+Math.abs(c.c)+' unit'+(Math.abs(c.c)===1?'':'s')+' of area for every unit of the other side.';
+     if(E.foil&&k===0) why+=' In the FOIL mnemonic this is <b>F</b>: '+FOIL[0].d+'.';
+     else if(E.foil) why+=' In the FOIL mnemonic this is <b>'+FOIL[k].l+'</b>: '+FOIL[k].d+'.';
+
+     add(plLab,'('+lead(a[0],a[1])+')('+lead(b[0],b[1])+') = '+hl(lead(c.c,c.e)),
+       '<u>piece '+(k+1)+' of '+nC+'</u>'+ca+' &times; '+cb+' = '+(ca*cb)+
+       ((a[1]||b[1])?('&nbsp; &middot; &nbsp;'+(a[1]&&b[1]?(mag(1,a[1])+' &middot; '+mag(1,b[1])+' = '+mag(1,a[1]+b[1])):('the '+mag(1,Math.max(a[1],b[1]))+' carries through'))):'')+
+       (c.c<0?'&nbsp; &middot; &nbsp; one side is subtracted, so the area is removed':''));
+     snap({t:nmStep,s:E.foil?('the '+FOIL[k].l+' of F&ndash;O&ndash;I&ndash;L'):('grid position '+(c.i+1)+', '+(c.j+1)),
+       p:3,k:k+1,cur:k,cw:true,rw:true,why:why,
+       tip:(E.foil&&k===3)?{c:'mnem',h:'Four pieces, four letters. <b>FOIL is not a rule</b> &mdash; it is a reading order for this grid, and it only has four letters because a 2 &times; 2 grid only has four boxes. Change either factor to three terms and the letters run out while the grid carries on.'}:null,
+       cap:(c.c<0?'A removed piece: ':'')+'this rectangle measures '+mag(a[0],a[1])+' by '+mag(b[0],b[1])+', so its area is <b>'+lead(c.c,c.e)+'</b>.'+
+         (c.c<0?' It is hatched because it comes off the total.':'')});
+   });
+
+   /* ---------- add the pieces ---------- */
+   var sumStr=E.cells.map(function(c,k){ return k===0?lead(c.c,c.e):more(c.c,c.e); }).join('');
+   add('all '+nC+' pieces',hl(sumStr),
+     '<u>the rectangle, piece by piece</u>'+E.nm+' = '+sumStr);
+   snap({t:'Add the pieces up',s:'this line is the distributive law',p:4,k:nC,cw:true,rw:true,
+     why:'The area of the whole equals the sum of the areas of its parts. Say that about this grid and you have written '+E.nm+' = '+sumStr+'. That single sentence <i>is</i> the distributive law &mdash; not a rule to memorise on top of the picture, but the picture read out loud.'+
+       (E.neg?' The hatched pieces enter the sum with minus signs, exactly as areas being removed should.':'')+
+       (E.foil?' And because the grid is 2 &times; 2, the four pieces in the order we took them spell F, O, I, L.':' Notice there is no F&ndash;O&ndash;I&ndash;L here: there are '+nC+' pieces, not four. The mnemonic has run out; the grid has not.'),
+     tip:E.foil?null:{c:'note',h:'<b>FOIL only ever meant a 2 &times; 2 grid.</b> Students who learned it as <i>the</i> way to multiply get stranded the first time a trinomial appears. The distributive law &mdash; every term of one factor times every term of the other &mdash; covers all sizes, and the rectangle draws it for you.'},
+     cap:'All '+nC+' pieces measured. Their areas add to the area of the whole rectangle, which is what '+E.nm+' means.'});
+
+   /* ---------- combine like terms ---------- */
+   var combStr=E.all.map(function(t,k){
+     var sign=(k===0?(t[0]<0?'&minus;':''):(t[0]<0?' &minus; ':' + '));
+     var body=mag(t[0],t[1]);
+     return sign+(E.merged[t[1]]?hl(body):body); }).join('');
+   /* a power can be shared by more than two pieces, and more than one
+      power can need pooling — example F pools its x^2 and its x pieces  */
+   var mEs=Object.keys(E.merged).map(Number).sort(function(p,q){ return q-p; });
+   var glow=[];
+   E.cells.forEach(function(c,k){ if(E.merged[c.e]) glow.push(k); });
+   var mergeTxt=mEs.map(function(e){
+     var parts=E.cells.filter(function(c){ return c.e===e; });
+     var tot=parts.reduce(function(s,c){ return s+c.c; },0);
+     return parts.map(function(c,i){ return (i===0?lead(c.c,c.e):more(c.c,c.e)); }).join('')+' = '+lead(tot,e);
+   }).join(';&nbsp; ');
+   add('combine',hl(combStr),mergeTxt?('<u>the like pieces</u>'+mergeTxt):'');
+   snap({t:'Combine like terms',s:'same colour, same power, so they add',p:5,k:nC,cw:true,rw:true,glow:glow,
+     why:'<b>Like terms</b> are terms with the identical power of <i>x</i> &mdash; in the picture, the pieces sharing a colour. They add the way ordinary counts add: three of something plus two of that same something is five of it. '+
+       (mEs.length?('The pieces outlined in gold are the ones sharing a power, and each group collapses into a single term: '+mergeTxt+'. '):'')+
+       'What can <b>never</b> merge is a term of one power with a term of another. <i>x</i><sup>2</sup> and a plain number are not the same kind of quantity &mdash; one is an area that quadruples when <i>x</i> doubles, the other never budges. Writing <i>x</i><sup>2</sup> + 15 as some single term would be like adding a length to a weight.'+
+       (E.id==='D'?' <b>And look what happened.</b> The two gold pieces have <i>equal area</i> &mdash; one is 5 by <i>x</i>, the other is <i>x</i> by 5 &mdash; but one is added and one is removed. They wipe each other out perfectly, and the middle term is gone.':'')+
+       (E.id==='E'?' <b>Both middle pieces are real.</b> They are two identical 4-by-<i>x</i> rectangles, so together they are 2 &middot; 4<i>x</i> = 8<i>x</i>. This is the exact area that gets thrown away by anyone who writes (<i>x</i> + 4)<sup>2</sup> = <i>x</i><sup>2</sup> + 16.':''),
+     tip:(E.id==='E')?{c:'note',h:'<b>The most expensive error in algebra:</b> (<i>a</i> + <i>b</i>)<sup>2</sup> = <i>a</i><sup>2</sup> + <i>b</i><sup>2</sup>. It is false, and the picture says why &mdash; it forgets two whole rectangles. Test it with numbers: (3 + 4)<sup>2</sup> = 49, while 3<sup>2</sup> + 4<sup>2</sup> = 25. The missing 24 is exactly 2 &middot; 3 &middot; 4, the two rectangles.'}:
+          (E.id==='D')?{c:'mnem',h:'Whenever the two factors are the same pair of terms with opposite signs, the middle always cancels &mdash; the two strips are the same rectangle, once added and once removed. Nothing survives but a difference of two squares.'}:
+          {c:'mnem',h:'Only the pieces of the same degree may be pooled. If you find yourself combining an <i>x</i><sup>2</sup> with an <i>x</i>, look back at the grid: those pieces are different shapes, and different shapes cannot be stacked into one.'},
+     cap:(mEs.length?'The gold-outlined pieces share a colour &mdash; same power, same kind of thing &mdash; so they pool together.':'Every piece has a different power, so there is nothing to combine.')});
+
+   /* ---------- the product ---------- */
+   add('product',hl(E.nm+' = '+PR));
+   snap({t:'The product',s:'the whole rectangle, in one line',p:6,k:nC,cw:true,rw:true,keep:true,
+     why:'<b>'+E.nm+' = '+PR+'.</b> '+
+       (E.neg?'The gold dashed outline marks the rectangle that is genuinely left after the hatched strips are taken away &mdash; and its area really is the product. The picture is drawn at <i>x</i> = '+E.X+', where the sides measure '+sub(E.A,E.X)+' = '+evalp(E.A,E.X)+' and '+sub(E.B,E.X)+' = '+evalp(E.B,E.X)+', so the surviving rectangle holds '+evalp(E.A,E.X)+' &times; '+evalp(E.B,E.X)+' = '+(evalp(E.A,E.X)*evalp(E.B,E.X))+' square units &mdash; exactly what '+PR+' gives at <i>x</i> = '+E.X+'. The subtraction is not a fudge; it is measured.'
+              :'The gold dashed outline is the whole rectangle, and its area is the product. Every square unit inside it has been accounted for exactly once.')+
+       (E.sch?' <span style="font-size:12px">(One thin strip in this drawing has been thickened so its label fits, so treat this particular figure as a floor plan rather than a scale drawing &mdash; the bookkeeping is exact either way.)</span>':''),
+     tip:{c:'mnem',h:'<b>Degree check, in two seconds.</b> Multiplying a degree-'+deg(E.A)+' factor by a degree-'+deg(E.B)+' factor must give degree '+(deg(E.A)+deg(E.B))+', and it did. Your answer should also have at most '+E.cells.length+' terms before combining. Both checks are free, and both catch a dropped piece.'},
+     cap:'Done: <b>'+E.nm+' = '+PR+'</b>. The gold outline encloses exactly the area that answer measures.'});
+
+   /* ---------- numerical check ---------- */
+   var kx=E.chk, va=evalp(E.A,kx), vb=evalp(E.B,kx), lhs=va*vb, rhs=evalp(E.P,kx);
+   add('check &mdash; factored','('+sub(E.A,kx)+')('+sub(E.B,kx)+') = ('+nk(va)+')('+nk(vb)+') = '+hl(nk(lhs)),
+     '<u>at <i>x</i> = '+kx+'</u>the two sides of the rectangle measure '+nk(va)+' and '+nk(vb)+'.',lhs===rhs?'t':'f');
+   add('check &mdash; expanded',sub(E.P,kx)+' = '+hl(nk(rhs)),
+     '<u>at <i>x</i> = '+kx+'</u>'+E.P.map(function(t,k){
+       var v=tval(t,kx); return (k===0?nk(v):(v<0?' &minus; '+Math.abs(v):' + '+v)); }).join('')+' = '+nk(rhs)+'.',lhs===rhs?'t':'f');
+   snap({t:'Check it with a number',s:'both sides at <i>x</i> = '+kx,p:7,k:nC,cw:true,rw:true,keep:true,
+     why:'Substituting one number turns both sides into plain arithmetic, and plain arithmetic is hard to fool. At <i>x</i> = '+kx+' the factored form gives '+nk(va)+' &times; '+nk(vb)+' = '+nk(lhs)+', and the expanded form gives '+nk(rhs)+'. They agree, so no term was dropped and no sign flipped on the way through.'+
+       ' This is a spot-check, not a proof &mdash; but a well-chosen value catches very nearly every mistake anyone actually makes, and it costs ten seconds.',
+     tip:{c:'note',h:'<b>Two cautions.</b> First, do not check with <i>x</i> = 0 (it only tests the constant term) or <i>x</i> = 1 (it only tests the sum of the coefficients, so two different wrong signs can cancel and pass). Pick 2, 3, or &minus;2 instead. Second, <b>nothing here needs excluding</b>: a polynomial is defined for every real number &mdash; no denominator to make zero, no square root to keep non-negative &mdash; so '+E.nm+' = '+PR+' holds for <b>all</b> real <i>x</i>. Restricted values and extraneous solutions arrive later, when variables move into denominators or under radicals; multiplying polynomials is the safe country.'},
+     cap:'Both forms hit '+nk(lhs)+' at <i>x</i> = '+kx+'. Two different-looking expressions, the same number &mdash; every time.'});
+
+   /* ---------- the pattern ---------- */
+   var L=LESSON[E.id](E,PR);
+   snap({t:L.t,s:L.s,p:8,k:nC,cw:true,rw:true,keep:true,glow:L.glow?glow:null,
+     why:L.why,tip:L.tip,cap:L.cap});
+   return steps;
+ }
+ function deg(ts){ return Math.max.apply(null,ts.map(function(t){ return t[1]; })); }
+ /* substitute a number for x, keeping the shape of the expression visible.
+    The coefficient needs an explicit dot, or 8x at x = 2 reads as "82".   */
+ function sub(ts,X){ return ts.map(function(t,k){
+   var a=Math.abs(t[0]), s=(k===0?(t[0]<0?'&minus;':''):(t[0]<0?' &minus; ':' + ')), body,
+       xs=(X<0?'(&minus;'+Math.abs(X)+')':''+X);
+   if(t[1]===0) body=''+a;
+   else body=(a===1?'':a+'&middot;')+xs+(t[1]>1?'<sup>'+t[1]+'</sup>':'');
+   return s+body; }).join(''); }
+
+ /* ==================== closing lesson, one per example ==================== */
+ var LESSON={
+  A:function(E,PR){ return {t:'Read the grid, not the letters',s:'where the 8 and the 15 came from',glow:true,
+    why:'Set the answer beside the factors: (<i>x</i> + 3)(<i>x</i> + 5) = '+PR+'. The <b>15</b> is the corner piece, 3 &middot; 5 &mdash; the only piece with no <i>x</i> in it. The <b>8</b> is the two side strips, 5<i>x</i> and 3<i>x</i>, which is 5 + 3 counts of <i>x</i>. That is not an accident of these numbers; the grid forces it every time. For any two numbers <i>p</i> and <i>q</i>: (<i>x</i> + <i>p</i>)(<i>x</i> + <i>q</i>) = <i>x</i><sup>2</sup> + (<i>p</i> + <i>q</i>)<i>x</i> + <i>pq</i> &mdash; big square, two strips, corner.',
+    tip:{c:'mnem',h:'<b>This is the sentence factoring reads backwards.</b> Handed <i>x</i><sup>2</sup> + 8<i>x</i> + 15 and asked to factor it, you are being asked: which two numbers multiply to 15 and add to 8? The area model built the trinomial; factoring dismantles it, hunting for the corner and the strips.'},
+    cap:'Corner = <i>pq</i>. Strips = (<i>p</i> + <i>q</i>)<i>x</i>. Big square = <i>x</i><sup>2</sup>. Every trinomial of this shape was born from a rectangle.'}; },
+  B:function(E,PR){ return {t:'What a coefficient changes',s:'and what it leaves alone',glow:true,
+    why:'With a 2 in front, the leading piece is no longer a plain square: 2<i>x</i> by <i>x</i> is <b>2<i>x</i><sup>2</sup></b>, two of those squares side by side. The two strips are 2<i>x</i> &middot; 4 = 8<i>x</i> and 3 &middot; <i>x</i> = 3<i>x</i>, which pool into 11<i>x</i> &mdash; and notice the middle coefficient is no longer just 4 + 3. The coefficient out front has mixed itself into the middle term. The corner, 3 &middot; 4 = 12, is untouched by it.',
+    tip:{c:'mnem',h:'This is precisely why factoring <i>ax</i><sup>2</sup> + <i>bx</i> + <i>c</i> with <i>a</i> &ne; 1 takes more work than the <i>a</i> = 1 case. The middle coefficient is a blend of the leading coefficient and the constants, so &ldquo;two numbers that add to <i>b</i>&rdquo; is no longer enough &mdash; you need two numbers that multiply to <i>ac</i> and add to <i>b</i>.'},
+    cap:'The 2 out front doubles the leading square and leaks into the middle term. The corner piece never notices it.'}; },
+  C:function(E,PR){ return {t:'Signs are lengths being removed',s:'and the grid keeps the books',glow:true,
+    why:'(<i>x</i> + 4)(<i>x</i> &minus; 7) = '+PR+'. The constant is <b>negative</b> because the corner piece is 4 &middot; (&minus;7) = &minus;28: one side was taken away, so that corner is area removed. The middle is <b>&minus;3<i>x</i></b> because the two strips pull against each other &mdash; +4<i>x</i> added, 7<i>x</i> removed, and the removal wins by 3<i>x</i>. The pattern from the first example still holds exactly, provided each number keeps its own sign: with <i>p</i> = 4 and <i>q</i> = &minus;7, <i>pq</i> = &minus;28 and <i>p</i> + <i>q</i> = &minus;3.',
+    tip:{c:'note',h:'<b>Carry the sign into the term, not beside it.</b> The second factor&rsquo;s terms are <i>x</i> and <b>&minus;7</b> &mdash; not <i>x</i> and 7 with a minus floating somewhere nearby. Attach the sign to the number the moment you split the factor, and the four products come out right without any extra sign rule to remember.'},
+    cap:'A negative term is a length taken away. The hatched pieces are the area it costs you.'}; },
+  D:function(E,PR){ return {t:'A difference of two squares',s:'the middle was never going to survive',glow:true,
+    why:'The two gold pieces are the same rectangle twice &mdash; <i>x</i> by 5 and 5 by <i>x</i>, equal area &mdash; but one is added and the other removed, so they annihilate. What is left is the big square minus the little square: '+PR+'. This happens for <i>any</i> such pair, because the strips are always <i>ab</i> and &minus;<i>ab</i>: <b>(<i>a</i> + <i>b</i>)(<i>a</i> &minus; <i>b</i>) = <i>a</i><sup>2</sup> &minus; <i>b</i><sup>2</sup></b>. The gold outline in the picture shows the survivors: an '+(E.X+5)+'-by-'+(E.X-5)+' rectangle at <i>x</i> = '+E.X+', area '+((E.X+5)*(E.X-5))+' &mdash; and '+E.X+'<sup>2</sup> &minus; 5<sup>2</sup> = '+(E.X*E.X-25)+'. The same number, as it must be.',
+    tip:{c:'mnem',h:'<b>Worth memorising in both directions.</b> Forwards it saves you the middle term entirely: (<i>x</i> + 5)(<i>x</i> &minus; 5) = <i>x</i><sup>2</sup> &minus; 25 on sight. Backwards it is the fastest factoring in the chapter: anything of the form <i>a</i><sup>2</sup> &minus; <i>b</i><sup>2</sup> splits instantly into (<i>a</i> + <i>b</i>)(<i>a</i> &minus; <i>b</i>). Note that <i>a</i><sup>2</sup> + <i>b</i><sup>2</sup> does <b>not</b> factor this way &mdash; there is no rectangle to draw.'},
+    cap:'Equal strips, opposite signs. They cancel, and only the two squares remain.'}; },
+  E:function(E,PR){ return {t:'A perfect square trinomial',s:'the two middle rectangles are real',glow:true,
+    why:'A genuine square, side <i>x</i> + 4. Inside it: a big square <i>x</i><sup>2</sup>, a small square 16, and <b>two</b> identical 4-by-<i>x</i> rectangles that together contribute 8<i>x</i>. So (<i>x</i> + 4)<sup>2</sup> = '+PR+', and in general <b>(<i>a</i> + <i>b</i>)<sup>2</sup> = <i>a</i><sup>2</sup> + 2<i>ab</i> + <i>b</i><sup>2</sup></b>. The 2 in the middle is not a rule to memorise &mdash; it is the count of rectangles, and you can see both of them sitting in the corners of the figure.',
+    tip:{c:'note',h:'<b>Squaring is never distributive over addition.</b> (<i>a</i> + <i>b</i>)<sup>2</sup> &ne; <i>a</i><sup>2</sup> + <i>b</i><sup>2</sup>, and the picture shows exactly what the false version discards: 2<i>ab</i> of area. At <i>x</i> = 10 that is 80 square units of rectangle simply deleted. The same warning applies to &radic;(<i>a</i> + <i>b</i>) &ne; &radic;<i>a</i> + &radic;<i>b</i> &mdash; and to every other operation people wish were distributive.'},
+    cap:'Two squares and two identical rectangles. The middle term counts the rectangles: 2 &middot; 4<i>x</i> = 8<i>x</i>.'}; },
+  F:function(E,PR){ return {t:'The grid never runs out',s:'FOIL does',glow:false,
+    why:'Two terms times three terms gives <b>six</b> pieces, and (<i>x</i> + 2)(<i>x</i><sup>2</sup> + 3<i>x</i> + 1) = '+PR+'. No mnemonic covers this, because F&ndash;O&ndash;I&ndash;L has four letters and this grid has six boxes. But nothing new had to be learned: it is the same instruction as always &mdash; <b>every term of the first factor times every term of the second, then collect like powers</b>. An <i>m</i>-term factor against an <i>n</i>-term factor makes <i>mn</i> pieces, and the rectangle will happily grow to hold them.',
+    tip:{c:'mnem',h:'<b>Stay organised and the grid does the thinking.</b> Multiply along one row at a time so nothing is skipped; write the results in order of descending power; and count your products before combining &mdash; there must be exactly '+E.cells.length+'. That habit scales to any size, while the FOIL habit quietly stops working the first time a trinomial walks in.'},
+    cap:'A 2 &times; 3 grid: six pieces, collected into '+PR+'. The method did not change &mdash; only the number of boxes.'}; }
+ };
+
+ EX.forEach(function(E){ E.steps=build(E); });
+
+ /* ==================== render ==================== */
+ var cur=0, si=0;
+
+ $("pick").innerHTML=EX.map(function(e,k){
+   return '<button data-k="'+k+'">'+e.lab+'<small>'+e.sm+'</small></button>'; }).join('');
+ Array.prototype.forEach.call($("pick").querySelectorAll('button'),function(b){
+   b.onclick=function(){ cur=+b.dataset.k; si=0; render(); }; });
+
+ function legend(E,st){
+   var seen=[], out='';
+   E.cells.forEach(function(c,k){ if(k<st.k&&seen.indexOf(c.e)<0) seen.push(c.e); });
+   seen.sort(function(p,q){ return q-p; });
+   seen.forEach(function(e){ var T=tone(e);
+     out+='<div><span class="sw" style="background:'+T.bg+';border-color:'+T.st+'"></span>'+T.nm+'</div>'; });
+   var anyNeg=E.cells.some(function(c,k){ return k<st.k&&c.c<0; });
+   if(anyNeg) out+='<div><span class="sw" style="background:#f7e3e6;border-color:#d1495b"></span>area removed</div>';
+   if(st.keep) out+='<div><span class="sw" style="background:transparent;border-color:#b8862f;border-style:dashed"></span>the product</div>';
+   return out;
+ }
+
+ function render(){
+   var E=EX[cur], st=E.steps[si];
+   $("art").innerHTML=paint(E,st);
+   $("leg").innerHTML=legend(E,st);
+   $("cap").innerHTML=st.cap;
+   $("cardTitle").innerHTML=E.nm;
+   $("stage").innerHTML=st.t+'<small>'+st.s+' &middot; step '+(si+1)+' of '+E.steps.length+'</small>';
+
+   $("work").innerHTML=st.rows.map(function(r,idx){
+     var on=(idx>=st.from);
+     return '<div class="wr'+(on?' on':'')+'"><span class="pl">'+r.pl+'</span><span class="mx">'+r.mx+
+       (r.chip?'<span class="chip '+r.chip+'">'+(r.chip==='t'?'&#10003; true':'&#10007; false')+'</span>':'')+
+       (r.ex?'<span class="ex">'+r.ex+'</span>':'')+'</span></div>'; }).join('');
+
+   $("info").innerHTML='<span class="n">'+st.t+'</span>'+st.why+
+     (st.tip?'<div class="'+st.tip.c+'">'+st.tip.h+'</div>':'');
+
+   $("plan").innerHTML=PLAN.map(function(p,k){
+     return '<span class="'+((k===st.p)?'on':((k<st.p)?'done':''))+'">'+p+'</span>'; }).join('');
+
+   Array.prototype.forEach.call($("pick").querySelectorAll('button'),function(b){
+     b.className=(+b.dataset.k===cur)?'on':''; });
+
+   $("prev").disabled=(si===0);
+   $("next").disabled=(si===E.steps.length-1);
+ }
+
+ $("prev").onclick=function(){ if(si>0){ si--; render(); } };
+ $("next").onclick=function(){ if(si<EX[cur].steps.length-1){ si++; render(); } };
+ document.addEventListener('keydown',function(e){
+   if(e.key==='ArrowRight'){ if(si<EX[cur].steps.length-1){ si++; render(); } }
+   else if(e.key==='ArrowLeft'){ if(si>0){ si--; render(); } } });
+
+ render();
+})();
+</script>
+</body>
+</html>

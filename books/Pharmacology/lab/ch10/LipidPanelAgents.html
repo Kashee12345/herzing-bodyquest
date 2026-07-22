@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Which Lipid Does Each Agent Actually Move?</title>
+<meta name="description" content="Interactive lipid panel — pick a statin, ezetimibe, PCSK9 inhibitor, bile acid sequestrant, fibrate, niacin, or omega-3 and watch LDL, HDL, triglycerides, and total cholesterol move. Mechanism, adverse effects, and nursing priorities. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:0.9fr 1.1fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.it .s{display:block;margin-top:1px;line-height:1.25;}
+.it{align-items:center;}
+.dlt{flex:none;font-size:11px;font-weight:800;min-width:46px;text-align:right;letter-spacing:-.2px;}
+.hint{font-size:9.8px;color:var(--muted);margin-top:10px;text-align:center;line-height:1.45;padding-top:9px;border-top:1px dashed var(--line);}
+#info .dd b{color:var(--teal-dk);}
+#art .rgn rect{transition:fill-opacity .25s;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 10</div>
+  <h1>Which Lipid Does Each Agent Actually Move?</h1>
+  <div class="intro">A lipid panel is four numbers, and <b>no drug moves all four</b>. Each agent reaches into one place &mdash; the gut, the liver, the capillary &mdash; and what it can grab there decides which row on the panel changes. Tap a drug class to run it on this patient; tap a row of the panel to see who moves that number.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The panel &amp; the pathway</h2>
+    <svg viewBox="0 0 250 404" aria-label="lipid panel and sites of drug action"><g id="art"></g></svg>
+    <div class="hint">Grey tick = the goal. Dashed tick = where this patient started. Values are a <b>typical single-agent response</b>, not a promise &mdash; real percentages vary with dose, drug, and patient.</div>
+  </div></div>
+  <div>
+    <div id="stage">Untreated panel<small>tap a class below</small></div>
+    <div class="card"><div class="list" id="list"></div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="rst">↺ Back to the untreated panel</button></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var LINE='#dfe4ee', DIM=0.38, RED='#d1495b', GRN='#2f9e5b', GREY='#9aa6b8';
+ var BASE={ldl:178,hdl:38,tg:260};
+ BASE.tc=Math.round(BASE.ldl+BASE.hdl+BASE.tg/5);
+
+ var LIPCFG={
+  ldl:{nm:'LDL-C',sub:'goal &lt; 100',max:200,goal:100,ok:function(v){return v<100;}},
+  hdl:{nm:'HDL-C',sub:'want &#8805; 40 &middot; up is good',max:80,goal:40,ok:function(v){return v>=40;},up:1},
+  tg:{nm:'Triglycerides',sub:'normal &lt; 150',max:320,goal:150,ok:function(v){return v<150;}},
+  tc:{nm:'Total chol.',sub:'desirable &lt; 200',max:320,goal:200,ok:function(v){return v<200;}}
+ };
+ var ORDER=['ldl','hdl','tg','tc'];
+
+ var D=[
+  {k:'statin',nm:'Statins',ct:'atorvastatin, rosuvastatin, simvastatin, pravastatin &middot; the "-statin" ending',col:'#2f6f9f',
+   pct:{ldl:-45,hdl:6,tg:-20},sites:['liver'],blocks:['hmg'],boosts:['ldlr'],
+   how:'Blocks <b>HMG-CoA reductase</b>, the rate-limiting enzyme of cholesterol synthesis inside the hepatocyte. The liver, suddenly short of cholesterol, does the only thing it can: it puts <b>more LDL receptors</b> on its surface and pulls LDL out of the blood. That second step &mdash; not the enzyme block itself &mdash; is what makes the LDL number fall.',
+   loc:'Works inside the <b>liver</b>: block synthesis, and LDL receptors go up.',
+   adv:'<b>Myalgia</b> &middot; myopathy &middot; rare <b>rhabdomyolysis</b> (rising CK, dark urine, acute kidney injury) &middot; elevated transaminases &middot; new-onset diabetes and a modest rise in glucose',
+   dd:'Look at the bars: <b>LDL is the headline</b> (30&ndash;50%, up to about 60% with a high-intensity dose), triglycerides fall modestly, HDL barely twitches. Statins are also the only class here with unarguable <b>mortality</b> data &mdash; which is why they are first-line and everything else on this page is an add-on.',
+   nur:'Nurse: teach the patient to report <b>unexplained muscle pain, tenderness, or weakness</b> &mdash; especially with <b>dark, tea-colored urine</b>, which is myoglobin. That patient needs a <b>CK</b> drawn. Baseline liver enzymes. <b>Simvastatin and lovastatin are dosed in the evening</b> (short half-life; the liver makes most of its cholesterol overnight); atorvastatin and rosuvastatin have long half-lives and may be given any time of day.',
+   note:'<b>Contraindicated in pregnancy</b> &mdash; a fetus needs cholesterol to build cell membranes. Confirm pregnancy status and contraception before the first dose. <b>Grapefruit juice</b> inhibits CYP3A4 and drives simvastatin, lovastatin, and atorvastatin levels up. And never pair a statin with <b>gemfibrozil</b>: that is the classic rhabdomyolysis setup.'},
+
+  {k:'ez',nm:'Ezetimibe',ct:'cholesterol absorption inhibitor &middot; one 10 mg tablet',col:'#2f9e5b',
+   pct:{ldl:-19,hdl:2,tg:-6},sites:['intestine','liver'],blocks:['absorb'],boosts:['ldlr'],
+   how:'Blocks the <b>NPC1L1 sterol transporter</b> on the brush border of the small intestine, so cholesterol from food <i>and</i> from recycled bile never crosses into the body. Less cholesterol reaches the liver &mdash; so the liver again raises its <b>LDL receptors</b> and clears LDL from the blood. Two organs involved, but it moves essentially <b>one number</b>.',
+   loc:'Works at the <b>intestinal brush border</b>; the LDL drop is delivered by the liver downstream.',
+   adv:'Well tolerated &middot; diarrhea &middot; abdominal pain &middot; myalgia (more likely once it is added to a statin) &middot; rare hepatitis in combination with a statin',
+   dd:'Alone it takes LDL down only about 18%. Its real job is <b>add-on</b>: bolted onto a maximally tolerated statin it pulls LDL down roughly another 20%, and that combination &mdash; unlike most add-ons &mdash; has outcome data behind it.',
+   nur:'Nurse: give with or without food, any time of day; there is no timing trick and no CK ritual. The one scheduling rule that matters: if the patient also takes a <b>bile acid sequestrant</b>, that resin binds ezetimibe too &mdash; give ezetimibe <b>2 hours before or 4 hours after</b> the sequestrant.',
+   note:'Monitor <b>liver enzymes</b> when ezetimibe is combined with a statin. Avoid in active liver disease.'},
+
+  {k:'pcsk9',nm:'PCSK9 inhibitors',ct:'alirocumab, evolocumab &middot; subcutaneous monoclonal antibodies',col:'#7a5a8a',
+   pct:{ldl:-58,hdl:6,tg:-12},sites:['liver'],blocks:['pcsk9'],boosts:['ldlr'],
+   how:'PCSK9 is a liver protein whose entire job is to <b>destroy the LDL receptor</b> after it has made one delivery. These drugs are monoclonal antibodies that pull PCSK9 out of circulation, so the receptor is instead <b>recycled back to the cell surface</b> and used again and again. More receptors, working longer &mdash; and LDL falls further than any oral agent can take it.',
+   loc:'Works on the <b>liver LDL receptor</b> &mdash; by protecting it rather than by making more of it.',
+   adv:'<b>Injection-site reactions</b> (redness, itching, bruising) &middot; nasopharyngitis &middot; flu-like symptoms &middot; hypersensitivity reactions',
+   dd:'Reserved for <b>familial hypercholesterolemia</b> or established atherosclerotic disease still above goal on a maximally tolerated statin. Cost and prior authorization &mdash; not safety &mdash; are what keep it off most charts. <b>Inclisiran</b> is a newer small interfering RNA that silences PCSK9 production instead, dosed twice a year.',
+   nur:'Nurse: <b>subcutaneous only &mdash; never IV.</b> Store in the refrigerator, but take the pen out and let it reach <b>room temperature for 30&ndash;45 minutes</b> first: a cold injection stings and burns. Rotate abdomen, thigh, and upper arm; never inject into skin that is tender, bruised, hardened, or scarred. Dosed every 2 to 4 weeks &mdash; teach self-injection and sharps disposal.',
+   note:'This is an <b>add-on</b>, not a replacement &mdash; the statin continues unless it genuinely could not be tolerated.'},
+
+  {k:'bas',nm:'Bile acid sequestrants',ct:'cholestyramine, colesevelam, colestipol &middot; resins',col:'#b8862f',
+   pct:{ldl:-20,hdl:4,tg:12},sites:['intestine','liver'],blocks:['bile'],boosts:['ldlr'],
+   how:'A resin that is <b>never absorbed</b>. It sits in the gut and binds <b>bile acids</b>, which then leave in the stool instead of being recycled back to the liver. The liver must build new bile acids, and it builds them out of <b>cholesterol</b> &mdash; so it raises its <b>LDL receptors</b> to go fetch more, and LDL falls. Now watch the triglyceride bar: the same liver compensates by <b>exporting more VLDL</b>. This is the one class on the page that pushes triglycerides <b>up</b>.',
+   loc:'Works entirely <b>inside the gut lumen</b>. Everything it does to LDL is the liver reacting.',
+   adv:'<b>Constipation</b> &middot; bloating, flatulence, cramping &middot; <b>raises triglycerides</b> &middot; impairs absorption of the fat-soluble vitamins <b>A, D, E, and K</b>',
+   dd:'Because nothing enters the bloodstream, this is one of the <b>few lipid classes considered acceptable in pregnancy</b>. <b>Colesevelam</b> binds less indiscriminately than cholestyramine and also lowers A1C modestly, so it turns up on charts that have diabetes on them too.',
+   nur:'Nurse: <b>mix the powder in 4&ndash;8 oz of fluid and never give it dry</b> &mdash; dry resin can be aspirated or swell in the esophagus. Push fluid and fiber ahead of the constipation. And remember the resin binds other drugs indiscriminately: give <b>digoxin, warfarin, levothyroxine, and thiazides at least 1 hour before or 4 hours after</b> it, then follow up the INR, digoxin level, or TSH.',
+   note:'<b>Contraindicated once triglycerides are above roughly 400 mg/dL</b> &mdash; this class raises them, and driving them higher risks <b>acute pancreatitis</b>. Also avoid in complete biliary or bowel obstruction.'},
+
+  {k:'fib',nm:'Fibrates',ct:'fenofibrate, gemfibrozil',col:'#17838f',
+   pct:{ldl:-8,hdl:15,tg:-45},sites:['liver','blood'],blocks:['vldl'],boosts:['lpl'],
+   how:'Activates <b>PPAR-&#945;</b>, a nuclear receptor in the liver, and two things follow. The liver <b>exports less VLDL</b> &mdash; the particle that carries triglyceride &mdash; and <b>lipoprotein lipase</b>, the enzyme lining the capillaries that strips triglyceride out of VLDL, works harder. Triglycerides fall further than with anything else here, and HDL rises as a by-product. LDL barely moves; in a very high-triglyceride patient it can even <b>rise</b> as bloated VLDL gets trimmed down into LDL.',
+   loc:'Two places at once: the <b>liver</b> (less VLDL out) and the <b>capillary bed</b> (more lipoprotein lipase).',
+   adv:'<b>Myopathy</b> &mdash; far more so alongside a statin &middot; <b>gallstones</b> (it raises cholesterol in bile) &middot; elevated transaminases &middot; a reversible rise in creatinine &middot; dyspepsia',
+   dd:'This is the class you reach for when <b>triglycerides are the emergency</b>. Above roughly 500 mg/dL the artery is no longer the problem &mdash; the pancreas is &mdash; and lowering LDL stops being the priority. <b>Fenofibrate</b> is the fibrate that may be combined with a statin. <b>Gemfibrozil</b> is not.',
+   nur:'Nurse: have the patient report <b>muscle pain</b> and <b>right upper quadrant pain</b> (gallstones). Gemfibrozil <b>potentiates warfarin</b> &mdash; expect the INR to climb and to be rechecked, with the warfarin dose coming down. Monitor liver enzymes, renal function, and a follow-up lipid panel.',
+   note:'<b>Never combine gemfibrozil with a statin.</b> Gemfibrozil blocks the statin\'s clearance, and the pairing is a well-documented cause of <b>rhabdomyolysis</b>. If a fibrate must go with a statin, it is fenofibrate &mdash; and the muscle teaching gets repeated.'},
+
+  {k:'nia',nm:'Niacin',ct:'nicotinic acid &middot; vitamin B&#8323; at gram doses',col:'#d1495b',
+   pct:{ldl:-15,hdl:25,tg:-30},sites:['liver'],blocks:['vldl'],
+   how:'At gram doses &mdash; hundreds of times the vitamin dose &mdash; niacin <b>suppresses the liver\'s VLDL production</b> and slows the release of free fatty acids out of fat tissue. It is the only agent here that moves <b>all three</b> lipids in a favorable direction at once, and it raises <b>HDL more than anything else available</b>. It lowers lipoprotein(a) as well.',
+   loc:'Works in the <b>liver</b> (less VLDL exported) and in <b>adipose tissue</b> (fewer free fatty acids released).',
+   adv:'<b>Cutaneous flushing</b> and itching of the face and neck &middot; <b>hyperglycemia</b> &middot; <b>hyperuricemia and gout</b> &middot; hepatotoxicity (worse with sustained-release forms) &middot; GI upset',
+   dd:'Read these bars honestly: niacin produces the <b>best-looking lipid panel on this page</b> and has the <b>worst outcome data</b>. Large trials adding it to a statin failed to reduce cardiovascular events and did cause harm. That gap is the whole lesson &mdash; a beautiful lab value is not the same thing as a patient who lives longer. It is now rarely used.',
+   nur:'Nurse: the flushing is <b>prostaglandin-mediated, not an allergy</b>. Give <b>aspirin 325 mg about 30 minutes before the dose</b>, give the dose <b>with food</b>, and keep alcohol, hot drinks, and hot showers away from it. Tell the patient it looks alarming and it fades over a few weeks &mdash; unwarned flushing is the single biggest reason people quit. Monitor <b>glucose, uric acid, and liver enzymes</b>.',
+   note:'Caution in <b>diabetes</b> (glucose rises), <b>gout</b> (uric acid rises), and <b>peptic ulcer disease</b>. And know the trap: the over-the-counter <b>"no-flush" niacin</b> a patient buys to avoid the redness is nicotinamide or inositol hexanicotinate &mdash; it does not lower lipids at all.'},
+
+  {k:'om3',nm:'Omega-3 fatty acids',ct:'icosapent ethyl &middot; omega-3 acid ethyl esters &middot; about 4 g/day',col:'#96562f',
+   pct:{ldl:0,hdl:0,tg:-25},sites:['liver','blood'],blocks:['vldl'],
+   how:'At <b>prescription doses near 4 grams a day</b> &mdash; not the capsule from the supplement aisle &mdash; omega-3 fatty acids cut the liver\'s triglyceride synthesis and VLDL output. It is the narrowest agent on the page: <b>triglycerides, and nothing else.</b> Watch LDL and HDL sit perfectly still.',
+   loc:'Works in the <b>liver</b>, on triglyceride and VLDL production.',
+   adv:'Fishy aftertaste and eructation ("fish burps") &middot; dyspepsia &middot; a possible increase in bleeding time &middot; <b>atrial fibrillation</b> has been seen with icosapent ethyl',
+   dd:'<b>Icosapent ethyl</b> is purified EPA and is the form carrying cardiovascular outcome data. The mixed <b>EPA + DHA</b> ethyl-ester products lower triglycerides just as well but can <b>raise LDL</b> &mdash; so the two are not interchangeable, and neither is the over-the-counter fish oil the patient is already taking.',
+   nur:'Nurse: swallow whole &mdash; <b>do not crush, chew, or break</b> the capsule. Give with a meal to blunt the GI upset and the burping. Ask about <b>fish or shellfish allergy</b> before the first dose, and watch for bleeding in a patient who is also on an anticoagulant or antiplatelet.',
+   note:'Report new <b>palpitations or an irregular pulse</b> &mdash; atrial fibrillation is a real signal with icosapent ethyl. And follow the lipid panel: if LDL climbs on a mixed EPA/DHA product, that gets reported too.'}
+ ];
+
+ var LIP={
+  ldl:{nm:'LDL cholesterol',sub:'goal &lt; 100 mg/dL',col:'#d1495b',
+   d:'LDL is the particle that actually <b>delivers cholesterol into the artery wall</b> &mdash; the one that builds plaque, and the one every guideline puts a number on. Notice that almost every drug here lowers it by the <b>same final step</b>: getting the liver to display more <b>LDL receptors</b>. Statins do it by blocking synthesis, ezetimibe by cutting off absorption, sequestrants by draining the bile pool, PCSK9 inhibitors by protecting the receptor from destruction. Four different doors into one room.',
+   n:'<b>L is for Lousy.</b> Goal is under 100 for most patients and under <b>70</b> for anyone with established atherosclerotic disease. Know the timing trap: a panel drawn while a patient is acutely ill, or in the days after an MI, reads <b>falsely low</b> &mdash; it does not mean the LDL is fine.'},
+  hdl:{nm:'HDL cholesterol',sub:'low if &lt; 40 mg/dL',col:'#2f9e5b',
+   d:'HDL carries cholesterol <b>away</b> from the tissues and back to the liver &mdash; <b>H is for Healthy</b>, and the one row you want to go <b>up</b>. <b>Niacin</b> raises it the most, <b>fibrates</b> next; statins nudge it a few percent. But here is the honest part: no drug has ever raised HDL and thereby prevented a single heart attack. Every trial built on that idea has failed.',
+   n:'So teach what genuinely moves this number: <b>aerobic exercise, weight loss, and stopping smoking</b>. Under 40 mg/dL is itself a cardiac risk factor; 60 and above is protective. This is the one row on the panel where a <b>longer bar is better</b> &mdash; and the reason "total cholesterol" alone is a bad target.'},
+  tg:{nm:'Triglycerides',sub:'normal &lt; 150 mg/dL',col:'#b8862f',
+   d:'Triglycerides ride inside <b>VLDL</b>. There are only two ways down: make the liver export less VLDL, or help <b>lipoprotein lipase</b> strip the triglyceride out of it in the capillaries. That is precisely what <b>fibrates</b>, <b>niacin</b>, and <b>omega-3s</b> do. And notice the one bar on this whole page that moves the wrong way: <b>bile acid sequestrants raise triglycerides.</b>',
+   n:'Above <b>500 mg/dL the problem is no longer the artery &mdash; it is the pancreas.</b> Very high triglycerides cause <b>acute pancreatitis</b>, and at that point a fibrate or omega-3 comes before any LDL goal. This number is also why the panel is drawn <b>fasting 9&ndash;12 hours</b>: a recent meal, alcohol, or uncontrolled diabetes all inflate it.'},
+  tc:{nm:'Total cholesterol',sub:'desirable &lt; 200 mg/dL',col:'#2f6f9f',
+   d:'Total cholesterol is not really measured against a target &mdash; it is <b>assembled from the other three rows</b>: <b>TC = LDL + HDL + (triglycerides &divide; 5)</b>, the Friedewald calculation. Watch the bottom bar every time you pick a drug. It is not responding to the drug at all; it is just the arithmetic of the three rows above it.',
+   n:'Which is exactly why total cholesterol is a <b>poor target on its own</b>: a patient can lower it by losing HDL, and that is worse, not better. The formula also breaks down once <b>triglycerides pass 400</b> &mdash; then the lab must measure LDL directly instead of calculating it.'}
+ };
+
+ var mode=null, cur=null;
+
+ function act(){ return (mode==='drug')?D.filter(function(d){return d.k===cur;})[0]:null; }
+ function accent(){ var a=act(); if(a)return a.col; if(mode==='lipid')return LIP[cur].col; return '#2f5f9e'; }
+ function blocked(b){ var a=act(); return a?a.blocks.indexOf(b)>=0:false; }
+ function boosted(b){ var a=act(); return (a&&a.boosts)?a.boosts.indexOf(b)>=0:false; }
+ function onSite(s){ var a=act(); return a?a.sites.indexOf(s)>=0:false; }
+
+ function vals(d){
+   var v={};
+   ORDER.forEach(function(k){ if(k!=='tc') v[k]=d?Math.round(BASE[k]*(1+d.pct[k]/100)):BASE[k]; });
+   v.tc=Math.round(v.ldl+v.hdl+v.tg/5);
+   return v;
+ }
+ function eff(d,lip){
+   if(lip!=='tc') return d.pct[lip];
+   return Math.round((vals(d).tc-BASE.tc)/BASE.tc*100);
+ }
+ function goalCount(v){ var n=0; ORDER.forEach(function(k){ if(LIPCFG[k].ok(v[k])) n++; }); return n; }
+ function dtxt(p){ return (p===0)?'&mdash;':((p<0?'&darr;':'&uarr;')+Math.abs(p)+'%'); }
+
+ function lbl(x,y,t,sz,col,w,an){
+   return '<text x="'+x+'" y="'+y+'" font-size="'+sz+'" text-anchor="'+(an||'middle')+'" fill="'+col+'" font-family="Inter,sans-serif" font-weight="'+(w||700)+'">'+t+'</text>';
+ }
+
+ /* ---------- panel rows ---------- */
+ function row(lip,yT){
+   var c=LIPCFG[lip], a=act(), v=vals(a), val=v[lip], base=BASE[lip];
+   var hot=(mode==='lipid'&&cur===lip), ac=accent();
+   var ok=c.ok(val), bc=ok?GRN:RED;
+   var bx=88, bw=104;
+   var w=Math.max(2,Math.min(bw,val/c.max*bw));
+   var gx=bx+c.goal/c.max*bw, sx=bx+Math.min(bw,base/c.max*bw);
+   var dim=(mode==='lipid'&&!hot)?0.45:1;
+   var s='<g class="rgn" data-lip="'+lip+'" opacity="'+dim+'">';
+   s+='<rect x="6" y="'+yT+'" width="238" height="34" rx="8" fill="'+(hot?ac:'#ffffff')+'" fill-opacity="'+(hot?0.1:0)+'" stroke="'+(hot?ac:'transparent')+'" stroke-width="'+(hot?1.8:0)+'"/>';
+   s+=lbl(13,yT+14,c.nm,8.4,hot?ac:'#3d4753',700,'start');
+   s+=lbl(13,yT+25,c.sub,5.8,'#a3abb8',500,'start');
+   s+='<rect x="'+bx+'" y="'+(yT+9)+'" width="'+bw+'" height="11" rx="5.5" fill="#eef2f8"/>';
+   s+='<rect x="'+bx+'" y="'+(yT+9)+'" width="'+w.toFixed(1)+'" height="11" rx="5.5" fill="'+bc+'" opacity=".88"/>';
+   if(a&&val!==base) s+='<line x1="'+sx.toFixed(1)+'" y1="'+(yT+5)+'" x2="'+sx.toFixed(1)+'" y2="'+(yT+24)+'" stroke="#8b95a5" stroke-width="1.4" stroke-dasharray="2 2"/>';
+   s+='<line x1="'+gx.toFixed(1)+'" y1="'+(yT+4)+'" x2="'+gx.toFixed(1)+'" y2="'+(yT+25)+'" stroke="'+GREY+'" stroke-width="2"/>';
+   s+=lbl(244,yT+17,String(val),11.5,bc,800,'end');
+   if(a){ var p=eff(a,lip); s+=lbl(244,yT+27,dtxt(p),6.4,(p===0)?'#a3abb8':(c.up?(p>0?GRN:RED):(p<0?GRN:RED)),800,'end'); }
+   else { s+=lbl(244,yT+27,'baseline',6.2,'#a3abb8',600,'end'); }
+   return s+'</g>';
+ }
+
+ /* ---------- pathway chips ---------- */
+ function chip(x,y,w,t,key){
+   var bk=blocked(key), bo=boosted(key), h=20;
+   var fill=bk?'#fae5e8':(bo?'#e5f3ea':'#f3f6fb'), str=bk?RED:(bo?GRN:LINE), tc=bk?'#a33345':(bo?'#237a45':'#5b6675');
+   var s='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="'+fill+'" stroke="'+str+'" stroke-width="'+((bk||bo)?1.6:1)+'"/>';
+   s+=lbl(x+7,y+13,t,5.8,tc,700,'start');
+   var mx=x+w-11, my=y+10;
+   if(bk){
+     s+='<line x1="'+(x+4)+'" y1="'+my+'" x2="'+(mx-5)+'" y2="'+my+'" stroke="'+RED+'" stroke-width="1.5"/>';
+     s+='<circle cx="'+mx+'" cy="'+my+'" r="6.5" fill="#ffffff" stroke="'+RED+'" stroke-width="1.8"/>';
+     s+='<path d="M'+(mx-2.8)+','+(my-2.8)+'L'+(mx+2.8)+','+(my+2.8)+'M'+(mx+2.8)+','+(my-2.8)+'L'+(mx-2.8)+','+(my+2.8)+'" stroke="'+RED+'" stroke-width="1.7" stroke-linecap="round"/>';
+   } else if(bo){
+     s+='<circle cx="'+mx+'" cy="'+my+'" r="6.5" fill="#ffffff" stroke="'+GRN+'" stroke-width="1.8"/>';
+     s+='<path d="M'+mx+','+(my-3.4)+'L'+mx+','+(my+3.4)+'M'+(mx-2.8)+','+(my-0.6)+'L'+mx+','+(my-3.6)+'L'+(mx+2.8)+','+(my-0.6)+'" stroke="'+GRN+'" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+   }
+   return s;
+ }
+ function box(x,y,w,h,site,name){
+   var hot=onSite(site), c=accent(), o=(mode==='drug'&&!hot)?DIM:1;
+   var s='<g data-site="'+site+'" opacity="'+o+'">';
+   s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="11" fill="'+(hot?c:'#ffffff')+'" fill-opacity="'+(hot?0.09:1)+'" stroke="'+(hot?c:LINE)+'" stroke-width="'+(hot?2.1:1.3)+'"/>';
+   s+=lbl(x+w/2,y+13,name,8,hot?c:'#5b6675',800);
+   return s;
+ }
+ function arrow(x,y1,y2,col){
+   return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="'+col+'" stroke-width="1.8"/>'+
+     '<path d="M'+(x-3.5)+','+(y2-3.5)+'L'+x+','+y2+'L'+(x+3.5)+','+(y2-3.5)+'Z" fill="'+col+'"/>';
+ }
+
+ function draw(){
+   var s='';
+   s+=lbl(13,14,'LIPID PANEL',7.6,'#8b95a5',800,'start');
+   s+=lbl(244,14,'mg/dL &middot; fasting',6.2,'#a3abb8',600,'end');
+   ORDER.forEach(function(k,i){ s+=row(k,24+i*38); });
+
+   s+='<line x1="6" y1="180" x2="244" y2="180" stroke="'+LINE+'" stroke-dasharray="3 3" stroke-width="1"/>';
+   s+=lbl(125,193,'WHERE IT WORKS',7,'#8b95a5',800);
+
+   var ac=(mode==='drug')?accent():'#a8b2c2';
+
+   s+=box(6,200,238,50,'intestine','INTESTINE');
+   s+=chip(12,222,106,'CHOLESTEROL ABSORB.','absorb');
+   s+=chip(126,222,106,'BILE ACID POOL','bile');
+   s+='</g>';
+   s+=arrow(125,250,258,(mode==='drug'&&onSite('intestine')&&onSite('liver'))?ac:'#a8b2c2');
+
+   s+=box(6,258,238,84,'liver','LIVER');
+   s+=chip(12,276,106,'HMG-CoA REDUCTASE','hmg');
+   s+=chip(126,276,106,'PCSK9','pcsk9');
+   s+=chip(12,302,106,'LDL RECEPTORS','ldlr');
+   s+=chip(126,302,106,'VLDL / TG OUTPUT','vldl');
+   s+=lbl(125,334,'more LDL receptors  &rarr;  less LDL in the blood',5.8,'#a3abb8',600);
+   s+='</g>';
+   s+=arrow(125,342,350,(mode==='drug'&&onSite('blood'))?ac:'#a8b2c2');
+
+   s+=box(6,350,238,48,'blood','BLOODSTREAM');
+   s+=chip(40,370,170,'LIPOPROTEIN LIPASE','lpl');
+   s+='</g>';
+
+   $("art").innerHTML=s;
+   var r=document.querySelectorAll('#art .rgn');
+   for(var j=0;j<r.length;j++){
+     r[j].onclick=(function(el){ return function(){
+       var l=el.getAttribute('data-lip');
+       if(l) pickLipid(l);
+     };})(r[j]);
+   }
+ }
+
+ /* ---------- list ---------- */
+ function renderList(){
+   var arr=D.slice();
+   if(mode==='lipid'){
+     arr.sort(function(a,b){ return Math.abs(eff(b,cur))-Math.abs(eff(a,cur)); });
+   }
+   $("list").innerHTML=arr.map(function(d){
+     var extra='';
+     if(mode==='lipid'){
+       var p=eff(d,cur), good=LIPCFG[cur].up?(p>0):(p<0);
+       var col=(p===0)?'#a3abb8':(good?GRN:RED);
+       extra='<span class="dlt" style="color:'+col+'">'+dtxt(p)+'</span>';
+     }
+     return '<button class="it'+(mode==='drug'&&d.k===cur?' on':'')+'" data-k="'+d.k+'">'+
+       '<span class="sw" style="background:'+d.col+'"></span>'+
+       '<span style="flex:1"><span class="nm">'+d.nm+'</span><span class="s">'+d.ct+'</span></span>'+extra+'</button>';
+   }).join('');
+   var b=document.querySelectorAll('#list .it');
+   for(var i=0;i<b.length;i++){ b[i].onclick=(function(el){return function(){pick(el.getAttribute('data-k'));};})(b[i]); }
+ }
+
+ function pick(k){
+   mode='drug'; cur=k;
+   var d=D.filter(function(x){return x.k===k;})[0], v=vals(d), n=goalCount(v);
+   $("stage").style.background=d.col;
+   $("stage").innerHTML=d.nm+'<small>LDL '+BASE.ldl+'&rarr;'+v.ldl+' &middot; HDL '+BASE.hdl+'&rarr;'+v.hdl+' &middot; TG '+BASE.tg+'&rarr;'+v.tg+' &middot; <b>'+n+' of 4 at goal</b></small>';
+   $("info").innerHTML='<span class="n">'+d.nm+'</span>'+
+     '<div class="ex"><span>'+d.ct+'</span></div>'+
+     '<div style="margin-top:9px">'+d.how+'</div>'+
+     '<div class="loc">'+d.loc+'</div>'+
+     '<div class="dd"><b>Watch for:</b> '+d.adv+'</div>'+
+     '<div class="dd">'+d.dd+'</div>'+
+     '<div class="mnem">'+d.nur+'</div>'+
+     '<div class="note">'+d.note+'</div>';
+   draw(); renderList();
+ }
+
+ function pickLipid(l){
+   mode='lipid'; cur=l;
+   var t=LIP[l], c=LIPCFG[l];
+   var arr=D.slice().sort(function(a,b){return Math.abs(eff(b,l))-Math.abs(eff(a,l));});
+   var movers=arr.filter(function(d){return eff(d,l)!==0;});
+   $("stage").style.background=t.col;
+   $("stage").innerHTML=t.nm+' &middot; this patient '+BASE[l]+' mg/dL<small>'+t.sub.replace(/&lt;/g,'<').replace(/&#8805;/g,'≥')+' &middot; '+movers.length+' of the 7 classes move this number</small>';
+   $("info").innerHTML='<span class="n">'+t.nm+'</span>'+t.d+
+     '<div class="ex">'+arr.slice(0,4).map(function(d){
+       return '<span style="background:'+d.col+'1f;color:'+d.col+'">'+d.nm+' '+dtxt(eff(d,l))+'</span>';
+     }).join('')+'</div>'+
+     '<div class="note">'+t.n+'</div>';
+   draw(); renderList();
+ }
+
+ function reset(){
+   mode=null; cur=null;
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='Untreated panel &middot; TC '+BASE.tc+'<small>LDL '+BASE.ldl+' &middot; HDL '+BASE.hdl+' &middot; TG '+BASE.tg+' mg/dL &middot; <b>0 of 4 at goal</b></small>';
+   $("info").innerHTML='<span class="n">Four numbers, seven agents, and no single winner</span>'+
+     'This patient fails every row. Run each class and watch what it can and cannot reach: a <b>statin</b> owns LDL, a <b>fibrate</b> owns triglycerides, <b>niacin</b> owns HDL, and <b>omega-3</b> touches exactly one bar. Nothing here fixes all four &mdash; which is the actual argument for combining agents that work at <b>different sites</b>.'+
+     '<div class="loc">Tap a <b>drug class</b> to run it on this panel, or tap a <b>row of the panel</b> to see which agents move that number and by how much.</div>'+
+     '<div class="mnem">The vocabulary the whole page runs on: <b>L is for Lousy</b> (LDL delivers cholesterol into the artery wall), <b>H is for Healthy</b> (HDL hauls it back to the liver). Triglycerides ride in <b>VLDL</b>. And total cholesterol is not its own measurement &mdash; it is <b>LDL + HDL + (TG &divide; 5)</b>, which is why it moves every time anything else does.</div>'+
+     '<div class="note">Before any of these drugs is worth discussing: this panel is drawn <b>fasting 9&ndash;12 hours</b>, and <b>diet, exercise, weight, and smoking</b> are the therapy that never gets skipped. A statin does not excuse the rest of the plan &mdash; and a patient who thinks it does is a teaching opportunity, not a lost cause.</div>';
+   draw(); renderList();
+ }
+
+ $("rst").onclick=reset;
+ reset();
+})();
+</script>
+</body>
+</html>

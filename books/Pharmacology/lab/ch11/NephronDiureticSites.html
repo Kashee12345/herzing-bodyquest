@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>The Nephron: Where Each Diuretic Works</title>
+<meta name="description" content="Interactive nephron — tap a tubule segment to see which diuretic acts there, or tap a drug class to watch it block its transporter. Sodium ledger, potency ceiling, potassium and calcium effects, and what the nurse monitors. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:0.9fr 1.1fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.led{margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);}
+.ltitle{font-size:10.6px;font-weight:700;color:var(--muted);margin-bottom:6px;}
+.lrow{display:flex;height:26px;border-radius:8px;overflow:hidden;border:1px solid var(--line);gap:1px;background:var(--line);}
+.lseg{position:relative;display:flex;align-items:center;justify-content:center;font-size:9.4px;font-weight:800;color:#fff;cursor:pointer;min-width:0;overflow:hidden;transition:opacity .25s;}
+.lseg.dim{opacity:.3;}
+.lseg.blk::after{content:"";position:absolute;left:0;right:0;top:0;bottom:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.62) 0 3px,transparent 3px 6px);}
+.lkey{font-size:9.7px;color:var(--muted);margin-top:7px;line-height:1.5;text-align:center;}
+.stat{display:flex;gap:7px;margin-top:11px;}
+.stat div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 3px;font-size:9.4px;font-weight:700;color:var(--muted);background:#fff;line-height:1.2;}
+.stat div .v{display:block;font-size:13.5px;margin-top:3px;color:var(--teal-dk);font-weight:800;}
+.stat div.dn{border-color:#bcd3e8;background:#f2f7fc;} .stat div.dn .v{color:#255f8a;}
+.stat div.up{border-color:#f0c9d0;background:#fdf3f5;} .stat div.up .v{color:#b23145;}
+.it .s{display:block;margin-top:1px;line-height:1.25;}
+#info .dd b{color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 11</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 11</div>
+  <h1>The Nephron: Where Each Diuretic Works</h1>
+  <div class="intro">A diuretic has exactly one idea: <b>stop the tubule from taking sodium back</b>, because water follows sodium out the door. There are only four sodium doors along the tube &mdash; so knowing <b>which door a drug jams</b> tells you how much fluid it can pull, what it does to potassium and calcium, and which lab you check before you give it. Tap a segment, or tap a class.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">One nephron</h2>
+    <svg viewBox="0 0 268 366" aria-label="nephron with diuretic sites of action"><g id="art"></g></svg>
+    <div class="led">
+      <div class="ltitle">Where the filtered sodium is reclaimed</div>
+      <div class="lrow" id="ledRow"></div>
+      <div class="lkey">Proximal <b>65%</b> &middot; thick ascending limb <b>25%</b> &middot; distal <b>5%</b> &middot; collecting duct <b>3%</b> &rarr; under <b>2%</b> of the filtered sodium ever reaches the urine.</div>
+    </div>
+    <div class="stat">
+      <div id="s_k">Serum K&#8314;<span class="v" id="v_k">&mdash;</span></div>
+      <div id="s_ca">Serum Ca&#178;&#8314;<span class="v" id="v_ca">&mdash;</span></div>
+      <div id="s_ab">Acid&ndash;base<span class="v" id="v_ab">&mdash;</span></div>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">One nephron &middot; 180 L filtered a day<small>tap a segment of the tubule, or a drug class</small></div>
+    <div class="card"><div class="list" id="list"></div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="rst">↺ Back to the untouched nephron</button></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var LINE='#dfe4ee', DIM=0.34, TUBE='#c3d0e0';
+
+ /* ---------- drug classes ---------- */
+ var D=[
+  {k:'acz',nm:'Carbonic anhydrase inhibitors',ct:'acetazolamide',col:'#7a5a8a',
+   sites:['pct'],blocks:['ca'],mark:'x',fena:5,fenaT:'~5%',kk:'&darr;',kc:'dn',ca:'&mdash;',cac:'',ab:'Acidosis',abc:'up',
+   how:'Carbonic anhydrase is the enzyme that lets the proximal tubule reclaim <b>bicarbonate</b> &mdash; and reclaiming bicarbonate is what drags sodium in behind it. Block the enzyme and <b>sodium bicarbonate walks out in the urine</b>: alkaline urine, and a <b>metabolic acidosis</b> in the blood. Now look at the ledger: this drug attacks the single biggest block of sodium on the whole nephron and is still the <b>weakest diuretic on the list</b> &mdash; because the thick ascending limb downstream has spare capacity and quietly picks back up almost everything the proximal tubule let go.',
+   loc:'Proximal convoluted tubule &mdash; blocks <b>carbonic anhydrase</b>, so the Na&#8314;/H&#8314; exchange that drives bicarbonate reabsorption stalls.',
+   adv:'Metabolic acidosis &middot; hypokalemia &middot; <b>paresthesias</b> (tingling fingers, toes, face) &middot; drowsiness &middot; metallic taste &middot; it carries a sulfonamide group',
+   dd:'It is barely used as a diuretic at all. It earns its place elsewhere: <b>glaucoma</b> (the same enzyme makes aqueous humor), <b>prevention of acute mountain sickness</b>, and correcting a <b>metabolic alkalosis</b> &mdash; including the alkalosis a loop diuretic caused.',
+   nur:'Nurse: the diuresis is <b>self-limiting</b> &mdash; once the bicarbonate is gone and the acidosis sets in, the drug simply stops working, usually within days. Follow the <b>bicarbonate and the potassium</b>. Tingling fingers are an expected effect, not an allergy &mdash; but report them.',
+   note:'Avoid in <b>hepatic cirrhosis</b>: alkaline urine stops trapping ammonia as ammonium, so ammonia is reabsorbed instead of excreted and can tip the patient into <b>hepatic encephalopathy</b>. Also avoid in existing acidosis, hypokalemia, or hyponatremia.'},
+
+  {k:'osm',nm:'Osmotic diuretics',ct:'mannitol',col:'#2f6f9f',
+   sites:['pct','desc'],blocks:[],mark:'hold',fena:null,fenaT:'water',kk:'&darr;',kc:'dn',ca:'&mdash;',cac:'',ab:'&mdash;',abc:'',
+   how:'Mannitol is a sugar the nephron cannot reabsorb. It is <b>freely filtered and then simply stays in the tubule</b>, holding water beside it by osmosis anywhere the wall lets water cross &mdash; the <b>proximal tubule</b> and the <b>thin descending limb</b>. It never touches a sodium transporter, so what leaves is mostly <b>water</b>, not salt. It pulls water the same way out in the body: out of swollen brain cells and into the blood. That, not the urine, is the reason it is given.',
+   loc:'Proximal tubule and thin descending limb &mdash; <b>no transporter is blocked</b>; the drug itself is the osmotic load.',
+   adv:'An <b>early surge in intravascular volume</b> before any urine appears &rarr; pulmonary edema in a failing heart &middot; dilutional hyponatremia early, then dehydration and hypernatremia &middot; hypokalemia &middot; headache &middot; rebound rise in ICP',
+   dd:'Given IV for <b>raised intracranial pressure and cerebral edema</b>, and for raised intraocular pressure &mdash; never for everyday edema and never for hypertension.',
+   nur:'Nurse: <b>use an in-line filter</b> &mdash; mannitol crystallizes at room temperature and below. Inspect every bag; if crystals are present, warm it per policy and re-inspect, and never infuse a bag that is still crystallized. Hourly output (indwelling catheter), <b>serum osmolality</b>, neuro checks, lung sounds, daily weight.',
+   note:'Contraindicated in established <b>anuria</b>, severe dehydration, active intracranial bleeding, and pulmonary edema or severe heart failure &mdash; the first thing mannitol does is <b>expand the blood volume</b>, which can drown a failing heart before a drop of urine appears. Hold and call for a serum osmolality above roughly <b>320 mOsm/kg</b>.'},
+
+  {k:'loop',nm:'Loop diuretics',ct:'furosemide, bumetanide, torsemide &middot; ethacrynic acid',col:'#d1495b',
+   sites:['tal'],blocks:['nkcc'],mark:'x',fena:22,fenaT:'20&ndash;25%',kk:'&darr;&darr;',kc:'dn',ca:'&darr;',cac:'dn',ab:'Alkalosis',abc:'',
+   how:'Blocks the <b>Na&#8314;&ndash;K&#8314;&ndash;2Cl&#8315; symporter (NKCC2)</b> from inside the lumen of the thick ascending limb &mdash; the busiest sodium transporter left after the proximal tubule, worth about a quarter of the filtered load. That is why loops are the <b>most powerful diuretics we have</b>. Two things travel with that power. The salt this limb pumps out is what builds the <b>medullary gradient</b>, so blocking it means the kidney can no longer concentrate urine. And the potassium recycling back through that transporter is what makes the lumen positively charged &mdash; the charge that pushes <b>calcium and magnesium</b> back across the wall. Lose it and they leave too.',
+   loc:'Thick ascending limb &mdash; blocks <b>NKCC2</b> from inside the lumen.',
+   adv:'<b>Hypokalemia</b> &middot; hyponatremia &middot; hypochloremic metabolic alkalosis &middot; <b>hypomagnesemia</b> &middot; <b>hypocalcemia</b> &middot; dehydration and orthostatic hypotension &middot; hyperuricemia (gout) &middot; hyperglycemia &middot; <b>ototoxicity</b> &middot; sulfonamide group',
+   dd:'A loop still works when the <b>eGFR falls below 30</b>, where a thiazide has already quit &mdash; so it is the diuretic of heart failure and of chronic kidney disease. Because it wastes calcium it is also part of the treatment of <b>hypercalcemia</b> (after the patient is rehydrated with saline). <b>Ethacrynic acid</b> is the one loop with no sulfonamide group &mdash; the choice in a true sulfa allergy &mdash; but the most ototoxic of them.',
+   nur:'Nurse: push IV furosemide slowly &mdash; <b>no faster than 20 mg/min</b>; a fast push is what causes the tinnitus and the hearing loss. <b>Daily weight</b>, same scale, same time, same clothing: <b>1 kg &asymp; 1 L</b> of fluid. Strict I&amp;O, lung sounds, orthostatic blood pressure, and <b>potassium, magnesium, sodium</b>. Dose in the morning so nocturia does not wreck sleep. Avoid pairing with aminoglycosides &mdash; the ototoxicity adds up.',
+   note:'The trap you will be tested on: <b>furosemide + digoxin</b>. The loop drops the potassium, and hypokalemia makes the myocardium far more sensitive to digoxin &mdash; <b>toxicity at a perfectly "therapeutic" digoxin level</b>. Check the potassium before you blame the digoxin.'},
+
+  {k:'thz',nm:'Thiazide &amp; thiazide-like diuretics',ct:'hydrochlorothiazide, chlorthalidone, metolazone, indapamide',col:'#17838f',
+   sites:['dct'],blocks:['ncc'],mark:'x',fena:5,fenaT:'3&ndash;5%',kk:'&darr;',kc:'dn',ca:'&uarr;',cac:'up',ab:'Alkalosis',abc:'',
+   how:'Blocks the <b>Na&#8314;&ndash;Cl&#8315; symporter (NCC)</b> in the distal convoluted tubule &mdash; only about 5% of the filtered sodium, which caps forever how much fluid a thiazide can remove. In hypertension that ceiling barely matters: after the first weeks the pressure drop comes less from lost volume and more from a fall in <b>vascular resistance</b>. Now watch the calcium. This is the segment that actively reabsorbs calcium, and blocking sodium entry here makes the cell take up <b>more</b> calcium, not less. <b>Thiazides raise serum calcium; loops lower it.</b>',
+   loc:'Distal convoluted tubule &mdash; blocks <b>NCC</b> from inside the lumen.',
+   adv:'Hypokalemia &middot; <b>hyponatremia</b> (thiazides are the classic drug cause) &middot; hypomagnesemia &middot; metabolic alkalosis &middot; and the four "hypers": <b>hyper</b>glycemia, <b>hyper</b>uricemia (gout), <b>hyper</b>calcemia, <b>hyper</b>lipidemia &middot; photosensitivity &middot; sulfonamide group',
+   dd:'First-line for <b>hypertension</b> &mdash; a blood-pressure drug, not a way to pull litres off a patient. A thiazide <b>stops working once the eGFR drops below about 30</b>; the exception is <b>metolazone</b>, which keeps working in kidney impairment. Two useful oddities: because they hold calcium back from the urine, thiazides prevent <b>calcium kidney stones</b>; and because they blunt the kidney\'s ability to make dilute urine, they paradoxically treat <b>nephrogenic diabetes insipidus</b>. <b>Chlorthalidone</b> is roughly twice as potent as hydrochlorothiazide and lasts far longer.',
+   nur:'Nurse: morning dose. Follow <b>potassium, sodium, glucose, uric acid, calcium</b>. Warn about <b>photosensitivity</b> &mdash; sunscreen and a hat. Encourage potassium-rich foods, and check orthostatic blood pressure in older adults before they walk.',
+   note:'<b>Metolazone is given 30 minutes before the loop diuretic</b>, not with it. Blocking two segments in sequence breaks through diuretic resistance in heart failure &mdash; it works spectacularly, and it is dangerous: potassium and volume can fall off a cliff. Daily weights, strict I&amp;O, close potassium.'},
+
+  {k:'aldo',nm:'Aldosterone antagonists',ct:'spironolactone, eplerenone &middot; potassium-sparing',col:'#2f9e5b',
+   sites:['cd'],blocks:['mr'],mark:'x',fena:2,fenaT:'1&ndash;2%',kk:'&uarr;',kc:'up',ca:'&mdash;',cac:'',ab:'Acidosis',abc:'up',
+   how:'Aldosterone\'s job in the collecting duct is to install more sodium channels and more Na&#8314;/K&#8314; pumps in the principal cell: sodium back into the body, <b>potassium out into the urine</b>. Spironolactone competes for the <b>mineralocorticoid receptor</b> and cancels that order &mdash; sodium and water leave, and the <b>potassium stays in the patient</b>. Notice where it works from: this is the one diuretic that binds a receptor <b>inside the cell, from the blood side</b>, so it never has to be secreted into the tubule to reach its target. And because it works by turning protein synthesis down, the effect takes <b>days</b>, not hours.',
+   loc:'Collecting duct &mdash; blocks the <b>mineralocorticoid (aldosterone) receptor</b> inside the principal cell.',
+   adv:'<b>HYPERKALEMIA</b> &mdash; the one that kills &middot; <b>gynecomastia</b>, breast tenderness, menstrual irregularity, impotence (spironolactone blocks androgen receptors too; <b>eplerenone</b> is selective and largely avoids this) &middot; metabolic acidosis &middot; drowsiness',
+   dd:'Weak as a diuretic, valuable for almost everything else: a <b>mortality benefit in heart failure with reduced ejection fraction</b>, the add-on of choice for <b>resistant hypertension</b>, and the diuretic of choice for the <b>ascites of cirrhosis</b>, where aldosterone is already running high (usually paired with furosemide).',
+   nur:'Nurse: <b>potassium and creatinine</b> at baseline, about a week after starting, and after every dose change. <b>No salt substitutes</b> &mdash; they are potassium chloride. No potassium supplements and no potassium-rich diet push unless ordered, and take real care alongside an <b>ACE inhibitor, ARB, or NSAID</b>. Teach that gynecomastia is reversible and is a reason to call, not a reason to quietly stop.',
+   note:'Normal potassium is <b>3.5&ndash;5.0 mEq/L</b>; above <b>5.5</b> is a hold-and-call. The classic fatal recipe is spironolactone <b>plus</b> an ACE inhibitor or ARB <b>plus</b> a potassium supplement or a salt substitute, in a patient whose kidneys are already struggling.'},
+
+  {k:'enac',nm:'Sodium channel blockers',ct:'amiloride, triamterene &middot; potassium-sparing',col:'#b8862f',
+   sites:['cd'],blocks:['enac'],mark:'x',fena:2,fenaT:'1&ndash;2%',kk:'&uarr;',kc:'up',ca:'&mdash;',cac:'',ab:'Acidosis',abc:'up',
+   how:'These plug the <b>epithelial sodium channel (ENaC)</b> in the luminal wall of the collecting duct directly &mdash; the same final doorway aldosterone uses, but blocked at the door rather than at the receptor. Sodium cannot enter the cell, so the electrical gradient that was pushing <b>potassium out into the urine</b> collapses and the potassium is retained. Because they never involve aldosterone at all, they work even when aldosterone is not the problem.',
+   loc:'Collecting duct &mdash; plugs <b>ENaC</b> from inside the lumen.',
+   adv:'<b>Hyperkalemia</b> &middot; metabolic acidosis &middot; nausea, headache &middot; <b>triamterene</b>: kidney stones, and it can tint the urine pale blue &middot; neither one causes gynecomastia',
+   dd:'Rarely used alone &mdash; the whole point is <b>potassium sparing</b>, which is why triamterene is sold in a fixed combination with hydrochlorothiazide: one drug wastes potassium at the distal tubule while the other holds on to it at the collecting duct. <b>Amiloride</b> has a second life in <b>lithium-induced nephrogenic diabetes insipidus</b>, because lithium enters the principal cell through that very channel.',
+   nur:'Nurse: the same potassium vigilance as spironolactone &mdash; <b>no salt substitutes</b>, no potassium supplements unless ordered, and watch the level closely alongside an ACE inhibitor or an ARB. With triamterene, keep the fluids up (stones) and reassure the patient that blue-tinged urine is harmless.',
+   note:'Never stack a potassium-sparing diuretic on another potassium-sparing diuretic, a potassium supplement, or a salt substitute without a plan for checking the level. <b>Hyperkalemia is silent until the ECG changes</b> &mdash; peaked T waves, a widening QRS &mdash; and by then you are at the arrest.'}
+ ];
+
+ /* ---------- nephron segments ---------- */
+ var SEG={
+  glom:{nm:'Glomerulus &amp; Bowman\'s capsule',sub:'filtration &mdash; 180 L a day',col:'#8b95a5',
+   d:'About <b>180 litres</b> of plasma are filtered here every day, and roughly <b>99%</b> of the salt and water in it is reclaimed before the end of the tube &mdash; which is why a day\'s urine is only about 1.5 L. <b>No diuretic acts here.</b> But this is where you learn how they get to work at all. Loops, thiazides, acetazolamide and the ENaC blockers are heavily <b>protein-bound</b>, so almost none of the drug is filtered. They are <b>secreted into the proximal tubule</b> by organic anion transporters, then ride the fluid downstream to block their transporter from <b>inside the lumen</b>. Spironolactone is the exception &mdash; it reaches its receptor from the blood side.',
+   n:'Two consequences at the bedside. First, <b>a diuretic cannot work without renal blood flow</b> &mdash; the hypotensive, volume-depleted patient who "isn\'t responding to the furosemide" usually needs perfusion, not a bigger dose. Second, in <b>kidney disease</b> the waste anions that pile up compete for that same secretion pump, so less drug ever reaches the lumen. That is real <b>diuretic resistance</b>, and it is why the dose climbs as the eGFR falls.'},
+  pct:{nm:'Proximal convoluted tubule',sub:'65% of filtered Na&#8314;',col:'#7a5a8a',
+   d:'The workhorse. Roughly <b>two-thirds of the filtered sodium</b> is reclaimed right here, along with essentially all of the glucose, the amino acids, and the <b>bicarbonate</b>. Water follows freely, so the fluid leaving is still isotonic. Two drugs reach this segment: <b>acetazolamide</b> blocks bicarbonate reabsorption here, and <b>mannitol</b> holds water here.',
+   n:'The lesson of this segment is that <b>the biggest target is not the best target</b>. Block 65% of sodium reabsorption and you would expect a flood &mdash; but the thick ascending limb downstream has enormous spare capacity and simply picks almost all of it back up. Acetazolamide is the weakest diuretic on the list <b>because</b> the loop is so good at its job.'},
+  desc:{nm:'Thin descending limb',sub:'water only &mdash; no sodium transport',col:'#2f6f9f',
+   d:'This limb is <b>permeable to water and not to salt</b>. As it dives into the salty medulla, water is drawn out and the fluid inside becomes steadily more concentrated. There is <b>no sodium transporter here to block</b> &mdash; which is exactly why the only drug that works here is the one that needs no transporter: <b>mannitol</b>, an osmotic load that refuses to leave and holds water beside it.',
+   n:'This is half of the countercurrent multiplier, the mechanism that lets you concentrate urine at all. The other half is the thick ascending limb pumping salt out into the medulla. Knock out that pump with a <b>loop diuretic</b> and this gradient collapses &mdash; which is why a loop leaves the kidney unable to concentrate anything.'},
+  tal:{nm:'Thick ascending limb',sub:'25% of filtered Na&#8314;',col:'#d1495b',
+   d:'Salt is pumped out and water cannot follow &mdash; this is the <b>diluting segment</b>, and the salt it dumps into the medulla is what builds the concentration gradient. The transporter is the <b>Na&#8314;&ndash;K&#8314;&ndash;2Cl&#8315; symporter (NKCC2)</b>, and the potassium it carries in leaks straight back out into the lumen, leaving the lumen <b>positively charged</b>. That charge is what drives <b>calcium and magnesium</b> back across the wall between the cells. <b>Loop diuretics &mdash; furosemide, bumetanide, torsemide &mdash; block NKCC2 here.</b>',
+   n:'Everything about loop diuretics falls out of that one paragraph. Block NKCC2 and you lose sodium (the biggest reclaimable block left), potassium, and chloride &mdash; and because the lumen\'s positive charge disappears with it, <b>calcium and magnesium go too</b>. The medullary gradient collapses, so the urine cannot be concentrated. One transporter, the entire side-effect profile.'},
+  dct:{nm:'Distal convoluted tubule',sub:'5% of filtered Na&#8314;',col:'#17838f',
+   d:'Fine work, small volumes. Sodium comes in on the <b>Na&#8314;&ndash;Cl&#8315; symporter (NCC)</b>, and this is also the segment where <b>calcium</b> is actively reabsorbed under the control of parathyroid hormone. Still no water permeability. <b>Thiazides &mdash; hydrochlorothiazide, chlorthalidone, metolazone &mdash; block NCC here.</b>',
+   n:'Because only about 5% of the sodium is on the table, a thiazide has a <b>low ceiling</b>: it is a blood-pressure drug, not a way to pull litres off a patient in pulmonary edema. And the calcium handling here explains the exam favourite &mdash; block sodium entry and the cell compensates by pulling <b>more calcium</b> in, so <b>thiazides raise serum calcium while loops lower it</b>.'},
+  cd:{nm:'Collecting duct',sub:'3% of filtered Na&#8314; &mdash; the fine tuning',col:'#2f9e5b',
+   d:'The last chance to adjust anything. In the principal cell, <b>aldosterone</b> puts more <b>ENaC</b> channels in the wall and more Na&#8314;/K&#8314; pumps behind them: sodium is pulled back into the body and <b>potassium is pushed out into the urine</b>. Antidiuretic hormone acts here too, opening the water channels that decide how concentrated the urine finally is. Two families of <b>potassium-sparing diuretics</b> work here: <b>spironolactone and eplerenone</b> block the aldosterone receptor, while <b>amiloride and triamterene</b> plug the ENaC channel itself.',
+   n:'This is the only segment where the potassium moves the <b>other way</b>. Everywhere upstream, blocking sodium reabsorption just sends more sodium down to this duct, aldosterone trades it for potassium, and the patient goes <b>hypokalemic</b>. Block it <b>here</b> and that trade stops &mdash; so these are the only diuretics that cause <b>hyperkalemia</b>. That one sentence is why they are combined with thiazides, and why they are dangerous next to an ACE inhibitor or an ARB.'}
+ };
+
+ var LED=[{seg:'pct',p:65,lab:'PROXIMAL 65%'},{seg:'tal',p:25,lab:'LOOP 25%'},{seg:'dct',p:5,lab:''},{seg:'cd',p:3,lab:''},{seg:'urine',p:2,lab:''}];
+
+ var mode=null, cur=null;
+
+ function act(){ return (mode==='class')?D.filter(function(d){return d.k===cur;})[0]:null; }
+ function on(s){ var a=act(); if(a)return a.sites.indexOf(s)>=0; if(mode==='seg')return cur===s; return false; }
+ function blocked(b){ var a=act(); return a?a.blocks.indexOf(b)>=0:false; }
+ function accent(){ var a=act(); if(a)return a.col; if(mode==='seg')return SEG[cur].col; return '#2f5f9e'; }
+ function classesAt(s){ return D.filter(function(d){return d.sites.indexOf(s)>=0;}); }
+
+ /* ---------- svg helpers ---------- */
+ function lbl(x,y,t,sz,col,w,an){
+   return '<text x="'+x+'" y="'+y+'" font-size="'+sz+'" text-anchor="'+(an||'middle')+'" fill="'+col+'" font-family="Inter,sans-serif" font-weight="'+(w||700)+'">'+t+'</text>';
+ }
+ function vlbl(x,y,t,sz,col){
+   return '<text x="'+x+'" y="'+y+'" font-size="'+sz+'" text-anchor="middle" fill="'+col+'" font-family="Inter,sans-serif" font-weight="700" transform="rotate(-90 '+x+' '+y+')" letter-spacing=".6">'+t+'</text>';
+ }
+ function tube(seg,d,w,inner){
+   var hot=on(seg), c=accent(), o=(mode&&!hot)?DIM:1;
+   return '<g class="rgn" data-seg="'+seg+'" opacity="'+o+'">'+
+     '<path d="'+d+'" stroke="#000" stroke-opacity="0" stroke-width="'+(w+14)+'" fill="none" stroke-linecap="round"/>'+
+     '<path d="'+d+'" stroke="'+(hot?c:TUBE)+'" stroke-width="'+w+'" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'+
+     '<path d="'+d+'" stroke="#ffffff" stroke-width="'+(w-4.5)+'" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>'+
+     (inner||'')+'</g>';
+ }
+ function fa(x,y,dir,seg){
+   var c=on(seg)?accent():'#aebbcc', d=(dir==='up')?-1:1;
+   return '<path d="M'+(x-3)+','+(y-2.6*d)+' L'+(x+3)+','+(y-2.6*d)+' L'+x+','+(y+2.4*d)+' Z" fill="'+c+'" opacity=".85"/>';
+ }
+ function xm(x,y,r){
+   r=r||8.5; var t=r*0.45;
+   return '<circle cx="'+x+'" cy="'+y+'" r="'+(r+4)+'" fill="#d1495b" opacity=".14"/>'+
+     '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="#ffffff" stroke="#d1495b" stroke-width="2.2"/>'+
+     '<path d="M'+(x-t)+','+(y-t)+'L'+(x+t)+','+(y+t)+'M'+(x+t)+','+(y-t)+'L'+(x-t)+','+(y+t)+'" stroke="#d1495b" stroke-width="2.2" stroke-linecap="round"/>';
+ }
+ function wdrop(x,y,c,s){
+   s=s||1;
+   return '<g transform="translate('+x+','+y+') scale('+s+')"><path d="M0,-5 q4.6,5.6 0,9.2 q-4.6,-3.6 0,-9.2 Z" fill="'+c+'"/></g>';
+ }
+ function chip(cx,cy,t,key,w,seg){
+   var bk=blocked(key), x=cx-w/2, y=cy-7, o=(mode&&!on(seg))?DIM:1;
+   var s='<g opacity="'+o+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="14" rx="7" fill="'+(bk?'#fae5e8':'#ffffff')+'" stroke="'+(bk?'#d1495b':LINE)+'" stroke-width="'+(bk?1.8:1)+'"/>'+
+     lbl(cx,cy+3.3,t,6.4,bk?'#a33345':'#5b6675',700);
+   if(bk) s+='<line x1="'+(x+4)+'" y1="'+cy+'" x2="'+(x+w-4)+'" y2="'+cy+'" stroke="#d1495b" stroke-width="1.6"/>';
+   return s+'</g>';
+ }
+
+ /* ---------- the nephron ---------- */
+ var P={
+   pct:'M53,62 c11,-19 27,-19 36,-2 c8,16 22,16 30,-1',
+   desc:'M119,59 L119,238 C119,258 128,266 138,266',
+   bendUp:'M138,266 C148,266 157,258 157,238',
+   tal:'M157,238 L157,104',
+   dct:'M157,104 c0,-16 16,-22 26,-10 c9,10 20,8 25,-4',
+   cd:'M208,90 C222,92 228,108 228,130 L228,318'
+ };
+
+ function draw(){
+   var a=act(), c=accent(), s='';
+
+   /* cortex / medulla */
+   s+='<rect x="0" y="0" width="268" height="150" fill="#eff4fb"/>'+
+      '<rect x="0" y="150" width="268" height="52" fill="#dfe8f4"/>'+
+      '<rect x="0" y="202" width="268" height="52" fill="#d6e1f0"/>'+
+      '<rect x="0" y="254" width="268" height="112" fill="#cddaeb"/>'+
+      '<line x1="0" y1="150" x2="268" y2="150" stroke="#c2cfe0" stroke-width="1" stroke-dasharray="4 4"/>'+
+      lbl(6,144,'CORTEX',6,'#9aa6b8',700,'start')+lbl(6,163,'MEDULLA',6,'#9aa6b8',700,'start')+
+      lbl(6,176,'salty &middot; concentrating',5.4,'#adb8c8',500,'start');
+
+   /* glomerulus */
+   var gh=on('glom'), go=(mode&&!gh)?DIM:1, gc=gh?c:'#c8b0ab';
+   s+='<g class="rgn" data-seg="glom" opacity="'+go+'">'+
+      '<circle cx="32" cy="62" r="21" fill="#000" fill-opacity="0"/>'+
+      '<circle cx="32" cy="62" r="20" fill="#ffffff" stroke="'+(gh?c:TUBE)+'" stroke-width="2.4"/>'+
+      '<path d="M22,54 c9,-7 19,2 12,9 c-7,7 4,15 13,7 c7,-6 -3,-15 -11,-9" stroke="'+gc+'" stroke-width="4" fill="none" stroke-linecap="round"/>'+
+      '<path d="M24,70 c8,6 18,0 20,-7" stroke="'+gc+'" stroke-width="4" fill="none" stroke-linecap="round"/>'+
+      '<line x1="2" y1="52" x2="14" y2="57" stroke="'+gc+'" stroke-width="3" stroke-linecap="round"/>'+
+      '<line x1="2" y1="74" x2="14" y2="69" stroke="'+gc+'" stroke-width="3" stroke-linecap="round"/>'+
+      '</g>';
+   s+=lbl(32,96,'GLOMERULUS',6.6,on('glom')?c:'#5b6675')+lbl(32,105,'filtration',6,'#a3abb8',500);
+
+   /* tubule */
+   s+=tube('pct',P.pct,11);
+   s+=tube('desc',P.desc,8,fa(119,112,'dn','desc')+fa(119,196,'dn','desc'));
+   s+=tube('tal',P.bendUp,8);
+   s+=tube('tal',P.tal,14,fa(157,212,'up','tal')+fa(157,134,'up','tal'));
+   s+=tube('dct',P.dct,11);
+   s+=tube('cd',P.cd,12,fa(228,182,'dn','cd')+fa(228,250,'dn','cd'));
+
+   /* segment labels */
+   s+=lbl(95,28,'PROXIMAL TUBULE',7,on('pct')?c:'#5b6675');
+   s+=vlbl(104,178,'THIN DESCENDING LIMB',6.2,on('desc')?c:'#5b6675');
+   s+=vlbl(172,174,'THICK ASCENDING LIMB',6.4,on('tal')?c:'#5b6675');
+   s+=lbl(186,70,'DISTAL TUBULE',7,on('dct')?c:'#5b6675');
+   s+=vlbl(246,228,'COLLECTING DUCT',6.4,on('cd')?c:'#5b6675');
+
+   /* transporter chips */
+   s+=chip(84,90,'Na&#8314;/H&#8314; &middot; CA','ca',52,'pct');
+   s+=chip(200,166,'NKCC2','nkcc',36,'tal');
+   s+=chip(196,116,'NCC','ncc',30,'dct');
+   s+=chip(186,290,'ALDO RECEPTOR','mr',58,'cd');
+   s+=chip(186,312,'ENaC','enac',32,'cd');
+
+   /* the mark for the active drug */
+   if(a){
+     if(a.mark==='x'){
+       if(a.k==='acz') s+=xm(72,49);
+       if(a.k==='loop') s+=xm(157,225);
+       if(a.k==='thz') s+=xm(183,93);
+       if(a.k==='aldo') s+=xm(228,290,7);
+       if(a.k==='enac') s+=xm(228,312,7);
+     } else {
+       var pts=[[71,52],[90,60],[108,68],[119,102],[119,140],[119,178],[119,216]];
+       for(var i=0;i<pts.length;i++) s+=wdrop(pts[i][0],pts[i][1],'#2f6f9f',0.8);
+       s+=lbl(95,14,'mannitol: water held inside the tube',5.8,'#2f6f9f',700);
+     }
+   }
+
+   /* urine */
+   var fe=a?a.fena:2, water=(a&&a.fena===null);
+   s+='<path d="M228,318 C228,338 190,340 120,332" stroke="#aebbcc" stroke-width="2" fill="none"/>'+
+      '<path d="M124,328 L116,331.6 L124,335.4 Z" fill="#aebbcc"/>';
+   s+='<rect x="8" y="286" width="106" height="72" rx="11" fill="#ffffff" stroke="'+(a?c:LINE)+'" stroke-width="'+(a?1.8:1.2)+'"/>';
+   s+=lbl(61,301,'URINE',6.6,a?c:'#8b95a5');
+   var nd = water?7:Math.max(1,Math.round((fe||2)/25*10));
+   for(var j=0;j<10;j++){
+     var dx=25+(j%5)*18, dy=(j<5)?318:336, live=(j<nd);
+     s+=wdrop(dx,dy,live?(water?'#2f6f9f':(a?c:'#8b95a5')):'#e6ebf3',0.95);
+   }
+   s+=lbl(61,354,water?'water diuresis':(a?('Na&#8314; out: up to '+a.fenaT):'Na&#8314; out: under 2%'),6,'#78828f',600);
+
+   $("art").innerHTML=s;
+   var r=document.querySelectorAll('#art .rgn');
+   for(var q=0;q<r.length;q++){
+     r[q].onclick=(function(el){return function(){pickSeg(el.getAttribute('data-seg'));};})(r[q]);
+   }
+ }
+
+ /* ---------- ledger + stats ---------- */
+ function ledger(){
+   $("ledRow").innerHTML=LED.map(function(l){
+     var a=act(), isU=(l.seg==='urine'), hot=isU?false:on(l.seg), bk=(a&&hot&&a.mark==='x');
+     var cls='lseg'+((mode&&!hot&&!isU)?' dim':'')+(bk?' blk':'');
+     var col=isU?'#9aa6b8':SEG[l.seg].col;
+     return '<div class="'+cls+'" data-seg="'+l.seg+'" style="flex:'+l.p+' 0 0;background:'+col+'" title="'+(isU?'urine':SEG[l.seg].nm)+'">'+l.lab+'</div>';
+   }).join('');
+   var cells=document.querySelectorAll('#ledRow .lseg');
+   for(var i=0;i<cells.length;i++){
+     cells[i].onclick=(function(el){return function(){ var s=el.getAttribute('data-seg'); if(s!=='urine') pickSeg(s); };})(cells[i]);
+   }
+ }
+ function stats(){
+   var a=act();
+   $("v_k").innerHTML=a?a.kk:'&mdash;'; $("v_ca").innerHTML=a?a.ca:'&mdash;'; $("v_ab").innerHTML=a?a.ab:'&mdash;';
+   $("s_k").className=a?a.kc:''; $("s_ca").className=a?a.cac:''; $("s_ab").className=a?a.abc:'';
+ }
+
+ /* ---------- list ---------- */
+ function renderList(){
+   $("list").innerHTML=D.map(function(d){
+     var hit=(mode==='seg'&&d.sites.indexOf(cur)>=0);
+     return '<button class="it'+(mode==='class'&&d.k===cur?' on':'')+'" data-k="'+d.k+'"'+
+       (hit?' style="border-color:'+d.col+';border-width:2px;background:#fbfdff"':'')+'>'+
+       '<span class="sw" style="background:'+d.col+'"></span>'+
+       '<span><span class="nm">'+d.nm+'</span><span class="s">'+d.ct+'</span></span></button>';
+   }).join('');
+   var b=document.querySelectorAll('#list .it');
+   for(var i=0;i<b.length;i++){ b[i].onclick=(function(el){return function(){pick(el.getAttribute('data-k'));};})(b[i]); }
+ }
+
+ /* ---------- selection ---------- */
+ function pick(k){
+   mode='class'; cur=k;
+   var d=D.filter(function(x){return x.k===k;})[0];
+   $("cardTitle").innerHTML=d.nm;
+   $("stage").style.background=d.col;
+   $("stage").innerHTML=d.nm+'<small>'+d.sites.map(function(s){return SEG[s].nm;}).join(' + ')+' &middot; peak Na&#8314; out '+(d.fena===null?'&mdash; water diuresis':'up to '+d.fenaT)+'</small>';
+   $("info").innerHTML='<span class="n">'+d.nm+'</span>'+
+     '<div class="ex"><span>'+d.ct+'</span></div>'+
+     '<div style="margin-top:9px">'+d.how+'</div>'+
+     '<div class="loc">'+d.loc+'</div>'+
+     '<div class="dd"><b>Watch for:</b> '+d.adv+'</div>'+
+     '<div class="dd">'+d.dd+'</div>'+
+     '<div class="mnem">'+d.nur+'</div>'+
+     '<div class="note">'+d.note+'</div>';
+   draw(); ledger(); stats(); renderList();
+ }
+
+ function pickSeg(s){
+   mode='seg'; cur=s;
+   var t=SEG[s], list=classesAt(s);
+   $("cardTitle").innerHTML=t.nm;
+   $("stage").style.background=t.col;
+   $("stage").innerHTML=t.nm+'<small>'+t.sub+' &middot; '+(list.length?(list.length===1?'1 class works here':list.length+' classes work here'):'no diuretic acts here')+'</small>';
+   $("info").innerHTML='<span class="n">'+t.nm+' &mdash; '+t.sub+'</span>'+t.d+
+     (list.length?('<div class="ex">'+list.map(function(d){return '<span style="background:'+d.col+'1f;color:'+d.col+'">'+d.ct.split(' &middot; ')[0]+'</span>';}).join('')+'</div>'):'')+
+     '<div class="note">'+t.n+'</div>';
+   draw(); ledger(); stats(); renderList();
+ }
+
+ function reset(){
+   mode=null; cur=null;
+   $("cardTitle").innerHTML='One nephron';
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='One nephron &middot; 180 L filtered a day<small>tap a segment of the tubule, or a drug class</small>';
+   $("info").innerHTML='<span class="n">Every diuretic is a plumbing decision</span>'+
+     'Sodium is reclaimed in four places along this tube, and <b>water follows sodium</b>. So there are only four doors to jam &mdash; plus one trick (mannitol) that needs no door at all. Which door a drug jams decides <b>how much fluid it can pull, what happens to the potassium and the calcium, and which lab you check before you give it</b>. Tap a <b>segment</b> to see who works there, or tap a <b>class</b> to watch it block its transporter.'+
+     '<div class="mnem">Read the ledger left to right and the chapter falls into place: the biggest block of sodium is <b>proximal</b>, but the strongest diuretic is the <b>loop</b> &mdash; because whatever the proximal tubule lets go, the thick ascending limb quietly picks back up. Only when you jam the loop itself does the sodium actually get out.</div>';
+   draw(); ledger(); stats(); renderList();
+ }
+
+ $("rst").onclick=reset;
+ reset();
+})();
+</script>
+</body>
+</html>

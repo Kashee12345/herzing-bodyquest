@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Who Can Donate to Whom?</title>
+<meta name="description" content="Interactive ABO/Rh blood compatibility grid — tap any patient-and-donor pair to see whether the transfusion is safe and why. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:0.82fr 1.18fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.lg{display:flex;flex-wrap:wrap;gap:9px;margin-top:9px;font-size:11px;font-weight:700;color:var(--muted);}
+.lg span{display:inline-flex;align-items:center;}
+.mxwrap{overflow-x:auto;margin:2px 0 4px;padding-bottom:2px;}
+.mx{border-collapse:separate;border-spacing:4px;margin:0 auto;}
+.mx th{font-family:var(--sans);font-weight:800;color:var(--teal-dk);}
+.mx thead th{font-size:11px;padding:0 0 3px;}
+.mx th.rh{font-size:11px;padding:0 6px 0 0;text-align:right;white-space:nowrap;}
+.mx th.cornr{font-size:8.5px;line-height:1.25;color:var(--muted);font-weight:700;text-align:right;padding-right:5px;}
+.mx td{padding:0;}
+.mxc{width:38px;height:31px;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:800;color:#fff;font-family:var(--sans);opacity:.9;transition:.12s;}
+.mxc.ok{background:var(--green);}
+.mxc.no{background:var(--coral);}
+.mxc:hover{opacity:1;transform:translateY(-1px);}
+.mxc.sel{outline:3px solid var(--teal-dk);outline-offset:1px;opacity:1;box-shadow:0 3px 9px rgba(60,42,92,.28);}
+.mxlg{display:flex;gap:14px;font-size:11.5px;font-weight:700;color:var(--soft);margin:2px 2px 4px;}
+.mxlg b{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:5px;vertical-align:-2px;}
+.mxlg .a{background:var(--green);} .mxlg .x{background:var(--coral);}
+.axhint{font-size:11px;color:var(--muted);text-align:center;margin:0 0 8px;font-weight:600;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 14</div>
+  <h1>Who Can Donate to Whom?</h1>
+  <div class="intro">Red blood cells wear <b>antigens</b> (A, B, and Rh/D); plasma carries <b>antibodies</b> against the antigens you <i>lack</i>. Give a patient cells their plasma recognizes as foreign and those cells are attacked. Tap any square in the grid &mdash; a <b>patient</b> row meeting a <b>donor</b> column &mdash; to test the transfusion.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Reaction chamber</h2>
+    <svg viewBox="0 0 220 182" aria-label="transfusion reaction chamber"><g id="art"></g></svg>
+    <div class="lg">
+      <span style="color:#2f9e5b">&#9650;&nbsp;A antigen</span>
+      <span style="color:#b8862f">&#9632;&nbsp;B antigen</span>
+      <span style="color:#7a5a8a">&#9670;&nbsp;Rh(D)</span>
+      <span style="color:#d1495b">&#9679;&nbsp;donor red cell</span>
+      <span>Y&nbsp;=&nbsp;patient antibody</span>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">Blood compatibility<small>tap a square to test a transfusion</small></div>
+    <div class="card">
+      <div class="axhint">columns = <b>donor</b> cells · rows = <b>patient</b> receiving</div>
+      <div class="mxwrap" id="mx"></div>
+      <div class="mxlg"><span><b class="a"></b>safe to transfuse</span><span><b class="x"></b>will react</span></div>
+      <div id="info"></div>
+      <div class="mnem"><b>The rule:</b> a patient can receive cells only if those cells carry <b>no antigen the patient's plasma has an antibody against</b>. <b>O&minus;</b> (no antigens) is the universal red-cell donor; <b>AB+</b> (no anti-A/anti-B, Rh-positive) is the universal recipient.</div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // Each type: ag = antigens ON the red cell; ab = antibodies IN the plasma; rh flag
+ var T=[
+  {k:'O−', ag:[],            ab:['A','B'], rh:false},
+  {k:'O+',      ag:['Rh'],        ab:['A','B'], rh:true },
+  {k:'A−', ag:['A'],         ab:['B'],     rh:false},
+  {k:'A+',      ag:['A','Rh'],    ab:['B'],     rh:true },
+  {k:'B−', ag:['B'],         ab:['A'],     rh:false},
+  {k:'B+',      ag:['B','Rh'],    ab:['A'],     rh:true },
+  {k:'AB−',ag:['A','B'],     ab:[],        rh:false},
+  {k:'AB+',     ag:['A','B','Rh'],ab:[],        rh:true }
+ ];
+ function has(a,x){return a.indexOf(x)>=0;}
+ function lab(x){return x==='Rh'?'Rh(D)':x;}
+ function abColor(x){return x==='A'?'#2f9e5b':'#b8862f';}
+ // ABO compatible: every A/B antigen the donor carries must also be on the patient
+ function aboOk(rec,don){ if(has(don.ag,'A')&&!has(rec.ag,'A'))return false; if(has(don.ag,'B')&&!has(rec.ag,'B'))return false; return true; }
+ // Rh: an Rh+ donor cell may only go to an Rh+ patient
+ function rhOk(rec,don){ return don.rh? rec.rh : true; }
+ function compat(rec,don){ return aboOk(rec,don)&&rhOk(rec,don); }
+
+ // ---------- SVG chamber ----------
+ function yg(x,y,c){
+   return '<g stroke="'+c+'" stroke-width="2.4" stroke-linecap="round" fill="none">'
+     +'<line x1="'+x+'" y1="'+y+'" x2="'+(x-6)+'" y2="'+(y-8)+'"/>'
+     +'<line x1="'+x+'" y1="'+y+'" x2="'+(x+6)+'" y2="'+(y-8)+'"/>'
+     +'<line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="'+(y+7)+'"/></g>'
+     +'<circle cx="'+(x-6)+'" cy="'+(y-8)+'" r="2.2" fill="'+c+'"/>'
+     +'<circle cx="'+(x+6)+'" cy="'+(y-8)+'" r="2.2" fill="'+c+'"/>';
+ }
+ function cell(x,y,d){
+   var s='<circle cx="'+x+'" cy="'+y+'" r="19" fill="#d1495b" stroke="#a83545" stroke-width="2"/>'
+     +'<ellipse cx="'+x+'" cy="'+y+'" rx="7" ry="5" fill="#a83545" opacity=".5"/>';
+   if(has(d.ag,'A')) s+='<polygon points="'+(x-5)+','+(y-13)+' '+(x+5)+','+(y-13)+' '+x+','+(y-23)+'" fill="#2f9e5b" stroke="#fff" stroke-width="1"/>';
+   if(has(d.ag,'B')) s+='<rect x="'+(x+13)+'" y="'+(y-4)+'" width="9" height="9" fill="#b8862f" stroke="#fff" stroke-width="1"/>';
+   if(has(d.ag,'Rh')) s+='<polygon points="'+x+','+(y+13)+' '+(x+6)+','+(y+20)+' '+x+','+(y+27)+' '+(x-6)+','+(y+20)+'" fill="#7a5a8a" stroke="#fff" stroke-width="1"/>';
+   return s;
+ }
+ function draw(rec,don,state){
+   var haze = state==='safe'?'#e9f5ee':(state==='abo'?'#fae5e8':'#fbf3e2');
+   var out='<rect x="6" y="12" width="208" height="150" rx="14" fill="'+haze+'"/>';
+   var spread=[[58,72],[156,66],[68,144],[162,146]];
+   var clump=[[100,96],[130,100],[106,128],[134,124]];
+   var pos = state==='abo'? clump : spread;
+   if(state==='abo'){
+     var br=[[0,1],[2,3],[0,2],[1,3]];
+     for(var b=0;b<br.length;b++){
+       out+='<line x1="'+clump[br[b][0]][0]+'" y1="'+clump[br[b][0]][1]+'" x2="'+clump[br[b][1]][0]+'" y2="'+clump[br[b][1]][1]+'" stroke="#b23145" stroke-width="3" opacity=".45"/>';
+     }
+   }
+   for(var i=0;i<4;i++){ out+=cell(pos[i][0],pos[i][1],don); }
+   // patient antibodies floating in the plasma
+   var fp=[[28,40],[196,44],[26,126],[198,124],[112,26],[64,28]];
+   var bind=[[114,98],[122,113],[100,114],[132,101]];
+   var idx=0, bidx=0;
+   rec.ab.forEach(function(a){
+     var m = has(don.ag,a);
+     for(var j=0;j<2;j++){
+       if(state==='abo' && m){ var p=bind[bidx%bind.length]; bidx++; out+=yg(p[0],p[1],abColor(a)); }
+       else { var q=fp[idx%fp.length]; idx++; out+=yg(q[0],q[1],abColor(a)); }
+     }
+   });
+   if(rec.ab.length===0){ out+='<text x="110" y="40" font-size="10" fill="#237a45" text-anchor="middle" font-weight="700">plasma has no anti-A / anti-B</text>'; }
+   var lbl = state==='safe'?'cells circulate freely':(state==='abo'?'agglutination — cells clump':'Rh sensitization risk');
+   var lcol = state==='safe'?'#237a45':(state==='abo'?'#b23145':'#8a6a20');
+   var pre = state==='safe'?'✓ ':(state==='abo'?'✗ ':'⚠ ');
+   out+='<text x="110" y="176" font-size="11" fill="'+lcol+'" text-anchor="middle" font-weight="800">'+pre+lbl+'</text>';
+   return out;
+ }
+
+ // ---------- info panel ----------
+ function infoHTML(rec,don,state){
+   var tag = state==='safe'?'<span class="pill normal">safe</span>':'<span class="pill high">do not transfuse</span>';
+   var body;
+   if(state==='safe'){
+     body='The patient’s plasma holds <b>no antibody</b> against any antigen on '+don.k+' red cells, so the transfused cells circulate normally.';
+   } else if(state==='abo'){
+     var atk=[], ant=[];
+     ['A','B'].forEach(function(x){ if(has(rec.ab,x)&&has(don.ag,x)){ atk.push('anti-'+x); ant.push('the '+x+' antigen'); } });
+     body='The patient carries <b>'+atk.join(' and ')+'</b>, which instantly bind '+ant.join(' and ')+' on the '+don.k+' cells &rarr; <b>agglutination and hemolysis</b>. This is an <b>acute hemolytic transfusion reaction</b> &mdash; potentially fatal.';
+   } else {
+     body='ABO matches, but an <b>Rh-negative patient</b> given <b>Rh-positive cells</b> becomes <b>sensitized</b> to the D antigen. No reaction this first time, but the patient then makes <b>anti-D</b> and will react to any later Rh+ exposure &mdash; a critical concern in patients who can become pregnant.';
+   }
+   var recAg = rec.ag.length? rec.ag.map(lab).join(', ') : 'none';
+   var recAb = rec.ab.length? rec.ab.map(function(x){return 'anti-'+x;}).join(', ') : 'none';
+   var donAg = don.ag.length? don.ag.map(lab).join(', ') : 'none';
+   var html='<span class="n">Donor '+don.k+' &rarr; Patient '+rec.k+' '+tag+'</span>'+body;
+   html+='<div class="loc"><b>Patient '+rec.k+':</b> cell antigens &mdash; '+recAg+' · plasma antibodies &mdash; '+recAb+'</div>';
+   html+='<div class="loc" style="margin-top:6px;"><b>Donor '+don.k+':</b> cell antigens &mdash; '+donAg+'</div>';
+   if(don.k==='O−') html+='<div class="note"><b>O&minus; is the universal red-cell donor</b> &mdash; carrying no A, B, or Rh antigen, its cells give no plasma anything to attack.</div>';
+   if(rec.k==='AB+') html+='<div class="note"><b>AB+ is the universal recipient</b> &mdash; with no anti-A or anti-B and an Rh-positive cell, it safely accepts every donor type.</div>';
+   return html;
+ }
+
+ // ---------- matrix ----------
+ var ri=3, di=0; // default: Patient A+ receiving Donor O- (a compatible universal-donor pairing)
+ function buildMatrix(){
+   var h='<table class="mx"><thead><tr><th class="cornr">patient&#8595;<br>donor&#8594;</th>';
+   T.forEach(function(d){ h+='<th>'+d.k+'</th>'; });
+   h+='</tr></thead><tbody>';
+   T.forEach(function(rec,r){
+     h+='<tr><th class="rh">'+rec.k+'</th>';
+     T.forEach(function(don,c){
+       var ok=compat(rec,don);
+       h+='<td><button class="mxc '+(ok?'ok':'no')+'" data-r="'+r+'" data-c="'+c+'" aria-label="donor '+don.k+' to patient '+rec.k+'">'+(ok?'✓':'✗')+'</button></td>';
+     });
+     h+='</tr>';
+   });
+   h+='</tbody></table>';
+   $('mx').innerHTML=h;
+   document.querySelectorAll('.mxc').forEach(function(b){
+     b.onclick=function(){ ri=+b.dataset.r; di=+b.dataset.c; render(); };
+   });
+ }
+ function render(){
+   var rec=T[ri], don=T[di];
+   var aOk=aboOk(rec,don), rOk=rhOk(rec,don), ok=aOk&&rOk;
+   var state = !aOk?'abo':(!rOk?'rh':'safe');
+   $('cardTitle').innerHTML='Donor '+don.k+' &rarr; Patient '+rec.k;
+   $('stage').style.background = ok? 'var(--green)':'var(--coral)';
+   $('stage').innerHTML = (ok?'✓ Compatible':'✗ Incompatible')+'<small>Donor '+don.k+' cells into Patient '+rec.k+'</small>';
+   $('art').innerHTML=draw(rec,don,state);
+   $('info').innerHTML=infoHTML(rec,don,state);
+   document.querySelectorAll('.mxc').forEach(function(b){ b.classList.toggle('sel', +b.dataset.r===ri && +b.dataset.c===di); });
+ }
+ buildMatrix();
+ render();
+})();
+</script>
+</body>
+</html>

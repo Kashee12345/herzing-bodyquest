@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Point Estimate &plusmn; Margin of Error</title>
+<meta name="description" content="Build a confidence interval from a real simulated sample &mdash; estimate plus or minus margin of error &mdash; and watch across hundreds of repeats exactly what that margin does and does not cover.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:112px;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:56px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.gk{text-transform:none;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.lgd i.mdl{width:14px;height:0;border-top:2px dashed #2f9e5b;border-radius:0;vertical-align:3px;}
+#info .loc{font-variant-numeric:tabular-nums;font-size:12.2px;line-height:1.75;}
+.grid .it .nm{display:block;} .grid .it .s{display:block;margin-top:2px;font-weight:600;font-variant-numeric:tabular-nums;}
+.lad{margin-top:11px;}
+.lad .r{display:flex;align-items:center;gap:9px;padding:6px 0;border-top:1px solid var(--line);}
+.lad .r:first-child{border-top:none;}
+.lad .lv{font-size:11.6px;font-weight:800;color:var(--teal-dk);min-width:34px;font-variant-numeric:tabular-nums;}
+.lad .zz{font-size:10.4px;font-weight:700;color:var(--muted);min-width:62px;font-variant-numeric:tabular-nums;}
+.lad .bar{flex:1;height:11px;background:#eef4f7;border-radius:6px;overflow:hidden;}
+.lad .bar i{display:block;height:100%;background:#a9c8d6;border-radius:6px;}
+.lad .r.on .bar i{background:var(--teal-dk);}
+.lad .r.on .lv{color:var(--coral);} .lad .r.on .ww{color:var(--coral);}
+.lad .ww{font-size:10.6px;font-weight:800;color:var(--teal-dk);min-width:78px;text-align:right;font-variant-numeric:tabular-nums;}
+.vd{border-radius:10px;padding:9px 12px;margin-top:11px;font-size:12.4px;font-weight:700;line-height:1.5;}
+.vd.hit{background:#e5f3ea;color:#237a45;border:1px solid #bfe3cd;}
+.vd.miss{background:#fae5e8;color:#b23145;border:1px solid #f0c9d0;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 9</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 9</div>
+  <h1>Point Estimate &plusmn; Margin of Error</h1>
+  <div class="intro">A sample hands you one number &mdash; a <b>point estimate</b> like x&#772; &mdash; and that number is almost certainly not &mu;. So you don't report it bare. You report it with a <b>margin of error</b>: a reach, built out of the standard error, wide enough that intervals made this way capture &mu; as often as you promised. Draw real samples below, watch each interval get built out of its own data, and then watch a few hundred of them at once to see exactly what that margin does &mdash; and does not &mdash; cover.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">One sample &rarr; one interval</h2>
+      <svg viewBox="0 0 480 322" id="chart" aria-label="a simulated sample shown on the population scale, and the confidence interval built from it shown magnified"></svg>
+      <div class="lgd">
+        <span><i style="background:#9fc4d4"></i>the n values you drew</span>
+        <span><i style="background:#1c4454;border-radius:50%"></i>x&#772; &mdash; point estimate</span>
+        <span><i class="mdl"></i>&mu; &mdash; the true value</span>
+        <span><i style="background:#e8f2f7"></i>zoom window</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>The same procedure, run again and again</h2>
+      <svg viewBox="0 0 480 334" id="cover" aria-label="the most recent intervals stacked, each drawn green if it captured mu and coral if it missed"></svg>
+      <div class="cap" id="covcap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Resting heart rate<small>press &ldquo;Draw a new sample&rdquo; to build an interval</small></div>
+    <div class="card">
+      <div class="hd">What you are measuring &mdash; &sigma; known from long experience</div>
+      <div class="grid" id="ctxs"></div>
+      <div class="hd">Confidence level &mdash; sets the multiplier z*</div>
+      <div class="seg" id="cseg">
+        <button data-c="80">80%<small>z* = 1.282</small></button>
+        <button data-c="90">90%<small>z* = 1.645</small></button>
+        <button data-c="95" class="on">95%<small>z* = 1.960</small></button>
+        <button data-c="99">99%<small>z* = 2.576</small></button>
+      </div>
+      <div class="sl"><label>confidence &mdash; any level</label><input type="range" id="cSl" min="50" max="99" step="1" value="95"><span class="nv" id="cVal">95%</span></div>
+      <div class="sl"><label>sample size n</label><input type="range" id="nSl" min="2" max="200" step="1" value="25"><span class="nv" id="nVal">25</span></div>
+      <div class="tiles">
+        <div><span class="lb">Point estimate<br><span class="gk">x&#772;</span></span><span class="vv" id="tXb">&mdash;</span></div>
+        <div><span class="lb">Multiplier<br><span class="gk">z*</span></span><span class="vv" id="tZ">1.960</span></div>
+        <div><span class="lb">Std. error<br><span class="gk">&sigma;/&radic;n</span></span><span class="vv" id="tSe">1.800</span></div>
+        <div><span class="lb">Margin of<br>error</span><span class="vv" id="tMo">3.528</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="d1">Draw a new sample</button><button class="btn" id="d100">Run 100</button><button class="btn" id="d1000">Run 1,000</button><button class="btn" id="rst">Reset</button></div>
+      <div class="vd" id="verd"></div>
+      <div id="info"></div>
+    </div>
+    <div class="card">
+      <h2>Where z* comes from</h2>
+      <div class="cap" style="margin-top:2px;">The multiplier is not a style choice. It is read off the standard normal curve: <b>z* is the number of standard errors you must reach in each direction to enclose the middle C% of the area.</b> Move the confidence slider and watch the shaded middle grow.</div>
+      <svg viewBox="0 0 460 206" id="zcurve" aria-label="the standard normal curve with the middle C percent of area shaded and plus or minus z star marked"></svg>
+      <div class="cap" id="zcap"></div>
+    </div>
+    <div class="card">
+      <h2>What extra confidence costs</h2>
+      <div class="cap" style="margin-top:2px;">Confidence and precision are traded against each other at a fixed exchange rate. Every bar below is a margin of error at the current n &mdash; same data, same standard error, only the promise changed.</div>
+      <div class="lad" id="lad"></div>
+      <div class="cap" id="ladcap"></div>
+      <div class="mnem"><b>estimate &plusmn; (multiplier &times; standard error).</b> That is the shape of almost every confidence interval you will ever build &mdash; for a mean, for a proportion, for a difference between two groups, for a slope. Only the three ingredients get swapped out. The estimate comes from your data. The standard error says how much an estimate like yours typically wobbles from sample to sample. The multiplier says how many of those wobbles you want to reach out, and it is set by the confidence level alone. Learn the shape once and every interval in the rest of the book is a substitution exercise.</div>
+      <div class="note"><b>Four things the margin of error does not cover.</b> <b>(1) It is not a probability statement about this interval.</b> Once the numbers are computed, &mu; is either inside or it is not &mdash; there is no chance left in it. The 95% belongs to the <i>procedure</i>: repeat the whole study endlessly and 95% of the intervals it produces will contain &mu;. That is precisely what the stack of intervals above is showing you. <b>(2) It says nothing about individual values.</b> Look at the two panels in the first chart: the interval is a claim about where &mu; sits, and it is far narrower than the data. It is not the range where 95% of hearts, commutes or bolts fall. <b>(3) It does not cover bias.</b> The margin of error is built entirely out of &sigma;/&radic;n, which describes random sampling wobble and nothing else. Volunteers only, one neighborhood, whoever picks up the phone, a scale reading 2 g heavy, a leading question &mdash; none of that is in the formula. A biased study just produces a tight interval centered on the wrong number, and raising n tightens it further. <b>(4) It assumes the sample was actually random.</b> Break that and the arithmetic still runs, still prints an answer, and still means nothing. One honest caveat on this page: &sigma; is treated as known, which is why z* is the right multiplier here. When you must estimate &sigma; from the sample itself, the multiplier comes from the t distribution instead &mdash; a slightly longer reach to pay for the extra thing being guessed.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- seeded PRNG (mulberry32) so every run reproduces exactly ---------- */
+ var SEED0=20260719, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ function gauss(){
+   var u1=rnd(); if(u1<1e-12)u1=1e-12;
+   var u2=rnd();
+   return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+ }
+
+ /* ---------- inverse standard normal (Acklam), good to ~1e-9 ---------- */
+ function invNorm(p){
+   var a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+   var b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+   var c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+   var d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+   var pl=0.02425, ph=1-pl, q, r;
+   if(p<pl){
+     q=Math.sqrt(-2*Math.log(p));
+     return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+   }
+   if(p<=ph){
+     q=p-0.5; r=q*q;
+     return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+   }
+   q=Math.sqrt(-2*Math.log(1-p));
+   return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+ }
+ function zStar(C){ return invNorm(1-(1-C/100)/2); }
+
+ /* ---------- the quantities being measured; sigma treated as known ---------- */
+ var CTX=[
+  {t:'Resting heart rate',s:'&mu; 72 &middot; &sigma; 9 bpm',nm:'Resting heart rate',
+   mu:72,sd:9,u:'bpm',dec:2,col:'#2f6f8a',
+   why:'Adults vary a lot &mdash; &sigma; = 9 bpm &mdash; so a single person tells you almost nothing about the population mean. The whole job of the margin of error is to convert that person-to-person spread into an honest reach around x&#772;.'},
+  {t:'Morning commute',s:'&mu; 27 &middot; &sigma; 8 min',nm:'Morning commute',
+   mu:27,sd:8,u:'min',dec:2,col:'#7a5a8a',
+   why:'Commutes scatter widely from day to day and person to person. Notice how much narrower the interval is than the commutes themselves &mdash; you are estimating the <i>average</i> commute, not predicting tomorrow\'s.'},
+  {t:'Bag fill weight',s:'&mu; 340 &middot; &sigma; 6 g',nm:'Bag fill weight',
+   mu:340,sd:6,u:'g',dec:2,col:'#b8862f',
+   why:'A filling machine with a long service history is the rare case where &sigma; really is known: it is a property of the equipment, measured over years, while &mu; drifts and must be re-estimated from each new sample.'},
+  {t:'Bolt diameter',s:'&mu; 12.00 &middot; &sigma; 0.40 mm',nm:'Bolt diameter',
+   mu:12,sd:0.4,u:'mm',dec:3,col:'#2f9e5b',
+   why:'A tight tolerance and a small &sigma;, so every number on the axis is small &mdash; but the arithmetic is identical. The margin of error is always z* standard errors, whatever the units happen to be.'}
+ ];
+
+ /* ---------- state ---------- */
+ var ci=0, conf=95, n=25;
+ var z=0, SE=0, MOE=0;
+ var cur=null;                    /* the interval on screen: {m,lo,hi,ok,dat} */
+ var recent=[], total=0, capt=0;  /* recent = last 40 intervals for the stack */
+ var KEEP=40;
+
+ function C(){ return CTX[ci]; }
+ function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+ function com(x){ return String(x).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+ function f(v){ return v.toFixed(C().dec); }
+ /* axis labels: pick decimals from how wide the axis is */
+ function tk(v,span){
+   var d=span>=200?0:(span>=20?1:(span>=2?2:(span>=0.2?3:4)));
+   return v.toFixed(d);
+ }
+
+ function recompute(){
+   z=zStar(conf);
+   SE=C().sd/Math.sqrt(n);
+   MOE=z*SE;
+ }
+
+ /* ---------- one real sample -> one real interval ---------- */
+ function drawSample(keepData){
+   var p=C(), sm=0, i, v, dat=keepData?[]:null;
+   for(i=0;i<n;i++){
+     v=p.mu+p.sd*gauss();
+     sm+=v;
+     if(dat)dat.push(v);
+   }
+   var m=sm/n, lo=m-MOE, hi=m+MOE;
+   var ok=(lo<=p.mu&&p.mu<=hi);
+   total++; if(ok)capt++;
+   var iv={m:m,lo:lo,hi:hi,ok:ok,dat:dat};
+   recent.push(iv);
+   if(recent.length>KEEP)recent.shift();
+   return iv;
+ }
+ function runMany(c){
+   var i;
+   for(i=0;i<c-1;i++){ drawSample(false); }
+   cur=drawSample(true);
+ }
+ function resetAll(){
+   seed=SEED0; recent=[]; total=0; capt=0; cur=null;
+   recompute();
+   cur=drawSample(true);
+ }
+
+ /* ---------- chart A: the sample, and the interval magnified ---------- */
+ var VW=480, ML=34, MR=34, PW=VW-ML-MR;
+ var AX1=100, BT=26, BB=100;                  /* panel 1 band + axis */
+ var FY=130, P2=158;                          /* fan lines, panel-2 top */
+ var BAR=240, AX2=278;                        /* interval bar, panel-2 axis */
+
+ function arrow(x1,y,x2,col,w){
+   var dir=(x2>=x1)?1:-1, L=Math.abs(x2-x1), s='';
+   if(L<3)return '';
+   var hx=x2-dir*Math.min(7,L*0.5);
+   s+='<line x1="'+x1.toFixed(1)+'" y1="'+y+'" x2="'+hx.toFixed(1)+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+w+'"/>';
+   s+='<polygon points="'+x2.toFixed(1)+','+y+' '+hx.toFixed(1)+','+(y-4.4)+' '+hx.toFixed(1)+','+(y+4.4)+'" fill="'+col+'"/>';
+   return s;
+ }
+
+ function drawChart(){
+   var p=C(), s='', i, ok=cur.ok, col=ok?'#2f9e5b':'#d1495b';
+
+   /* how far the magnified panel reaches, and how far panel 1 must reach to contain it */
+   var ZH=Math.max(7*SE, Math.abs(cur.m-p.mu)+MOE+SE);
+   var R=Math.max(3.4*p.sd, ZH*1.06);
+   function x1(v){ return ML+(v-(p.mu-R))/(2*R)*PW; }
+   function x2(v){ return ML+(v-(p.mu-ZH))/(2*ZH)*PW; }
+
+   /* ===== panel 1: the raw sample on the population's own scale ===== */
+   s+='<text x="'+ML+'" y="14" font-size="10" fill="#1c4454" font-weight="800" letter-spacing="1.1">THE SAMPLE &mdash; POPULATION SCALE</text>';
+   s+='<text x="'+(ML+PW)+'" y="14" font-size="9.6" fill="#78868d" text-anchor="end" font-weight="700">'+n+' value'+(n===1?'':'s')+' drawn</text>';
+
+   var za=x1(p.mu-ZH), zb=x1(p.mu+ZH);
+   s+='<rect x="'+za.toFixed(1)+'" y="'+BT+'" width="'+Math.max(1.5,zb-za).toFixed(1)+'" height="'+(BB-BT)+'" fill="#e8f2f7" stroke="#b9ccd6" stroke-width="1" stroke-dasharray="3 3"/>';
+
+   /* mu, straight down through panel 1 */
+   s+='<line x1="'+x1(p.mu).toFixed(1)+'" y1="'+(BT-6)+'" x2="'+x1(p.mu).toFixed(1)+'" y2="'+AX1+'" stroke="#2f9e5b" stroke-width="1.8" stroke-dasharray="6 4"/>';
+   s+='<text x="'+(x1(p.mu)+5).toFixed(1)+'" y="'+(BT-9)+'" font-size="10.2" fill="#237a45" font-weight="800">&#956; = '+f(p.mu)+'</text>';
+
+   /* the actual observations, jittered deterministically so none hide behind another */
+   var dd=cur.dat;
+   for(i=0;i<dd.length;i++){
+     var dx=x1(dd[i]);
+     if(dx<ML-2||dx>ML+PW+2)continue;
+     s+='<circle cx="'+dx.toFixed(1)+'" cy="'+(42+((i*29)%9)*5.4).toFixed(1)+'" r="3.1" fill="#9fc4d4" opacity=".85"/>';
+   }
+   /* the interval, drawn honestly to the population scale: usually a sliver */
+   s+='<line x1="'+x1(cur.lo).toFixed(1)+'" y1="'+(AX1-6)+'" x2="'+x1(cur.hi).toFixed(1)+'" y2="'+(AX1-6)+'" stroke="'+col+'" stroke-width="6" stroke-linecap="butt"/>';
+
+   s+='<line x1="'+ML+'" y1="'+AX1+'" x2="'+(ML+PW)+'" y2="'+AX1+'" stroke="#8fa6b0" stroke-width="1.2"/>';
+   s+='<text x="'+ML+'" y="115" font-size="9.6" fill="#78868d" font-weight="600">'+tk(p.mu-R,2*R)+'</text>';
+   s+='<text x="'+(ML+PW)+'" y="115" font-size="9.6" fill="#78868d" text-anchor="end" font-weight="600">'+tk(p.mu+R,2*R)+' '+p.u+'</text>';
+
+   /* the zoom bracket and the fan down to panel 2 */
+   s+='<line x1="'+za.toFixed(1)+'" y1="'+(FY-4)+'" x2="'+za.toFixed(1)+'" y2="'+FY+'" stroke="#b9ccd6" stroke-width="1.4"/>';
+   s+='<line x1="'+zb.toFixed(1)+'" y1="'+(FY-4)+'" x2="'+zb.toFixed(1)+'" y2="'+FY+'" stroke="#b9ccd6" stroke-width="1.4"/>';
+   s+='<line x1="'+za.toFixed(1)+'" y1="'+FY+'" x2="'+zb.toFixed(1)+'" y2="'+FY+'" stroke="#b9ccd6" stroke-width="1.4"/>';
+   s+='<path d="M'+za.toFixed(1)+' '+FY+' L'+ML+' '+P2+' L'+(ML+PW)+' '+P2+' L'+zb.toFixed(1)+' '+FY+' Z" fill="#eff5f8" stroke="#dfe8ed" stroke-width="1"/>';
+
+   /* ===== panel 2: the same interval, magnified ===== */
+   s+='<text x="'+ML+'" y="172" font-size="10" fill="#1c4454" font-weight="800" letter-spacing="1.1">THE INTERVAL, MAGNIFIED</text>';
+   s+='<text x="'+(ML+PW)+'" y="172" font-size="9.6" fill="#78868d" text-anchor="end" font-weight="700">x&#772; &plusmn; z* &sdot; &sigma;/&radic;n</text>';
+
+   var xm=x2(cur.m), xlo=x2(cur.lo), xhi=x2(cur.hi), xmu=x2(p.mu);
+   s+='<line x1="'+xmu.toFixed(1)+'" y1="186" x2="'+xmu.toFixed(1)+'" y2="'+(AX2-6)+'" stroke="#2f9e5b" stroke-width="1.8" stroke-dasharray="6 4"/>';
+   var mrt=(xmu>ML+PW-96);
+   s+='<text x="'+(xmu+(mrt?-5:5)).toFixed(1)+'" y="183" font-size="10.2" fill="#237a45" font-weight="800" text-anchor="'+(mrt?'end':'start')+'">&#956; = '+f(p.mu)+'</text>';
+
+   /* the point estimate, its readout, and a spine tying them together */
+   var xrt=(xm>ML+PW-100);
+   s+='<text x="'+(xm+(xrt?-8:8)).toFixed(1)+'" y="203" font-size="11" fill="#1c4454" font-weight="800" text-anchor="'+(xrt?'end':'start')+'">x&#772; = '+f(cur.m)+'</text>';
+   s+='<line x1="'+xm.toFixed(1)+'" y1="208" x2="'+xm.toFixed(1)+'" y2="'+(BAR+12)+'" stroke="#8fa6b0" stroke-width="1" stroke-dasharray="3 3"/>';
+
+   /* the two reaches, each one margin of error long */
+   s+=arrow(xm,222,xlo,'#2f6f8a',2);
+   s+=arrow(xm,222,xhi,'#2f6f8a',2);
+   s+='<text x="'+((xm+xlo)/2).toFixed(1)+'" y="215" font-size="9.8" fill="#255f8a" text-anchor="middle" font-weight="800">&minus;'+f(MOE)+'</text>';
+   s+='<text x="'+((xm+xhi)/2).toFixed(1)+'" y="215" font-size="9.8" fill="#255f8a" text-anchor="middle" font-weight="800">+'+f(MOE)+'</text>';
+   s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="235" font-size="9.6" fill="#78868d" text-anchor="middle" font-weight="700">each reach is one margin of error</text>';
+
+   /* the interval itself */
+   s+='<line x1="'+xlo.toFixed(1)+'" y1="'+BAR+'" x2="'+xhi.toFixed(1)+'" y2="'+BAR+'" stroke="'+col+'" stroke-width="7" stroke-linecap="butt"/>';
+   s+='<line x1="'+xlo.toFixed(1)+'" y1="'+(BAR-11)+'" x2="'+xlo.toFixed(1)+'" y2="'+(BAR+11)+'" stroke="'+col+'" stroke-width="3.4"/>';
+   s+='<line x1="'+xhi.toFixed(1)+'" y1="'+(BAR-11)+'" x2="'+xhi.toFixed(1)+'" y2="'+(BAR+11)+'" stroke="'+col+'" stroke-width="3.4"/>';
+   s+='<circle cx="'+xm.toFixed(1)+'" cy="'+BAR+'" r="6" fill="#1c4454" stroke="#fff" stroke-width="2"/>';
+
+   s+='<text x="'+xlo.toFixed(1)+'" y="'+(BAR+26)+'" font-size="10" fill="#4a585f" text-anchor="middle" font-weight="800">'+f(cur.lo)+'</text>';
+   s+='<text x="'+xhi.toFixed(1)+'" y="'+(BAR+26)+'" font-size="10" fill="#4a585f" text-anchor="middle" font-weight="800">'+f(cur.hi)+'</text>';
+
+   /* panel-2 axis */
+   s+='<line x1="'+ML+'" y1="'+AX2+'" x2="'+(ML+PW)+'" y2="'+AX2+'" stroke="#8fa6b0" stroke-width="1.2"/>';
+   var span2=2*ZH, st2=span2/6;
+   for(i=0;i<=6;i++){
+     var tv=p.mu-ZH+i*st2, tx=x2(tv);
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+AX2+'" x2="'+tx.toFixed(1)+'" y2="'+(AX2+5)+'" stroke="#8fa6b0" stroke-width="1"/>';
+     s+='<text x="'+tx.toFixed(1)+'" y="'+(AX2+17)+'" font-size="9.6" fill="#78868d" text-anchor="middle" font-weight="600">'+tk(tv,span2)+'</text>';
+   }
+   s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="'+(AX2+35)+'" font-size="10.4" fill="#4a585f" text-anchor="middle" font-weight="700">'+p.nm.toLowerCase()+' ('+p.u+') &mdash; magnified '+(R/ZH).toFixed(1)+'&times; from the panel above</text>';
+
+   $('chart').innerHTML=s;
+ }
+
+ /* ---------- chart B: the stack of intervals ---------- */
+ function drawCover(){
+   var p=C(), ML2=48, MR2=22, PW2=480-ML2-MR2, TOP=46, STEP=6.0, AXY=294, s='', i;
+
+   /* the axis has to hold the widest interval on show */
+   var W=MOE+2.6*SE, k;
+   for(k=0;k<recent.length;k++){
+     var d1=Math.abs(recent[k].lo-p.mu), d2=Math.abs(recent[k].hi-p.mu);
+     if(d1>W)W=d1; if(d2>W)W=d2;
+   }
+   W*=1.05;
+   function xc(v){ return ML2+(v-(p.mu-W))/(2*W)*PW2; }
+
+   s+='<text x="'+ML2+'" y="14" font-size="10" fill="#1c4454" font-weight="800" letter-spacing="1.1">THE LAST '+Math.min(KEEP,recent.length)+' INTERVALS</text>';
+   s+='<text x="'+(ML2+PW2)+'" y="14" font-size="9.6" fill="#78868d" text-anchor="end" font-weight="700">'+com(total)+' built in total</text>';
+   s+='<text x="'+ML2+'" y="29" font-size="9.6" fill="#78868d" font-weight="600">newest at the top &mdash; each one is a whole repeat of the study, with its own fresh sample of '+n+'</text>';
+
+   /* mu: the fixed target every interval is aiming at */
+   s+='<line x1="'+xc(p.mu).toFixed(1)+'" y1="36" x2="'+xc(p.mu).toFixed(1)+'" y2="'+AXY+'" stroke="#2f9e5b" stroke-width="1.8" stroke-dasharray="6 4"/>';
+
+   var start=recent.length-1;
+   for(i=0;i<recent.length;i++){
+     var iv=recent[start-i], y=TOP+i*STEP;
+     var c2=iv.ok?'#2f9e5b':'#d1495b', lw=iv.ok?2.2:3.2, op=iv.ok?0.62:1;
+     var a=clamp(xc(iv.lo),ML2,ML2+PW2), b=clamp(xc(iv.hi),ML2,ML2+PW2);
+     s+='<line x1="'+a.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+b.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+c2+'" stroke-width="'+lw+'" opacity="'+op+'" stroke-linecap="round"/>';
+     s+='<circle cx="'+clamp(xc(iv.m),ML2,ML2+PW2).toFixed(1)+'" cy="'+y.toFixed(1)+'" r="1.7" fill="'+c2+'" opacity="'+op+'"/>';
+     if(i===0){
+       s+='<text x="'+(ML2-7)+'" y="'+(y+3.4).toFixed(1)+'" font-size="9" fill="#4a585f" text-anchor="end" font-weight="800">newest</text>';
+     }
+   }
+   if(!recent.length){
+     s+='<text x="'+(ML2+PW2/2).toFixed(1)+'" y="150" font-size="11" fill="#8fa6b0" text-anchor="middle" font-weight="700">press &ldquo;Run 100&rdquo; to repeat the study</text>';
+   }
+
+   s+='<text x="'+(xc(p.mu)+6).toFixed(1)+'" y="42" font-size="10.2" fill="#237a45" font-weight="800">&#956; = '+f(p.mu)+'</text>';
+
+   /* axis */
+   s+='<line x1="'+ML2+'" y1="'+AXY+'" x2="'+(ML2+PW2)+'" y2="'+AXY+'" stroke="#8fa6b0" stroke-width="1.2"/>';
+   var span=2*W, st=span/6;
+   for(i=0;i<=6;i++){
+     var tv2=p.mu-W+i*st, tx2=xc(tv2);
+     s+='<line x1="'+tx2.toFixed(1)+'" y1="'+AXY+'" x2="'+tx2.toFixed(1)+'" y2="'+(AXY+5)+'" stroke="#8fa6b0" stroke-width="1"/>';
+     s+='<text x="'+tx2.toFixed(1)+'" y="'+(AXY+17)+'" font-size="9.6" fill="#78868d" text-anchor="middle" font-weight="600">'+tk(tv2,span)+'</text>';
+   }
+   s+='<text x="'+(ML2+PW2/2).toFixed(1)+'" y="'+(AXY+35)+'" font-size="10.4" fill="#4a585f" text-anchor="middle" font-weight="700">'+p.nm.toLowerCase()+' ('+p.u+') &mdash; green captured &#956;, coral missed it</text>';
+
+   $('cover').innerHTML=s;
+ }
+
+ /* ---------- chart C: where z* comes from ---------- */
+ function drawZ(){
+   var ML3=40, PW3=380, BASE=152, PKH=108, LIM=3.6, s='', i;
+   function xz(v){ return ML3+(v+LIM)/(2*LIM)*PW3; }
+   function yz(v){ return BASE-PKH*Math.exp(-0.5*v*v); }
+   function region(a,b,fill){
+     var d='M'+xz(a).toFixed(1)+' '+BASE, t, x;
+     for(t=0;t<=120;t++){ x=a+(b-a)*t/120; d+=' L'+xz(x).toFixed(1)+' '+yz(x).toFixed(1); }
+     d+=' L'+xz(b).toFixed(1)+' '+BASE+' Z';
+     return '<path d="'+d+'" fill="'+fill+'"/>';
+   }
+   var zz=Math.min(z,LIM);
+   s+='<text x="'+ML3+'" y="14" font-size="10" fill="#1c4454" font-weight="800" letter-spacing="1.1">THE STANDARD NORMAL CURVE</text>';
+   s+='<text x="'+(ML3+PW3)+'" y="14" font-size="9.6" fill="#78868d" text-anchor="end" font-weight="700">area, not values</text>';
+
+   s+=region(-LIM,-zz,'#f6dde1');
+   s+=region(zz,LIM,'#f6dde1');
+   s+=region(-zz,zz,'#cfe6f0');
+
+   var d='', t2, xv;
+   for(t2=0;t2<=300;t2++){ xv=-LIM+2*LIM*t2/300; d+=(t2?'L':'M')+xz(xv).toFixed(1)+' '+yz(xv).toFixed(1)+' '; }
+   s+='<path d="'+d+'" fill="none" stroke="#1c4454" stroke-width="2.2"/>';
+
+   s+='<line x1="'+xz(-zz).toFixed(1)+'" y1="'+yz(zz).toFixed(1)+'" x2="'+xz(-zz).toFixed(1)+'" y2="'+BASE+'" stroke="#d1495b" stroke-width="2"/>';
+   s+='<line x1="'+xz(zz).toFixed(1)+'" y1="'+yz(zz).toFixed(1)+'" x2="'+xz(zz).toFixed(1)+'" y2="'+BASE+'" stroke="#d1495b" stroke-width="2"/>';
+
+   s+='<text x="'+xz(0).toFixed(1)+'" y="96" font-size="15" fill="#1c4454" text-anchor="middle" font-weight="800">'+conf+'%</text>';
+   s+='<text x="'+xz(0).toFixed(1)+'" y="112" font-size="9.6" fill="#4a585f" text-anchor="middle" font-weight="700">of all samples land in here</text>';
+
+   var tail=((100-conf)/2).toFixed(1);
+   s+='<text x="'+xz(-LIM*0.80).toFixed(1)+'" y="'+(BASE-16)+'" font-size="9.6" fill="#a4384a" text-anchor="middle" font-weight="800">'+tail+'%</text>';
+   s+='<text x="'+xz(LIM*0.80).toFixed(1)+'" y="'+(BASE-16)+'" font-size="9.6" fill="#a4384a" text-anchor="middle" font-weight="800">'+tail+'%</text>';
+
+   s+='<line x1="'+ML3+'" y1="'+BASE+'" x2="'+(ML3+PW3)+'" y2="'+BASE+'" stroke="#8fa6b0" stroke-width="1.2"/>';
+   for(i=-3;i<=3;i++){
+     s+='<line x1="'+xz(i).toFixed(1)+'" y1="'+BASE+'" x2="'+xz(i).toFixed(1)+'" y2="'+(BASE+5)+'" stroke="#8fa6b0" stroke-width="1"/>';
+     s+='<text x="'+xz(i).toFixed(1)+'" y="'+(BASE+17)+'" font-size="9.6" fill="#78868d" text-anchor="middle" font-weight="600">'+i+'</text>';
+   }
+   s+='<text x="'+xz(-zz).toFixed(1)+'" y="'+(BASE+32)+'" font-size="10.4" fill="#a4384a" text-anchor="middle" font-weight="800">&minus;z* = &minus;'+z.toFixed(3)+'</text>';
+   s+='<text x="'+xz(zz).toFixed(1)+'" y="'+(BASE+32)+'" font-size="10.4" fill="#a4384a" text-anchor="middle" font-weight="800">z* = '+z.toFixed(3)+'</text>';
+   s+='<text x="'+(ML3+PW3/2).toFixed(1)+'" y="'+(BASE+50)+'" font-size="10.4" fill="#4a585f" text-anchor="middle" font-weight="700">standard errors away from the centre</text>';
+
+   $('zcurve').innerHTML=s;
+ }
+
+ /* ---------- the confidence ladder ---------- */
+ function drawLadder(){
+   var lv=[80,90,95,99], i;
+   if(lv.indexOf(conf)<0){ lv.push(conf); lv.sort(function(a,b){return a-b;}); }
+   var mx=0, rows=[];
+   for(i=0;i<lv.length;i++){
+     var zi=zStar(lv[i]), mi=zi*SE;
+     if(mi>mx)mx=mi;
+     rows.push({c:lv[i],z:zi,m:mi});
+   }
+   var h='';
+   for(i=0;i<rows.length;i++){
+     var r=rows[i], on=(r.c===conf);
+     h+='<div class="r'+(on?' on':'')+'">';
+     h+='<span class="lv">'+r.c+'%</span>';
+     h+='<span class="zz">z* '+r.z.toFixed(3)+'</span>';
+     h+='<span class="bar"><i style="width:'+(mx>0?(r.m/mx*100):0).toFixed(1)+'%"></i></span>';
+     h+='<span class="ww">&plusmn;'+f(r.m)+'</span>';
+     h+='</div>';
+   }
+   $('lad').innerHTML=h;
+
+   var m95=zStar(95)*SE, m99=zStar(99)*SE, m80=zStar(80)*SE;
+   var t='At n = '+n+' the standard error is fixed at '+SE.toFixed(4)+' '+C().u+', so the only thing separating these bars is the multiplier. ';
+   t+='Going from 95% to 99% confidence stretches the margin from &plusmn;'+f(m95)+' to &plusmn;'+f(m99)+' &mdash; <b>'+((m99/m95-1)*100).toFixed(0)+'% wider</b>, and the interval gets that much vaguer, in exchange for missing &mu; once in a hundred repeats instead of once in twenty. ';
+   t+='Dropping to 80% buys you a tidy &plusmn;'+f(m80)+', '+((1-m80/m95)*100).toFixed(0)+'% narrower than the 95% interval &mdash; and one repeat in five now misses &mu; completely. ';
+   t+='<b>There is no setting that is both certain and precise.</b> The only honest way to get both is to go back and collect more data: raising n shrinks every bar in this list at once, because it shrinks the standard error they are all multiples of.';
+   $('ladcap').innerHTML=t;
+ }
+
+ /* ---------- prose ---------- */
+ function capText(){
+   var p=C();
+   var t='<b>Two panels, two different scales &mdash; and the gap between them is the point.</b> ';
+   t+='Up top are the '+n+' actual value'+(n===1?'':'s')+' this sample drew, scattered across the population\'s full range, with the finished interval laid on the axis to the same scale. ';
+   t+='Below, that shaded strip is blown up until the anatomy is visible: x&#772; in the middle, one margin of error reaching each way, a bound at each end. ';
+   t+='<b>The interval is a claim about &#956;, not about individuals.</b> It is much narrower than the data because averaging '+n+' value'+(n===1?'':'s')+' pins down a mean far more tightly than any single observation is pinned down &mdash; that is what &sigma;/&radic;n measures, and the margin of error is just z* of them. ';
+   t+='<br><b>This quantity:</b> '+p.why;
+   return t;
+ }
+ function covText(){
+   var t='';
+   if(total<2){
+     return 'Each horizontal line here is one complete repeat of the study &mdash; a fresh sample of '+n+', a fresh x&#772;, a fresh interval. Press <b>Run 100</b> and watch the stack fill in. The vertical green line is &#956;, and it never moves; the intervals are what jump around.';
+   }
+   var rate=100*capt/total;
+   t+='<b>&#956; is fixed. The intervals move.</b> That is the whole idea, and it is the reverse of how the sentence &ldquo;'+conf+'% confident&rdquo; usually gets read. ';
+   t+='Across '+com(total)+' repeats, <b>'+com(capt)+'</b> intervals contained &#956; and <b>'+com(total-capt)+'</b> missed it entirely &mdash; a capture rate of <b>'+rate.toFixed(1)+'%</b> against the '+conf+'% promised. ';
+   t+='Nothing was tuned to make that happen: the multiplier '+z.toFixed(3)+' was chosen from the normal curve before any data existed, and the coverage came out where it did on its own. ';
+   t+='<b>Look at a coral one.</b> Its arithmetic was flawless; its sample just happened to land more than '+z.toFixed(2)+' standard errors from &#956;, which is exactly the '+(100-conf)+'% of the time you agreed to be wrong when you picked '+conf+'%. ';
+   t+='You can never tell from the inside which kind you are holding &mdash; a real study gets one line from this picture and no way to check it against the green line, because in real work &#956; is unknown. ';
+   t+='<b>Confidence is a property of the procedure, and it is measured across the whole stack, not inside any one line of it.</b>';
+   return t;
+ }
+ function infoText(){
+   var p=C(), s='';
+   s+='<span class="n">Building the interval</span>';
+   s+='Take the estimate your sample handed you, decide how many standard errors to reach, and reach that far in both directions. Every number below is arithmetic on this sample &mdash; nothing is looked up except z*, which comes from the curve above.';
+   s+='<div class="loc">'
+     +'x&#772; &plusmn; z* &sdot; &sigma;/&radic;n<br>'
+     +f(cur.m)+' &plusmn; '+z.toFixed(3)+' &times; '+p.sd+' / &radic;'+n+'<br>'
+     +f(cur.m)+' &plusmn; '+z.toFixed(3)+' &times; '+SE.toFixed(4)+'<br>'
+     +f(cur.m)+' &plusmn; <b>'+f(MOE)+'</b><br>'
+     +'&rarr; ( <b>'+f(cur.lo)+'</b> , <b>'+f(cur.hi)+'</b> ) &nbsp;'+p.u+'</div>';
+   s+='<div class="dd"><b>How to say it out loud.</b> &ldquo;We estimate the mean '+p.nm.toLowerCase()+' to be '+f(cur.m)+' '+p.u
+     +', with a margin of error of '+f(MOE)+' at '+conf+'% confidence.&rdquo; Or: &ldquo;We are '+conf+'% confident that the mean '+p.nm.toLowerCase()
+     +' is between '+f(cur.lo)+' and '+f(cur.hi)+' '+p.u+'.&rdquo; Both sentences describe a <i>method</i> that works '+conf+'% of the time. Neither says there is a '+conf
+     +'% chance &#956; is in this particular interval &mdash; &#956; is a fixed number, and this interval is now a fixed pair of numbers, so the two either overlap or they do not.</div>';
+   var err=Math.abs(cur.m-p.mu);
+   s+='<div class="dd"><b>This sample, graded against the truth.</b> Because this is a simulation you get to peek: &#956; really is '+f(p.mu)+', so x&#772; missed it by '+f(err)
+     +' '+p.u+', which is '+(err/SE).toFixed(2)+' standard errors. Your reach was '+z.toFixed(3)+' standard errors, so the interval '
+     +(cur.ok?'reached far enough and covered &#956;':'fell short and missed &#956;')+'. In a real study this paragraph cannot be written &mdash; that is the entire reason the margin of error exists.</div>';
+   return s;
+ }
+ function zCapText(){
+   var t='With '+conf+'% confidence, '+((100-conf)/2).toFixed(1)+'% of the area is left in each tail, so z* is the cutoff with '+((100-conf)/2).toFixed(1)+'% beyond it: <b>z* = '+z.toFixed(3)+'</b>. ';
+   t+='Multiply it by the standard error and you get the margin of error in real units: '+z.toFixed(3)+' &times; '+SE.toFixed(4)+' = <b>'+f(MOE)+' '+C().u+'</b>. ';
+   t+='<b>The curve here is in standard errors, not '+C().u+'.</b> That is why the same four multipliers &mdash; 1.282, 1.645, 1.960, 2.576 &mdash; show up in every z-interval you will ever build, no matter what is being measured. ';
+   t+='It also shows why 100% confidence is unavailable: the normal curve never quite reaches zero, so enclosing <i>all</i> the area would take an infinitely long reach, and &ldquo;&#956; is somewhere between &minus;&infin; and &infin;&rdquo; is certainly true and completely useless.';
+   return t;
+ }
+
+ /* ---------- render ---------- */
+ function render(){
+   var p=C();
+   recompute();
+   $('cVal').innerHTML=conf+'%';
+   $('nVal').innerHTML=n;
+   $('cSl').value=conf;
+   $('nSl').value=n;
+   $('tXb').innerHTML=f(cur.m);
+   $('tZ').innerHTML=z.toFixed(3);
+   $('tSe').innerHTML=SE.toFixed(3);
+   $('tMo').innerHTML=f(MOE);
+
+   $('cardTitle').innerHTML=p.nm+' &middot; n = '+n+' &middot; '+conf+'% &middot; ( '+f(cur.lo)+' , '+f(cur.hi)+' )';
+   $('stage').style.background=p.col;
+   $('stage').innerHTML=f(cur.m)+' &plusmn; '+f(MOE)+' '+p.u
+     +'<small>'+conf+'% interval &middot; ( '+f(cur.lo)+' , '+f(cur.hi)+' ) &middot; '+com(total)+' built &middot; '+(total?(100*capt/total).toFixed(1)+'% captured &#956;':'&mdash;')+'</small>';
+
+   $('verd').className='vd '+(cur.ok?'hit':'miss');
+   $('verd').innerHTML=cur.ok
+     ? '&#10003; This interval contains &#956; = '+f(p.mu)+'. It is one of the '+conf+'% that work.'
+     : '&#10007; This interval misses &#956; = '+f(p.mu)+' completely. Its arithmetic was correct; its sample was unlucky.';
+
+   var cb=document.querySelectorAll('#cseg button');
+   for(var i=0;i<cb.length;i++){
+     cb[i].className=(parseInt(cb[i].getAttribute('data-c'),10)===conf)?'on':'';
+   }
+   var xb=document.querySelectorAll('#ctxs .it');
+   for(var j=0;j<xb.length;j++){
+     xb[j].className=(j===ci)?'it on':'it';
+   }
+
+   drawChart(); drawCover(); drawZ(); drawLadder();
+   $('cap').innerHTML=capText();
+   $('covcap').innerHTML=covText();
+   $('info').innerHTML=infoText();
+   $('zcap').innerHTML=zCapText();
+ }
+
+ /* ---------- wiring ---------- */
+ $('ctxs').innerHTML=CTX.map(function(x,ix){
+   return '<button class="it" data-i="'+ix+'"><span class="nm">'+x.t+'</span><span class="s">'+x.s+'</span></button>';
+ }).join('');
+ var xbtn=document.querySelectorAll('#ctxs .it');
+ for(var b=0;b<xbtn.length;b++){
+   xbtn[b].onclick=function(){ ci=parseInt(this.getAttribute('data-i'),10); resetAll(); render(); };
+ }
+ var cbtn=document.querySelectorAll('#cseg button');
+ for(var c=0;c<cbtn.length;c++){
+   cbtn[c].onclick=function(){ conf=parseInt(this.getAttribute('data-c'),10); resetAll(); render(); };
+ }
+ /* changing the procedure has to clear the tally: a stack of intervals only
+    means something if every line in it was built the same way */
+ $('cSl').oninput=function(){ conf=clamp(parseInt(this.value,10)||95,50,99); resetAll(); render(); };
+ $('nSl').oninput=function(){ n=clamp(parseInt(this.value,10)||25,2,200); resetAll(); render(); };
+ $('d1').onclick=function(){ cur=drawSample(true); render(); };
+ $('d100').onclick=function(){ runMany(100); render(); };
+ $('d1000').onclick=function(){ runMany(1000); render(); };
+ $('rst').onclick=function(){ resetAll(); render(); };
+
+ resetAll();
+ render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>The Radical Wears a Fraction: Radicals and Rational Exponents</title>
+<meta name="description" content="Convert between radical form and rational exponent form — with a live exponent dial and graph, a proof of why 1/n means the nth root, and a worked-step machine that shows every line.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.94fr 1.06fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+
+/* ---- radical drawn with HTML only: index + glyph + vinculum ---- */
+.rad{display:inline-block;white-space:nowrap;}
+.rad>.ix{font-size:.58em;vertical-align:.66em;margin-right:-4px;letter-spacing:-.4px;font-family:var(--sans);font-weight:700;}
+.rad>.rv{border-top:1.2px solid currentColor;padding:1px 3px 0 2px;margin-left:-1px;}
+
+/* ---- stacked fractions, HTML only ---- */
+.fr{display:inline-block;text-align:center;line-height:1.06;vertical-align:middle;}
+.fr>.nu{display:block;border-bottom:1.1px solid currentColor;padding:0 4px 1px;}
+.fr>.de{display:block;padding:1px 4px 0;}
+.fr.fx{font-size:.66em;vertical-align:.60em;}
+
+/* ---- left column: the dial ---- */
+.sl{margin-top:9px;}
+.sl label{display:flex;justify-content:space-between;align-items:baseline;font-size:9.6px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+.sl label b{font-family:var(--math);font-size:15px;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+.sl label b.gold{color:#8a6a20;} .sl label b.blue{color:#255f8a;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;cursor:pointer;margin-top:1px;}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:4px;background:#e0e2ef;}
+input[type=range]::-moz-range-track{height:6px;border-radius:4px;background:#e0e2ef;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 4px rgba(30,32,70,.35);margin-top:-6px;}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 4px rgba(30,32,70,.35);}
+#rM::-webkit-slider-thumb{background:#b8862f;} #rM::-moz-range-thumb{background:#b8862f;}
+#rN::-webkit-slider-thumb{background:#2f6f9f;} #rN::-moz-range-thumb{background:#2f6f9f;}
+.ends{display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);margin-top:-3px;}
+
+.big{font-family:var(--math);font-size:23px;color:var(--teal-dk);text-align:center;line-height:2.4;margin:12px 0 4px;font-weight:600;}
+.big .eq{color:var(--muted);font-size:.8em;padding:0 5px;}
+.reduce{text-align:center;font-family:var(--math);font-size:13.5px;color:var(--soft);line-height:2.1;min-height:26px;}
+.reduce b{color:var(--teal-dk);}
+.readout{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);background:#f7f6fc;border-radius:9px;padding:7px 11px;margin-top:8px;}
+.readout b{font-size:9.4px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;flex:none;}
+.readout span{font-family:var(--math);font-size:14px;color:var(--teal-dk);font-weight:700;text-align:right;}
+.cap{font-size:12px;color:var(--soft);line-height:1.6;margin-top:10px;border-top:1px solid var(--line);padding-top:9px;min-height:62px;}
+.cap b{color:var(--ink);} .cap i{font-family:var(--math);}
+
+/* ---- example picker ---- */
+#pick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+#pick button{display:block;text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 9px;cursor:pointer;font-family:var(--sans);transition:.12s;}
+#pick button:hover{border-color:var(--teal);}
+#pick button .nm{display:block;font-weight:700;font-size:11px;color:var(--ink);line-height:1.15;}
+#pick button .ct{display:block;font-family:var(--math);font-size:14px;color:var(--muted);margin-top:5px;line-height:1.3;}
+#pick button.on{background:var(--teal);border-color:var(--teal);}
+#pick button.on .nm{color:#fff;} #pick button.on .ct{color:rgba(255,255,255,.94);}
+@media (max-width:470px){#pick{grid-template-columns:repeat(2,1fr);}}
+
+/* ---- worked-step machine ---- */
+.work{margin-top:2px;}
+.wr{display:flex;gap:10px;align-items:baseline;padding:6px 8px;border-radius:9px;border-left:4px solid transparent;transition:.18s;}
+.wr + .wr{margin-top:2px;}
+.wr .pl{flex:none;width:92px;font-size:9.3px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.wr .mx{font-family:var(--math);font-size:14.5px;color:var(--muted);line-height:2.1;flex:1;min-width:0;}
+.wr.on{background:#eef0fa;border-left-color:var(--teal);}
+.wr.on .mx{font-size:17px;color:var(--ink);font-weight:600;line-height:2.35;}
+.wr.on .pl{color:var(--teal);}
+.wr.done .mx{color:var(--soft);}
+.wr .ex{font-family:var(--math);font-size:13px;color:var(--soft);line-height:1.9;margin-top:5px;display:block;font-weight:400;}
+.wr:not(.on) .ex{display:none;}
+.wr .ex u{font-family:var(--sans);font-size:9.6px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;display:block;margin-bottom:2px;line-height:1.3;}
+.wr .ex b{color:var(--ink);}
+.mx sub{font-size:.62em;} .mx sup{font-size:.66em;} .ex sup{font-size:.66em;} .ex sub{font-size:.62em;}
+
+/* ---- highlights: GOLD = power / numerator, BLUE = index / denominator ---- */
+.hl{border-radius:4px;padding:1px 4px;background:#f7e2a8;box-shadow:inset 0 0 0 1.5px #b8862f;}
+.gl{border-radius:4px;padding:1px 4px;background:#dbe9f5;box-shadow:inset 0 0 0 1.5px #2f6f9f;}
+.wr:not(.on) .hl,.wr:not(.on) .gl{background:transparent;box-shadow:none;padding:0;}
+.gh{opacity:.32;}
+.ok{color:#237a45;font-weight:700;} .bad{color:#b23145;font-weight:700;}
+.key{display:flex;flex-wrap:wrap;gap:12px;margin-top:9px;font-size:10.2px;color:var(--muted);align-items:center;justify-content:center;}
+.key i{font-style:normal;display:inline-flex;align-items:center;gap:5px;}
+.key .g{width:12px;height:12px;border-radius:3px;background:#f7e2a8;border:1.5px solid #b8862f;display:inline-block;}
+.key .t{width:12px;height:12px;border-radius:3px;background:#dbe9f5;border:1.5px solid #2f6f9f;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 8</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 8</div>
+  <h1>The Radical Wears a Fraction</h1>
+  <div class="intro">A radical sign and a fractional exponent are <b>two spellings of the same idea</b>. Once you can move between them, hard radical problems turn into easy exponent problems. Turn the dial to see what a fraction in the exponent actually does &mdash; then step through six conversions, one line at a time.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2>The exponent dial</h2>
+      <div class="sl">
+        <label><span>Power inside · numerator</span><b class="gold" id="lM">m = 2</b></label>
+        <input type="range" id="rM" min="1" max="6" step="1" value="2" aria-label="power m">
+        <div class="ends"><span>1</span><span>6</span></div>
+      </div>
+      <div class="sl">
+        <label><span>Root index · denominator</span><b class="blue" id="lN">n = 3</b></label>
+        <input type="range" id="rN" min="2" max="6" step="1" value="3" aria-label="index n">
+        <div class="ends"><span>2</span><span>6</span></div>
+      </div>
+      <div class="big" id="big"></div>
+      <div class="reduce" id="red"></div>
+      <svg viewBox="0 0 250 200" aria-label="graph of y equals x to the m over n"><g id="art"></g></svg>
+      <div class="readout"><b>at x = 2</b><span id="ro"></span></div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>Why the bottom number is the root</h2>
+      <svg viewBox="0 0 250 138" aria-label="n copies multiply to x"><g id="why"></g></svg>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Radical form &harr; exponent form<small>pick an example below</small></div>
+    <div class="card">
+      <div id="pick"></div>
+      <div class="work" id="work"></div>
+      <div class="key"><i><span class="g"></span> power &rarr; numerator (top)</i><i><span class="t"></span> index &rarr; denominator (bottom)</i></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"></div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ============ HTML math helpers — no LaTeX, no renderer anywhere ============ */
+ function RAD(ix,inner){ return '<span class="rad">'+(ix?'<span class="ix">'+ix+'</span>':'')+'&radic;<span class="rv">'+inner+'</span></span>'; }
+ function F(a,b){ return '<span class="fr"><span class="nu">'+a+'</span><span class="de">'+b+'</span></span>'; }
+ function FX(a,b){ return '<span class="fr fx"><span class="nu">'+a+'</span><span class="de">'+b+'</span></span>'; }
+ function HL(s){ return '<span class="hl">'+s+'</span>'; }   /* gold = power / numerator */
+ function GL(s){ return '<span class="gl">'+s+'</span>'; }   /* blue = index / denominator */
+ var X='<i>x</i>', M='&minus;', DOT='&nbsp;&middot;&nbsp;', EQ='&nbsp;=&nbsp;',
+     CK='<span class="ok">&#10003;</span>', XX='<span class="bad">&#10007;</span>',
+     GE='&ge;', NE='&ne;';
+ function gcd(a,b){ while(b){ var t=a%b; a=b; b=t; } return a; }
+
+ /* ============================================================================
+    LEFT COLUMN — the live exponent dial, graph, and the 1/n proof
+    ============================================================================ */
+ var TEAL='#43458f', TEALD='#262a5c', SOFT='#4d4f66', MUT='#7d7f94', GRID='#e6e8f5',
+     GOLD='#b8862f', BLUE='#2f6f9f', GOLDF='#f7e2a8', BLUEF='#dbe9f5';
+ function T(x,y,s,fs,fill,anch,bold,ital){
+   return '<text x="'+x+'" y="'+y+'" text-anchor="'+(anch||'middle')+'" font-family="Georgia,serif" font-size="'+fs+
+     '" fill="'+fill+'"'+(bold?' font-weight="bold"':'')+(ital?' font-style="italic"':'')+'>'+s+'</text>';
+ }
+
+ var mm=2, nn=3;
+ var X0=34, Y0=172, GW=204, GH=156, XMAX=4, YMAX=4;
+ function gx(x){ return X0 + x/XMAX*GW; }
+ function gy(y){ return Y0 - y/YMAX*GH; }
+
+ function drawGraph(){
+   var p=mm/nn, s='', i, k;
+   /* grid */
+   for(i=1;i<=4;i++){
+     s+='<line x1="'+gx(i)+'" y1="'+gy(0)+'" x2="'+gx(i)+'" y2="'+gy(YMAX)+'" stroke="'+GRID+'" stroke-width="1"/>';
+     s+='<line x1="'+gx(0)+'" y1="'+gy(i)+'" x2="'+gx(XMAX)+'" y2="'+gy(i)+'" stroke="'+GRID+'" stroke-width="1"/>';
+   }
+   /* reference line y = x */
+   s+='<line x1="'+gx(0)+'" y1="'+gy(0)+'" x2="'+gx(4)+'" y2="'+gy(4)+'" stroke="#b9bed8" stroke-width="1.4" stroke-dasharray="4 3"/>';
+   s+=T(gx(3.55),gy(3.72),'y = x',9,'#9aa0c4','middle',0,1);
+   /* axes */
+   s+='<line x1="'+X0+'" y1="'+Y0+'" x2="'+gx(XMAX)+'" y2="'+Y0+'" stroke="'+SOFT+'" stroke-width="1.6"/>';
+   s+='<line x1="'+X0+'" y1="'+Y0+'" x2="'+X0+'" y2="'+gy(YMAX)+'" stroke="'+SOFT+'" stroke-width="1.6"/>';
+   for(i=1;i<=4;i++){
+     s+='<line x1="'+gx(i)+'" y1="'+Y0+'" x2="'+gx(i)+'" y2="'+(Y0+4)+'" stroke="'+SOFT+'" stroke-width="1.2"/>';
+     s+=T(gx(i),Y0+15,String(i),9,MUT);
+     s+='<line x1="'+X0+'" y1="'+gy(i)+'" x2="'+(X0-4)+'" y2="'+gy(i)+'" stroke="'+SOFT+'" stroke-width="1.2"/>';
+     s+=T(X0-8,gy(i)+3.4,String(i),9,MUT,'end');
+   }
+   s+=T(X0-8,Y0+3.4,'0',9,MUT,'end');
+   /* the curve, from computed points */
+   var xEnd=XMAX, clipped=false;
+   var xc=Math.pow(YMAX,1/p);            /* where x^p first reaches YMAX */
+   if(xc<XMAX){ xEnd=xc; clipped=true; }
+   var pts=[];
+   for(k=0;k<=260;k++){
+     var xv=xEnd*k/260, yv=Math.pow(xv,p);
+     if(yv>YMAX) yv=YMAX;
+     pts.push(gx(xv).toFixed(2)+','+gy(yv).toFixed(2));
+   }
+   s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+TEAL+'" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>';
+   /* every one of these passes through (1,1) */
+   s+='<circle cx="'+gx(1)+'" cy="'+gy(1)+'" r="4" fill="#fff" stroke="'+TEAL+'" stroke-width="2"/>';
+   s+=T(gx(1)+7,gy(1)-7,'(1, 1)',8.4,MUT,'start');
+   /* live marker at x = 2 */
+   var y2=Math.pow(2,p);
+   if(y2<=YMAX){
+     s+='<line x1="'+gx(2)+'" y1="'+Y0+'" x2="'+gx(2)+'" y2="'+gy(y2)+'" stroke="'+GOLD+'" stroke-width="1.2" stroke-dasharray="3 2.5"/>';
+     s+='<line x1="'+X0+'" y1="'+gy(y2)+'" x2="'+gx(2)+'" y2="'+gy(y2)+'" stroke="'+GOLD+'" stroke-width="1.2" stroke-dasharray="3 2.5"/>';
+     s+='<circle cx="'+gx(2)+'" cy="'+gy(y2)+'" r="4.4" fill="'+GOLD+'"/>';
+     s+=T(gx(2)+8,gy(y2)-8,y2.toFixed(3),8.6,GOLD,'start',1);
+   }
+   /* label the curve */
+   var lx, ly;
+   if(clipped){ lx=gx(xEnd)-6; ly=gy(YMAX)+14; s+=T(lx,ly,'leaves the window at x &#8776; '+xEnd.toFixed(2),8.2,TEAL,'end'); }
+   else { lx=gx(XMAX)-4; ly=gy(Math.pow(XMAX,p))-9; if(ly<12) ly=12; s+=T(lx,ly,'y = x^('+mm+'/'+nn+')',9,TEAL,'end',1); }
+   s+=T(gx(2),14,'y = x raised to '+mm+'/'+nn,9.4,TEALD,'middle',1);
+   $('art').innerHTML=s;
+ }
+
+ /* the proof picture: n copies of x^(1/n) multiplied together give x */
+ function drawWhy(){
+   var n=nn, s='', i;
+   var L=6, R=244, dotW=13;
+   var bw=(R-L-(n-1)*dotW)/n;
+   s+=T(125,12,n+' copies of the same number, multiplied together',9,MUT);
+   for(i=0;i<n;i++){
+     var bx=L+i*(bw+dotW);
+     s+='<rect x="'+bx.toFixed(1)+'" y="20" width="'+bw.toFixed(1)+'" height="32" rx="6" fill="'+BLUEF+'" stroke="'+BLUE+'" stroke-width="1.5"/>';
+     s+='<text x="'+(bx+bw/2).toFixed(1)+'" y="41" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="'+TEALD+'" font-style="italic">x<tspan font-size="8" dy="-5" font-style="normal">1/'+n+'</tspan></text>';
+     if(i<n-1) s+=T(bx+bw+dotW/2,42,'&middot;',13,MUT);
+   }
+   /* the exponent arithmetic, spelled all the way out */
+   var terms=[]; for(i=0;i<n;i++) terms.push('1/'+n);
+   s+=T(125,70,'x<tspan font-size="8" dy="-5">'+terms.join(' + ')+'</tspan><tspan dy="5"> = </tspan>x<tspan font-size="8" dy="-5">'+n+'/'+n+'</tspan><tspan dy="5"> = </tspan>x<tspan font-size="8" dy="-5">1</tspan><tspan dy="5"> = x</tspan>',11.5,TEALD,'middle');
+   s+='<line x1="20" y1="82" x2="230" y2="82" stroke="'+GRID+'" stroke-width="1.4"/>';
+   s+=T(125,97,'So x to the 1/'+n+' is the number whose '+ordinal(n)+' power is x &mdash;',9.4,SOFT);
+   s+=T(125,109,'and that is the definition of the '+rootWord(n)+' root.',9.4,SOFT);
+   s+='<text x="125" y="130" text-anchor="middle" font-family="Georgia,serif" font-size="16" fill="'+TEALD+
+      '" font-weight="bold"><tspan font-size="9.5" dy="-7">'+n+'</tspan><tspan dy="7">&#8730;</tspan>'+
+      '<tspan text-decoration="overline" font-style="italic">&#8202;x&#8202;</tspan><tspan> = </tspan>'+
+      '<tspan font-style="italic">x</tspan><tspan font-size="9.5" dy="-7">1/'+n+'</tspan></text>';
+   $('why').innerHTML=s;
+ }
+ function ordinal(n){ return ({2:'2nd',3:'3rd',4:'4th',5:'5th',6:'6th'})[n]||(n+'th'); }
+ function rootWord(n){ return ({2:'square',3:'cube',4:'fourth',5:'fifth',6:'sixth'})[n]||(n+'th'); }
+
+ function updateDial(){
+   mm=+$('rM').value; nn=+$('rN').value;
+   $('lM').innerHTML='m = '+mm; $('lN').innerHTML='n = '+nn;
+   /* the three equivalent spellings */
+   $('big').innerHTML =
+     RAD(GL(nn), X+'<sup>'+HL(mm)+'</sup>') +
+     '<span class="eq">=</span>' + X + FX(HL(mm),GL(nn)) +
+     '<span class="eq">=</span>' + '('+RAD(GL(nn),X)+')<sup>'+HL(mm)+'</sup>';
+   /* reduced form, when the fraction is not in lowest terms */
+   var g=gcd(mm,nn), a=mm/g, b=nn/g, r='';
+   if(g>1){
+     r = 'in lowest terms: ' + X+FX(mm,nn) + ' = ' + X+FX(a,b);
+     r += (b===1) ? (' = <b>'+X+(a===1?'':'<sup>'+a+'</sup>')+'</b>') : (' = <b>'+RAD(b, X+(a===1?'':'<sup>'+a+'</sup>'))+'</b>');
+     r += ' &nbsp;(for <i>x</i> '+GE+' 0)';
+   } else if(mm===nn){ r='the exponent is 1 &mdash; the root undoes the power exactly'; }
+   else { r=X+FX(mm,nn)+' is already in lowest terms'; }
+   $('red').innerHTML=r;
+   drawGraph(); drawWhy();
+   /* numeric readout at x = 2, exact form beside the decimal */
+   var y2=Math.pow(2,mm/nn);
+   $('ro').innerHTML = RAD(nn,'2<sup>'+mm+'</sup>')+' = '+RAD(nn,String(Math.pow(2,mm)))+' &#8776; '+y2.toFixed(5);
+   /* what the shape means */
+   var p=mm/nn, c;
+   if(Math.abs(p-1)<1e-12){
+     c='<b>Exponent exactly 1.</b> The '+rootWord(nn)+' root and the '+ordinal(mm)+' power cancel each other, so the graph collapses onto the line <i>y</i> = <i>x</i>. That is the clearest possible proof that a root really is an exponent &mdash; it is the exponent that undoes a power.';
+   } else if(p<1){
+     c='<b>Exponent below 1 &mdash; the root wins.</b> The curve shoots up near zero and then flattens, staying <b>below</b> <i>y</i> = <i>x</i> once <i>x</i> &gt; 1 (and above it between 0 and 1). Taking a root of a big number shrinks it.';
+   } else {
+     c='<b>Exponent above 1 &mdash; the power wins.</b> The curve hugs the floor at first, then climbs <b>above</b> <i>y</i> = <i>x</i> past <i>x</i> = 1. The power outgrows the root.';
+   }
+   c+=' Every setting passes through <b>(0, 0)</b> and <b>(1, 1)</b>, because 0 and 1 are unchanged by any exponent. Only <i>x</i> '+GE+' 0 is graphed &mdash; an even index needs a nonnegative radicand.';
+   $('cap').innerHTML=c;
+ }
+ $('rM').oninput=updateDial; $('rN').oninput=updateDial;
+
+ /* ============================================================================
+    RIGHT COLUMN — the worked-step machine
+    ============================================================================ */
+ var EX=[
+
+ /* ---------- 1. radical to exponent ---------- */
+ {k:'e1', nm:'Radical &rarr; exponent', ct:RAD(3,X+'<sup>2</sup>'), col:'#43458f',
+  dir:'Radical form &rarr; exponent form',
+  mnem:'<b>Power on top, root below.</b> The number sitting on the radicand climbs to the numerator; the little index in the notch of the radical sign drops to the denominator.',
+  note:'A radical sign with no visible index is a <b>square</b> root &mdash; its hidden index is <b>2</b>. So &radic;<i>x</i> is <i>x</i> to the 1/2, never <i>x</i> to the 1/1.',
+  S:[
+   {pl:'The expression', mx:RAD(3,X+'<sup>2</sup>'),
+    n:'Two operations, stacked', d:'Read it from the inside out: <b>square</b> the <i>x</i>, then take the <b>cube root</b> of the result. A rational exponent is a way to pack both of those instructions into a single number.'},
+   {pl:'Name the parts', mx:RAD(GL(3),X+'<sup>'+HL(2)+'</sup>'),
+    ex:'<u>the only two numbers that matter</u>index = '+GL(3)+' &nbsp;(which root) &nbsp;&middot;&nbsp; power = '+HL(2)+' &nbsp;(the exponent inside)',
+    n:'Index and power', d:'Every radical carries exactly two numbers you need: the small <b>index</b> tucked into the notch of the radical sign, and the <b>power</b> on the radicand. Find those two and the conversion is already done.'},
+   {pl:'Index &rarr; bottom', mx:X+FX('<span class="gh">?</span>',GL(3)),
+    ex:'<u>why the index goes underneath</u>Roots <b>divide</b> an exponent. Cubing multiplies an exponent by 3, so the cube root must divide it by 3 &mdash; and dividing by 3 is what a denominator of '+GL(3)+' does.',
+    n:'The root becomes a denominator', d:'The index tells you how many equal factors the number splits into, so it lands <b>under</b> the bar. This is the half of the rule students flip most often, so anchor it: <b>root down</b>.'},
+   {pl:'Power &rarr; top', mx:X+FX(HL(2),GL(3)),
+    ex:'<u>the finished conversion</u>'+RAD(GL(3),X+'<sup>'+HL(2)+'</sup>')+EQ+X+FX(HL(2),GL(3)),
+    n:'The power becomes a numerator', d:'The exponent that was riding on the radicand moves straight up to the top of the fraction. Nothing about the expression changed &mdash; only the notation. Both spellings name the same number for every <i>x</i> '+GE+' 0.'},
+   {pl:'Check by cubing', mx:'('+X+FX(2,3)+')<sup>3</sup>'+EQ+X+FX('2'+DOT+'3','3')+EQ+X+FX(6,3)+EQ+X+'<sup>2</sup>&nbsp; '+CK,
+    ex:'<u>and the radical side</u>('+RAD(3,X+'<sup>2</sup>')+')<sup>3</sup> = <i>x</i><sup>2</sup> as well &mdash; cubing is exactly what undoes a cube root. Same input, same output, so the two forms are the same object.',
+    n:'The verification that settles it', d:'A cube root is <i>defined</i> as the thing that gives you back the radicand when you cube it. Cube <i>x</i> to the 2/3 and the power rule multiplies the exponents: (2/3)&nbsp;&middot;&nbsp;3 = 2. You land on <i>x</i><sup>2</sup>. The conversion survives the only test that matters.'},
+   {pl:'Check a number', mx:'<i>x</i> = 8:&nbsp; '+RAD(3,'8<sup>2</sup>')+EQ+RAD(3,'64')+EQ+'4',
+    ex:'<u>the other spelling, same number</u>8<sup>2/3</sup> = ('+RAD(3,'8')+')<sup>2</sup> = 2<sup>2</sup> = 4&nbsp; '+CK+'&nbsp; Two roads, one answer.',
+    n:'Numbers do not lie', d:'When a rule feels slippery, test it on a number you can check by hand. Here 8 is a perfect cube, so both routes are easy: cube-root-then-square gives 2<sup>2</sup> = 4, and square-then-cube-root gives '+RAD(3,'64')+' = 4.'}
+  ]},
+
+ /* ---------- 2. exponent to radical ---------- */
+ {k:'e2', nm:'Exponent &rarr; radical', ct:X+FX(3,4), col:'#2f6f9f',
+  dir:'Exponent form &rarr; radical form',
+  mnem:'Going backwards uses the same map, read right to left: <b>bottom becomes the index, top becomes the power</b>.',
+  note:'Index 4 is even, so the radicand must be nonnegative: this expression is defined only for <i>x</i> '+GE+' 0. Odd indexes have no such restriction.',
+  S:[
+   {pl:'The expression', mx:X+FX(3,4),
+    n:'A fraction in the exponent', d:'A whole-number exponent says "multiply this many times." A <b>fractional</b> exponent says "multiply <i>and</i> take a root." The fraction is holding both instructions at once.'},
+   {pl:'Read the fraction', mx:X+FX(HL(3),GL(4)),
+    ex:'<u>decode each level</u>numerator '+HL(3)+' = the power &nbsp;&middot;&nbsp; denominator '+GL(4)+' = the index',
+    n:'Split the fraction into two jobs', d:'The top and the bottom of the exponent do different work. The top is an ordinary power. The bottom is a root. Label them before you write anything.'},
+   {pl:'Bottom &rarr; index', mx:RAD(GL(4),'<span class="gh">x&nbsp;?</span>'),
+    ex:'<u>build the shell first</u>Denominator '+GL(4)+' means a <b>fourth</b> root, so draw a radical with a small '+GL(4)+' in the notch. The radicand goes in next.',
+    n:'The denominator becomes the index', d:'Write the radical sign with its index before you worry about the power. Getting the shell right first prevents the classic mistake of burying the 4 inside the radicand.'},
+   {pl:'Top &rarr; power', mx:RAD(GL(4),X+'<sup>'+HL(3)+'</sup>'),
+    ex:'<u>the finished conversion</u>'+X+FX(HL(3),GL(4))+EQ+RAD(GL(4),X+'<sup>'+HL(3)+'</sup>'),
+    n:'The numerator becomes the power', d:'The 3 rides onto the radicand. You now have the radical spelling of the same expression &mdash; identical values, different clothes.'},
+   {pl:'Either order', mx:RAD(4,X+'<sup>3</sup>')+EQ+'('+RAD(4,X)+')<sup>3</sup>',
+    ex:'<u>why both are legal</u><i>x</i><sup>3/4</sup> = <i>x</i><sup>3&nbsp;&middot;&nbsp;(1/4)</sup> = (<i>x</i><sup>3</sup>)<sup>1/4</sup>, and also <i>x</i><sup>3/4</sup> = <i>x</i><sup>(1/4)&nbsp;&middot;&nbsp;3</sup> = (<i>x</i><sup>1/4</sup>)<sup>3</sup>. Multiplication commutes, so the order is yours to choose.',
+    n:'Power first or root first?', d:'Both are correct because 3/4 can be factored as 3 &middot; (1/4) or as (1/4) &middot; 3. With <b>numbers</b>, take the <b>root first</b> &mdash; it keeps the arithmetic small. With <b>variables</b>, either form is fine; pick whichever the next step needs.'},
+   {pl:'Check a number', mx:'<i>x</i> = 16:&nbsp; ('+RAD(4,'16')+')<sup>3</sup>'+EQ+'2<sup>3</sup>'+EQ+'8',
+    ex:'<u>and power first</u>'+RAD(4,'16<sup>3</sup>')+' = '+RAD(4,'4096')+' = 8&nbsp; '+CK+'&nbsp; (8<sup>4</sup> = 4096.) Same answer &mdash; but notice how much uglier 4096 was to handle.',
+    n:'Why root-first is the kinder road', d:'Root first: '+RAD(4,'16')+' = 2, then 2<sup>3</sup> = 8. Power first: 16<sup>3</sup> = 4096, then you have to recognise that 8<sup>4</sup> = 4096. Identical answers, wildly different effort.'}
+  ]},
+
+ /* ---------- 3. evaluate a numeric rational exponent ---------- */
+ {k:'e3', nm:'Evaluate a number', ct:'27'+FX(2,3), col:'#b8862f',
+  dir:'Evaluating a rational exponent',
+  mnem:'With numbers, <b>always take the root first</b>. The root shrinks the number; the power then works on something small.',
+  note:'Both routes give 9 &mdash; the rule is not "root first or you get it wrong," it is "root first or you get it <i>slowly</i>."',
+  S:[
+   {pl:'The expression', mx:'27'+FX(2,3),
+    n:'A number, not a variable', d:'Same rule as always: the bottom is a <b>cube root</b>, the top is a <b>square</b>. The only new question is which one to do first.'},
+   {pl:'Split the exponent', mx:'27'+FX(HL(2),GL(3))+EQ+'27<sup>(1/'+GL(3)+')'+DOT+HL(2)+'</sup>'+EQ+'27<sup>'+HL(2)+DOT+'(1/'+GL(3)+')</sup>',
+    ex:'<u>two factorisations of the same fraction</u>2/3 = (1/3)&nbsp;&middot;&nbsp;2 &nbsp;and&nbsp; 2/3 = 2&nbsp;&middot;&nbsp;(1/3). Each one suggests a different order of operations.',
+    n:'One fraction, two routes', d:'Because (<i>a</i><sup>p</sup>)<sup>q</sup> = <i>a</i><sup>pq</sup> and multiplication commutes, you may apply the root and the power in either order. Route A takes the root first; Route B takes the power first.'},
+   {pl:'Route A: root', mx:'('+RAD(GL(3),'27')+')<sup>'+HL(2)+'</sup>',
+    ex:'<u>cube root of 27</u>3<sup>3</sup> = 27, so '+RAD(3,'27')+' = 3. You are now holding a single-digit number.',
+    n:'Route A &mdash; root first', d:'Rewrite the fractional exponent so the root is applied first. 27 is a perfect cube, which is exactly why this problem was chosen: the root comes out clean.'},
+   {pl:'Route A: power', mx:'3<sup>'+HL(2)+'</sup>'+EQ+'<b>9</b>',
+    ex:'<u>done, in your head</u>All the arithmetic you actually performed was "cube root of 27" and "3 squared."',
+    n:'Route A finishes', d:'Two easy operations and you are done. No calculator, no large numbers. This is the whole reason the root-first habit is worth building.'},
+   {pl:'Route B: power', mx:RAD(GL(3),'27<sup>'+HL(2)+'</sup>')+EQ+RAD(GL(3),'729')+EQ+'<b>9</b>',
+    ex:'<u>the honest but heavier road</u>27<sup>2</sup> = 729, and 9<sup>3</sup> = 729, so '+RAD(3,'729')+' = 9&nbsp; '+CK,
+    n:'Route B &mdash; power first', d:'Perfectly valid, and it lands on the same 9. But it asks you to square 27 and then recognise 729 as a perfect cube. Correct, just more work &mdash; and more places to slip.'},
+   {pl:'Same answer', mx:'27'+FX(2,3)+EQ+'<b>9</b>&nbsp; '+CK,
+    ex:'<u>the takeaway</u>Root first: 3<sup>2</sup>. Power first: '+RAD(3,'729')+'. Choose the road with the smaller numbers on it.',
+    n:'Both roads, one destination', d:'The two routes must agree &mdash; they are the same exponent factored two ways. Since they always agree, you are free to pick the easy one every single time.'}
+  ]},
+
+ /* ---------- 4. negative rational exponent ---------- */
+ {k:'e4', nm:'Negative exponent', ct:'16'+FX(M+'3',4), col:'#7a5a8a',
+  dir:'Negative rational exponent',
+  mnem:'A negative exponent <b>flips</b>, a fractional exponent <b>roots</b>. Flip first, then root &mdash; the minus sign never touches the radicand.',
+  note:'The reciprocal rule needs a nonzero base: <i>a</i><sup>'+M+'p</sup> = 1/<i>a</i><sup>p</sup> requires <i>a</i> '+NE+' 0. Also, 16 to the '+M+'3/4 is <b>positive</b> &mdash; a negative exponent never makes a positive base negative.',
+  S:[
+   {pl:'The expression', mx:'16'+FX(M+'3',4),
+    n:'Three instructions at once', d:'The minus says <b>reciprocal</b>. The 4 on the bottom says <b>fourth root</b>. The 3 on top says <b>cube</b>. Handle them one at a time, in that order, and it stays easy.'},
+   {pl:'Minus &rarr; flip', mx:F(1,'16'+FX(HL(3),GL(4))),
+    ex:'<u>the rule</u><i>a</i><sup>'+M+'p</sup> = 1 / <i>a</i><sup>p</sup>&nbsp; (<i>a</i> '+NE+' 0). Moving a factor across the fraction bar is what a negative exponent <b>means</b>; the exponent lands positive on the other side.',
+    n:'Deal with the sign first', d:'Send the whole power to the denominator and drop the minus. The exponent 3/4 is now positive and the problem has become one you have already solved.'},
+   {pl:'Fraction &rarr; radical', mx:F(1,'('+RAD(GL(4),'16')+')<sup>'+HL(3)+'</sup>'),
+    ex:'<u>root first, as always</u>Denominator '+GL(4)+' &rarr; fourth root. Numerator '+HL(3)+' &rarr; cube. Taking the root first keeps 16 from becoming 4096.',
+    n:'Same conversion as before', d:'Nothing new here &mdash; bottom becomes the index, top becomes the power. The negative sign is already spent, so it plays no further part.'},
+   {pl:'Take the root', mx:F(1,'2<sup>'+HL(3)+'</sup>'),
+    ex:'<u>fourth root of 16</u>2<sup>4</sup> = 16, so '+RAD(4,'16')+' = 2.',
+    n:'Shrink it', d:'16 is a perfect fourth power, so the root is exact. This is the payoff of the root-first habit: you are now cubing a 2 instead of hunting for the fourth root of a five-digit number.'},
+   {pl:'Finish', mx:F(1,8)+'&nbsp;&nbsp;<span style="font-size:.8em;color:#7d7f94">(= 0.125)</span>',
+    ex:'<u>the answer</u>2<sup>3</sup> = 8, so 16<sup>'+M+'3/4</sup> = 1/8. Positive, and smaller than 1 &mdash; exactly what a negative exponent on a base above 1 should produce.',
+    n:'A positive answer, comfortably less than 1', d:'Sanity check the sign and the size before you move on. Base bigger than 1 with a negative exponent must land strictly between 0 and 1, and 1/8 does.'},
+   {pl:'Check', mx:'16'+FX(3,4)+DOT+'16'+FX(M+'3',4)+EQ+'16<sup>0</sup>'+EQ+'1',
+    ex:'<u>and numerically</u>8 &nbsp;&middot;&nbsp; 1/8 = 1&nbsp; '+CK+'&nbsp; The two are genuine reciprocals, which is precisely what the minus sign promised.',
+    n:'The reciprocal test', d:'Multiply an expression by its negative-exponent twin and the exponents must cancel to zero, giving 1. Since 16<sup>3/4</sup> = 8, the answer had to be 1/8 &mdash; and it is.'}
+  ]},
+
+ /* ---------- 5. why exponent form is worth the trouble ---------- */
+ {k:'e5', nm:'Different indexes', ct:RAD('',X)+DOT+RAD(3,X), col:'#2f9e5b',
+  dir:'Where exponent form earns its keep',
+  mnem:'You cannot combine radicals with <b>different indexes</b> &mdash; but you can always add exponents. Convert, add, convert back.',
+  note:'The new index 6 is the <b>least common denominator</b> of 2 and 3. That is where a "common index" comes from; it was never a guess. A square root is present, so <i>x</i> '+GE+' 0.',
+  S:[
+   {pl:'The expression', mx:RAD('',X)+DOT+RAD(3,X),
+    n:'A wall, in radical form', d:'A square root times a cube root. There is no product rule that merges radicals of <b>different indexes</b> &mdash; '+RAD('',X)+DOT+RAD(3,X)+' is emphatically <b>not</b> '+RAD('','<i>x</i>&nbsp;&middot;&nbsp;<i>x</i>')+'. In radical form you are stuck.'},
+   {pl:'Both to exponents', mx:X+FX(1,GL(2))+DOT+X+FX(1,GL(3)),
+    ex:'<u>convert each one</u>'+RAD('',X)+' = <i>x</i><sup>1/2</sup> &nbsp;(hidden index '+GL(2)+') &nbsp;&middot;&nbsp; '+RAD(3,X)+' = <i>x</i><sup>1/3</sup>',
+    n:'Change the notation, break the wall', d:'Rewrite both radicals as powers of the <b>same base</b> <i>x</i>. The moment they are powers of one base, an exponent rule you already own becomes available.'},
+   {pl:'Add exponents', mx:X+'<sup>1/'+GL(2)+'&nbsp;+&nbsp;1/'+GL(3)+'</sup>',
+    ex:'<u>the rule</u><i>a</i><sup>p</sup>&nbsp;&middot;&nbsp;<i>a</i><sup>q</sup> = <i>a</i><sup>p+q</sup>. Same base, so the exponents simply add: <i>x</i><sup>1/2</sup>&nbsp;&middot;&nbsp;<i>x</i><sup>1/3</sup> = <i>x</i><sup>1/2 + 1/3</sup>.',
+    n:'One rule does all the work', d:'This is the rule radicals could not give you. It applies to <b>any</b> exponents &mdash; whole, fractional, negative &mdash; as long as the base is the same.'},
+   {pl:'Common denominator', mx:X+FX('3 + 2',6)+EQ+X+FX(HL(5),GL(6)),
+    ex:'<u>the fraction arithmetic, shown</u>1/2 = 3/6 &nbsp;and&nbsp; 1/3 = 2/6, so 1/2 + 1/3 = 5/6. The LCD of 2 and 3 is '+GL(6)+'.',
+    n:'Ordinary fraction addition', d:'Nothing exotic: put the exponents over a common denominator and add the numerators. The LCD you compute here is the index the final radical will wear.'},
+   {pl:'Back to radical', mx:RAD(GL(6),X+'<sup>'+HL(5)+'</sup>'),
+    ex:'<u>same map, reversed</u>Denominator '+GL(6)+' &rarr; index. Numerator '+HL(5)+' &rarr; power. So the product is a <b>sixth</b> root.',
+    n:'Translate back if the question asked for a radical', d:'The answer <i>x</i><sup>5/6</sup> is complete on its own. Convert to '+RAD(6,X+'<sup>5</sup>')+' only when the problem is phrased in radicals &mdash; and notice you could never have guessed that sixth root by staring at the original.'},
+   {pl:'Check a number', mx:'<i>x</i> = 64:&nbsp; '+RAD('','64')+DOT+RAD(3,'64')+EQ+'8'+DOT+'4'+EQ+'32',
+    ex:'<u>and the answer</u>('+RAD(6,'64')+')<sup>5</sup> = 2<sup>5</sup> = 32&nbsp; '+CK+'&nbsp; (64 = 2<sup>6</sup>, so its sixth root is exactly 2.)',
+    n:'Verified on a number', d:'64 was chosen because it is a perfect square, a perfect cube, <i>and</i> a perfect sixth power. Both sides come out to 32, so the conversion held.'}
+  ]},
+
+ /* ---------- 6. reducing the fraction simplifies the radical ---------- */
+ {k:'e6', nm:'Reduce the index', ct:RAD(6,X+'<sup>4</sup>'), col:'#d1495b',
+  dir:'Reducing the fraction shrinks the radical',
+  mnem:'Reduce the <b>exponent fraction</b>, not the radical. Lowest terms in the exponent means the smallest possible index.',
+  note:'Reducing is safe when <i>x</i> '+GE+' 0. For a negative base it can change the value: '+RAD(6,'(&minus;8)<sup>2</sup>')+' = '+RAD(6,'64')+' = 2, but (&minus;8)<sup>1/3</sup> = '+RAD(3,'&minus;8')+' = &minus;2. Assume <i>x</i> '+GE+' 0 unless told otherwise.',
+  S:[
+   {pl:'The expression', mx:RAD(6,X+'<sup>4</sup>'),
+    n:'A sixth root looks worse than it is', d:'Nothing obvious comes out of a sixth root, and hunting for perfect sixth powers is miserable. Convert to an exponent and the problem practically solves itself.'},
+   {pl:'To exponent form', mx:X+FX(HL(4),GL(6)),
+    ex:'<u>the usual map</u>index '+GL(6)+' &rarr; denominator &nbsp;&middot;&nbsp; power '+HL(4)+' &rarr; numerator',
+    n:'Translate first, think second', d:'Once the expression is a single power of <i>x</i>, every tool you have for fractions becomes a tool for radicals. That is the real reason this section exists.'},
+   {pl:'Reduce', mx:X+FX(4,6)+EQ+X+FX(HL(2),GL(3)),
+    ex:'<u>divide top and bottom by 2</u>4/6 = 2/3. This is ordinary fraction reduction &mdash; and it is legitimate here because <i>x</i><sup>4/6</sup> and <i>x</i><sup>2/3</sup> are the same number for every <i>x</i> '+GE+' 0.',
+    n:'The step that does the simplifying', d:'A fraction not in lowest terms means the radical has a bigger index than it needs. Reducing 4/6 to 2/3 is exactly the same act as simplifying '+RAD(6,X+'<sup>4</sup>')+'.'},
+   {pl:'Back to radical', mx:RAD(GL(3),X+'<sup>'+HL(2)+'</sup>'),
+    ex:'<u>reversing the map</u>Denominator '+GL(3)+' &rarr; index 3. Numerator '+HL(2)+' &rarr; power 2. A sixth root became a <b>cube</b> root.',
+    n:'Same value, smaller machinery', d:''+RAD(6,X+'<sup>4</sup>')+' = '+RAD(3,X+'<sup>2</sup>')+'. Identical for every <i>x</i> '+GE+' 0, but the second is far easier to evaluate, differentiate, or combine with anything else.'},
+   {pl:'Why it is a win', mx:RAD(6,'4096')+EQ+RAD(3,'64')+EQ+'4',
+    ex:'<u>feel the difference</u>Left: find a number whose <b>sixth</b> power is 4096. Right: find a number whose <b>cube</b> is 64. Same answer, one-tenth the effort.',
+    n:'The practical payoff', d:'Smaller index means smaller numbers under the radical and far less searching. Any time an index looks large, check whether the exponent fraction reduces &mdash; it very often does.'},
+   {pl:'Check a number', mx:'<i>x</i> = 8:&nbsp; '+RAD(6,'8<sup>4</sup>')+EQ+RAD(6,'4096')+EQ+'4',
+    ex:'<u>and the reduced form</u>'+RAD(3,'8<sup>2</sup>')+' = '+RAD(3,'64')+' = 4&nbsp; '+CK+'&nbsp; (4<sup>6</sup> = 4096 and 4<sup>3</sup> = 64.)',
+    n:'Verified', d:'Both spellings return 4 at <i>x</i> = 8. Run this check whenever you reduce an exponent &mdash; one perfect-power test is usually enough to catch an arithmetic slip.'}
+  ]}
+ ];
+
+ var ei=0, si=0;
+
+ function renderPick(){
+   $('pick').innerHTML=EX.map(function(e,i){
+     return '<button class="'+(i===ei?'on':'')+'" data-i="'+i+'"><span class="nm">'+e.nm+'</span><span class="ct">'+e.ct+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call($('pick').querySelectorAll('button'),function(b){
+     b.onclick=function(){ ei=+b.getAttribute('data-i'); si=0; renderPick(); renderWork(); };
+   });
+ }
+
+ function renderWork(){
+   var e=EX[ei], S=e.S, out='', i;
+   for(i=0;i<S.length;i++){
+     if(i>si) break;                                   /* reveal one line at a time */
+     var cls=(i===si?'wr on':'wr done');
+     out+='<div class="'+cls+'"><div class="pl">'+S[i].pl+'</div><div class="mx">'+S[i].mx+
+          (S[i].ex&&i===si?'<span class="ex">'+S[i].ex+'</span>':'')+'</div></div>';
+   }
+   $('work').innerHTML=out;
+   $('stage').style.background=e.col;
+   $('stage').innerHTML=e.dir+'<small>step '+(si+1)+' of '+S.length+'</small>';
+   $('info').innerHTML='<span class="n">'+S[si].n+'</span>'+S[si].d;
+   $('mnem').innerHTML=e.mnem;
+   $('note').innerHTML=e.note;
+   $('prev').disabled=(si===0);
+   $('next').disabled=(si===S.length-1);
+ }
+
+ $('prev').onclick=function(){ if(si>0){ si--; renderWork(); } };
+ $('next').onclick=function(){ if(si<EX[ei].S.length-1){ si++; renderWork(); } };
+ document.addEventListener('keydown',function(ev){
+   var t=ev.target||{};
+   if(t.tagName==='INPUT') return;          /* let the sliders own the arrow keys */
+   if(ev.key==='ArrowRight'){ $('next').click(); }
+   else if(ev.key==='ArrowLeft'){ $('prev').click(); }
+ });
+
+ updateDial();
+ renderPick();
+ renderWork();
+})();
+</script>
+</body>
+</html>

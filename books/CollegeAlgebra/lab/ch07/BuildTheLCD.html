@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>The Bottoms Must Match: Building the LCD</title>
+<meta name="description" content="Finding the least common denominator run as a worked-step machine — factor every denominator, stack the factors into bins, take the highest power of each, and rewrite both fractions over the LCD.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* example picker */
+#pick{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px;}
+#pick button{display:block;text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 9px;cursor:pointer;font-family:var(--sans);transition:.12s;}
+#pick button:hover{border-color:var(--teal);}
+#pick button .nm{display:block;font-weight:700;font-size:11.6px;color:var(--ink);line-height:1.15;}
+#pick button .ct{display:block;font-family:var(--math);font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.3;}
+#pick button.on{background:var(--teal);border-color:var(--teal);}
+#pick button.on .nm{color:#fff;} #pick button.on .ct{color:rgba(255,255,255,.9);}
+#pick sup{font-size:.66em;}
+/* the worked-step column */
+.work{margin-top:2px;}
+.wr{display:flex;gap:9px;align-items:baseline;padding:7px 8px;border-radius:9px;border-left:4px solid transparent;transition:.18s;}
+.wr + .wr{margin-top:2px;}
+.wr .pl{flex:none;width:74px;font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.wr .mx{font-family:var(--math);font-size:14.5px;color:var(--muted);line-height:1.7;flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;}
+.wr.on{background:#eef0fa;border-left-color:var(--teal);}
+.wr.on .mx{font-size:16.5px;color:var(--ink);font-weight:600;}
+.wr.on .pl{color:var(--teal);}
+.wr.done .mx{color:var(--soft);}
+.wr .ex{font-family:var(--math);font-size:13px;color:var(--soft);line-height:1.65;margin-top:7px;display:block;font-weight:400;}
+.wr:not(.on) .ex{display:none;}
+.wr .ex u{font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;display:block;margin-bottom:1px;}
+.wr .ex b{color:var(--ink);}
+.mx sub{font-size:.62em;vertical-align:sub;} .mx sup{font-size:.66em;} .ex sup{font-size:.66em;} .ex sub{font-size:.62em;}
+.mx .op{font-family:var(--sans);font-size:.74em;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);padding:0 5px;}
+.wr.on .mx .op{color:var(--teal);}
+/* stacked fraction, built from HTML only */
+.fr{display:inline-block;vertical-align:middle;text-align:center;line-height:1.25;margin:0 2px;}
+.fr .nu{display:block;padding:0 7px 2px;border-bottom:1.5px solid currentColor;}
+.fr .de{display:block;padding:2px 7px 0;}
+.wr.on .fr{font-size:.96em;}
+/* highlight the part that just changed */
+.hl{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.wr:not(.on) .hl{background:transparent;box-shadow:none;padding:0;}
+.gl{border-radius:4px;padding:1px 4px;background:#dbe9f5;box-shadow:inset 0 0 0 1.5px #9dc0dc;}
+.wr:not(.on) .gl{background:transparent;box-shadow:none;padding:0;}
+/* left column extras */
+.dom{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:9px;border:1px solid var(--line);background:#f7f6fc;border-radius:9px;padding:7px 11px;}
+.dom b{font-size:9.4px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;flex:none;}
+.dom span{font-family:var(--math);font-size:14px;color:var(--teal-dk);font-weight:700;text-align:right;}
+.dom span.none{color:var(--muted);font-weight:400;}
+.dom.excl span{color:#b23145;}
+.dom sup{font-size:.66em;}
+.cap{font-size:12px;color:var(--soft);line-height:1.55;margin-top:11px;border-top:1px solid var(--line);padding-top:10px;min-height:56px;}
+.cap b{color:var(--ink);} .cap i{font-family:var(--math);} .cap sup{font-size:.66em;}
+.key{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:10.2px;color:var(--muted);align-items:center;}
+.key i{font-style:normal;display:inline-flex;align-items:center;gap:4px;}
+.key .s{width:13px;height:13px;border-radius:4px;display:inline-block;}
+.key .s1{background:#43458f;} .key .s2{background:#fff;border:1.5px dashed #b0b3c9;}
+.key .s3{background:#fbf3e2;border:2px dashed #b8862f;}
+/* plan chips */
+.plan{display:flex;flex-wrap:wrap;gap:4px;margin-top:11px;}
+.plan span{font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:#eceefa;color:var(--muted);border-radius:20px;padding:4px 9px;}
+.plan span.on{background:var(--teal);color:#fff;}
+.plan span.done{background:#dfe2f4;color:var(--teal-dk);}
+#info .n{margin-bottom:4px;}
+#info i,.mnem i,.note i{font-family:var(--math);}
+#info sup,.mnem sup,.note sup{font-size:.66em;}
+/* math drawn in the picture speaks the same typographic voice as the worked lines */
+#pic text{font-family:var(--math);}
+#pic text.ui{font-family:var(--sans);}
+.pulse{animation:pl 1.25s ease-in-out infinite;}
+@keyframes pl{0%,100%{opacity:1;}50%{opacity:.42;}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 7</div>
+  <h1>The Bottoms Must Match</h1>
+  <div class="intro">You cannot add two fractions whose denominators disagree &mdash; the pieces are different sizes, so the tops are not countable. The fix is always the same: find the smallest expression <b>both denominators divide into</b>, then rename each fraction so it sits on that expression. That smallest expression is the <b>least common denominator</b>, and it is built from <b>factors</b>, never from guesswork. Step through each example one line at a time; the bins on the left show exactly which factors each denominator already owns, and which ones it is missing.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The factor bins</h2>
+      <svg id="pic" viewBox="0 0 250 164" aria-label="factor bins for the two denominators and the LCD"><g id="art"></g></svg>
+      <div class="dom"><b>LCD</b><span id="lcdv" class="none">&mdash;</span></div>
+      <div class="dom excl"><b>Excluded values</b><span id="domv" class="none">&mdash;</span></div>
+      <div class="key"><i><span class="s s1"></span> factor this denominator has</i><i><span class="s s2"></span> factor it lacks</i><i><span class="s s3"></span> what you must multiply by</i></div>
+      <div class="cap" id="cap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Build the LCD, one line at a time<small>pick an example below</small></div>
+    <div class="card">
+      <div id="pick"></div>
+      <div class="work" id="work"></div>
+      <div class="plan" id="plan"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"></div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- the six steps, and why each one is the way it is ---------- */
+ var STEPS=[
+  {pl:'the two fractions',chip:'set up',t:'The two fractions',
+   u:'why a common denominator at all',
+   w:'One half plus one third is not two fifths. Halves and thirds are different-sized pieces, so their counts cannot be added. Rename both as sixths and the counting works. Every problem in this section is that same rename, with polynomials in place of 2 and 3.'},
+  {pl:'factor each bottom',chip:'factor',t:'Factor every denominator',
+   u:'why factoring comes first',
+   w:'A multiplied-out denominator hides what it shares. <i>x</i><sup>2</sup> &minus; 9 and <i>x</i><sup>2</sup> + 6<i>x</i> + 9 look unrelated until you factor them and (<i>x</i> + 3) appears in both. <b>Factors are the only currency the LCD accepts</b>, so nothing can happen before this line.'},
+  {pl:'build the LCD',chip:'highest power',t:'Build the LCD',
+   u:'why the highest power, and not the sum',
+   w:'The LCD has one job: <b>be divisible by both denominators</b>. Look at one factor at a time. If it appears twice in one denominator and once in the other, two copies cover both &mdash; a third copy would still work but would not be <i>least</i>. So: every distinct factor, each to the highest power it reaches in any single denominator.'},
+  {pl:'rewrite the first',chip:'rewrite &#9312;',t:'Rewrite the first fraction',
+   u:'why this does not change the fraction',
+   w:'Compare the first denominator with the LCD and read off the factors it is missing. Multiplying top <b>and</b> bottom by those factors is multiplying by a fraction equal to <b>1</b>, so the value is untouched &mdash; only the name changes. It is the same move as rewriting 1/2 as 3/6.'},
+  {pl:'rewrite the second',chip:'rewrite &#9313;',t:'Rewrite the second fraction',
+   u:'why the bottom stays factored',
+   w:'Same move on the other fraction. Multiply the new numerator out, but <b>leave the denominator in factored form</b>. In the next section you will combine the tops and try to cancel; a factored denominator shows instantly what can cancel, while a multiplied-out one hides it.'},
+  {pl:'both over the LCD',chip:'match',t:'Both fractions over the LCD',
+   u:'why the exclusions outlive the rewrite',
+   w:'The denominators finally match, so the numerators can be added or subtracted. But any value that made an <b>original</b> denominator zero is banned forever, even from a rewritten form that looks harmless there. The new fractions equal the old ones only where the old ones were defined.'}
+ ];
+
+ /* ---------- four worked examples ---------- */
+ var EX=[
+  {nm:'Numbers first',ct:'1/12 and 1/18',c:'#2f6f9f',
+   n1:'1',n2:'1',
+   d1:'12',d2:'18',d1s:'12',d2s:'18',
+   d1f:'2<sup>2</sup> &middot; 3',d2f:'2 &middot; 3<sup>2</sup>',
+   facs:[{lab:'2',e1:2,e2:1,c:'#43458f'},{lab:'3',e1:1,e2:2,c:'#2f6f9f'}],
+   lcd:'2<sup>2</sup> &middot; 3<sup>2</sup>',lcdD:'36',
+   m1:'3',m2:'2',
+   nn1r:'1 &middot; 3',nn1e:'3',nn2r:'1 &middot; 2',nn2e:'2',
+   sum:'5',sumd:'36',excl:'',
+   d:[
+    'Start where the fear is smallest. To add <b>1/12</b> and <b>1/18</b> you cannot add the tops: a twelfth and an eighteenth are different-sized pieces. You need one denominator that both can become.',
+    '<b>12 = 2 &middot; 2 &middot; 3</b> and <b>18 = 2 &middot; 3 &middot; 3</b>. Prime factors are the ingredients of a number, and the bins on the left now show each denominator as its ingredient list.',
+    'Cover both lists with as little as possible: you need <b>two 2s</b> (12 demands them) and <b>two 3s</b> (18 demands them). LCD = 2<sup>2</sup> &middot; 3<sup>2</sup> = <b>36</b>. Notice that 12 &middot; 18 = 216 is also a common denominator &mdash; it just carries six times more baggage than necessary.',
+    '36 &divide; 12 = <b>3</b>, which is exactly the one 3 that 12 was missing. Multiply top and bottom by 3: <b>1/12 = 3/36</b>. You multiplied by 3/3, which is 1, so nothing about the value moved.',
+    '36 &divide; 18 = <b>2</b> &mdash; the 2 that 18 was missing. Multiply top and bottom by 2: <b>1/18 = 2/36</b>.',
+    'Both fractions now sit on 36, so the tops are finally countable: 3/36 + 2/36 = <b>5/36</b>. Numbers have no excluded values, because no letter can make 12 or 18 equal zero. Every remaining example is this exact procedure wearing algebra.'
+   ]},
+
+  {nm:'Monomial bottoms',ct:'3/(4<i>x</i><sup>2</sup>) and 5/(6<i>x</i>)',c:'#43458f',
+   n1:'3',n2:'5',
+   d1:'4<i>x</i><sup>2</sup>',d2:'6<i>x</i>',d1s:'4x²',d2s:'6x',
+   d1f:'2<sup>2</sup> &middot; <i>x</i><sup>2</sup>',d2f:'2 &middot; 3 &middot; <i>x</i>',
+   facs:[{lab:'2',e1:2,e2:1,c:'#43458f'},{lab:'3',e1:0,e2:1,c:'#2f6f9f'},{lab:'x',e1:2,e2:1,c:'#7a5a8a'}],
+   lcd:'2<sup>2</sup> &middot; 3 &middot; <i>x</i><sup>2</sup>',lcdD:'12<i>x</i><sup>2</sup>',
+   m1:'3',m2:'2<i>x</i>',
+   nn1r:'3 &middot; 3',nn1e:'9',nn2r:'5 &middot; 2<i>x</i>',nn2e:'10<i>x</i>',
+   sum:'9 + 10<i>x</i>',sumd:'12<i>x</i><sup>2</sup>',excl:'<i>x</i> &ne; 0',
+   d:[
+    'Same job, now with a letter in it. The denominators <b>4<i>x</i><sup>2</sup></b> and <b>6<i>x</i></b> are different-sized pieces just as 12 and 18 were.',
+    'Break each denominator all the way down, treating <i>x</i> exactly like a prime: <b>4<i>x</i><sup>2</sup> = 2 &middot; 2 &middot; <i>x</i> &middot; <i>x</i></b> and <b>6<i>x</i> = 2 &middot; 3 &middot; <i>x</i></b>. Notice 4<i>x</i><sup>2</sup> has no 3 at all, and 6<i>x</i> has only one <i>x</i>.',
+    'Highest power of each distinct factor: 2<sup>2</sup> (from the 4), 3 (from the 6), <i>x</i><sup>2</sup> (from the 4<i>x</i><sup>2</sup>). LCD = 4 &middot; 3 &middot; <i>x</i><sup>2</sup> = <b>12<i>x</i><sup>2</sup></b>. Multiplying the denominators instead gives 4<i>x</i><sup>2</sup> &middot; 6<i>x</i> = 24<i>x</i><sup>3</sup> &mdash; a legal common denominator, but it drags an extra 2<i>x</i> through every line and must be cancelled at the end.',
+    '12<i>x</i><sup>2</sup> &divide; 4<i>x</i><sup>2</sup> = <b>3</b>. That single missing 3 is the whole multiplier. Top and bottom: 3 &middot; 3 = 9, so 3/(4<i>x</i><sup>2</sup>) becomes <b>9/(12<i>x</i><sup>2</sup>)</b>.',
+    '12<i>x</i><sup>2</sup> &divide; 6<i>x</i> = <b>2<i>x</i></b> &mdash; 6<i>x</i> was short one 2 and one <i>x</i>. The numerator becomes 5 &middot; 2<i>x</i> = <b>10<i>x</i></b>. The <i>x</i> climbing into the top is normal and expected; only the bottoms were required to match.',
+    'Both sit on 12<i>x</i><sup>2</sup>, and adding gives (9 + 10<i>x</i>)/(12<i>x</i><sup>2</sup>). That top does not factor, so it is finished. And <b><i>x</i> &ne; 0</b>: both original denominators vanish at zero, so zero was never in play.'
+   ]},
+
+  {nm:'A shared factor',ct:'7/(<i>x</i><sup>2</sup>&minus;9) and 2/(<i>x</i><sup>2</sup>+6<i>x</i>+9)',c:'#7a5a8a',
+   n1:'7',n2:'2',
+   d1:'<i>x</i><sup>2</sup> &minus; 9',d2:'<i>x</i><sup>2</sup> + 6<i>x</i> + 9',d1s:'x² − 9',d2s:'x² + 6x + 9',
+   d1f:'(<i>x</i> &minus; 3)(<i>x</i> + 3)',d2f:'(<i>x</i> + 3)<sup>2</sup>',
+   facs:[{lab:'(x−3)',e1:1,e2:0,c:'#43458f'},{lab:'(x+3)',e1:1,e2:2,c:'#2f9e5b'}],
+   lcd:'(<i>x</i> &minus; 3)(<i>x</i> + 3)<sup>2</sup>',lcdD:'(<i>x</i> &minus; 3)(<i>x</i> + 3)<sup>2</sup>',
+   m1:'<i>x</i> + 3',m2:'<i>x</i> &minus; 3',
+   nn1r:'7(<i>x</i> + 3)',nn1e:'7<i>x</i> + 21',nn2r:'2(<i>x</i> &minus; 3)',nn2e:'2<i>x</i> &minus; 6',
+   sum:'9<i>x</i> + 15',sumd:'(<i>x</i> &minus; 3)(<i>x</i> + 3)<sup>2</sup>',excl:'<i>x</i> &ne; 3, <i>x</i> &ne; &minus;3',
+   d:[
+    'These two denominators look completely unrelated. Multiplied out, they are meant to. Factoring will show they share a piece &mdash; and sharing is what keeps the LCD small.',
+    '<b><i>x</i><sup>2</sup> &minus; 9</b> is a difference of squares: <b>(<i>x</i> &minus; 3)(<i>x</i> + 3)</b>. <b><i>x</i><sup>2</sup> + 6<i>x</i> + 9</b> is a perfect square trinomial: <b>(<i>x</i> + 3)<sup>2</sup></b>, which is (<i>x</i> + 3)(<i>x</i> + 3). The shared factor is <b>(<i>x</i> + 3)</b>.',
+    'Only two distinct factors exist here. (<i>x</i> &minus; 3) reaches power 1; (<i>x</i> + 3) reaches power <b>2</b> in the second denominator, so the LCD carries two of them. LCD = <b>(<i>x</i> &minus; 3)(<i>x</i> + 3)<sup>2</sup></b>. Multiplying the denominators instead would give (<i>x</i> &minus; 3)(<i>x</i> + 3)<sup>3</sup> &mdash; one wasted copy of (<i>x</i> + 3) that you would have to cancel later.',
+    'The first denominator holds one (<i>x</i> + 3); the LCD holds two. It is missing exactly <b>(<i>x</i> + 3)</b>. Multiply top and bottom by it: the numerator becomes 7(<i>x</i> + 3) = <b>7<i>x</i> + 21</b>, and the denominator becomes the full LCD.',
+    'The second denominator has no <b>(<i>x</i> &minus; 3)</b> at all, so that is its multiplier. The numerator becomes 2(<i>x</i> &minus; 3) = <b>2<i>x</i> &minus; 6</b>. Watch the sign: it is minus 6, not plus.',
+    'Both fractions now rest on (<i>x</i> &minus; 3)(<i>x</i> + 3)<sup>2</sup>, and adding the tops gives (7<i>x</i> + 21) + (2<i>x</i> &minus; 6) = <b>9<i>x</i> + 15</b>. Excluded: <b><i>x</i> &ne; 3</b> and <b><i>x</i> &ne; &minus;3</b>, because each kills an original denominator.'
+   ]},
+
+  {nm:'Three factors',ct:'4/(<i>x</i><sup>2</sup>&minus;<i>x</i>&minus;6) and <i>x</i>/(<i>x</i><sup>2</sup>&minus;4)',c:'#2f9e5b',
+   n1:'4',n2:'<i>x</i>',
+   d1:'<i>x</i><sup>2</sup> &minus; <i>x</i> &minus; 6',d2:'<i>x</i><sup>2</sup> &minus; 4',d1s:'x² − x − 6',d2s:'x² − 4',
+   d1f:'(<i>x</i> &minus; 3)(<i>x</i> + 2)',d2f:'(<i>x</i> &minus; 2)(<i>x</i> + 2)',
+   facs:[{lab:'(x−3)',e1:1,e2:0,c:'#43458f'},{lab:'(x+2)',e1:1,e2:1,c:'#2f9e5b'},{lab:'(x−2)',e1:0,e2:1,c:'#2f6f9f'}],
+   lcd:'(<i>x</i> &minus; 3)(<i>x</i> + 2)(<i>x</i> &minus; 2)',lcdD:'(<i>x</i> &minus; 3)(<i>x</i> + 2)(<i>x</i> &minus; 2)',
+   m1:'<i>x</i> &minus; 2',m2:'<i>x</i> &minus; 3',
+   nn1r:'4(<i>x</i> &minus; 2)',nn1e:'4<i>x</i> &minus; 8',nn2r:'<i>x</i>(<i>x</i> &minus; 3)',nn2e:'<i>x</i><sup>2</sup> &minus; 3<i>x</i>',
+   sum:'<i>x</i><sup>2</sup> + <i>x</i> &minus; 8',sumd:'(<i>x</i> &minus; 3)(<i>x</i> + 2)(<i>x</i> &minus; 2)',excl:'<i>x</i> &ne; 3, <i>x</i> &ne; &minus;2, <i>x</i> &ne; 2',
+   d:[
+    'The hardest version is still the same procedure. Two quadratics, one shared factor hiding inside them, and a third factor that belongs to only one side.',
+    '<b><i>x</i><sup>2</sup> &minus; <i>x</i> &minus; 6 = (<i>x</i> &minus; 3)(<i>x</i> + 2)</b> &mdash; check it: (&minus;3)(2) = &minus;6 and &minus;3 + 2 = &minus;1. <b><i>x</i><sup>2</sup> &minus; 4 = (<i>x</i> &minus; 2)(<i>x</i> + 2)</b>, a difference of squares. They share <b>(<i>x</i> + 2)</b> and nothing else.',
+    'Three distinct factors appear across the two lists, and none reaches a power above 1. So the LCD is simply all three, once each: <b>(<i>x</i> &minus; 3)(<i>x</i> + 2)(<i>x</i> &minus; 2)</b>. Here the shared (<i>x</i> + 2) is written <b>once</b>, not twice &mdash; that is the entire saving over multiplying the denominators together.',
+    'Line up the first denominator against the LCD: it has (<i>x</i> &minus; 3) and (<i>x</i> + 2), so it is missing <b>(<i>x</i> &minus; 2)</b>. Numerator: 4(<i>x</i> &minus; 2) = <b>4<i>x</i> &minus; 8</b>.',
+    'The second denominator is missing <b>(<i>x</i> &minus; 3)</b>. Numerator: <i>x</i>(<i>x</i> &minus; 3) = <b><i>x</i><sup>2</sup> &minus; 3<i>x</i></b>. Distribute the <i>x</i> into both terms &mdash; a numerator that is itself a product must be multiplied out before anything can be combined.',
+    'Both fractions share the LCD, and adding gives (4<i>x</i> &minus; 8) + (<i>x</i><sup>2</sup> &minus; 3<i>x</i>) = <b><i>x</i><sup>2</sup> + <i>x</i> &minus; 8</b>, which does not factor, so nothing cancels. Excluded: <b><i>x</i> &ne; 3, &minus;2, 2</b> &mdash; all three roots of the original denominators.'
+   ]}
+ ];
+
+ var CAP=[
+  'The two denominators, still multiplied out. Nothing can be compared while they look like this.',
+  'Each denominator is now a row of <b>factor tiles</b>. A pale dashed tile marks a factor that <b>this denominator does not have</b>.',
+  'The LCD row takes the <b>tallest stack in every column</b> &mdash; just enough of each factor to cover both rows above it.',
+  'The gold tiles are the factors the <b>first</b> denominator lacks. Multiplying its top and bottom by exactly those fills the row.',
+  'The gold tiles are what the <b>second</b> denominator lacks. Different fraction, different gap, same rule.',
+  'Both rows can now be stretched onto the LCD row. The denominators match, so the numerators can finally be combined.'
+ ];
+
+ /* ---------- HTML math helpers (no renderer, no LaTeX) ---------- */
+ function fr(n,d){return '<span class="fr"><span class="nu">'+n+'</span><span class="de">'+d+'</span></span>';}
+ function hl(s){return '<span class="hl">'+s+'</span>';}
+ function gl(s){return '<span class="gl">'+s+'</span>';}
+ function AND(){return '<span class="op">and</span>';}
+
+ function lines(x){
+  var L=[];
+  L.push(fr(x.n1,x.d1)+AND()+fr(x.n2,x.d2));
+  L.push(fr(x.n1,hl(x.d1f))+AND()+fr(x.n2,hl(x.d2f)));
+  L.push('LCD = '+hl(x.lcd)+(x.lcdD!==x.lcd?' = '+hl(x.lcdD):''));
+  L.push(fr(x.n1,x.d1f)+' &middot; '+fr(gl(x.m1),gl(x.m1))+' = '+fr(hl(x.nn1r),x.lcdD));
+  L.push(fr(x.n2,x.d2f)+' &middot; '+fr(gl(x.m2),gl(x.m2))+' = '+fr(hl(x.nn2r),x.lcdD));
+  L.push(fr(hl(x.nn1e),x.lcdD)+AND()+fr(hl(x.nn2e),x.lcdD));
+  return L;
+ }
+
+ /* ---------- the factor-bin picture ---------- */
+ var LX=52, RX=244, RY=[30,74,124], TH=30;
+
+ function slots(x){
+  var o=[],i,k,mx;
+  for(i=0;i<x.facs.length;i++){ mx=Math.max(x.facs[i].e1,x.facs[i].e2);
+   for(k=0;k<mx;k++){ o.push({f:x.facs[i],gi:i,k:k}); } }
+  return o;
+ }
+ function widthOf(S,x){
+  var G=x.facs.length, n=S.length;
+  var gaps=(n-G)*4+(G-1)*9;
+  return (RX-LX-gaps)/n;
+ }
+ function tile(x,y,w,lab,mode,col){
+  var fs = lab.length<=2 ? Math.min(16,w*0.42) : Math.min(13,w*0.235);
+  var it = lab.indexOf('x')>=0 ? ' font-style="italic"' : '';
+  var tx=x+w/2, ty=y+TH/2+fs*0.35, r='';
+  if(mode==='on'){
+   r+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+TH+'" rx="7" fill="'+col+'"/>';
+   r+='<text x="'+tx+'" y="'+ty+'" text-anchor="middle" font-size="'+fs.toFixed(1)+'" fill="#ffffff" font-weight="700"'+it+'>'+lab+'</text>';
+  } else if(mode==='need'){
+   r+='<rect class="pulse" x="'+x+'" y="'+y+'" width="'+w+'" height="'+TH+'" rx="7" fill="#fbf3e2" stroke="#b8862f" stroke-width="2" stroke-dasharray="5 3"/>';
+   r+='<text x="'+tx+'" y="'+ty+'" text-anchor="middle" font-size="'+fs.toFixed(1)+'" fill="#8a6a20" font-weight="700"'+it+'>'+lab+'</text>';
+  } else {
+   r+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+TH+'" rx="7" fill="#ffffff" stroke="'+col+'" stroke-opacity=".3" stroke-dasharray="3 3"/>';
+   r+='<text x="'+tx+'" y="'+ty+'" text-anchor="middle" font-size="'+fs.toFixed(1)+'" fill="#c3c5d5" font-weight="700"'+it+'>'+lab+'</text>';
+  }
+  return r;
+ }
+ function bar(y,txt,col){
+  var s='<rect x="'+LX+'" y="'+y+'" width="'+(RX-LX)+'" height="'+TH+'" rx="7" fill="#f1f2f9" stroke="'+col+'" stroke-opacity=".45"/>';
+  s+='<text x="'+((LX+RX)/2)+'" y="'+(y+TH/2+5)+'" text-anchor="middle" font-size="14.5" fill="'+col+'" font-weight="700" font-style="italic">'+txt+'</text>';
+  return s;
+ }
+ function rowlab(y,t){
+  return '<text class="ui" x="46" y="'+(y+TH/2+3.5)+'" text-anchor="end" font-size="10.5" fill="#7d7f94" font-weight="800">'+t+'</text>';
+ }
+ function draw(x,st){
+  var S=slots(x), w=widthOf(S,x), P=[], i, s='', cur=LX;
+  for(i=0;i<S.length;i++){ if(i>0){ cur+=(S[i].gi===S[i-1].gi?4:9); } P.push(cur); cur+=w; }
+
+  /* column headers, one per distinct factor */
+  if(st>=1){
+   for(i=0;i<x.facs.length;i++){
+    var a=-1,b=-1,j;
+    for(j=0;j<S.length;j++){ if(S[j].gi===i){ if(a<0)a=j; b=j; } }
+    var cx=(P[a]+P[b]+w)/2;
+    var itg=x.facs[i].lab.indexOf('x')>=0?' font-style="italic"':'';
+    s+='<text x="'+cx.toFixed(1)+'" y="19" text-anchor="middle" font-size="10.5" fill="'+x.facs[i].c+'" font-weight="800"'+itg+'>'+x.facs[i].lab+'</text>';
+   }
+  }
+
+  /* the two denominator rows */
+  var o1=(st===4?' opacity=".34"':''), o2=(st===3?' opacity=".34"':'');
+  if(st===0){
+   s+='<g>'+bar(RY[0],x.d1s,'#43458f')+'</g>';
+   s+='<g>'+bar(RY[1],x.d2s,'#2f6f9f')+'</g>';
+  } else {
+   s+='<g'+o1+'>';
+   for(i=0;i<S.length;i++){ s+=tile(P[i],RY[0],w,S[i].f.lab,(S[i].k<S[i].f.e1?'on':'off'),S[i].f.c); }
+   s+='</g><g'+o2+'>';
+   for(i=0;i<S.length;i++){ s+=tile(P[i],RY[1],w,S[i].f.lab,(S[i].k<S[i].f.e2?'on':'off'),S[i].f.c); }
+   s+='</g>';
+  }
+  s+=rowlab(RY[0],'first')+rowlab(RY[1],'second')+rowlab(RY[2],'LCD');
+
+  /* divider */
+  s+='<line x1="10" y1="110" x2="244" y2="110" stroke="#d7d9ea" stroke-width="1" stroke-dasharray="4 4"/>';
+
+  /* the LCD row */
+  if(st<2){
+   s+='<rect x="'+LX+'" y="'+RY[2]+'" width="'+(RX-LX)+'" height="'+TH+'" rx="7" fill="#ffffff" stroke="#c3c5d5" stroke-width="1.5" stroke-dasharray="4 4"/>';
+   s+='<text x="'+((LX+RX)/2)+'" y="'+(RY[2]+TH/2+6)+'" text-anchor="middle" font-size="16" fill="#c3c5d5" font-weight="800">?</text>';
+  } else {
+   for(i=0;i<S.length;i++){
+    var m='on';
+    if(st===3 && S[i].k>=S[i].f.e1) m='need';
+    if(st===4 && S[i].k>=S[i].f.e2) m='need';
+    s+=tile(P[i],RY[2],w,S[i].f.lab,m,S[i].f.c);
+   }
+  }
+  return s;
+ }
+
+ /* ---------- state + render ---------- */
+ var e=0, st=0;
+
+ function pick(){
+  $("pick").innerHTML=EX.map(function(x,i){
+   return '<button class="'+(i===e?'on':'')+'" data-i="'+i+'"><span class="nm">'+x.nm+'</span><span class="ct">'+x.ct+'</span></button>';
+  }).join('');
+  var bs=$("pick").getElementsByTagName('button'), i;
+  for(i=0;i<bs.length;i++){
+   bs[i].onclick=(function(k){return function(){ e=k; st=0; render(); };})(i);
+  }
+ }
+
+ function render(){
+  var x=EX[e], L=lines(x), i, s='';
+  pick();
+  $("art").innerHTML=draw(x,st);
+  $("cardTitle").innerHTML=(st===0?'The two denominators':'The factor bins');
+
+  /* only the lines already earned: never pre-reveal the next step */
+  for(i=0;i<=st;i++){
+   s+='<div class="'+(i===st?'wr on':'wr done')+'"><div class="pl">'+STEPS[i].pl+'</div><div class="mx">'+L[i];
+   if(i===st){ s+='<span class="ex"><u>'+STEPS[i].u+'</u>'+STEPS[i].w+'</span>'; }
+   s+='</div></div>';
+  }
+  $("work").innerHTML=s;
+
+  $("plan").innerHTML=STEPS.map(function(p,i){
+   return '<span class="'+(i===st?'on':(i<st?'done':''))+'">'+p.chip+'</span>';
+  }).join('');
+
+  $("stage").style.background=x.c;
+  $("stage").innerHTML=x.nm+'<small>step '+(st+1)+' of 6 &middot; '+STEPS[st].t+'</small>';
+
+  $("info").innerHTML='<span class="n">'+STEPS[st].t+'</span>'+x.d[st];
+  $("cap").innerHTML=CAP[st];
+
+  if(st>=2){ $("lcdv").className=''; $("lcdv").innerHTML=x.lcdD; }
+  else { $("lcdv").className='none'; $("lcdv").innerHTML='&mdash;'; }
+  if(x.excl){ $("domv").className=''; $("domv").innerHTML=x.excl; }
+  else { $("domv").className='none'; $("domv").innerHTML='none &mdash; no letters here'; }
+
+  $("mnem").innerHTML='<b>Every distinct factor, to its highest power.</b> Not the sum of the powers, and not the product of the denominators &mdash; only the tallest stack in each column. If a factor appears in just one denominator, it still joins the LCD.';
+  $("note").innerHTML='<b>The classic error:</b> multiplying only the bottom. If the denominator gets multiplied by (<i>x</i> + 3), the numerator must be multiplied by (<i>x</i> + 3) too. Change one without the other and you have changed the fraction itself, not merely its name.';
+
+  $("prev").disabled=(st===0);
+  $("next").disabled=(st===STEPS.length-1);
+ }
+
+ $("prev").onclick=function(){ if(st>0){ st--; render(); } };
+ $("next").onclick=function(){ if(st<STEPS.length-1){ st++; render(); } };
+ document.addEventListener('keydown',function(ev){
+  if(ev.key==='ArrowRight'&&st<STEPS.length-1){ st++; render(); }
+  if(ev.key==='ArrowLeft'&&st>0){ st--; render(); }
+ });
+
+ render();
+})();
+</script>
+</body>
+</html>

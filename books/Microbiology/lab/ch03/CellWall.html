@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>The Cell Wall — Gram-Positive vs Gram-Negative</title>
+<meta name="description" content="Toggle between the Gram-positive and Gram-negative cell envelope and tap each layer of the wall to see how they differ and why it changes antibiotic choice. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:0.95fr 1.05fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:8px;}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px;}
+.cmp div{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff;font-size:12.5px;line-height:1.45;color:var(--soft);}
+.cmp .hd{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;display:block;margin-bottom:4px;}
+.cmp .gp .hd{color:var(--teal);} .cmp .gn .hd{color:var(--coral);}
+.cmp div b{color:var(--ink);}
+.cmp div.act{border-color:var(--teal);box-shadow:0 0 0 2px rgba(109,63,156,.16);background:#faf7fd;}
+.cmp div.gn.act{border-color:var(--coral);box-shadow:0 0 0 2px rgba(209,73,91,.16);background:#fdf6f7;}
+.gres{display:flex;align-items:center;gap:9px;margin-top:11px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;color:var(--soft);}
+.gres .dot{width:17px;height:17px;border-radius:50%;flex:none;box-shadow:0 0 0 3px rgba(40,34,58,.06);}
+.gres b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 3</div>
+  <h1>Gram-Positive vs Gram-Negative</h1>
+  <div class="intro">Almost every bacterium sorts into one of two wall designs &mdash; and a single stain reveals which. The difference is not academic: it decides <b>which antibiotics can reach the wall</b> and whether a dying microbe can throw a patient into <b>septic shock</b>. Switch the envelope and tap each layer.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Gram-positive envelope</h2>
+    <svg viewBox="0 0 240 224" aria-label="cell envelope cross-section"><g id="art"></g></svg>
+    <div class="gres" id="gres"></div>
+    <div class="hint">Tap a layer in the envelope, or a feature at right &rarr;</div>
+  </div></div>
+  <div>
+    <div id="stage">Two cell walls<small>choose an envelope, then a layer</small></div>
+    <div class="card">
+      <div class="modeseg" id="seg">
+        <button data-c="p" class="on">Gram-positive</button>
+        <button data-c="n">Gram-negative</button>
+      </div>
+      <div class="list" id="list"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var CELL={
+   p:{nm:'Gram-positive',col:'#6d3f9c',sub:'thick wall · no outer membrane',dot:'#6d3f9c',res:'Stains <b>purple</b> &mdash; Gram-positive'},
+   n:{nm:'Gram-negative',col:'#d1495b',sub:'thin wall + outer membrane',dot:'#c8385f',res:'Stains <b>pink / red</b> &mdash; Gram-negative'}
+ };
+ var F=[
+  {k:'stain',nm:'Gram stain result',
+   d:'The stain sorts nearly all bacteria into two envelope types in minutes &mdash; long before a culture is ready.',
+   p:'<b>Purple.</b> The thick peptidoglycan traps the crystal-violet&ndash;iodine complex even after the alcohol wash.',
+   n:'<b>Pink / red.</b> Alcohol dissolves the outer membrane, the dye rinses out of the thin wall, and safranin counterstains it pink.',
+   note:'A Gram stain of sputum, urine, wound, blood or CSF steers the <b>first, empiric antibiotic</b> hours before final cultures return.'},
+  {k:'wall',nm:'Peptidoglycan wall',region:1,
+   d:'Peptidoglycan is a mesh of sugar strands cross-linked by short peptides &mdash; the layer that gives the cell shape and keeps it from bursting under its own pressure.',
+   p:'<b>Thick</b> &mdash; many layers (~20&ndash;80 nm), roughly 90% of the wall. Retains the dye and offers a big target for wall drugs.',
+   n:'<b>Thin</b> &mdash; one or a few layers (~2&ndash;7 nm), only ~10% of the wall, tucked inside the periplasm.',
+   note:'Penicillins and cephalosporins block peptidoglycan cross-linking; the cell can no longer hold its shape and lyses. Human cells have no wall &mdash; that gap is <b>selective toxicity</b>.'},
+  {k:'outer',nm:'Outer membrane',region:1,
+   d:'A second lipid bilayer sitting outside the wall &mdash; the defining feature of Gram-negatives.',
+   p:'<b>Absent.</b> Nothing covers the thick peptidoglycan except surface proteins and teichoic acids.',
+   n:'<b>Present.</b> An extra bilayer that acts as a permeability barrier, so many drugs simply cannot pass to reach the wall.',
+   note:'This barrier is why large drugs like <b>vancomycin</b> cannot treat Gram-negatives &mdash; the molecule cannot cross the outer membrane to reach the peptidoglycan.'},
+  {k:'lps',nm:'LPS / endotoxin',region:1,
+   d:'Lipopolysaccharide studs the outer face of the outer membrane; its lipid-A anchor is the toxic part.',
+   p:'<b>Absent.</b> Gram-positives carry no LPS.',
+   n:'<b>Present.</b> The lipid-A portion is <b>endotoxin</b> &mdash; heat-stable and released as the cell breaks apart.',
+   note:'Released lipid-A can drive fever, vasodilation, hypotension and <b>septic shock</b>. It is a key reason Gram-negative bacteremia can deteriorate so fast.'},
+  {k:'teichoic',nm:'Teichoic acids',region:1,
+   d:'Long negatively charged chains woven through the wall (wall teichoic acid) or anchored to the membrane (lipoteichoic acid).',
+   p:'<b>Present.</b> They add negative surface charge, help regulate the wall, and can provoke a strong inflammatory response.',
+   n:'<b>Absent.</b> Gram-negatives rely on LPS in the outer membrane instead.'},
+  {k:'periplasm',nm:'Periplasmic space',region:1,
+   d:'The gel-filled gap where secreted enzymes do their work.',
+   p:'<b>Small.</b> Little room between the thick wall and the plasma membrane.',
+   n:'<b>Prominent.</b> A roomy compartment between the two membranes that houses the thin wall and concentrates secreted enzymes.',
+   note:'<b>&beta;-lactamase</b> enzymes gather in the Gram-negative periplasm and destroy penicillins before they reach the wall &mdash; a major mechanism of <b>antibiotic resistance</b>.'},
+  {k:'membrane',nm:'Plasma (inner) membrane',region:1,
+   d:'The phospholipid bilayer every bacterium shares, controlling what enters and leaves the cell.',
+   p:'<b>Present</b> &mdash; a single plasma membrane just beneath the wall.',
+   n:'<b>Present</b> &mdash; the inner membrane, mirrored by the outer membrane above it.'},
+  {k:'bugs',nm:'Who is who',
+   d:'Matching the two designs to organisms you will meet on a ward.',
+   p:'<b>Staphylococcus, Streptococcus, Enterococcus, Clostridioides, Listeria.</b>',
+   n:'<b>E. coli, Klebsiella, Pseudomonas, Neisseria, Salmonella, H. influenzae.</b>',
+   note:'Reporting "Gram-positive cocci in clusters" vs "Gram-negative rods" instantly narrows the likely bug and the drug.'}
+ ];
+ var REG={wall:1,outer:1,lps:1,teichoic:1,periplasm:1,membrane:1};
+ var cell='p', sel='wall';
+ function byKey(k){ for(var i=0;i<F.length;i++){ if(F[i].k===k) return F[i]; } return F[0]; }
+
+ function band(y0,y1,on,col){ return on?'<rect x="14" y="'+y0+'" width="212" height="'+(y1-y0)+'" rx="9" fill="'+col+'" opacity="0.14"/>':''; }
+ function mem(y,col,hi){ var s='',n=14,w=200,x0=20,top=y+3,bot=y+15;
+   for(var i=0;i<n;i++){ var cx=x0+(i+0.5)*(w/n);
+     s+='<circle cx="'+cx+'" cy="'+top+'" r="'+(hi?4.2:3.2)+'" fill="'+col+'"/>';
+     s+='<line x1="'+cx+'" y1="'+(top+3)+'" x2="'+cx+'" y2="'+(top+7)+'" stroke="'+col+'" stroke-width="1.4"/>';
+     s+='<line x1="'+cx+'" y1="'+(bot-7)+'" x2="'+cx+'" y2="'+(bot-3)+'" stroke="'+col+'" stroke-width="1.4"/>';
+     s+='<circle cx="'+cx+'" cy="'+bot+'" r="'+(hi?4.2:3.2)+'" fill="'+col+'"/>'; }
+   return s; }
+ function pepto(yTop,yBot,col,hi){ var s='',x0=20,w=200,rows=Math.max(1,Math.round((yBot-yTop)/13));
+   for(var r=0;r<rows;r++){ var y=yTop+6+r*13;
+     s+='<line x1="'+x0+'" y1="'+y+'" x2="'+(x0+w)+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+(hi?5:3.4)+'" stroke-linecap="round"/>'; }
+   for(var q=0;q<rows-1;q++){ var y1=yTop+6+q*13, y2=y1+13;
+     for(var c=0;c<8;c++){ var x=x0+13+c*25; s+='<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="'+col+'" stroke-width="'+(hi?3:2)+'"/>'; } }
+   return s; }
+
+ function drawP(col){ var s='';
+   s+='<text x="120" y="12" text-anchor="middle" font-size="9.5" fill="#a79bbb" font-weight="700" letter-spacing="0.5">▲ outside the cell</text>';
+   s+='<rect x="20" y="158" width="200" height="60" rx="8" fill="#efe9f6"/>';
+   s+='<rect x="20" y="128" width="200" height="12" fill="#f3eefb"/>';
+   s+=band(20,44,sel==='teichoic',col)+band(44,128,sel==='wall',col)+band(128,140,sel==='periplasm',col)+band(140,158,sel==='membrane',col);
+   s+='<text x="120" y="192" text-anchor="middle" font-size="10" fill="#837a94" font-weight="700">cytoplasm</text>';
+   s+='<g class="rgn" data-k="wall">'+pepto(44,128,'#c08a2e',sel==='wall')+'<rect x="14" y="44" width="212" height="84" fill="transparent"/></g>';
+   s+='<g class="rgn" data-k="teichoic">';
+   for(var i=0;i<6;i++){ var x=34+i*33, ty=(sel==='teichoic'?23:28);
+     s+='<line x1="'+x+'" y1="'+ty+'" x2="'+x+'" y2="120" stroke="#b8862f" stroke-width="'+(sel==='teichoic'?4:2.6)+'"/>';
+     s+='<circle cx="'+x+'" cy="'+ty+'" r="'+(sel==='teichoic'?5:3.5)+'" fill="#b8862f"/>'; }
+   s+='<rect x="14" y="18" width="212" height="26" fill="transparent"/></g>';
+   s+='<g class="rgn" data-k="periplasm"><rect x="14" y="128" width="212" height="12" fill="transparent"/></g>';
+   s+='<g class="rgn" data-k="membrane">'+mem(140,'#2f6f9f',sel==='membrane')+'<rect x="14" y="140" width="212" height="20" fill="transparent"/></g>';
+   return s; }
+ function drawN(col){ var s='';
+   s+='<text x="120" y="10" text-anchor="middle" font-size="9.5" fill="#a79bbb" font-weight="700" letter-spacing="0.5">▲ outside the cell</text>';
+   s+='<rect x="20" y="136" width="200" height="82" rx="8" fill="#efe9f6"/>';
+   s+='<rect x="20" y="52" width="200" height="66" fill="#f3eefb"/>';
+   s+=band(14,32,sel==='lps',col)+band(32,52,sel==='outer',col)+band(52,118,sel==='periplasm',col)+band(72,96,sel==='wall',col)+band(118,136,sel==='membrane',col);
+   s+='<text x="120" y="184" text-anchor="middle" font-size="10" fill="#837a94" font-weight="700">cytoplasm</text>';
+   s+='<g class="rgn" data-k="lps">';
+   for(var j=0;j<10;j++){ var lx=26+j*20, ly=(sel==='lps'?15:20);
+     s+='<line x1="'+lx+'" y1="'+ly+'" x2="'+lx+'" y2="34" stroke="#2f9e5b" stroke-width="'+(sel==='lps'?3.4:2.2)+'"/>';
+     s+='<circle cx="'+lx+'" cy="'+ly+'" r="'+(sel==='lps'?4:2.8)+'" fill="#2f9e5b"/>'; }
+   s+='<rect x="14" y="12" width="212" height="22" fill="transparent"/></g>';
+   s+='<g class="rgn" data-k="outer">'+mem(34,'#7a5a8a',sel==='outer')+'<rect x="14" y="32" width="212" height="20" fill="transparent"/></g>';
+   s+='<g class="rgn" data-k="wall">'+pepto(78,92,'#c08a2e',sel==='wall')+'<rect x="14" y="72" width="212" height="24" fill="transparent"/></g>';
+   s+='<g class="rgn" data-k="periplasm"><rect x="14" y="52" width="212" height="66" fill="transparent"/></g>';
+   s+='<g class="rgn" data-k="membrane">'+mem(118,'#2f6f9f',sel==='membrane')+'<rect x="14" y="118" width="212" height="20" fill="transparent"/></g>';
+   return s; }
+
+ function renderList(){
+   $("list").innerHTML=F.map(function(f){
+     return '<button class="it'+(f.k===sel?' on':'')+'" data-k="'+f.k+'"><span><span class="nm">'+f.nm+'</span></span></button>';
+   }).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){ b.onclick=function(){ setSel(b.dataset.k); }; });
+ }
+ function render(){
+   var C=CELL[cell];
+   $("art").innerHTML = cell==='p'?drawP(C.col):drawN(C.col);
+   document.querySelectorAll('#art .rgn').forEach(function(g){
+     g.onclick=function(){ var k=g.dataset.k; if(REG[k]) setSel(k); };
+   });
+   $("cardTitle").innerHTML=C.nm+' envelope';
+   $("gres").innerHTML='<span class="dot" style="background:'+C.dot+'"></span><span>'+C.res+'</span>';
+   $("stage").style.background=C.col;
+   $("stage").innerHTML=C.nm+'<small>'+C.sub+'</small>';
+   document.querySelectorAll('#seg button').forEach(function(b){ b.className=(b.dataset.c===cell?'on':''); });
+   var f=byKey(sel);
+   $("info").innerHTML='<span class="n">'+f.nm+'</span>'+f.d+
+     '<div class="cmp"><div class="gp'+(cell==='p'?' act':'')+'"><span class="hd">Gram-positive</span>'+f.p+'</div>'+
+     '<div class="gn'+(cell==='n'?' act':'')+'"><span class="hd">Gram-negative</span>'+f.n+'</div></div>'+
+     (f.note?'<div class="mnem">'+f.note+'</div>':'');
+   renderList();
+ }
+ function setSel(k){ sel=k; render(); }
+ function setCell(c){ cell=c; render(); }
+ document.querySelectorAll('#seg button').forEach(function(b){ b.onclick=function(){ setCell(b.dataset.c); }; });
+ render();
+})();
+</script>
+</body>
+</html>

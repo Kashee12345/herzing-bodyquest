@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Drag the Points, Watch r</title>
+<meta name="description" content="Drag data points around a live scatterplot and watch the correlation coefficient r and the least-squares line respond in real time. Every number is computed from the points currently on screen.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+#scSvg{touch-action:none;cursor:crosshair;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:56px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles div.rr .vv{color:var(--coral);} .tiles div.r2 .vv{color:var(--green);}
+.cap{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;line-height:1.45;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px;font-size:11px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.lgd i.ln{width:16px;height:0;border-top:2px solid var(--coral);border-radius:0;vertical-align:3px;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.45;}
+.hd{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;margin-bottom:6px;}
+#info .eq{font-size:12.5px;color:var(--teal-dk);background:#e2eff5;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.6;font-variant-numeric:tabular-nums;}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,1fr);}.sl label{font-size:10px;}.row .btn{font-size:12px;padding:10px 4px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 14</div>
+  <h1>Drag the Points, Watch r</h1>
+  <div class="intro">The <b>correlation coefficient r</b> is a single number, between &minus;1 and +1, that measures how tightly a cloud of points hugs a straight line &mdash; and which way that line tilts. The fastest way to feel what it means is to move the cloud yourself. <b>Drag any point</b> on the scatterplot below; tap an empty spot to drop a new one. The number line, the fitted line and every figure on the page recompute from the dots the instant they move.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="scTitle">The scatterplot</h2>
+      <svg id="scSvg" viewBox="0 0 340 276" aria-label="draggable scatterplot with the least-squares line"><g id="scat"></g></svg>
+      <div class="lgd" id="lgd"></div>
+      <div class="cap" id="scCap"></div>
+    </div>
+    <div class="card"><h2>Where r sits, from &minus;1 to +1</h2>
+      <svg viewBox="0 0 340 104" aria-label="a number line from minus one to plus one with the current correlation marked"><g id="meter"></g></svg>
+      <div class="cap" id="mCap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Correlation<small>drag a point to begin</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-v="0" class="on">Positive<small>rises together</small></button>
+        <button data-v="1">None<small>no pattern</small></button>
+        <button data-v="2">Negative<small>falls together</small></button>
+        <button data-v="3">Curved<small>r misses it</small></button>
+      </div>
+      <div class="modeseg" id="mode" style="margin-top:11px;">
+        <button data-m="0">Points only</button>
+        <button data-m="1" class="on">Fit line</button>
+        <button data-m="2">Line + residuals</button>
+      </div>
+      <div class="sl"><label for="nSl">Number of points</label><input type="range" id="nSl" min="4" max="24" step="1" value="12"><span class="nv" id="nVal">12</span></div>
+      <div class="row"><button class="btn" id="samp">&#8635; New sample</button><button class="btn" id="reset">&#8634; Reset shape</button></div>
+      <div class="tiles">
+        <div><span class="lb">Points n</span><span class="vv" id="tN">12</span></div>
+        <div class="rr"><span class="lb">Correlation r</span><span class="vv" id="tR">&mdash;</span></div>
+        <div class="r2"><span class="lb">r&sup2; explained</span><span class="vv" id="tR2">&mdash;</span></div>
+        <div><span class="lb">Line slope</span><span class="vv" id="tB">&mdash;</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>Reading r at a glance.</b> The <b>sign</b> is the tilt: <b>+</b> means the line runs uphill (as x rises, y tends to rise), <b>&minus;</b> means downhill. The <b>size</b> is the grip: near <b>&plusmn;1</b> the points sit almost exactly on the line, near <b>0</b> they scatter into a shapeless blob. Try this: build a tidy uphill line, then drag one point far below the others &mdash; a single stray point can drag r down noticeably, because r feels every point&rsquo;s distance from the trend.</div>
+      <div class="note"><b>Two things r cannot do.</b> First, <b>r only sees straight lines.</b> The <i>Curved</i> preset has a strong, obvious relationship, yet r sits near zero &mdash; always look at the scatterplot, never trust r alone. Second, <b>correlation is not causation.</b> A large r means two variables move together in this sample; it says nothing about whether one <i>causes</i> the other, and a lurking third variable can manufacture a correlation between things that have no direct link at all.</div>
+      <div class="fn" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- seeded PRNG so the page opens the same way every time ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function nrm(r){var u=1-r(),v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+
+ /* ================= four shapes worth seeing ================= */
+ var DS=[
+  {nm:'Positive',xl:'Hours studied',yl:'Exam score',slope:0.72,icpt:16,noise:8,
+   story:'More study hours tend to go with higher scores, so r is positive and the line runs uphill. Remember that a positive correlation only says the two rose together in this sample &mdash; on its own it cannot prove that studying <b>caused</b> the higher scores.'},
+  {nm:'No relationship',xl:'Shoe size',yl:'Exam score',slope:0,icpt:52,noise:20,
+   story:'Shoe size and exam score have no reason to move together, and r sits near zero. Notice that &ldquo;near zero&rdquo; is almost never <i>exactly</i> zero: random samples wobble, so a small non-zero r is exactly what no relationship looks like.'},
+  {nm:'Negative',xl:'Hours of TV',yl:'Exam score',slope:-0.66,icpt:84,noise:8,
+   story:'More television hours go with lower scores here, so r is negative and the fitted line slopes down. Association still is not proof of cause &mdash; free time, motivation or a dozen other factors could be driving both at once.'},
+  {nm:'Curved',xl:'Caffeine (mg)',yl:'Alertness',special:'quad',icpt:96,k:0.031,noise:6,
+   story:'Alertness climbs with caffeine, peaks, then falls &mdash; a clear and strong relationship. Yet r hovers near <b>zero</b>, because r measures only the <b>straight-line</b> part of a pattern. Your eye sees the arch that r is completely blind to.'}
+ ];
+
+ var ds=0,viewIdx=1,nPts=12,seedN=0;
+ var P=[],S={};
+
+ /* ================= generate a shape ================= */
+ function gen(){
+  var D=DS[ds],r=mulberry32(20260720+seedN*7919+ds*104729),i,x,y;
+  P=[];
+  for(i=0;i<nPts;i++){
+    x=8+r()*84;
+    if(D.special==='quad'){ y=D.icpt-D.k*(x-50)*(x-50)+nrm(r)*D.noise; }
+    else { y=D.icpt+D.slope*x+nrm(r)*D.noise; }
+    x=clamp(Math.round(x*10)/10); y=clamp(Math.round(y*10)/10);
+    P.push({x:x,y:y});
+  }
+  compute();
+ }
+ function clamp(v){return v<2?2:(v>98?98:v);}
+
+ /* ================= the statistics, computed live ================= */
+ function compute(){
+  var n=P.length,i,sx=0,sy=0;
+  for(i=0;i<n;i++){sx+=P[i].x;sy+=P[i].y;}
+  var mx=sx/n,my=sy/n,sxx=0,syy=0,sxy=0,dx,dy;
+  for(i=0;i<n;i++){dx=P[i].x-mx;dy=P[i].y-my;sxx+=dx*dx;syy+=dy*dy;sxy+=dx*dy;}
+  var r=(sxx>1e-9&&syy>1e-9)?sxy/Math.sqrt(sxx*syy):0;
+  if(r>1)r=1; if(r<-1)r=-1;
+  var b=(sxx>1e-9)?sxy/sxx:0, a=my-b*mx;
+  S={n:n,mx:mx,my:my,sxx:sxx,syy:syy,sxy:sxy,r:r,b:b,a:a,vert:(sxx<=1e-9),flat:(syy<=1e-9)};
+ }
+
+ /* ================= plot geometry ================= */
+ var PX0=38,PX1=326,PYT=14,PYB=244,VBH=276;
+ function xOf(x){return PX0+x/100*(PX1-PX0);}
+ function yOf(y){return PYB-y/100*(PYB-PYT);}
+
+ function drawScatter(){
+  var s='',i,tv,tx,ty;
+  s+='<clipPath id="pc"><rect x="'+PX0+'" y="'+PYT+'" width="'+(PX1-PX0)+'" height="'+(PYB-PYT)+'"/></clipPath>';
+  /* gridlines + ticks */
+  for(tv=0;tv<=100;tv+=25){
+    tx=xOf(tv); ty=yOf(tv);
+    s+='<line x1="'+tx.toFixed(1)+'" y1="'+PYT+'" x2="'+tx.toFixed(1)+'" y2="'+PYB+'" stroke="#eef3f6" stroke-width="1"/>';
+    s+='<line x1="'+PX0+'" y1="'+ty.toFixed(1)+'" x2="'+PX1+'" y2="'+ty.toFixed(1)+'" stroke="#eef3f6" stroke-width="1"/>';
+    s+='<text x="'+tx.toFixed(1)+'" y="'+(PYB+13)+'" font-size="8.6" fill="#95a3aa" font-weight="600" text-anchor="middle">'+tv+'</text>';
+    s+='<text x="'+(PX0-6)+'" y="'+(ty+3).toFixed(1)+'" font-size="8.6" fill="#95a3aa" font-weight="600" text-anchor="end">'+tv+'</text>';
+  }
+  /* frame */
+  s+='<rect x="'+PX0+'" y="'+PYT+'" width="'+(PX1-PX0)+'" height="'+(PYB-PYT)+'" fill="none" stroke="#b7c7d0" stroke-width="1.3"/>';
+
+  /* residuals (behind everything) */
+  if(viewIdx===2&&!S.vert){
+    for(i=0;i<P.length;i++){
+      var yh=S.a+S.b*P[i].x;
+      s+='<line x1="'+xOf(P[i].x).toFixed(1)+'" y1="'+yOf(P[i].y).toFixed(1)+'" x2="'+xOf(P[i].x).toFixed(1)+'" y2="'+yOf(yh).toFixed(1)+'" stroke="#b8862f" stroke-width="1.3" stroke-dasharray="2 2" opacity="0.85"/>';
+    }
+  }
+  /* least-squares line */
+  if(viewIdx>=1&&!S.vert&&P.length>=2){
+    var yA=S.a+S.b*0, yB=S.a+S.b*100;
+    s+='<g clip-path="url(#pc)"><line x1="'+xOf(0).toFixed(1)+'" y1="'+yOf(yA).toFixed(1)+'" x2="'+xOf(100).toFixed(1)+'" y2="'+yOf(yB).toFixed(1)+'" stroke="#d1495b" stroke-width="2.4"/></g>';
+  }
+  /* mean-point cross: the line always passes through (x-bar, y-bar) */
+  if(viewIdx>=1&&!S.vert){
+    var cx=xOf(S.mx),cy=yOf(S.my);
+    s+='<line x1="'+(cx-5).toFixed(1)+'" y1="'+cy.toFixed(1)+'" x2="'+(cx+5).toFixed(1)+'" y2="'+cy.toFixed(1)+'" stroke="#1c4454" stroke-width="1.3"/>';
+    s+='<line x1="'+cx.toFixed(1)+'" y1="'+(cy-5).toFixed(1)+'" x2="'+cx.toFixed(1)+'" y2="'+(cy+5).toFixed(1)+'" stroke="#1c4454" stroke-width="1.3"/>';
+  }
+  /* the points */
+  for(i=0;i<P.length;i++){
+    var on=(i===ai);
+    s+='<circle cx="'+xOf(P[i].x).toFixed(1)+'" cy="'+yOf(P[i].y).toFixed(1)+'" r="'+(on?6.6:5.4)+'" fill="'+(on?'#b8862f':'#2f6f8a')+'" stroke="#fffdf9" stroke-width="1.4"/>';
+  }
+  /* axis titles */
+  s+='<text x="'+((PX0+PX1)/2)+'" y="'+(VBH-3)+'" font-size="9.4" fill="#78868d" font-weight="700" text-anchor="middle">'+DS[ds].xl+' &rarr;</text>';
+  s+='<text transform="translate(11 '+((PYT+PYB)/2)+') rotate(-90)" font-size="9.4" fill="#78868d" font-weight="700" text-anchor="middle">'+DS[ds].yl+' &rarr;</text>';
+  $("scat").innerHTML=s;
+ }
+
+ /* ================= the r number line ================= */
+ var MX0=26,MX1=314,MY=42;
+ function mpos(r){return MX0+(r+1)/2*(MX1-MX0);}
+ function drawMeter(){
+  var s='',i,r=S.r;
+  /* the bar, two tinted halves */
+  s+='<rect x="'+MX0+'" y="'+(MY-7)+'" width="'+((MX1-MX0)/2)+'" height="14" fill="#f6dfe3"/>';
+  s+='<rect x="'+((MX0+MX1)/2)+'" y="'+(MY-7)+'" width="'+((MX1-MX0)/2)+'" height="14" fill="#dcebf1"/>';
+  s+='<rect x="'+MX0+'" y="'+(MY-7)+'" width="'+(MX1-MX0)+'" height="14" rx="7" fill="none" stroke="#b7c7d0" stroke-width="1.2"/>';
+  /* ticks */
+  var labs=[[-1,'&minus;1'],[-0.5,'&minus;0.5'],[0,'0'],[0.5,'+0.5'],[1,'+1']];
+  for(i=0;i<labs.length;i++){
+    var mx=mpos(labs[i][0]);
+    s+='<line x1="'+mx.toFixed(1)+'" y1="'+(MY-7)+'" x2="'+mx.toFixed(1)+'" y2="'+(MY+7)+'" stroke="#b7c7d0" stroke-width="1.1"/>';
+    s+='<text x="'+mx.toFixed(1)+'" y="'+(MY+22)+'" font-size="9" fill="#78868d" font-weight="700" text-anchor="middle">'+labs[i][1]+'</text>';
+  }
+  s+='<text x="'+mpos(-1)+'" y="'+(MY+34)+'" font-size="8.2" fill="#b23145" font-weight="700" text-anchor="middle">perfect down</text>';
+  s+='<text x="'+mpos(0)+'" y="'+(MY+34)+'" font-size="8.2" fill="#95a3aa" font-weight="700" text-anchor="middle">no line</text>';
+  s+='<text x="'+mpos(1)+'" y="'+(MY+34)+'" font-size="8.2" fill="#255f8a" font-weight="700" text-anchor="middle">perfect up</text>';
+  /* the needle */
+  var bd=band(r),nx=mpos(r);
+  s+='<line x1="'+nx.toFixed(1)+'" y1="'+(MY-18)+'" x2="'+nx.toFixed(1)+'" y2="'+(MY+9)+'" stroke="'+bd.c+'" stroke-width="2.4"/>';
+  s+='<polygon points="'+nx.toFixed(1)+','+(MY+9)+' '+(nx-6).toFixed(1)+','+(MY-4)+' '+(nx+6).toFixed(1)+','+(MY-4)+'" fill="'+bd.c+'"/>';
+  s+='<text x="'+nx.toFixed(1)+'" y="'+(MY-22)+'" font-size="12" fill="'+bd.c+'" font-weight="800" text-anchor="middle">r = '+fr(r)+'</text>';
+  $("meter").innerHTML=s;
+ }
+ function band(r){
+  var a=Math.abs(r);
+  if(a<0.15)return {t:'essentially no',c:'#95a3aa'};
+  if(a<0.35)return {t:'weak',c:'#7a5a8a'};
+  if(a<0.6)return {t:'moderate',c:'#b8862f'};
+  if(a<0.85)return {t:'strong',c:'#2f6f8a'};
+  return {t:'very strong',c:'#1c4454'};
+ }
+
+ /* ================= formatting ================= */
+ function fr(r){var s=(r<0?'&minus;':'')+Math.abs(r).toFixed(3);return s;}
+ function fnum(x,d){return (x<0?'&minus;':'')+Math.abs(x).toFixed(d);}
+
+ /* ================= words ================= */
+ function infoHTML(){
+  var D=DS[ds],r=S.r,bd=band(r),dir=(r>0?'positive':(r<0?'negative':'zero')),h='';
+  var curved=(D.special==='quad'&&Math.abs(r)<0.3);
+
+  if(S.vert){
+   h='<span class="n">r is undefined here</span>'+
+     'Every point shares the same x-value, so x does not vary at all. With no spread in x there is no line to fit and no correlation to measure &mdash; r is simply not defined. Drag a point sideways to give x some spread.';
+   return h;
+  }
+  if(curved){
+   h='<span class="n">A strong pattern that r cannot see</span>'+
+     'The points trace a clear arch, yet r = <b>'+fr(r)+'</b> &mdash; barely different from zero. Nothing is broken: r is built to measure how well a <b>single straight line</b> fits, and no straight line captures a curve that goes up and then down. The rises on the left and the falls on the right cancel out in r&rsquo;s arithmetic. '+
+     '<div class="dd">This is the headline warning of the whole topic: <b>r near zero does not mean &ldquo;no relationship.&rdquo;</b> It means &ldquo;no <i>linear</i> relationship.&rdquo; Only the scatterplot tells you which. Drag the arch into a slope and watch r climb.</div>';
+  }else{
+   h='<span class="n">'+(dir==='zero'?'No linear tilt':'A '+bd.t+' '+dir+' correlation')+'</span>'+
+     'r = <b>'+fr(r)+'</b>. The sign is <b>'+(r>=0?'positive':'negative')+'</b>, so the fitted line runs '+(r>=0?'uphill &mdash; higher x tends to come with higher y':'downhill &mdash; higher x tends to come with lower y')+'. The size, <b>'+Math.abs(r).toFixed(3)+'</b>, puts the grip at <b>'+bd.t+'</b>: '+
+     (Math.abs(r)>=0.85?'the points sit close to the line.':(Math.abs(r)>=0.35?'the points follow the line but scatter around it.':'the cloud is nearly shapeless &mdash; the line barely describes it.'))+
+     '<div class="dd">Grab any gold-highlighted point and pull it away from the trend. As it strays, r shrinks toward zero; line it back up and r heads back toward &plusmn;1. r rewards points that lie on the line and punishes points that miss it.</div>';
+  }
+
+  h+='<div class="eq"><b>r = '+fr(r)+'</b> &nbsp; from &nbsp; r = &Sigma;(x&minus;x&#772;)(y&minus;y&#772;) &divide; &radic;[ &Sigma;(x&minus;x&#772;)&sup2; &middot; &Sigma;(y&minus;y&#772;)&sup2; ]<br>'+
+    'Least-squares line: &nbsp; <b>y&#770; = '+fnum(S.a,1)+(S.b>=0?' + ':' &minus; ')+Math.abs(S.b).toFixed(3)+' &middot; x</b><br>'+
+    'It always passes through the mean point (x&#772;, y&#772;) = ('+S.mx.toFixed(1)+', '+S.my.toFixed(1)+'), marked with the small cross.</div>';
+
+  h+='<div class="loc"><b>What r&sup2; = '+(r*r*100).toFixed(1)+'% means.</b> Squaring r gives the fraction of the <i>variation in y</i> that the straight-line fit accounts for. Here about <b>'+(r*r*100).toFixed(1)+'%</b> of y&rsquo;s spread is explained by the line, leaving <b>'+((1-r*r)*100).toFixed(1)+'%</b> unexplained &mdash; the vertical residual gaps you can show with the toggle above.</div>';
+
+  h+='<div class="dd">'+D.story+'</div>';
+  return h;
+ }
+
+ /* ================= render ================= */
+ function render(){
+  var r=S.r,bd=band(r);
+  $("stage").style.background=(S.vert?'var(--muted)':bd.c);
+  $("stage").innerHTML=(S.vert?'r is undefined':'r = '+fr(r))+
+    '<small>'+(S.vert?'x has no spread &mdash; drag a point sideways'
+      :((Math.abs(r)<0.15?'essentially no linear relationship':bd.t+' '+(r>0?'positive':'negative')+' correlation')+' &middot; n = '+S.n+' points'))+'</small>';
+
+  $("tN").innerHTML=S.n;
+  $("tR").innerHTML=S.vert?'&mdash;':fr(r);
+  $("tR2").innerHTML=S.vert?'&mdash;':(r*r*100).toFixed(1)+'%';
+  $("tB").innerHTML=S.vert?'&mdash;':fnum(S.b,3);
+
+  $("scTitle").innerHTML=DS[ds].yl+' vs '+DS[ds].xl+' &middot; '+S.n+' points';
+  $("lgd").innerHTML='<span><i style="background:#2f6f8a"></i>a data point (drag it)</span>'+
+    '<span><i style="background:#b8862f"></i>the point you last touched</span>'+
+    '<span><i class="ln"></i>least-squares line</span>'+
+    (viewIdx===2?'<span><i style="background:#b8862f"></i>residual (miss from the line)</span>':'')+
+    '<span><i style="background:#1c4454"></i>mean point (x&#772;, y&#772;)</span>';
+  $("scCap").innerHTML='<b>Drag any dot</b> to move it in both directions; <b>tap an empty spot</b> to add a point there. The coral line is the one straight line that makes the total of the squared vertical misses as small as possible &mdash; the <i>least-squares</i> line.';
+
+  $("mCap").innerHTML='r lives on a fixed scale from &minus;1 to +1. The needle shows where this cloud lands right now. Push the points onto a tidy uphill line and the needle slides to +1; a tidy downhill line sends it to &minus;1; a shapeless blob parks it near 0.';
+
+  drawScatter(); drawMeter();
+  $("info").innerHTML=infoHTML();
+
+  $("fnote").innerHTML='The points are drawn with a seeded generator, so the page opens identically every time and <b>&#8635; New sample</b> draws a genuinely new cloud from the same shape. r has no units and does not change if you swap the roles of x and y, but the fitted line and its slope do. r&sup2; is reported as a percentage of the variation in y explained by the linear fit.';
+ }
+
+ /* ================= dragging & tapping the plot ================= */
+ var svg=$("scSvg"),ai=-1,down=false;
+ function toData(cx,cy){
+  var rct=svg.getBoundingClientRect();
+  var px=(cx-rct.left)/rct.width*340, py=(cy-rct.top)/rct.height*VBH;
+  var x=(px-PX0)/(PX1-PX0)*100, y=(PYB-py)/(PYB-PYT)*100;
+  return {x:clamp(Math.round(x*10)/10),y:clamp(Math.round(y*10)/10),px:px,py:py};
+ }
+ function nearest(d){
+  var best=-1,bd=1e9,i,dx,dy,dist;
+  for(i=0;i<P.length;i++){
+    dx=xOf(P[i].x)-d.px; dy=yOf(P[i].y)-d.py; dist=dx*dx+dy*dy;
+    if(dist<bd){bd=dist;best=i;}
+  }
+  return (bd<=22*22)?best:-1;
+ }
+ svg.addEventListener('pointerdown',function(e){
+  var d=toData(e.clientX,e.clientY),k=nearest(d);
+  if(k<0){                       /* empty space: drop a new point */
+    if(P.length>=40)return;
+    P.push({x:d.x,y:d.y}); k=P.length-1; nPts=P.length; $("nSl").value=nPts; $("nVal").innerHTML=nPts;
+  }
+  ai=k; down=true;
+  if(svg.setPointerCapture)svg.setPointerCapture(e.pointerId);
+  compute(); render(); e.preventDefault();
+ });
+ svg.addEventListener('pointermove',function(e){
+  if(!down||ai<0)return;
+  var d=toData(e.clientX,e.clientY);
+  P[ai].x=d.x; P[ai].y=d.y; compute(); render();
+ });
+ function up(){down=false;}
+ svg.addEventListener('pointerup',up);
+ svg.addEventListener('pointercancel',up);
+
+ /* ================= controls ================= */
+ $("nSl").oninput=function(){nPts=+this.value; $("nVal").innerHTML=nPts; ai=-1; gen(); render();};
+ $("samp").onclick=function(){seedN++; ai=-1; gen(); render();};
+ $("reset").onclick=function(){seedN=0; ai=-1; gen(); render();};
+
+ var sg=$("seg").getElementsByTagName('button');
+ for(var j=0;j<sg.length;j++)sg[j].onclick=function(){
+   for(var q=0;q<sg.length;q++)sg[q].className='';
+   this.className='on'; ds=+this.getAttribute('data-v'); seedN=0; ai=-1; gen(); render();
+ };
+ var mg=$("mode").getElementsByTagName('button');
+ for(var m=0;m<mg.length;m++)mg[m].onclick=function(){
+   for(var q=0;q<mg.length;q++)mg[q].className='';
+   this.className='on'; viewIdx=+this.getAttribute('data-m'); render();
+ };
+
+ gen(); render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Cross-Sectional vs. Longitudinal Designs</title>
+<meta name="description" content="An interactive cohort-by-year grid comparing cross-sectional, longitudinal, and sequential research designs in developmental psychology — and where the cohort confound hides.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>
+.wrap{grid-template-columns:0.98fr 1.02fr;}
+#modes button{font-size:12px;padding:10px 4px;line-height:1.2;}
+.plab{font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:2px 0 6px;}
+.seg button small{text-transform:none;}
+.gcap{font-size:12px;color:var(--muted);margin-top:9px;line-height:1.45;text-align:center;}
+.gcap b{color:var(--teal-dk);}
+.key{display:flex;justify-content:center;gap:14px;margin-top:6px;font-size:11px;font-weight:700;color:var(--muted);flex-wrap:wrap;}
+.key i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 9</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 9</div>
+  <h1>Cross-Sectional vs. Longitudinal</h1>
+  <div class="intro">To study how people change with age, a researcher must choose <b>who</b> to test and <b>when</b>. The same grid of people can be sliced three ways &mdash; and each slice answers a different question, with a different hidden cost. Pick a design and watch the grid.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Pick a design</h2>
+    <svg viewBox="0 0 340 262" aria-label="grid of birth cohorts by testing year"><g id="grid"></g></svg>
+    <div class="gcap">Each cell = <b>how old that birth cohort is</b> in that testing year.</div>
+    <div class="key"><span><i style="background:#2f6f9f"></i>cross-sectional</span><span><i style="background:#a1466b"></i>longitudinal</span><span><i style="background:#7a5a8a"></i>sequential</span></div>
+  </div></div>
+  <div>
+    <div class="modeseg" id="modes">
+      <button data-m="cross" class="on">Cross-sectional</button>
+      <button data-m="long">Longitudinal</button>
+      <button data-m="seq">Sequential</button>
+    </div>
+    <div id="stage">Three ways to study change<small>choose a design above</small></div>
+    <div class="card">
+      <div id="picker"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var cohorts=[1950,1960,1970,1980,1990];   // rows = birth cohorts
+ var years=[2000,2010,2020];               // columns = testing years
+ var state={mode:'cross',cy:2,lc:2};        // default: test 2020, follow cohort 1970
+ var META={
+   cross:{name:'Cross-sectional design',sub:'different people · one moment',color:'#2f6f9f',dark:'#24597f',light:'#e9f0f6'},
+   long :{name:'Longitudinal design',sub:'same people · many moments',color:'#a1466b',dark:'#5e2846',light:'#f8e2ec'},
+   seq  :{name:'Sequential design',sub:'many cohorts · followed over time',color:'#7a5a8a',dark:'#5b4568',light:'#efeaf3'}
+ };
+ // grid geometry
+ var startX=58,colW=90,cellW=84,startY=26,rowH=46;
+
+ function draw(){
+   var m=META[state.mode],s='';
+   // column headers (testing years)
+   for(var c=0;c<years.length;c++){
+     var cxh=startX+c*colW+cellW/2, selC=(state.mode==='cross'&&c===state.cy);
+     s+='<text x="'+cxh+'" y="16" text-anchor="middle" font-size="13" font-weight="800" fill="'+(selC?m.dark:'#63505a')+'">'+years[c]+'</text>';
+   }
+   s+='<text x="30" y="15" text-anchor="middle" font-size="9" font-weight="700" fill="#94818b">BORN</text>';
+   // rows
+   for(var r=0;r<cohorts.length;r++){
+     var ry=startY+r*rowH, selR=(state.mode==='long'&&r===state.lc);
+     s+='<text x="30" y="'+(ry+25)+'" text-anchor="middle" font-size="11.5" font-weight="800" fill="'+(selR?m.dark:'#94818b')+'">'+cohorts[r]+'</text>';
+     for(var c2=0;c2<years.length;c2++){
+       var x=startX+c2*colW, age=years[c2]-cohorts[r], fill,stroke,tcol,sw=1.5;
+       var diag=(state.mode==='seq'&&age===50);
+       if(state.mode==='seq'){
+         fill=diag?m.color:m.light; stroke=diag?'#b8862f':'#d8c7e0'; tcol=diag?'#fff':'#5b4568'; sw=diag?3:1.5;
+       } else {
+         var on=(state.mode==='cross')?(c2===state.cy):(r===state.lc);
+         fill=on?m.color:'#fbf2f6'; stroke=on?m.dark:'#eee0e6'; tcol=on?'#fff':'#94818b';
+       }
+       s+='<g class="cell" data-r="'+r+'" data-c="'+c2+'" style="cursor:pointer">';
+       s+='<rect x="'+x+'" y="'+ry+'" width="'+cellW+'" height="40" rx="9" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'"/>';
+       s+='<text x="'+(x+cellW/2)+'" y="'+(ry+20)+'" text-anchor="middle" font-size="15" font-weight="800" fill="'+tcol+'" pointer-events="none">'+age+'</text>';
+       s+='<text x="'+(x+cellW/2)+'" y="'+(ry+32)+'" text-anchor="middle" font-size="8" font-weight="700" opacity="0.82" fill="'+tcol+'" pointer-events="none">years old</text>';
+       s+='</g>';
+     }
+   }
+   return s;
+ }
+
+ function pickerHTML(){
+   if(state.mode==='cross'){
+     return '<div class="plab">Testing year (one snapshot)</div><div class="seg" id="pk">'+years.map(function(y,i){
+       return '<button data-i="'+i+'" class="'+(i===state.cy?'on':'')+'">'+y+'<small>tested once</small></button>';}).join('')+'</div>';
+   }
+   if(state.mode==='long'){
+     return '<div class="plab">Cohort to follow over time</div><div class="seg" id="pk">'+cohorts.map(function(c,i){
+       return '<button data-i="'+i+'" class="'+(i===state.lc?'on':'')+'">'+c+'<small>born</small></button>';}).join('')+'</div>';
+   }
+   return '<div class="mnem"><b>Nothing to pick:</b> a sequential study runs every row and column at once. Tap any <b>cell</b> to inspect it, and read the <b>gold diagonal</b> to compare equal ages across cohorts.</div>';
+ }
+
+ function infoHTML(){
+   if(state.mode==='cross'){
+     var y=years[state.cy], ag=cohorts.map(function(c){return y-c;});
+     return '<span class="n">Cross-sectional design</span>'+
+       'Test people of <b>different ages at a single point in time</b>, then compare the age groups. It is fast and inexpensive &mdash; no waiting, no drop-out &mdash; and captures a wide age range in one study.'+
+       '<div class="dd">In <b>'+y+'</b> you test people aged <b>'+ag.join(', ')+'</b> all at once &mdash; yet the oldest were born in <b>'+cohorts[0]+'</b> and the youngest in <b>'+cohorts[cohorts.length-1]+'</b>.</div>'+
+       '<div class="note"><b>Cohort effect:</b> age is tangled up with generation. Different birth cohorts differ in schooling, nutrition, and historical experience, so an apparent &ldquo;change with age&rdquo; may really be a difference <b>between generations</b>.</div>'+
+       '<div class="loc">Early cross-sectional data overstated the decline of intelligence in adulthood &mdash; older cohorts had simply received less formal schooling.</div>';
+   }
+   if(state.mode==='long'){
+     var co=cohorts[state.lc], a=years.map(function(yr){return yr-co;});
+     return '<span class="n">Longitudinal design</span>'+
+       'Follow the <b>same people repeatedly</b> across years or decades. Because each person is compared with their earlier self, it reveals <b>true within-person change</b> and individual developmental paths.'+
+       '<div class="dd">The cohort <b>born '+co+'</b> is re-tested as it ages &mdash; <b>'+a.join(' &rarr; ')+'</b> across <b>'+years.join(', ')+'</b>.</div>'+
+       '<div class="note"><b>The price:</b> it is slow and costly, participants drop out over time (<b>attrition</b>), repeated testing brings <b>practice effects</b>, and the findings apply mainly to that one cohort.</div>'+
+       '<div class="loc">Terman&rsquo;s Study of the Gifted (begun 1921) followed children across their lives; the Seattle Longitudinal Study (Schaie, 1956) tracked adult cognition for decades.</div>';
+   }
+   return '<span class="n">Sequential design</span>'+
+     'Combine the two: test <b>several cohorts</b> and <b>follow each over time</b>. Comparing across rows, columns, and diagonals lets researchers <b>separate the effects of age, cohort, and time of measurement</b> &mdash; and it is faster than a pure longitudinal study.'+
+     '<div class="dd">Read a <b>column</b> for a cross-sectional slice, a <b>row</b> for a longitudinal one, and the <b>gold diagonal</b> to compare people at the <b>same age (50)</b> from three different cohorts.</div>'+
+     '<div class="mnem"><b>Best of both:</b> the Seattle Longitudinal Study (K.&nbsp;Warner Schaie) used a sequential design to show that earlier cross-sectional work had mistaken a <b>cohort effect</b> for genuine cognitive aging.</div>';
+ }
+
+ function renderAll(){
+   var m=META[state.mode];
+   var st=$("stage"); st.style.background=m.color; st.innerHTML=m.name+'<small>'+m.sub+'</small>';
+   $("cardTitle").innerHTML=m.name;
+   $("grid").innerHTML=draw();
+   document.querySelectorAll('#grid .cell').forEach(function(g){
+     g.onclick=function(){
+       var r=+g.getAttribute('data-r'), c=+g.getAttribute('data-c');
+       if(state.mode==='cross'){state.cy=c;} else if(state.mode==='long'){state.lc=r;} else {return;}
+       renderAll();
+     };
+   });
+   document.querySelectorAll('#modes button').forEach(function(b){ b.className=(b.getAttribute('data-m')===state.mode?'on':''); });
+   $("picker").innerHTML=pickerHTML();
+   document.querySelectorAll('#pk button').forEach(function(b){
+     b.onclick=function(){ var i=+b.getAttribute('data-i'); if(state.mode==='cross'){state.cy=i;} else if(state.mode==='long'){state.lc=i;} renderAll(); };
+   });
+   $("info").innerHTML=infoHTML();
+ }
+
+ document.querySelectorAll('#modes button').forEach(function(b){
+   b.onclick=function(){ state.mode=b.getAttribute('data-m'); renderAll(); };
+ });
+ renderAll();
+})();
+</script>
+</body>
+</html>

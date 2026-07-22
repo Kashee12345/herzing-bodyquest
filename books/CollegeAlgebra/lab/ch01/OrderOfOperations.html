@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>One Operation at a Time</title>
+<meta name="description" content="Step through an expression one operation at a time, then re-run it in the wrong order and watch the answer change. An interactive order-of-operations machine.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.86fr 1.14fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.modeseg{display:grid;grid-template-columns:repeat(4,1fr);}
+@media (max-width:560px){.modeseg{grid-template-columns:repeat(2,1fr);}}
+.modeseg button{font-size:12px;padding:9px 4px;line-height:1.25;}
+.modeseg button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:2px;font-family:var(--math);}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+.seg button small{font-family:var(--sans);}
+#mb{min-height:214px;display:flex;flex-direction:column;justify-content:center;margin-top:12px;}
+.dl{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:7px 2px;border-bottom:1px dashed var(--line);}
+.dl:last-child{border-bottom:none;}
+.mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.5;}
+.mx sup{font-size:.62em;vertical-align:super;}
+.dl.cur .mx{font-size:21px;color:var(--ink);font-weight:600;}
+.pl{flex:none;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);white-space:nowrap;}
+.dl.cur .pl{color:var(--gold);}
+.dl.cur.wrong .pl{color:var(--coral);}
+.nv{background:#e6e8f5;border-radius:4px;padding:0 4px;color:var(--teal-dk);font-weight:700;}
+.wrong .nv,.cur.wrong .nv{background:#fae5e8;color:#b23145;}
+.dl:not(.cur) .nv{background:transparent;padding:0;color:var(--soft);font-weight:600;}
+.tg{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.dl:not(.cur) .tg{background:transparent;box-shadow:none;padding:0;}
+.ans{text-align:center;font-family:var(--math);font-size:12.5px;color:var(--muted);margin-top:9px;}
+.ans b{font-size:17px;color:var(--teal-dk);}
+.ans.wrong b{color:#b23145;}
+.gaptxt{font-size:12.5px;text-align:center;color:var(--soft);margin-top:8px;line-height:1.5;}
+.gaptxt b{color:var(--teal-dk);font-family:var(--math);}
+.row .btn.wide{flex:1.3;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 1</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 1</div>
+  <h1>One Operation at a Time</h1>
+  <div class="intro">An expression is not a sentence &mdash; you do <b>not</b> just read it left to right. Step through each problem one operation at a time, then re-run the very same expression in the <b>wrong order</b> and watch the answer change.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="ladTitle">The priority ladder</h2>
+      <svg viewBox="0 0 240 210" aria-label="order of operations priority ladder"><g id="lad"></g></svg>
+      <div class="mnem"><b>The two rules.</b> (1) Work down the ladder &mdash; finish every operation on a rung before you drop to the next. (2) Within one rung, operations are <b>equal</b>; do them <b>left to right</b>.</div>
+    </div>
+    <div class="card"><h2>Where the two paths land</h2>
+      <svg viewBox="0 0 240 96" aria-label="number line comparing the two answers"><g id="nl"></g></svg>
+      <div class="gaptxt" id="gap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Pick an expression<small>then press Next &rsaquo;</small></div>
+    <div class="card">
+      <div class="modeseg" id="probs"></div>
+      <div class="seg" id="paths" style="margin-top:10px;">
+        <button data-p="ok">Correct order<small>follow the ladder</small></button>
+        <button data-p="alt">Reordered<small>the tempting slip</small></button>
+      </div>
+      <div id="mb"></div>
+      <div class="ans" id="ansline"></div>
+      <div id="info"></div>
+      <div class="note" id="warn" style="display:none;"></div>
+      <div class="row">
+        <button class="btn" id="prev">&lsaquo; Prev</button>
+        <button class="btn wide" id="play">&#9654; Run it</button>
+        <button class="btn solid" id="next">Next &rsaquo;</button>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var TEAL='#43458f', TEALDK='#262a5c', CORAL='#d1495b';
+
+ var TIERS=[
+  {n:'Grouping',s:'( ) [ ] — clear the inside'},
+  {n:'Exponents',s:'powers and roots'},
+  {n:'Multiply · Divide',s:'equal rank → left to right'},
+  {n:'Add · Subtract',s:'equal rank → left to right'}
+ ];
+
+ var P=[
+  {k:'p1', t:'Multiply outranks add', sub:'8 + 4 &times; 3',
+   ok:{ans:20, ansTxt:'20', R:[
+    {h:'8 + <span class="tg">4 &times; 3</span>', op:'given', tier:-1,
+     w:'No grouping symbols, no exponents. The highest-ranking operation actually <i>present</i> is <b>&times;</b> &mdash; so it goes first, even though it sits to the <i>right</i> of the +.'},
+    {h:'<span class="tg">8 + <b class="nv">12</b></span>', op:'4 &times; 3 = 12', tier:2,
+     w:'Multiply: 4 &times; 3 = <b>12</b>. Look at what did <i>not</i> happen &mdash; the 8 never moved. This expression is really <b>8 plus one single thing</b>, and that thing is 4 &times; 3.'},
+    {h:'<b class="nv">20</b>', op:'8 + 12 = 20', tier:3,
+     w:'Only addition is left: 8 + 12 = <b>20</b>. The expression has collapsed to one number, so you are finished.'}
+   ]},
+   alt:{ans:36, ansTxt:'36', R:[
+    {h:'<span class="tg">8 + 4</span> &times; 3', op:'given', tier:-1,
+     w:'Now suppose we read it like a sentence &mdash; straight across, left to right. The + comes first on the page, so we do it first.'},
+    {h:'<span class="tg"><b class="nv">12</b> &times; 3</span>', op:'8 + 4 = 12', tier:3, x:2,
+     w:'Adding first fuses the 8 and the 4 into a single number. But the 4 was never a stand-alone term &mdash; it was already spoken for by the &times;. We just tripled something that was never supposed to be tripled.'},
+    {h:'<b class="nv">36</b>', op:'12 &times; 3 = 36', tier:2,
+     w:'12 &times; 3 = <b>36</b>. Same symbols, same order on the page, <b>different answer</b> &mdash; because a different grouping was assumed.'}
+   ]},
+   why:'Multiplication is repeated addition, so 4 &times; 3 is already a finished quantity before the + ever gets a turn. Ranking &times; above + is what lets us write 8 + 4 &times; 3 without a single parenthesis and still mean exactly one thing.'},
+
+  {k:'p2', t:'A tie is broken left to right', sub:'36 &divide; 6 &times; 2 + 5',
+   ok:{ans:17, ansTxt:'17', R:[
+    {h:'<span class="tg">36 &divide; 6</span> &times; 2 + 5', op:'given', tier:-1,
+     w:'&times; and &divide; sit on the <b>same rung</b> &mdash; neither outranks the other. When two operations tie, the tiebreaker is position: do the <b>leftmost</b> one first. Here that is the &divide;.'},
+    {h:'<span class="tg"><b class="nv">6</b> &times; 2</span> + 5', op:'36 &divide; 6 = 6', tier:2,
+     w:'36 &divide; 6 = <b>6</b>. Still on the multiply/divide rung, so stay there &mdash; the + waits.'},
+    {h:'<span class="tg"><b class="nv">12</b> + 5</span>', op:'6 &times; 2 = 12', tier:2,
+     w:'6 &times; 2 = <b>12</b>. That rung is now empty, so we may finally drop to add/subtract.'},
+    {h:'<b class="nv">17</b>', op:'12 + 5 = 17', tier:3,
+     w:'12 + 5 = <b>17</b>.'}
+   ]},
+   alt:{ans:8, ansTxt:'8', R:[
+    {h:'36 &divide; <span class="tg">6 &times; 2</span> + 5', op:'given', tier:-1,
+     w:'Here is the single most common misreading of PEMDAS: the letters spell <b>M</b> before <b>D</b>, so it looks like every multiplication must happen before any division. Let us follow that reading and see.'},
+    {h:'<span class="tg">36 &divide; <b class="nv">12</b></span> + 5', op:'6 &times; 2 = 12', tier:2, lr:1,
+     w:'Multiplying first quietly puts a parenthesis where there was none: it turns the problem into 36 &divide; (6 &times; 2). The 6 got attached to the 2 instead of staying with the 36 it was dividing.'},
+    {h:'<span class="tg"><b class="nv">3</b> + 5</span>', op:'36 &divide; 12 = 3', tier:2,
+     w:'36 &divide; 12 = <b>3</b>, not 6. The whole rest of the problem is now built on a different number.'},
+    {h:'<b class="nv">8</b>', op:'3 + 5 = 8', tier:3,
+     w:'3 + 5 = <b>8</b>. Off by 9 &mdash; from one tie broken the wrong way.'}
+   ]},
+   why:'PEMDAS is a list of <b>four ranks</b>, not six steps in a queue: P, E, then (M and D together), then (A and S together). Some books write it as <b>GEMS</b> &mdash; Grouping, Exponents, Multiply-or-divide, Subtract-or-add &mdash; precisely to stop the M-before-D mistake.'},
+
+  {k:'p3', t:'The power belongs to the whole group', sub:'2 + 3 &times; (7 &minus; 4)<sup>2</sup>',
+   ok:{ans:29, ansTxt:'29', R:[
+    {h:'2 + 3 &times; (<span class="tg">7 &minus; 4</span>)<sup>2</sup>', op:'given', tier:-1,
+     w:'Grouping symbols are the top rung. Nothing from outside may touch a parenthesis until the inside has collapsed to a single number.'},
+    {h:'2 + 3 &times; <span class="tg">(<b class="nv">3</b>)<sup>2</sup></span>', op:'7 &minus; 4 = 3', tier:0,
+     w:'Inside is done: 7 &minus; 4 = <b>3</b>. Now, and only now, is the exponent allowed to act &mdash; and what it acts on is that finished 3.'},
+    {h:'2 + <span class="tg">3 &times; <b class="nv">9</b></span>', op:'(3)<sup>2</sup> = 9', tier:1,
+     w:'Why 9? An exponent is a counter for repeated multiplication: 3<sup>2</sup> means <b>3 &times; 3</b>, which is 9. Writing the power out longhand is always the safest way to check yourself.'},
+    {h:'<span class="tg">2 + <b class="nv">27</b></span>', op:'3 &times; 9 = 27', tier:2,
+     w:'Down a rung: 3 &times; 9 = <b>27</b>.'},
+    {h:'<b class="nv">29</b>', op:'2 + 27 = 29', tier:3,
+     w:'2 + 27 = <b>29</b>.'}
+   ]},
+   alt:{ans:-25, ansTxt:'&minus;25', R:[
+    {h:'2 + 3 &times; (7 &minus; <span class="tg">4</span>)<sup>2</sup>', op:'given', tier:-1,
+     w:'The slip: &ldquo;E comes before P, so square something first.&rdquo; The only thing that looks squareable is the 4 sitting right next to it.'},
+    {h:'2 + 3 &times; (7 &minus; <b class="nv">16</b>)', op:'4<sup>2</sup> = 16', tier:1, x:0,
+     w:'But that 2 was printed <b>outside</b> the closing parenthesis. It squares the entire group (7 &minus; 4), not the 4 by itself. Grouping outranks exponents, so the inside had to be cleared first.'},
+    {h:'2 + <span class="tg">3 &times; <b class="nv">(&minus;9)</b></span>', op:'7 &minus; 16 = &minus;9', tier:0,
+     w:'7 &minus; 16 = <b>&minus;9</b>. The value inside has swung negative, and every later step inherits that sign.'},
+    {h:'<span class="tg">2 + <b class="nv">(&minus;27)</b></span>', op:'3 &times; (&minus;9) = &minus;27', tier:2,
+     w:'3 &times; (&minus;9) = <b>&minus;27</b>.'},
+    {h:'<b class="nv">&minus;25</b>', op:'2 + (&minus;27) = &minus;25', tier:3,
+     w:'2 + (&minus;27) = <b>&minus;25</b>. Not just a different number &mdash; a different <i>sign</i>.'}
+   ]},
+   why:'Position on the page decides what an exponent owns. In (7 &minus; 4)<sup>2</sup> the base is the whole group, so it means (7 &minus; 4)(7 &minus; 4) = 3 &times; 3 = 9. In 7 &minus; 4<sup>2</sup> the base is only the 4, giving 7 &minus; 16 = &minus;9. Same digits, different base &mdash; the parentheses are doing real work.'},
+
+  {k:'p4', t:'The rules also apply inside', sub:'24 &divide; (10 &minus; 2 &times; 3) &minus; 3<sup>2</sup>',
+   ok:{ans:-3, ansTxt:'&minus;3', R:[
+    {h:'24 &divide; (10 &minus; <span class="tg">2 &times; 3</span>) &minus; 3<sup>2</sup>', op:'given', tier:-1,
+     w:'Start inside the parentheses &mdash; but the ladder does not switch off in there. Inside the group, &times; still outranks &minus;.'},
+    {h:'24 &divide; (<span class="tg">10 &minus; <b class="nv">6</b></span>) &minus; 3<sup>2</sup>', op:'2 &times; 3 = 6', tier:2,
+     w:'2 &times; 3 = <b>6</b>. Think of a parenthesis as a small, complete problem of its own, solved by the same four ranks.'},
+    {h:'24 &divide; <b class="nv">4</b> &minus; <span class="tg">3<sup>2</sup></span>', op:'10 &minus; 6 = 4', tier:0,
+     w:'10 &minus; 6 = <b>4</b>, and the group is now a single number, so the parentheses have done their job and can be dropped. Top rung cleared &mdash; next is exponents.'},
+    {h:'<span class="tg">24 &divide; 4</span> &minus; <b class="nv">9</b>', op:'3<sup>2</sup> = 9', tier:1,
+     w:'3<sup>2</sup> = 3 &times; 3 = <b>9</b>. Note it is <i>subtracted</i>, so we are heading below zero.'},
+    {h:'<span class="tg"><b class="nv">6</b> &minus; 9</span>', op:'24 &divide; 4 = 6', tier:2,
+     w:'24 &divide; 4 = <b>6</b>.'},
+    {h:'<b class="nv">&minus;3</b>', op:'6 &minus; 9 = &minus;3', tier:3,
+     w:'6 &minus; 9 = <b>&minus;3</b>. A perfectly good answer &mdash; order of operations has no objection to negative results.'}
+   ]},
+   alt:{ans:-8, ansTxt:'&minus;8', R:[
+    {h:'24 &divide; (<span class="tg">10 &minus; 2</span> &times; 3) &minus; 3<sup>2</sup>', op:'given', tier:-1,
+     w:'Inside a parenthesis it feels natural to just sweep left to right. Let us try it: 10 &minus; 2 first.'},
+    {h:'24 &divide; (<span class="tg"><b class="nv">8</b> &times; 3</span>) &minus; 3<sup>2</sup>', op:'10 &minus; 2 = 8', tier:3, x:2,
+     w:'The parentheses tell you <i>when</i> to work on this piece, not <i>how</i>. Inside them the ranking still holds, and 2 &times; 3 outranked the subtraction.'},
+    {h:'24 &divide; <b class="nv">24</b> &minus; <span class="tg">3<sup>2</sup></span>', op:'8 &times; 3 = 24', tier:2,
+     w:'8 &times; 3 = <b>24</b> instead of the correct 4 &mdash; the divisor is six times too large.'},
+    {h:'<span class="tg">24 &divide; 24</span> &minus; <b class="nv">9</b>', op:'3<sup>2</sup> = 9', tier:1,
+     w:'3<sup>2</sup> = <b>9</b>, same as before. This part was never in dispute.'},
+    {h:'<span class="tg"><b class="nv">1</b> &minus; 9</span>', op:'24 &divide; 24 = 1', tier:2,
+     w:'24 &divide; 24 = <b>1</b>.'},
+    {h:'<b class="nv">&minus;8</b>', op:'1 &minus; 9 = &minus;8', tier:3,
+     w:'1 &minus; 9 = <b>&minus;8</b>.'}
+   ]},
+   why:'A grouping symbol is a container, not a licence. It says &ldquo;evaluate me before you use me,&rdquo; and inside that container you climb the exact same ladder. Nested grouping just means innermost container first.'}
+ ];
+
+ var pi=0, path='ok', si=0, timer=null;
+ var seen={}; P.forEach(function(p){seen[p.k]={ok:false,alt:false};});
+
+ function cur(){ return P[pi][path]; }
+ function step(){ return cur().R[si]; }
+
+ /* ---------- priority ladder ---------- */
+ function ladder(){
+   var s=step(), t=s.tier, bad=(path==='alt'), o='';
+   for(var i=0;i<4;i++){
+     var y=6+i*48, on=(t===i), flag=(bad&&on&&(s.x!==undefined||s.lr)), want=(bad&&s.x===i);
+     var fill = on ? (flag?'#fae5e8':'#eef0f8') : '#f7f7fc';
+     var edge = on ? (flag?CORAL:TEAL) : '#e0e2ef';
+     if(on&&!flag) fill=TEAL;
+     o+='<rect x="20" y="'+y+'" width="216" height="40" rx="9" fill="'+fill+'" stroke="'+edge+'" stroke-width="'+(on?2.2:1)+'"'+(want?' stroke-dasharray="5 4"':'')+'/>';
+     if(want) o+='<rect x="20" y="'+y+'" width="216" height="40" rx="9" fill="#fae5e8" opacity=".55"/>';
+     var lab = (on&&!flag) ? '#ffffff' : (on&&flag ? '#b23145' : (want?'#b23145':TEALDK));
+     var sub = (on&&!flag) ? 'rgba(255,255,255,.88)' : (on&&flag?'#b23145':(want?'#b23145':'#7d7f94'));
+     o+='<circle cx="36" cy="'+(y+20)+'" r="10" fill="'+((on&&!flag)?'rgba(255,255,255,.22)':'#e6e8f5')+'"/>';
+     o+='<text x="36" y="'+(y+24)+'" font-size="11" font-weight="800" text-anchor="middle" fill="'+((on&&!flag)?'#fff':TEALDK)+'" font-family="Inter,sans-serif">'+(i+1)+'</text>';
+     o+='<text x="53" y="'+(y+18)+'" font-size="11.5" font-weight="700" fill="'+lab+'" font-family="Inter,sans-serif">'+TIERS[i].n+'</text>';
+     o+='<text x="53" y="'+(y+31)+'" font-size="9" fill="'+sub+'" font-family="Inter,sans-serif">'+TIERS[i].s+'</text>';
+     if(want) o+='<text x="230" y="'+(y+24)+'" font-size="8.5" font-weight="800" text-anchor="end" fill="#b23145" font-family="Inter,sans-serif">SKIPPED</text>';
+     if(on) o+='<polygon points="4,'+(y+13)+' 16,'+(y+20)+' 4,'+(y+27)+'" fill="'+(flag?CORAL:TEAL)+'"/>';
+   }
+   var cap = t<0 ? 'Nothing done yet — scan the whole expression first.'
+     : (bad&&s.lr ? 'Right rung, wrong end — that one was not leftmost.'
+     : (bad&&s.x!==undefined ? 'Dropped past rung '+(s.x+1)+' while work was still left on it.'
+     : 'Working rung '+(t+1)+': '+TIERS[t].n+'.'));
+   o+='<text x="120" y="205" font-size="9" text-anchor="middle" fill="'+((bad&&t>=0&&(s.lr||s.x!==undefined))?'#b23145':'#7d7f94')+'" font-family="Inter,sans-serif">'+cap+'</text>';
+   $('lad').innerHTML=o;
+   $('ladTitle').innerHTML = t<0 ? 'The priority ladder' : 'The priority ladder — rung '+(t+1);
+ }
+
+ /* ---------- number line ---------- */
+ function numline(){
+   var p=P[pi], a=p.ok.ans, b=p.alt.ans;
+   var lo=Math.min(a,b), hi=Math.max(a,b), pad=(hi-lo)*0.3;
+   var mn=lo-pad, mx=hi+pad;
+   var X=function(v){ return 16+(v-mn)/(mx-mn)*208; };
+   var o='<line x1="10" y1="52" x2="230" y2="52" stroke="#d6d9ea" stroke-width="2"/>';
+   o+='<polygon points="230,52 222,48 222,56" fill="#d6d9ea"/><polygon points="10,52 18,48 18,56" fill="#d6d9ea"/>';
+   if(mn<=0&&mx>=0){ var z=X(0); o+='<line x1="'+z+'" y1="44" x2="'+z+'" y2="60" stroke="#b9bdd4" stroke-width="1.5"/><text x="'+z+'" y="70" font-size="8.5" text-anchor="middle" fill="#9a9db4" font-family="Inter,sans-serif">0</text>'; }
+   var xa=X(a), xb=X(b);
+   o+='<line x1="'+Math.min(xa,xb)+'" y1="52" x2="'+Math.max(xa,xb)+'" y2="52" stroke="#c9ccdf" stroke-width="4" stroke-dasharray="3 3"/>';
+   /* correct answer, labelled above */
+   if(seen[p.k].ok){
+     o+='<circle cx="'+xa+'" cy="52" r="'+(path==='ok'?7:5.5)+'" fill="'+TEAL+'" stroke="#fff" stroke-width="2"/>';
+     o+='<text x="'+xa+'" y="28" font-size="14" font-weight="800" text-anchor="middle" fill="'+TEALDK+'" font-family="Georgia,serif">'+p.ok.ansTxt+'</text>';
+     o+='<text x="'+xa+'" y="39" font-size="8" font-weight="700" text-anchor="middle" fill="'+TEAL+'" font-family="Inter,sans-serif">CORRECT ORDER</text>';
+   } else {
+     o+='<circle cx="'+xa+'" cy="52" r="6" fill="#e6e8f5" stroke="#c9ccdf" stroke-width="1.5"/>';
+     o+='<text x="'+xa+'" y="33" font-size="12" font-weight="800" text-anchor="middle" fill="#a9adc4" font-family="Inter,sans-serif">?</text>';
+   }
+   /* reordered answer, labelled below */
+   if(seen[p.k].alt){
+     o+='<circle cx="'+xb+'" cy="52" r="'+(path==='alt'?7:5.5)+'" fill="'+CORAL+'" stroke="#fff" stroke-width="2"/>';
+     o+='<text x="'+xb+'" y="84" font-size="14" font-weight="800" text-anchor="middle" fill="#b23145" font-family="Georgia,serif">'+p.alt.ansTxt+'</text>';
+     o+='<text x="'+xb+'" y="93" font-size="8" font-weight="700" text-anchor="middle" fill="'+CORAL+'" font-family="Inter,sans-serif">REORDERED</text>';
+   } else {
+     o+='<circle cx="'+xb+'" cy="52" r="6" fill="#fae5e8" stroke="#f0c9d0" stroke-width="1.5"/>';
+     o+='<text x="'+xb+'" y="80" font-size="12" font-weight="800" text-anchor="middle" fill="#dba3ad" font-family="Inter,sans-serif">?</text>';
+   }
+   $('nl').innerHTML=o;
+   var both=seen[p.k].ok&&seen[p.k].alt;
+   $('gap').innerHTML = both
+     ? 'One expression, two answers &mdash; <b>'+p.ok.ansTxt+'</b> and <b>'+p.alt.ansTxt+'</b>, a gap of <b>'+Math.abs(a-b)+'</b>. Nothing on the page changed. Only the order did.'
+     : 'Finish <b>both</b> paths to reveal the two answers and the gap between them.';
+ }
+
+ /* ---------- main render ---------- */
+ function render(){
+   var p=P[pi], c=cur(), s=step(), last=(si===c.R.length-1), bad=(path==='alt');
+   if(last) seen[p.k][path]=true;
+
+   $('probs').innerHTML=P.map(function(q,i){
+     return '<button data-i="'+i+'"'+(i===pi?' class="on"':'')+'>'+q.t+'<small>'+q.sub+'</small></button>';}).join('');
+   Array.prototype.forEach.call($('probs').children,function(b){
+     b.onclick=function(){ stop(); pi=+b.dataset.i; si=0; render(); };});
+   Array.prototype.forEach.call($('paths').children,function(b){
+     b.className=(b.dataset.p===path?'on':'');
+     b.onclick=function(){ stop(); path=b.dataset.p; si=0; render(); };});
+
+   var rows='';
+   for(var i=0;i<=si;i++){
+     var r=c.R[i], on=(i===si);
+     rows+='<div class="dl'+(on?' cur':'')+(bad?' wrong':'')+'"><div class="mx">'+r.h+'</div><div class="pl">'+r.op+'</div></div>';
+   }
+   $('mb').innerHTML=rows;
+
+   $('stage').style.background = bad?CORAL:TEAL;
+   $('stage').innerHTML = p.t+'<small>'+(bad?'reordered':'correct order')+' &middot; step '+(si+1)+' of '+c.R.length+'</small>';
+
+   $('ansline').className='ans'+(bad?' wrong':'');
+   $('ansline').innerHTML = last
+     ? (bad?'This path lands on ':'The value of this expression is ')+'<b>'+c.ansTxt+'</b>'
+     : '<span style="opacity:.75">'+(c.R.length-1-si)+' operation'+((c.R.length-1-si)===1?'':'s')+' still to go</span>';
+
+   var extra='';
+   if(last&&!bad) extra='<div class="loc">Why the rank exists: '+p.why+'</div>';
+   if(last&&bad) extra='<div class="loc">Both paths obeyed a rule &mdash; but only one obeyed <b>the</b> rule. Switch back to <b>Correct order</b> and compare the very first move.</div>';
+   $('info').innerHTML='<span class="n">'+(s.op==='given'?'Before any operation':s.op)+'</span>'+s.w+extra;
+
+   if(bad&&(s.x!==undefined||s.lr)){
+     $('warn').style.display='';
+     $('warn').innerHTML= s.lr
+       ? '<b>Same rung, wrong end.</b> &times; and &divide; are equals; so are + and &minus;. A tie is broken by <b>position</b>, always leftmost first &mdash; never by the order of the letters in PEMDAS.'
+       : '<b>Rung '+(s.x+1)+' was not empty yet.</b> You may not drop to a lower rung while a higher one still has work on it.';
+   } else { $('warn').style.display='none'; }
+
+   $('prev').disabled=(si===0);
+   $('next').disabled=last;
+   $('play').disabled=last;
+   ladder(); numline();
+ }
+
+ function stop(){ if(timer){clearInterval(timer);timer=null;} $('play').innerHTML='&#9654; Run it'; }
+ $('prev').onclick=function(){ stop(); if(si>0){si--;render();} };
+ $('next').onclick=function(){ stop(); if(si<cur().R.length-1){si++;render();} };
+ $('play').onclick=function(){
+   if(timer){ stop(); return; }
+   $('play').innerHTML='&#10073;&#10073; Pause';
+   timer=setInterval(function(){
+     if(si<cur().R.length-1){ si++; render(); if(si===cur().R.length-1) stop(); }
+     else stop();
+   },1250);
+ };
+ render();
+})();
+</script>
+</body>
+</html>

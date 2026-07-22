@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>The Cognitive Dissonance Lab</title>
+<meta name="description" content="Interactive demonstration of Leon Festinger's cognitive dissonance theory — set up a clash between attitude and behavior, dial the outside justification, and watch the private attitude shift.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:0.95fr 1.05fr;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:6px;background:linear-gradient(90deg,#a1466b,#f0d0dd);outline:none;margin:8px 0 2px;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--teal);cursor:pointer;box-shadow:0 2px 6px rgba(94,40,70,.3);}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--teal);cursor:pointer;box-shadow:0 2px 6px rgba(94,40,70,.3);}
+.axisName{font-size:12.5px;font-weight:700;color:var(--teal-dk);}
+.slabels{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted);margin-top:1px;}
+.slabels b{color:var(--teal);}
+.readout{display:flex;justify-content:space-between;align-items:center;margin:11px 0 3px;font-size:12.5px;font-weight:700;color:var(--soft);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 12</div>
+  <h1>The Cognitive Dissonance Lab</h1>
+  <div class="intro">In 1957, <b>Leon Festinger</b> argued that holding two clashing thoughts creates an uncomfortable tension &mdash; <b>cognitive dissonance</b> &mdash; that we ease by quietly changing the thought that is easiest to move. Pick a clash, then dial the outside justification and watch the private attitude shift.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Pick a clash</h2>
+    <svg viewBox="0 0 220 224" aria-label="cognitive dissonance illustration"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">Attitude vs. behavior<small>tap a clash to begin</small></div>
+    <div class="card"><div class="list" id="list"></div></div>
+    <div class="card">
+      <div class="axisName" id="axisName">Outside justification</div>
+      <input type="range" id="sld" min="0" max="100" value="50" step="1" aria-label="amount of outside justification">
+      <div class="slabels"><b id="loLab">less</b><b id="hiLab">more</b></div>
+      <div class="readout"><span id="jtxt">Justification: moderate</span><span class="pill high" id="dpill">Dissonance</span></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var SC=[
+  {k:'task',ic:'🔁',nm:'The Boring Task',ct:'Festinger &amp; Carlsmith, 1959',col:'#a1466b',
+   belief:'“That task was dull.”',behavior:'You told a stranger it was fun.',
+   left:'Boring',right:'Enjoyable',axis:'Payment for the lie',lo:'Paid $1',hi:'Paid $20',
+   outLo:'“Hmm &mdash; maybe it really was kind of interesting.”',
+   outMid:'“It was dull&hellip; though perhaps not the worst.”',
+   outHi:'“I only said it for the twenty bucks.”',
+   cite:'In the classic study, students paid <b>$1</b> to praise a boring task later rated it as <b>more enjoyable</b> than those paid $20. The small payment gave no good reason to lie &mdash; so the attitude moved instead.'},
+  {k:'essay',ic:'✍️',nm:'The Counter-Attitudinal Essay',ct:'Cohen, 1962; Festinger, 1957',col:'#7a5a8a',
+   belief:'“I’m against this policy.”',behavior:'You wrote an essay defending it.',
+   left:'Opposed',right:'Supportive',axis:'How free the choice felt',lo:'Freely chose',hi:'Ordered to',
+   outLo:'“I guess I do see some merit in it now.”',
+   outMid:'“I still disagree&hellip; mostly.”',
+   outHi:'“I only wrote it because I was told to.”',
+   cite:'When people feel they <b>freely chose</b> to argue against their own view, they cannot blame an order &mdash; so the private attitude drifts toward the position they defended.'},
+  {k:'toy',ic:'🧸',nm:'The Forbidden Toy',ct:'Aronson &amp; Carlsmith, 1963',col:'#b8862f',
+   belief:'“I love that toy.”',behavior:'You didn’t play with it.',
+   left:'Loves it',right:'Meh',axis:'Severity of the threat',lo:'Mild warning',hi:'Harsh threat',
+   outLo:'“That toy isn’t so great anyway.” (now devalued)',
+   outMid:'“I like it a little less than before.”',
+   outHi:'“I love it &mdash; I just didn’t dare touch it.”',
+   cite:'Children given only a <b>mild</b> warning not to play with a prized toy later <b>liked it less</b>: with no strong external reason to obey, they decided they never wanted it much anyway.'}
+ ];
+ var cur=0, j=50;
+
+ function wrap(t,max,cx,y,lh,fs,col){
+   var words=t.split(' '),lines=[],c='';
+   for(var i=0;i<words.length;i++){ var test=(c+' '+words[i]).replace(/^ /,'');
+     if(test.length<=max){c=test;} else {if(c)lines.push(c); c=words[i];} }
+   if(c)lines.push(c);
+   var ts='';
+   for(var n=0;n<lines.length;n++){ ts+='<tspan x="'+cx+'" dy="'+(n===0?0:lh)+'">'+lines[n]+'</tspan>'; }
+   return '<text x="'+cx+'" y="'+y+'" font-size="'+fs+'" fill="'+col+'" text-anchor="middle" font-family="Inter,sans-serif" font-weight="600">'+ts+'</text>';
+ }
+
+ function band(d){ return d>=66?2:(d>=34?1:0); } // 2=high,1=some,0=low
+
+ function draw(s){
+   var d=100-j;                         // dissonance rises as justification falls
+   var shift=Math.round(d*0.85);        // attitude moves toward the behavior
+   var sc=0.45+d/100*0.95;
+   var face=d>=66?'😖':(d>=34?'😕':'🙂');
+   var out='';
+   // two clashing cognition boxes
+   out+='<rect x="8" y="12" width="90" height="60" rx="11" fill="#fff" stroke="'+s.col+'" stroke-width="2"/>';
+   out+='<rect x="122" y="12" width="90" height="60" rx="11" fill="#fff" stroke="'+s.col+'" stroke-width="2"/>';
+   out+='<text x="53" y="25" font-size="8" fill="#94818b" text-anchor="middle" font-weight="800" letter-spacing="1" font-family="Inter,sans-serif">I BELIEVE</text>';
+   out+='<text x="167" y="25" font-size="8" fill="#94818b" text-anchor="middle" font-weight="800" letter-spacing="1" font-family="Inter,sans-serif">I DID</text>';
+   out+=wrap(s.belief,13,53,40,11,10,'#361f2b');
+   out+=wrap(s.behavior,14,167,40,10,9.5,'#361f2b');
+   // dissonance bolt between the boxes
+   out+='<g transform="translate(110,42) scale('+sc.toFixed(2)+')" opacity="'+(0.3+d/100*0.7).toFixed(2)+'"><polygon points="-5,-15 3,-4 -1,-4 5,15 -6,1 -1,1" fill="#d1495b"/></g>';
+   // the mind, with an expression that reflects the tension
+   out+='<circle cx="110" cy="98" r="20" fill="#fdf1e6" stroke="'+s.col+'" stroke-width="2"/>';
+   out+='<text x="110" y="106" font-size="24" text-anchor="middle">'+face+'</text>';
+   // dissonance gauge
+   out+='<text x="20" y="140" font-size="9" fill="#94818b" font-weight="800" letter-spacing="1" font-family="Inter,sans-serif">DISSONANCE</text>';
+   out+='<text x="200" y="140" font-size="10" fill="#d1495b" text-anchor="end" font-weight="800" font-family="Inter,sans-serif">'+d+'%</text>';
+   out+='<rect x="20" y="146" width="180" height="12" rx="6" fill="#efe0e7"/>';
+   out+='<rect x="20" y="146" width="'+(180*d/100).toFixed(1)+'" height="12" rx="6" fill="#d1495b"/>';
+   // attitude meter — the knob slides toward "matches behavior" as dissonance grows
+   out+='<text x="20" y="180" font-size="9" fill="#94818b" font-weight="800" letter-spacing="1" font-family="Inter,sans-serif">ATTITUDE NOW</text>';
+   out+='<rect x="20" y="186" width="180" height="10" rx="5" fill="#efe0e7"/>';
+   var kx=20+shift/100*180;
+   out+='<line x1="20" y1="191" x2="'+kx.toFixed(1)+'" y2="191" stroke="'+s.col+'" stroke-width="10" stroke-linecap="round" opacity=".55"/>';
+   out+='<circle cx="'+kx.toFixed(1)+'" cy="191" r="9" fill="'+s.col+'" stroke="#fff" stroke-width="3"/>';
+   out+='<text x="20" y="214" font-size="9.5" fill="#94818b" font-weight="700" font-family="Inter,sans-serif">'+s.left+'</text>';
+   out+='<text x="200" y="214" font-size="9.5" fill="#94818b" text-anchor="end" font-weight="700" font-family="Inter,sans-serif">'+s.right+'</text>';
+   return out;
+ }
+
+ function renderList(){
+   $("list").innerHTML=SC.map(function(s,i){
+     return '<button class="it'+(i===cur?' on':'')+'" data-i="'+i+'"><span class="ic">'+s.ic+'</span><span><span class="nm">'+s.nm+'</span><br><span class="ct">'+s.ct+'</span></span></button>';
+   }).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){ b.onclick=function(){ cur=+b.dataset.i; j=50; $("sld").value=50; render(); }; });
+ }
+
+ function render(){
+   var s=SC[cur], d=100-j, b=band(d);
+   $("art").innerHTML=draw(s);
+   $("cardTitle").innerHTML=s.nm;
+   $("axisName").innerHTML=s.axis;
+   $("loLab").innerHTML=s.lo; $("hiLab").innerHTML=s.hi;
+   var jword=(j<=34?'low':(j<=66?'moderate':'high')); // slider value = amount of outside justification
+   $("jtxt").innerHTML='Outside justification: '+jword;
+   var dp=$("dpill");
+   dp.className='pill '+(b===2?'high':(b===1?'low':'normal'));
+   dp.innerHTML=(b===2?'Dissonance high':(b===1?'Dissonance some':'Dissonance low'));
+   $("stage").style.background=s.col;
+   $("stage").innerHTML=s.nm+'<small>'+(b===2?'strong tension — the attitude is moving':(b===1?'partial tension':'little tension — the attitude holds'))+'</small>';
+   var out=(b===2?s.outLo:(b===1?s.outMid:s.outHi));
+   var expl=(b===2?
+       'With little outside reason for the behavior, the discomfort is real. The cheapest cognition to change is the <b>private attitude</b> &mdash; so it slides to match what you did. This is <b>self-persuasion</b>.'
+     :(b===1?
+       'There is some outside justification, so only part of the tension is resolved by changing the attitude &mdash; it drifts, but not all the way.'
+       :'Plenty of outside justification absorbs the discomfort: <b>“I did it for the reward / because I had to.”</b> The attitude has no need to move.'));
+   $("info").innerHTML=
+     '<span class="n">'+s.nm+'</span>'+
+     'Your attitude <b>'+s.belief+'</b> clashes with your behavior: <b>'+s.behavior+'</b>'+
+     '<div class="loc">Resulting thought: '+out+'</div>'+
+     '<div class="dd">'+expl+'</div>'+
+     '<div class="mnem"><b>The key finding.</b> '+s.cite+'</div>'+
+     '<div class="note"><b>The rule of the theory:</b> less outside justification &rarr; more dissonance &rarr; more attitude change. Bigger rewards actually change attitudes <b>less</b>.</div>';
+ }
+
+ $("sld").oninput=function(){ j=+this.value; render(); };
+ renderList();
+ render();
+})();
+</script>
+</body>
+</html>

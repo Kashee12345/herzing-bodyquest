@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Check the Domain</title>
+<meta name="description" content="Why a logarithmic equation can hand you an answer that must be thrown away — a live graph of the phantom branch the product rule invents, plus a worked-step machine that ends where every log problem must: the domain check.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* math typography — pure HTML, no renderer */
+.fr{display:inline-flex;flex-direction:column;vertical-align:-0.58em;text-align:center;font-size:.88em;line-height:1.14;margin:0 3px;}
+.fr .nu{border-bottom:1.5px solid currentColor;padding:0 6px 2px;}
+.fr .de{padding:2px 6px 0;}
+.rad{border-top:1.5px solid currentColor;padding:0 3px 0 1px;margin-left:-1px;}
+.hl{background:#fbf0cf;border-radius:4px;padding:1px 5px;box-shadow:inset 0 -2px 0 #e8cf8a;}
+.hl.bad{background:#fae5e8;box-shadow:inset 0 -2px 0 #eeb9c3;}
+/* step machine */
+.ln{border-radius:10px;padding:8px 11px;margin-bottom:5px;border:1px solid transparent;}
+.ln.done{opacity:.5;}
+.ln.cur{background:#f3f4fb;border-color:#dfe2f2;}
+.ln .eqx{font-size:15.5px;font-weight:700;color:var(--teal-dk);line-height:2.0;}
+.ln .sub{font-size:12.4px;font-weight:600;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums;}
+.ln .rl{display:block;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.75px;margin-top:4px;}
+.pend{border-radius:10px;padding:6px 11px;margin-bottom:5px;font-size:12px;font-weight:800;color:#c9ccdc;letter-spacing:3px;}
+/* graph extras */
+.legend{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+.legend span{font-size:10.8px;font-weight:700;color:var(--soft);background:#eef0f9;border:1px solid #dfe2f2;border-radius:20px;padding:4px 9px;display:inline-flex;align-items:center;gap:6px;}
+.legend i{width:16px;height:0;border-top:3px solid;border-radius:2px;display:inline-block;}
+#gout{font-size:12.5px;color:var(--teal-dk);background:#e6e8f5;border-radius:8px;padding:9px 11px;margin-top:10px;line-height:1.65;font-variant-numeric:tabular-nums;}
+#gout b{color:#1b1e46;}
+#gcap{font-size:12.6px;line-height:1.6;color:var(--soft);margin-top:10px;}
+#gcap b{color:var(--ink);}
+#nlt{font-size:12.5px;line-height:1.6;color:var(--soft);margin-top:10px;}
+#nlt b{color:var(--ink);}
+/* sliders */
+.nsl{margin-top:11px;}
+.sld{width:100%;-webkit-appearance:none;appearance:none;height:20px;background:transparent;cursor:pointer;}
+.sld::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-moz-range-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);margin-top:-7px;}
+.sld::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);}
+.sldlab{display:flex;justify-content:space-between;align-items:baseline;font-size:11.6px;color:var(--muted);font-weight:600;gap:8px;}
+.sldlab b{font-size:15px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+/* domain-check rows */
+.arg{display:flex;justify-content:space-between;align-items:center;gap:8px;border-radius:8px;padding:6px 10px;margin-top:6px;font-size:12.4px;font-weight:600;font-variant-numeric:tabular-nums;border:1px solid;}
+.arg .lft{color:var(--ink);}
+.arg.good{background:#e5f3ea;border-color:#bfe3cd;color:#237a45;}
+.arg.bad{background:#fae5e8;border-color:#f0c9d0;color:#b23145;}
+.arg .vd{font-size:10.2px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;white-space:nowrap;}
+.verdict{margin-top:11px;border-radius:9px;padding:10px 12px;font-size:13px;line-height:1.6;font-weight:600;border:1px solid;}
+.verdict.keep{background:#e5f3ea;border-color:#bfe3cd;color:#237a45;} .verdict.keep b{color:#186036;}
+.verdict.rej{background:#fae5e8;border-color:#f0c9d0;color:#b23145;} .verdict.rej b{color:#7a1f2c;}
+.gotcha{margin-top:10px;border-radius:9px;padding:9px 11px;font-size:12.2px;line-height:1.6;background:#fbf3e2;border:1px solid #ecd9ac;color:#8a6a20;}
+.gotcha b{color:#5a4212;}
+.it .sw{width:14px;height:14px;border-radius:4px;flex:none;}
+.it .nm{font-variant-numeric:tabular-nums;}
+#dom{font-size:12.4px;border-radius:9px;padding:10px 12px;margin-top:12px;line-height:1.6;color:#255f8a;background:#e5eef6;border:1px solid #c9dcea;}
+#dom b{color:#1c4a6d;}
+.eqbig{font-size:15px;font-weight:700;color:var(--teal-dk);line-height:2.0;text-align:center;margin:2px 0 4px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">&larr; Chapter 13</a></div>
+<header>
+  <div class="kick">College Algebra &middot; Chapter 13</div>
+  <h1>Check the Domain</h1>
+  <div class="intro">Somewhere in the middle of almost every logarithmic equation there is a step that <b>widens what the expression will accept</b>. Combine log&nbsp;<i>x</i> + log(<i>x</i> &minus; 3) into log(<i>x</i>(<i>x</i> &minus; 3)) and negative <i>x</i> is suddenly allowed. The algebra after that point is honest &mdash; but it is answering a slightly bigger question than the one you were asked, and it will hand back an extra answer that <b>must be rejected</b>. Here is that extra answer, drawn.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2>The real curve and its phantom</h2>
+      <div class="eqbig" id="eqhd"></div>
+      <svg viewBox="0 0 344 252" aria-label="graph of a logarithmic equation showing the true curve and the wider curve created by combining the logarithms"><g id="art"></g></svg>
+      <div class="legend">
+        <span><i style="border-color:#43458f"></i>log <i>x</i> + log(<i>x</i> &minus; <b id="lg1">3</b>)&nbsp; the real left side</span>
+        <span><i style="border-color:#b8862f;border-top-style:dashed"></i>log(<i>x</i>(<i>x</i> &minus; <b id="lg2">3</b>))&nbsp; after combining</span>
+      </div>
+      <div class="nsl">
+        <div class="sldlab"><span>shift <i>a</i> in log(<i>x</i> &minus; <i>a</i>) =</span><b id="labA">3</b></div>
+        <input class="sld" type="range" min="1" max="8" step="1" id="slA" value="3" aria-label="value of a">
+      </div>
+      <div class="nsl">
+        <div class="sldlab"><span>right-hand side <i>c</i> =</span><b id="labC">1</b></div>
+        <input class="sld" type="range" min="0" max="3" step="1" id="slC" value="1" aria-label="value of c">
+      </div>
+      <div id="gout"></div>
+      <div id="gcap"></div>
+    </div>
+    <div class="card">
+      <h2>Where each expression is allowed to live</h2>
+      <svg viewBox="0 0 344 206" aria-label="number lines comparing the domain of each logarithmic expression"><g id="nl"></g></svg>
+      <div id="nlt"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">One equation, step by step<small>press Next to begin</small></div>
+    <div class="card">
+      <h2 id="stepTitle">Worked steps</h2>
+      <div id="steps"></div>
+      <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+      <div id="info"></div>
+    </div>
+    <div class="card">
+      <h2>The domain check</h2>
+      <div class="list" id="cands"></div>
+      <div id="chk"></div>
+    </div>
+    <div class="card">
+      <h2>A negative candidate is not automatically wrong</h2>
+      <div class="eqbig">log(<i>x</i><sup>2</sup>) = 2 &nbsp;&rarr;&nbsp; <i>x</i><sup>2</sup> = 10<sup>2</sup> = 100 &nbsp;&rarr;&nbsp; <i>x</i> = &plusmn;10</div>
+      <div class="arg good"><span class="lft"><i>x</i> = 10 &nbsp;&rarr;&nbsp; argument <i>x</i><sup>2</sup> = 100</span><span class="vd">&#10003; keep</span></div>
+      <div class="arg good"><span class="lft"><i>x</i> = &minus;10 &nbsp;&rarr;&nbsp; argument <i>x</i><sup>2</sup> = 100</span><span class="vd">&#10003; keep</span></div>
+      <div class="mnem">Both work: log(100) = 2 either way. The test is never &ldquo;is <i>x</i> negative?&rdquo; &mdash; it is <b>&ldquo;is every argument positive?&rdquo;</b> Rejecting negatives on sight is a habit, not a rule, and it will cost you a real solution.</div>
+      <div id="dom">The whole discipline in three lines: <b>(1)</b> before you solve, write down what each argument requires; <b>(2)</b> solve; <b>(3)</b> test every candidate in the <b>original</b> equation, not in the line you rewrote. Step 3 is the one people skip, and it is the only one that catches the impostor.</div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra &middot; an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(id){return document.getElementById(id);};
+ var a=3, c=1, si=0, sel=0;
+
+ /* ---------- helpers ---------- */
+ function L10(v){return Math.log(v)/Math.LN10;}
+ /* HTML-safe number: exact integers print clean, otherwise 4 decimals */
+ function n(v){
+   if(!isFinite(v))return '&mdash;';
+   var r=Math.round(v);
+   if(Math.abs(v-r)<1e-9)return (r<0?'&minus;':'')+Math.abs(r);
+   return (v<0?'&minus;':'')+Math.abs(v).toFixed(4);
+ }
+ /* SVG-safe number (real unicode minus, shorter) */
+ function s(v,d){
+   if(!isFinite(v))return '?';
+   d=(d==null?2:d);
+   var r=Math.round(v);
+   if(Math.abs(v-r)<1e-9)return (r<0?'−':'')+Math.abs(r);
+   return (v<0?'−':'')+Math.abs(v).toFixed(d);
+ }
+ /* current numbers: log x + log(x-a) = c  ->  x^2 - ax - 10^c = 0 */
+ function M(){
+   var A=Math.pow(10,c);
+   var disc=a*a+4*A;
+   var sq=Math.sqrt(disc);
+   return {A:A, disc:disc, sq:sq, r1:(a+sq)/2, r2:(a-sq)/2};
+ }
+
+ /* ---------- the graph ---------- */
+ var PL=42,PR=334,PT=14,PB=206;
+ function niceStep(range){
+   var raw=range/6, m=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10)), q=raw/m;
+   var k=(q<1.5?1:(q<3?2:(q<7?5:10)));
+   return k*m;
+ }
+ function graph(){
+   var m=M(), r1=m.r1, r2=m.r2;
+   var span=r1-r2;
+   var xmin=r2-0.20*span, xmax=r1+0.20*span;
+   var ymin=c-3.4, ymax=c+1.3;
+   function X(x){return PL+(x-xmin)/(xmax-xmin)*(PR-PL);}
+   function Y(y){return PB-(y-ymin)/(ymax-ymin)*(PB-PT);}
+   var o='';
+
+   /* backdrop + the three territories */
+   o+='<rect x="'+PL+'" y="'+PT+'" width="'+(PR-PL)+'" height="'+(PB-PT)+'" fill="#fbfaff" stroke="#dfe2f2" stroke-width="1"/>';
+   o+='<rect x="'+PL.toFixed(1)+'" y="'+PT+'" width="'+(X(0)-PL).toFixed(1)+'" height="'+(PB-PT)+'" fill="#fdeff2"/>';
+   o+='<rect x="'+X(0).toFixed(1)+'" y="'+PT+'" width="'+(X(a)-X(0)).toFixed(1)+'" height="'+(PB-PT)+'" fill="#ebedf7"/>';
+   if(X(0)-PL>92) o+='<text x="'+((PL+X(0))/2).toFixed(1)+'" y="'+(PT+13)+'" text-anchor="middle" font-size="8.8" font-weight="800" fill="#c07a88" letter-spacing="0.4">PHANTOM BRANCH</text>';
+   if(X(a)-X(0)>86) o+='<text x="'+((X(0)+X(a))/2).toFixed(1)+'" y="'+(PT+13)+'" text-anchor="middle" font-size="8.8" font-weight="800" fill="#a3a7bd" letter-spacing="0.4">NO LOG AT ALL</text>';
+   if(PR-X(a)>98) o+='<text x="'+((X(a)+PR)/2).toFixed(1)+'" y="'+(PT+13)+'" text-anchor="middle" font-size="8.8" font-weight="800" fill="#7fae90" letter-spacing="0.4">THE TRUE DOMAIN</text>';
+
+   /* gridlines + x ticks */
+   var st=niceStep(xmax-xmin), t0=Math.ceil(xmin/st)*st;
+   for(var t=t0;t<=xmax+1e-9;t+=st){
+     var px=X(t);
+     if(px<PL+1||px>PR-1)continue;
+     o+='<line x1="'+px.toFixed(1)+'" y1="'+PT+'" x2="'+px.toFixed(1)+'" y2="'+PB+'" stroke="#e6e8f4" stroke-width="1"/>';
+     o+='<text x="'+px.toFixed(1)+'" y="'+(PB+13)+'" text-anchor="middle" font-size="8.6" fill="#9a9db2">'+s(t,(st<1?2:0))+'</text>';
+   }
+
+   /* vertical asymptotes at x = 0 and x = a */
+   o+='<line x1="'+X(0).toFixed(1)+'" y1="'+PT+'" x2="'+X(0).toFixed(1)+'" y2="'+PB+'" stroke="#b9bdd4" stroke-width="1.3" stroke-dasharray="4 3"/>';
+   o+='<line x1="'+X(a).toFixed(1)+'" y1="'+PT+'" x2="'+X(a).toFixed(1)+'" y2="'+PB+'" stroke="#b9bdd4" stroke-width="1.3" stroke-dasharray="4 3"/>';
+
+   /* the two curves */
+   function build(fn,ok){
+     var pts=[],out=[],N=620;
+     for(var k=0;k<=N;k++){
+       var x=xmin+(xmax-xmin)*k/N;
+       if(!ok(x)){ if(pts.length>1)out.push(pts.join(' ')); pts=[]; continue; }
+       var y=fn(x);
+       if(!isFinite(y)||y<ymin||y>ymax){ if(pts.length>1)out.push(pts.join(' ')); pts=[]; continue; }
+       pts.push(X(x).toFixed(1)+','+Y(y).toFixed(1));
+     }
+     if(pts.length>1)out.push(pts.join(' '));
+     return out;
+   }
+   /* combined form: defined wherever x(x-a) > 0  — i.e. x<0 OR x>a */
+   var cb=build(function(x){return L10(x*(x-a));},function(x){return x*(x-a)>1e-9;});
+   /* original form: needs BOTH x>0 and x-a>0 */
+   var or=build(function(x){return L10(x)+L10(x-a);},function(x){return x>1e-9&&x-a>1e-9;});
+   var q;
+   for(q=0;q<cb.length;q++) o+='<polyline points="'+cb[q]+'" fill="none" stroke="#b8862f" stroke-width="3.4" stroke-dasharray="7 4" stroke-linecap="round"/>';
+   for(q=0;q<or.length;q++) o+='<polyline points="'+or[q]+'" fill="none" stroke="#43458f" stroke-width="2.6" stroke-linecap="round"/>';
+
+   /* the horizontal line y = c */
+   o+='<line x1="'+PL+'" y1="'+Y(c).toFixed(1)+'" x2="'+PR+'" y2="'+Y(c).toFixed(1)+'" stroke="#d1495b" stroke-width="1.7" stroke-dasharray="5 4"/>';
+   o+='<text x="'+(PL+5)+'" y="'+(Y(c)-6).toFixed(1)+'" font-size="9.4" font-weight="800" fill="#c24153">y = '+s(c)+'</text>';
+
+   /* the two crossings */
+   o+='<line x1="'+X(r2).toFixed(1)+'" y1="'+Y(c).toFixed(1)+'" x2="'+X(r2).toFixed(1)+'" y2="'+PB+'" stroke="#d1495b" stroke-width="1.3" stroke-dasharray="3 3"/>';
+   o+='<line x1="'+X(r1).toFixed(1)+'" y1="'+Y(c).toFixed(1)+'" x2="'+X(r1).toFixed(1)+'" y2="'+PB+'" stroke="#2f9e5b" stroke-width="1.3" stroke-dasharray="3 3"/>';
+   o+='<circle cx="'+X(r1).toFixed(1)+'" cy="'+Y(c).toFixed(1)+'" r="6" fill="#2f9e5b" stroke="#fff" stroke-width="2.2"/>';
+   o+='<circle cx="'+X(r2).toFixed(1)+'" cy="'+Y(c).toFixed(1)+'" r="6" fill="#fff" stroke="#d1495b" stroke-width="2.4"/>';
+   o+='<line x1="'+(X(r2)-3.6).toFixed(1)+'" y1="'+(Y(c)-3.6).toFixed(1)+'" x2="'+(X(r2)+3.6).toFixed(1)+'" y2="'+(Y(c)+3.6).toFixed(1)+'" stroke="#d1495b" stroke-width="2"/>';
+   o+='<line x1="'+(X(r2)+3.6).toFixed(1)+'" y1="'+(Y(c)-3.6).toFixed(1)+'" x2="'+(X(r2)-3.6).toFixed(1)+'" y2="'+(Y(c)+3.6).toFixed(1)+'" stroke="#d1495b" stroke-width="2"/>';
+   o+='<text x="'+X(r1).toFixed(1)+'" y="'+(Y(c)-11).toFixed(1)+'" text-anchor="middle" font-size="9.2" font-weight="800" fill="#237a45">KEEP</text>';
+   o+='<text x="'+X(r2).toFixed(1)+'" y="'+(Y(c)-11).toFixed(1)+'" text-anchor="middle" font-size="9.2" font-weight="800" fill="#b23145">REJECT</text>';
+   o+='<text x="'+X(r1).toFixed(1)+'" y="'+(PB+25)+'" text-anchor="middle" font-size="9.6" font-weight="800" fill="#237a45">x = '+s(r1,3)+'</text>';
+   o+='<text x="'+X(r2).toFixed(1)+'" y="'+(PB+25)+'" text-anchor="middle" font-size="9.6" font-weight="800" fill="#b23145">x = '+s(r2,3)+'</text>';
+   o+='<text x="'+((PL+PR)/2)+'" y="'+(PB+42)+'" text-anchor="middle" font-size="9.2" font-weight="700" fill="#7d7f94">two crossings on the dashed curve — only one on the solid</text>';
+   $("art").innerHTML=o;
+
+   $("eqhd").innerHTML='log <i>x</i> + log(<i>x</i> &minus; '+n(a)+') = '+n(c);
+   $("lg1").innerHTML=n(a); $("lg2").innerHTML=n(a);
+   $("gout").innerHTML=
+     'At <b>x = '+n(r1)+'</b>&nbsp; both arguments are positive, so the solid curve exists there and it is a genuine solution.<br>'+
+     'At <b>x = '+n(r2)+'</b>&nbsp; only the dashed curve exists. The solid curve &mdash; the actual left side of your equation &mdash; has <b>no point at all</b> above that <i>x</i>. There is nothing there to equal '+n(c)+'.';
+   $("gcap").innerHTML=
+     'Both curves agree perfectly for <i>x</i> &gt; '+n(a)+'. To the left of zero the dashed curve reappears on its own, because there <i>x</i> and <i>x</i> &minus; '+n(a)+' are <b>both negative and their product is positive</b> &mdash; enough for log(<i>x</i>(<i>x</i> &minus; '+n(a)+')) even though neither original logarithm can be written. That extra branch is the whole source of the extra answer. Drag either slider: the numbers move, but there is always exactly one crossing on the solid curve and one impostor on the dashed one.';
+ }
+
+ /* ---------- number lines ---------- */
+ function lines(){
+   var m=M(), r1=m.r1, r2=m.r2;
+   var lo=Math.min(r2,-1)-1, hi=Math.max(a+4,r1+2);
+   function NX(x){return 10+(x-lo)/(hi-lo)*324;}
+   var rows=[46,88,130,176], o='';
+   /* vertical guides at x = 0 and x = a */
+   o+='<line x1="'+NX(0).toFixed(1)+'" y1="20" x2="'+NX(0).toFixed(1)+'" y2="192" stroke="#c6cadd" stroke-width="1.2" stroke-dasharray="4 3"/>';
+   o+='<line x1="'+NX(a).toFixed(1)+'" y1="20" x2="'+NX(a).toFixed(1)+'" y2="192" stroke="#c6cadd" stroke-width="1.2" stroke-dasharray="4 3"/>';
+   o+='<text x="'+NX(0).toFixed(1)+'" y="14" text-anchor="middle" font-size="9.4" font-weight="800" fill="#8a8da3">0</text>';
+   o+='<text x="'+NX(a).toFixed(1)+'" y="14" text-anchor="middle" font-size="9.4" font-weight="800" fill="#8a8da3">'+s(a)+'</text>';
+
+   var lab=[
+     'log x  needs  x '+'>'+' 0',
+     'log(x − '+s(a)+')  needs  x '+'>'+' '+s(a),
+     'BOTH together — the real domain:  x '+'>'+' '+s(a),
+     'log(x(x − '+s(a)+'))  needs  x(x − '+s(a)+') '+'>'+' 0'
+   ];
+   var colr=['#2f6f9f','#7a5a8a','#2f9e5b','#b8862f'];
+   for(var k=0;k<4;k++){
+     var y=rows[k];
+     o+='<text x="10" y="'+(y-11)+'" font-size="9.6" font-weight="800" fill="'+(k===2?'#237a45':'#7d7f94')+'">'+lab[k]+'</text>';
+     o+='<line x1="10" y1="'+y+'" x2="334" y2="'+y+'" stroke="#e2e4f1" stroke-width="2" stroke-linecap="round"/>';
+     var segs=[];
+     if(k===0)segs=[[0,hi]];
+     if(k===1)segs=[[a,hi]];
+     if(k===2)segs=[[a,hi]];
+     if(k===3)segs=[[lo,0],[a,hi]];
+     for(var j=0;j<segs.length;j++){
+       var col=colr[k];
+       if(k===3&&j===0)col='#d1495b';
+       if(k===3&&j===1)col='#2f9e5b';
+       o+='<line x1="'+NX(segs[j][0]).toFixed(1)+'" y1="'+y+'" x2="'+NX(segs[j][1]).toFixed(1)+'" y2="'+y+'" stroke="'+col+'" stroke-width="5" stroke-linecap="round"/>';
+       var ep=(k===3&&j===0)?segs[j][1]:segs[j][0];
+       o+='<circle cx="'+NX(ep).toFixed(1)+'" cy="'+y+'" r="4.2" fill="#fffdf9" stroke="'+col+'" stroke-width="2.2"/>';
+     }
+     /* where does the rejected candidate sit on this line? */
+     if(k===3){
+       o+='<circle cx="'+NX(r2).toFixed(1)+'" cy="'+y+'" r="5" fill="#d1495b" stroke="#fff" stroke-width="1.8"/>';
+       o+='<text x="'+(NX(r2)+9).toFixed(1)+'" y="'+(y+18)+'" text-anchor="start" font-size="9" font-weight="800" fill="#b23145">x = '+s(r2,2)+' lives here</text>';
+     }
+     if(k===2&&NX(r1)<330){
+       var tx=Math.max(30,Math.min(NX(r1),312));
+       o+='<circle cx="'+NX(r1).toFixed(1)+'" cy="'+y+'" r="5" fill="#2f9e5b" stroke="#fff" stroke-width="1.8"/>';
+       o+='<text x="'+tx.toFixed(1)+'" y="'+(y+16)+'" text-anchor="middle" font-size="9" font-weight="800" fill="#237a45">x = '+s(r1,2)+'</text>';
+     }
+   }
+   $("nl").innerHTML=o;
+   $("nlt").innerHTML='The first three lines belong to the <b>original</b> equation, and they agree: nothing below '+n(a)+' is admissible. The fourth line belongs to the equation <b>after</b> the product rule &mdash; and it has grown a whole extra region on the far left, because a product of two negatives is positive. Your rejected candidate sits comfortably inside that region. It is a perfectly good solution to the wrong equation.';
+ }
+
+ /* ---------- worked steps ---------- */
+ function build(){
+   var m=M(), A=m.A, r1=m.r1, r2=m.r2, sq=m.sq;
+   var lhs1=L10(r1)+L10(r1-a);
+   return [
+    {rl:'THE EQUATION', col:'#43458f',
+     eq:'log <i>x</i> + log(<i>x</i> &minus; '+n(a)+') = '+n(c),
+     sub:'log means base 10',
+     hd:'Write the restrictions before you write anything else',
+     tx:'A logarithm accepts only a <b>positive</b> argument, and this equation contains two of them. That is two conditions, and they arrive before any algebra does: <b><i>x</i> &gt; 0</b> and <b><i>x</i> &minus; '+n(a)+' &gt; 0</b>. The second is the stricter one, so together they say <b><i>x</i> &gt; '+n(a)+'</b>. Note it in the margin now. Nothing you write on a later line has the authority to loosen it.'},
+    {rl:'PRODUCT RULE', col:'#b8862f',
+     eq:'log(<span class="hl"><i>x</i>(<i>x</i> &minus; '+n(a)+')</span>) = '+n(c),
+     sub:'log M + log N = log(MN)',
+     hd:'This is the step that manufactures the impostor',
+     tx:'The rule is true: whenever <i>M</i> and <i>N</i> are both positive, log <i>M</i> + log <i>N</i> = log(<i>MN</i>). But look at what the <b>new expression</b> will tolerate. log(<i>x</i>(<i>x</i> &minus; '+n(a)+')) only asks that the <b>product</b> be positive &mdash; and two negatives multiply to a positive. So every <i>x</i> below 0 is now welcome, even though neither log on the previous line existed there. The rule did not lie; the rewritten expression simply lives on a <b>bigger set</b>. From this line onward you are solving a slightly larger problem than the one you were given.'},
+    {rl:'EXPONENTIAL FORM', col:'#2f6f9f',
+     eq:'<i>x</i>(<i>x</i> &minus; '+n(a)+') = <span class="hl">10<sup>'+n(c)+'</sup></span>',
+     sub:'10^'+n(c).replace('&minus;','-')+' = '+n(A),
+     hd:'Undo the logarithm',
+     tx:'log<sub>10</sub>(<i>M</i>) = '+n(c)+' says exactly one thing: <i>M</i> = 10<sup>'+n(c)+'</sup> = '+n(A)+'. That is the definition of a logarithm, nothing more. Notice that the word &ldquo;log&rdquo; has now disappeared from the page &mdash; and with it, every reminder about what is and is not allowed.'},
+    {rl:'EXPAND', col:'#2f6f9f',
+     eq:'<span class="hl"><i>x</i><sup>2</sup> &minus; '+n(a)+'<i>x</i></span> = '+n(A),
+     sub:'distribute x across (x &minus; '+n(a).replace('&minus;','-')+')',
+     hd:'Multiply it out',
+     tx:'<i>x</i>&middot;<i>x</i> = <i>x</i><sup>2</sup> and <i>x</i>&middot;(&minus;'+n(a)+') = &minus;'+n(a)+'<i>x</i>. Ordinary distribution &mdash; no new information, no new danger.'},
+    {rl:'STANDARD FORM', col:'#2f6f9f',
+     eq:'<i>x</i><sup>2</sup> &minus; '+n(a)+'<i>x</i> <span class="hl">&minus; '+n(A)+' = 0</span>',
+     sub:'subtract '+n(A).replace('&minus;','-')+' from both sides',
+     hd:'A quadratic that has forgotten where it came from',
+     tx:'This line is a plain polynomial. Polynomials have <b>no domain restrictions at all</b> &mdash; they accept every real number without complaint. Whatever memory the problem had of &ldquo;<i>x</i> must exceed '+n(a)+'&rdquo; is now living only in your margin note. That is precisely why the note matters.'},
+    {rl:'QUADRATIC FORMULA', col:'#7a5a8a',
+     eq:'<i>x</i> = <span class="fr"><span class="nu">'+n(a)+' &plusmn; &radic;<span class="rad">('+n(a)+')<sup>2</sup> + 4('+n(A)+')</span></span><span class="de">2</span></span>',
+     sub:'discriminant = '+n(a*a)+' + '+n(4*A)+' = '+n(m.disc)+',&nbsp; &radic;'+n(m.disc)+' = '+n(sq),
+     hd:'Why this family always produces exactly one impostor',
+     tx:'Because 10<sup>'+n(c)+'</sup> = '+n(A)+' is <b>positive</b>, the quantity under the radical is bigger than '+n(a)+'<sup>2</sup>, so &radic;'+n(m.disc)+' = '+n(sq)+' is bigger than '+n(a)+' itself. Adding gives a root above '+n(a)+'; subtracting gives a root below 0. No matter where you drag the sliders, one candidate lands safely inside the domain and one lands in forbidden territory.'},
+    {rl:'TWO CANDIDATES', col:'#7a5a8a',
+     eq:'<i>x</i> = '+n(r1)+' &nbsp;&nbsp;or&nbsp;&nbsp; <i>x</i> = <span class="hl bad">'+n(r2)+'</span>',
+     sub:'candidates — not yet solutions',
+     hd:'Call them candidates until they have earned the other word',
+     tx:'These two numbers solve the <b>quadratic</b>. Whether they solve the <b>logarithmic equation</b> you started with is a separate question that the quadratic is not qualified to answer. Tap either one in the panel below to put it back where it came from.'},
+    {rl:'CHECK THE ORIGINAL', col:'#d1495b',
+     eq:'log(<span class="hl bad">'+n(r2)+'</span>) &nbsp;is undefined',
+     sub:n(r2)+' is not greater than 0',
+     hd:'Substitute into the first line, not the rewritten one',
+     tx:'Put <i>x</i> = '+n(r2)+' into log <i>x</i> and you are asking for the logarithm of a negative number, which does not exist. The candidate is <b>rejected</b> &mdash; and here is the trap: substitute it into the <b>combined</b> line instead and it passes flawlessly, because '+n(r2)+'&middot;('+n(r2)+' &minus; '+n(a)+') = '+n(r2*(r2-a))+' = 10<sup>'+n(c)+'</sup>. Checking the line you rewrote would never expose it. <b>Check the original.</b>'},
+    {rl:'SOLUTION', col:'#2f9e5b',
+     eq:'<i>x</i> = <span class="hl">'+n(r1)+'</span>',
+     sub:'log('+n(r1)+') + log('+n(r1-a)+') = '+n(L10(r1))+' + '+n(L10(r1-a))+' = '+n(lhs1),
+     hd:'One equation, two candidates, one solution',
+     tx:'<i>x</i> = '+n(r1)+' is greater than '+n(a)+', so both arguments are positive and both logarithms exist. Evaluate them and they add to '+n(lhs1)+' = '+n(c)+'. This candidate survived the check, so this one gets to be called a solution &mdash; and it is the <b>only</b> one.'}
+   ];
+ }
+
+ /* ---------- render ---------- */
+ function render(){
+   var S=build(), m=M();
+   if(si>S.length-1)si=S.length-1;
+   var o='',k;
+   for(k=0;k<=si;k++){
+     var st=S[k];
+     o+='<div class="ln '+(k===si?'cur':'done')+'">'+
+        '<div class="eqx">'+st.eq+'</div>'+
+        (st.sub?'<div class="sub">'+st.sub+'</div>':'')+
+        '<span class="rl" style="color:'+st.col+'">'+st.rl+'</span></div>';
+   }
+   for(k=si+1;k<S.length;k++) o+='<div class="pend">&middot; &middot; &middot;</div>';
+   $("steps").innerHTML=o;
+   $("stepTitle").innerHTML='Worked steps &mdash; '+(si+1)+' of '+S.length;
+   $("info").innerHTML='<span class="n">'+S[si].hd+'</span>'+S[si].tx;
+   $("info").style.borderLeftColor=S[si].col;
+   $("stage").style.background=S[si].col;
+   $("stage").innerHTML=S[si].rl+'<small>step '+(si+1)+' of '+S.length+' &nbsp;&middot;&nbsp; log <i>x</i> + log(<i>x</i> &minus; '+n(a)+') = '+n(c)+'</small>';
+   $("prev").disabled=(si===0); $("next").disabled=(si===S.length-1);
+   $("labA").innerHTML=n(a); $("labC").innerHTML=n(c);
+   graph(); lines(); cands();
+ }
+
+ /* ---------- candidate checker ---------- */
+ function cands(){
+   var m=M(), r=[m.r1,m.r2];
+   var o='';
+   for(var k=0;k<2;k++){
+     var ok=(r[k]>a);
+     o+='<button class="it'+(k===sel?' on':'')+'" data-k="'+k+'">'+
+        '<span class="sw" style="background:'+(ok?'#2f9e5b':'#d1495b')+'"></span>'+
+        '<span><span class="nm"><i>x</i> = '+n(r[k])+'</span><br>'+
+        '<span class="ct">candidate '+(k===0?'from the + sign':'from the &minus; sign')+'</span></span></button>';
+   }
+   $("cands").innerHTML=o;
+   var bs=$("cands").getElementsByClassName('it');
+   for(var j=0;j<bs.length;j++){
+     bs[j].onclick=(function(idx){return function(){sel=idx;cands();};})(j);
+   }
+   detail(r[sel],sel);
+ }
+ function detail(x,idx){
+   var m=M();
+   var g1=x, g2=x-a, prod=x*(x-a);
+   var ok1=g1>0, ok2=g2>0, all=ok1&&ok2;
+   var o='<div style="font-size:12.4px;color:var(--soft);line-height:1.6;margin-top:12px;">'+
+     'Substitute <b><i>x</i> = '+n(x)+'</b> into the <b>original</b> equation and read every argument:</div>';
+   o+='<div class="arg '+(ok1?'good':'bad')+'"><span class="lft">log <i>x</i> &nbsp;&rarr;&nbsp; argument = '+n(g1)+'</span><span class="vd">'+(ok1?'&#10003; positive':'&#10007; not positive')+'</span></div>';
+   o+='<div class="arg '+(ok2?'good':'bad')+'"><span class="lft">log(<i>x</i> &minus; '+n(a)+') &nbsp;&rarr;&nbsp; argument = '+n(g2)+'</span><span class="vd">'+(ok2?'&#10003; positive':'&#10007; not positive')+'</span></div>';
+   if(all){
+     var v1=L10(g1), v2=L10(g2);
+     o+='<div class="verdict keep"><b>KEEP.</b> Both logarithms exist, so the left side is a real number. Evaluate it: '+
+        n(v1)+' + '+n(v2)+' = <b>'+n(v1+v2)+'</b>, and the right side is '+n(c)+'. The equation is satisfied and the domain is respected &mdash; this is a genuine solution.</div>';
+     o+='<div class="gotcha">Worth noticing <i>why</i> it clears the domain: '+n(x)+' &gt; '+n(a)+', which is the single condition the two arguments boiled down to on the very first line.</div>';
+   }else{
+     o+='<div class="verdict rej"><b>REJECT.</b> '+(!ok1&&!ok2?'Neither logarithm exists':'One of the logarithms does not exist')+
+        ' at this value, so the left side of the original equation cannot even be evaluated &mdash; there is nothing there to equal '+n(c)+'. This is an <b>extraneous solution</b>: manufactured by a legitimate step, and removable only by checking.</div>';
+     o+='<div class="gotcha">And here is the reason the check has to use the <b>original</b> line. In the combined form the same number sails through: <i>x</i>(<i>x</i> &minus; '+n(a)+') = ('+n(x)+')('+n(g2)+') = <b>'+n(prod)+'</b> = 10<sup>'+n(c)+'</sup>, so log('+n(prod)+') = '+n(c)+' exactly. Substituting into the rewritten equation confirms the impostor instead of catching it.</div>';
+   }
+   $("chk").innerHTML=o;
+ }
+
+ /* ---------- wiring ---------- */
+ $("prev").onclick=function(){ if(si>0){si--;render();} };
+ $("next").onclick=function(){ var L=build().length; if(si<L-1){si++;render();} };
+ $("slA").oninput=function(){ a=parseInt(this.value,10); render(); };
+ $("slC").oninput=function(){ c=parseInt(this.value,10); render(); };
+ render();
+})();
+</script>
+</body>
+</html>

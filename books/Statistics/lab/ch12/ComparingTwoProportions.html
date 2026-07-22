@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Comparing Two Proportions</title>
+<meta name="description" content="Run a real two-arm trial, watch the gap between two sample proportions bounce around, and see why the test and the confidence interval use two different standard errors.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:9px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:132px;line-height:1.3;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.a input[type=range]::-webkit-slider-thumb{background:#2f6f8a;} .sl.a input[type=range]::-moz-range-thumb{background:#2f6f8a;}
+.sl.b input[type=range]::-webkit-slider-thumb{background:#b8862f;} .sl.b input[type=range]::-moz-range-thumb{background:#b8862f;}
+.sl .nv{font-size:15px;font-weight:800;color:var(--teal-dk);min-width:62px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.4px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;line-height:1.3;}
+.tiles div.warn{border-color:#e2adb7;background:#fdf1f3;} .tiles div.warn .vv{color:#b23145;}
+.tiles div.good{border-color:#b6d8c4;background:#f0f8f3;} .tiles div.good .vv{color:#237a45;}
+.tiles.three{grid-template-columns:repeat(3,1fr);}
+.cap{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.55;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.sent{border:1px solid #bcd6e2;border-left:5px solid var(--teal);background:#eef6f9;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:13.2px;line-height:1.6;color:var(--soft);}
+.sent b{color:var(--teal-dk);}
+.sent .big{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.sent.warn{border-color:#e2adb7;border-left-color:#d1495b;background:#fdf1f3;} .sent.warn .big{color:#b23145;}
+.sent.good{border-color:#b6d8c4;border-left-color:#2f9e5b;background:#f0f8f3;} .sent.good .big{color:#237a45;}
+.strip{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:11px;}
+.strip div{border:1px solid var(--line);border-radius:10px;padding:7px 6px;background:#fff;text-align:center;}
+.strip .lb{display:block;font-size:8.8px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.strip .vv{display:block;font-size:14px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.chk{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.chk div{border:1px solid var(--line);border-radius:10px;padding:8px 6px;background:#fff;text-align:center;}
+.chk .lb{display:block;font-size:9px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.chk .vv{display:block;font-size:16px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.chk div.ok{border-color:#b6d8c4;background:#f0f8f3;} .chk div.ok .vv{color:#237a45;}
+.chk div.bad{border-color:#e2adb7;background:#fdf1f3;} .chk div.bad .vv{color:#b23145;}
+table.tv{width:100%;border-collapse:collapse;margin-top:11px;font-variant-numeric:tabular-nums;}
+table.tv th,table.tv td{padding:6px 4px;font-size:12px;text-align:right;border-bottom:1px solid var(--line);color:var(--soft);font-weight:600;}
+table.tv th{font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.3;}
+table.tv td:first-child,table.tv th:first-child{text-align:left;font-weight:800;color:var(--teal-dk);}
+table.tv tr:last-child td{border-bottom:none;background:#f2f8fa;}
+table.tv tr:last-child td:first-child{color:var(--teal-dk);}
+.mnem,.note{font-size:12px;border-radius:8px;padding:9px 12px;margin-top:10px;line-height:1.6;}
+.mnem{color:#8a6a20;background:#fbf3e2;border:1px solid #ecd9ac;} .mnem b{color:#5a4212;}
+.note{color:#8a2a3a;background:#fae5e8;border:1px solid #f0c9d0;} .note b{color:#7a1f2c;}
+.list .it .s{display:block;margin-top:2px;line-height:1.35;}
+.list .it .nm{line-height:1.4;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 12</div>
+  <h1>Comparing Two Proportions</h1>
+  <div class="intro">Some questions are not about how much, but about <b>how many out of how many</b>. Did more people recover on this treatment than on that one? The data are just counts &mdash; two numerators over two denominators &mdash; and the quantity you care about is the gap between the two shares, <b>p&#770;<sub>A</sub> &minus; p&#770;<sub>B</sub></b>. Like every statistic, that gap is not a fixed fact about the world; it is a number that would come out differently if you ran the trial again. Below you set the two true recovery rates, then <b>run the trial for real</b> &mdash; every patient is an actual coin flip weighted by the truth you chose. Watch how far a single trial can land from the answer. Then meet the wrinkle that makes proportions different from means: <b>the test and the confidence interval do not use the same standard error</b>, and there is a good reason for that.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">One trial&rsquo;s worth of patients</h2>
+      <div class="cap" style="margin-top:2px;">Each square is a patient (or, in a large trial, one percent of the arm); filled squares recovered. Nothing here is drawn from a formula &mdash; every square was decided by an independent weighted coin flip at the true rate you set on the right. Underneath, on a shared axis, is each arm&rsquo;s observed share with its own 95% interval, and a dashed tick at the truth you are trying to recover. Press <b>Run a new trial</b> repeatedly and watch how much both shares move while the truth beneath them never budges.</div>
+      <svg viewBox="0 0 480 300" id="waf" aria-label="two grids of squares showing which patients recovered in each treatment arm, and beneath them each arm's observed proportion with a 95 percent confidence interval on a shared axis"></svg>
+      <table class="tv" id="tbl"></table>
+      <div class="row"><button class="btn solid" id="bdraw">Run a new trial</button><button class="btn" id="bhunt">Hunt for a trial that lands the wrong way</button></div>
+      <div class="sent" id="wafsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>The gap, judged against &ldquo;no difference&rdquo;</h2>
+      <div class="cap" style="margin-top:2px;">The curve is what p&#770;<sub>A</sub>&nbsp;&minus;&nbsp;p&#770;<sub>B</sub> would look like across endless repeats <b>if both arms shared one common recovery rate</b>. That &ldquo;if&rdquo; is doing real work: because the null says the two rates are the same, the best estimate of that shared rate is every success over every patient, and the width of this curve is built from that <b>pooled</b> figure. The dark marker is the gap you actually got, and the shaded tails &mdash; every outcome at least that far from zero, in either direction &mdash; are the <b>p&#8209;value</b>. The bar underneath is the confidence interval, drawn on the same scale but from a <b>different</b> standard error, because an interval assumes nothing about the null being true.</div>
+      <svg viewBox="0 0 480 216" id="dif" aria-label="the null sampling distribution of the difference in proportions with the observed difference marked and the confidence interval drawn below on the same scale"></svg>
+      <div class="lgd">
+        <span><i style="background:#cfdde4"></i>if both rates were equal</span>
+        <span><i style="background:#e6b3bd"></i>as far out as observed, or farther</span>
+        <span><i style="background:#1c4454"></i>the gap you got</span>
+      </div>
+      <div class="sent" id="difsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Two standard errors, two different jobs</h2>
+      <div class="cap" style="margin-top:2px;">Every proportion carries its own uncertainty, &radic;(p&#770;(1&minus;p&#770;)/n), and the two combine the way perpendicular sides of a triangle do &mdash; square, add, take the root. That hypotenuse is the <b>unpooled</b> standard error, and it is what builds the confidence interval. The test uses a fourth number, the <b>pooled</b> standard error, computed as though both arms drew from one common rate. Watch the two bars: they run close together, they coincide exactly in the one case where the two observed shares are equal, and otherwise the pooled one sits a little higher. Knowing which belongs where is most of what this section asks of you.</div>
+      <svg viewBox="0 0 480 236" id="se" aria-label="a right triangle whose legs are the two standard errors and whose hypotenuse is the unpooled standard error, beside a bar comparison including the pooled standard error"></svg>
+      <div class="sent" id="sesent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Run the whole trial a thousand times</h2>
+      <div class="cap" style="margin-top:2px;">One trial settles nothing. So repeat it: each run below enrols fresh patients in both arms, flips every one of them, and records only the gap between the two recovered shares. The <b>bars</b> are those simulated gaps. The <b>dark line</b> is the normal approximation this whole section leans on &mdash; centred on the true gap p<sub>A</sub>&nbsp;&minus;&nbsp;p<sub>B</sub>, with spread &radic;(p<sub>A</sub>q<sub>A</sub>/n<sub>A</sub> + p<sub>B</sub>q<sub>B</sub>/n<sub>B</sub>). Nothing was fitted to the bars. When the curve and the bars agree, the approximation is earning its keep; when they part company, it is not.</div>
+      <svg viewBox="0 0 480 236" id="hist" aria-label="histogram of the difference in sample proportions across many simulated trials with the normal approximation overlaid"></svg>
+      <div class="lgd">
+        <span><i style="background:#bcd9e6"></i>simulated trials</span>
+        <span><i style="background:#1c4454"></i>the normal approximation</span>
+        <span><i style="background:#d1495b"></i>zero &mdash; no difference</span>
+      </div>
+      <div class="strip">
+        <div><span class="lb">Trials<br>run</span><span class="vv" id="rN">0</span></div>
+        <div><span class="lb">Mean of<br>the gaps</span><span class="vv" id="rM">&mdash;</span></div>
+        <div><span class="lb">SD of<br>the gaps</span><span class="vv" id="rS">&mdash;</span></div>
+        <div><span class="lb" id="rPl">Share calling<br>a difference</span><span class="vv" id="rP">&mdash;</span></div>
+        <div><span class="lb">Intervals that<br>caught the truth</span><span class="vv" id="rC">&mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="run1">Run 1,000 trials</button><button class="btn" id="run2">Add 4,000 more</button><button class="btn" id="rrs">Reset</button></div>
+      <div class="cap" id="histcap"></div>
+    </div>
+  </div>
+
+  <div>
+    <div id="stage">Two treatment arms<small>set the truth, then run the trial</small></div>
+
+    <div class="card">
+      <h2>The truth you are sampling from</h2>
+      <div class="cap" style="margin-top:2px;">In a real trial none of these four numbers is knowable &mdash; that is the entire problem. Here you set them, so you can grade the machinery against an answer you already have.</div>
+      <div class="hd">Arm A &mdash; the new treatment</div>
+      <div class="sl a"><label>true rate p<sub>A</sub></label><input type="range" id="pA" min="0.01" max="0.99" step="0.01" value="0.55" aria-label="true recovery rate in arm A"><span class="nv" id="pAv">0.55</span></div>
+      <div class="sl a"><label>patients n<sub>A</sub></label><input type="range" id="nA" min="0" max="18" step="1" value="10" aria-label="number of patients in arm A"><span class="nv" id="nAv">200</span></div>
+      <div class="hd">Arm B &mdash; the standard treatment</div>
+      <div class="sl b"><label>true rate p<sub>B</sub></label><input type="range" id="pB" min="0.01" max="0.99" step="0.01" value="0.40" aria-label="true recovery rate in arm B"><span class="nv" id="pBv">0.40</span></div>
+      <div class="sl b"><label>patients n<sub>B</sub></label><input type="range" id="nB" min="0" max="18" step="1" value="10" aria-label="number of patients in arm B"><span class="nv" id="nBv">200</span></div>
+      <div class="hd">Jump to a situation worth seeing</div>
+      <div class="seg" id="preSeg">
+        <button data-v="0">An honest gap<small>55% vs 40%, n = 200</small></button>
+        <button data-v="1">No gap at all<small>p<sub>A</sub> = p<sub>B</sub></small></button>
+        <button data-v="2">Too small a trial<small>n = 25 per arm</small></button>
+        <button data-v="3">Rare outcome<small>3% vs 1%, n = 500</small></button>
+        <button data-v="4">Precision at last<small>54% vs 50%, n = 2000</small></button>
+      </div>
+      <div class="row"><button class="btn" id="brst">Reset everything</button></div>
+    </div>
+
+    <div class="card">
+      <h2>This trial, computed live</h2>
+      <div class="tiles">
+        <div><span class="lb">Arm A<br>share p&#770;<sub>A</sub></span><span class="vv" id="tPA">&mdash;</span><span class="sub" id="tPAs">&nbsp;</span></div>
+        <div><span class="lb">Arm B<br>share p&#770;<sub>B</sub></span><span class="vv" id="tPB">&mdash;</span><span class="sub" id="tPBs">&nbsp;</span></div>
+        <div><span class="lb">Observed<br>gap</span><span class="vv" id="tD">&mdash;</span><span class="sub" id="tDs">&nbsp;</span></div>
+        <div><span class="lb">True<br>gap</span><span class="vv" id="tT0">&mdash;</span><span class="sub">you set this</span></div>
+        <div><span class="lb">SE of<br>p&#770;<sub>A</sub></span><span class="vv" id="tSA">&mdash;</span><span class="sub">&radic;(p&#770;<sub>A</sub>q&#770;<sub>A</sub>/n<sub>A</sub>)</span></div>
+        <div><span class="lb">SE of<br>p&#770;<sub>B</sub></span><span class="vv" id="tSB">&mdash;</span><span class="sub">&radic;(p&#770;<sub>B</sub>q&#770;<sub>B</sub>/n<sub>B</sub>)</span></div>
+        <div><span class="lb">SE for the<br>interval</span><span class="vv" id="tSU">&mdash;</span><span class="sub">unpooled</span></div>
+        <div><span class="lb">SE for the<br>test</span><span class="vv" id="tSP">&mdash;</span><span class="sub" id="tSPs">pooled</span></div>
+        <div><span class="lb">z statistic</span><span class="vv" id="tZ">&mdash;</span><span class="sub">gap &divide; pooled SE</span></div>
+        <div id="bxP"><span class="lb">p&#8209;value<br>two&#8209;sided</span><span class="vv" id="tP">&mdash;</span><span class="sub" id="tPs">&nbsp;</span></div>
+        <div id="bxCI" style="grid-column:span 2;"><span class="lb">95% confidence interval for p<sub>A</sub> &minus; p<sub>B</sub></span><span class="vv" id="tCI">&mdash;</span><span class="sub" id="tCIs">&nbsp;</span></div>
+      </div>
+      <div class="sent" id="sent"></div>
+    </div>
+
+    <div class="card">
+      <h2>The same gap, three different headlines</h2>
+      <div class="cap" style="margin-top:2px;">A difference in proportions can be reported three ways, and they are not interchangeable. The <b>risk difference</b> is the gap in percentage points. The <b>relative risk</b> is the ratio of the two shares. The <b>number needed to treat</b> is how many patients you would have to give A instead of B to gain one extra recovery. The curve below holds your observed gap <i>fixed</i> and slides only the baseline rate underneath it &mdash; the absolute benefit never changes, yet the ratio swings wildly.</div>
+      <div class="tiles three">
+        <div><span class="lb">Risk<br>difference</span><span class="vv" id="mRD">&mdash;</span><span class="sub">percentage points</span></div>
+        <div><span class="lb">Relative<br>risk</span><span class="vv" id="mRR">&mdash;</span><span class="sub">p&#770;<sub>A</sub> &divide; p&#770;<sub>B</sub></span></div>
+        <div><span class="lb">Number needed<br>to treat</span><span class="vv" id="mNNT">&mdash;</span><span class="sub">1 &divide; risk difference</span></div>
+      </div>
+      <svg viewBox="0 0 480 190" id="rr" aria-label="relative risk plotted against baseline rate with the absolute risk difference held fixed at the observed value"></svg>
+      <div class="sent" id="rrsent"></div>
+    </div>
+
+    <div class="card">
+      <h2>Is the normal approximation safe here?</h2>
+      <div class="cap" style="margin-top:2px;">Everything above replaces a lumpy distribution of counts with a smooth normal curve. That swap is legitimate only when <b>each of these four counts is comfortably large</b> &mdash; at least 10 is the usual working rule, and some texts will accept 5. It is the counts that matter, not the sample size: a trial of five thousand patients chasing an outcome that happens twice still has nothing to smooth.</div>
+      <div class="chk">
+        <div id="k1"><span class="lb">A<br>recovered</span><span class="vv" id="v1">&mdash;</span></div>
+        <div id="k2"><span class="lb">A did<br>not</span><span class="vv" id="v2">&mdash;</span></div>
+        <div id="k3"><span class="lb">B<br>recovered</span><span class="vv" id="v3">&mdash;</span></div>
+        <div id="k4"><span class="lb">B did<br>not</span><span class="vv" id="v4">&mdash;</span></div>
+      </div>
+      <div class="sent" id="assent"></div>
+      <div class="cap">Two further conditions are not visible in any count. The patients must be a <b>random sample</b> or a randomised allocation, and the two arms must be <b>independent</b> of each other &mdash; different people, not the same people measured twice. Paired data (the same patients before and after) violate that second condition, and the methods on this page will misreport the uncertainty if you use them anyway. And when the counts are small, the interval drawn here &mdash; the plain p&#770;&nbsp;&plusmn;&nbsp;z*&nbsp;SE form &mdash; stops hitting its advertised 95% reliably. The distribution underneath is a coarse ladder of a few possible values, and a recipe aimed at a smooth target cannot land on it: true coverage comes loose, usually falling short and occasionally overshooting. Drag <i>both</i> arms down to ten patients and run several thousand trials &mdash; one thousand is too few to see it through the noise &mdash; and watch the coverage figure settle somewhere other than the 95% on the label.</div>
+    </div>
+
+    <div class="card">
+      <h2>Say it right</h2>
+      <div class="cap" style="margin-top:2px;">Nine things people say after comparing two proportions. Four of them are correct. Tap each one.</div>
+      <div class="list" id="claims"></div>
+      <div id="info"></div>
+    </div>
+
+    <div class="card">
+      <h2>What to carry out of this section</h2>
+      <div class="mnem"><b>Pool for the test, do not pool for the interval.</b> This is the one rule that is specific to proportions, and it follows from what each procedure assumes. A test starts by <i>granting</i> the null hypothesis that both arms share a single rate; if that rate is one number, the honest estimate of it is all the successes over all the patients, and the standard error is built from that pooled figure. A confidence interval grants nothing &mdash; it is trying to locate the gap, not to test a claim about it &mdash; so each arm keeps its own p&#770; and the two variances simply add. The two standard errors sit side by side in the triangle panel: equal in the knife&#8209;edge case where the two observed shares match exactly, and otherwise close but distinct, with the pooled one slightly the larger whenever the arms are the same size.</div>
+      <div class="mnem"><b>Variances add; standard errors do not.</b> As with two means, Var(p&#770;<sub>A</sub>&nbsp;&minus;&nbsp;p&#770;<sub>B</sub>) = Var(p&#770;<sub>A</sub>) + Var(p&#770;<sub>B</sub>) for independent arms &mdash; a plus sign despite the minus sign in the statistic. Independent noise cannot cancel; it can only accumulate. Adding the two standard errors instead gives the bottom bar in the triangle panel, which is always too long, and every interval built from it would be too wide.</div>
+      <div class="mnem"><b>A proportion carries its own spread.</b> With measurements you estimate the mean and the standard deviation separately. With a proportion you do not get that choice: p&#770; fixes the variability at p&#770;(1&minus;p&#770;)/n. That product peaks at p&#770;&nbsp;=&nbsp;0.5 and collapses toward zero at either extreme, which is why rare outcomes are easier to pin down in relative terms and much harder in absolute ones, and why sample size requirements balloon near 50%.</div>
+      <div class="note"><b>What a small p&#8209;value is not.</b> It is not the probability that the two rates are equal, and it is not the probability that you are wrong. It is computed <i>assuming</i> they are equal, and it reports how often a gap at least this extreme would appear under that assumption. Inverting it &mdash; treating it as the probability of the assumption itself &mdash; is the most common error in applied statistics, and no sample size protects you from it.</div>
+      <div class="note"><b>What 95% confidence is not.</b> The interval either contains the true gap or it does not; once the arithmetic is done there is nothing left to be random about. The 95% describes the <b>procedure</b>: across endless repeats, that recipe brackets the truth 95% of the time. The simulation panel measures exactly that, one interval per trial, and reports the running score &mdash; including the honest fact that with small counts this particular recipe stops delivering the number printed on its label.</div>
+      <div class="note"><b>Relative risk without a baseline is not information.</b> Load the <i>Rare outcome</i> preset. The rates you set are 3% and 1%: a relative risk of three, which sounds enormous, and an absolute gap of two percentage points, which means about fifty patients treated per extra recovery. Both numbers describe the same truth. Your particular trial will report something near them rather than exactly them &mdash; with events this scarce, a handful of patients either way moves the ratio a long distance and the absolute gap barely at all, which is itself the lesson. Only one of them tells you what happens to a patient. Whenever a ratio is quoted without the baseline it was computed from, the baseline is the missing number, not an optional detail.</div>
+      <div class="note"><b>A gap between arms is not automatically caused by the arms.</b> Every number on this page would be identical whether patients were randomised to A and B or simply sorted themselves into the two groups. The statistics measure the size and precision of a gap; they are silent about what produced it. Only <b>random allocation</b> licenses a causal reading, and no value of z upgrades an observational comparison into a causal one.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ================= seeded PRNG (mulberry32) — reproducible every session ================= */
+ var SEED0=20260112, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+
+ /* ================= normal tail, via erfc (Numerical Recipes, |err| < 1.2e-7) ========== */
+ function erfc(x){
+   var z=Math.abs(x), t=1/(1+0.5*z);
+   var ans=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+
+       t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+
+       t*(-0.82215223+t*0.17087277)))))))));
+   return x>=0?ans:2-ans;
+ }
+ function twoSided(z){ return erfc(Math.abs(z)/Math.SQRT2); }   /* P(|Z| > |z|) */
+ function normPdf(x){ return 0.3989422804014327*Math.exp(-0.5*x*x); }
+ var Z95=1.959963985, AL=0.05;
+
+ /* ================= dials ================= */
+ var NS=[10,15,20,25,30,40,50,75,100,150,200,250,300,400,500,750,1000,1500,2000];
+ var P={pa:0.55,ia:10, pb:0.40,ib:10};
+ var ci=-1;
+ function nA(){ return NS[P.ia]; }
+ function nB(){ return NS[P.ib]; }
+ function trueDiff(){ return P.pa-P.pb; }
+ function trueSE(){ return Math.sqrt(P.pa*(1-P.pa)/nA()+P.pb*(1-P.pb)/nB()); }
+
+ /* ================= the current trial: two counts, honestly flipped ================= */
+ var xa=0, xb=0;
+ function binom(n,p){ var k=0,i; for(i=0;i<n;i++){ if(rnd()<p) k++; } return k; }
+ function newTrial(){ xa=binom(nA(),P.pa); xb=binom(nB(),P.pb); }
+ function huntWrong(){
+   var d0=trueDiff(), na=nA(), nb=nB(), i, best=null, bestv=Infinity, sg=d0>=0?1:-1, tries=2500;
+   if(Math.abs(d0)<1e-12){ newTrial(); return {found:0,tries:0}; }
+   for(i=0;i<tries;i++){
+     var a=binom(na,P.pa), b=binom(nb,P.pb), d=a/na-b/nb, v=d*sg;
+     if(v<bestv){ bestv=v; best=[a,b]; }
+     if(v<0){ xa=a; xb=b; return {found:1,tries:i+1}; }
+   }
+   xa=best[0]; xb=best[1];
+   return {found:0,tries:tries};
+ }
+
+ /* ================= the two-proportion computation, done once, in one place ============ */
+ function score(a,b,na,nb){
+   var pa=a/na, pb=b/nb, d=pa-pb;
+   var sea=Math.sqrt(pa*(1-pa)/na), seb=Math.sqrt(pb*(1-pb)/nb);
+   var seU=Math.sqrt(sea*sea+seb*seb);
+   var pp=(a+b)/(na+nb);
+   var seP=Math.sqrt(pp*(1-pp)*(1/na+1/nb));
+   var z=seP>0?d/seP:0;
+   return {pa:pa,pb:pb,d:d,sea:sea,seb:seb,seU:seU,pp:pp,seP:seP,z:z,
+           p:seP>0?twoSided(z):1, lo:d-Z95*seU, hi:d+Z95*seU};
+ }
+ function cur(){ return score(xa,xb,nA(),nB()); }
+ function own(x,n){                                   /* one arm's own interval */
+   var p=x/n, se=Math.sqrt(p*(1-p)/n);
+   return {p:p,se:se,lo:Math.max(0,p-Z95*se),hi:Math.min(1,p+Z95*se)};
+ }
+
+ /* ================= formatting ================= */
+ function f3(x){ return (x<0?'&minus;':'')+Math.abs(x).toFixed(3); }
+ function pts(x,d){ if(d===undefined) d=1; return (x<0?'&minus;':'')+Math.abs(x*100).toFixed(d)+' pts'; }
+ function pcs(v,d){ return (v*100).toFixed(d===undefined?1:d)+'%'; }
+ function com(s){ s=String(s); var q=s.split('.');
+   q[0]=q[0].replace(/\B(?=(\d{3})+(?!\d))/g,','); return q.join('.'); }
+ function pv(p){ return p<0.0001?'&lt; 0.0001':p.toFixed(4); }
+ /* NNT is conventionally rounded up, but 15/500 - 5/500 lands at 0.019999999999999997
+    in binary floating point, which would round 50 up to 51. Nudge before ceiling. */
+ function nntUp(v){ return Math.ceil(v-1e-9); }
+ function stepFor(range){
+   var s=[0.0005,0.001,0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.25], i;
+   for(i=0;i<s.length;i++){ if(range/s[i]<=9) return s[i]; }
+   return 0.25;
+ }
+ function tickTxt(g,s){
+   var v=g*100, dec=(s*100<1)?1:0;
+   return (Math.abs(v)<1e-9?'0':(v<0?'&minus;':'')+Math.abs(v).toFixed(dec));
+ }
+ var CA='#2f6f8a', CB='#b8862f';
+
+ /* ================= panel 1 — the patients, and each arm's interval ================= */
+ function drawWaf(){
+   var o='', g, i;
+   var arms=[{x0:34,c:CA,lab:'Arm A &mdash; new',x:xa,n:nA(),tp:P.pa},
+             {x0:266,c:CB,lab:'Arm B &mdash; standard',x:xb,n:nB(),tp:P.pb}];
+   var perPatient=(nA()<=100&&nB()<=100);
+
+   for(g=0;g<2;g++){
+     var R=arms[g], cells, filled;
+     if(R.n<=100){ cells=R.n; filled=R.x; }
+     else { cells=100; filled=Math.round(R.x/R.n*100); }
+     var cols=10, rows=Math.ceil(cells/10), cs=14;
+     var yTop=46+(144-rows*cs)/2;
+     for(i=0;i<cells;i++){
+       var row=Math.floor(i/cols), col=i%cols;
+       var cx=R.x0+col*cs, cy=yTop+row*cs;
+       var on=(i<filled);
+       o+='<rect x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" width="12.3" height="12.3" rx="2.6" fill="'+
+          (on?R.c:'#e6eef2')+'"'+(on?'':' stroke="#d8e4ea" stroke-width="0.8"')+'/>';
+     }
+     o+='<text x="'+(R.x0+70)+'" y="26" font-size="10.4" fill="'+R.c+'" text-anchor="middle" font-weight="800">'+R.lab+'</text>';
+     o+='<text x="'+(R.x0+70)+'" y="39" font-size="9.6" fill="#9aa8ae" text-anchor="middle" font-weight="700">'+
+        com(R.x)+' of '+com(R.n)+' recovered &nbsp;&middot;&nbsp; p&#770; = '+(R.x/R.n).toFixed(3)+'</text>';
+   }
+   o+='<text x="240" y="207" font-size="9.8" fill="#9aa8ae" text-anchor="middle" font-weight="700">'+
+      (perPatient?'one square = one patient':'one square = 1% of that arm, rounded')+'</text>';
+
+   /* the shared, zoomed interval axis */
+   var oa=own(xa,nA()), ob=own(xb,nB());
+   var lo=Math.min(oa.lo,ob.lo,P.pa,P.pb), hi=Math.max(oa.hi,ob.hi,P.pa,P.pb);
+   var pad=(hi-lo)*0.12+0.006;
+   lo=Math.max(0,lo-pad); hi=Math.min(1,hi+pad);
+   if(hi-lo<0.02){ var mid=(lo+hi)/2; lo=Math.max(0,mid-0.01); hi=Math.min(1,mid+0.01); }
+   var X0=54, X1=470;
+   function ax(v){ return X0+(v-lo)/(hi-lo)*(X1-X0); }
+   var AY=286;
+   o+='<line x1="'+X0+'" y1="'+AY+'" x2="'+X1+'" y2="'+AY+'" stroke="#c3d2d9" stroke-width="1.3"/>';
+   var st=stepFor(hi-lo), k0=Math.ceil(lo/st-1e-9), k;
+   for(k=k0;k*st<=hi+1e-9;k++){
+     var gv=k*st, X=ax(gv);
+     o+='<line x1="'+X.toFixed(1)+'" y1="'+AY+'" x2="'+X.toFixed(1)+'" y2="'+(AY+5)+'" stroke="#c3d2d9" stroke-width="1.1"/>';
+     o+='<text x="'+X.toFixed(1)+'" y="'+(AY+16)+'" font-size="9.5" fill="#9aa8ae" text-anchor="middle" font-weight="700">'+tickTxt(gv,st)+'%</text>';
+   }
+   var rows2=[{s:oa,c:CA,l:'A',tp:P.pa,y:232},{s:ob,c:CB,l:'B',tp:P.pb,y:262}];
+   for(i=0;i<2;i++){
+     var Q=rows2[i], a=Math.max(X0,ax(Q.s.lo)), b=Math.min(X1,ax(Q.s.hi)), yy=Q.y;
+     o+='<line x1="'+a.toFixed(1)+'" y1="'+yy+'" x2="'+b.toFixed(1)+'" y2="'+yy+'" stroke="'+Q.c+'" stroke-width="3.6"/>';
+     o+='<line x1="'+a.toFixed(1)+'" y1="'+(yy-6)+'" x2="'+a.toFixed(1)+'" y2="'+(yy+6)+'" stroke="'+Q.c+'" stroke-width="2.6"/>';
+     o+='<line x1="'+b.toFixed(1)+'" y1="'+(yy-6)+'" x2="'+b.toFixed(1)+'" y2="'+(yy+6)+'" stroke="'+Q.c+'" stroke-width="2.6"/>';
+     o+='<circle cx="'+ax(Q.s.p).toFixed(1)+'" cy="'+yy+'" r="4.4" fill="'+Q.c+'"/>';
+     var tx=ax(Q.tp);
+     o+='<line x1="'+tx.toFixed(1)+'" y1="'+(yy-10)+'" x2="'+tx.toFixed(1)+'" y2="'+(yy+10)+'" stroke="#9fb0b8" stroke-width="1.5" stroke-dasharray="3 3"/>';
+     o+='<text x="6" y="'+(yy+4)+'" font-size="10" fill="'+Q.c+'" font-weight="800">Arm '+Q.l+'</text>';
+   }
+   o+='<text x="'+X0+'" y="222" font-size="9.4" fill="#9aa8ae" font-weight="700">each arm&rsquo;s own 95% interval &mdash; dashed tick = the true rate you set</text>';
+   $("waf").innerHTML=o;
+
+   /* the 2x2 table */
+   var C=cur();
+   $("tbl").innerHTML=
+     '<tr><th>Outcome</th><th>Arm A &mdash; new</th><th>Arm B &mdash; standard</th><th>Both arms</th></tr>'+
+     '<tr><td>Recovered</td><td>'+com(xa)+'</td><td>'+com(xb)+'</td><td>'+com(xa+xb)+'</td></tr>'+
+     '<tr><td>Did not recover</td><td>'+com(nA()-xa)+'</td><td>'+com(nB()-xb)+'</td><td>'+com(nA()+nB()-xa-xb)+'</td></tr>'+
+     '<tr><td>Patients</td><td>'+com(nA())+'</td><td>'+com(nB())+'</td><td>'+com(nA()+nB())+'</td></tr>'+
+     '<tr><td>Share recovered</td><td>'+C.pa.toFixed(3)+'</td><td>'+C.pb.toFixed(3)+'</td><td>'+C.pp.toFixed(3)+'</td></tr>';
+
+   var d=C.d, d0=trueDiff(), flipped=(Math.abs(d0)>1e-12)&&(d*d0<0), err=d-d0;
+   $("wafsent").className='sent'+(flipped?' warn':'');
+   $("wafsent").innerHTML='<span class="big">p&#770;<sub>A</sub> &minus; p&#770;<sub>B</sub> = '+pts(d)+'</span>'+
+     'This trial recovered <b>'+com(xa)+' of '+com(nA())+'</b> in arm A and <b>'+com(xb)+' of '+com(nB())+'</b> in arm B. '+
+     'The truth you set is a gap of <b>'+pts(d0)+'</b>, so this particular trial is off by <b>'+pts(err)+'</b> &mdash; '+
+     (flipped
+       ? 'and it is off <b>in the wrong direction entirely</b>. Arm '+(d0>0?'A':'B')+' really does recover more often, but these patients say the opposite. Nothing malfunctioned; this is ordinary sampling variability, and it happens whenever the true gap is small next to the standard error.'
+       : (Math.abs(err)<trueSE()
+          ? 'a miss of less than one standard error, which is the ordinary case.'
+          : 'a miss of more than one standard error, which happens on roughly a third of all trials.'))+
+     ' Run it again. The two true rates have not moved; only the patients have.';
+ }
+
+ /* ================= panel 2 — the gap under the null ================= */
+ var DX0=40, DX1=470, DYB=118, DY0=18;
+ function drawDif(){
+   var C=cur(), o='', i;
+   var R=Math.max(3.6*C.seP, Math.abs(C.d)*1.25+0.8*C.seP, Math.abs(C.hi)*1.06, Math.abs(C.lo)*1.06, 0.004);
+   function dx(v){ return DX0+(v/R+1)/2*(DX1-DX0); }
+   function ycurve(v){ return DYB-normPdf(v/C.seP)/normPdf(0)*(DYB-DY0); }
+   function seg(a,b,n){
+     var s='',k,v;
+     for(k=0;k<=n;k++){ v=a+(b-a)*k/n; s+=(k?'L':'M')+dx(v).toFixed(2)+' '+ycurve(v).toFixed(2); }
+     return s;
+   }
+   function band(a,b,n){
+     return 'M'+dx(a).toFixed(2)+' '+DYB+'L'+seg(a,b,n).slice(1)+'L'+dx(b).toFixed(2)+' '+DYB+'Z';
+   }
+
+   if(C.seP>0){
+     o+='<path d="'+band(-R,R,260)+'" fill="#cfdde4"/>';
+     var a=Math.abs(C.d);
+     if(a<R){
+       o+='<path d="'+band(a,R,110)+'" fill="#e6b3bd"/>';
+       o+='<path d="'+band(-R,-a,110)+'" fill="#e6b3bd"/>';
+     }
+     o+='<path d="'+seg(-R,R,260)+'" fill="none" stroke="#8fa7b3" stroke-width="1.8"/>';
+   } else {
+     o+='<text x="240" y="70" font-size="11" fill="#b23145" text-anchor="middle" font-weight="800">every patient in both arms had the same outcome &mdash; there is no spread to work with</text>';
+   }
+
+   o+='<line x1="'+DX0+'" y1="'+DYB+'" x2="'+DX1+'" y2="'+DYB+'" stroke="#c3d2d9" stroke-width="1.3"/>';
+   var st=stepFor(2*R), k;
+   for(k=-Math.floor(R/st);k*st<=R+1e-9;k++){
+     var gv=k*st, X=dx(gv);
+     if(X<DX0-1||X>DX1+1) continue;
+     o+='<line x1="'+X.toFixed(1)+'" y1="'+DYB+'" x2="'+X.toFixed(1)+'" y2="'+(DYB+5)+'" stroke="#c3d2d9" stroke-width="1.1"/>';
+     o+='<text x="'+X.toFixed(1)+'" y="'+(DYB+17)+'" font-size="9.6" fill="#9aa8ae" text-anchor="middle" font-weight="700">'+tickTxt(gv,st)+'</text>';
+   }
+   o+='<text x="'+((DX0+DX1)/2)+'" y="'+(DYB+31)+'" font-size="10.3" fill="#78868d" text-anchor="middle" font-weight="700">gap in share recovered, percentage points</text>';
+   o+='<line x1="'+dx(0).toFixed(1)+'" y1="'+DY0+'" x2="'+dx(0).toFixed(1)+'" y2="'+DYB+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="4 3"/>';
+
+   var ox=dx(C.d);
+   if(ox>DX0-2&&ox<DX1+2){
+     o+='<line x1="'+ox.toFixed(1)+'" y1="'+(DY0-6)+'" x2="'+ox.toFixed(1)+'" y2="'+DYB+'" stroke="#1c4454" stroke-width="2.4"/>';
+     o+='<circle cx="'+ox.toFixed(1)+'" cy="'+DYB+'" r="4.6" fill="#1c4454"/>';
+     var w=112, bx=Math.max(2,Math.min(ox-w/2,DX1-w));
+     o+='<rect x="'+bx.toFixed(1)+'" y="'+(DY0-16)+'" width="'+w+'" height="17" rx="8" fill="#1c4454"/>';
+     o+='<text x="'+(bx+w/2).toFixed(1)+'" y="'+(DY0-3.6)+'" font-size="9.4" fill="#fff" text-anchor="middle" font-weight="800">observed '+pts(C.d)+'</text>';
+   }
+
+   var cy=176, la=Math.max(DX0,dx(C.lo)), lb=Math.min(DX1,dx(C.hi));
+   var excl=(C.lo>0||C.hi<0), col=excl?'#237a45':'#b23145';
+   o+='<line x1="'+dx(0).toFixed(1)+'" y1="'+(cy-24)+'" x2="'+dx(0).toFixed(1)+'" y2="'+(cy+14)+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="4 3"/>';
+   o+='<line x1="'+la.toFixed(1)+'" y1="'+cy+'" x2="'+lb.toFixed(1)+'" y2="'+cy+'" stroke="'+col+'" stroke-width="4"/>';
+   o+='<line x1="'+la.toFixed(1)+'" y1="'+(cy-7)+'" x2="'+la.toFixed(1)+'" y2="'+(cy+7)+'" stroke="'+col+'" stroke-width="2.8"/>';
+   o+='<line x1="'+lb.toFixed(1)+'" y1="'+(cy-7)+'" x2="'+lb.toFixed(1)+'" y2="'+(cy+7)+'" stroke="'+col+'" stroke-width="2.8"/>';
+   o+='<circle cx="'+Math.max(DX0,Math.min(dx(C.d),DX1)).toFixed(1)+'" cy="'+cy+'" r="4.6" fill="'+col+'"/>';
+   o+='<text x="'+DX0+'" y="'+(cy-16)+'" font-size="9.6" fill="'+col+'" font-weight="800">95% interval for p<tspan font-size="7">A</tspan> &minus; p<tspan font-size="7">B</tspan>: '+
+      pts(C.lo)+' to '+pts(C.hi)+' &mdash; '+(excl?'does not reach zero':'contains zero')+'</text>';
+   o+='<text x="'+(dx(0)+5).toFixed(1)+'" y="'+(cy+25)+'" font-size="9.4" fill="#b23145" font-weight="800">no difference</text>';
+   $("dif").innerHTML=o;
+
+   var sig=C.p<AL, agree=(sig===excl);
+   $("difsent").className='sent'+(sig?' good':' warn');
+   $("difsent").innerHTML='<span class="big">z = '+f3(C.z)+' &nbsp;&middot;&nbsp; p = '+pv(C.p)+'</span>'+
+     'The observed gap of <b>'+pts(C.d)+'</b> sits <b>'+Math.abs(C.z).toFixed(2)+' pooled standard errors</b> from zero. '+
+     'If both arms really recovered at the same rate, a gap at least this large in either direction would turn up in <b>'+
+     (C.p<0.0001?'fewer than 1 trial in 10,000':'about '+pcs(C.p,C.p<0.01?2:1)+' of trials')+'. '+
+     (sig
+      ? 'That is rare enough under the equal&#8209;rates assumption to make that assumption a poor description of these data, so we report a difference. Then read the interval, not the verdict: what the data support is a gap somewhere between <b>'+pts(C.lo)+'</b> and <b>'+pts(C.hi)+'</b>.'
+      : 'That is not rare, so these data cannot tell this gap apart from zero. Notice what that does <i>not</i> say: it does not say the treatments are equivalent. The interval runs from <b>'+pts(C.lo)+'</b> to <b>'+pts(C.hi)+'</b>, and every value inside it &mdash; including some worth caring about &mdash; is still live.')+
+     (agree?'':' <b>Worth noticing:</b> the test and the interval have landed on opposite sides of the line here. That is not an error. The curve above is built from the pooled standard error ('+C.seP.toFixed(4)+') and the interval from the unpooled one ('+C.seU.toFixed(4)+'), so in a genuinely borderline case the two can disagree by a hair. The interval is the more informative report.');
+ }
+
+ /* ================= panel 3 — the two standard errors ================= */
+ function drawSE(){
+   var C=cur(), o='';
+   var sa=C.sea, sb=C.seb, hyp=C.seU, pooled=C.seP, sum=sa+sb;
+   var sc=hyp>0?142/hyp:1;
+   var LA=sa*sc, LB=sb*sc, ox=44, oy=178;
+
+   o+='<path d="M'+ox+' '+oy+'L'+(ox+LA).toFixed(1)+' '+oy+'L'+(ox+LA).toFixed(1)+' '+(oy-LB).toFixed(1)+'Z" fill="#e2eff5" stroke="#9fb9c6" stroke-width="1.2"/>';
+   o+='<path d="M'+(ox+LA-11).toFixed(1)+' '+oy+'L'+(ox+LA-11).toFixed(1)+' '+(oy-11)+'L'+(ox+LA).toFixed(1)+' '+(oy-11)+'" fill="none" stroke="#9fb9c6" stroke-width="1.2"/>';
+   o+='<line x1="'+ox+'" y1="'+oy+'" x2="'+(ox+LA).toFixed(1)+'" y2="'+oy+'" stroke="'+CA+'" stroke-width="3.4"/>';
+   o+='<line x1="'+(ox+LA).toFixed(1)+'" y1="'+oy+'" x2="'+(ox+LA).toFixed(1)+'" y2="'+(oy-LB).toFixed(1)+'" stroke="'+CB+'" stroke-width="3.4"/>';
+   o+='<line x1="'+ox+'" y1="'+oy+'" x2="'+(ox+LA).toFixed(1)+'" y2="'+(oy-LB).toFixed(1)+'" stroke="#1c4454" stroke-width="3.4"/>';
+   o+='<text x="'+(ox+LA/2).toFixed(1)+'" y="'+(oy+15)+'" font-size="9.6" fill="'+CA+'" text-anchor="middle" font-weight="800">SE of p&#770;<tspan font-size="7">A</tspan> = '+sa.toFixed(4)+'</text>';
+   o+='<text x="'+(ox+LA+7).toFixed(1)+'" y="'+(oy-LB/2).toFixed(1)+'" font-size="9.6" fill="'+CB+'" font-weight="800">SE of p&#770;<tspan font-size="7">B</tspan> = '+sb.toFixed(4)+'</text>';
+   var ang=(-Math.atan2(LB,LA)*180/Math.PI).toFixed(1), lx=(ox+LA/2-16).toFixed(1), ly=(oy-LB/2-7).toFixed(1);
+   o+='<text x="'+lx+'" y="'+ly+'" font-size="10" fill="#1c4454" text-anchor="middle" font-weight="800" transform="rotate('+ang+' '+lx+' '+ly+')">unpooled SE = '+hyp.toFixed(4)+'</text>';
+   o+='<text x="'+ox+'" y="204" font-size="9.4" fill="#9aa8ae" font-weight="700">the hypotenuse builds the interval</text>';
+
+   var bx=252, bw=196, mx=Math.max(sum,pooled,1e-12), bs=bw/mx;
+   var items=[{l:'SE of p&#770;A',v:sa,c:CA},
+              {l:'SE of p&#770;B',v:sb,c:CB},
+              {l:'unpooled &mdash; builds the interval',v:hyp,c:'#1c4454'},
+              {l:'pooled &mdash; runs the test',v:pooled,c:'#2f9e5b'},
+              {l:'adding the two SEs &mdash; the mistake',v:sum,c:'#c9b8cf'}];
+   for(var i=0;i<5;i++){
+     var y=26+i*40, L=Math.max(1,items[i].v*bs);
+     o+='<text x="'+bx+'" y="'+y+'" font-size="9.2" fill="#78868d" font-weight="800">'+items[i].l+'</text>';
+     o+='<rect x="'+bx+'" y="'+(y+5)+'" width="'+L.toFixed(1)+'" height="12" rx="4" fill="'+items[i].c+'"/>';
+     o+='<text x="'+(bx+L+6).toFixed(1)+'" y="'+(y+15)+'" font-size="9.4" fill="'+items[i].c+'" font-weight="800">'+items[i].v.toFixed(4)+'</text>';
+   }
+   o+='<text x="'+bx+'" y="228" font-size="9.2" fill="#9aa8ae" font-weight="700">all four are standard errors of the same gap</text>';
+   $("se").innerHTML=o;
+
+   var over=sum>0?(1-hyp/sum)*100:0;
+   var gapPct=hyp>0?Math.abs(pooled-hyp)/hyp*100:0;
+   $("sesent").innerHTML='<span class="big">'+sa.toFixed(4)+'&sup2; + '+sb.toFixed(4)+'&sup2; = '+hyp.toFixed(4)+'&sup2;</span>'+
+     'Squaring turns standard errors into <b>variances</b>, and variances of independent quantities add. Adding the standard errors instead would have given '+
+     sum.toFixed(4)+' &mdash; <b>'+over.toFixed(0)+'% too large</b>, and every interval built from it would be that much too wide. '+
+     'The pooled figure is a different animal: it throws all '+com(xa+xb)+' recoveries into one bucket over all '+com(nA()+nB())+' patients, gets a common rate of <b>'+
+     C.pp.toFixed(3)+'</b>, and computes &radic;(p&#770;(1&minus;p&#770;)(1/n<sub>A</sub> + 1/n<sub>B</sub>)) = <b>'+pooled.toFixed(4)+'</b>. '+
+     'Here the pooled and unpooled standard errors differ by <b>'+gapPct.toFixed(1)+'%</b>. '+
+     (gapPct<1.5
+      ? 'They are nearly identical right now, which is the usual state of affairs &mdash; and exactly why the distinction is so easy to sleepwalk past. Push the two rates far apart and watch the gap open up.'
+      : 'They have separated noticeably, because the two observed rates are far apart and pooling them describes neither arm well. That is fine: the pooled value is only ever meant to describe the world <i>under the null hypothesis</i>, where one common rate is exactly what is assumed.');
+ }
+
+ /* ================= panel 4 — repeat the trial ================= */
+ var runs=[], CAPN=20000;
+ var HX0=44, HX1=470, HY0=18, HYB=190;
+ function runTrials(k){
+   if(runs.length>=CAPN) return;
+   if(runs.length+k>CAPN) k=CAPN-runs.length;
+   var na=nA(), nb=nB(), j;
+   for(j=0;j<k;j++){ runs.push([binom(na,P.pa),binom(nb,P.pb)]); }
+ }
+ function drawHist(){
+   var o='', i, n=runs.length, na=nA(), nb=nB();
+   var D0=trueDiff(), SD=trueSE();
+   var hLo=Math.min(D0-4.1*SD,-0.6*SD), hHi=Math.max(D0+4.1*SD,0.6*SD);
+   var rg=hHi-hLo;
+   var BINS=Math.max(10,Math.min(44,Math.floor(rg*Math.min(na,nb)/1.2)));
+   var BW=rg/BINS;
+   function hx(v){ return HX0+(v-hLo)/rg*(HX1-HX0); }
+
+   o+='<line x1="'+HX0+'" y1="'+HYB+'" x2="'+HX1+'" y2="'+HYB+'" stroke="#c3d2d9" stroke-width="1.3"/>';
+   var st=stepFor(rg), k0=Math.ceil(hLo/st-1e-9), k;
+   for(k=k0;k*st<=hHi+1e-9;k++){
+     var gv=k*st, X=hx(gv);
+     o+='<line x1="'+X.toFixed(1)+'" y1="'+HYB+'" x2="'+X.toFixed(1)+'" y2="'+(HYB+5)+'" stroke="#c3d2d9" stroke-width="1.1"/>';
+     o+='<text x="'+X.toFixed(1)+'" y="'+(HYB+17)+'" font-size="9.6" fill="#9aa8ae" text-anchor="middle" font-weight="700">'+tickTxt(gv,st)+'</text>';
+   }
+   o+='<text x="'+((HX0+HX1)/2)+'" y="'+(HYB+31)+'" font-size="10.3" fill="#78868d" text-anchor="middle" font-weight="700">p&#770;<tspan font-size="7">A</tspan> &minus; p&#770;<tspan font-size="7">B</tspan> from one repeat of the whole trial, percentage points</text>';
+
+   var HMAX=1.34/(SD*Math.sqrt(2*Math.PI));
+   function hy(dn){ var y=HYB-(dn/HMAX)*(HYB-HY0); return y<HY0?HY0:y; }
+
+   var off=0;
+   if(n>0){
+     var b=new Array(BINS);
+     for(k=0;k<BINS;k++) b[k]=0;
+     for(i=0;i<n;i++){
+       k=Math.floor((runs[i][0]/na-runs[i][1]/nb-hLo)/BW);
+       if(k<0||k>=BINS){ off++; continue; }
+       b[k]++;
+     }
+     for(k=0;k<BINS;k++){
+       if(!b[k]) continue;
+       var dens=b[k]/(n*BW), x0=hx(hLo+k*BW), x1=hx(hLo+(k+1)*BW), yy=hy(dens);
+       o+='<rect x="'+(x0+0.4).toFixed(2)+'" y="'+yy.toFixed(2)+'" width="'+Math.max(0.6,x1-x0-0.8).toFixed(2)+'" height="'+(HYB-yy).toFixed(2)+'" fill="#bcd9e6"/>';
+     }
+   }
+
+   var tp='';
+   for(i=0;i<=300;i++){
+     var v=hLo+rg*i/300;
+     tp+=(i?'L':'M')+hx(v).toFixed(2)+' '+hy(normPdf((v-D0)/SD)/SD).toFixed(2);
+   }
+   o+='<path d="'+tp+'" fill="none" stroke="#1c4454" stroke-width="2.4"/>';
+   o+='<line x1="'+hx(0).toFixed(1)+'" y1="'+HY0+'" x2="'+hx(0).toFixed(1)+'" y2="'+HYB+'" stroke="#d1495b" stroke-width="1.7" stroke-dasharray="4 3"/>';
+   var tX=hx(D0);
+   o+='<line x1="'+tX.toFixed(1)+'" y1="'+HY0+'" x2="'+tX.toFixed(1)+'" y2="'+HYB+'" stroke="#1c4454" stroke-width="1.5" stroke-dasharray="2 3"/>';
+   o+='<text x="'+Math.min(tX+5,HX1-96).toFixed(1)+'" y="'+(HY0+11)+'" font-size="9.4" fill="#1c4454" font-weight="800">truth: '+pts(D0)+'</text>';
+   $("hist").innerHTML=o;
+
+   var sig=0, cov=0, sm=0, ss=0;
+   for(i=0;i<n;i++){
+     var S=score(runs[i][0],runs[i][1],na,nb);
+     sm+=S.d;
+     if(S.p<AL) sig++;
+     if(S.lo<=D0&&D0<=S.hi) cov++;
+   }
+   var mean=n?sm/n:0;
+   for(i=0;i<n;i++){ var dd=runs[i][0]/na-runs[i][1]/nb-mean; ss+=dd*dd; }
+   var sd=n>1?Math.sqrt(ss/(n-1)):0;
+   var nul=Math.abs(D0)<1e-12;
+   $("rN").innerHTML=com(n);
+   $("rM").innerHTML=n?pts(mean,2):'&mdash;';
+   $("rS").innerHTML=n?sd.toFixed(4):'&mdash;';
+   $("rP").innerHTML=n?pcs(sig/n):'&mdash;';
+   $("rPl").innerHTML=nul?'False alarm<br>rate':'Power &mdash; share<br>that detect it';
+   $("rC").innerHTML=n?pcs(cov/n):'&mdash;';
+   $("run2").disabled=(n>=CAPN);
+
+   if(!n){
+     $("histcap").innerHTML='Press <b>Run 1,000 trials</b>. Touching any dial clears this panel, because different rates and sizes produce a different curve and the old trials no longer belong to it.';
+     return;
+   }
+   var covPct=cov/n*100;
+   $("histcap").innerHTML='Across <b>'+com(n)+'</b> repeats the gaps averaged <b>'+pts(mean,2)+'</b> against a true gap of <b>'+pts(D0,2)+
+     '</b> &mdash; the estimator is <b>unbiased</b>, so it misses in both directions about equally and the misses wash out. Their spread was <b>'+sd.toFixed(4)+
+     '</b> against the theoretical &radic;(p<sub>A</sub>q<sub>A</sub>/n<sub>A</sub> + p<sub>B</sub>q<sub>B</sub>/n<sub>B</sub>) = <b>'+SD.toFixed(4)+'</b>. '+
+     (off?'('+com(off)+' trial'+(off===1?'':'s')+' landed off the frame and '+(off===1?'is':'are')+' not drawn.) ':'')+
+     (nul
+      ? 'Because you set the two rates exactly equal, the share of trials declaring a difference is the <b>false alarm rate</b>, sitting at '+pcs(sig/n)+' against the 5% you authorised by choosing &alpha; = 0.05. Those trials are the advertised price of the rule, not a fault in it. '
+      : 'The share of trials that detected the gap &mdash; <b>'+pcs(sig/n)+'</b> &mdash; is this design&rsquo;s <b>power</b>. It is a property of the design, fixed before a single patient is enrolled: raise the sample sizes and it climbs, push the two rates together and it falls. ')+
+     'And <b>'+pcs(cov/n)+'</b> of the '+com(n)+' confidence intervals actually contained the true gap. '+
+     (covPct<93.5
+      ? 'That is meaningfully <b>short</b> of 95%, and it is the honest signature of a small&#8209;count trial: the plain p&#770;&nbsp;&plusmn;&nbsp;z*&nbsp;SE recipe over&#8209;promises when there are too few successes or failures to smooth. This is what the assumption check is protecting you from.'
+      : (covPct>96.5
+         ? 'That is noticeably <b>above</b> 95% &mdash; which is a failure too, just a flattering one. A recipe that brackets the truth 97% of the time is producing intervals wider than the confidence level advertises, and the extra width is precision you paid for and did not receive. Over&#8209;coverage like this shows up with rare outcomes, where the count of successes can only take a handful of values and no interval can be tuned to hit exactly 95%.'
+         : 'That is the 95% figure earning its name &mdash; and notice it is a statement about the <i>procedure</i> across many repeats, never about the single interval you happen to be holding.'))+
+     ' The bars are visibly '+(BINS<26?'lumpy, and that lumpiness is real: with these sample sizes the gap can only take a limited set of values, so the underlying distribution genuinely has steps in it that the smooth curve papers over.':'smooth here, because with samples this size the gap can take so many closely spaced values that the steps become invisible.');
+ }
+
+ /* ================= relative risk vs baseline ================= */
+ function drawRR(){
+   var C=cur(), d=C.d, o='';
+   var RX0=50, RX1=468, RYB=152, RY0=20;
+   var bLo=Math.max(0.01,(d<0?-d+0.01:0.01)), bHi=Math.min(0.95,1-Math.max(0,d)-0.005);
+   if(bHi<=bLo+0.01){ bHi=bLo+0.02; }
+   var rrAt=function(b){ return (b+d)/b; };
+   var yMax=Math.min(9,Math.max(2.6,rrAt(bLo)));
+   function rx(b){ return RX0+(b-bLo)/(bHi-bLo)*(RX1-RX0); }
+   function ry(v){ var y=RYB-(v/yMax)*(RYB-RY0); return y<RY0?RY0:y; }
+
+   /* grid + axes */
+   var gi;
+   for(gi=1;gi<=Math.floor(yMax);gi++){
+     if(gi>8) break;
+     o+='<line x1="'+RX0+'" y1="'+ry(gi).toFixed(1)+'" x2="'+RX1+'" y2="'+ry(gi).toFixed(1)+'" stroke="'+(gi===1?'#d1495b':'#e6eef2')+'" stroke-width="'+(gi===1?1.6:1)+'"'+(gi===1?' stroke-dasharray="4 3"':'')+'/>';
+     o+='<text x="'+(RX0-6)+'" y="'+(ry(gi)+3.5).toFixed(1)+'" font-size="9.2" fill="#9aa8ae" text-anchor="end" font-weight="700">'+gi+'</text>';
+   }
+   o+='<line x1="'+RX0+'" y1="'+RYB+'" x2="'+RX1+'" y2="'+RYB+'" stroke="#c3d2d9" stroke-width="1.3"/>';
+   var st=stepFor(bHi-bLo), k0=Math.ceil(bLo/st-1e-9), k;
+   for(k=k0;k*st<=bHi+1e-9;k++){
+     var gv=k*st, X=rx(gv);
+     o+='<line x1="'+X.toFixed(1)+'" y1="'+RYB+'" x2="'+X.toFixed(1)+'" y2="'+(RYB+5)+'" stroke="#c3d2d9" stroke-width="1.1"/>';
+     o+='<text x="'+X.toFixed(1)+'" y="'+(RYB+16)+'" font-size="9.4" fill="#9aa8ae" text-anchor="middle" font-weight="700">'+tickTxt(gv,st)+'%</text>';
+   }
+   o+='<text x="'+((RX0+RX1)/2)+'" y="'+(RYB+30)+'" font-size="10" fill="#78868d" text-anchor="middle" font-weight="700">baseline rate in arm B, with the gap held fixed at '+pts(d)+'</text>';
+   o+='<text x="'+(RX0-6)+'" y="'+(RY0-6)+'" font-size="9.2" fill="#78868d" text-anchor="end" font-weight="800">RR</text>';
+
+   var pth='';
+   for(k=0;k<=240;k++){
+     var b=bLo+(bHi-bLo)*k/240;
+     pth+=(k?'L':'M')+rx(b).toFixed(2)+' '+ry(Math.max(0,Math.min(yMax,rrAt(b)))).toFixed(2);
+   }
+   o+='<path d="'+pth+'" fill="none" stroke="#1c4454" stroke-width="2.4"/>';
+
+   var bNow=C.pb, rrNow=(bNow>0)?C.pa/C.pb:Infinity;
+   if(bNow>=bLo&&bNow<=bHi&&isFinite(rrNow)){
+     var mx=rx(bNow), my=ry(Math.max(0,Math.min(yMax,rrNow)));
+     o+='<line x1="'+mx.toFixed(1)+'" y1="'+my.toFixed(1)+'" x2="'+mx.toFixed(1)+'" y2="'+RYB+'" stroke="'+CB+'" stroke-width="1.6" stroke-dasharray="3 3"/>';
+     o+='<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="5" fill="'+CB+'"/>';
+     var w=104, lx2=Math.max(2,Math.min(mx-w/2,RX1-w));
+     o+='<rect x="'+lx2.toFixed(1)+'" y="'+Math.max(2,my-22).toFixed(1)+'" width="'+w+'" height="16" rx="8" fill="'+CB+'"/>';
+     o+='<text x="'+(lx2+w/2).toFixed(1)+'" y="'+Math.max(2,my-22+11.6).toFixed(1)+'" font-size="9.2" fill="#fff" text-anchor="middle" font-weight="800">your trial: RR '+(rrNow>=100?'&gt; 100':rrNow.toFixed(2))+'</text>';
+   }
+   o+='<text x="'+RX0+'" y="'+(RY0-6)+'" font-size="9.2" fill="#9aa8ae" font-weight="700">the dashed red line is RR = 1, no relative effect</text>';
+   $("rr").innerHTML=o;
+
+   var rd=d, nnt=(Math.abs(rd)>1e-12)?1/Math.abs(rd):Infinity;
+   $("mRD").innerHTML=pts(rd,rd!==0&&Math.abs(rd)<0.05?2:1);
+   $("mRR").innerHTML=(C.pb>0)?(C.pa/C.pb).toFixed(2):'&mdash;';
+   $("mNNT").innerHTML=isFinite(nnt)?com(nntUp(nnt)):'&mdash;';
+
+   var excl=(C.lo>0||C.hi<0);
+   var s='<span class="big">'+(C.pb>0?'RR = '+(C.pa/C.pb).toFixed(2)+' &nbsp;&middot;&nbsp; ':'')+'RD = '+pts(rd)+'</span>';
+   if(Math.abs(rd)<1e-12){
+     s+='The two arms recovered at exactly the same observed rate in this trial, so the risk difference is zero, the relative risk is one, and the number needed to treat is undefined &mdash; you cannot buy an extra recovery at any price from a treatment that changed nothing. Run the trial again.';
+   } else {
+     s+='These are the same fact stated three ways. In absolute terms, treating patients with '+(rd>0?'A instead of B':'B instead of A')+
+        ' gains one extra recovery for roughly every <b>'+com(nntUp(nnt))+' patients switched</b>. In relative terms the recovery rate is '+
+        (C.pb>0?'<b>'+(C.pa/C.pb).toFixed(2)+' times</b> the comparison arm&rsquo;s':'undefined, because no one in arm B recovered')+'. '+
+        'Slide the baseline along the curve: the absolute benefit is pinned at '+pts(rd)+' the whole way, yet the ratio '+
+        (rd>0?'climbs without limit as the baseline shrinks':'sinks toward zero as the baseline shrinks')+
+        '. A ratio quoted on its own is not a lie, but it is not yet a fact about a patient either. '+
+        (excl
+         ? 'Because the interval for the gap excludes zero, the number needed to treat is bounded too: somewhere between <b>'+
+           com(nntUp(1/Math.max(Math.abs(C.lo),Math.abs(C.hi))))+'</b> and <b>'+com(nntUp(1/Math.min(Math.abs(C.lo),Math.abs(C.hi))))+
+           '</b> patients, which is a wide enough span to change what a reasonable person would decide.'
+         : 'Because the interval for the gap straddles zero, the number needed to treat has no sensible upper bound at all &mdash; the data are compatible with a treatment that helps a little, does nothing, or does mild harm, and quoting a single NNT here would hide all three.');
+   }
+   $("rrsent").innerHTML=s;
+   $("rrsent").className='sent'+(excl?' good':'');
+ }
+
+ /* ================= assumption check ================= */
+ function drawChk(){
+   var v=[xa,nA()-xa,xb,nB()-xb], ids=['k1','k2','k3','k4'], vs=['v1','v2','v3','v4'], i, bad=0, worst=Infinity;
+   for(i=0;i<4;i++){
+     $(vs[i]).innerHTML=com(v[i]);
+     $(ids[i]).className=(v[i]>=10)?'ok':'bad';
+     if(v[i]<10) bad++;
+     if(v[i]<worst) worst=v[i];
+   }
+   var s;
+   if(bad===0){
+     s='<span class="big">All four counts clear 10</span>The normal approximation has enough to work with in both arms, so the z statistic, the p&#8209;value and the interval above are all on solid ground. The smallest of the four is '+
+       com(worst)+'. If you drag either sample size down, or push either rate toward 0% or 100%, watch which box turns red first &mdash; it is always the rarer outcome in the smaller arm.';
+     $("assent").className='sent good';
+   } else {
+     s='<span class="big">'+bad+' of the 4 counts '+(bad===1?'is':'are')+' below 10</span>The smallest is <b>'+com(worst)+
+       '</b>. With a count that thin there is no smooth bell shape underneath &mdash; the true distribution of the gap is a coarse ladder of a few possible values, and laying a normal curve over it misstates both the p&#8209;value and the interval width. The numbers above will still compute; they simply should not be believed. The repairs are to enrol more patients, or to switch to a method built for small counts &mdash; an exact test, or an interval that adds a couple of pseudo&#8209;observations to each cell before it does the arithmetic.';
+     $("assent").className='sent warn';
+   }
+   $("assent").innerHTML=s;
+ }
+
+ /* ================= claims ================= */
+ var DEF='<span class="n">The section in one line</span>The gap between two sample proportions is a statistic with its own sampling distribution &mdash; centred on the true gap, spread by <b>&radic;(p&#770;<sub>A</sub>q&#770;<sub>A</sub>/n<sub>A</sub> + p&#770;<sub>B</sub>q&#770;<sub>B</sub>/n<sub>B</sub>)</b> for the interval, and by the <b>pooled</b> standard error for the test, because the test is the one procedure that begins by granting the null.';
+ var CLM=[
+  {ok:1, t:'&ldquo;The difference between the two sample proportions is itself a statistic, with its own sampling distribution.&rdquo;',
+   s:'the idea the section is built on',
+   d:'<b>Correct.</b> p&#770;<sub>A</sub>&nbsp;&minus;&nbsp;p&#770;<sub>B</sub> is computed from data, so it changes when the data change. The simulation panel shows that distribution directly: centred on the true gap p<sub>A</sub>&nbsp;&minus;&nbsp;p<sub>B</sub>, and spread out by &radic;(p<sub>A</sub>q<sub>A</sub>/n<sub>A</sub>&nbsp;+&nbsp;p<sub>B</sub>q<sub>B</sub>/n<sub>B</sub>). Everything else here &mdash; z, the interval, the p&#8209;value &mdash; is bookkeeping laid on top of that one distribution.'},
+  {ok:0, t:'&ldquo;Since each proportion has its own standard error, the standard error of the gap is the two added together.&rdquo;',
+   s:'the most common arithmetic error here',
+   d:'<b>Wrong.</b> <b>Variances</b> add, not standard errors. The correct combination is &radic;(SE<sub>A</sub>&sup2;&nbsp;+&nbsp;SE<sub>B</sub>&sup2;) &mdash; the hypotenuse of the triangle above &mdash; and it is always <i>smaller</i> than SE<sub>A</sub>&nbsp;+&nbsp;SE<sub>B</sub>, as the bottom bar in that panel shows for your current numbers. Adding standard errors overstates the uncertainty, producing intervals that are too wide and a test with less power than you actually have.'},
+  {ok:0, t:'&ldquo;The test and the confidence interval use the same standard error.&rdquo;',
+   s:'the wrinkle that is unique to proportions',
+   d:'<b>Wrong &mdash; and this is the point of the section.</b> The test begins by <i>granting</i> the null hypothesis that both arms share one rate, so it estimates that single rate by pooling every success over every patient and builds its standard error from that. The interval grants nothing; it lets each arm keep its own p&#770; and simply adds the two variances. With two means you can get away with one standard error for both jobs. With proportions the estimate of the spread is welded to the estimate of the rate, so the null assumption changes the spread as well, and the two numbers separate. Read them side by side in the tile panel.'},
+  {ok:1, t:'&ldquo;Under the null hypothesis the two arms share one common rate, which is exactly why the test pools them.&rdquo;',
+   s:'where the pooled estimate comes from',
+   d:'<b>Correct, and it is the whole justification.</b> If p<sub>A</sub>&nbsp;=&nbsp;p<sub>B</sub>&nbsp;=&nbsp;p, then every patient in the study is an observation of the same p, and the sharpest estimate of it uses all of them: p&#770; = (x<sub>A</sub>&nbsp;+&nbsp;x<sub>B</sub>)&nbsp;/&nbsp;(n<sub>A</sub>&nbsp;+&nbsp;n<sub>B</sub>). The standard error then follows as &radic;(p&#770;(1&minus;p&#770;)(1/n<sub>A</sub>&nbsp;+&nbsp;1/n<sub>B</sub>)). Pooling is not a convenience or a shortcut &mdash; it is what the hypothesis being tested actually says.'},
+  {ok:0, t:'&ldquo;A relative risk of 3 means the treatment makes a big difference to a patient.&rdquo;',
+   s:'a ratio without its baseline',
+   d:'<b>Wrong &mdash; or rather, unknowable from that number alone.</b> A relative risk of 3 on a baseline of 30% is a 60&#8209;point swing. The same relative risk of 3 on a baseline of 1% is a 2&#8209;point swing, about fifty patients treated per extra recovery. Load the <i>Rare outcome</i> preset and slide the baseline along the curve in the ratio panel: the absolute benefit stays pinned while the ratio runs away. Ratios travel well between populations, which is why researchers like them; absolute differences tell you what happens to a person, which is why decisions need them.'},
+  {ok:0, t:'&ldquo;p = 0.02 means there is a 2% chance the two population rates are actually equal.&rdquo;',
+   s:'the classic inversion',
+   d:'<b>Wrong.</b> The p&#8209;value is computed <i>assuming</i> the rates are equal &mdash; that assumption is the starting point of the calculation, not something being assigned a probability by it. It answers &ldquo;how often would a gap at least this extreme appear if the rates were equal?&rdquo; Reading it backwards, as the probability of the assumption given the data, is a different quantity that requires information the p&#8209;value simply does not contain.'},
+  {ok:1, t:'&ldquo;A 95% interval means 95% of intervals built this way capture the true gap &mdash; this one either does or does not.&rdquo;',
+   s:'a claim about the procedure',
+   d:'<b>Correct.</b> The confidence level is a long&#8209;run property of the recipe, not a probability attached to the single interval on your screen. Once the arithmetic is done, the true gap is either between those endpoints or outside them, and nothing remains random. The simulation panel measures the long&#8209;run claim directly: it builds one interval per trial and reports the share that caught the truth. With healthy counts that share sits near 95%. With thin counts it comes loose &mdash; usually landing short, occasionally overshooting &mdash; because a discrete pile of counts cannot be pinned to a smooth target. That is a real limitation of this particular recipe, not a flaw in the idea of confidence.'},
+  {ok:0, t:'&ldquo;The trial enrolled 5,000 patients, so the normal approximation is certainly fine.&rdquo;',
+   s:'size is the wrong thing to check',
+   d:'<b>Wrong.</b> What has to be large is not n but the four cell counts: successes and failures in <i>each</i> arm, at least about 10 apiece. A trial of 5,000 patients chasing an outcome that occurs in one patient per thousand has five events to work with, and there is no smooth bell curve hiding in five events. Drag either rate toward an extreme and watch the assumption boxes turn red while the sample size stays enormous.'},
+  {ok:1, t:'&ldquo;Even a very small p&#8209;value says nothing about whether the treatment caused the difference.&rdquo;',
+   s:'a design question, not a computation',
+   d:'<b>Correct.</b> Every number on this page would be identical whether patients were randomly allocated to the two arms or simply observed in whichever group they already belonged to. The statistics quantify how large the gap is and how precisely it was measured; they are blind to how the groups came about. Only random allocation rules out the possibility that some third difference between the groups produced the gap, and no value of z can substitute for it.'}
+ ];
+ function drawClaims(){
+   $("claims").innerHTML=CLM.map(function(c,i){
+     return '<button class="it'+(i===ci?' on':'')+'" data-i="'+i+'"><span class="sw" style="background:'+(i===ci?'#fff':(c.ok?'#2f9e5b':'#d1495b'))+'"></span>'+
+            '<span><span class="nm">'+c.t+'</span><span class="s">'+c.s+'</span></span></button>';
+   }).join('');
+   var b=document.querySelectorAll('#claims .it'), i;
+   for(i=0;i<b.length;i++){
+     b[i].onclick=function(){ ci=parseInt(this.getAttribute('data-i'),10); drawClaims(); };
+   }
+   if(ci>=0){
+     var c=CLM[ci];
+     $("info").innerHTML='<span class="n">'+(c.ok?'&#10003; True':'&#10007; False')+' &mdash; '+c.s+'</span>'+c.d;
+   } else {
+     $("info").innerHTML=DEF;
+   }
+ }
+
+ /* ================= tiles + stage ================= */
+ function drawTiles(){
+   var C=cur(), d0=trueDiff();
+   $("tPA").innerHTML=C.pa.toFixed(3);
+   $("tPAs").innerHTML=com(xa)+' of '+com(nA())+', p<sub>A</sub> = '+P.pa.toFixed(2);
+   $("tPB").innerHTML=C.pb.toFixed(3);
+   $("tPBs").innerHTML=com(xb)+' of '+com(nB())+', p<sub>B</sub> = '+P.pb.toFixed(2);
+   $("tD").innerHTML=pts(C.d);
+   $("tDs").innerHTML='off by '+pts(C.d-d0,2);
+   $("tT0").innerHTML=pts(d0);
+   $("tSA").innerHTML=C.sea.toFixed(4);
+   $("tSB").innerHTML=C.seb.toFixed(4);
+   $("tSU").innerHTML=C.seU.toFixed(4);
+   $("tSP").innerHTML=C.seP.toFixed(4);
+   $("tSPs").innerHTML='pooled p&#770; = '+C.pp.toFixed(3);
+   $("tZ").innerHTML=f3(C.z);
+   $("tP").innerHTML=pv(C.p);
+   var sig=C.p<AL;
+   $("tPs").innerHTML=sig?'below &alpha; = 0.05':'above &alpha; = 0.05';
+   $("bxP").className=sig?'good':'warn';
+   $("tCI").innerHTML=pts(C.lo)+' &nbsp;to&nbsp; '+pts(C.hi);
+   var excl=(C.lo>0||C.hi<0);
+   $("tCIs").innerHTML=(excl?'zero is outside':'zero is inside')+' &mdash; width '+pts(C.hi-C.lo)+', margin of error &plusmn;'+pts(Z95*C.seU);
+   $("bxCI").className=excl?'good':'warn';
+
+   $("stage").style.background=sig?'#2f6f8a':'#8a6f4f';
+   $("stage").innerHTML=C.pa.toFixed(3)+' vs '+C.pb.toFixed(3)+' &nbsp;&middot;&nbsp; gap '+pts(C.d)+
+     '<small>'+(sig?'the data can tell this gap apart from zero':'the data cannot tell this gap apart from zero')+' &middot; z = '+f3(C.z)+' &middot; p = '+pv(C.p)+'</small>';
+
+   $("sent").className='sent'+(sig?' good':' warn');
+   $("sent").innerHTML='<span class="big">'+pts(C.d)+' &divide; '+C.seP.toFixed(4)+' = '+f3(C.z)+'</span>'+
+     'Every two&#8209;proportion comparison reduces to that one line: <b>the gap you saw, measured in units of how much such a gap wobbles when nothing is going on</b>. '+
+     'Here the two arms differ by '+pts(C.d)+', and under the null a gap like this wobbles by about '+C.seP.toFixed(4)+
+     ' from trial to trial, so what you observed is '+Math.abs(C.z).toFixed(2)+' wobbles wide. Because that denominator is a <b>pooled</b> figure it belongs to the test alone; the &plusmn;'+
+     pts(Z95*C.seU)+' margin of error beside it is built from the <b>unpooled</b> '+C.seU.toFixed(4)+' instead. Two standard errors, two jobs, and the tiles above keep them apart.';
+ }
+
+ /* ================= wiring ================= */
+ function labels(){
+   $("pAv").innerHTML=P.pa.toFixed(2); $("nAv").innerHTML=com(nA());
+   $("pBv").innerHTML=P.pb.toFixed(2); $("nBv").innerHTML=com(nB());
+ }
+ function redrawTrial(){ drawWaf(); drawDif(); drawSE(); drawTiles(); drawRR(); drawChk(); }
+ function dialsChanged(){
+   labels();
+   seed=SEED0; runs=[];
+   newTrial();
+   redrawTrial(); drawHist();
+ }
+ $("pA").oninput=function(){ P.pa=parseFloat(this.value); dialsChanged(); };
+ $("pB").oninput=function(){ P.pb=parseFloat(this.value); dialsChanged(); };
+ $("nA").oninput=function(){ P.ia=parseInt(this.value,10); dialsChanged(); };
+ $("nB").oninput=function(){ P.ib=parseInt(this.value,10); dialsChanged(); };
+
+ var PRE=[{pa:0.55,ia:10, pb:0.40,ib:10},
+          {pa:0.45,ia:10, pb:0.45,ib:10},
+          {pa:0.55,ia:3,  pb:0.40,ib:3},
+          {pa:0.03,ia:14, pb:0.01,ib:14},
+          {pa:0.54,ia:18, pb:0.50,ib:18}];
+ function applyPre(k){
+   var q=PRE[k], key;
+   for(key in q){ if(Object.prototype.hasOwnProperty.call(q,key)) P[key]=q[key]; }
+   $("pA").value=P.pa; $("nA").value=P.ia;
+   $("pB").value=P.pb; $("nB").value=P.ib;
+   dialsChanged();
+ }
+ (function(){
+   var b=document.querySelectorAll('#preSeg button'), i;
+   for(i=0;i<b.length;i++){
+     b[i].onclick=function(){ applyPre(parseInt(this.getAttribute('data-v'),10)); };
+   }
+ })();
+
+ $("bdraw").onclick=function(){ newTrial(); redrawTrial(); };
+ $("bhunt").onclick=function(){
+   var r=huntWrong();
+   redrawTrial();
+   var extra;
+   if(Math.abs(trueDiff())<1e-12){
+     extra=' <b>The hunt could not run:</b> you have set the two true rates equal, so there is no &ldquo;right way round&rdquo; for a trial to miss. Move one of the rate sliders and try again.';
+   } else if(r.found){
+     extra=' <b>Found one after '+com(r.tries)+' simulated trial'+(r.tries===1?'':'s')+'.</b> Every trial before this one pointed the correct way; this is what a genuinely misleading study looks like from the inside, and nothing about it announces itself.';
+   } else {
+     extra=' <b>No reversal in '+com(r.tries)+' simulated trials.</b> Shown here is the closest the hunt came. With a true gap of '+pts(trueDiff())+
+           ' and these sample sizes, a trial that lands on the wrong side is rarer than one in '+com(r.tries)+' &mdash; which is exactly what adequate sample size buys you. Shrink the arms and run the hunt again to watch reversals become easy.';
+   }
+   $("wafsent").innerHTML=$("wafsent").innerHTML+extra;
+ };
+ $("run1").onclick=function(){ runTrials(1000); drawHist(); };
+ $("run2").onclick=function(){ runTrials(4000); drawHist(); };
+ $("rrs").onclick=function(){ runs=[]; drawHist(); };
+ $("brst").onclick=function(){ ci=-1; drawClaims(); applyPre(0); };
+
+ /* ================= go ================= */
+ $("nA").max=NS.length-1; $("nB").max=NS.length-1;
+ $("nA").value=P.ia; $("nB").value=P.ib;
+ drawClaims();
+ labels();
+ newTrial();
+ redrawTrial();
+ drawHist();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Statistical vs Practical Significance</title>
+<meta name="description" content="Hold a trivially small true effect fixed and slide the sample size from 10 to 500,000. A live two-tailed z-test drives p below 0.05 while the confidence interval, Cohen's d, and the overlapping population curves show the effect never became worth treating.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.05fr 0.95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:14px 0 6px;}
+.hd:first-child{margin-top:0;}
+.slide{-webkit-appearance:none;appearance:none;width:100%;height:9px;border-radius:6px;outline:none;margin:6px 0 2px;background:#dbe8ef;}
+.slide::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(25,55,70,.4);cursor:grab;}
+.slide::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(25,55,70,.4);cursor:grab;}
+.big{font-family:var(--disp);font-weight:700;font-size:24px;color:var(--teal-dk);letter-spacing:-.5px;font-variant-numeric:tabular-nums;}
+.big span{font-size:12.5px;font-family:var(--sans);font-weight:700;color:var(--muted);}
+.rd{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.rd.three{grid-template-columns:repeat(3,1fr);}
+.rd div{border:1px solid var(--line);border-radius:9px;padding:7px 3px;text-align:center;background:#fff;}
+.rd .k{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;}
+.rd .v{font-size:14.5px;font-weight:800;color:var(--teal-dk);font-variant-numeric:tabular-nums;margin-top:2px;}
+.rd .v sup{font-size:9.5px;}
+.rd div.hi{border-color:var(--coral);background:#fdf2f4;} .rd div.hi .v{color:#b23145;}
+.lg{display:flex;gap:14px;margin-top:7px;font-size:11.3px;color:var(--muted);font-weight:600;flex-wrap:wrap;}
+.lg i{width:14px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px;}
+.eq{text-align:center;font-size:13px;font-weight:800;color:var(--teal-dk);background:#e2eff5;border-radius:9px;padding:9px;margin-top:11px;font-variant-numeric:tabular-nums;}
+.hint{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:7px;}
+.vt{display:flex;align-items:center;gap:8px;margin-top:2px;}
+.vt h2{margin-bottom:0 !important;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 10</div>
+  <h1>Statistical vs Practical Significance</h1>
+  <div class="intro">A blood-pressure drug truly lowers systolic pressure by <b>0.4&nbsp;mmHg</b> &mdash; an amount no patient would ever feel. Run it as a 40-patient pilot and nothing shows. Run it across half a million health records and the same trivial effect comes back with a p-value smaller than one in a hundred billion. <b>Slide the sample size and watch it happen.</b></div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2>The effect itself &mdash; drawn to scale</h2>
+      <svg viewBox="0 0 340 158" aria-label="Two overlapping population distributions separated by the true effect"><g id="pop"></g></svg>
+      <svg viewBox="0 0 340 58" aria-label="Individual patients from each group"><g id="dots"></g></svg>
+      <div class="lg"><span><i style="background:#8fb5c8"></i>standard care &nbsp;&mu; = 128</span><span><i style="background:#e3a3ac"></i>on the drug</span></div>
+      <div class="rd three">
+        <div><div class="k">Cohen's d</div><div class="v" id="rd">—</div></div>
+        <div><div class="k">Curve overlap</div><div class="v" id="rov">—</div></div>
+        <div><div class="k">Coin-flip test</div><div class="v" id="rcl">—</div></div>
+      </div>
+      <div class="hint" id="gap"></div>
+    </div>
+
+    <div class="card"><h2>The test's ruler &mdash; it shrinks with n</h2>
+      <svg viewBox="0 0 340 202" aria-label="Null sampling distribution of the sample mean, rescaling with sample size"><g id="nullc"></g></svg>
+      <div class="lg"><span><i style="background:#f3c3ca"></i>results at least this extreme &mdash; area = p</span></div>
+      <div class="hint" id="ruler"></div>
+    </div>
+  </div>
+
+  <div>
+    <div id="stage">Set a true effect and a sample size<small>then read both verdicts</small></div>
+
+    <div class="card"><h2>Design the study</h2>
+      <div class="hd">The true effect &mdash; the thing the drug actually does</div>
+      <div class="big" id="dv">0.40 <span>mmHg lower</span></div>
+      <input class="slide" id="ds" type="range" min="0" max="120" step="1" value="8" aria-label="true effect in mmHg">
+      <div class="hd">How many patients you look at</div>
+      <div class="big" id="nv">n = 400</div>
+      <input class="slide" id="ns" type="range" min="0" max="100" step="1" value="34" aria-label="sample size">
+      <div class="seg" id="pre" style="margin-top:8px">
+        <button data-n="50">50<small>pilot</small></button>
+        <button data-n="1200">1,200<small>trial</small></button>
+        <button data-n="40000">40k<small>registry</small></button>
+        <button data-n="500000">500k<small>records</small></button>
+      </div>
+      <div class="rd">
+        <div><div class="k">observed drop</div><div class="v" id="rr">—</div></div>
+        <div><div class="k">std. error</div><div class="v" id="rse">—</div></div>
+        <div><div class="k">test z</div><div class="v" id="rz">—</div></div>
+        <div><div class="k">p-value</div><div class="v" id="rp">—</div></div>
+      </div>
+      <div class="eq" id="calc"></div>
+      <div class="row"><button class="btn solid" id="run">Run the trial again ↻</button></div>
+      <div class="hint">&sigma; = 12&nbsp;mmHg is treated as known; H&#8320;: &mu; = 128 against a two-tailed alternative at &alpha; = 0.05. Sliding <i>n</i> holds this trial's luck of the draw fixed so you see only what sample size does &mdash; press the button for fresh noise.</div>
+    </div>
+
+    <div class="card"><h2>What the p-value does as the study grows</h2>
+      <svg viewBox="0 0 340 186" aria-label="p-value against sample size on a logarithmic axis"><g id="pn"></g></svg>
+      <div class="eq" id="nstar"></div>
+      <div class="hint">The curve is the p-value a trial would get if it landed exactly on the true effect; the solid dot is the trial you actually ran, knocked off the curve by sampling noise. <b>Any</b> non-zero effect, however small, eventually drags this curve to the floor.</div>
+    </div>
+
+    <div class="card">
+      <div class="vt"><h2>How big could the real effect be?</h2><span class="pill" id="pill">—</span></div>
+      <svg viewBox="0 0 340 96" aria-label="95 percent confidence interval for the true reduction against the clinically meaningful threshold"><g id="ci"></g></svg>
+      <div class="eq" id="cit"></div>
+      <div id="info"></div>
+      <div class="mnem"><b>Two different questions.</b> &ldquo;Is the effect distinguishable from zero?&rdquo; is answered by the p-value and is answered better by a bigger <i>n</i>. &ldquo;Is the effect big enough to bother with?&rdquo; is answered by the size of the effect and its interval &mdash; and no sample size on earth can turn a small answer into a large one.</div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- study constants ---------- */
+ var MU0=128, SIG=12, ZC=1.959963985, ALPHA=0.05, MCID=5;
+ var EMIN=1, EMAX=Math.log10(500000), ESTEP=(EMAX-EMIN)/100;
+
+ /* ---------- seeded PRNG (mulberry32) ---------- */
+ var seed=20250401>>>0;
+ function rnd(){seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
+ function randn(){var u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+
+ /* ---------- normal distribution ----------
+    Zelen & Severo near the middle; a continued fraction in the far tail so that
+    p-values like 1e-123 come out right instead of collapsing to zero.          */
+ function normCdf(x){
+   var a=Math.abs(x),t=1/(1+0.2316419*a),d=0.3989422804014327*Math.exp(-a*a/2);
+   var q=d*t*(0.319381530+t*(-0.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429))));
+   return x>0?1-q:q;
+ }
+ function upTailL10(z){                      /* log10 of P(Z > z) for z > 2 */
+   var cf=0,k;
+   for(k=60;k>=1;k--)cf=k/(z+cf);
+   return -z*z/(2*Math.LN10)-0.3990899341790575-Math.log10(z+cf);
+ }
+ function lp2(z){                            /* log10 of the two-tailed p-value */
+   var a=Math.abs(z);
+   if(a<1e-9)return 0;
+   if(a<=2)return Math.log10(Math.max(2*(1-normCdf(a)),1e-320));
+   return 0.30102999566398+upTailL10(a);
+ }
+ function pOf(l){return l<-300?0:Math.pow(10,l);}
+
+ /* ---------- formatting ---------- */
+ function fmtP(l){
+   if(l>=-0.00001)return '1.000';
+   if(l>-3)return pOf(l).toFixed(4);
+   var e=Math.floor(l),m=Math.pow(10,l-e);
+   if(m>=9.995){m=1;e=e+1;}
+   return m.toFixed(2)+'&#215;10<sup>&#8722;'+Math.abs(e)+'</sup>';
+ }
+ function fmtN(v){return String(v).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+ function niceN(x){
+   if(x<100)return Math.max(10,Math.round(x));
+   var m=Math.pow(10,Math.floor(Math.log10(x))-1);
+   return Math.round(x/m)*m;
+ }
+
+ /* ---------- state ---------- */
+ var delta=0.40, n=400, Zn=0, dotZ=[];
+
+ function newTrial(){
+   Zn=randn(); dotZ=[];
+   for(var i=0;i<80;i++)dotZ.push(randn());
+ }
+
+ /* A sample mean of n independent draws is exactly Normal(mu, sigma^2/n),
+    so one standard normal Zn is a complete, faithful simulation of the study. */
+ function stats(){
+   var se=SIG/Math.sqrt(n);
+   var xbar=MU0-delta+se*Zn;
+   var red=MU0-xbar;                 /* observed reduction, mmHg */
+   var z=(xbar-MU0)/se;
+   var l=lp2(z);
+   return {se:se,xbar:xbar,red:red,z:z,l:l,
+           lo:red-ZC*se,hi:red+ZC*se,
+           sig:Math.abs(z)>=ZC};
+ }
+
+ /* ================= chart 1: the two populations ================= */
+ var EX0=26,EX1=326,EBASE=126,EHT=96,ELO=MU0-36,EHI=MU0+36;
+ function XE(v){return EX0+(Math.max(ELO,Math.min(EHI,v))-ELO)/(EHI-ELO)*(EX1-EX0);}
+ function bellPath(c){
+   var d='',v,first=true;
+   for(v=ELO;v<=EHI+1e-9;v+=0.4){
+     var y=EBASE-EHT*Math.exp(-Math.pow((v-c)/SIG,2)/2);
+     d+=(first?'M':' L')+XE(v).toFixed(1)+' '+y.toFixed(1); first=false;
+   }
+   return d;
+ }
+ function drawPop(){
+   var o='',v,dC=bellPath(MU0),dT=bellPath(MU0-delta);
+   o+='<path d="'+dC+' L'+EX1+' '+EBASE+' L'+EX0+' '+EBASE+' Z" fill="#2f6f8a" opacity=".16"/>';
+   o+='<path d="'+dT+' L'+EX1+' '+EBASE+' L'+EX0+' '+EBASE+' Z" fill="#d1495b" opacity=".16"/>';
+   o+='<path d="'+dC+'" fill="none" stroke="#2f6f8a" stroke-width="2"/>';
+   o+='<path d="'+dT+'" fill="none" stroke="#d1495b" stroke-width="2"/>';
+   o+='<line x1="'+EX0+'" y1="'+EBASE+'" x2="'+EX1+'" y2="'+EBASE+'" stroke="#9fb3bd" stroke-width="1.2"/>';
+   for(v=100;v<=160;v+=10){
+     o+='<line x1="'+XE(v).toFixed(1)+'" y1="'+EBASE+'" x2="'+XE(v).toFixed(1)+'" y2="'+(EBASE+4)+'" stroke="#9fb3bd" stroke-width="1.2"/>'+
+        '<text x="'+XE(v).toFixed(1)+'" y="'+(EBASE+15)+'" font-size="9.5" fill="#78868d" text-anchor="middle" font-family="Inter,sans-serif">'+v+'</text>';
+   }
+   o+='<text x="176" y="'+(EBASE+30)+'" font-size="10" fill="#78868d" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">systolic blood pressure (mmHg)</text>';
+   o+='<line x1="'+XE(MU0).toFixed(1)+'" y1="22" x2="'+XE(MU0).toFixed(1)+'" y2="'+EBASE+'" stroke="#2f6f8a" stroke-width="1.5" stroke-dasharray="4 3"/>';
+   o+='<line x1="'+XE(MU0-delta).toFixed(1)+'" y1="22" x2="'+XE(MU0-delta).toFixed(1)+'" y2="'+EBASE+'" stroke="#d1495b" stroke-width="1.5" stroke-dasharray="4 3"/>';
+   o+='<text x="'+XE(MU0).toFixed(1)+'" y="16" font-size="10" fill="#1c4454" font-weight="800" text-anchor="middle" font-family="Inter,sans-serif">the whole true difference is here</text>';
+   $("pop").innerHTML=o;
+ }
+ function drawDots(){
+   var o='',i,v;
+   for(i=0;i<40;i++){
+     v=MU0+SIG*dotZ[i];
+     o+='<circle cx="'+XE(v).toFixed(1)+'" cy="'+(15+(i%3)*3.5).toFixed(1)+'" r="3.3" fill="#2f6f8a" opacity=".45"/>';
+   }
+   for(i=0;i<40;i++){
+     v=MU0-delta+SIG*dotZ[40+i];
+     o+='<circle cx="'+XE(v).toFixed(1)+'" cy="'+(40+(i%3)*3.5).toFixed(1)+'" r="3.3" fill="#d1495b" opacity=".45"/>';
+   }
+   o+='<text x="'+EX0+'" y="'+(56)+'" font-size="9.5" fill="#78868d" font-family="Inter,sans-serif">40 patients from each group &mdash; try to tell the rows apart</text>';
+   $("dots").innerHTML=o;
+ }
+
+ /* ================= chart 2: the null sampling distribution ================= */
+ var NX0=26,NX1=326,NBASE=150,NHT=104;
+ function drawNull(S){
+   var hw=Math.max(4*S.se,1.28*Math.abs(S.red)+2.1*S.se);
+   var lo=MU0-hw,hi=MU0+hw,o='',v;
+   function X(v){return NX0+(v-lo)/(2*hw)*(NX1-NX0);}
+   function Y(v){return NBASE-NHT*Math.exp(-Math.pow((v-MU0)/S.se,2)/2);}
+   function area(a,b){
+     if(b<=a)return '';
+     var d='M'+X(a).toFixed(1)+' '+NBASE,st=(b-a)/70,k;
+     for(k=a;k<b;k+=st)d+=' L'+X(k).toFixed(1)+' '+Y(k).toFixed(1);
+     return d+' L'+X(b).toFixed(1)+' '+Y(b).toFixed(1)+' L'+X(b).toFixed(1)+' '+NBASE+' Z';
+   }
+   /* the tails at least as extreme as what was observed — area = p */
+   var d0=Math.abs(S.red);
+   o+='<path d="'+area(MU0+d0,hi)+'" fill="#f3c3ca"/><path d="'+area(lo,MU0-d0)+'" fill="#f3c3ca"/>';
+   /* the bell */
+   var d='',st=(2*hw)/320,first=true;
+   for(v=lo;v<=hi+1e-12;v+=st){d+=(first?'M':' L')+X(v).toFixed(1)+' '+Y(v).toFixed(1);first=false;}
+   o+='<path d="'+d+'" fill="none" stroke="#1c4454" stroke-width="2"/>';
+   /* axis */
+   o+='<line x1="'+NX0+'" y1="'+NBASE+'" x2="'+NX1+'" y2="'+NBASE+'" stroke="#9fb3bd" stroke-width="1.2"/>';
+   var dec=Math.max(0,Math.min(4,Math.ceil(-Math.log10(hw/2))+1)),k;
+   for(k=-2;k<=2;k++){
+     var tv=MU0+k*hw/2;
+     o+='<line x1="'+X(tv).toFixed(1)+'" y1="'+NBASE+'" x2="'+X(tv).toFixed(1)+'" y2="'+(NBASE+4)+'" stroke="#9fb3bd" stroke-width="1.2"/>'+
+        '<text x="'+X(tv).toFixed(1)+'" y="'+(NBASE+15)+'" font-size="9" fill="#78868d" text-anchor="middle" font-family="Inter,sans-serif">'+tv.toFixed(dec)+'</text>';
+   }
+   o+='<text x="176" y="'+(NBASE+31)+'" font-size="10" fill="#78868d" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">where the sample mean lands if &#956; really is 128</text>';
+   /* mu-0 reference and critical values */
+   o+='<line x1="'+X(MU0).toFixed(1)+'" y1="'+(NBASE-NHT-6)+'" x2="'+X(MU0).toFixed(1)+'" y2="'+NBASE+'" stroke="#9fb3bd" stroke-width="1.2" stroke-dasharray="3 3"/>';
+   o+='<line x1="'+X(MU0-ZC*S.se).toFixed(1)+'" y1="46" x2="'+X(MU0-ZC*S.se).toFixed(1)+'" y2="'+NBASE+'" stroke="#d1495b" stroke-width="1.4" stroke-dasharray="4 3"/>';
+   o+='<line x1="'+X(MU0+ZC*S.se).toFixed(1)+'" y1="46" x2="'+X(MU0+ZC*S.se).toFixed(1)+'" y2="'+NBASE+'" stroke="#d1495b" stroke-width="1.4" stroke-dasharray="4 3"/>';
+   /* the observed sample mean */
+   var mx=X(S.xbar);
+   o+='<line x1="'+mx.toFixed(1)+'" y1="18" x2="'+mx.toFixed(1)+'" y2="'+NBASE+'" stroke="#1c4454" stroke-width="2.6"/>'+
+      '<circle cx="'+mx.toFixed(1)+'" cy="'+Y(S.xbar).toFixed(1)+'" r="4.5" fill="#1c4454"/>'+
+      '<text x="'+Math.max(46,Math.min(300,mx)).toFixed(1)+'" y="13" font-size="10.5" fill="#1c4454" font-weight="800" text-anchor="middle" font-family="Inter,sans-serif">x&#772; = '+S.xbar.toFixed(dec+1)+'</text>';
+   $("nullc").innerHTML=o;
+   $("ruler").innerHTML='At n = '+fmtN(n)+' the standard error is <b>'+S.se.toFixed(3)+'&nbsp;mmHg</b>, so this entire window spans just <b>'+(2*hw).toFixed(2)+'&nbsp;mmHg</b>. '+
+     'The bell is not moving away from your result &mdash; it is <b>collapsing</b>. Significance is the effect measured against this shrinking ruler, and the ruler shrinks like &radic;n forever.';
+ }
+
+ /* ================= chart 3: p against sample size ================= */
+ var PX0=36,PX1=326,PYB=146,PYT=22;
+ function XPn(l){return PX0+(l-EMIN)/(EMAX-EMIN)*(PX1-PX0);}
+ function YPn(p){return PYB-Math.max(0,Math.min(1,p))*(PYB-PYT);}
+ function drawPN(S){
+   var o='',l,k;
+   /* the "significant" band */
+   o+='<rect x="'+PX0+'" y="'+YPn(ALPHA).toFixed(1)+'" width="'+(PX1-PX0)+'" height="'+(PYB-YPn(ALPHA)).toFixed(1)+'" fill="#f3c3ca" opacity=".65"/>';
+   o+='<line x1="'+PX0+'" y1="'+YPn(ALPHA).toFixed(1)+'" x2="'+PX1+'" y2="'+YPn(ALPHA).toFixed(1)+'" stroke="#d1495b" stroke-width="1.4" stroke-dasharray="4 3"/>';
+   o+='<text x="'+(PX1-2)+'" y="'+(YPn(ALPHA)-4).toFixed(1)+'" font-size="9.5" fill="#b23145" font-weight="800" text-anchor="end" font-family="Inter,sans-serif">&alpha; = 0.05</text>';
+   /* axes */
+   o+='<line x1="'+PX0+'" y1="'+PYB+'" x2="'+PX1+'" y2="'+PYB+'" stroke="#9fb3bd" stroke-width="1.2"/>';
+   o+='<line x1="'+PX0+'" y1="'+PYT+'" x2="'+PX0+'" y2="'+PYB+'" stroke="#9fb3bd" stroke-width="1.2"/>';
+   var yl=[0,0.25,0.5,0.75,1];
+   for(k=0;k<yl.length;k++){
+     o+='<text x="'+(PX0-5)+'" y="'+(YPn(yl[k])+3.4).toFixed(1)+'" font-size="9" fill="#78868d" text-anchor="end" font-family="Inter,sans-serif">'+yl[k].toFixed(2)+'</text>';
+   }
+   var xl=[[1,'10'],[2,'100'],[3,'1k'],[4,'10k'],[5,'100k']];
+   for(k=0;k<xl.length;k++){
+     o+='<line x1="'+XPn(xl[k][0]).toFixed(1)+'" y1="'+PYB+'" x2="'+XPn(xl[k][0]).toFixed(1)+'" y2="'+(PYB+4)+'" stroke="#9fb3bd" stroke-width="1.2"/>'+
+        '<text x="'+XPn(xl[k][0]).toFixed(1)+'" y="'+(PYB+15)+'" font-size="9" fill="#78868d" text-anchor="middle" font-family="Inter,sans-serif">'+xl[k][1]+'</text>';
+   }
+   o+='<text x="181" y="'+(PYB+31)+'" font-size="10" fill="#78868d" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">sample size n (each tick is ten times the last)</text>';
+   /* the sample size where half of all trials this size come back significant */
+   if(delta>0){
+     var ls=Math.log10(Math.pow(ZC*SIG/delta,2));
+     if(ls>=EMIN&&ls<=EMAX){
+       o+='<line x1="'+XPn(ls).toFixed(1)+'" y1="'+PYT+'" x2="'+XPn(ls).toFixed(1)+'" y2="'+PYB+'" stroke="#b8862f" stroke-width="1.5" stroke-dasharray="3 3"/>';
+     }
+   }
+   /* the curve: p when the trial lands exactly on the true effect */
+   var d='',first=true,stp=(EMAX-EMIN)/300;
+   for(l=EMIN;l<=EMAX+1e-9;l+=stp){
+     var zz=delta*Math.sqrt(Math.pow(10,l))/SIG;
+     d+=(first?'M':' L')+XPn(l).toFixed(1)+' '+YPn(pOf(lp2(zz))).toFixed(1); first=false;
+   }
+   o+='<path d="'+d+'" fill="none" stroke="#2f6f8a" stroke-width="2.4"/>';
+   /* where you are now */
+   var lc=Math.log10(n);
+   o+='<line x1="'+XPn(lc).toFixed(1)+'" y1="'+PYT+'" x2="'+XPn(lc).toFixed(1)+'" y2="'+PYB+'" stroke="#1c4454" stroke-width="1.4" stroke-dasharray="2 3"/>';
+   var pt=pOf(lp2(delta*Math.sqrt(n)/SIG));
+   o+='<circle cx="'+XPn(lc).toFixed(1)+'" cy="'+YPn(pt).toFixed(1)+'" r="4" fill="#fffdf9" stroke="#2f6f8a" stroke-width="2"/>';
+   o+='<circle cx="'+XPn(lc).toFixed(1)+'" cy="'+YPn(pOf(S.l)).toFixed(1)+'" r="4.6" fill="#1c4454"/>';
+   o+='<text x="'+Math.max(60,Math.min(300,XPn(lc))).toFixed(1)+'" y="'+(PYT-6)+'" font-size="10" fill="#1c4454" font-weight="800" text-anchor="middle" font-family="Inter,sans-serif">n = '+fmtN(n)+'</text>';
+   $("pn").innerHTML=o;
+   if(delta>0){
+     var ns=Math.ceil(Math.pow(ZC*SIG/delta,2));
+     $("nstar").innerHTML='At n = '+fmtN(ns)+', half of all trials come back significant';
+   }else{
+     $("nstar").innerHTML='True effect is exactly zero &mdash; no sample size ever helps';
+   }
+ }
+
+ /* ================= chart 4: the interval against what matters ================= */
+ var CX0=26,CX1=326,CY=52,CLO=-10,CHI=10;
+ function XC(v){return CX0+(Math.max(CLO,Math.min(CHI,v))-CLO)/(CHI-CLO)*(CX1-CX0);}
+ function drawCI(S){
+   var o='',k;
+   o+='<rect x="'+XC(MCID).toFixed(1)+'" y="20" width="'+(CX1-XC(MCID)).toFixed(1)+'" height="'+(CY+14-20)+'" fill="#2f9e5b" opacity=".13"/>';
+   o+='<line x1="'+XC(MCID).toFixed(1)+'" y1="20" x2="'+XC(MCID).toFixed(1)+'" y2="'+(CY+14)+'" stroke="#2f9e5b" stroke-width="1.6"/>';
+   o+='<text x="'+(XC(MCID)+5).toFixed(1)+'" y="17" font-size="9.5" fill="#237a45" font-weight="800" font-family="Inter,sans-serif">worth treating (&ge; 5 mmHg)</text>';
+   o+='<line x1="'+XC(0).toFixed(1)+'" y1="20" x2="'+XC(0).toFixed(1)+'" y2="'+(CY+14)+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="4 3"/>';
+   o+='<text x="'+(XC(0)-5).toFixed(1)+'" y="17" font-size="9.5" fill="#b23145" font-weight="800" text-anchor="end" font-family="Inter,sans-serif">no effect</text>';
+   o+='<line x1="'+CX0+'" y1="'+(CY+14)+'" x2="'+CX1+'" y2="'+(CY+14)+'" stroke="#9fb3bd" stroke-width="1.2"/>';
+   for(k=CLO;k<=CHI;k+=5){
+     o+='<line x1="'+XC(k).toFixed(1)+'" y1="'+(CY+14)+'" x2="'+XC(k).toFixed(1)+'" y2="'+(CY+18)+'" stroke="#9fb3bd" stroke-width="1.2"/>'+
+        '<text x="'+XC(k).toFixed(1)+'" y="'+(CY+29)+'" font-size="9" fill="#78868d" text-anchor="middle" font-family="Inter,sans-serif">'+k+'</text>';
+   }
+   o+='<text x="176" y="'+(CY+43)+'" font-size="10" fill="#78868d" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">true reduction in systolic pressure (mmHg)</text>';
+   /* the interval */
+   var a=XC(S.lo),b=XC(S.hi),w=Math.max(3,b-a);
+   o+='<rect x="'+a.toFixed(1)+'" y="'+(CY-9)+'" width="'+w.toFixed(1)+'" height="14" rx="7" fill="#2f6f8a" opacity=".85"/>';
+   o+='<circle cx="'+XC(S.red).toFixed(1)+'" cy="'+(CY-2)+'" r="4.4" fill="#1c4454" stroke="#fffdf9" stroke-width="1.6"/>';
+   /* the truth, which a real study never gets to see */
+   o+='<line x1="'+XC(delta).toFixed(1)+'" y1="'+(CY-18)+'" x2="'+XC(delta).toFixed(1)+'" y2="'+(CY-11)+'" stroke="#b8862f" stroke-width="2.4"/>'+
+      '<text x="'+Math.max(40,Math.min(310,XC(delta))).toFixed(1)+'" y="'+(CY-21)+'" font-size="9" fill="#8a6a20" font-weight="800" text-anchor="middle" font-family="Inter,sans-serif">truth</text>';
+   $("ci").innerHTML=o;
+   $("cit").innerHTML='95% CI for the true reduction: &nbsp;'+S.lo.toFixed(3)+' to '+S.hi.toFixed(3)+' mmHg';
+ }
+
+ /* ================= render ================= */
+ function render(){
+   var S=stats();
+
+   /* sliders */
+   $("dv").innerHTML=delta.toFixed(2)+' <span>mmHg lower</span>';
+   $("nv").innerHTML='n = '+fmtN(n);
+   $("ds").style.background='linear-gradient(90deg,#c9dde8 0%,#c9dde8 '+(delta/6*100)+'%,#dbe8ef '+(delta/6*100)+'%,#dbe8ef 100%)';
+   var np=(Math.log10(n)-EMIN)/(EMAX-EMIN)*100;
+   $("ns").style.background='linear-gradient(90deg,#c9dde8 0%,#c9dde8 '+np+'%,#dbe8ef '+np+'%,#dbe8ef 100%)';
+
+   /* the effect card — none of this depends on n */
+   var d=delta/SIG;
+   $("rd").innerHTML=d.toFixed(3);
+   $("rov").innerHTML=(2*normCdf(-d/2)*100).toFixed(1)+'%';
+   $("rcl").innerHTML=(normCdf(d/Math.SQRT2)*100).toFixed(1)+'%';
+   $("gap").innerHTML='The two curves are drawn to the same scale and sit <b>'+(delta/72*300).toFixed(1)+' pixels</b> apart. '+
+     'Cohen calls d = 0.2 a small effect; this one is '+(d<0.2?'<b>smaller still</b>':'<b>past that</b>')+'. '+
+     'Pick a patient from each row at random and the treated one is lower only '+(normCdf(d/Math.SQRT2)*100).toFixed(1)+'% of the time &mdash; a coin flip'+(d<0.1?' you could not win money on':'')+'. '+
+     '<b>Nothing in this card changes when you move n.</b>';
+
+   /* the test readouts */
+   $("rr").innerHTML=S.red.toFixed(2);
+   $("rse").innerHTML=S.se.toFixed(3);
+   $("rz").innerHTML=S.z.toFixed(2);
+   $("rp").innerHTML=fmtP(S.l);
+   $("rp").parentNode.className=S.sig?'hi':'';
+   $("rz").parentNode.className=S.sig?'hi':'';
+   $("calc").innerHTML='z = (x&#772; &minus; 128) / (12/&radic;n) = ('+S.xbar.toFixed(3)+' &minus; 128) / '+S.se.toFixed(3)+' = '+S.z.toFixed(2);
+
+   /* verdicts */
+   var trivial=S.hi<MCID;
+   var pill=$("pill");
+   if(!S.sig){ pill.className='pill low'; pill.innerHTML='undecided'; }
+   else if(trivial){ pill.className='pill high'; pill.innerHTML='real but trivial'; }
+   else { pill.className='pill normal'; pill.innerHTML='could matter'; }
+
+   $("stage").style.background=!S.sig?'#2f6f8a':(trivial?'#b8862f':'#2f9e5b');
+   $("stage").innerHTML=(S.sig?'Reject H&#8320; &mdash; statistically significant':'Fail to reject H&#8320;')+
+     '<small>p = '+fmtP(S.l)+' &nbsp;·&nbsp; n = '+fmtN(n)+' &nbsp;·&nbsp; true effect '+delta.toFixed(2)+' mmHg</small>';
+
+   /* the interpretation */
+   var txt;
+   if(delta===0){
+     txt='<span class="n">There is nothing there to find</span>You have set the true effect to <b>exactly zero</b>, so H&#8320; is true. '+
+       'Slide n from 10 to 500,000 and watch the p-value refuse to budge &mdash; with no effect to detect, sample size buys you nothing. '+
+       'Press <b>Run the trial again</b> repeatedly and you will still see a &ldquo;significant&rdquo; result roughly once in twenty tries. '+
+       'That is not a malfunction; that is &alpha; = 0.05 doing precisely what it promises.';
+   } else if(!S.sig){
+     txt='<span class="n">Not significant &mdash; and that settles nothing</span>'+
+       'With n = '+fmtN(n)+' the standard error is '+S.se.toFixed(3)+' mmHg, so a drop of '+S.red.toFixed(2)+' mmHg sits comfortably inside ordinary sampling noise. '+
+       'p = '+fmtP(S.l)+' is the chance of a result at least this far from 128 <b>if the true mean really were 128</b> &mdash; not the chance that it is. '+
+       'The 95% interval runs from '+S.lo.toFixed(2)+' to '+S.hi.toFixed(2)+' mmHg: it contains zero'+
+       (S.hi>=MCID?' <i>and</i> it contains reductions past 5 mmHg. The study cannot tell a useless drug from a useful one.':' and it also rules out anything past 5 mmHg. Small study, but already enough to say the effect is not large.')+
+       ' The honest sentence is &ldquo;we did not detect a difference,&rdquo; never &ldquo;there is no difference.&rdquo;';
+   } else if(trivial){
+     txt='<span class="n">Real. Also pointless.</span>'+
+       'p = '+fmtP(S.l)+', so the effect is genuinely distinguishable from zero &mdash; noise alone would essentially never produce this at n = '+fmtN(n)+'. '+
+       'Now read what is actually real: the 95% interval for the true reduction is <b>'+S.lo.toFixed(3)+' to '+S.hi.toFixed(3)+' mmHg</b>, and <b>every value in it is below the 5 mmHg</b> a prescriber said was worth the cost and the side effects. '+
+       'Nothing about the drug improved between the pilot and here. Only n did. '+
+       'A p-value answers <i>is it zero?</i>; it has no opinion whatsoever on <i>is it enough?</i>';
+   } else {
+     txt='<span class="n">Significant, and plausibly worth it</span>'+
+       'p = '+fmtP(S.l)+' and the 95% interval runs from '+S.lo.toFixed(2)+' to '+S.hi.toFixed(2)+' mmHg, which reaches past the 5 mmHg threshold. '+
+       'A clinically worthwhile effect is still on the table &mdash; but note that the interval is what earned that sentence, not the p-value. '+
+       'The 95% describes the <b>procedure</b>: over many repeated studies, 95% of intervals built this way capture the true reduction. This particular one either does or it does not.';
+   }
+   $("info").innerHTML=txt;
+
+   $("note").innerHTML=delta>0
+     ? '<b>The trap.</b> A big enough n makes <i>any</i> non-zero difference significant &mdash; a 0.05 mmHg drop needs about '+fmtN(Math.ceil(Math.pow(ZC*SIG/0.05,2)))+' patients, and databases that size exist. '+
+       'So &ldquo;p &lt; 0.05&rdquo; on its own tells you almost nothing until you also know n. Always ask for the effect size and its interval.'
+     : '<b>The mirror image.</b> With a true effect of zero, the p-value is equally likely to be anywhere between 0 and 1 no matter how many patients you enrol. A tiny p is evidence against H&#8320;; it is never a measurement of how much H&#8320; is wrong by.';
+
+   drawPop(); drawDots(); drawNull(S); drawPN(S); drawCI(S);
+
+   var b=$("pre").getElementsByTagName('button'),i;
+   for(i=0;i<b.length;i++)b[i].className=(+b[i].getAttribute('data-n')===n)?'on':'';
+ }
+
+ /* ================= wiring ================= */
+ $("ds").oninput=function(){delta=(+this.value)/20;render();};
+ $("ns").oninput=function(){n=niceN(Math.pow(10,EMIN+(+this.value)*ESTEP));render();};
+ var pb=$("pre").getElementsByTagName('button');
+ for(var i=0;i<pb.length;i++)(function(b){
+   b.onclick=function(){
+     n=+b.getAttribute('data-n');
+     $("ns").value=Math.round((Math.log10(n)-EMIN)/ESTEP);
+     render();
+   };
+ })(pb[i]);
+ $("run").onclick=function(){newTrial();render();};
+
+ newTrial();
+ render();
+})();
+</script>
+</body>
+</html>

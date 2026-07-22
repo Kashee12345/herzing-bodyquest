@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Oral Antidiabetics &amp; Glucagon Rescue</title>
+<meta name="description" content="Interactive map of where each oral antidiabetic class works — liver, pancreas, gut, kidney, muscle — plus a step-by-step glucagon rescue for severe hypoglycemia. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.pills .lb{font-size:11px;font-weight:700;color:var(--muted);align-self:center;}
+.gtxt{margin-top:6px;font-size:12px;color:var(--muted);}
+.gtxt b{color:var(--teal-dk);float:right;}
+.it .ic{width:22px;text-align:center;}
+.stepdots{display:flex;gap:5px;margin-top:11px;}
+.stepdots i{flex:1;height:5px;border-radius:3px;background:#e3e9f3;}
+.stepdots i.on{background:var(--teal);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 8</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 8</div>
+  <h1>Oral Antidiabetics &amp; Glucagon Rescue</h1>
+  <div class="intro">Every oral agent lowers glucose by leaning on <b>one organ</b> &mdash; and that organ tells you the side effects, the teaching, and whether the drug can drop a patient too low. Then learn the other direction: <b>glucagon</b>, the rescue that pushes glucose back <i>up</i>.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Where the drug works</h2>
+    <svg viewBox="0 0 240 210" aria-label="glucose map"><g id="art"></g></svg>
+    <div class="gtxt">Blood glucose effect <b id="gtxt">—</b></div>
+  </div></div>
+  <div>
+    <div class="modeseg">
+      <button id="mA" class="on">Oral agents</button>
+      <button id="mB">Glucagon rescue</button>
+    </div>
+    <div id="stage">Eight oral classes<small>tap one to explore</small></div>
+    <div class="card">
+      <div class="list" id="list"></div>
+      <div class="stepdots" id="dots" style="display:none"></div>
+      <div id="info"></div>
+      <div class="row" id="nav" style="display:none"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var ORG={
+  panc :{x:6,y:28,w:80,h:32,lb:'PANCREAS',sub:'beta cells'},
+  liver:{x:6,y:88,w:80,h:32,lb:'LIVER',sub:'glucose output'},
+  gut  :{x:6,y:148,w:80,h:32,lb:'GUT',sub:'carb absorption'},
+  kid  :{x:154,y:44,w:80,h:32,lb:'KIDNEY',sub:'glucose reabsorption'},
+  musc :{x:154,y:122,w:80,h:32,lb:'MUSCLE / FAT',sub:'insulin sensitivity'}
+ };
+
+ function vessel(n,col){
+   var s='<rect x="100" y="12" width="40" height="186" rx="20" fill="#f7e3e6" stroke="#e6c4ca"/>';
+   s+='<text x="120" y="9" font-size="7" text-anchor="middle" fill="#a05663" font-weight="700">BLOOD</text>';
+   for(var k=0;k<n;k++){
+     var x=107+((k*11)%26), y=22+((k*29)%168);
+     s+='<circle cx="'+x+'" cy="'+y+'" r="3.6" fill="'+(col||'#d1495b')+'"/>';
+   }
+   return s;
+ }
+ function organ(id,active,col){
+   var o=ORG[id];
+   var f=active?col:'#fff', st=active?col:'#dfe4ee', tc=active?'#fff':'#78828f';
+   var s='<rect x="'+o.x+'" y="'+o.y+'" width="'+o.w+'" height="'+o.h+'" rx="8" fill="'+f+'" stroke="'+st+'" stroke-width="'+(active?2:1)+'"/>';
+   s+='<text x="'+(o.x+o.w/2)+'" y="'+(o.y+14)+'" font-size="8" text-anchor="middle" font-weight="800" fill="'+(active?'#fff':'#4b5563')+'">'+o.lb+'</text>';
+   s+='<text x="'+(o.x+o.w/2)+'" y="'+(o.y+25)+'" font-size="6.6" text-anchor="middle" fill="'+tc+'">'+o.sub+'</text>';
+   return s;
+ }
+ function arrow(id,col){
+   var o=ORG[id], y=o.y+o.h/2, left=(o.x<100);
+   var x1=left?(o.x+o.w+2):(o.x-2), x2=left?98:142;
+   var s='<line x1="'+x1+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="'+col+'" stroke-width="2.6"/>';
+   var t=left?x2:x2, d=left?-5:5;
+   s+='<polygon points="'+t+','+y+' '+(t+d)+','+(y-4)+' '+(t+d)+','+(y+4)+'" fill="'+col+'"/>';
+   return s;
+ }
+
+ var D=[
+  {k:'big',ic:'🍚',nm:'Biguanide',ct:'metformin',col:'#2f5f9e',sites:['liver','musc','gut'],g:7,
+   gl:'lowered',hypo:0,wt:'neutral / slight loss',
+   mech:'Cuts <b>hepatic gluconeogenesis</b> (the main effect), slows intestinal glucose absorption, and makes muscle more sensitive to the insulin the patient already has. It does not squeeze insulin out of the pancreas, so <b>it does not cause hypoglycemia on its own</b>. First-line for type 2 diabetes.',
+   ex:['metformin'],
+   ae:'GI upset, diarrhea, metallic taste (usually settles in 1&ndash;2 weeks); long-term use lowers <b>vitamin B12</b>. Rare but serious: <b>lactic acidosis</b> &mdash; suspect it with malaise, myalgia, hyperventilation, and unexplained acidosis.',
+   nur:'Give <b>with meals</b> to blunt GI effects. Hold before and for 48 h after <b>iodinated contrast</b>, and restart only after renal function is rechecked. Contraindicated if eGFR &lt;30 mL/min/1.73 m&sup2;. Monitor renal function and B12; caution with alcohol.'},
+
+  {k:'sul',ic:'🔓',nm:'Sulfonylureas',ct:'-ide secretagogues',col:'#b8862f',sites:['panc'],g:6,
+   gl:'lowered',hypo:1,wt:'gain',
+   mech:'Close the <b>ATP-sensitive potassium channel</b> on the pancreatic beta cell, which depolarizes it and forces <b>insulin release &mdash; regardless of the glucose level</b>. That "regardless" is the whole safety story: skip a meal and the insulin still comes. Requires functioning beta cells, so useless in type 1 diabetes.',
+   ex:['glipizide','glyburide','glimepiride'],
+   ae:'<b>Hypoglycemia</b> (the highest risk of any oral class, and it can be prolonged), weight gain, photosensitivity. A disulfiram-like reaction can occur with alcohol.',
+   nur:'Give about <b>30 minutes before breakfast</b> and stress that the patient must eat. Teach hypoglycemia signs and carry fast carbs. <b>Glyburide is a poor choice in older adults</b> &mdash; long duration, more hypoglycemia. Use caution with sulfonamide allergy.'},
+
+  {k:'meg',ic:'⚡',nm:'Meglitinides',ct:'-glinide secretagogues',col:'#c9722f',sites:['panc'],g:6,
+   gl:'lowered',hypo:1,wt:'gain',
+   mech:'Same target as the sulfonylureas &mdash; the beta-cell potassium channel &mdash; but they bind at a different site and are <b>fast on, fast off</b>. That short action is aimed at the <b>after-meal glucose spike</b> rather than the whole day.',
+   ex:['repaglinide','nateglinide'],
+   ae:'Hypoglycemia (less than sulfonylureas because the action is brief), weight gain.',
+   nur:'Dose is <b>tied to the meal</b>: take within 30 minutes before eating. Teach the rule that makes this class safe &mdash; <b>skip the meal, skip the dose</b>. Useful for patients with erratic eating schedules.'},
+
+  {k:'tzd',ic:'💪',nm:'Thiazolidinediones',ct:'-glitazone sensitizers',col:'#7a5a8a',sites:['musc'],g:7,
+   gl:'lowered',hypo:0,wt:'gain (fluid + fat)',
+   mech:'Activate <b>PPAR-gamma</b> in muscle and fat, turning on genes that make those tissues respond to insulin again. Because it works through gene transcription, the <b>full effect takes several weeks</b> &mdash; do not expect a next-day number.',
+   ex:['pioglitazone','rosiglitazone'],
+   ae:'<b>Fluid retention</b>, edema, weight gain, and a <b>boxed warning for heart failure</b> &mdash; contraindicated in symptomatic (NYHA class III&ndash;IV) heart failure. Also fractures in women and hepatotoxicity; pioglitazone carries a bladder cancer signal.',
+   nur:'Monitor <b>daily weight, edema, and dyspnea</b> &mdash; a rapid weight gain is fluid, not fat, and is the early sign of heart failure. Check baseline and periodic <b>LFTs</b>. Teach that benefit builds over weeks.'},
+
+  {k:'dpp',ic:'🛡️',nm:'DPP-4 inhibitors',ct:'-gliptin incretin enhancers',col:'#2f6f9f',sites:['panc','gut'],g:7,
+   gl:'lowered',hypo:0,wt:'neutral',
+   mech:'Block the enzyme <b>dipeptidyl peptidase-4</b>, which normally destroys the incretin hormones (GLP-1 and GIP) within minutes. More incretin means insulin is released <b>only when glucose is high</b> and glucagon is suppressed &mdash; so the effect switches off as glucose normalizes. That glucose-dependence is why hypoglycemia is uncommon.',
+   ex:['sitagliptin','linagliptin','saxagliptin'],
+   ae:'Nasopharyngitis, headache, severe <b>joint pain</b>, and rare <b>pancreatitis</b>. Saxagliptin and alogliptin have been linked to heart-failure hospitalization.',
+   nur:'Give without regard to meals. Teach the patient to report <b>persistent severe abdominal pain radiating to the back with vomiting</b> &mdash; stop the drug and notify the provider. Dose is reduced in renal impairment (linagliptin is the exception).'},
+
+  {k:'sgl',ic:'🚽',nm:'SGLT2 inhibitors',ct:'-gliflozin glucose dumpers',col:'#2f9e5b',sites:['kid'],g:5,
+   gl:'lowered (into the urine)',hypo:0,wt:'loss',
+   mech:'Block the <b>sodium-glucose co-transporter 2</b> in the proximal tubule, so filtered glucose is not reabsorbed and is <b>excreted in the urine</b>. This works independently of insulin, and it also drops blood pressure and preload &mdash; which is why these agents improve <b>heart failure and chronic kidney disease</b> outcomes.',
+   ex:['empagliflozin','dapagliflozin','canagliflozin'],
+   ae:'<b>Genital mycotic infections</b> and UTI (sugar in the urine feeds yeast), polyuria, volume depletion with hypotension and dizziness, and <b>euglycemic ketoacidosis</b> &mdash; DKA with a near-normal glucose, which is easy to miss.',
+   nur:'Give <b>in the morning</b> to limit nocturia. Push <b>fluids and perineal hygiene</b>; teach the patient to report genital itching or discharge. Hold before major surgery or during prolonged fasting. If the patient has nausea, vomiting, and Kussmaul breathing, <b>check ketones even when glucose looks normal</b>.'},
+
+  {k:'agi',ic:'🐌',nm:'Alpha-glucosidase inhibitors',ct:'carb-digestion blockers',col:'#d1495b',sites:['gut'],g:7,
+   gl:'lowered after meals',hypo:0,wt:'neutral',
+   mech:'Inhibit <b>alpha-glucosidase</b> on the intestinal brush border, so complex carbohydrates and sucrose are broken down and absorbed more slowly. Nothing enters the bloodstream to act on any organ &mdash; the drug works entirely <b>inside the gut lumen</b>, flattening the post-meal spike.',
+   ex:['acarbose','miglitol'],
+   ae:'<b>Flatulence, bloating, cramping, diarrhea</b> from undigested carbohydrate fermenting in the colon. Avoid in inflammatory bowel disease and bowel obstruction.',
+   nur:'Take with the <b>first bite of each meal</b>. Know the exam-favorite rule: this class does not cause hypoglycemia alone, but if the patient is <b>also</b> on insulin or a sulfonylurea and goes low, treat with <b>pure glucose (glucose tablets or dextrose) &mdash; not table sugar, candy, or juice</b>, because the drug blocks the breakdown of sucrose.'},
+
+  {k:'glp',ic:'💊',nm:'Oral GLP-1 agonist',ct:'oral semaglutide',col:'#5a7f3a',sites:['panc','gut'],g:6,
+   gl:'lowered',hypo:0,wt:'loss',
+   mech:'Directly stimulates the <b>GLP-1 receptor</b> rather than protecting native incretin: glucose-dependent insulin release, suppressed glucagon, <b>slowed gastric emptying</b>, and early satiety. The oral form is co-formulated with an absorption enhancer, which is why its administration rules are so strict.',
+   ex:['semaglutide (oral)'],
+   ae:'<b>Nausea, vomiting, early satiety</b> (dose-limiting, usually improves), pancreatitis, gallbladder disease. <b>Boxed warning: thyroid C-cell tumors</b> &mdash; contraindicated with a personal or family history of medullary thyroid carcinoma or MEN 2.',
+   nur:'Teach the administration rule exactly: <b>first thing in the morning, on an empty stomach, with no more than 4 oz (120 mL) of plain water</b>, then wait <b>at least 30 minutes</b> before food, drink, or other oral medications. Swallow whole. Because it delays gastric emptying, it can alter absorption of other oral drugs.'}
+ ];
+
+ var G=[
+  {t:'Recognize it',lb:'GLUCOSE &lt;70',gv:'critically low',col:'#b8862f',dots:3,gly:9,rel:0,icon:'😰',
+   d:'Hypoglycemia is a blood glucose <b>below 70 mg/dL</b>. Early <b>adrenergic</b> signs &mdash; diaphoresis, tremor, tachycardia, anxiety, hunger &mdash; are the body\'s alarm. As glucose falls further, <b>neuroglycopenic</b> signs appear: confusion, slurred speech, blurred vision, seizure, coma. <b>Severe</b> hypoglycemia means the patient cannot self-treat.',
+   n:'A patient on a <b>beta blocker</b> loses the adrenergic warning signs &mdash; no tremor, no tachycardia. Diaphoresis remains, and confusion may be the first thing you see. Check a glucose on any diabetic patient with a sudden change in behavior.'},
+
+  {t:'Can they swallow?',lb:'RULE OF 15',gv:'critically low',col:'#2f6f9f',dots:3,gly:9,rel:0,icon:'🧃',
+   d:'This one question picks the route. <b>Awake, alert, able to protect the airway</b> &rarr; use the <b>Rule of 15</b>: give 15 g of fast-acting carbohydrate (4 oz juice or regular soda, 3&ndash;4 glucose tablets, 1 tbsp honey), <b>recheck in 15 minutes</b>, and repeat if still below 70 mg/dL.',
+   n:'<b>Never</b> put food or fluid in the mouth of a patient who is drowsy, confused, or unresponsive &mdash; that is an aspiration event, not a treatment. If the patient takes <b>acarbose or miglitol</b>, the fast carb must be <b>glucose tablets or dextrose</b>; sucrose will not be absorbed.'},
+
+  {t:'Give glucagon',lb:'1 mg IM',gv:'still low',col:'#d1495b',dots:3,gly:9,rel:1,icon:'💉',
+   d:'Unresponsive, seizing, or unable to swallow safely &rarr; <b>glucagon</b>. Adult dose is <b>1 mg IM or subcutaneously</b>, or <b>3 mg intranasally</b> as a single spray in one nostril (it works even if the patient is not breathing through the nose). If IV access is already there, <b>IV dextrose 50%</b> acts faster and is preferred in hospital.',
+   n:'<b>Position the patient on their side before you give it.</b> Vomiting is a common glucagon effect, and the patient cannot protect their own airway. Never delay glucagon to start an IV.'},
+
+  {t:'Know how it works &mdash; and when it fails',lb:'GLYCOGENOLYSIS',gv:'rising in 10–15 min',col:'#7a5a8a',dots:11,gly:3,rel:1,icon:'🔥',
+   d:'Glucagon is the mirror image of insulin. It drives <b>hepatic glycogenolysis</b> &mdash; breaking stored glycogen back into glucose &mdash; and gluconeogenesis, raising blood glucose in about <b>10&ndash;15 minutes</b>. <b>Recheck the glucose at 15 minutes</b>; a second dose may be given if there is no response.',
+   n:'Glucagon <b>only works if the liver has glycogen to break down</b>. It will fail in starvation, prolonged fasting, chronic alcohol use, adrenal insufficiency, and liver failure. Those patients need <b>IV dextrose</b>. This is the single most tested fact about glucagon.'},
+
+  {t:'Refill the tank',lb:'REBUILD STORES',gv:'stabilizing',col:'#2f9e5b',dots:8,gly:7,rel:0,icon:'🍞',
+   d:'Once the patient is awake and swallowing safely, give a <b>complex carbohydrate with protein</b> &mdash; crackers with peanut butter, milk, or the next meal. Glucagon emptied the liver\'s glycogen; without a refill the patient can <b>drop again</b>. Continue to monitor glucose.',
+   n:'Then close the loop: recheck glucose, document the event and response, <b>notify the provider</b>, and find the cause &mdash; a missed meal, a dosing error, new renal impairment, unusual exercise, or alcohol. Treating the episode without finding the cause guarantees a repeat.'}
+ ];
+
+ var mode='A', cur='', gi=0;
+
+ function drawOral(d){
+   var s='', on=d?d.sites:[];
+   s+=vessel(d?d.g:9, d?'#c9505f':'#d1495b');
+   for(var id in ORG){ s+=organ(id, on.indexOf(id)>-1, d?d.col:'#2f5f9e'); }
+   if(d){ for(var i=0;i<on.length;i++){ s+=arrow(on[i], d.col); } }
+   return s;
+ }
+ function drawGluc(s0){
+   var s=vessel(s0.dots,'#c9505f');
+   s+=organ('liver', true, s0.col);
+   for(var k=0;k<s0.gly;k++){
+     var x=16+((k*17)%62), y=126+((k*13)%40);
+     s+='<rect x="'+x+'" y="'+y+'" width="7" height="7" rx="2" fill="'+s0.col+'" opacity=".75"/>';
+   }
+   s+='<text x="46" y="180" font-size="6.6" text-anchor="middle" fill="#78828f">glycogen stores</text>';
+   if(s0.rel){ s+=arrow('liver', s0.col); }
+   s+='<text x="192" y="70" font-size="30" text-anchor="middle">'+s0.icon+'</text>';
+   s+='<text x="192" y="92" font-size="7.5" text-anchor="middle" font-weight="800" fill="'+s0.col+'">'+s0.lb+'</text>';
+   return s;
+ }
+
+ function renderList(){
+   $("list").innerHTML=D.map(function(d){
+     return '<button class="it'+(d.k===cur?' on':'')+'" data-k="'+d.k+'"><span class="ic">'+d.ic+'</span><span><span class="nm">'+d.nm+'</span><br><span class="ct">'+d.ct+'</span></span></button>';
+   }).join('');
+   var b=document.querySelectorAll('#list .it');
+   for(var i=0;i<b.length;i++){ b[i].onclick=(function(el){return function(){ selD(el.getAttribute('data-k')); };})(b[i]); }
+ }
+ function selD(k){
+   var d=null;
+   for(var i=0;i<D.length;i++){ if(D[i].k===k) d=D[i]; }
+   if(!d) return;
+   cur=k;
+   $("art").innerHTML=drawOral(d);
+   $("cardTitle").innerHTML=d.nm;
+   $("gtxt").innerHTML=d.gl;
+   $("stage").style.background=d.col;
+   $("stage").innerHTML=d.nm+'<small>'+d.ct+'</small>';
+   $("info").innerHTML='<span class="n">'+d.nm+'</span>'+d.mech+
+     '<div class="ex">'+d.ex.map(function(e){return '<span>'+e+'</span>';}).join('')+'</div>'+
+     '<div class="pills"><span class="lb">Hypoglycemia alone</span><span class="pill '+(d.hypo?'high':'normal')+'">'+(d.hypo?'YES — high risk':'unlikely')+'</span>'+
+     '<span class="lb">Weight</span><span class="pill low">'+d.wt+'</span></div>'+
+     '<div class="note"><b>Adverse effects:</b> '+d.ae+'</div>'+
+     '<div class="loc"><b>Nursing care:</b> '+d.nur+'</div>';
+   renderList();
+ }
+
+ function renderG(){
+   var s=G[gi];
+   $("art").innerHTML=drawGluc(s);
+   $("cardTitle").innerHTML='Glucagon rescue';
+   $("gtxt").innerHTML=s.gv;
+   $("stage").style.background=s.col;
+   $("stage").innerHTML=s.t+'<small>step '+(gi+1)+' of '+G.length+'</small>';
+   $("info").innerHTML='<span class="n">'+s.t+'</span>'+s.d+'<div class="note">'+s.n+'</div>';
+   $("dots").innerHTML=G.map(function(x,j){return '<i class="'+(j<=gi?'on':'')+'"></i>';}).join('');
+   $("prev").disabled=(gi===0); $("next").disabled=(gi===G.length-1);
+ }
+
+ function setMode(m){
+   mode=m;
+   $("mA").className=(m==='A'?'on':''); $("mB").className=(m==='B'?'on':'');
+   $("list").style.display=(m==='A'?'flex':'none');
+   $("dots").style.display=(m==='B'?'flex':'none');
+   $("nav").style.display=(m==='B'?'flex':'none');
+   if(m==='A'){
+     $("cardTitle").innerHTML='Where the drug works';
+     if(cur){ selD(cur); }
+     else{
+       $("art").innerHTML=drawOral(null);
+       $("gtxt").innerHTML='—';
+       $("stage").style.background='#2f5f9e';
+       $("stage").innerHTML='Eight oral classes<small>tap one to explore</small>';
+       $("info").innerHTML='<span class="n">One organ, one drug story</span>Oral agents are only for <b>type 2 diabetes</b> &mdash; they all need some residual beta-cell function or insulin action, so <b>none of them treat type 1</b>. Find the organ a class leans on and the rest follows: work on the <b>pancreas</b> and you force insulin out, so hypoglycemia is the risk. Work on the <b>liver, gut, kidney, or muscle</b> and the drug cannot drive glucose below normal by itself.<div class="mnem"><b>Tap any class</b> to light up its organ and see the mechanism, adverse effects, and nursing care.</div>';
+       renderList();
+     }
+   } else { renderG(); }
+ }
+
+ $("mA").onclick=function(){ setMode('A'); };
+ $("mB").onclick=function(){ setMode('B'); };
+ $("prev").onclick=function(){ if(gi>0){ gi--; renderG(); } };
+ $("next").onclick=function(){ if(gi<G.length-1){ gi++; renderG(); } };
+
+ setMode('A');
+})();
+</script>
+</body>
+</html>

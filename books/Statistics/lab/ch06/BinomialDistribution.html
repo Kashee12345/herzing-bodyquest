@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>The Binomial Distribution</title>
+<meta name="description" content="Drag n and p and watch the binomial distribution reshape live &mdash; exact probabilities, mean and standard deviation, cumulative tails, a normal-curve overlay, and a real simulation that converges to the theory.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.06fr 0.94fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:104px;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:52px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles.t3{grid-template-columns:repeat(3,1fr);}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.lgd i.dash{width:14px;height:0;border-top:2px dashed #1c4454;border-radius:0;vertical-align:3px;}
+.lgd i.curve{width:14px;height:0;border-top:2px solid #7a5a8a;border-radius:0;vertical-align:3px;}
+#info .loc{font-variant-numeric:tabular-nums;font-size:12px;line-height:1.6;}
+#info sup{font-size:9.5px;}
+.grid .it .nm{display:block;} .grid .it .s{display:block;margin-top:2px;font-weight:600;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 6</div>
+  <h1>The Binomial Distribution</h1>
+  <div class="intro">Count the successes in a fixed number of independent yes/no trials and you get a <b>binomial</b> random variable. Only two numbers control it &mdash; <b>n</b>, how many trials, and <b>p</b>, the chance of success on each one. Drag them and watch the whole distribution reshape.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Binomial (n = 10, p = 0.50)</h2>
+      <svg viewBox="0 0 480 330" id="chart" aria-label="binomial probability histogram"></svg>
+      <div class="lgd">
+        <span><i style="background:#9dc0d0"></i>P(X = k)</span>
+        <span><i style="background:#2f6f8a"></i>in the highlighted region</span>
+        <span><i style="background:#d1495b"></i>k itself</span>
+        <span><i style="background:#b8862f"></i>simulated</span>
+        <span><i class="dash"></i>&mu; = np</span>
+        <span><i class="curve"></i>normal curve</span>
+      </div>
+      <div class="row"><button class="btn" id="norm">Normal curve overlay: OFF</button></div>
+      <div class="cap" id="cap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Binomial (n = 10, p = 0.50)<small>drag the sliders below</small></div>
+    <div class="card">
+      <div class="hd">The two parameters</div>
+      <div class="sl"><label>n &mdash; trials</label><input type="range" id="nSl" min="1" max="40" step="1" value="10"><span class="nv" id="nVal">10</span></div>
+      <div class="sl"><label>p &mdash; success</label><input type="range" id="pSl" min="1" max="99" step="1" value="50"><span class="nv" id="pVal">0.50</span></div>
+      <div class="tiles">
+        <div><span class="lb">Mean &mu;<br>= np</span><span class="vv" id="tMu">5.00</span></div>
+        <div><span class="lb">SD &sigma;<br>= &radic;(npq)</span><span class="vv" id="tSd">1.58</span></div>
+        <div><span class="lb">Most likely<br>value</span><span class="vv" id="tMode">5</span></div>
+        <div><span class="lb">Shape<br>skew</span><span class="vv" id="tSkew">0.00</span></div>
+      </div>
+      <div class="hd">Try a shape</div>
+      <div class="grid" id="presets"></div>
+      <div class="hd">Read a probability off the chart</div>
+      <div class="seg" id="mseg">
+        <button data-m="eq" class="on">P(X = k)<small>exactly</small></button>
+        <button data-m="le">P(X &le; k)<small>at most</small></button>
+        <button data-m="ge">P(X &ge; k)<small>at least</small></button>
+      </div>
+      <div class="sl"><label>k &mdash; successes</label><input type="range" id="kSl" min="0" max="10" step="1" value="5"><span class="nv" id="kVal">5</span></div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"><b>A count is binomial only if all four hold:</b> the number of trials <b>n</b> is fixed in advance · each trial is <b>independent</b> · each trial has exactly <b>two</b> outcomes · and <b>p</b> is the same on every trial.</div>
+    </div>
+    <div class="card">
+      <h2>Does it actually happen that way?</h2>
+      <div class="cap" style="margin-top:2px;">Each "experiment" runs <b id="simN">10</b> independent trials and records how many successes came up. The gold bars are what really happened; the blue bars are what the formula predicted.</div>
+      <div class="tiles t3">
+        <div><span class="lb">Experiments</span><span class="vv" id="sCount">0</span><span class="sub">&nbsp;</span></div>
+        <div><span class="lb">Mean successes</span><span class="vv" id="sMean">&mdash;</span><span class="sub" id="sMeanT">theory 5.00</span></div>
+        <div><span class="lb">SD of successes</span><span class="vv" id="sSd">&mdash;</span><span class="sub" id="sSdT">theory 1.58</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="draw">Run 200 experiments</button><button class="btn" id="reset">Clear</button></div>
+      <div class="cap" id="scap">Run a batch and the gold bars will wobble around the blue ones. Keep running and the wobble shrinks &mdash; that is the long-run frequency the probabilities were describing all along.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- state ---------- */
+ var N=10, P=0.50, K=5, mode='eq', showNorm=false;
+ var obs=null, obsN=0, seed=20260718;
+
+ /* ---------- seeded PRNG (mulberry32) ---------- */
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+
+ /* ---------- exact-ish binomial machinery ---------- */
+ var LF=[0];
+ for(var i=1;i<=60;i++){LF[i]=LF[i-1]+Math.log(i);}
+
+ function comb(n,k){                     /* exact for n <= 40 */
+   if(k<0||k>n)return 0;
+   var m=Math.min(k,n-k), r=1;
+   for(var j=1;j<=m;j++){r=r*(n-m+j)/j;}
+   return Math.round(r);
+ }
+ function pmfArr(n,p){                   /* log-space, then exponentiate */
+   var q=1-p, lp=Math.log(p), lq=Math.log(q), a=[];
+   for(var k=0;k<=n;k++){
+     a[k]=Math.exp(LF[n]-LF[k]-LF[n-k]+k*lp+(n-k)*lq);
+   }
+   return a;
+ }
+ function cumArr(a){var c=[],s=0;for(var k=0;k<a.length;k++){s+=a[k];c[k]=s;}return c;}
+
+ /* ---------- formatting ---------- */
+ function com(x){return String(x).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+ function fmtP(v){
+   if(v>=0.0001)return v.toFixed(4);
+   if(v>0)return v.toExponential(2);
+   return '0';
+ }
+ function pct(v){
+   if(v>=0.001)return (v*100).toFixed(1)+'%';
+   if(v>0)return 'under 0.1%';
+   return '0%';
+ }
+ function niceMax(v){
+   var c=[0.02,0.04,0.06,0.08,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.50,0.60,0.80,1.00];
+   for(var j=0;j<c.length;j++){if(c[j]>=v)return c[j];}
+   return 1;
+ }
+
+ /* ---------- chart geometry ---------- */
+ var VW=480, VH=330, ML=50, MR=12, MT=18, MB=48;
+ var PW=VW-ML-MR, PH=VH-MT-MB, Y1=MT+PH;
+
+ function drawChart(pm,mu,sd){
+   var slot=PW/(N+1), barW=Math.max(2,Math.min(slot*0.78,54)), obsW=barW*0.52;
+   var maxv=0,k;
+   for(k=0;k<=N;k++){if(pm[k]>maxv)maxv=pm[k];}
+   if(obs&&obsN>0){for(k=0;k<=N;k++){if(obs[k]/obsN>maxv)maxv=obs[k]/obsN;}}
+   var ymax=niceMax(maxv*1.08);
+   var xOf=function(v){return ML+(v+0.5)*slot;};
+   var yOf=function(v){return Y1-(v/ymax)*PH;};
+   var s='<defs><clipPath id="pclip"><rect x="'+ML+'" y="'+MT+'" width="'+PW+'" height="'+PH+'"/></clipPath></defs>';
+
+   /* sigma band behind everything */
+   var lo=Math.max(-0.5,mu-sd), hi=Math.min(N+0.5,mu+sd);
+   s+='<rect x="'+xOf(lo).toFixed(1)+'" y="'+MT+'" width="'+(xOf(hi)-xOf(lo)).toFixed(1)+'" height="'+PH+'" fill="#dcebf2" opacity=".75"/>';
+
+   /* horizontal gridlines + y labels */
+   for(var g=0;g<=4;g++){
+     var yv=ymax*g/4, y=yOf(yv);
+     s+='<line x1="'+ML+'" y1="'+y.toFixed(1)+'" x2="'+(ML+PW)+'" y2="'+y.toFixed(1)+'" stroke="'+(g===0?'#8fa6b0':'#e6eef2')+'" stroke-width="1"/>';
+     s+='<text x="'+(ML-7)+'" y="'+(y+3.5).toFixed(1)+'" font-size="10" fill="#78868d" text-anchor="end" font-weight="600">'+(ymax<=0.1?yv.toFixed(3):yv.toFixed(2))+'</text>';
+   }
+
+   /* bars */
+   for(k=0;k<=N;k++){
+     var h=(pm[k]/ymax)*PH, cx=xOf(k), col='#9dc0d0';
+     if(mode==='eq'){ if(k===K)col='#d1495b'; }
+     else if(mode==='le'){ col = k<K?'#2f6f8a':(k===K?'#d1495b':'#9dc0d0'); }
+     else { col = k>K?'#2f6f8a':(k===K?'#d1495b':'#9dc0d0'); }
+     if(h>0.4){
+       s+='<rect x="'+(cx-barW/2).toFixed(1)+'" y="'+(Y1-h).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="'+Math.min(2.5,barW/4).toFixed(1)+'" fill="'+col+'"/>';
+     }
+   }
+
+   /* observed (simulated) bars on top */
+   if(obs&&obsN>0){
+     for(k=0;k<=N;k++){
+       if(!obs[k])continue;
+       var oh=(obs[k]/obsN/ymax)*PH;
+       s+='<rect x="'+(xOf(k)-obsW/2).toFixed(1)+'" y="'+(Y1-oh).toFixed(1)+'" width="'+obsW.toFixed(1)+'" height="'+oh.toFixed(1)+'" rx="1" fill="#b8862f" opacity=".92"/>';
+     }
+   }
+
+   /* normal curve overlay */
+   if(showNorm&&sd>0){
+     var d='',t,xv,dens;
+     for(t=0;t<=140;t++){
+       xv=-0.5+(t/140)*(N+1);
+       dens=Math.exp(-0.5*Math.pow((xv-mu)/sd,2))/(sd*Math.sqrt(2*Math.PI));
+       d+=(t?'L':'M')+xOf(xv).toFixed(1)+' '+yOf(dens).toFixed(1)+' ';
+     }
+     s+='<g clip-path="url(#pclip)"><path d="'+d+'" fill="none" stroke="#7a5a8a" stroke-width="2.2" stroke-linejoin="round" opacity=".9"/></g>';
+   }
+
+   /* mean line */
+   s+='<line x1="'+xOf(mu).toFixed(1)+'" y1="'+MT+'" x2="'+xOf(mu).toFixed(1)+'" y2="'+Y1+'" stroke="#1c4454" stroke-width="1.6" stroke-dasharray="5 4"/>';
+   s+='<text x="'+xOf(mu).toFixed(1)+'" y="'+(MT-5)+'" font-size="10.5" fill="#1c4454" text-anchor="middle" font-weight="800">&#956; = '+mu.toFixed(2)+'</text>';
+
+   /* x axis */
+   var step = N<=12?1:(N<=24?2:5);
+   for(k=0;k<=N;k++){
+     if(k%step!==0&&k!==N)continue;
+     if(k!==N&&N-k<step*0.6)continue;
+     s+='<text x="'+xOf(k).toFixed(1)+'" y="'+(Y1+16)+'" font-size="10" fill="'+(k===K?'#d1495b':'#78868d')+'" text-anchor="middle" font-weight="'+(k===K?'800':'600')+'">'+k+'</text>';
+   }
+   s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="'+(Y1+36)+'" font-size="10.5" fill="#4a585f" text-anchor="middle" font-weight="700">k = number of successes in '+N+' trial'+(N===1?'':'s')+'</text>';
+   s+='<text x="14" y="'+(MT+PH/2).toFixed(1)+'" font-size="10.5" fill="#4a585f" text-anchor="middle" font-weight="700" transform="rotate(-90 14 '+(MT+PH/2).toFixed(1)+')">probability</text>';
+
+   /* invisible hit targets last so they sit on top */
+   for(k=0;k<=N;k++){
+     s+='<rect class="hit" data-k="'+k+'" x="'+(xOf(k)-slot/2).toFixed(1)+'" y="'+MT+'" width="'+slot.toFixed(1)+'" height="'+PH+'" fill="transparent" style="cursor:pointer"/>';
+   }
+   $('chart').innerHTML=s;
+   var hits=document.querySelectorAll('#chart .hit');
+   for(var z=0;z<hits.length;z++){
+     hits[z].onclick=function(){K=parseInt(this.getAttribute('data-k'),10);$('kSl').value=K;render();};
+   }
+ }
+
+ /* ---------- narrative ---------- */
+ function shapeOf(skew){
+   if(Math.abs(skew)<0.12)return 'nearly symmetric';
+   return skew>0?'right-skewed':'left-skewed';
+ }
+ function stageCol(skew){
+   if(Math.abs(skew)<0.12)return '#2f6f8a';
+   return skew>0?'#b8862f':'#7a5a8a';
+ }
+
+ function capText(mu,sd,skew,pm){
+   var q=1-P, np=N*P, nq=N*q, sh=shapeOf(skew), t='';
+   t+='<b>'+sh.charAt(0).toUpperCase()+sh.slice(1)+'.</b> ';
+   if(sh==='nearly symmetric'){
+     t+='With p this close to 0.50 (or n large enough to swamp the imbalance), the successes and failures are balanced and the bars fall away evenly on both sides of &mu;.';
+   }else if(sh==='right-skewed'){
+     t+='Success is the rarer outcome (p = '+P.toFixed(2)+'), so the pile-up sits near 0 and the thin tail stretches to the right &mdash; large counts are possible but unlikely.';
+   }else{
+     t+='Success is the commoner outcome (p = '+P.toFixed(2)+'), so the pile-up sits near n and the thin tail stretches to the left &mdash; small counts are possible but unlikely.';
+   }
+   t+='<br>The shaded band is &mu; &plusmn; &sigma; = '+(mu-sd).toFixed(2)+' to '+(mu+sd).toFixed(2)+'. ';
+   if(np>=10&&nq>=10){
+     t+='Here <b>np = '+np.toFixed(1)+'</b> and <b>n(1&minus;p) = '+nq.toFixed(1)+'</b>, both at least 10, so a normal curve traces this histogram closely &mdash; switch the overlay on and see.';
+   }else{
+     t+='Here <b>np = '+np.toFixed(1)+'</b> and <b>n(1&minus;p) = '+nq.toFixed(1)+'</b>; the usual rule of thumb wants both at least 10 before leaning on a normal approximation, so this shape is still too lopsided or too coarse for that shortcut.';
+   }
+   return t;
+ }
+
+ function infoText(pm,cum){
+   var q=1-P, C=comb(N,K), pe=pm[K];
+   var le=cum[K], ge=1-(K>0?cum[K-1]:0);
+   var s='';
+   if(mode==='eq'){
+     s+='<span class="n">P(X = '+K+') = '+fmtP(pe)+'</span>';
+     s+='The formula multiplies three pieces: how many <b>orderings</b> of '+N+' trials give exactly '+K+' success'+(K===1?'':'es')+', the probability of those '+K+' success'+(K===1?'':'es')+', and the probability of the '+(N-K)+' failure'+(N-K===1?'':'s')+'.';
+     s+='<div class="loc">P(X = '+K+') = C('+N+', '+K+') &middot; '+P.toFixed(2)+'<sup>'+K+'</sup> &middot; '+q.toFixed(2)+'<sup>'+(N-K)+'</sup><br>= '+com(C)+' &times; '+fmtP(Math.pow(P,K))+' &times; '+fmtP(Math.pow(q,N-K))+' = <b>'+fmtP(pe)+'</b></div>';
+     s+='Read it as a long-run frequency: repeat the whole set of '+N+' trials over and over, and about <b>'+pct(pe)+'</b> of those repetitions land on exactly '+K+'.';
+   }else if(mode==='le'){
+     s+='<span class="n">P(X &le; '+K+') = '+fmtP(le)+'</span>';
+     s+='A <b>cumulative</b> probability &mdash; just the heights of bars 0 through '+K+' added up. There is nothing to integrate here: X only lands on whole numbers, so summing bars <i>is</i> the calculation.';
+     s+='<div class="loc">P(X &le; '+K+') = P(0) + P(1) + &hellip; + P('+K+') = <b>'+fmtP(le)+'</b></div>';
+     s+='About <b>'+pct(le)+'</b> of repetitions give <b>at most</b> '+K+' success'+(K===1?'':'es')+'. The words "no more than," "up to," and "'+K+' or fewer" all mean this same sum.';
+   }else if(K===0){
+     s+='<span class="n">P(X &ge; 0) = 1</span>';
+     s+='Every possible outcome clears this bar. X counts successes, so it can never be negative &mdash; "at least 0 successes" is guaranteed, and the bars from 0 to '+N+' are the entire distribution.';
+     s+='<div class="loc">P(X &ge; 0) = P(0) + P(1) + &hellip; + P('+N+') = <b>1.0000</b></div>';
+     s+='This is the second requirement of any probability distribution showing up as a sanity check: the bars must total exactly 1. Slide k up to ask a question that can actually fail.';
+   }else{
+     s+='<span class="n">P(X &ge; '+K+') = '+fmtP(ge)+'</span>';
+     s+='"At least '+K+'" means '+K+' <b>counts too</b>, so it is the bars from '+K+' all the way up to '+N+'.';
+     s+='<div class="loc">P(X &ge; '+K+') = 1 &minus; P(X &le; '+(K-1)+') = 1 &minus; '+fmtP(K>0?cum[K-1]:0)+' = <b>'+fmtP(ge)+'</b></div>';
+     s+='About <b>'+pct(ge)+'</b> of repetitions give '+K+' or more.';
+     s+='<div class="note"><b>The off-by-one trap.</b> P(X &ge; '+K+') is <b>not</b> 1 &minus; P(X &le; '+K+'), because that would throw away the bar at exactly '+K+' &mdash; here worth '+fmtP(pe)+'. For a discrete variable you must step the boundary down by one whole unit: subtract P(X &le; '+(K-1)+').</div>';
+   }
+   return s;
+ }
+
+ /* ---------- simulation ---------- */
+ function runBatch(count){
+   if(!obs){obs=[];for(var j=0;j<=N;j++)obs[j]=0;obsN=0;}
+   for(var e=0;e<count;e++){
+     var succ=0;
+     for(var t=0;t<N;t++){ if(rnd()<P)succ++; }
+     obs[succ]++;
+   }
+   obsN+=count;
+ }
+ function simStats(mu,sd){
+   $('simN').innerHTML=N;
+   $('sMeanT').innerHTML='theory '+mu.toFixed(2);
+   $('sSdT').innerHTML='theory '+sd.toFixed(2);
+   if(!obs||!obsN){
+     $('sCount').innerHTML='0'; $('sMean').innerHTML='&mdash;'; $('sSd').innerHTML='&mdash;';
+     $('scap').innerHTML='Run a batch and the gold bars will wobble around the blue ones. Keep running and the wobble shrinks &mdash; that is the long-run frequency the probabilities were describing all along.';
+     return;
+   }
+   var sum=0,k;
+   for(k=0;k<=N;k++)sum+=k*obs[k];
+   var m=sum/obsN, ss=0;
+   for(k=0;k<=N;k++)ss+=obs[k]*Math.pow(k-m,2);
+   var sdObs=Math.sqrt(ss/obsN);
+   var gap=Math.abs(m-mu);
+   $('sCount').innerHTML=com(obsN);
+   $('sMean').innerHTML=m.toFixed(2);
+   $('sSd').innerHTML=sdObs.toFixed(2);
+   $('scap').innerHTML='Across <b>'+com(obsN)+'</b> experiments the average number of successes came out <b>'+m.toFixed(2)+'</b>, off the theoretical &mu; = '+mu.toFixed(2)+' by '+gap.toFixed(2)+'. The gold bars are <i>estimates</i> of the blue ones, and they tighten onto them as the count grows &mdash; the formula was never predicting any single experiment, only the long-run pattern of many.';
+ }
+
+ /* ---------- render ---------- */
+ function render(){
+   var pm=pmfArr(N,P), cum=cumArr(pm);
+   var q=1-P, mu=N*P, sd=Math.sqrt(N*P*q), skew=(1-2*P)/sd;
+   var best=0,k;
+   for(k=0;k<=N;k++){if(pm[k]>pm[best])best=k;}
+   var modes=[];                          /* (n+1)p integer => two equally likely values */
+   for(k=0;k<=N;k++){if(pm[k]>=pm[best]*(1-1e-9))modes.push(k);}
+
+   $('nVal').innerHTML=N;
+   $('pVal').innerHTML=P.toFixed(2);
+   $('kVal').innerHTML=K;
+   $('tMu').innerHTML=mu.toFixed(2);
+   $('tSd').innerHTML=sd.toFixed(2);
+   $('tMode').innerHTML=modes.join(' &amp; ');
+   $('tSkew').innerHTML=(skew>0?'+':'')+skew.toFixed(2);
+
+   var lbl='Binomial (n = '+N+', p = '+P.toFixed(2)+')';
+   $('cardTitle').innerHTML=lbl;
+   $('stage').style.background=stageCol(skew);
+   $('stage').innerHTML=lbl+'<small>'+shapeOf(skew)+' &middot; &mu; = '+mu.toFixed(2)+' &middot; &sigma; = '+sd.toFixed(2)+'</small>';
+
+   drawChart(pm,mu,sd);
+   $('cap').innerHTML=capText(mu,sd,skew,pm);
+   $('info').innerHTML=infoText(pm,cum);
+   simStats(mu,sd);
+ }
+
+ /* ---------- presets ---------- */
+ var PRE=[
+  {t:'Fair coin',s:'n = 10, p = 0.50',n:10,p:50,k:5},
+  {t:'Rare outcome',s:'n = 20, p = 0.10',n:20,p:10,k:2},
+  {t:'Common outcome',s:'n = 20, p = 0.85',n:20,p:85,k:17},
+  {t:'Many trials',s:'n = 40, p = 0.50',n:40,p:50,k:20}
+ ];
+ $('presets').innerHTML=PRE.map(function(x,ix){
+   return '<button class="it" data-i="'+ix+'"><span class="nm">'+x.t+'</span><span class="s">'+x.s+'</span></button>';
+ }).join('');
+ var pb=document.querySelectorAll('#presets .it');
+ for(var b=0;b<pb.length;b++){
+   pb[b].onclick=function(){
+     var x=PRE[parseInt(this.getAttribute('data-i'),10)];
+     N=x.n; P=x.p/100; K=x.k; obs=null; obsN=0;
+     $('nSl').value=N; $('pSl').value=x.p;
+     $('kSl').max=N; $('kSl').value=K;
+     render();
+   };
+ }
+
+ /* ---------- wiring ---------- */
+ $('nSl').oninput=function(){
+   N=parseInt(this.value,10);
+   if(K>N)K=N;
+   $('kSl').max=N; $('kSl').value=K;
+   obs=null; obsN=0;
+   render();
+ };
+ $('pSl').oninput=function(){
+   P=parseInt(this.value,10)/100;
+   obs=null; obsN=0;
+   render();
+ };
+ $('kSl').oninput=function(){ K=parseInt(this.value,10); render(); };
+ var mb=document.querySelectorAll('#mseg button');
+ for(var m2=0;m2<mb.length;m2++){
+   mb[m2].onclick=function(){
+     mode=this.getAttribute('data-m');
+     for(var z=0;z<mb.length;z++){mb[z].className=(mb[z]===this?'on':'');}
+     render();
+   };
+ }
+ $('norm').onclick=function(){
+   showNorm=!showNorm;
+   this.className=showNorm?'btn solid':'btn';
+   this.innerHTML='Normal curve overlay: '+(showNorm?'ON':'OFF');
+   render();
+ };
+ $('draw').onclick=function(){ runBatch(200); render(); };
+ $('reset').onclick=function(){ obs=null; obsN=0; render(); };
+
+ render();
+})();
+</script>
+</body>
+</html>

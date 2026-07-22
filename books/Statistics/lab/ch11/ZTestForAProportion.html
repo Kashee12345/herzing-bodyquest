@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>The Z-Test for a Proportion</title>
+<meta name="description" content="Run a complete one-proportion z-test on real simulated data, compare the exact binomial distribution against the normal approximation the test relies on, and repeat the whole test thousands of times.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.03fr 0.97fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:126px;line-height:1.3;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.alt input[type=range]{background:#e3daea;}
+.sl.alt input[type=range]::-webkit-slider-thumb{background:var(--purple);}
+.sl.alt input[type=range]::-moz-range-thumb{background:var(--purple);}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:82px;text-align:right;font-variant-numeric:tabular-nums;line-height:1.2;}
+.sl .nv small{display:block;font-size:9.6px;font-weight:700;color:var(--muted);}
+.sl.alt .nv{color:var(--purple);}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.tiles div.rj{border-color:#e2adb7;background:#fdf1f3;} .tiles div.rj .vv{color:#b23145;}
+.tiles div.fr{border-color:#b6d8c4;background:#f0f8f3;} .tiles div.fr .vv{color:#237a45;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.stp{font-size:12.5px;color:var(--soft);line-height:1.62;padding:8px 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;}
+.stp:first-child{border-top:none;}
+.stp b{color:var(--teal-dk);} .stp .k{font-family:var(--disp);font-weight:600;color:var(--teal-dk);}
+.stp .ok{color:#237a45;font-weight:800;} .stp .bad{color:#b23145;font-weight:800;}
+.sent{border:1px solid #bcd6e2;border-left:5px solid var(--teal);background:#eef6f9;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:13.2px;line-height:1.6;color:var(--soft);}
+.sent b{color:var(--teal-dk);}
+.sent .big{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.sent.rj{border-color:#e2adb7;border-left-color:#d1495b;background:#fdf1f3;} .sent.rj .big{color:#b23145;}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.strip div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;text-align:left;}
+.strip .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.strip .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.cnd{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px;}
+.cnd div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;}
+.cnd .lb{display:block;font-size:9.4px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;}
+.cnd .vv{display:block;font-size:15px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums;color:var(--teal-dk);}
+.cnd div.pass{border-color:#b6d8c4;background:#f0f8f3;} .cnd div.pass .vv{color:#237a45;}
+.cnd div.fail{border-color:#e2adb7;background:#fdf1f3;} .cnd div.fail .vv{color:#b23145;}
+.cl{display:block;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 11px;cursor:pointer;text-align:left;font-family:var(--sans);width:100%;font-size:12.4px;line-height:1.5;color:var(--soft);font-weight:600;transition:.12s;}
+.cl:hover{border-color:var(--teal);}
+.cl .vd{display:none;margin-top:6px;padding-top:6px;border-top:1px solid var(--line);font-size:11.9px;font-weight:600;}
+.cl.open .vd{display:block;}
+.cl.open.good{border-color:#b6d8c4;background:#f4faf6;} .cl.open.bad{border-color:#e2adb7;background:#fdf4f5;}
+.cl .mk{font-weight:800;margin-right:5px;}
+.cl.open.good .mk,.cl.open.good .vd b{color:#237a45;} .cl.open.bad .mk,.cl.open.bad .vd b{color:#b23145;}
+#chart{cursor:ew-resize;touch-action:none;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 11</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 11</div>
+  <h1>The Z&#8209;Test for a Proportion</h1>
+  <div class="intro">Sometimes the thing you measure is not a number but a <b>yes or no</b> &mdash; the bottle passes or fails, the seed sprouts or doesn&rsquo;t, the voter says yes or no. Count the yeses, divide by the number of tries, and you have a <b>sample proportion</b>. A one&#8209;proportion z&#8209;test asks the same question every test in this chapter asks: <b>is this proportion farther from the claimed value than sampling noise alone would plausibly push it?</b> The arithmetic is the familiar one &mdash; gap divided by standard error &mdash; but with one twist that trips almost everyone. The standard error is built from <b>p&#8320;, the claimed proportion, not from the proportion you observed</b>, because the whole calculation is conducted inside the pretend world where the claim is true. Below you can run the test end to end: set the count, watch z land on the curve, and then look at something the mean&#8209;test never had to show you &mdash; the <i>exact</i> distribution of your count, one bar per possible outcome, next to the smooth normal curve the test is quietly substituting for it.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The test statistic, on the curve</h2>
+      <div class="cap" style="margin-top:0;">This is the sampling distribution of the test statistic <b>if H<sub>0</sub> were true</b>. The dark marker is your z. The pale red region is where you agreed in advance to reject; the hatched region is every result at least as extreme as yours, and its area is the p&#8209;value. Read the two rulers under the axis: the top row is z, the bottom row is the sample proportion that produces it. <b>Drag the marker</b> to move your result &mdash; the count on the right follows it.</div>
+      <svg viewBox="0 0 480 300" id="chart" aria-label="the standard normal curve with the rejection region shaded, the observed test statistic marked, and the p-value area hatched"></svg>
+      <div class="lgd">
+        <span><i style="background:#f2ccd3"></i>rejection region &mdash; area = &alpha;</span>
+        <span><i style="background:#8fb6c8"></i>at least this extreme &mdash; area = p</span>
+        <span><i style="background:#1c4454;border-radius:50%"></i>your test statistic z</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>The sample it came from</h2>
+      <div class="cap" style="margin-top:2px;">Every dot is one real trial. Filled dots are the successes; hollow dots are the rest. This is the entire dataset a proportion test ever sees &mdash; there is nothing to average, only something to count. Press the button and a genuinely new sample is drawn from the world you set on the right.</div>
+      <svg viewBox="0 0 480 182" id="dots" aria-label="the sample drawn as a grid of dots, filled for successes and hollow for failures"></svg>
+      <div class="row"><button class="btn solid" id="bdraw">Draw a new sample</button><button class="btn" id="bcen">Put p&#770; on p&#8320;</button></div>
+      <div class="cap" id="dotcap"></div>
+    </div>
+    <div class="card">
+      <h2>What the test approximates &mdash; and how well</h2>
+      <div class="cap" style="margin-top:2px;">Here is the part a proportion test hides. Your count can only be a whole number, so its true sampling distribution under H<sub>0</sub> is a row of <b>discrete bars</b> &mdash; the binomial distribution &mdash; not a smooth curve. The z&#8209;test replaces those bars with the <b>normal curve drawn over them</b>. When the bars are tall, plentiful and symmetric, the swap is nearly free. When p&#8320; is close to 0 or 1, or n is small, the bars pile up against a wall, the curve spills past it, and the p&#8209;values start to lie. Shrink <i>n</i> on the right and watch the fit fall apart.</div>
+      <svg viewBox="0 0 480 232" id="binom" aria-label="the exact binomial distribution of the count under the null hypothesis, drawn as bars, with the normal approximation overlaid as a curve"></svg>
+      <div class="lgd">
+        <span><i style="background:#bcd9e6"></i>exact binomial &mdash; one bar per possible count</span>
+        <span><i style="background:#e8b6c0"></i>counts that would reject H<sub>0</sub></span>
+        <span><i style="background:#7a5a8a"></i>the normal curve the test uses instead</span>
+      </div>
+      <div class="cap" id="bincap"></div>
+    </div>
+    <div class="card">
+      <h2>Run the whole test, over and over</h2>
+      <div class="cap" style="margin-top:2px;">A single test either rejects or it doesn&rsquo;t; from one run you cannot tell whether the <i>procedure</i> is any good. So run it repeatedly. Each click draws a brand&#8209;new sample of <i>n</i> trials from the true world, counts its successes, computes its own z and applies the same rule. Bars in the pale red zone are the runs that rejected H<sub>0</sub>.</div>
+      <svg viewBox="0 0 480 210" id="rep" aria-label="histogram of test statistics from many repeated tests, with the runs falling in the rejection region shaded"></svg>
+      <div class="strip">
+        <div><span class="lb">Tests<br>run</span><span class="vv" id="rN">0</span></div>
+        <div><span class="lb">Rejected<br>H<sub>0</sub></span><span class="vv" id="rK">0</span></div>
+        <div><span class="lb">Observed<br>rate</span><span class="vv" id="rObs">&mdash;</span></div>
+        <div><span class="lb">Exact long&#8209;<br>run rate</span><span class="vv" id="rExp">&mdash;</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="run1">Run 200 tests</button><button class="btn" id="run2">Add 2,000 more</button><button class="btn" id="rrs">Reset</button></div>
+      <div class="cap" id="repcap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Four studies<small>pick one to begin</small></div>
+    <div class="card">
+      <h2>The study on the table</h2>
+      <div class="list" id="studies"></div>
+      <div class="cap" id="claimtxt" style="font-size:12.6px;color:var(--soft);"></div>
+    </div>
+    <div class="card">
+      <h2>Set the test up</h2>
+      <div class="hd">1 &middot; Which alternative did you commit to?</div>
+      <div class="seg" id="altSeg">
+        <button data-v="lt">p &lt; p&#8320;<small>left tail</small></button>
+        <button data-v="ne">p &ne; p&#8320;<small>two tails</small></button>
+        <button data-v="gt">p &gt; p&#8320;<small>right tail</small></button>
+      </div>
+      <div class="hd">2 &middot; How much false-alarm risk will you accept?</div>
+      <div class="seg" id="alSeg">
+        <button data-v="0.10">&alpha; = 0.10<small>looser</small></button>
+        <button data-v="0.05">&alpha; = 0.05<small>the usual</small></button>
+        <button data-v="0.01">&alpha; = 0.01<small>stricter</small></button>
+      </div>
+      <div class="hd">3 &middot; The data you actually collected</div>
+      <div class="sl"><label>number of trials n</label><input type="range" id="nSl"><span class="nv" id="nVal">&mdash;</span></div>
+      <div class="sl"><label id="xLab">successes x</label><input type="range" id="xSl"><span class="nv" id="xVal">&mdash;</span></div>
+      <div class="hd">4 &middot; The world the sample comes from</div>
+      <div class="sl alt"><label>true proportion p (hidden in real life)</label><input type="range" id="pSl"><span class="nv" id="pVal">&mdash;</span></div>
+      <div class="cap" id="worldcap"></div>
+      <div class="row"><button class="btn" id="bnull">Set p = p&#8320; (H&#8320; true)</button><button class="btn" id="brst">Reset the study</button></div>
+    </div>
+    <div class="card">
+      <h2>Do the conditions hold?</h2>
+      <div class="cnd">
+        <div id="cA"><span class="lb">n &times; p&#8320; &mdash; expected successes</span><span class="vv" id="vA">&mdash;</span></div>
+        <div id="cB"><span class="lb">n &times; (1&minus;p&#8320;) &mdash; expected failures</span><span class="vv" id="vB">&mdash;</span></div>
+      </div>
+      <div class="cap" id="cndcap"></div>
+    </div>
+    <div class="card">
+      <h2>The test, step by step, with your numbers</h2>
+      <div class="tiles">
+        <div><span class="lb">Sample<br>proportion</span><span class="vv" id="tPh">&mdash;</span><span class="sub" id="tPhs">x / n</span></div>
+        <div><span class="lb">Null standard<br>error</span><span class="vv" id="tSe">&mdash;</span><span class="sub">&radic;(p&#8320;q&#8320;/n)</span></div>
+        <div><span class="lb">Test<br>statistic z</span><span class="vv" id="tZ">&mdash;</span><span class="sub">SEs from p&#8320;</span></div>
+        <div id="tDbox"><span class="lb">p&#8209;value<br>vs &alpha;</span><span class="vv" id="tP">&mdash;</span><span class="sub" id="tPs">&nbsp;</span></div>
+      </div>
+      <div id="steps" style="margin-top:12px;"></div>
+      <div class="sent" id="sent"></div>
+    </div>
+    <div class="card">
+      <h2>Say it right</h2>
+      <div class="cap" style="margin-top:2px;">Seven things people say after running a one&#8209;proportion z&#8209;test. Two of them are correct. Tap each one.</div>
+      <div class="list" id="claims"></div>
+      <div id="info"><span class="n">The test in one line</span>Measure the gap <b>p&#770; &minus; p&#8320;</b> in units of <b>&radic;(p&#8320;(1&minus;p&#8320;)/n)</b>, then ask how often pure sampling noise would push a count that far. That is all a one&#8209;proportion z&#8209;test is.</div>
+    </div>
+    <div class="card">
+      <h2>The two standard errors, and why they differ</h2>
+      <div class="mnem"><b>The test divides by p&#8320;. A confidence interval divides by p&#770;. This is not a typo.</b> A hypothesis test is conducted entirely inside the hypothetical world where the claim is exactly true, so every quantity in it &mdash; including the spread of the count &mdash; is computed <i>from the claim</i>: SE<sub>0</sub> = &radic;(p&#8320;(1&minus;p&#8320;)/n). A confidence interval makes no claim to test; it has only the data, so it uses what the data gave it: SE = &radic;(p&#770;(1&minus;p&#770;)/n). The two numbers are usually close, which is exactly why the mistake survives &mdash; but they are answers to different questions, and when p&#770; sits far from p&#8320; they can disagree enough to flip a borderline conclusion. If a test and an interval ever seem to contradict each other on the same data, this is almost always why.</div>
+      <div class="note"><b>Conditions, in order of how much trouble they cause.</b> <b>Random, independent trials</b> is the one no arithmetic can rescue: the standard error formula is derived from independent draws, and a large biased sample is simply a confidently wrong answer. If you are sampling people <i>without</i> replacement, the draws are not quite independent &mdash; the usual repair is to keep the sample under about <b>10% of the population</b>, which makes the dependence too small to matter. <b>Enough expected successes and failures</b> is the one you can buy with sample size, and it is checked above: both n&#183;p&#8320; and n&#183;(1&minus;p&#8320;) should be at least 10. Note that the check uses <b>p&#8320;</b>, not p&#770; &mdash; again because the null world is where the p&#8209;value is computed. Texts vary on the threshold (some say 5, some say 15); 10 is the common compromise, and none of them is a cliff edge.</div>
+      <div class="note"><b>When the condition fails, the fix is not a bigger warning label.</b> It is a different test. The count really does follow a binomial distribution &mdash; the bars in the third panel are not an approximation of anything, they <i>are</i> the truth &mdash; so you can compute the p&#8209;value by adding up binomial probabilities directly. That is the <b>exact binomial test</b>, and it needs no condition at all. The z&#8209;test exists because for decades those sums were painful to do by hand and a single normal curve could stand in for all of them. Watch the &ldquo;exact long&#8209;run rate&rdquo; tile drift away from &alpha; as you shrink n, and you are watching the price of that convenience.</div>
+      <div class="cap">One last thing the curve makes visible. Hold p&#770; where it is and push <i>n</i> upward: z stretches away from zero while the gap between p&#770; and p&#8320; never changes at all. The world did not move; your instrument got sharper. A defect rate of 3.1% against a claimed 3.0% will eventually produce a z of 8 if you inspect enough units, and it will still be a difference nobody would act on. <b>Significance and importance are different questions</b>, and a test answers only the first. The size of the effect &mdash; p&#770; &minus; p&#8320;, in the units of the problem &mdash; is the one that decides what to do next.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- seeded PRNG (mulberry32) so every run reproduces exactly ---------- */
+ var SEED0=20260719, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+
+ /* ---------- standard normal CDF via erfc (fractional error < 1.2e-7) ---------- */
+ function erfc(x){
+   var z=Math.abs(x), t=1/(1+0.5*z);
+   var ans=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+
+     t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+
+     t*(-0.82215223+t*0.17087277)))))))));
+   return x>=0?ans:2-ans;
+ }
+ function normCdf(x){ return 0.5*erfc(-x/Math.SQRT2); }
+ function invNorm(p){
+   var lo=-9, hi=9, mid, i;
+   for(i=0;i<80;i++){ mid=(lo+hi)/2; if(normCdf(mid)<p){ lo=mid; } else { hi=mid; } }
+   return (lo+hi)/2;
+ }
+ function phi(z){ return Math.exp(-z*z/2)/2.5066282746310002; }
+
+ /* ---------- exact binomial pmf, built by a stable log recursion ---------- */
+ function binomPmf(n,p){
+   p=Math.min(0.999999,Math.max(0.000001,p));
+   var a=new Array(n+1), lp=Math.log(p), lq=Math.log(1-p), cur=n*lq, i;
+   a[0]=Math.exp(cur);
+   for(i=1;i<=n;i++){ cur+=Math.log((n-i+1)/i)+lp-lq; a[i]=Math.exp(cur); }
+   return a;
+ }
+
+ /* ================= the four studies ================= */
+ var ST=[
+  {k:'taste', nm:'Blind taste test', ct:'p &middot; share choosing cup A', col:'#2f6f8a',
+   trial:'taster', trials:'tasters', succ:'chose cup A', dp:3, sdp:4,
+   p0:0.50, dir0:'ne',
+   n0:100, x0:60, nMin:20, nMax:400, nStep:5,
+   pt0:0.50, ptMin:0.30, ptMax:0.72, ptStep:0.005,
+   ctx:'the share of drinkers who prefer cup A',
+   claim:'A beverage company insists its two formulas are <b>indistinguishable</b>. If that is true, tasters given an unlabelled cup of each should split evenly &mdash; <b>p&#8320; = 0.50</b>. A hundred tasters are recruited at random and each names a favourite. Because a preference in <b>either</b> direction would disprove the claim, the test is two&#8209;sided.',
+   note:'This is the cleanest arithmetic in the section: with p&#8320; = 0.50 and n = 100 the standard error is exactly 0.05, so every 5 percentage points of gap is worth precisely one unit of z. Sixty out of a hundred puts z at exactly 2.000 and the two&#8209;sided p&#8209;value at 0.0455 &mdash; a rejection at &alpha; = 0.05 by a hair. And notice the true proportion is set to 0.50, which means the formulas really <i>are</i> identical. What you are looking at is a false alarm.'},
+
+  {k:'poll', nm:'Referendum poll', ct:'p &middot; share voting yes', col:'#7a5a8a',
+   trial:'voter', trials:'voters', succ:'said yes', dp:3, sdp:4,
+   p0:0.55, dir0:'ne',
+   n0:600, x0:306, nMin:100, nMax:800, nStep:25,
+   pt0:0.52, ptMin:0.42, ptMax:0.68, ptStep:0.005,
+   ctx:'the share of the electorate voting yes',
+   claim:'A campaign has been telling reporters that <b>55%</b> of the electorate will vote yes. A polling organisation draws a random sample of registered voters and asks each one. The campaign&rsquo;s figure could be too high or too low, so the poll tests it <b>two&#8209;sided</b> &mdash; the question is whether 55% is right, not whether it is optimistic.',
+   note:'A textbook borderline case: p&#770; = 0.510 against a claimed 0.550 gives z = &minus;1.969 and a two&#8209;sided p&#8209;value of 0.0489, which clears &alpha; = 0.05 by four ten&#8209;thousandths. Switch to &alpha; = 0.01 and the identical data reverse the verdict. Nothing about the electorate changed &mdash; only how much false&#8209;alarm risk you were willing to carry, chosen before the data arrived.'},
+
+  {k:'defect', nm:'Production defect rate', ct:'p &middot; share of units defective', col:'#b8862f',
+   trial:'unit', trials:'units', succ:'were defective', dp:4, sdp:5,
+   p0:0.03, dir0:'gt',
+   n0:400, x0:19, nMin:100, nMax:800, nStep:10,
+   pt0:0.045, ptMin:0.005, ptMax:0.10, ptStep:0.0025,
+   ctx:'the true defect rate of the line',
+   claim:'A supplier&rsquo;s contract guarantees that <b>no more than 3%</b> of units are defective. An inspector pulls a random sample from the shipment and tests each one. Only an <b>excess</b> of defects would breach the contract &mdash; a shipment better than promised is not a problem &mdash; so the alternative points up.',
+   note:'This is the study that stresses the approximation. With p&#8320; = 0.03, the expected number of defects is only n &times; 0.03, so at n = 400 you are sitting on 12 &mdash; barely over the line. Drag n down toward 300 and the condition fails outright; watch the binomial bars in the third panel lean hard to the right while the normal curve slides off the left edge into counts that cannot exist.'},
+
+  {k:'seed', nm:'Seed germination', ct:'p &middot; share of seeds that sprout', col:'#2f9e5b',
+   trial:'seed', trials:'seeds', succ:'germinated', dp:3, sdp:4,
+   p0:0.90, dir0:'lt',
+   n0:200, x0:172, nMin:40, nMax:500, nStep:5,
+   pt0:0.88, ptMin:0.74, ptMax:0.99, ptStep:0.005,
+   ctx:'the true germination rate of the batch',
+   claim:'A packet promises a <b>90% germination rate</b>. A grower sows a random sample from the batch under controlled conditions and counts how many sprout. Only a <b>shortfall</b> would justify a complaint, so the alternative points down.',
+   note:'The mirror image of the defect study, and worth comparing: here it is the <i>failures</i> that are scarce. n &times; (1 &minus; p&#8320;) is the binding condition, and at n = 200 it sits at 20. The batch really is weak &mdash; 88% against a promised 90% &mdash; but run the repeated tests and you will find this design catches the shortfall well under half the time. A problem that is real and a test that can see it are two different things.'}
+ ];
+
+ var CLAIMS=[
+  {ok:0, t:'The p&#8209;value is the probability that the claim H<sub>0</sub> is true.',
+   v:'The p&#8209;value <b>assumes</b> H<sub>0</sub> is true and asks how surprising the data would be in that world. It is a probability about data given a hypothesis, never about a hypothesis given data. H<sub>0</sub> is either true or it is not; it has no probability here.'},
+  {ok:0, t:'We rejected at &alpha; = 0.05, so there is a 95% chance the true proportion differs from p&#8320;.',
+   v:'No probability attaches to the conclusion of a single test. The 5% describes how often <b>this procedure</b> would raise a false alarm across many repetitions when H<sub>0</sub> is true &mdash; which is exactly the number the repeated&#8209;test panel converges on.'},
+  {ok:1, t:'The p&#8209;value is the chance of getting a sample proportion at least this far from p&#8320;, in whichever direction the alternative names, if the claim were exactly true.',
+   v:'Correct, and it is the only sentence on this list that defines the p&#8209;value. It is the shaded area in the top panel &mdash; a statement about the data, computed inside the null world.'},
+  {ok:1, t:'The standard error in the test statistic is built from p&#8320;, not from p&#770;.',
+   v:'Correct, and it is what separates this test from the confidence interval for the same proportion. The test lives inside the world where the claim holds, so the spread it uses comes from the claim.'},
+  {ok:0, t:'A large enough sample makes the test valid even if the sample was not random.',
+   v:'Sample size fixes only the normal approximation. It does nothing for bias &mdash; a larger biased sample just estimates the wrong number more precisely. There is no n at which a self&#8209;selected sample becomes a random one.'},
+  {ok:0, t:'We failed to reject, so the claimed proportion is correct.',
+   v:'Failing to reject means the data are <b>consistent</b> with the claim, not that the claim is true. A small sample fails to reject almost everything; absence of evidence against p&#8320; is not evidence for it.'},
+  {ok:0, t:'The p&#8209;value came out at 0.0001, so the difference is big enough to act on.',
+   v:'A tiny p&#8209;value says the gap is hard to explain by chance, not that it is large. Push n up on any study and watch z climb while p&#770; &minus; p&#8320; stays put. Importance is read off the gap itself, never off the p&#8209;value.'}
+ ];
+
+ /* ================= state ================= */
+ var si=0, alt='ne', al=0.05, N=100, X=60, PT=0.5;
+ var ord=[], rz=[], rN=0, rK=0;
+
+ function shuffle(n){
+   var a=new Array(n), i, j, t;
+   for(i=0;i<n;i++){ a[i]=i; }
+   for(i=n-1;i>0;i--){ j=Math.floor(rnd()*(i+1)); t=a[i]; a[i]=a[j]; a[j]=t; }
+   return a;
+ }
+
+ /* ================= the computation ================= */
+ function calc(){
+   var st=ST[si], p0=st.p0, n=N, x=X;
+   var ph=x/n;
+   var se=Math.sqrt(p0*(1-p0)/n);
+   var z=(ph-p0)/se;
+   var pv = alt==='ne' ? 2*normCdf(-Math.abs(z)) : (alt==='gt' ? normCdf(-z) : normCdf(z));
+   if(pv>1){ pv=1; }
+   var zc = alt==='ne' ? invNorm(1-al/2) : invNorm(1-al);
+   var rej = alt==='ne' ? (Math.abs(z)>=zc) : (alt==='gt' ? (z>=zc) : (z<=-zc));
+   return {st:st,p0:p0,n:n,x:x,ph:ph,se:se,z:z,pv:pv,zc:zc,rej:rej};
+ }
+ /* would a count of k reject, under the current rule? */
+ function rejK(k,n,p0,se,zc){
+   var z=(k/n-p0)/se;
+   return alt==='ne' ? (Math.abs(z)>=zc) : (alt==='gt' ? (z>=zc) : (z<=-zc));
+ }
+ /* the EXACT long-run rejection rate, summed over the binomial - no simulation needed */
+ function exactRate(pTrue){
+   var R=calc(), n=R.n, pmf=binomPmf(n,pTrue), s=0, k;
+   for(k=0;k<=n;k++){ if(rejK(k,n,R.p0,R.se,R.zc)){ s+=pmf[k]; } }
+   return s;
+ }
+
+ /* ================= formatting ================= */
+ function f(v,d){ return v.toFixed(d); }
+ function pct(v,d){ return (v*100).toFixed(d)+'%'; }
+ function thou(v){ var s=String(v), o='', i, c=0; for(i=s.length-1;i>=0;i--){ o=s.charAt(i)+o; if(++c%3===0&&i>0){ o=','+o; } } return o; }
+ function fp(p){
+   if(p<0.0001){ return '&lt; 0.0001'; }
+   if(p<0.001){ return p.toFixed(5); }
+   return p.toFixed(4);
+ }
+ function sgn(v,d){ return (v<0?'&minus;':'')+Math.abs(v).toFixed(d); }
+
+ /* ================= panel 1 - the curve ================= */
+ function drawCurve(){
+   var R=calc(), st=R.st;
+   var x0=38, x1=462, base=214, ht=152, zmin=-4, zmax=4, PK=0.3989422804014327;
+   function px(z){ return x0+(z-zmin)/(zmax-zmin)*(x1-x0); }
+   function py(d){ return base-d/PK*ht; }
+   function area(a,b,fill,extra){
+     a=Math.max(zmin,a); b=Math.min(zmax,b);
+     if(!(b>a)){ return ''; }
+     var s='M'+px(a).toFixed(2)+' '+base, i, z;
+     for(i=0;i<=70;i++){ z=a+(b-a)*i/70; s+='L'+px(z).toFixed(2)+' '+py(phi(z)).toFixed(2); }
+     s+='L'+px(b).toFixed(2)+' '+base+'Z';
+     return '<path d="'+s+'" fill="'+fill+'"'+(extra||'')+'/>';
+   }
+   var o='<defs><pattern id="hx" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'+
+     '<rect width="7" height="7" fill="#8fb6c8" opacity=".30"/><line x1="0" y1="0" x2="0" y2="7" stroke="#3d7d99" stroke-width="2.1" opacity=".65"/></pattern></defs>';
+   o+='<rect x="0" y="0" width="480" height="300" fill="none"/>';
+
+   /* rejection region */
+   if(alt==='ne'||alt==='lt'){ o+=area(zmin,-R.zc,'#f2ccd3'); }
+   if(alt==='ne'||alt==='gt'){ o+=area(R.zc,zmax,'#f2ccd3'); }
+
+   /* p-value region */
+   var za=Math.abs(R.z);
+   if(alt==='ne'){ o+=area(zmin,-za,'url(#hx)'); o+=area(za,zmax,'url(#hx)'); }
+   else if(alt==='gt'){ o+=area(R.z,zmax,'url(#hx)'); }
+   else { o+=area(zmin,R.z,'url(#hx)'); }
+
+   /* the curve */
+   var d='', i, z;
+   for(i=0;i<=280;i++){ z=zmin+(zmax-zmin)*i/280; d+=(i?'L':'M')+px(z).toFixed(2)+' '+py(phi(z)).toFixed(2); }
+   o+='<path d="'+d+'" fill="none" stroke="#1c4454" stroke-width="2.1"/>';
+   o+='<line x1="'+x0+'" y1="'+base+'" x2="'+x1+'" y2="'+base+'" stroke="#9fb2bc" stroke-width="1.2"/>';
+
+   /* critical value markers */
+   var cvs=[];
+   if(alt==='ne'){ cvs=[-R.zc,R.zc]; } else if(alt==='gt'){ cvs=[R.zc]; } else { cvs=[-R.zc]; }
+   for(i=0;i<cvs.length;i++){
+     o+='<line x1="'+px(cvs[i]).toFixed(2)+'" y1="'+(base-ht*phi(cvs[i])/PK-4).toFixed(2)+'" x2="'+px(cvs[i]).toFixed(2)+'" y2="'+base+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="4 3"/>';
+     o+='<text x="'+px(cvs[i]).toFixed(2)+'" y="'+(base-ht*phi(cvs[i])/PK-9).toFixed(2)+'" font-size="10" font-weight="800" fill="#b23145" text-anchor="middle">'+sgn(cvs[i],3)+'</text>';
+   }
+
+   /* the observed statistic */
+   var zp=Math.max(zmin+0.04,Math.min(zmax-0.04,R.z));
+   o+='<line x1="'+px(zp).toFixed(2)+'" y1="'+py(phi(zp)).toFixed(2)+'" x2="'+px(zp).toFixed(2)+'" y2="'+base+'" stroke="#1c4454" stroke-width="2.6"/>';
+   o+='<circle cx="'+px(zp).toFixed(2)+'" cy="'+py(phi(zp)).toFixed(2)+'" r="7.5" fill="#1c4454" stroke="#fff" stroke-width="2.6"/>';
+   o+='<text x="'+px(zp).toFixed(2)+'" y="'+(py(phi(zp))-14).toFixed(2)+'" font-size="12.5" font-weight="800" fill="#1c4454" text-anchor="middle">z = '+sgn(R.z,3)+'</text>';
+
+   /* two rulers: z, and the sample proportion that produces it */
+   var tk=[-3,-2,-1,0,1,2,3];
+   for(i=0;i<tk.length;i++){
+     var tx=px(tk[i]);
+     o+='<line x1="'+tx.toFixed(2)+'" y1="'+base+'" x2="'+tx.toFixed(2)+'" y2="'+(base+5)+'" stroke="#9fb2bc" stroke-width="1.2"/>';
+     o+='<text x="'+tx.toFixed(2)+'" y="'+(base+18)+'" font-size="10.5" font-weight="700" fill="#78868d" text-anchor="middle">'+sgn(tk[i],0)+'</text>';
+     var pv2=R.p0+tk[i]*R.se;
+     o+='<text x="'+tx.toFixed(2)+'" y="'+(base+37)+'" font-size="10" font-weight="700" fill="#2f6f8a" text-anchor="middle">'+(pv2>=0&&pv2<=1?f(pv2,st.dp):'&mdash;')+'</text>';
+   }
+   o+='<text x="'+x0+'" y="'+(base+18)+'" font-size="9.4" font-weight="800" fill="#9fb2bc" text-anchor="start">z</text>';
+   o+='<text x="'+x0+'" y="'+(base+37)+'" font-size="9.4" font-weight="800" fill="#7fa8bd" text-anchor="start">p&#770;</text>';
+   o+='<text x="240" y="'+(base+58)+'" font-size="10.6" font-weight="700" fill="#78868d" text-anchor="middle">the same axis, read twice &mdash; standard errors above, proportions below</text>';
+   o+='<text x="240" y="'+(base+76)+'" font-size="10.6" font-weight="700" fill="#9fb2bc" text-anchor="middle">drag the marker to change the count</text>';
+   $('chart').innerHTML=o;
+
+   /* caption */
+   var tail = alt==='ne' ? 'both tails' : (alt==='gt' ? 'the right tail only' : 'the left tail only');
+   $('cap').innerHTML='The hatched area covers '+tail+' beyond your z, and it comes to <b>'+fp(R.pv)+'</b>. Read that as: <b>if the claim p = '+f(R.p0,R.st.dp)+' were exactly true</b>, about '+
+     (R.pv>=0.0001?pct(R.pv,2):'fewer than 0.01%')+' of samples of '+R.n+' '+st.trials+' would land a sample proportion at least this far from '+f(R.p0,R.st.dp)+
+     (alt==='ne'?' in either direction':' in the direction you named')+'. The pale red area is fixed at &alpha; = '+f(al,2)+' &mdash; you chose it before seeing anything.';
+ }
+
+ /* ================= panel 2 - the raw sample ================= */
+ function drawDots(){
+   var R=calc(), st=R.st, n=R.n;
+   var PX0=8, PX1=472, PY0=10, PY1=170, W=PX1-PX0, H=PY1-PY0;
+   var cols=Math.max(1,Math.ceil(Math.sqrt(n*W/H)));
+   var rows=Math.ceil(n/cols);
+   var cw=W/cols, chh=H/rows;
+   var r=Math.max(1.6,Math.min(cw,chh)*0.34);
+   var rS=r.toFixed(1), rH=(r*0.86).toFixed(1), sw=Math.max(0.7,r*0.22).toFixed(1);
+   var isS=new Uint8Array(n), i;
+   for(i=0;i<X&&i<n;i++){ isS[ord[i]]=1; }
+   var out=[];
+   for(i=0;i<n;i++){
+     var c=i%cols, rw=Math.floor(i/cols);
+     var cx=(PX0+cw*(c+0.5)).toFixed(1), cy=(PY0+chh*(rw+0.5)).toFixed(1);
+     if(isS[i]){ out.push('<circle cx="'+cx+'" cy="'+cy+'" r="'+rS+'" fill="'+st.col+'"/>'); }
+     else { out.push('<circle cx="'+cx+'" cy="'+cy+'" r="'+rH+'" fill="#fff" stroke="#c6d5dd" stroke-width="'+sw+'"/>'); }
+   }
+   out.push('<text x="8" y="180" font-size="10.6" font-weight="800" fill="'+st.col+'" text-anchor="start">'+X+' '+st.succ+'</text>');
+   out.push('<text x="472" y="180" font-size="10.6" font-weight="700" fill="#9fb2bc" text-anchor="end">'+(n-X)+' did not &mdash; '+n+' '+st.trials+' in all</text>');
+   $('dots').innerHTML=out.join('');
+   $('dotcap').innerHTML='<b>p&#770; = '+X+' / '+n+' = '+f(R.ph,st.dp)+'</b> ('+pct(R.ph,1)+'), against a claimed <b>p&#8320; = '+f(R.p0,st.dp)+'</b> ('+pct(R.p0,1)+
+     '). The gap is '+sgn(R.ph-R.p0,st.dp)+' &mdash; that is the number that matters practically, and it is the one the p&#8209;value will never tell you.';
+ }
+
+ /* ================= panel 3 - exact binomial vs the normal it is replaced by ========= */
+ function drawBinom(){
+   var R=calc(), st=R.st, n=R.n, p0=R.p0;
+   var mu=n*p0, sd=Math.sqrt(n*p0*(1-p0));
+   var lo=Math.max(0,Math.floor(mu-4.6*sd)), hi=Math.min(n,Math.ceil(mu+4.6*sd));
+   if(hi-lo<6){ lo=Math.max(0,lo-3); hi=Math.min(n,hi+3); }
+   var pmf=binomPmf(n,p0);
+   var x0=34, x1=468, base=182, ht=150, k, mx=0;
+   for(k=lo;k<=hi;k++){ if(pmf[k]>mx){ mx=pmf[k]; } }
+   var nb=hi-lo+1, bw=(x1-x0)/nb;
+   function bx(k){ return x0+(k-lo)*bw; }
+   function by(v){ return base-v/mx*ht; }
+   var out=[], size=0;
+   for(k=lo;k<=hi;k++){
+     var rj=rejK(k,n,p0,R.se,R.zc);
+     if(rj){ size+=pmf[k]; }
+     var h=by(pmf[k]);
+     out.push('<rect x="'+bx(k).toFixed(2)+'" y="'+h.toFixed(2)+'" width="'+Math.max(0.6,bw-0.6).toFixed(2)+'" height="'+(base-h).toFixed(2)+'" fill="'+(rj?'#e8b6c0':'#bcd9e6')+'"/>');
+   }
+   /* the normal curve the test substitutes for those bars, on the same vertical scale */
+   var d='', i, xv, dens;
+   for(i=0;i<=300;i++){
+     xv=lo-0.5+(hi-lo+1)*i/300;
+     dens=phi((xv-mu)/sd)/sd;
+     d+=(i?'L':'M')+(x0+(xv-lo+0.5)*bw).toFixed(2)+' '+by(dens).toFixed(2);
+   }
+   out.push('<path d="'+d+'" fill="none" stroke="#7a5a8a" stroke-width="2.1"/>');
+   out.push('<line x1="'+x0+'" y1="'+base+'" x2="'+x1+'" y2="'+base+'" stroke="#9fb2bc" stroke-width="1.2"/>');
+
+   /* observed count */
+   if(X>=lo&&X<=hi){
+     var ox=bx(X)+bw/2;
+     out.push('<line x1="'+ox.toFixed(2)+'" y1="'+(base+6)+'" x2="'+ox.toFixed(2)+'" y2="24" stroke="#1c4454" stroke-width="2.2"/>');
+     out.push('<circle cx="'+ox.toFixed(2)+'" cy="24" r="5" fill="#1c4454"/>');
+     out.push('<text x="'+ox.toFixed(2)+'" y="16" font-size="10.6" font-weight="800" fill="#1c4454" text-anchor="middle">your count: '+X+'</text>');
+   } else {
+     out.push('<text x="'+(X>hi?x1:x0)+'" y="16" font-size="10.6" font-weight="800" fill="#1c4454" text-anchor="'+(X>hi?'end':'start')+'">your count ('+X+') is off this scale &#8594;</text>');
+   }
+   /* axis labels */
+   var stepK=Math.max(1,Math.round((hi-lo)/6));
+   for(k=lo;k<=hi;k+=stepK){
+     out.push('<text x="'+(bx(k)+bw/2).toFixed(2)+'" y="'+(base+16)+'" font-size="10.2" font-weight="700" fill="#78868d" text-anchor="middle">'+k+'</text>');
+   }
+   out.push('<text x="240" y="'+(base+34)+'" font-size="10.6" font-weight="700" fill="#9fb2bc" text-anchor="middle">number of '+st.trials+' out of '+n+' that '+st.succ+', if p = '+f(p0,st.dp)+'</text>');
+   if(lo===0){ out.push('<line x1="'+x0+'" y1="'+(base-ht-6)+'" x2="'+x0+'" y2="'+(base+4)+'" stroke="#d1495b" stroke-width="1.4" stroke-dasharray="3 3"/>'); }
+   $('binom').innerHTML=out.join('');
+
+   var npq=Math.min(n*p0,n*(1-p0));
+   var drift=size-al;
+   $('bincap').innerHTML='Add up the bars that would reject, and you get the test&rsquo;s <b>exact size: '+pct(size,2)+'</b>, against the &alpha; = '+pct(al,0)+
+     ' you asked for. They are not equal and never can be &mdash; the count is a whole number, so the rejection region jumps in steps and can never carve out exactly '+pct(al,0)+
+     '. Here the gap is '+(Math.abs(drift)<0.0005?'negligible':(drift>0?'<b>'+pct(drift,2)+' too generous</b> &mdash; the test rejects more often than advertised':'<b>'+pct(-drift,2)+' too conservative</b> &mdash; the test rejects less often than advertised'))+
+     '. The smaller of n&#183;p&#8320; and n&#183;(1&minus;p&#8320;) is <b>'+f(npq,1)+'</b>'+(npq<10?', which is under 10 &mdash; and it shows':', comfortably past 10')+'.'+
+     (lo===0?' <b>Look at the red dashed wall on the left.</b> The count cannot go below zero, but the normal curve does not know that &mdash; it keeps going, assigning probability to counts that can never happen. That leaked probability is exactly what makes the p&#8209;value wrong when the condition fails.':'');
+ }
+
+ /* ================= panel 4 - repeat the whole test ================= */
+ function drawRep(){
+   var R=calc();
+   var x0=34, x1=468, base=170, ht=132, zmin=-5, zmax=5, nb=40, bw=(zmax-zmin)/nb;
+   var h=new Array(nb), hr=new Array(nb), i;
+   for(i=0;i<nb;i++){ h[i]=0; hr[i]=0; }
+   var mx=0;
+   for(i=0;i<rz.length;i++){
+     var b=Math.floor((rz[i]-zmin)/bw);
+     if(b<0){ b=0; } if(b>=nb){ b=nb-1; }
+     h[b]++;
+   }
+   for(i=0;i<nb;i++){ if(h[i]>mx){ mx=h[i]; } }
+   if(mx===0){ mx=1; }
+   function px(z){ return x0+(z-zmin)/(zmax-zmin)*(x1-x0); }
+   var out=[];
+   /* rejection zones */
+   function zone(a,b){
+     a=Math.max(zmin,a); b=Math.min(zmax,b);
+     if(!(b>a)){ return ''; }
+     return '<rect x="'+px(a).toFixed(2)+'" y="20" width="'+(px(b)-px(a)).toFixed(2)+'" height="'+(base-20)+'" fill="#fbe6ea"/>';
+   }
+   if(alt==='ne'||alt==='lt'){ out.push(zone(zmin,-R.zc)); }
+   if(alt==='ne'||alt==='gt'){ out.push(zone(R.zc,zmax)); }
+   for(i=0;i<nb;i++){
+     if(!h[i]){ continue; }
+     var zl=zmin+i*bw, zc2=zl+bw/2;
+     var rj = alt==='ne' ? (Math.abs(zc2)>=R.zc) : (alt==='gt' ? (zc2>=R.zc) : (zc2<=-R.zc));
+     var bh=h[i]/mx*ht, y=base-bh;
+     out.push('<rect x="'+px(zl).toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+((x1-x0)/nb-0.8).toFixed(2)+'" height="'+bh.toFixed(2)+'" fill="'+(rj?'#d1495b':'#7fa8bd')+'"/>');
+   }
+   out.push('<line x1="'+x0+'" y1="'+base+'" x2="'+x1+'" y2="'+base+'" stroke="#9fb2bc" stroke-width="1.2"/>');
+   var tk=[-4,-3,-2,-1,0,1,2,3,4];
+   for(i=0;i<tk.length;i++){
+     out.push('<text x="'+px(tk[i]).toFixed(2)+'" y="'+(base+16)+'" font-size="10.2" font-weight="700" fill="#78868d" text-anchor="middle">'+sgn(tk[i],0)+'</text>');
+   }
+   out.push('<text x="240" y="'+(base+34)+'" font-size="10.6" font-weight="700" fill="#9fb2bc" text-anchor="middle">test statistic z from each fresh sample of '+R.n+'</text>');
+   if(!rz.length){ out.push('<text x="240" y="96" font-size="12.6" font-weight="700" fill="#9fb2bc" text-anchor="middle">press a button below to start running tests</text>'); }
+   $('rep').innerHTML=out.join('');
+
+   var ex=exactRate(PT);
+   $('rN').innerHTML=thou(rN);
+   $('rK').innerHTML=thou(rK);
+   $('rObs').innerHTML=rN?pct(rK/rN,1):'&mdash;';
+   $('rExp').innerHTML=pct(ex,1);
+   var nullTrue=Math.abs(PT-R.p0)<1e-9;
+   $('repcap').innerHTML= nullTrue
+     ? 'You have set the true proportion <b>equal to p&#8320;</b>, so H<sub>0</sub> is true and every rejection here is a <b>false alarm</b>. The long&#8209;run rate should sit near &alpha; = '+pct(al,0)+
+       ', and the exact figure &mdash; '+pct(ex,1)+' &mdash; is computed by summing binomial probabilities, not simulated. That is what &ldquo;&alpha; = '+f(al,2)+'&rdquo; actually promises: a property of the <b>procedure over many repetitions</b>, not a statement about any one result.'
+     : 'The true proportion is <b>'+f(PT,R.st.dp)+'</b> while the claim is <b>'+f(R.p0,R.st.dp)+'</b>, so H<sub>0</sub> is false and every rejection is a <b>correct catch</b>. The long&#8209;run rate is this test&rsquo;s <b>power</b> against that particular truth: '+pct(ex,1)+
+       '. Move the true proportion closer to p&#8320; and power collapses toward &alpha;; push n up and it climbs. A real difference the test cannot see is a <b>Type&nbsp;II error</b>, and it happens here '+pct(1-ex,1)+' of the time.';
+ }
+
+ /* ================= the step-by-step and the verdict ================= */
+ function renderSteps(){
+   var R=calc(), st=R.st, q0=1-R.p0;
+   var a=n_p(), b=n_q();
+   var condOK=(a>=10&&b>=10);
+   var altTxt = alt==='ne' ? 'p &ne; '+f(R.p0,st.dp) : (alt==='gt' ? 'p &gt; '+f(R.p0,st.dp) : 'p &lt; '+f(R.p0,st.dp));
+   var s='';
+   s+='<div class="stp"><span class="k">1 &middot; State the two hypotheses.</span><br>H<sub>0</sub>: p = <b>'+f(R.p0,st.dp)+'</b> &nbsp;&middot;&nbsp; H<sub>1</sub>: <b>'+altTxt+'</b><br>'+
+    '<span style="font-size:11.6px;color:var(--muted);">The claim always goes in H<sub>0</sub> with an equals sign, because the whole calculation needs one specific number to compute inside.</span></div>';
+   s+='<div class="stp"><span class="k">2 &middot; Check the conditions.</span><br>n&#183;p&#8320; = '+R.n+' &times; '+f(R.p0,st.dp)+' = <b>'+f(a,1)+'</b> &nbsp;&middot;&nbsp; n&#183;(1&minus;p&#8320;) = '+R.n+' &times; '+f(q0,st.dp)+' = <b>'+f(b,1)+'</b> &nbsp; '+
+    (condOK?'<span class="ok">both &ge; 10 &#10003;</span>':'<span class="bad">below 10 &mdash; the normal approximation is not trustworthy here</span>')+'</div>';
+   s+='<div class="stp"><span class="k">3 &middot; The sample proportion.</span><br>p&#770; = x / n = '+R.x+' / '+R.n+' = <b>'+f(R.ph,st.dp+1)+'</b></div>';
+   s+='<div class="stp"><span class="k">4 &middot; The standard error, built from the claim.</span><br>SE<sub>0</sub> = &radic;( p&#8320;(1&minus;p&#8320;) / n ) = &radic;( '+f(R.p0,st.dp)+' &times; '+f(q0,st.dp)+' / '+R.n+' ) = <b>'+f(R.se,st.sdp+1)+'</b><br>'+
+    '<span style="font-size:11.6px;color:var(--muted);">p&#8320; here, not p&#770; &mdash; this is the step everyone gets wrong.</span></div>';
+   s+='<div class="stp"><span class="k">5 &middot; The test statistic.</span><br>z = (p&#770; &minus; p&#8320;) / SE<sub>0</sub> = ('+f(R.ph,st.dp+1)+' &minus; '+f(R.p0,st.dp)+') / '+f(R.se,st.sdp+1)+' = <b>'+sgn(R.z,3)+'</b><br>'+
+    '<span style="font-size:11.6px;color:var(--muted);">The sample sits '+Math.abs(R.z).toFixed(2)+' standard errors '+(R.z<0?'below':'above')+' the claimed proportion.</span></div>';
+   var pvExpr = alt==='ne' ? '2 &times; P(Z &ge; '+Math.abs(R.z).toFixed(3)+')' : (alt==='gt' ? 'P(Z &ge; '+sgn(R.z,3)+')' : 'P(Z &le; '+sgn(R.z,3)+')');
+   s+='<div class="stp"><span class="k">6 &middot; The p&#8209;value.</span><br>'+pvExpr+' = <b>'+fp(R.pv)+'</b><br>'+
+    '<span style="font-size:11.6px;color:var(--muted);">Critical value for &alpha; = '+f(al,2)+' '+(alt==='ne'?'two-sided':'one-sided')+': &plusmn;'+f(R.zc,3)+'</span></div>';
+   s+='<div class="stp"><span class="k">7 &middot; The decision.</span><br>'+fp(R.pv)+' '+(R.rej?'&lt;':'&gt;')+' '+f(al,2)+' &rarr; '+
+    (R.rej?'<span class="bad">reject H<sub>0</sub></span>':'<span class="ok">fail to reject H<sub>0</sub></span>')+'</div>';
+   $('steps').innerHTML=s;
+
+   $('tPh').innerHTML=f(R.ph,st.dp);
+   $('tPhs').innerHTML=R.x+' / '+R.n;
+   $('tSe').innerHTML=f(R.se,st.sdp);
+   $('tZ').innerHTML=sgn(R.z,3);
+   $('tP').innerHTML=fp(R.pv);
+   $('tPs').innerHTML='&alpha; = '+f(al,2);
+   $('tDbox').className=R.rej?'rj':'fr';
+
+   var dirTxt = alt==='ne' ? 'differs from' : (alt==='gt' ? 'is greater than' : 'is less than');
+   var sv=$('sent');
+   sv.className='sent'+(R.rej?' rj':'');
+   if(R.rej){
+     sv.innerHTML='<span class="big">Reject H<sub>0</sub></span>There is <b>sufficient evidence at &alpha; = '+f(al,2)+'</b> to conclude that '+st.ctx+' '+dirTxt+' '+f(R.p0,st.dp)+' ('+pct(R.p0,1)+
+       '). A result this far from the claim would arise from sampling noise alone only '+(R.pv>=0.0001?pct(R.pv,2):'less than 0.01% ')+' of the time. '+
+       '<b>That is a statement about how surprising the data are, not about how large the difference is</b> &mdash; the observed gap is '+sgn(R.ph-R.p0,st.dp)+', and whether that matters is a question the test cannot answer.';
+   } else {
+     sv.innerHTML='<span class="big">Fail to reject H<sub>0</sub></span>There is <b>not sufficient evidence at &alpha; = '+f(al,2)+'</b> to conclude that '+st.ctx+' '+dirTxt+' '+f(R.p0,st.dp)+' ('+pct(R.p0,1)+
+       '). Sampling noise alone would produce a result this extreme about '+pct(R.pv,1)+' of the time, which is not rare enough by the standard you set. '+
+       '<b>This does not show the claim is true</b> &mdash; only that these data are consistent with it. A small sample is consistent with almost everything.';
+   }
+
+   /* conditions card */
+   $('vA').innerHTML=f(a,1); $('vB').innerHTML=f(b,1);
+   $('cA').className=a>=10?'pass':'fail';
+   $('cB').className=b>=10?'pass':'fail';
+   $('cndcap').innerHTML=condOK
+     ? 'Both are at least 10, so the binomial distribution of the count is symmetric enough and far enough from its walls that the normal curve stands in for it well. Notice that both use <b>p&#8320;</b> &mdash; the claim &mdash; because that is the world the p&#8209;value is computed in.'
+     : 'One of these is <b>under 10</b>, so the count piles up against 0 or against n, the binomial bars go visibly lopsided, and the symmetric normal curve the test uses spills into counts that cannot occur. The p&#8209;value above is still printed, but it should not be trusted &mdash; use an <b>exact binomial test</b>, or collect more '+st.trials+'.';
+ }
+ function n_p(){ return N*ST[si].p0; }
+ function n_q(){ return N*(1-ST[si].p0); }
+
+ /* ================= the claim list ================= */
+ function renderClaims(){
+   var h='', i;
+   for(i=0;i<CLAIMS.length;i++){
+     h+='<button class="cl" data-i="'+i+'"><span class="mk">?</span>'+CLAIMS[i].t+'<span class="vd"></span></button>';
+   }
+   $('claims').innerHTML=h;
+   var bs=document.querySelectorAll('#claims .cl'), j;
+   for(j=0;j<bs.length;j++){
+     bs[j].onclick=function(){
+       var c=CLAIMS[+this.dataset.i];
+       if(this.className.indexOf('open')>=0){ this.className='cl'; this.querySelector('.mk').innerHTML='?'; return; }
+       this.className='cl open '+(c.ok?'good':'bad');
+       this.querySelector('.mk').innerHTML=c.ok?'&#10003;':'&#10007;';
+       this.querySelector('.vd').innerHTML='<b>'+(c.ok?'True.':'False.')+'</b> '+c.v;
+     };
+   }
+ }
+
+ /* ================= study list + controls ================= */
+ function renderStudies(){
+   var h='', i;
+   for(i=0;i<ST.length;i++){
+     h+='<button class="it'+(i===si?' on':'')+'" data-i="'+i+'"><span class="sw" style="background:'+ST[i].col+'"></span>'+
+        '<span><span class="nm">'+ST[i].nm+'</span><br><span class="ct">'+ST[i].ct+'</span></span></button>';
+   }
+   $('studies').innerHTML=h;
+   var bs=document.querySelectorAll('#studies .it'), j;
+   for(j=0;j<bs.length;j++){ bs[j].onclick=function(){ loadStudy(+this.dataset.i); }; }
+ }
+ function renderSeg(id,val){
+   var bs=document.querySelectorAll('#'+id+' button'), i;
+   for(i=0;i<bs.length;i++){ bs[i].className=(bs[i].dataset.v===val)?'on':''; }
+ }
+
+ function resetReps(){ rz=[]; rN=0; rK=0; }
+
+ function loadStudy(i){
+   si=i;
+   var st=ST[i];
+   seed=SEED0+i*7919;
+   alt=st.dir0; al=0.05; N=st.n0; X=st.x0; PT=st.pt0;
+   $('nSl').min=st.nMin; $('nSl').max=st.nMax; $('nSl').step=st.nStep; $('nSl').value=N;
+   $('pSl').min=st.ptMin; $('pSl').max=st.ptMax; $('pSl').step=st.ptStep; $('pSl').value=PT;
+   ord=shuffle(N);
+   resetReps();
+   $('stage').style.background=st.col;
+   $('stage').innerHTML=st.nm+'<small>H&#8320;: p = '+f(st.p0,st.dp)+' &mdash; '+st.ct.replace('p &middot; ','')+'</small>';
+   $('claimtxt').innerHTML=st.claim+'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line);">'+st.note+'</div>';
+   $('xLab').innerHTML='successes x &mdash; '+st.trials+' who '+st.succ;
+   renderStudies();
+   renderAll();
+ }
+
+ function renderAll(){
+   var st=ST[si];
+   $('xSl').min=0; $('xSl').max=N; $('xSl').step=1; $('xSl').value=X;
+   $('nSl').value=N; $('pSl').value=PT;
+   $('nVal').innerHTML=N+'<small>'+st.trials+'</small>';
+   $('xVal').innerHTML=X+'<small>p&#770; = '+f(X/N,st.dp)+'</small>';
+   $('pVal').innerHTML=f(PT,st.dp)+'<small>'+pct(PT,1)+'</small>';
+   $('cardTitle').innerHTML=st.nm+' &mdash; the test statistic on the curve';
+   renderSeg('altSeg',alt); renderSeg('alSeg',f(al,2));
+   var nullTrue=Math.abs(PT-st.p0)<1e-9;
+   $('worldcap').innerHTML= nullTrue
+     ? 'The truth is currently set <b>exactly on the claim</b>, so H<sub>0</sub> is true. Any rejection you produce from here is a false alarm &mdash; which is precisely what &alpha; is the budget for.'
+     : 'The truth is set to <b>'+f(PT,st.dp)+'</b>, so the claim of '+f(st.p0,st.dp)+' is <b>wrong by '+sgn(PT-st.p0,st.dp)+'</b>. In real work this row does not exist &mdash; it is the thing you are trying to learn. Here it lets you check whether the test actually finds a difference you know is there.';
+   drawCurve(); drawDots(); drawBinom(); renderSteps(); drawRep();
+ }
+
+ /* ================= events ================= */
+ $('altSeg').onclick=function(e){ var b=e.target.closest('button'); if(!b){ return; } alt=b.dataset.v; resetReps(); renderAll(); };
+ $('alSeg').onclick=function(e){ var b=e.target.closest('button'); if(!b){ return; } al=parseFloat(b.dataset.v); resetReps(); renderAll(); };
+
+ $('nSl').oninput=function(){
+   var old=X/N;
+   N=+this.value;
+   X=Math.max(0,Math.min(N,Math.round(old*N)));   /* hold p-hat, so z stretches with n */
+   ord=shuffle(N);
+   resetReps();
+   renderAll();
+ };
+ $('xSl').oninput=function(){ X=+this.value; renderAll(); };
+ $('pSl').oninput=function(){ PT=+this.value; resetReps(); renderAll(); };
+
+ $('bdraw').onclick=function(){
+   var pmf=binomPmf(N,PT), cum=new Array(N+1), s=0, k;
+   for(k=0;k<=N;k++){ s+=pmf[k]; cum[k]=s; }
+   var u=rnd()*s, lo=0, hi=N, mid;
+   while(lo<hi){ mid=(lo+hi)>>1; if(cum[mid]<u){ lo=mid+1; } else { hi=mid; } }
+   X=lo; ord=shuffle(N); renderAll();
+ };
+ $('bcen').onclick=function(){ X=Math.round(N*ST[si].p0); renderAll(); };
+ $('bnull').onclick=function(){ PT=ST[si].p0; resetReps(); renderAll(); };
+ $('brst').onclick=function(){ loadStudy(si); };
+
+ function runTests(m){
+   var R=calc(), n=R.n, pmf=binomPmf(n,PT), cum=new Array(n+1), s=0, k, j;
+   for(k=0;k<=n;k++){ s+=pmf[k]; cum[k]=s; }
+   for(j=0;j<m;j++){
+     var u=rnd()*s, lo=0, hi=n, mid;
+     while(lo<hi){ mid=(lo+hi)>>1; if(cum[mid]<u){ lo=mid+1; } else { hi=mid; } }
+     var kk=lo, zz=(kk/n-R.p0)/R.se;
+     if(rz.length<20000){ rz.push(zz); }
+     rN++;
+     if(rejK(kk,n,R.p0,R.se,R.zc)){ rK++; }
+   }
+   drawRep();
+ }
+ $('run1').onclick=function(){ runTests(200); };
+ $('run2').onclick=function(){ runTests(2000); };
+ $('rrs').onclick=function(){ resetReps(); drawRep(); };
+
+ /* drag the marker on the curve */
+ (function(){
+   var sv=$('chart'), drag=false;
+   function move(e){
+     var R=calc(), r=sv.getBoundingClientRect();
+     var cx=(e.touches?e.touches[0].clientX:e.clientX);
+     var vx=(cx-r.left)/r.width*480;
+     var z=-4+(vx-38)/(462-38)*8;
+     if(z<-4){ z=-4; } if(z>4){ z=4; }
+     var ph=R.p0+z*R.se;
+     X=Math.max(0,Math.min(N,Math.round(ph*N)));
+     renderAll();
+   }
+   sv.addEventListener('pointerdown',function(e){ drag=true; sv.setPointerCapture(e.pointerId); move(e); e.preventDefault(); });
+   sv.addEventListener('pointermove',function(e){ if(drag){ move(e); } });
+   sv.addEventListener('pointerup',function(){ drag=false; });
+   sv.addEventListener('pointercancel',function(){ drag=false; });
+ })();
+
+ renderClaims();
+ loadStudy(0);
+})();
+</script>
+</body>
+</html>

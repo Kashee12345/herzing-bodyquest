@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Branches of the Nervous System</title>
+<meta name="description" content="Tap through the organization of the nervous system — central and peripheral, somatic and autonomic, sympathetic and parasympathetic — in an interactive branching tree.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:0.9fr 1.1fr;}
+.hint{font-size:12px;color:var(--muted);margin-top:8px;text-align:center;}
+.hint b{color:var(--teal-dk);}
+.rgn text{pointer-events:none;}
+.pq-halo{animation:pqp 1.5s ease-in-out infinite;}
+@keyframes pqp{0%,100%{opacity:.10;}50%{opacity:.34;}}
+#stage small b{color:#fff;font-weight:800;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 3</div>
+  <h1>Branches of the Nervous System</h1>
+  <div class="intro">The nervous system splits, then splits again &mdash; first into the <b>central</b> command center and the <b>peripheral</b> nerves that reach the body, then into <b>voluntary</b> and <b>automatic</b> control, and finally into the <b>arousal</b> and <b>calming</b> systems. Tap any branch to explore what it does.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The nervous system tree</h2>
+    <svg viewBox="0 0 264 314" aria-label="branching diagram of the nervous system"><g id="art"></g></svg>
+    <div class="hint">Tap a <b>branch</b> to explore it &middot; or step through with Prev / Next</div>
+  </div></div>
+  <div>
+    <div id="stage">The nervous system<small>tap a branch, or press Explore</small></div>
+    <div class="card">
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Explore ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var RX=250; // right edge of pills
+
+ // --- tree geometry ---------------------------------------------------------
+ var N=[
+  {id:'root', pid:null,       depth:0, cy:20,  lx:12, h:26, emoji:'',  main:'The Nervous System', sub:'',              col:'#5e2846', kind:'root'},
+  {id:'cns',  pid:'root',     depth:1, cy:58,  lx:22, h:30, emoji:'🧠', main:'Central',            sub:'CNS',            col:'#2f6f9f', kind:'node'},
+  {id:'lbrn', pid:'cns',      depth:2, cy:90,  lx:46, h:20, emoji:'',  main:'Brain',              sub:'',              col:'#2f6f9f', kind:'leaf', go:'cns'},
+  {id:'lspn', pid:'cns',      depth:2, cy:112, lx:46, h:20, emoji:'',  main:'Spinal cord',        sub:'',              col:'#2f6f9f', kind:'leaf', go:'cns'},
+  {id:'pns',  pid:'root',     depth:1, cy:146, lx:22, h:30, emoji:'🌿', main:'Peripheral',         sub:'PNS',            col:'#7a5a8a', kind:'node'},
+  {id:'som',  pid:'pns',      depth:2, cy:182, lx:46, h:30, emoji:'✋', main:'Somatic',            sub:'voluntary',      col:'#b8862f', kind:'node'},
+  {id:'aut',  pid:'pns',      depth:2, cy:218, lx:46, h:30, emoji:'⚙️', main:'Autonomic',          sub:'automatic',      col:'#a1466b', kind:'node'},
+  {id:'symp', pid:'aut',      depth:3, cy:254, lx:70, h:30, emoji:'⚡', main:'Sympathetic',        sub:'fight or flight',col:'#d1495b', kind:'node'},
+  {id:'para', pid:'aut',      depth:3, cy:290, lx:70, h:30, emoji:'🌙', main:'Parasympathetic',    sub:'rest & digest',  col:'#2f9e5b', kind:'node'}
+ ];
+ var byId={}; for(var a=0;a<N.length;a++){ byId[N[a].id]=N[a]; }
+ var ORDER=['cns','pns','som','aut','symp','para'];
+
+ // --- teaching content ------------------------------------------------------
+ var C={
+  cns:{title:'Central Nervous System',
+   text:'The <b>brain</b> and the <b>spinal cord</b> &mdash; the body&rsquo;s command center. It receives sensory information, integrates it, makes decisions, and sends out commands. Everything you think, feel, and remember happens here. It is shielded by bone (the skull and vertebrae) and cushioned in cerebrospinal fluid.',
+   loc:'Two structures &middot; the brain and the spinal cord make up the <b>entire</b> CNS.',
+   mnem:'<b>Central</b> &mdash; the core two: <b>brain + spinal cord</b>.'},
+  pns:{title:'Peripheral Nervous System',
+   text:'Every nerve <b>outside</b> the brain and spinal cord. These nerves are the wiring that carries messages between the CNS and the rest of the body &mdash; the limbs, skin, and organs. The PNS itself has two divisions: the <b>somatic</b> (voluntary) and the <b>autonomic</b> (automatic).',
+   loc:'The messenger &middot; it links the central command center to the whole body.',
+   mnem:'<b>Peripheral</b> &mdash; the perimeter: the nerves reaching out to the edges.'},
+  som:{title:'Somatic Nervous System',
+   text:'The <b>voluntary</b> branch of the PNS. Sensory neurons carry information from the skin, muscles, and joints <b>to</b> the CNS, and motor neurons carry commands <b>out</b> to the skeletal muscles. When you decide to raise your hand or type a word, the somatic system does it.',
+   loc:'Voluntary &middot; it controls the <b>skeletal muscles</b> you move on purpose.',
+   mnem:'<b>Soma</b> means body &mdash; skeletal muscle under conscious control.'},
+  aut:{title:'Autonomic Nervous System',
+   text:'The <b>automatic</b> branch of the PNS. Without any conscious effort it runs the internal organs and glands &mdash; heartbeat, breathing rate, digestion, and pupil size. It has two opposing divisions, the <b>sympathetic</b> and the <b>parasympathetic</b>, that balance each other.',
+   loc:'Involuntary &middot; it keeps the body running on its own, day and night.',
+   mnem:'<b>Autonomic</b> = <b>automatic</b> &mdash; it works without you thinking about it.'},
+  symp:{title:'Sympathetic Division',
+   text:'The body&rsquo;s <b>&ldquo;fight-or-flight&rdquo;</b> system. Facing a threat or stress it floods the body with arousal: heart rate and blood pressure climb, pupils widen, airways open, and digestion shuts down while adrenaline and glucose are released for action. <b>Walter Cannon</b> named this the fight-or-flight response.',
+   loc:'Fight or flight &middot; it mobilizes energy to meet a sudden challenge.',
+   mnem:'<b>Sympathetic</b> = <b>Spends</b> energy &mdash; arousal and action.',
+   note:'Staying switched on is costly: <b>Hans Selye</b> showed that <i>prolonged</i> stress arousal (his General Adaptation Syndrome) wears the body down over time.'},
+  para:{title:'Parasympathetic Division',
+   text:'The <b>&ldquo;rest-and-digest&rdquo;</b> system &mdash; the sympathetic division&rsquo;s calming counterweight. Once a threat has passed it <b>slows the heart</b>, constricts the pupils, and turns energy back toward digestion, repair, and storage, returning the body to a calm baseline.',
+   loc:'Rest and digest &middot; it conserves energy and restores calm.',
+   mnem:'<b>Parasympathetic</b> = the &ldquo;brake&rdquo; that settles the body back down.'}
+ };
+
+ var i=-1; // -1 = overview
+
+ function pathOf(id){
+   var out=[], n=byId[id];
+   while(n && n.id!=='root'){ out.unshift(n.main); n=n.pid?byId[n.pid]:null; }
+   return out.join(' › ');
+ }
+
+ // --- drawing ---------------------------------------------------------------
+ function connectors(){
+   var s='';
+   for(var k=0;k<N.length;k++){ var n=N[k]; if(!n.pid) continue;
+     var p=byId[n.pid], ex=n.lx-8, pb=p.cy+p.h/2;
+     s+='<path d="M'+ex+' '+pb+' V'+n.cy+' H'+n.lx+'" fill="none" stroke="#dcc7d1" stroke-width="1.4"/>';
+   }
+   return s;
+ }
+ function nodeSVG(n,selId){
+   var x=n.lx, y=n.cy-n.h/2, w=RX-n.lx, s='';
+   if(n.kind==='root'){
+     s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+n.h+'" rx="8" fill="'+n.col+'"/>';
+     s+='<text x="'+((x+RX)/2)+'" y="'+(n.cy+4)+'" font-size="12" font-weight="800" fill="#fff" text-anchor="middle" font-family="Inter,sans-serif">'+n.main+'</text>';
+     return s;
+   }
+   if(n.kind==='leaf'){
+     s+='<g class="rgn" data-id="'+n.go+'">';
+     s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+n.h+'" rx="7" fill="#f7eff3" stroke="#e8d7df" stroke-width="1"/>';
+     s+='<circle cx="'+(x+12)+'" cy="'+n.cy+'" r="2.6" fill="'+n.col+'" opacity=".55"/>';
+     s+='<text x="'+(x+22)+'" y="'+(n.cy+4)+'" font-size="10.5" font-weight="600" fill="#94818b" font-family="Inter,sans-serif">'+n.main+'</text>';
+     s+='</g>';
+     return s;
+   }
+   // interactive node
+   var on=(n.id===selId);
+   s+='<g class="rgn" data-id="'+n.id+'">';
+   if(on){ s+='<rect class="pq-halo" x="'+(x-4)+'" y="'+(y-4)+'" width="'+(w+8)+'" height="'+(n.h+8)+'" rx="11" fill="'+n.col+'"/>'; }
+   s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+n.h+'" rx="8" fill="'+(on?n.col:'#ffffff')+'" stroke="'+n.col+'" stroke-width="'+(on?2:1.6)+'"/>';
+   if(!on){ s+='<rect x="'+x+'" y="'+y+'" width="5" height="'+n.h+'" rx="2.5" fill="'+n.col+'"/>'; }
+   s+='<text x="'+(x+14)+'" y="'+(n.cy+5)+'" font-size="14">'+n.emoji+'</text>';
+   s+='<text x="'+(x+34)+'" y="'+(n.cy-2)+'" font-size="11.5" font-weight="800" fill="'+(on?'#fff':'#361f2b')+'" font-family="Inter,sans-serif">'+n.main+'</text>';
+   s+='<text x="'+(x+34)+'" y="'+(n.cy+10)+'" font-size="8.8" font-weight="600" fill="'+(on?'rgba(255,255,255,.9)':'#94818b')+'" font-family="Inter,sans-serif">'+n.sub+'</text>';
+   s+='</g>';
+   return s;
+ }
+ function tree(selId){
+   var s=connectors();
+   for(var k=0;k<N.length;k++){ s+=nodeSVG(N[k],selId); }
+   return s;
+ }
+
+ // --- render ----------------------------------------------------------------
+ function overview(){
+   $("art").innerHTML=tree(null);
+   $("cardTitle").innerHTML='The nervous system tree';
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='The nervous system<small>tap a branch, or press Explore</small>';
+   $("info").innerHTML='<span class="n">One network, two great divisions</span>'
+     +'Every thought, heartbeat, and reflex travels this one network. It divides first into the <b>central</b> nervous system (the brain and spinal cord) and the <b>peripheral</b> nervous system (the nerves branching out to the body). The peripheral side splits again into <b>somatic</b> and <b>autonomic</b>, and the autonomic into <b>sympathetic</b> and <b>parasympathetic</b>.'
+     +'<div class="loc">Tap any branch in the tree &mdash; or press <b>Explore</b> to walk them in order.</div>'
+     +'<div class="mnem"><b>C</b>entral vs <b>P</b>eripheral, then <b>S</b>omatic vs <b>A</b>utonomic, then <b>S</b>ympathetic vs <b>P</b>arasympathetic &mdash; the tree divides in twos the whole way down.</div>';
+   $("prev").disabled=true;
+   $("next").disabled=false;
+   $("next").innerHTML='Explore ›';
+   bind();
+ }
+ function render(){
+   if(i<0){ overview(); return; }
+   var id=ORDER[i], n=byId[id], c=C[id];
+   $("art").innerHTML=tree(id);
+   $("cardTitle").innerHTML=c.title;
+   $("stage").style.background=n.col;
+   $("stage").innerHTML=c.title+'<small>'+pathOf(id)+'</small>';
+   $("info").innerHTML='<span class="n">'+c.title+'</span>'+c.text
+     +'<div class="loc">'+c.loc+'</div>'
+     +(c.mnem?'<div class="mnem">'+c.mnem+'</div>':'')
+     +(c.note?'<div class="note">'+c.note+'</div>':'');
+   $("prev").disabled=false;
+   $("next").disabled=(i===ORDER.length-1);
+   $("next").innerHTML=(i===ORDER.length-1?'Done':'Next ›');
+   bind();
+ }
+ function bind(){
+   var g=document.querySelectorAll('#art .rgn');
+   for(var k=0;k<g.length;k++){ g[k].onclick=function(){ sel(this.getAttribute('data-id')); }; }
+ }
+ function sel(id){ var idx=ORDER.indexOf(id); if(idx>=0){ i=idx; render(); } }
+
+ $("prev").onclick=function(){ if(i> -1){ i--; render(); } };
+ $("next").onclick=function(){ if(i<ORDER.length-1){ i++; render(); } };
+ overview();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Shaped By, Shaping Back</title>
+<meta name="description" content="Interactive on the social-cognitive view of personality: tap Bandura's reciprocal determinism triangle (cognition, behavior, environment) and drag Rotter's internal-external locus of control slider through real attribution scenarios.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:0.95fr 1.05fr;}
+.cap{font-size:12px;color:var(--muted);text-align:center;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--soft);}
+.hide{display:none;}
+#art .rgn{cursor:pointer;}
+.lnk{margin-top:9px;padding:8px 11px;border-radius:8px;background:#f8e2ec;font-size:12.5px;line-height:1.5;color:var(--soft);}
+.lnk b{display:block;color:var(--teal-dk);font-size:11.5px;letter-spacing:.3px;margin-bottom:2px;text-transform:uppercase;}
+.lc-slider{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:5px;margin:14px 0 5px;background:linear-gradient(90deg,var(--green),var(--purple),var(--blue));outline:none;cursor:pointer;}
+.lc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--teal);box-shadow:0 1px 6px rgba(70,30,45,.35);cursor:pointer;}
+.lc-slider::-moz-range-thumb{width:19px;height:19px;border-radius:50%;background:#fff;border:3px solid var(--teal);box-shadow:0 1px 6px rgba(70,30,45,.35);cursor:pointer;}
+.lc-ends{display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;}
+.lc-ends .in{color:var(--green);} .lc-ends .ex{color:var(--blue);}
+.pill.mix{background:#efe6f6;color:#6d3f9c;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 11</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 11</div>
+  <h1>Shaped By, Shaping Back</h1>
+  <div class="intro">The <b>social-cognitive</b> approach &mdash; led by <b>Albert Bandura</b> and <b>Julian Rotter</b> &mdash; locates personality in the space between mind, action, and world. It rejects the idea that you are simply pushed by drives or pulled by rewards; instead you are an active agent who <b>shapes the very forces that shape you</b>. Explore its two core ideas below.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Reciprocal determinism</h2>
+    <svg viewBox="0 0 240 210" aria-label="Diagram for the social-cognitive concept"><g id="art"></g></svg>
+    <div class="cap" id="cap">Bandura's <b>triadic reciprocality</b>: three forces that continuously influence one another.</div>
+  </div></div>
+  <div>
+    <div id="stage">The social-cognitive self<small>choose a lens below</small></div>
+    <div class="card">
+      <div class="modeseg"><button id="mRd" class="on">Reciprocal Determinism</button><button id="mLc">Locus of Control</button></div>
+      <div id="ctlRd"><div class="list" id="rdList"></div></div>
+      <div id="ctlLc" class="hide">
+        <div class="seg" id="scSeg"></div>
+        <input type="range" min="0" max="100" value="18" class="lc-slider" id="lcRange" aria-label="Locus of control from internal to external">
+        <div class="lc-ends"><span class="in">◀ Internal</span><span class="ex">External ▶</span></div>
+      </div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var mode='rd';
+
+ /* ---------- geometry helpers ---------- */
+ function head(tx,ty,ux,uy,col){
+   var s=7,px=-uy,py=ux,bx=tx-ux*s,by=ty-uy*s;
+   return '<polygon points="'+tx.toFixed(1)+','+ty.toFixed(1)+' '+(bx+px*4).toFixed(1)+','+(by+py*4).toFixed(1)+' '+(bx-px*4).toFixed(1)+','+(by-py*4).toFixed(1)+'" fill="'+col+'"/>';
+ }
+ function arrow(a,b,col,w,dir,ro,ri){
+   var dx=b[0]-a[0],dy=b[1]-a[1],L=Math.sqrt(dx*dx+dy*dy)||1,ux=dx/L,uy=dy/L;
+   var x1=a[0]+ux*ro,y1=a[1]+uy*ro,x2=b[0]-ux*ri,y2=b[1]-uy*ri;
+   var s='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"/>';
+   if(dir==='fwd'||dir==='both') s+=head(x2,y2,ux,uy,col);
+   if(dir==='rev'||dir==='both') s+=head(x1,y1,-ux,-uy,col);
+   return s;
+ }
+
+ /* ================= RECIPROCAL DETERMINISM ================= */
+ var POS={cog:[120,50],beh:[52,150],env:[188,150]};
+ var NODE={
+   cog:{ic:'🧠',nm:'Cognition',col:'#7a5a8a',sub:'beliefs · self-efficacy'},
+   beh:{ic:'🏃',nm:'Behavior',col:'#a1466b',sub:'what you actually do'},
+   env:{ic:'🏙️',nm:'Environment',col:'#2f6f9f',sub:'people · rewards · cues'}
+ };
+ var EDGES=[['cog','beh'],['beh','env'],['cog','env']];
+ var selNode=null;
+
+ var NF={
+  cog:{lead:'Your <b>beliefs, expectations, and self-efficacy</b> &mdash; Bandura&rsquo;s term for &ldquo;Do I believe I can do this?&rdquo; &mdash; form one corner, and they both steer and get steered by the other two.',
+    links:[
+     ['Cognition &rlarr; Behavior','Believing <b>&ldquo;I&rsquo;m not a math person&rdquo;</b> makes you skip practice &mdash; and every skipped session drives the belief lower.'],
+     ['Cognition &rlarr; Environment','Expecting rejection, you avoid the party &mdash; so you never gather the friendly moments that would revise the expectation.']
+    ]},
+  beh:{lead:'What you <b>actually do</b> is never just an output. Your actions loop back to reshape both your mind and your surroundings.',
+    links:[
+     ['Behavior &rlarr; Cognition','Pushing through a hard task and <b>succeeding</b> raises self-efficacy: &ldquo;I can handle this after all.&rdquo;'],
+     ['Behavior &rlarr; Environment','Choosing to study in the library <b>selects and alters</b> the setting around you &mdash; new cues, new rewards.']
+    ]},
+  env:{lead:'Your <b>situation</b> &mdash; people, rewards, and cues &mdash; is powerful, but social-cognitive theory treats it as one of three interacting forces, not the sole cause.',
+    links:[
+     ['Environment &rlarr; Behavior','A gym full of <b>encouraging friends</b> pulls you into the workout you would have skipped alone.'],
+     ['Environment &rlarr; Cognition','Years of being <b>praised for effort</b> build a durable belief that effort pays off.']
+    ]}
+ };
+
+ function drawTri(){
+   var out='';
+   EDGES.forEach(function(e){
+     var act=selNode&&(e[0]===selNode||e[1]===selNode);
+     out+=arrow(POS[e[0]],POS[e[1]],act?'#a1466b':'#dcc7d0',act?4.5:2.6,'both',32,32);
+   });
+   Object.keys(POS).forEach(function(k){
+     var p=POS[k],n=NODE[k],on=(k===selNode),dim=(selNode&&!on);
+     out+='<g class="rgn" data-k="'+k+'">';
+     out+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="25" fill="'+n.col+'" opacity="'+(dim?0.38:1)+'"/>';
+     if(on) out+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="30" fill="none" stroke="'+n.col+'" stroke-width="2.5" opacity="0.55"/>';
+     out+='<text x="'+p[0]+'" y="'+(p[1]+8)+'" font-size="22" text-anchor="middle">'+n.ic+'</text>';
+     var ly=(k==='cog')?p[1]-34:p[1]+43;
+     out+='<text x="'+p[0]+'" y="'+ly+'" font-size="12.5" font-weight="800" text-anchor="middle" fill="'+(dim?'#b9a7b0':'#5e2846')+'">'+n.nm+'</text>';
+     out+='</g>';
+   });
+   return out;
+ }
+ function infoNode(k){
+   if(!k) return '<span class="n">Triadic reciprocality</span>Albert <b>Bandura</b> argued that personality emerges from three forces that <b>continuously shape one another</b> &mdash; so no single one is ever &ldquo;the cause.&rdquo; Tap a corner of the triangle (or a card below) to trace its two-way links.';
+   var n=NODE[k],f=NF[k];
+   var h='<span class="n">'+n.nm+'</span>'+f.lead;
+   f.links.forEach(function(l){ h+='<div class="lnk"><b>'+l[0]+'</b>'+l[1]+'</div>'; });
+   h+='<div class="mnem"><b>Reciprocal determinism:</b> cognition, behavior &amp; environment run as a three-way loop, each cause also an effect &mdash; Bandura (1986).</div>';
+   return h;
+ }
+ function renderList(){
+   $("rdList").innerHTML=Object.keys(NODE).map(function(k){var n=NODE[k];
+     return '<button class="it'+(k===selNode?' on':'')+'" data-k="'+k+'"><span class="ic">'+n.ic+'</span><span><span class="nm">'+n.nm+'</span><br><span class="ct">'+n.sub+'</span></span></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#rdList .it'),function(b){
+     b.onclick=function(){ selNode=(selNode===b.getAttribute('data-k'))?null:b.getAttribute('data-k'); render(); };
+   });
+ }
+
+ /* ================= LOCUS OF CONTROL ================= */
+ var lv=18, scen=0;
+ var SC=[
+  {t:'You failed an exam',
+   in:'&ldquo;I didn&rsquo;t put in enough hours. I&rsquo;ll change <b>how</b> I study and retake it.&rdquo;',
+   ex:'&ldquo;The professor writes impossible tests &mdash; there was nothing I could do.&rdquo;'},
+  {t:'You landed the job',
+   in:'&ldquo;My preparation and interview practice paid off.&rdquo;',
+   ex:'&ldquo;I just got lucky &mdash; they can&rsquo;t have had many other applicants.&rdquo;'},
+  {t:'Your health improved',
+   in:'&ldquo;The diet and exercise changes I chose are working.&rdquo;',
+   ex:'&ldquo;Good genes, or the doctor fixed me &mdash; it wasn&rsquo;t really up to me.&rdquo;'}
+ ];
+ function band(){ return lv<34?'in':(lv>66?'ex':'mix'); }
+ function locCol(b){ return b==='in'?'#2f9e5b':(b==='ex'?'#2f6f9f':'#7a5a8a'); }
+
+ function drawLoc(){
+   var b=band(),col=locCol(b),out='';
+   out+='<defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2f9e5b"/><stop offset="0.5" stop-color="#7a5a8a"/><stop offset="1" stop-color="#2f6f9f"/></linearGradient></defs>';
+   var lbl=b==='in'?'I steer the outcome':(b==='ex'?'The outcome steers me':'A pull from both sides');
+   out+='<text x="120" y="17" font-size="12.5" font-weight="800" text-anchor="middle" fill="'+col+'">'+lbl+'</text>';
+   var anchor=[120,102];
+   var dir=b==='in'?'fwd':(b==='ex'?'rev':'both');
+   var tk=[[50,54,'🎯'],[190,54,'🏆'],[120,170,'📈']];
+   tk.forEach(function(t){
+     out+=arrow(anchor,[t[0],t[1]],col,3,dir,30,18);
+     out+='<text x="'+t[0]+'" y="'+(t[1]+6)+'" font-size="20" text-anchor="middle">'+t[2]+'</text>';
+   });
+   out+='<circle cx="120" cy="72" r="15" fill="'+col+'"/>';
+   out+='<rect x="104" y="88" width="32" height="40" rx="14" fill="'+col+'"/>';
+   out+='<rect x="24" y="192" width="192" height="8" rx="4" fill="url(#lg)"/>';
+   var mx=24+lv/100*192;
+   out+='<circle cx="'+mx.toFixed(1)+'" cy="196" r="8.5" fill="#fff" stroke="'+col+'" stroke-width="3"/>';
+   return out;
+ }
+ function infoLoc(){
+   var b=band(),s=SC[scen];
+   var pill=b==='in'?'<span class="pill normal">Internal</span>':(b==='ex'?'<span class="pill low">External</span>':'<span class="pill mix">Mixed</span>');
+   var txt=b==='in'?s.in:(b==='ex'?s.ex:'<i>Between the poles:</i> &ldquo;Partly my own doing, partly the circumstances.&rdquo;');
+   var where=b==='in'?'You locate the cause <b>inside</b> yourself &mdash; in effort and choices you can change.'
+     :(b==='ex'?'You locate the cause <b>outside</b> yourself &mdash; in luck, fate, or powerful others.'
+     :'You split the cause between what you did and what the world handed you.');
+   var h='<span class="n">'+s.t+' '+pill+'</span>';
+   h+='<div class="lnk"><b>How you explain it</b>'+txt+'</div>';
+   h+='<div class="dd">'+where+'</div>';
+   h+='<div class="mnem"><b>Julian Rotter (1966)</b> measured this trait on the <b>I-E Scale</b>. A more internal locus tends to predict stronger achievement, health behaviors, and active coping &mdash; though pushed to an extreme it can tip into harsh self-blame.</div>';
+   return h;
+ }
+ function renderScen(){
+   $("scSeg").innerHTML=SC.map(function(s,i){ return '<button class="'+(i===scen?'on':'')+'" data-i="'+i+'">'+s.t+'</button>'; }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#scSeg button'),function(b){
+     b.onclick=function(){ scen=+b.getAttribute('data-i'); render(); };
+   });
+ }
+
+ /* ================= MASTER RENDER ================= */
+ function render(){
+   if(mode==='rd'){
+     $("mRd").classList.add('on'); $("mLc").classList.remove('on');
+     $("ctlRd").classList.remove('hide'); $("ctlLc").classList.add('hide');
+     $("cardTitle").innerHTML='Reciprocal determinism';
+     $("cap").innerHTML='Bandura&rsquo;s <b>triadic reciprocality</b>: three forces that continuously influence one another.';
+     $("art").innerHTML=drawTri();
+     Array.prototype.forEach.call(document.querySelectorAll('#art .rgn'),function(g){
+       g.onclick=function(){ var k=g.getAttribute('data-k'); selNode=(selNode===k)?null:k; render(); };
+     });
+     $("stage").style.background='#7a5a8a';
+     $("stage").innerHTML='Reciprocal Determinism<small>'+(selNode?NODE[selNode].nm+' selected &mdash; tap another corner':'tap a corner of the triangle')+'</small>';
+     renderList();
+     $("info").innerHTML=infoNode(selNode);
+   } else {
+     $("mLc").classList.add('on'); $("mRd").classList.remove('on');
+     $("ctlLc").classList.remove('hide'); $("ctlRd").classList.add('hide');
+     $("cardTitle").innerHTML='Locus of control';
+     $("cap").innerHTML='Rotter&rsquo;s <b>internal&ndash;external</b> dimension: who do you believe controls what happens to you?';
+     $("art").innerHTML=drawLoc();
+     var b=band();
+     $("stage").style.background=locCol(b);
+     $("stage").innerHTML='Locus of Control<small>'+(b==='in'?'internal &mdash; &ldquo;it&rsquo;s up to me&rdquo;':(b==='ex'?'external &mdash; &ldquo;it&rsquo;s out of my hands&rdquo;':'mixed attribution'))+'</small>';
+     renderScen();
+     $("info").innerHTML=infoLoc();
+   }
+ }
+
+ $("mRd").onclick=function(){ mode='rd'; render(); };
+ $("mLc").onclick=function(){ mode='lc'; render(); };
+ $("lcRange").oninput=function(){ lv=+this.value; render(); };
+
+ render();
+})();
+</script>
+</body>
+</html>

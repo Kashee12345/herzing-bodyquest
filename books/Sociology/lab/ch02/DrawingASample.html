@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf3ec">
+<title>Drawing a Sample</title>
+<meta name="description" content="Draw samples from a town of 100 residents using four sampling methods — simple random, stratified, convenience, and voluntary response — and watch representativeness and bias change your estimate against the known census value. An interactive for introductory sociology.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_socio.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.legend{display:flex;gap:13px;flex-wrap:wrap;margin:9px 2px 2px;font-size:11.5px;font-weight:600;color:var(--soft);}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.legend i{width:12px;height:12px;border-radius:50%;display:inline-block;}
+.legend i.ring{background:transparent;border:2px solid var(--ink);width:11px;height:11px;}
+.result{margin-top:10px;border-top:1px solid var(--line);padding-top:10px;}
+.rrow{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--soft);font-weight:600;margin:1px 0;}
+.rrow b{font-size:18px;font-family:var(--disp);line-height:1.1;}
+.rrow small{color:var(--muted);font-weight:500;font-size:10.5px;}
+.gaptxt{font-size:12px;color:var(--soft);text-align:center;background:#faf3ec;border:1px solid var(--line);border-radius:8px;padding:7px 10px;margin-top:5px;line-height:1.45;}
+.gaptxt b{color:var(--teal-dk);}
+.lbl{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.grid .it .ic{font-size:16px;margin-right:3px;}
+.grid .it small{display:block;font-weight:600;font-size:10px;color:var(--muted);margin-top:3px;line-height:1.32;}
+.grid .it.on small{color:rgba(255,255,255,.85);}
+.seg button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:1px;text-transform:none;letter-spacing:0;}
+.seg button.on small{color:rgba(255,255,255,.9);}
+#info .verd{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0 2px;}
+#info .kt{font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:11px 0 5px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 2</a></div>
+<header>
+  <div class="kick">Sociology · Chapter 2</div>
+  <h1>Drawing a Sample</h1>
+  <div class="intro">To study a whole <b>population</b>, researchers almost never reach everyone &mdash; they study a <b>sample</b> and generalize. That only works if the sample is <b>representative</b>. This town of 100 lets you cheat: survey everyone (a <b>census</b>) to learn the true answer, then try to hit it by sampling. Pick a method and a size, then draw &mdash; and watch which methods land near the truth and which miss on purpose.</div>
+</header>
+<div class="wrap">
+  <div><div class="card">
+    <h2 id="cardTitle">The town &mdash; 100 residents</h2>
+    <svg viewBox="0 0 240 210" aria-label="a grid of 100 residents who support or oppose a transit measure, with your current sample highlighted"><g id="art"></g></svg>
+    <div class="legend">
+      <span><i style="background:#bf6a30"></i>Supports the measure</span>
+      <span><i style="background:#c9b7a4"></i>Opposes it</span>
+      <span><i class="ring"></i>In your sample</span>
+    </div>
+    <div class="result">
+      <div class="rrow"><span>True support &mdash; the whole town <small>(census)</small></span><b id="trueTxt" style="color:var(--gold)">&mdash;</b></div>
+      <div class="rrow"><span>Your sample estimate <small id="estMeta"></small></span><b id="estTxt" style="color:var(--muted)">&mdash;</b></div>
+      <svg viewBox="0 0 240 56" aria-label="a scale from 0 to 100 percent comparing the true support level with your sample estimate and recent draws"><g id="scale"></g></svg>
+      <div id="gapTxt" class="gaptxt">Choose a method and size, then press <b>Draw new sample</b>.</div>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">Sampling<small>pick a method and size, then draw</small></div>
+    <div class="card">
+      <div class="lbl">1 &middot; How will you recruit residents?</div>
+      <div class="grid" id="methods"></div>
+      <div class="lbl" style="margin-top:14px;">2 &middot; How many will you sample?</div>
+      <div class="seg" id="sizes"></div>
+      <div class="row">
+        <button class="btn solid" id="draw">&#127922; Draw new sample</button>
+        <button class="btn" id="reset">Reset</button>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>Bias vs. sampling error.</b> A <b>probability sample</b> (random, stratified) may miss the truth by a little from chance alone &mdash; that gap is <b>sampling error</b>, and it shrinks as the sample grows. A <b>non-probability sample</b> (convenience, voluntary) misses in a consistent direction &mdash; that is <b>bias</b>, and more data only makes you confidently wrong. Representative samples are what let sociologists <b>generalize</b> from a few to the many &mdash; the empirical ambition Auguste <b>Comte</b> named positivism.</div>
+    </div>
+  </div>
+</div>
+<footer>Sociology &middot; an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- deterministic population: 100 residents on a 10x10 grid ---- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ var POP=[], TRUE=0;
+ (function initPop(){
+   var rng=mulberry32(20260716);
+   for(var r=0;r<10;r++){ for(var c=0;c<10;c++){
+     var p=0.82-(c/9)*0.62;          /* left side leans pro-transit, right side against */
+     var sup=rng()<p?1:0;
+     var quad=(r<5?0:2)+(c<5?0:1);   /* four equal districts of 25 */
+     POP.push({id:POP.length,r:r,c:c,sup:sup,quad:quad,left:(c<5?1:0),prop:(sup?1:3)});
+   }}
+   TRUE=POP.reduce(function(a,x){return a+x.sup;},0); /* out of 100 = percent */
+ })();
+
+ var METHODS=[
+  {k:'random',nm:'Simple random',ic:'&#127922;',tag:'Random',col:'#2f9e5b',prob:1,
+   tip:'Every resident has an <b>equal chance</b> of being picked, so draws scatter across the whole town. The sample mirrors the population: estimates cluster around the true value and tighten as the sample grows.',
+   chips:['Probability sample','Simple random sampling','Sampling error']},
+  {k:'strat',nm:'Stratified',ic:'&#128193;',tag:'Strata',col:'#2f6f9f',prob:1,
+   tip:'Split the town into <b>strata</b> (here, four districts) and draw at random from each in proportion. Because every district is guaranteed a fair share, this gives the tightest, most reliable estimates.',
+   chips:['Probability sample','Stratified sampling','Proportional strata']},
+  {k:'conv',nm:'Convenience',ic:'&#128652;',tag:'Convenience',col:'#b8862f',prob:0,
+   tip:'You survey whoever is <b>easiest to reach</b> &mdash; everyone along one busy street. That corner of town leans one way, so your estimate is off in a consistent direction. This is <b>sampling bias</b>.',
+   chips:['Non-probability','Convenience sampling','Sampling bias']},
+  {k:'vol',nm:'Voluntary response',ic:'&#128227;',tag:'Voluntary',col:'#d1495b',prob:0,
+   tip:'People <b>opt in</b> themselves &mdash; a call-in line or online poll. Those with the strongest feelings answer most, so the loudest group is over-counted. This is <b>self-selection bias</b>.',
+   chips:['Non-probability','Voluntary response','Self-selection bias']}
+ ];
+ var SIZES=[10,25,50];
+
+ var cur=METHODS[0], curN=25, sel=[], lastEst=null, history=[];
+
+ /* ---- sampling ---- */
+ function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
+ function weighted(arr,n){ var items=arr.slice(), out=[]; for(var k=0;k<n&&items.length;k++){ var tot=0,i; for(i=0;i<items.length;i++)tot+=items[i].prop; var t=Math.random()*tot,acc=0,idx=0; for(i=0;i<items.length;i++){ acc+=items[i].prop; if(t<=acc){idx=i;break;} } out.push(items[idx]); items.splice(idx,1); } return out; }
+ function drawSample(){
+   var s=[];
+   if(cur.k==='random'){ s=shuffle(POP.slice()).slice(0,curN); }
+   else if(cur.k==='conv'){ s=shuffle(POP.filter(function(x){return x.left;})).slice(0,curN); }
+   else if(cur.k==='vol'){ s=weighted(POP,curN); }
+   else { var base=Math.floor(curN/4), rem=curN-base*4, per=[base,base,base,base], q;
+     for(q=0;q<rem;q++)per[q]++;
+     for(q=0;q<4;q++){ s=s.concat(shuffle(POP.filter(function(x){return x.quad===q;})).slice(0,per[q])); } }
+   return s;
+ }
+
+ /* ---- geometry ---- */
+ function cx(c){return 20+c*22;}
+ function cy(r){return 14+r*20;}
+ function sx(p){return 14+p/100*212;}
+
+ function drawPop(){
+   var inS={}; sel.forEach(function(x){inS[x.id]=1;});
+   var s='';
+   if(cur.k==='conv'){
+     s+='<rect x="8" y="5" width="112" height="200" rx="9" fill="#b8862f" fill-opacity=".11" stroke="#b8862f" stroke-opacity=".4" stroke-width="1.4" stroke-dasharray="4 4"/>';
+     s+='<text x="64" y="203" font-size="9" fill="#8a6a20" font-weight="800" text-anchor="middle">one busy street</text>';
+   }
+   if(cur.k==='strat'){
+     s+='<line x1="119" y1="6" x2="119" y2="200" stroke="#2f6f9f" stroke-opacity=".35" stroke-width="1.4" stroke-dasharray="4 4"/>';
+     s+='<line x1="8" y1="102" x2="230" y2="102" stroke="#2f6f9f" stroke-opacity=".35" stroke-width="1.4" stroke-dasharray="4 4"/>';
+     var lab=['District A','District B','District C','District D'], lx=[26,150,26,150], ly=[11,11,199,199];
+     for(var q=0;q<4;q++){ s+='<text x="'+lx[q]+'" y="'+ly[q]+'" font-size="8" fill="#255f8a" font-weight="800">'+lab[q]+'</text>'; }
+   }
+   for(var i=0;i<POP.length;i++){
+     var m=POP[i], x=cx(m.c), y=cy(m.r), col=m.sup?'#bf6a30':'#c9b7a4', on=inS[m.id];
+     var title=(m.sup?'Supports':'Opposes')+' the measure'+(on?' — in your sample':'');
+     if(on){ s+='<circle cx="'+x+'" cy="'+y+'" r="7.4" fill="'+col+'" stroke="#33261a" stroke-width="2"><title>'+title+'</title></circle>'; }
+     else { s+='<circle cx="'+x+'" cy="'+y+'" r="5.3" fill="'+col+'" opacity=".26"><title>'+title+'</title></circle>'; }
+   }
+   return s;
+ }
+
+ function drawScale(){
+   var s='';
+   s+='<line x1="14" y1="34" x2="226" y2="34" stroke="#e0d3c4" stroke-width="3" stroke-linecap="round"/>';
+   [0,50,100].forEach(function(p){ var x=sx(p); s+='<line x1="'+x+'" y1="30" x2="'+x+'" y2="38" stroke="#cbbba8" stroke-width="1.5"/><text x="'+x+'" y="52" font-size="9" fill="#8c8074" font-weight="700" text-anchor="middle">'+p+'%</text>'; });
+   /* recent-draw dots */
+   history.forEach(function(h,i){ var o=0.22+0.62*((i+1)/history.length); s+='<circle cx="'+sx(h.est)+'" cy="34" r="3.2" fill="'+h.col+'" opacity="'+o.toFixed(2)+'"/>'; });
+   /* true value marker (gold) */
+   var xt=sx(TRUE);
+   s+='<line x1="'+xt+'" y1="19" x2="'+xt+'" y2="40" stroke="#b8862f" stroke-width="2.6"/>';
+   s+='<polygon points="'+(xt-5)+',15 '+(xt+5)+',15 '+xt+',22" fill="#b8862f"/>';
+   s+='<text x="'+xt+'" y="12" font-size="8.5" fill="#8a6a20" font-weight="800" text-anchor="middle">true '+TRUE+'%</text>';
+   /* current estimate marker (diamond in method color) */
+   if(lastEst!=null){ var xe=sx(lastEst);
+     s+='<polygon points="'+xe+',26 '+(xe+7)+',34 '+xe+',42 '+(xe-7)+',34" fill="'+cur.col+'" stroke="#fff" stroke-width="1.6"/>'; }
+   return s;
+ }
+
+ function renderMethods(){
+   $('methods').innerHTML=METHODS.map(function(m){
+     return '<button class="it'+(m.k===cur.k?' on':'')+'" data-k="'+m.k+'"><span class="ic">'+m.ic+'</span>'+m.nm+'<small>'+m.tag+'</small></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#methods .it'),function(b){ b.onclick=function(){ cur=METHODS.filter(function(x){return x.k===b.dataset.k;})[0]; fresh(); }; });
+ }
+ function renderSizes(){
+   $('sizes').innerHTML=SIZES.map(function(n){
+     return '<button class="'+(n===curN?'on':'')+'" data-n="'+n+'">'+n+'<small>residents</small></button>';
+   }).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#sizes button'),function(b){ b.onclick=function(){ curN=+b.dataset.n; fresh(); }; });
+ }
+
+ function render(){
+   $('art').innerHTML=drawPop();
+   $('scale').innerHTML=drawScale();
+   $('trueTxt').innerHTML=TRUE+'%';
+   $('cardTitle').innerHTML='The town &mdash; 100 residents';
+   $('stage').style.background=cur.col;
+   $('stage').innerHTML=cur.nm+' sample<small>'+(lastEst==null?'press Draw to sample '+curN+' residents':'n = '+curN+' residents drawn')+'</small>';
+
+   if(lastEst!=null){
+     $('estTxt').innerHTML=lastEst+'%'; $('estTxt').style.color=cur.col;
+     $('estMeta').innerHTML='(n = '+curN+')';
+     var err=lastEst-TRUE, ab=Math.abs(err), dir=err>0?'over':(err<0?'under':'exactly on');
+     $('gapTxt').innerHTML='Gap from the truth: <b>'+(ab===0?'0':(err>0?'+':'&minus;')+ab)+' points</b> &mdash; '+(ab===0?'right on the mark':'your estimate is '+dir+'-counting support');
+   } else {
+     $('estTxt').innerHTML='&mdash;'; $('estTxt').style.color='var(--muted)'; $('estMeta').innerHTML='';
+     $('gapTxt').innerHTML='Choose a method and size, then press <b>Draw new sample</b>.';
+   }
+
+   /* info panel */
+   var vpill=cur.prob?'<span class="pill low">Probability</span>':'<span class="pill high">Non-probability</span>';
+   var rpill, verdict;
+   if(cur.prob){ rpill='<span class="pill normal">Representative</span>';
+     verdict='This is a <b>probability sample</b>: no group is systematically favored, so estimates <b>center on the true '+TRUE+'%</b>. Any gap is <b>sampling error</b> from chance &mdash; draw again, or raise the sample size, and it settles closer.';
+   } else { rpill='<span class="pill high">Biased</span>';
+     verdict='This is a <b>non-probability sample</b>: some residents are far likelier to be chosen, so it is <b>not representative</b>. The gap is <b>bias</b>, pointing the same way every draw &mdash; a bigger sample does <b>not</b> fix it.';
+   }
+   var avgLine='';
+   if(history.length>=3){ var av=Math.round(history.reduce(function(a,h){return a+h.est;},0)/history.length);
+     avgLine='<div class="loc">Across your last <b>'+history.length+'</b> draws the estimates average <b>'+av+'%</b>, while the truth is <b>'+TRUE+'%</b>. '+(cur.prob?'They orbit the true value &mdash; that is representativeness.':'They keep landing to one side &mdash; that is bias, and it never averages out.')+'</div>'; }
+   var chips=cur.chips.map(function(c){return '<span>'+c+'</span>';}).join('');
+   $('info').style.borderLeftColor=cur.col;
+   $('info').innerHTML=
+     '<span class="n">'+cur.ic+' '+cur.nm+' sample</span>'+
+     cur.tip+
+     '<div class="verd">'+vpill+rpill+'</div>'+
+     verdict+
+     avgLine+
+     '<div class="kt">Key terms</div><div class="ex">'+chips+'</div>';
+
+   renderMethods(); renderSizes();
+ }
+
+ function fresh(){ /* clear the run of draws, then take one fresh sample with the new config */
+   history=[]; doDraw();
+ }
+ function doDraw(){
+   sel=drawSample();
+   var supN=sel.filter(function(x){return x.sup;}).length;
+   lastEst=Math.round(supN/sel.length*100);
+   history.push({est:lastEst,col:cur.col}); if(history.length>9)history.shift();
+   render();
+ }
+
+ $('draw').onclick=doDraw;
+ $('reset').onclick=fresh;
+
+ renderMethods(); renderSizes(); doDraw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Undoing the Rectangle: GCF and Factoring by Grouping</title>
+<meta name="description" content="Factoring run as a worked-step machine: pull out the greatest common factor, then factor four terms by grouping — with the rectangle picture that shows why each move is legal.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.95fr 1.05fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* example picker */
+#pick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+#pick button{display:block;text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 9px;cursor:pointer;font-family:var(--sans);transition:.12s;}
+#pick button:hover{border-color:var(--teal);}
+#pick button .nm{display:block;font-weight:700;font-size:11.6px;color:var(--ink);line-height:1.15;}
+#pick button .ct{display:block;font-family:var(--math);font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.2;}
+#pick button.on{background:var(--teal);border-color:var(--teal);}
+#pick button.on .nm{color:#fff;} #pick button.on .ct{color:rgba(255,255,255,.9);}
+#pick sup{font-size:.66em;}
+@media (max-width:470px){#pick{grid-template-columns:repeat(2,1fr);}}
+/* the worked-step column */
+.work{margin-top:2px;}
+.wr{display:flex;gap:10px;align-items:baseline;padding:7px 8px;border-radius:9px;border-left:4px solid transparent;transition:.18s;}
+.wr + .wr{margin-top:2px;}
+.wr .pl{flex:none;width:82px;font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.wr .mx{font-family:var(--math);font-size:15.5px;color:var(--muted);line-height:1.75;flex:1;min-width:0;}
+.wr.on{background:#eef0fa;border-left-color:var(--teal);}
+.wr.on .mx{font-size:18px;color:var(--ink);font-weight:600;}
+.wr.on .pl{color:var(--teal);}
+.wr.done .mx{color:var(--soft);}
+.wr .ex{font-family:var(--math);font-size:13px;color:var(--soft);line-height:1.65;margin-top:5px;display:block;}
+.wr:not(.on) .ex{display:none;}
+.wr .ex u{font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;display:block;margin-bottom:1px;}
+.wr .ex b{color:var(--ink);}
+.mx sub{font-size:.62em;vertical-align:sub;} .mx sup{font-size:.66em;} .ex sup{font-size:.66em;} .ex sub{font-size:.62em;}
+/* highlight the part that just changed */
+.hl{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.wr:not(.on) .hl{background:transparent;box-shadow:none;padding:0;}
+.gl{border-radius:4px;padding:1px 4px;background:#dbe9f5;box-shadow:inset 0 0 0 1.5px #9dc0dc;}
+.wr:not(.on) .gl{background:transparent;box-shadow:none;padding:0;}
+/* caption + plan */
+.cap{font-size:12px;color:var(--soft);line-height:1.55;margin-top:11px;border-top:1px solid var(--line);padding-top:10px;min-height:62px;}
+.cap b{color:var(--ink);} .cap i{font-family:var(--math);}
+.scale{font-size:10.5px;color:var(--muted);margin-top:7px;font-style:italic;}
+.plan{display:flex;flex-wrap:wrap;gap:4px;margin-top:11px;}
+.plan span{font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:#eceefa;color:var(--muted);border-radius:20px;padding:4px 9px;}
+.plan span.on{background:var(--teal);color:#fff;}
+.plan span.done{background:#dfe2f4;color:var(--teal-dk);}
+#info .n{margin-bottom:4px;}
+#info i,.mnem i,.note i{font-family:var(--math);}
+#info sup,.mnem sup,.note sup{font-size:.66em;}
+.recipe{font-size:12.5px;color:var(--soft);line-height:1.6;margin-top:10px;}
+.recipe b{color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 6</div>
+  <h1>Undoing the Rectangle</h1>
+  <div class="intro">Multiplying builds a rectangle out of pieces. <b>Factoring runs the film backwards</b> &mdash; you are handed the pieces and asked to rebuild the rectangle. Two moves do almost all the work: pull out the <b>greatest common factor</b> (find the shared height), and, when four terms have nothing in common, <b>factor by grouping</b> (find the shared width). Step through each example one line at a time; the picture on the left shows what the algebra is actually doing.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The picture</h2>
+      <svg id="pic" viewBox="0 0 250 200" aria-label="area picture of the factoring step"><g id="art"></g></svg>
+      <div class="cap" id="cap"></div>
+      <div class="scale">Blocks are drawn schematically &mdash; they show which factor is shared, not exact sizes.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Factoring, one line at a time<small>pick an example below</small></div>
+    <div class="card">
+      <div id="pick"></div>
+      <div class="work" id="work"></div>
+      <div class="plan" id="plan"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"></div>
+      <div class="note" id="note" style="display:none"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- tiny math-to-SVG helper: 'x^2' -> italic x with a superscript 2 ---------- */
+ function sv(str,fs){
+   var out='',i,sup=false;
+   for(i=0;i<str.length;i++){
+     var c=str.charAt(i), isSup=false;
+     if(c==='^'){ i++; c=str.charAt(i); isSup=true; }
+     var at='';
+     if(isSup&&!sup) at+=' dy="'+(-fs*0.34).toFixed(1)+'"';
+     else if(!isSup&&sup) at+=' dy="'+(fs*0.34).toFixed(1)+'"';
+     if(isSup) at+=' font-size="'+(fs*0.68).toFixed(1)+'"';
+     if(/[a-z]/i.test(c)) at+=' font-style="italic"';
+     if(c==='-') c='−';
+     if(c===' ') c=' ';
+     out+='<tspan'+at+'>'+c+'</tspan>';
+     sup=isSup;
+   }
+   return out;
+ }
+ function tx(x,y,s,fs,fill,anch,bold){
+   return '<text x="'+x+'" y="'+y+'" text-anchor="'+(anch||'middle')+'" font-family="Georgia,serif" font-size="'+fs+'" fill="'+fill+'"'+(bold?' font-weight="bold"':'')+'>'+sv(s,fs)+'</text>';
+ }
+ var GRAY='#c9cde4', TINT='#eceefa', INK='#22243a', SOFT='#4d4f66', DK='#262a5c', TEAL='#43458f', BLUE='#2f6f9f', GOLD='#b8862f';
+
+ /* ---------- picture 1: pulling out a GCF (one row of blocks, shared height) ---------- */
+ function drawGCF(e,vs){
+   var X0=58, AV=250-X0-12, YT=66, HH=82;
+   var n=e.tiles.length, i, tot=0;
+   for(i=0;i<n;i++) tot+=e.tiles[i].w;
+   var gap=(vs<=1)?9:0;
+   var usable=AV-gap*(n-1);
+   var band=(vs===0)?0:((vs===1)?34:HH);
+   var s='', x=X0;
+   for(i=0;i<n;i++){
+     var w=usable*e.tiles[i].w/tot;
+     s+='<rect x="'+x.toFixed(1)+'" y="'+YT+'" width="'+w.toFixed(1)+'" height="'+HH+'" rx="5" fill="'+TINT+'" stroke="'+GRAY+'" stroke-width="1.2"/>';
+     if(band>0){
+       s+='<rect x="'+x.toFixed(1)+'" y="'+(YT+HH-band)+'" width="'+w.toFixed(1)+'" height="'+band+'" rx="5" fill="'+TEAL+'" opacity="'+(vs===1?'.15':'.19')+'"/>';
+       if(vs===1) s+='<line x1="'+x.toFixed(1)+'" y1="'+(YT+HH-band)+'" x2="'+(x+w).toFixed(1)+'" y2="'+(YT+HH-band)+'" stroke="'+TEAL+'" stroke-width="1.7" stroke-dasharray="4 3"/>';
+     }
+     var big=(vs<2);
+     s+=tx(x+w/2, YT+HH/2+(big?5:5.5), e.tiles[i].term, big?15:12.5, big?INK:SOFT);
+     if(vs>=2) s+=tx(x+w/2, YT-13, e.tiles[i].left, 14, DK, 'middle', 1);
+     x+=w+gap;
+   }
+   var right=X0+AV;
+   if(vs===1){
+     s+=tx(X0-6, YT+HH-band/2+4, 'shared', 10.5, TEAL, 'end');
+   }
+   if(vs>=2){
+     /* left bracket labelled with the GCF */
+     s+='<path d="M'+(X0-7)+' '+YT+' h-6 v'+HH+' h6" fill="none" stroke="'+TEAL+'" stroke-width="1.8"/>';
+     s+=tx(X0-16, YT+HH/2+5, e.gcfL, 12.5, TEAL, 'end', 1);
+     s+=tx((X0+right)/2, YT-32, 'widths left behind', 10.5, GOLD);
+   }
+   if(vs>=3){
+     /* brace under the whole width */
+     s+='<path d="M'+X0+' '+(YT+HH+8)+' v6 h'+AV+' v-6" fill="none" stroke="'+GOLD+'" stroke-width="1.8"/>';
+     s+=tx((X0+right)/2, YT+HH+30, e.sumL, 13.5, GOLD, 'middle', 1);
+   }
+   return s;
+ }
+
+ /* ---------- picture 2: grouping (a 2x2 grid; rows are the pairs) ---------- */
+ function drawGrp(e,vs,ot){
+   var X0=50, AV=250-X0-34, Y0=68, AH=112;
+   var cells=(ot||!e.cells0)?e.cells:e.cells0;
+   var ct=e.cw[0]+e.cw[1], rt=e.rh[0]+e.rh[1];
+   var gx=(vs===0)?8:((vs===1)?4:0);
+   var gy=(vs===0)?10:((vs===1)?16:((vs===2)?12:0));
+   var cwp=[], rhp=[], i, j;
+   for(i=0;i<2;i++) cwp.push((AV-gx)*e.cw[i]/ct);
+   for(j=0;j<2;j++) rhp.push((AH-gy)*e.rh[j]/rt);
+   var rowCol=[BLUE,GOLD];
+   var s='';
+   for(j=0;j<2;j++){
+     var y=Y0+(j===0?0:rhp[0]+gy);
+     for(i=0;i<2;i++){
+       var x=X0+(i===0?0:cwp[0]+gx);
+       var fill=TINT, op='0';
+       s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+cwp[i].toFixed(1)+'" height="'+rhp[j].toFixed(1)+'" rx="5" fill="'+fill+'" stroke="'+GRAY+'" stroke-width="1.2"/>';
+       if(vs===1||vs===2) s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+cwp[i].toFixed(1)+'" height="'+rhp[j].toFixed(1)+'" rx="5" fill="'+rowCol[j]+'" opacity=".13"/>';
+       if(vs>=3) s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+cwp[i].toFixed(1)+'" height="'+rhp[j].toFixed(1)+'" rx="5" fill="'+TEAL+'" opacity=".17"/>';
+       var big=(vs<=1);
+       s+=tx(x+cwp[i]/2, y+rhp[j]/2+(big?5:5), cells[j][i], big?14.5:13, big?INK:SOFT);
+     }
+     if(vs===1) s+=tx(X0-8, Y0+(j===0?rhp[0]/2:rhp[0]+gy+rhp[1]/2)+4, (j===0?'pair 1':'pair 2'), 10, rowCol[j], 'end');
+     if(vs>=2) s+=tx(X0-8, Y0+(j===0?rhp[0]/2:rhp[0]+gy+rhp[1]/2)+5, e.rows[j], 13.5, vs>=3?TEAL:rowCol[j], 'end', 1);
+   }
+   if(vs>=3){
+     var xd=X0+cwp[0];
+     s+='<line x1="'+xd.toFixed(1)+'" y1="'+(Y0-4)+'" x2="'+xd.toFixed(1)+'" y2="'+(Y0+AH+4)+'" stroke="'+GOLD+'" stroke-width="2.2" stroke-dasharray="5 3"/>';
+     for(i=0;i<2;i++){
+       var xc=X0+(i===0?cwp[0]/2:cwp[0]+cwp[1]/2);
+       s+=tx(xc, Y0-9, e.cols[i], 13.5, GOLD, 'middle', 1);
+     }
+   }
+   if(vs>=4){
+     /* the shared width, braced across the top */
+     s+='<path d="M'+X0+' '+(Y0-32)+' v-6 h'+AV+' v6" fill="none" stroke="'+GOLD+'" stroke-width="1.8"/>';
+     s+=tx(X0+AV/2, Y0-46, e.colL, 13, GOLD, 'middle', 1);
+     /* the assembled height, bracketed down the right so it clears the row labels */
+     var rb=X0+AV+6;
+     s+='<path d="M'+rb+' '+Y0+' h6 v'+AH+' h-6" fill="none" stroke="'+TEAL+'" stroke-width="1.8"/>';
+     s+='<text transform="translate('+(rb+16)+','+(Y0+AH/2)+') rotate(-90)" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="'+TEAL+'" font-weight="bold">'+sv(e.rowL,13)+'</text>';
+   }
+   if(e.outer&&ot){
+     s+='<rect x="196" y="4" width="48" height="19" rx="6" fill="#fbf3e2" stroke="#ecd9ac"/>';
+     s+=tx(220, 18, '× '+e.outer, 12, '#8a6a20', 'middle', 1);
+   }
+   return s;
+ }
+
+ var CAP_G=[
+  'Each term is a block. Right now they are strangers &mdash; nothing has been shared yet.',
+  'The dashed line marks the part <b>every</b> block already contains. As you find more of the common factor, that shared band grows.',
+  'Every block now has the <b>same height</b>, and that height is the GCF. What is left over is each block&rsquo;s <b>width</b>.',
+  'One rectangle. Height &times; total width &mdash; and that is exactly the factored form: the GCF outside, the sum of the widths inside.'
+ ];
+ var CAP_R=[
+  'Four blocks, and no single factor fits all four. So stop hunting for a shared height and look for <b>structure</b> instead.',
+  'Split the four terms into two pairs. Each pair is one <b>row</b> of a rectangle that does not exist yet.',
+  'Factoring each pair gives that row its <b>height</b>. Those two heights will become the second factor.',
+  'Both rows break at the <b>same vertical line</b>. That is what &ldquo;the binomials match&rdquo; looks like &mdash; a shared width.',
+  'The rectangle is whole. Read its width across the top and its height down the side, and you have the two factors.'
+ ];
+
+ /* =================== the examples =================== */
+ var EX=[
+ {k:'a',nm:'Pull it out',sub:'12<i>x</i><sup>3</sup> + 18<i>x</i><sup>2</sup>',type:'gcf',col:'#43458f',
+  gcfL:'6x^2', sumL:'(2x + 3)',
+  tiles:[{term:'12x^3',left:'2x',w:2.1},{term:'18x^2',left:'3',w:1.5}],
+  idea:'<span class="n">The one move you always try first</span>Before anything else, ask what <b>every</b> term contains. Whatever that is, it comes out front and the rest stays in parentheses. Factoring out a GCF is just the distributive property read right to left.',
+  steps:[
+   {pl:'The problem',vs:0,mx:'12<i>x</i><sup>3</sup> + 18<i>x</i><sup>2</sup>',
+    ex:'<u>Read before you write</u>Two terms, joined by a plus. To factor is to rewrite this sum as a <b>product</b>. So the opening question is never &ldquo;what do I do,&rdquo; it is <b>what do both terms have in common?</b>'},
+   {pl:'Split the numbers',vs:1,mx:'12 = 2 &middot; 2 &middot; 3 &nbsp;&nbsp;&nbsp; 18 = 2 &middot; 3 &middot; 3',
+    ex:'<u>Why break them into primes</u>Written this way you can literally <b>see</b> the overlap: each list contains one 2 and one 3, and nothing more is in both. So the largest number dividing both is 2 &middot; 3 = <b>6</b>. Not a rule to memorize &mdash; just the shared part of two lists.'},
+   {pl:'Split the variables',vs:1,mx:'<i>x</i><sup>3</sup> = <i>x</i> &middot; <i>x</i> &middot; <i>x</i> &nbsp;&nbsp;&nbsp; <i>x</i><sup>2</sup> = <i>x</i> &middot; <i>x</i>',
+    ex:'<u>Why the lowest power wins</u>Expanded, the second term has only <b>two</b> <i>x</i>&rsquo;s to give. You can pull out only what the <b>poorest</b> term can afford, so you take <i>x</i> &middot; <i>x</i> = <i>x</i><sup>2</sup>. That is the whole reason the rule says &ldquo;use the smallest exponent.&rdquo;'},
+   {pl:'The GCF',vs:2,mx:'GCF = <span class="hl">6<i>x</i><sup>2</sup></span>',
+    ex:'<u>Put the two halves together</u>Number part 6, variable part <i>x</i><sup>2</sup>. In the picture, both blocks just gained the same height. Everything still left in a block is now its <b>width</b>.'},
+   {pl:'Divide each term',vs:2,mx:'12<i>x</i><sup>3</sup> &divide; 6<i>x</i><sup>2</sup> = <span class="hl">2<i>x</i></span> &nbsp;&nbsp; 18<i>x</i><sup>2</sup> &divide; 6<i>x</i><sup>2</sup> = <span class="hl">3</span>',
+    ex:'<u>What is left over</u>12 &divide; 6 = 2 and <i>x</i><sup>3</sup> &divide; <i>x</i><sup>2</sup> = <i>x</i>, so the first leftover is 2<i>x</i>. For the second: 18 &divide; 6 = 3 and <i>x</i><sup>2</sup> &divide; <i>x</i><sup>2</sup> = 1, so the leftover is just 3.'},
+   {pl:'Factored form',vs:3,mx:'6<i>x</i><sup>2</sup><span class="hl">(2<i>x</i> + 3)</span>',
+    ex:'<u>Assemble it</u>GCF outside, leftovers inside, keeping the original signs between them. The picture is now a single rectangle of height 6<i>x</i><sup>2</sup> and width 2<i>x</i> + 3.'},
+   {pl:'Check',vs:3,mx:'6<i>x</i><sup>2</sup> &middot; 2<i>x</i> + 6<i>x</i><sup>2</sup> &middot; 3 = 12<i>x</i><sup>3</sup> + 18<i>x</i><sup>2</sup> &nbsp;&#10003;',
+    ex:'<u>Always distribute back</u>Multiplying out returns the original polynomial exactly, so the factoring is right. This check costs ten seconds and catches nearly every mistake &mdash; make it a habit, not an afterthought.'}
+  ]},
+
+ {k:'b',nm:'The hidden 1',sub:'20<i>a</i><sup>4</sup><i>b</i> &minus; 30<i>a</i><sup>3</sup><i>b</i><sup>2</sup> + 10<i>a</i><sup>2</sup><i>b</i>',type:'gcf',col:'#43458f',
+  gcfL:'10a^2b', sumL:'(2a^2 - 3ab + 1)',
+  tiles:[{term:'20a^4b',left:'2a^2',w:2},{term:'30a^3b^2',left:'-3ab',w:2},{term:'10a^2b',left:'1',w:1}],
+  idea:'<span class="n">When a term <i>is</i> the GCF</span>The most common error in this whole section: a term that gets completely used up leaves behind a <b>1</b>, not a blank. Dividing never deletes a term &mdash; it can only shrink it to 1.',
+  steps:[
+   {pl:'The problem',vs:0,mx:'20<i>a</i><sup>4</sup><i>b</i> &minus; 30<i>a</i><sup>3</sup><i>b</i><sup>2</sup> + 10<i>a</i><sup>2</sup><i>b</i>',
+    ex:'<u>Three terms, two variables</u>Same question as always. Handle the numbers first, then each letter separately &mdash; <i>a</i> on its own, then <i>b</i> on its own.'},
+   {pl:'The numbers',vs:1,mx:'20 = 2 &middot; 2 &middot; 5 &nbsp; 30 = 2 &middot; 3 &middot; 5 &nbsp; 10 = 2 &middot; 5',
+    ex:'<u>Shared by all three</u>Every list holds one 2 and one 5; the extra 2 in twenty and the 3 in thirty are not in all three. So the number part of the GCF is 2 &middot; 5 = <b>10</b>.'},
+   {pl:'The letters',vs:1,mx:'<i>a</i>: <i>a</i><sup>4</sup>, <i>a</i><sup>3</sup>, <i>a</i><sup>2</sup> &rarr; <i>a</i><sup>2</sup> &nbsp;&nbsp; <i>b</i>: <i>b</i>, <i>b</i><sup>2</sup>, <i>b</i> &rarr; <i>b</i>',
+    ex:'<u>Lowest power, letter by letter</u>The poorest term carries only <i>a</i><sup>2</sup>, so <i>a</i><sup>2</sup> is all you can take. For <i>b</i>, two of the terms carry a single <i>b</i>, so you take one <i>b</i>. A letter missing from any term contributes nothing at all.'},
+   {pl:'The GCF',vs:2,mx:'GCF = <span class="hl">10<i>a</i><sup>2</sup><i>b</i></span>',
+    ex:'<u>Notice something</u>10<i>a</i><sup>2</sup><i>b</i> is not just the common factor &mdash; it is the <b>third term itself</b>, exactly. Keep an eye on what happens to that term next.'},
+   {pl:'Divide each term',vs:2,mx:'<span class="hl">2<i>a</i><sup>2</sup></span> &nbsp; <span class="hl">3<i>ab</i></span> &nbsp; <span class="hl">1</span>',
+    ex:'<u>Term by term</u>20<i>a</i><sup>4</sup><i>b</i> &divide; 10<i>a</i><sup>2</sup><i>b</i> = 2<i>a</i><sup>2</sup>. &nbsp; 30<i>a</i><sup>3</sup><i>b</i><sup>2</sup> &divide; 10<i>a</i><sup>2</sup><i>b</i> = 3<i>ab</i>. &nbsp; And 10<i>a</i><sup>2</sup><i>b</i> &divide; 10<i>a</i><sup>2</sup><i>b</i> = <b>1</b> &mdash; anything divided by itself is 1, never zero and never nothing.'},
+   {pl:'Factored form',vs:3,mx:'10<i>a</i><sup>2</sup><i>b</i>(2<i>a</i><sup>2</sup> &minus; 3<i>ab</i> + <span class="hl">1</span>)',
+    ex:'<u>Keep the 1</u>Drop that 1 and the third block vanishes from the rectangle &mdash; you would be handing back a different polynomial. The original minus sign stays with the middle term.'},
+   {pl:'Check',vs:3,mx:'20<i>a</i><sup>4</sup><i>b</i> &minus; 30<i>a</i><sup>3</sup><i>b</i><sup>2</sup> + 10<i>a</i><sup>2</sup><i>b</i> &nbsp;&#10003;',
+    ex:'<u>Distribute back</u>10<i>a</i><sup>2</sup><i>b</i> &middot; 2<i>a</i><sup>2</sup> = 20<i>a</i><sup>4</sup><i>b</i>. &nbsp; 10<i>a</i><sup>2</sup><i>b</i> &middot; (&minus;3<i>ab</i>) = &minus;30<i>a</i><sup>3</sup><i>b</i><sup>2</sup>. &nbsp; 10<i>a</i><sup>2</sup><i>b</i> &middot; 1 = 10<i>a</i><sup>2</sup><i>b</i>. All three return, so it is correct.'}
+  ]},
+
+ {k:'c',nm:'Pull out a minus',sub:'&minus;6<i>x</i><sup>3</sup> + 15<i>x</i><sup>2</sup> &minus; 9<i>x</i>',type:'gcf',col:'#43458f',
+  gcfL:'-3x', sumL:'(2x^2 - 5x + 3)',
+  tiles:[{term:'-6x^3',left:'2x^2',w:2},{term:'15x^2',left:'-5x',w:1.7},{term:'-9x',left:'3',w:1.2}],
+  idea:'<span class="n">A negative common factor is legal</span>When the leading term is negative, pull the minus sign out with the GCF. Every sign inside the parentheses then flips &mdash; and the polynomial you are left with is far easier to factor further.',
+  steps:[
+   {pl:'The problem',vs:0,mx:'&minus;6<i>x</i><sup>3</sup> + 15<i>x</i><sup>2</sup> &minus; 9<i>x</i>',
+    ex:'<u>Signs belong to terms</u>Read the terms as &minus;6<i>x</i><sup>3</sup>, +15<i>x</i><sup>2</sup>, and &minus;9<i>x</i>. Each sign travels with the term in front of it; that is what makes the arithmetic below predictable.'},
+   {pl:'The numbers',vs:1,mx:'6 = 2 &middot; 3 &nbsp;&nbsp; 15 = 3 &middot; 5 &nbsp;&nbsp; 9 = 3 &middot; 3',
+    ex:'<u>Use the sizes first</u>Ignore the signs for a moment and compare 6, 15, and 9. The only prime in all three lists is 3, so the number part is <b>3</b>.'},
+   {pl:'The letters',vs:1,mx:'<i>x</i><sup>3</sup>, <i>x</i><sup>2</sup>, <i>x</i> &rarr; <i>x</i>',
+    ex:'<u>The poorest term again</u>The last term carries a single <i>x</i>, so one <i>x</i> is the most you can take. That gives a common factor of 3<i>x</i> &mdash; and now the sign decision.'},
+   {pl:'Choose the sign',vs:2,mx:'GCF = <span class="hl">&minus;3<i>x</i></span>',
+    ex:'<u>Why pull out the minus</u>&minus;3<i>x</i> divides all three terms just as cleanly as 3<i>x</i>, so both are legal. Taking the negative one makes the leading term inside <b>positive</b>, which is the form every later method (trinomial factoring, the quadratic formula, graphing) expects. When the leading coefficient is negative, take the minus.'},
+   {pl:'Divide each term',vs:2,mx:'<span class="hl">2<i>x</i><sup>2</sup></span> &nbsp; <span class="hl">&minus;5<i>x</i></span> &nbsp; <span class="hl">3</span>',
+    ex:'<u>Every sign flips</u>&minus;6<i>x</i><sup>3</sup> &divide; (&minus;3<i>x</i>) = +2<i>x</i><sup>2</sup>. &nbsp; 15<i>x</i><sup>2</sup> &divide; (&minus;3<i>x</i>) = &minus;5<i>x</i>. &nbsp; &minus;9<i>x</i> &divide; (&minus;3<i>x</i>) = +3. Negative divided by negative is positive, positive divided by negative is negative &mdash; so the whole sign pattern reverses.'},
+   {pl:'Factored form',vs:3,mx:'&minus;3<i>x</i>(2<i>x</i><sup>2</sup> &minus; 5<i>x</i> + 3)',
+    ex:'<u>Read the result</u>Compare the signs inside with the original: &minus; + &minus; became + &minus; +. That reversal is the fingerprint of pulling out a negative, and seeing it is how you know you did it right.'},
+   {pl:'Check',vs:3,mx:'&minus;6<i>x</i><sup>3</sup> + 15<i>x</i><sup>2</sup> &minus; 9<i>x</i> &nbsp;&#10003;',
+    ex:'<u>Distribute back</u>&minus;3<i>x</i> &middot; 2<i>x</i><sup>2</sup> = &minus;6<i>x</i><sup>3</sup>. &nbsp; &minus;3<i>x</i> &middot; (&minus;5<i>x</i>) = +15<i>x</i><sup>2</sup>. &nbsp; &minus;3<i>x</i> &middot; 3 = &minus;9<i>x</i>. The original is back. (2<i>x</i><sup>2</sup> &minus; 5<i>x</i> + 3 factors further, but that is the next section&rsquo;s job.)'}
+  ]},
+
+ {k:'d',nm:'Group in pairs',sub:'<i>x</i><sup>3</sup> + 3<i>x</i><sup>2</sup> + 2<i>x</i> + 6',type:'grp',col:'#2f6f9f',
+  rows:['x^2','2'], cols:['x','3'], rowL:'(x^2 + 2)', colL:'(x + 3)',
+  cells:[['x^3','3x^2'],['2x','6']], cw:[3,2], rh:[3,2],
+  idea:'<span class="n">Four terms, nothing in common</span>When no factor fits all four terms, factor them <b>two at a time</b>. If the same binomial falls out of both pairs, that binomial is a common factor of the whole expression &mdash; and you finish exactly as you would with a GCF.',
+  steps:[
+   {pl:'The problem',vs:0,mx:'<i>x</i><sup>3</sup> + 3<i>x</i><sup>2</sup> + 2<i>x</i> + 6',
+    ex:'<u>Check for a GCF first &mdash; always</u>The coefficients 1, 3, 2, 6 share only 1, and the last term has no <i>x</i> at all, so no variable can come out either. There is no GCF. <b>Four terms with no GCF is the signal to try grouping.</b>'},
+   {pl:'Make two pairs',vs:1,mx:'<span class="gl">(<i>x</i><sup>3</sup> + 3<i>x</i><sup>2</sup>)</span> + <span class="gl">(2<i>x</i> + 6)</span>',
+    ex:'<u>Why pairs</u>Neither pair is the answer &mdash; grouping is a bet that each pair hides a piece of the same factor. Take the terms in the order given, and keep the plus sign between the two groups.'},
+   {pl:'Factor pair 1',vs:2,mx:'<span class="hl"><i>x</i><sup>2</sup></span>(<i>x</i> + 3) + (2<i>x</i> + 6)',
+    ex:'<u>A small GCF problem</u><i>x</i><sup>3</sup> and 3<i>x</i><sup>2</sup> share <i>x</i><sup>2</sup>. Pulling it out: <i>x</i><sup>3</sup> &divide; <i>x</i><sup>2</sup> = <i>x</i> and 3<i>x</i><sup>2</sup> &divide; <i>x</i><sup>2</sup> = 3, leaving <i>x</i><sup>2</sup>(<i>x</i> + 3). In the picture, that <i>x</i><sup>2</sup> just became the height of the top row.'},
+   {pl:'Factor pair 2',vs:2,mx:'<i>x</i><sup>2</sup>(<i>x</i> + 3) + <span class="hl">2</span>(<i>x</i> + 3)',
+    ex:'<u>The moment of truth</u>2<i>x</i> and 6 share 2, giving 2(<i>x</i> + 3). The two parentheses came out <b>identical</b> &mdash; that is the bet paying off. If they had not matched, grouping would have failed here.'},
+   {pl:'See the common factor',vs:3,mx:'<i>x</i><sup>2</sup>&middot;<span class="gl">(<i>x</i> + 3)</span> + 2&middot;<span class="gl">(<i>x</i> + 3)</span>',
+    ex:'<u>Treat the binomial as one object</u>Call (<i>x</i> + 3) a single block, say &#9633;. The expression is <i>x</i><sup>2</sup>&#9633; + 2&#9633; &mdash; and you already know how to factor that: the &#9633; comes out front. A binomial can be a common factor for exactly the same reason a monomial can.'},
+   {pl:'Factored form',vs:4,mx:'(<i>x</i> + 3)<span class="hl">(<i>x</i><sup>2</sup> + 2)</span>',
+    ex:'<u>Where the second factor comes from</u>The leftovers are <i>x</i><sup>2</sup> and 2 &mdash; the two things that were multiplying the block. In the rectangle they are the two row heights, and (<i>x</i> + 3) is the width shared by both rows.'},
+   {pl:'Check',vs:4,mx:'<i>x</i><sup>3</sup> + 2<i>x</i> + 3<i>x</i><sup>2</sup> + 6 = <i>x</i><sup>3</sup> + 3<i>x</i><sup>2</sup> + 2<i>x</i> + 6 &nbsp;&#10003;',
+    ex:'<u>Multiply it out</u>(<i>x</i> + 3)(<i>x</i><sup>2</sup> + 2) gives <i>x</i>&middot;<i>x</i><sup>2</sup> = <i>x</i><sup>3</sup>, <i>x</i>&middot;2 = 2<i>x</i>, 3&middot;<i>x</i><sup>2</sup> = 3<i>x</i><sup>2</sup>, 3&middot;2 = 6. Reordered, that is the original polynomial &mdash; those four products are literally the four blocks on the left.'}
+  ]},
+
+ {k:'e',nm:'The sign trap',sub:'6<i>x</i><sup>3</sup> &minus; 9<i>x</i><sup>2</sup> &minus; 4<i>x</i> + 6',type:'grp',col:'#2f6f9f',
+  rows:['3x^2','-2'], cols:['2x','-3'], rowL:'(3x^2 - 2)', colL:'(2x - 3)',
+  cells:[['6x^3','-9x^2'],['-4x','6']], cw:[3,2], rh:[3,2],
+  idea:'<span class="n">When the second pair starts negative</span>If the third term is negative, pull out a <b>negative</b> GCF from the second pair. Do it and the binomials match; skip it and they come out backwards and you will wrongly conclude the polynomial does not factor.',
+  steps:[
+   {pl:'The problem',vs:0,mx:'6<i>x</i><sup>3</sup> &minus; 9<i>x</i><sup>2</sup> &minus; 4<i>x</i> + 6',
+    ex:'<u>GCF check first</u>The numbers 6, 9, 4, 6 share only 1, and the constant 6 has no <i>x</i>. No GCF, four terms &mdash; try grouping. Note the third term is <b>negative</b>; that is what makes this one a trap.'},
+   {pl:'Make two pairs',vs:1,mx:'<span class="gl">(6<i>x</i><sup>3</sup> &minus; 9<i>x</i><sup>2</sup>)</span> + <span class="gl">(&minus;4<i>x</i> + 6)</span>',
+    ex:'<u>Carry the sign into the group</u>The minus in front of 4<i>x</i> belongs to that term, so the second pair is &minus;4<i>x</i> + 6, and the groups are joined by a plus. Writing it this way &mdash; rather than &ldquo;minus a group&rdquo; &mdash; keeps you out of sign trouble.'},
+   {pl:'Factor pair 1',vs:2,mx:'<span class="hl">3<i>x</i><sup>2</sup></span>(2<i>x</i> &minus; 3) + (&minus;4<i>x</i> + 6)',
+    ex:'<u>Standard GCF</u>6<i>x</i><sup>3</sup> and &minus;9<i>x</i><sup>2</sup> share 3<i>x</i><sup>2</sup>. Dividing: 6<i>x</i><sup>3</sup> &divide; 3<i>x</i><sup>2</sup> = 2<i>x</i> and &minus;9<i>x</i><sup>2</sup> &divide; 3<i>x</i><sup>2</sup> = &minus;3, so the first row is 3<i>x</i><sup>2</sup>(2<i>x</i> &minus; 3). <b>Remember that binomial: 2<i>x</i> &minus; 3.</b>'},
+   {pl:'The wrong turn',vs:2,mx:'&hellip; + 2(&minus;2<i>x</i> + 3) &nbsp;&#10007;',
+    ex:'<u>Watch what goes wrong</u>Pull out +2 from &minus;4<i>x</i> + 6 and you get 2(&minus;2<i>x</i> + 3). That is <b>true</b> arithmetic, but (&minus;2<i>x</i> + 3) is not (2<i>x</i> &minus; 3), so nothing matches and grouping looks like a dead end. It is not &mdash; you just took out the wrong sign.'},
+   {pl:'Factor pair 2',vs:2,mx:'3<i>x</i><sup>2</sup>(2<i>x</i> &minus; 3) <span class="hl">&minus; 2</span>(2<i>x</i> &minus; 3)',
+    ex:'<u>Take out the negative</u>Pull out &minus;2 instead: &minus;4<i>x</i> &divide; (&minus;2) = 2<i>x</i> and 6 &divide; (&minus;2) = &minus;3, giving &minus;2(2<i>x</i> &minus; 3). Now both parentheses read 2<i>x</i> &minus; 3. <b>Rule of thumb: if the third term is negative, pull out a negative.</b>'},
+   {pl:'See the common factor',vs:3,mx:'3<i>x</i><sup>2</sup>&middot;<span class="gl">(2<i>x</i> &minus; 3)</span> &minus; 2&middot;<span class="gl">(2<i>x</i> &minus; 3)</span>',
+    ex:'<u>One block, two multipliers</u>Again the binomial is a single object being multiplied by 3<i>x</i><sup>2</sup> and then by &minus;2. Pull the block out front; the multipliers, signs and all, become the other factor.'},
+   {pl:'Factored form',vs:4,mx:'(2<i>x</i> &minus; 3)<span class="hl">(3<i>x</i><sup>2</sup> &minus; 2)</span>',
+    ex:'<u>The minus stays with the 2</u>The second factor is 3<i>x</i><sup>2</sup> &minus; 2, because the leftover was &minus;2, not 2. In the rectangle the bottom row has a negative height &mdash; the drawing is bookkeeping there, but the algebra is exact.'},
+   {pl:'Check',vs:4,mx:'6<i>x</i><sup>3</sup> &minus; 4<i>x</i> &minus; 9<i>x</i><sup>2</sup> + 6 = 6<i>x</i><sup>3</sup> &minus; 9<i>x</i><sup>2</sup> &minus; 4<i>x</i> + 6 &nbsp;&#10003;',
+    ex:'<u>Multiply it out</u>(2<i>x</i> &minus; 3)(3<i>x</i><sup>2</sup> &minus; 2) gives 2<i>x</i>&middot;3<i>x</i><sup>2</sup> = 6<i>x</i><sup>3</sup>, 2<i>x</i>&middot;(&minus;2) = &minus;4<i>x</i>, (&minus;3)&middot;3<i>x</i><sup>2</sup> = &minus;9<i>x</i><sup>2</sup>, (&minus;3)&middot;(&minus;2) = +6. Rearranged, that is the original &mdash; signs and all.'}
+  ]},
+
+ {k:'f',nm:'Both at once',sub:'2<i>x</i><sup>3</sup> + 10<i>x</i><sup>2</sup> + 6<i>x</i> + 30',type:'grp',col:'#b8862f',
+  rows:['x^2','3'], cols:['x','5'], rowL:'(x^2 + 3)', colL:'(x + 5)', outer:'2',
+  cells:[['x^3','5x^2'],['3x','15']], cells0:[['2x^3','10x^2'],['6x','30']], cw:[3,2], rh:[3,2],
+  idea:'<span class="n">GCF first, then group</span>These two methods are not rivals &mdash; they run in sequence. Take out anything common to all four terms <b>before</b> you pair them up, and the grouping that follows is smaller, cleaner, and finished in one pass.',
+  steps:[
+   {pl:'The problem',vs:0,ot:0,mx:'2<i>x</i><sup>3</sup> + 10<i>x</i><sup>2</sup> + 6<i>x</i> + 30',
+    ex:'<u>Do the GCF check honestly</u>2, 10, 6, and 30 are all even, so 2 divides every term. (No variable comes out: 30 has no <i>x</i>.) This time the check is not empty &mdash; there <b>is</b> a GCF, so it comes out first.'},
+   {pl:'Pull out the GCF',vs:0,ot:1,mx:'<span class="hl">2</span>(<i>x</i><sup>3</sup> + 5<i>x</i><sup>2</sup> + 3<i>x</i> + 15)',
+    ex:'<u>Divide all four</u>2<i>x</i><sup>3</sup> &divide; 2 = <i>x</i><sup>3</sup>, 10<i>x</i><sup>2</sup> &divide; 2 = 5<i>x</i><sup>2</sup>, 6<i>x</i> &divide; 2 = 3<i>x</i>, 30 &divide; 2 = 15. The 2 now sits outside for good &mdash; carry it through every remaining line and it will be waiting at the end.'},
+   {pl:'Make two pairs',vs:1,ot:1,mx:'2[<span class="gl">(<i>x</i><sup>3</sup> + 5<i>x</i><sup>2</sup>)</span> + <span class="gl">(3<i>x</i> + 15)</span>]',
+    ex:'<u>Group what is inside</u>The polynomial in the brackets still has four terms and no GCF of its own (1, 5, 3, 15 share only 1). So grouping is the next move &mdash; applied to the inside only.'},
+   {pl:'Factor both pairs',vs:2,ot:1,mx:'2[<span class="hl"><i>x</i><sup>2</sup></span>(<i>x</i> + 5) + <span class="hl">3</span>(<i>x</i> + 5)]',
+    ex:'<u>Two small GCF problems</u><i>x</i><sup>3</sup> + 5<i>x</i><sup>2</sup> = <i>x</i><sup>2</sup>(<i>x</i> + 5), and 3<i>x</i> + 15 = 3(<i>x</i> + 5). Both parentheses read (<i>x</i> + 5), so the bet paid off again.'},
+   {pl:'See the common factor',vs:3,ot:1,mx:'2[<i>x</i><sup>2</sup>&middot;<span class="gl">(<i>x</i> + 5)</span> + 3&middot;<span class="gl">(<i>x</i> + 5)</span>]',
+    ex:'<u>Same move as before</u>The shared binomial (<i>x</i> + 5) comes out front, and the multipliers <i>x</i><sup>2</sup> and 3 gather into the second factor. In the picture both rows break at the same vertical line.'},
+   {pl:'Factored form',vs:4,ot:1,mx:'<span class="hl">2</span>(<i>x</i> + 5)(<i>x</i><sup>2</sup> + 3)',
+    ex:'<u>Three factors now</u>Nothing further will come out: <i>x</i> + 5 is linear, and <i>x</i><sup>2</sup> + 3 has no common factor and is never zero for real <i>x</i>. This is fully factored.'},
+   {pl:'Why GCF first',vs:4,ot:1,mx:'group first &rarr; (<i>x</i> + 5)(2<i>x</i><sup>2</sup> + 6)',
+    ex:'<u>Skipping the GCF costs you</u>Group without pulling the 2 and you get 2<i>x</i><sup>2</sup>(<i>x</i> + 5) + 6(<i>x</i> + 5) = (<i>x</i> + 5)(2<i>x</i><sup>2</sup> + 6) &mdash; correct, but <b>not finished</b>, since 2<i>x</i><sup>2</sup> + 6 = 2(<i>x</i><sup>2</sup> + 3). You end up factoring twice, and on a test the half-done answer is the one that gets written down.'},
+   {pl:'Check',vs:4,ot:1,mx:'2(<i>x</i><sup>3</sup> + 5<i>x</i><sup>2</sup> + 3<i>x</i> + 15) = 2<i>x</i><sup>3</sup> + 10<i>x</i><sup>2</sup> + 6<i>x</i> + 30 &nbsp;&#10003;',
+    ex:'<u>Multiply it out</u>(<i>x</i> + 5)(<i>x</i><sup>2</sup> + 3) = <i>x</i><sup>3</sup> + 3<i>x</i> + 5<i>x</i><sup>2</sup> + 15. Multiply by the outside 2 and every original term returns exactly.'}
+  ]}
+ ];
+
+ var RECIPE='<b>The order of operations for factoring:</b> <b>1.</b> GCF out of every term &mdash; always, first, no exceptions. <b>2.</b> Count what is left. Four terms &rarr; try grouping. <b>3.</b> Factor each pair; the binomials must match. <b>4.</b> Pull the matching binomial out front. <b>5.</b> Distribute back to check.';
+ var FAILNOTE='<b>Grouping is not guaranteed.</b> Take <i>x</i><sup>3</sup> + 3<i>x</i><sup>2</sup> + 5<i>x</i> + 6: the first pair gives <i>x</i><sup>2</sup>(<i>x</i> + 3), but 5<i>x</i> + 6 shares no common factor, so no matching binomial can ever appear and the method simply fails. Re-ordering the four terms sometimes rescues it. (This particular polynomial does factor &mdash; it equals (<i>x</i> + 2)(<i>x</i><sup>2</sup> + <i>x</i> + 3) &mdash; just not by grouping. A failed attempt is information, not a verdict.)';
+
+ var ei=0, si=0;
+
+ function pick(){
+   $('pick').innerHTML=EX.map(function(e,n){
+     return '<button data-n="'+n+'" class="'+(n===ei?'on':'')+'"><span class="nm">'+e.nm+'</span><span class="ct">'+e.sub+'</span></button>';
+   }).join('');
+   var bs=$('pick').getElementsByTagName('button'), i;
+   for(i=0;i<bs.length;i++){ bs[i].onclick=function(){ ei=parseInt(this.getAttribute('data-n'),10); si=0; render(); }; }
+ }
+
+ function render(){
+   var e=EX[ei], st=e.steps[si], i;
+   pick();
+   /* picture */
+   if(e.type==='gcf'){
+     $('pic').setAttribute('viewBox','0 0 250 200');
+     $('art').innerHTML=drawGCF(e,st.vs); $('cap').innerHTML=CAP_G[st.vs];
+   } else {
+     $('pic').setAttribute('viewBox','0 0 250 210');
+     $('art').innerHTML=drawGrp(e,st.vs,st.ot); $('cap').innerHTML=CAP_R[st.vs];
+   }
+   $('cardTitle').innerHTML=(e.type==='gcf'?'One shared height':'Rebuilding the rectangle');
+   /* stage banner */
+   $('stage').style.background=e.col;
+   $('stage').innerHTML=e.nm+'<small>step '+(si+1)+' of '+e.steps.length+' &nbsp;&middot;&nbsp; '+(e.type==='gcf'?'greatest common factor':'factoring by grouping')+'</small>';
+   /* worked steps */
+   var h='';
+   for(i=0;i<e.steps.length;i++){
+     var s=e.steps[i], cl='wr'+(i===si?' on':(i<si?' done':''));
+     h+='<div class="'+cl+'"><div class="pl">'+s.pl+'</div><div class="mx">'+s.mx+(i===si?'<span class="ex">'+s.ex+'</span>':'')+'</div></div>';
+   }
+   $('work').innerHTML=h;
+   /* plan chips */
+   var p='';
+   for(i=0;i<e.steps.length;i++){ p+='<span class="'+(i===si?'on':(i<si?'done':''))+'">'+e.steps[i].pl+'</span>'; }
+   $('plan').innerHTML=p;
+   /* side panels */
+   $('info').innerHTML=e.idea;
+   $('mnem').innerHTML=RECIPE;
+   if(e.type==='grp'){ $('note').style.display='block'; $('note').innerHTML=FAILNOTE; }
+   else { $('note').style.display='none'; }
+   $('prev').disabled=(si===0);
+   $('next').disabled=(si===e.steps.length-1);
+ }
+
+ $('prev').onclick=function(){ if(si>0){ si--; render(); } };
+ $('next').onclick=function(){ if(si<EX[ei].steps.length-1){ si++; render(); } };
+ document.addEventListener('keydown',function(ev){
+   if(ev.key==='ArrowRight'){ if(si<EX[ei].steps.length-1){ si++; render(); } }
+   if(ev.key==='ArrowLeft'){ if(si>0){ si--; render(); } }
+ });
+ render();
+})();
+</script>
+</body>
+</html>

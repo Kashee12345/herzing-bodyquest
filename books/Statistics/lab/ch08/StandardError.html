@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Standard Error &mdash; the &radic;n Law</title>
+<meta name="description" content="Raise the sample size and watch the sampling distribution of the sample mean narrow by exactly the square root of n &mdash; with every standard error simulated and computed live.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:104px;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:52px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.3px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.gk{text-transform:none;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.6px;font-weight:700;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.cap{font-size:11.4px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5;}
+.cap b{color:var(--teal-dk);}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.lgd i.mdl{width:14px;height:0;border-top:2px dashed #7a5a8a;border-radius:0;vertical-align:3px;}
+.lgd i.gst{width:14px;height:0;border-top:2px solid #b9ccd6;border-radius:0;vertical-align:3px;}
+.lgd i.dash{width:14px;height:0;border-top:2px dashed #2f9e5b;border-radius:0;vertical-align:3px;}
+#info .loc{font-variant-numeric:tabular-nums;font-size:12px;line-height:1.65;}
+.grid .it .nm{display:block;} .grid .it .s{display:block;margin-top:2px;font-weight:600;font-variant-numeric:tabular-nums;}
+.answer{border:1px solid #ecd9ac;background:#fbf3e2;border-radius:10px;padding:11px 13px;margin-top:11px;font-size:12.6px;color:#8a6a20;line-height:1.6;font-variant-numeric:tabular-nums;}
+.answer b{color:#5a4212;} .answer .big{font-family:var(--disp);font-weight:700;font-size:21px;color:#5a4212;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 8</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 8</div>
+  <h1>Standard Error &mdash; the &radic;n Law</h1>
+  <div class="intro">The <b>standard error</b> is the standard deviation of the sample mean across repeated studies &mdash; the typical distance between your x&#772; and the &mu; you are chasing. It equals <b>&sigma;/&radic;n</b>, so raising the sample size narrows the sampling distribution. But it narrows by <b>&radic;n</b>, not by n, and that one square root sets the price of every precise study ever run. Draw samples, move n, and watch the pile tighten.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Watch it narrow</h2>
+      <svg viewBox="0 0 480 404" id="chart" aria-label="sampling distribution of the sample mean narrowing as the sample size rises, with standard error rulers"></svg>
+      <div class="lgd">
+        <span><i style="background:#7fb0c6"></i>simulated sample means</span>
+        <span><i class="mdl"></i>normal model at your n</span>
+        <span><i class="gst"></i>model at 1, 4, 16, 64</span>
+        <span><i style="background:#cfe6f0"></i>&plusmn;1 SE</span>
+        <span><i style="background:#e8f2f7"></i>&plusmn;2 SE</span>
+        <span><i class="dash"></i>&mu;</span>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="card">
+      <h2>The exchange rate: &times;4 the data, &divide;2 the error</h2>
+      <svg viewBox="0 0 460 212" id="cost" aria-label="standard error against sample size on a log scale, with the quadrupling staircase"></svg>
+      <div class="cap" id="costcap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Bell-shaped population<small>n = 1 &middot; press &ldquo;Draw 200 samples&rdquo; to begin</small></div>
+    <div class="card">
+      <div class="hd">Population you are sampling from</div>
+      <div class="grid" id="pops"></div>
+      <div class="hd">Sample size &mdash; the quadrupling ladder</div>
+      <div class="seg" id="nseg">
+        <button data-n="1" class="on">n = 1<small>SE = &sigma;</small></button>
+        <button data-n="4">n = 4<small>SE = &sigma;/2</small></button>
+        <button data-n="16">n = 16<small>SE = &sigma;/4</small></button>
+        <button data-n="64">n = 64<small>SE = &sigma;/8</small></button>
+      </div>
+      <div class="sl"><label>n &mdash; any size</label><input type="range" id="nSl" min="1" max="200" step="1" value="1"><span class="nv" id="nVal">1</span></div>
+      <div class="tiles">
+        <div><span class="lb">Population<br><span class="gk">&sigma;</span></span><span class="vv" id="tSd">15.0</span></div>
+        <div><span class="lb">Sample<br>size n</span><span class="vv" id="tN">1</span></div>
+        <div><span class="lb">Divide by<br><span class="gk">&radic;n</span></span><span class="vv" id="tRt">1.00</span></div>
+        <div><span class="lb">Standard<br>error</span><span class="vv" id="tSe">15.00</span></div>
+      </div>
+      <div class="row"><button class="btn solid" id="d200">Draw 200 samples</button><button class="btn" id="d2000">Draw 2,000 more</button><button class="btn" id="rst">Reset</button></div>
+      <div id="info"></div>
+    </div>
+    <div class="card">
+      <h2>Where the sample means actually landed</h2>
+      <div class="cap" style="margin-top:2px;">Top row: measured from the x&#772; values you piled up. Bottom row: what &sigma;/&radic;n predicted before any data existed.</div>
+      <div class="tiles">
+        <div><span class="lb">SD of the <span class="gk">x&#772;</span>'s</span><span class="vv" id="oS">&mdash;</span><span class="sub" id="oSt">&sigma;/&radic;n = 15.00</span></div>
+        <div><span class="lb">Within<br>&plusmn;1 SE</span><span class="vv" id="o1">&mdash;</span><span class="sub">68.3% if normal</span></div>
+        <div><span class="lb">Within<br>&plusmn;2 SE</span><span class="vv" id="o2">&mdash;</span><span class="sub">95.4% if normal</span></div>
+        <div><span class="lb">Biggest<br>miss</span><span class="vv" id="oX">&mdash;</span><span class="sub" id="oXt">&mdash;</span></div>
+      </div>
+      <div class="cap" id="ocap"></div>
+    </div>
+    <div class="card">
+      <h2>How many would you need?</h2>
+      <div class="cap" style="margin-top:2px;">Turn the question around. Name the precision you want and the &radic;n law hands you the sample size: solve &sigma;/&radic;n = target for n, giving <b>n = (&sigma;/target)&sup2;</b>.</div>
+      <div class="sl"><label>target SE</label><input type="range" id="tSl" min="5" max="100" step="1" value="25"><span class="nv" id="tVal">0.25&sigma;</span></div>
+      <div class="answer" id="ans"></div>
+      <div class="mnem"><b>Four times the data, half the error.</b> That is the whole section. The standard error is not a mistake anyone made &mdash; it is the built-in wobble of a mean computed from n individuals instead of everyone, and it shrinks only as fast as &radic;n. Doubling your sample does not halve your uncertainty; it divides it by &radic;2, about 1.41, a 29% improvement. To halve it you need four times the data. To cut it to a tenth you need <b>a hundred times</b> the data. Sample size is bought on a square-root sale, and the sale gets worse the more you buy.</div>
+      <div class="note"><b>Three things &radic;n cannot do.</b> <b>(1)</b> It does not shrink your data. &sigma; is a property of the population and it never moves; a bigger sample gives a sharper <i>mean</i>, not tidier <i>observations</i>. <b>(2)</b> It does not fix bias. If your sampling method systematically misses people &mdash; volunteers only, one neighborhood, whoever answers the phone &mdash; then x&#772; is centered on the wrong number, and raising n shrinks the standard error around <i>that wrong number</i>. A large biased study is a confidently wrong study. <b>(3)</b> It does not depend on the size of the population. There is no N in &sigma;/&radic;n: a sample of 1,000 is equally precise for a town or a nation. (Sampling <i>without</i> replacement from a population only a few times larger than the sample is the one exception, and it makes the error <i>smaller</i>, not larger.) One more honest caveat: &sigma;/&radic;n needs &sigma;, which you almost never know. In real work you report the <b>estimated</b> standard error s/&radic;n, using the sample's own SD &mdash; the same &radic;n law, with one more thing being guessed.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- seeded PRNG (mulberry32) so every run reproduces exactly ---------- */
+ var SEED0=20260719, seed=SEED0;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ function gauss(){
+   var u1=rnd(); if(u1<1e-12)u1=1e-12;
+   var u2=rnd();
+   return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+ }
+
+ /* ---------- populations, each with its exact mu and sigma ---------- */
+ var U60=60/Math.sqrt(12);      /* uniform(0,60):  sigma = 17.3205 */
+ var BM=Math.sqrt(436);         /* 0.5N(35,6)+0.5N(75,6): sigma = 20.8806 */
+ var POPS=[
+  {t:'Bell-shaped',s:'&mu; 100 &middot; &sigma; 15.0',nm:'Bell-shaped population',
+   mu:100,sd:15,lo:52,hi:148,col:'#2f6f8a',
+   r:function(){ return 100+15*gauss(); },
+   why:'A normal population. Here the sampling distribution of x&#772; is <b>exactly</b> normal at every n &mdash; even n = 1 &mdash; so the model curve and the simulated pile should agree from the very start.'},
+  {t:'Right-skewed',s:'&mu; 20.0 &middot; &sigma; 20.0',nm:'Right-skewed population',
+   mu:20,sd:20,lo:0,hi:80,col:'#b8862f',
+   r:function(){ var u=rnd(); if(u<1e-12)u=1e-12; return -20*Math.log(u); },
+   why:'A long right tail &mdash; waiting times, lengths of stay, repair costs. At n = 1 the pile is visibly lopsided and the normal model fits badly, yet &sigma;/&radic;n is <i>still exactly right</i> for the width.'},
+  {t:'Flat (uniform)',s:'&mu; 30.0 &middot; &sigma; 17.3',nm:'Flat population',
+   mu:30,sd:U60,lo:0,hi:60,col:'#7a5a8a',
+   r:function(){ return 60*rnd(); },
+   why:'Every value between 0 and 60 equally likely &mdash; no peak at all. At n = 1 the pile is a rectangle; by n = 4 it is already close to a bell, and it keeps halving on schedule throughout.'},
+  {t:'Two humps',s:'&mu; 55.0 &middot; &sigma; 20.9',nm:'Two-humped population',
+   mu:55,sd:BM,lo:8,hi:102,col:'#2f9e5b',
+   r:function(){ return (rnd()<0.5?35:75)+6*gauss(); },
+   why:'Two separate clusters, and &mu; = 55 sits in the empty gap between them. At n = 1 the pile has two peaks and nothing near the center; averaging fills the middle in and the width still obeys &radic;n.'}
+ ];
+
+ var LADDER=[1,4,16,64];
+ var LADLBL=['&sigma;','&sigma;/2','&sigma;/4','&sigma;/8'];
+
+ /* ---------- state ---------- */
+ var pi=0, n=1, tgt=25, SE=0;
+ var bins=null, NB=0, BW=0, K=0, sumM=0, sumM2=0, c1=0, c2=0, mxd=0, off=0;
+
+ function P(){ return POPS[pi]; }
+ function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+ function com(x){ return String(x).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+
+ function resetSim(){
+   seed=SEED0;
+   SE=P().sd/Math.sqrt(n);
+   var span=P().hi-P().lo;
+   BW=Math.max(span/600,SE/4);
+   NB=Math.ceil(span/BW);
+   bins=[]; for(var i=0;i<NB;i++){ bins[i]=0; }
+   K=0; sumM=0; sumM2=0; c1=0; c2=0; mxd=0; off=0;
+ }
+
+ /* ---------- real sampling ---------- */
+ function batch(c){
+   var p=P(), i, j, sm, m, dev, ix;
+   for(i=0;i<c;i++){
+     sm=0;
+     for(j=0;j<n;j++){ sm+=p.r(); }
+     m=sm/n;
+     K++; sumM+=m; sumM2+=m*m;
+     dev=Math.abs(m-p.mu);
+     if(dev<=SE)c1++;
+     if(dev<=2*SE)c2++;
+     if(dev>mxd)mxd=dev;
+     ix=Math.floor((m-p.lo)/BW);
+     if(ix<0||ix>=NB){ off++; } else { bins[ix]++; }
+   }
+ }
+
+ /* ---------- main chart ---------- */
+ var VW=480, ML=46, MR=14, PW=VW-ML-MR;
+ var AT=28, AH=142, AB=AT+AH;             /* the distribution panel */
+ var RY0=214, RSTEP=25, AXY=344;          /* the standard-error rulers */
+ var PKH=AH*0.9;
+
+ function xOf(v){ var p=P(); return ML+(v-p.lo)/(p.hi-p.lo)*PW; }
+
+ function modelPath(se){
+   var p=P(), a=Math.max(p.lo,p.mu-4*se), b=Math.min(p.hi,p.mu+4*se);
+   var d='', steps=260, x, z, t;
+   for(t=0;t<=steps;t++){
+     x=a+(b-a)*t/steps;
+     z=(x-p.mu)/se;
+     d+=(t?'L':'M')+xOf(x).toFixed(1)+' '+(AB-PKH*Math.exp(-0.5*z*z)).toFixed(1)+' ';
+   }
+   return d;
+ }
+
+ function drawChart(){
+   var p=P(), i, s='';
+
+   s+='<defs><clipPath id="ca"><rect x="'+ML+'" y="'+(AT-8)+'" width="'+PW+'" height="'+(AH+8)+'"/></clipPath></defs>';
+
+   /* the +/-1 SE and +/-2 SE bands: the standard error drawn as a WIDTH */
+   var b2a=xOf(Math.max(p.lo,p.mu-2*SE)), b2b=xOf(Math.min(p.hi,p.mu+2*SE));
+   var b1a=xOf(Math.max(p.lo,p.mu-SE)),   b1b=xOf(Math.min(p.hi,p.mu+SE));
+   s+='<rect x="'+b2a.toFixed(1)+'" y="'+AT+'" width="'+Math.max(0,b2b-b2a).toFixed(1)+'" height="'+AH+'" fill="#e8f2f7"/>';
+   s+='<rect x="'+b1a.toFixed(1)+'" y="'+AT+'" width="'+Math.max(0,b1b-b1a).toFixed(1)+'" height="'+AH+'" fill="#cfe6f0"/>';
+
+   /* gridlines running the full height so the panels share one scale */
+   var step=(p.hi-p.lo)/6;
+   for(i=0;i<=6;i++){
+     var gx=xOf(p.lo+i*step);
+     s+='<line x1="'+gx.toFixed(1)+'" y1="'+AT+'" x2="'+gx.toFixed(1)+'" y2="'+AXY+'" stroke="#e6eef2" stroke-width="1"/>';
+   }
+   /* mu, straight down through everything */
+   s+='<line x1="'+xOf(p.mu).toFixed(1)+'" y1="'+(AT-9)+'" x2="'+xOf(p.mu).toFixed(1)+'" y2="'+AXY+'" stroke="#2f9e5b" stroke-width="1.8" stroke-dasharray="6 4"/>';
+   var mrt=(xOf(p.mu)>ML+PW-70);
+   s+='<text x="'+(xOf(p.mu)+(mrt?-4:4)).toFixed(1)+'" y="'+(AT-12)+'" font-size="10.5" fill="#237a45" font-weight="800" text-anchor="'+(mrt?'end':'start')+'">&#956; = '+p.mu.toFixed(1)+'</text>';
+
+   /* ---------- panel A: the pile of sample means ---------- */
+   s+='<text x="'+ML+'" y="15" font-size="10" fill="#1c4454" font-weight="800" letter-spacing="1.1">THE SAMPLING DISTRIBUTION OF x&#772;</text>';
+   s+='<text x="'+(ML+PW)+'" y="15" font-size="9.6" fill="#78868d" text-anchor="end" font-weight="700">'+(K?com(K)+' sample mean'+(K===1?'':'s')+' at n = '+n:'nothing drawn yet')+'</text>';
+
+   s+='<g clip-path="url(#ca)">';
+   /* the simulated histogram, scaled so its tallest bar reaches the same height as the curves */
+   if(K>0){
+     var mxb=0;
+     for(i=0;i<NB;i++){ if(bins[i]>mxb)mxb=bins[i]; }
+     if(mxb>0){
+       for(i=0;i<NB;i++){
+         if(!bins[i])continue;
+         var xa=xOf(p.lo+i*BW), xb=xOf(p.lo+(i+1)*BW), hh=bins[i]/mxb*PKH;
+         s+='<rect x="'+(xa+0.2).toFixed(1)+'" y="'+(AB-hh).toFixed(1)+'" width="'+Math.max(0.9,xb-xa-0.4).toFixed(1)+'" height="'+hh.toFixed(1)+'" fill="#7fb0c6" opacity=".9"/>';
+       }
+     }
+   }
+   /* ghost outlines: the model at every rung of the ladder, so the nesting is visible at a glance */
+   for(i=0;i<LADDER.length;i++){
+     if(LADDER[i]===n)continue;
+     s+='<path d="'+modelPath(p.sd/Math.sqrt(LADDER[i]))+'" fill="none" stroke="#b9ccd6" stroke-width="1.5"/>';
+   }
+   /* the model at the current n */
+   s+='<path d="'+modelPath(SE)+'" fill="none" stroke="#7a5a8a" stroke-width="2.4" stroke-dasharray="6 4"/>';
+   s+='</g>';
+   s+='<line x1="'+ML+'" y1="'+AB+'" x2="'+(ML+PW)+'" y2="'+AB+'" stroke="#8fa6b0" stroke-width="1.2"/>';
+   if(!K){
+     s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="'+(AT+62)+'" font-size="11" fill="#8fa6b0" text-anchor="middle" font-weight="700">press &ldquo;Draw 200 samples&rdquo; &mdash; each sample of '+n+' contributes one x&#772; to this pile</text>';
+   }
+   s+='<text x="14" y="'+(AT+AH/2).toFixed(1)+'" font-size="9.4" fill="#78868d" text-anchor="middle" font-weight="700" transform="rotate(-90 14 '+(AT+AH/2).toFixed(1)+')">how often</text>';
+
+   /* ---------- panel B: standard error drawn as a ruler, one rung per n ---------- */
+   s+='<text x="'+ML+'" y="198" font-size="10" fill="#1c4454" font-weight="800" letter-spacing="1.1">&plusmn;1 STANDARD ERROR, TO SCALE</text>';
+   s+='<text x="'+(ML+PW)+'" y="198" font-size="9.6" fill="#78868d" text-anchor="end" font-weight="700">each bar is &plusmn;&sigma;/&radic;n around &mu;</text>';
+
+   var rows=[], j;
+   for(j=0;j<LADDER.length;j++){ rows.push({n:LADDER[j],lbl:LADLBL[j],cur:0}); }
+   rows.push({n:n,lbl:'&sigma;/&radic;n',cur:1});
+   for(j=0;j<rows.length;j++){
+     var rn=rows[j].n, rse=p.sd/Math.sqrt(rn), ry=RY0+j*RSTEP;
+     var ra=xOf(Math.max(p.lo,p.mu-rse)), rb=xOf(Math.min(p.hi,p.mu+rse));
+     var col=rows[j].cur?'#d1495b':'#5b7f93', lw=rows[j].cur?3.4:2.2;
+     s+='<text x="'+(ML-8)+'" y="'+(ry+3.6)+'" font-size="10.2" fill="'+(rows[j].cur?'#a4384a':'#4a585f')+'" text-anchor="end" font-weight="800">n = '+rn+'</text>';
+     s+='<line x1="'+ra.toFixed(1)+'" y1="'+ry+'" x2="'+rb.toFixed(1)+'" y2="'+ry+'" stroke="'+col+'" stroke-width="'+lw+'" stroke-linecap="round"/>';
+     s+='<line x1="'+ra.toFixed(1)+'" y1="'+(ry-5)+'" x2="'+ra.toFixed(1)+'" y2="'+(ry+5)+'" stroke="'+col+'" stroke-width="'+lw+'"/>';
+     s+='<line x1="'+rb.toFixed(1)+'" y1="'+(ry-5)+'" x2="'+rb.toFixed(1)+'" y2="'+(ry+5)+'" stroke="'+col+'" stroke-width="'+lw+'"/>';
+     s+='<text x="'+(ML+PW)+'" y="'+(ry+3.6)+'" font-size="9.8" fill="'+(rows[j].cur?'#a4384a':'#78868d')+'" text-anchor="end" font-weight="800">'+rows[j].lbl+' = '+rse.toFixed(2)+'</text>';
+     if(rows[j].cur){
+       s+='<text x="'+(ML-8)+'" y="'+(ry+14)+'" font-size="8.6" fill="#a4384a" text-anchor="end" font-weight="700">yours</text>';
+     }
+   }
+
+   /* ---------- the shared axis ---------- */
+   s+='<line x1="'+ML+'" y1="'+AXY+'" x2="'+(ML+PW)+'" y2="'+AXY+'" stroke="#8fa6b0" stroke-width="1.2"/>';
+   for(i=0;i<=6;i++){
+     var tv=p.lo+i*step, tx=xOf(tv);
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+AXY+'" x2="'+tx.toFixed(1)+'" y2="'+(AXY+6)+'" stroke="#8fa6b0" stroke-width="1"/>';
+     s+='<text x="'+tx.toFixed(1)+'" y="'+(AXY+19)+'" font-size="10" fill="#78868d" text-anchor="middle" font-weight="600">'+(Math.abs(tv-Math.round(tv))<0.05?Math.round(tv):tv.toFixed(1))+'</text>';
+   }
+   s+='<text x="'+(ML+PW/2).toFixed(1)+'" y="'+(AXY+37)+'" font-size="10.5" fill="#4a585f" text-anchor="middle" font-weight="700">value of x&#772; &mdash; one shared scale for both panels</text>';
+
+   $('chart').innerHTML=s;
+ }
+
+ /* ---------- the exchange-rate chart ---------- */
+ function drawCost(){
+   var sd=P().sd, ML2=52, MR2=16, MT2=20, MB2=48;
+   var PW2=460-ML2-MR2, PH2=212-MT2-MB2, YB=MT2+PH2, TOP=sd*1.08, LG=Math.log(1024);
+   function xn(v){ return ML2+Math.log(v)/LG*PW2; }
+   function yv(v){ return YB-clamp(v/TOP,0,1)*PH2; }
+   var s='', i;
+
+   /* horizontal guides at sigma, sigma/2, sigma/4, 0 */
+   var GUID=[[1,'&sigma;'],[2,'&sigma;/2'],[4,'&sigma;/4']];
+   for(i=0;i<GUID.length;i++){
+     var gv=sd/GUID[i][0], gy=yv(gv);
+     s+='<line x1="'+ML2+'" y1="'+gy.toFixed(1)+'" x2="'+(ML2+PW2)+'" y2="'+gy.toFixed(1)+'" stroke="#e6eef2" stroke-width="1"/>';
+     s+='<text x="'+(ML2-7)+'" y="'+(gy+3.4).toFixed(1)+'" font-size="9.6" fill="#78868d" text-anchor="end" font-weight="700">'+GUID[i][1]+'</text>';
+   }
+   s+='<line x1="'+ML2+'" y1="'+YB+'" x2="'+(ML2+PW2)+'" y2="'+YB+'" stroke="#8fa6b0" stroke-width="1"/>';
+   s+='<text x="'+(ML2-7)+'" y="'+(YB+3.4)+'" font-size="9.6" fill="#78868d" text-anchor="end" font-weight="700">0</text>';
+
+   /* the staircase: run right by a factor of 4, then drop by exactly a half */
+   var st='M'+xn(1).toFixed(1)+' '+yv(sd).toFixed(1)+' ';
+   for(i=0;i<5;i++){
+     var na=Math.pow(4,i), nb=Math.pow(4,i+1), va=sd/Math.pow(2,i), vb=sd/Math.pow(2,i+1);
+     st+='L'+xn(nb).toFixed(1)+' '+yv(va).toFixed(1)+' L'+xn(nb).toFixed(1)+' '+yv(vb).toFixed(1)+' ';
+     if(i<3){
+       s+='<text x="'+((xn(na)+xn(nb))/2).toFixed(1)+'" y="'+(yv(va)-6).toFixed(1)+'" font-size="9.6" fill="#8a6a20" text-anchor="middle" font-weight="800">&times;4 data</text>';
+       s+='<text x="'+(xn(nb)+5).toFixed(1)+'" y="'+((yv(va)+yv(vb))/2+3.4).toFixed(1)+'" font-size="9.6" fill="#8a6a20" font-weight="800">&divide;2</text>';
+     }
+   }
+   s+='<path d="'+st+'" fill="none" stroke="#d9b45e" stroke-width="2.2" stroke-linejoin="round"/>';
+
+   /* the smooth sigma/sqrt(n) curve the staircase is walking down */
+   var d='';
+   for(i=0;i<=200;i++){
+     var nv=Math.exp(LG*i/200);
+     d+=(i?'L':'M')+xn(nv).toFixed(1)+' '+yv(sd/Math.sqrt(nv)).toFixed(1)+' ';
+   }
+   s+='<path d="'+d+'" fill="none" stroke="#1c4454" stroke-width="2.4"/>';
+
+   /* where you are right now */
+   var cv=sd/Math.sqrt(n), cx=xn(n), cy=yv(cv), rt=(cx>ML2+PW2*0.72);
+   s+='<line x1="'+ML2+'" y1="'+cy.toFixed(1)+'" x2="'+cx.toFixed(1)+'" y2="'+cy.toFixed(1)+'" stroke="#d1495b" stroke-width="1.2" stroke-dasharray="4 3"/>';
+   s+='<line x1="'+cx.toFixed(1)+'" y1="'+cy.toFixed(1)+'" x2="'+cx.toFixed(1)+'" y2="'+YB+'" stroke="#d1495b" stroke-width="1.2" stroke-dasharray="4 3"/>';
+   s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="5.4" fill="#d1495b" stroke="#fff" stroke-width="2"/>';
+   /* when the dot sits high the readout would run into the staircase labels, so drop it below instead */
+   var ly=(cy<MT2+PH2*0.28)?(cy+17):(cy-9);
+   s+='<text x="'+(cx+(rt?-9:9)).toFixed(1)+'" y="'+ly.toFixed(1)+'" font-size="10.5" fill="#a4384a" font-weight="800" text-anchor="'+(rt?'end':'start')+'">n = '+n+' &rarr; SE '+cv.toFixed(2)+'</text>';
+
+   var TCK=[1,4,16,64,256,1024];
+   for(i=0;i<TCK.length;i++){
+     var tx=xn(TCK[i]);
+     s+='<line x1="'+tx.toFixed(1)+'" y1="'+YB+'" x2="'+tx.toFixed(1)+'" y2="'+(YB+5)+'" stroke="#8fa6b0" stroke-width="1"/>';
+     s+='<text x="'+tx.toFixed(1)+'" y="'+(YB+18)+'" font-size="9.6" fill="#78868d" text-anchor="middle" font-weight="600">'+com(TCK[i])+'</text>';
+   }
+   s+='<text x="'+(ML2+PW2/2).toFixed(1)+'" y="'+(YB+36)+'" font-size="10.5" fill="#4a585f" text-anchor="middle" font-weight="700">sample size n &mdash; each tick is four times the one before it</text>';
+   s+='<text x="13" y="'+(MT2+PH2/2).toFixed(1)+'" font-size="9.6" fill="#4a585f" text-anchor="middle" font-weight="700" transform="rotate(-90 13 '+(MT2+PH2/2).toFixed(1)+')">standard error</text>';
+   $('cost').innerHTML=s;
+ }
+
+ /* ---------- prose ---------- */
+ function capText(){
+   var p=P();
+   var t='<b>The two panels share one horizontal scale, and horizontal is where spread lives.</b> ';
+   t+='Up top, the blue bars are '+(K?com(K)+' real sample means':'the sample means you are about to draw')+' and the dashed purple curve is the normal model with SD = &sigma;/&radic;n. ';
+   t+='The pale grey outlines behind it are that same model at n = 1, 4, 16 and 64 &mdash; look how each one is half the width of the one outside it. ';
+   t+='<b>Curve heights are normalized to match</b> so the widths can be compared; a true density would grow taller as it narrows, since the area always stays 1. ';
+   t+='Down below, the same standard errors drawn as plain rulers: &plusmn;&sigma;/&radic;n around &mu;, at each rung. Four times the data, half the bar &mdash; every single time, for every population here. ';
+   t+='<br><b>This population:</b> '+p.why;
+   return t;
+ }
+ function costCap(){
+   var sd=P().sd;
+   var t='The dark curve is &sigma;/&radic;n. The gold staircase walks down it the only way you are allowed to walk: <b>&times;4 the data buys &divide;2 the error</b>, over and over. ';
+   t+='With &sigma; = '+sd.toFixed(1)+', going n = 1 &rarr; 4 drops the standard error from '+sd.toFixed(2)+' to '+(sd/2).toFixed(2)+'. The next halving, to '+(sd/4).toFixed(2)+', costs you n = 16. The one after that costs n = 64. ';
+   t+='<b>The horizontal axis multiplies by four at every tick and the curve still flattens out.</b> That is why adding 30 subjects to a study of 10 changes everything and adding 30 to a study of 1,000 changes almost nothing &mdash; and why the last scrap of precision in a big trial is always the most expensive thing in the budget.';
+   return t;
+ }
+ function infoText(){
+   var p=P(), s='';
+   var half=n*4, dbl=n*2;
+   if(!K){
+     s+='<span class="n">Nothing drawn yet</span>';
+     s+='The standard error is already determined &mdash; it was fixed the moment you chose the population and n, before a single observation existed. That is what makes it a <i>prediction</i> and not a summary. Press <b>Draw 200 samples</b> and watch the pile fill in to exactly the width the formula promised.';
+     s+='<div class="loc">&sigma;/&radic;n = '+p.sd.toFixed(2)+' / &radic;'+n+' = '+p.sd.toFixed(2)+' / '+Math.sqrt(n).toFixed(3)+' = <b>'+SE.toFixed(3)+'</b></div>';
+     return s;
+   }
+   var mb=sumM/K;
+   var sb=K>1?Math.sqrt(Math.max(0,(sumM2-K*mb*mb)/(K-1))):NaN;
+   s+='<span class="n">'+com(K)+' sample'+(K===1?'':'s')+' of n = '+n+'</span>';
+   s+='Each of those '+com(K)+' studies produced one x&#772;, and they did not agree with each other. The typical gap between an x&#772; and the true &mu; = '+p.mu.toFixed(1)+' is what <b>standard error</b> names, and here it came out <b>'+(isFinite(sb)?sb.toFixed(3):'&mdash;')+'</b> against a predicted '+SE.toFixed(3)+'. Nothing was fitted &mdash; the formula was written down first.';
+   s+='<div class="loc">predicted: &sigma;/&radic;n = '+p.sd.toFixed(2)+' / '+Math.sqrt(n).toFixed(3)+' = <b>'+SE.toFixed(3)+'</b>'
+     +'<br>observed SD of the '+com(K)+' x&#772; values = <b>'+(isFinite(sb)?sb.toFixed(3):'&mdash;')+'</b>'
+     +'<br>observed center = <b>'+mb.toFixed(3)+'</b> &nbsp;vs&nbsp; &mu; = '+p.mu.toFixed(1)+'</div>';
+   if(n===1){
+     s+='<div class="dd"><b>n = 1 is the baseline.</b> With a sample of one, x&#772; <i>is</i> the observation, so this pile is just a rebuilt copy of the population itself and &sigma;/&radic;1 = &sigma;. Nothing has been averaged yet. Press <b>n = 4</b> and the whole picture should collapse to exactly half this width &mdash; the ruler panel is already showing you where it will land.</div>';
+   } else {
+     s+='<div class="dd"><b>What the next step would cost.</b> To halve this standard error again you would need n = '+com(half)+'. Merely doubling to n = '+com(dbl)+' would take it from '+SE.toFixed(3)+' down to '+(p.sd/Math.sqrt(dbl)).toFixed(3)+' &mdash; a '+((1-1/Math.sqrt(2))*100).toFixed(0)+'% improvement for 100% more work, which is the &radic;n law charging you its usual price.</div>';
+   }
+   if(off>0){
+     s+='<div class="dd">'+com(off)+' sample mean'+(off===1?'':'s')+' landed past the edge of the axis and could not be binned, though '+(off===1?'it is':'they are')+' still counted in every statistic shown.</div>';
+   }
+   return s;
+ }
+ function obsText(){
+   var p=P();
+   if(K<2){ return 'Draw a few hundred samples and these four numbers will settle onto the predictions underneath them. Every figure in the top row is arithmetic performed on the sample means you piled up &mdash; none of it is looked up.'; }
+   var mb=sumM/K;
+   var sb=Math.sqrt(Math.max(0,(sumM2-K*mb*mb)/(K-1)));
+   var t='Across <b>'+com(K)+'</b> samples the means spread out by <b>'+sb.toFixed(3)+'</b> against the predicted '+SE.toFixed(3)+' &mdash; off by '+Math.abs(sb-SE).toFixed(3)+'. ';
+   t+='<b>'+(100*c1/K).toFixed(1)+'%</b> of them landed within one standard error of &mu; and <b>'+(100*c2/K).toFixed(1)+'%</b> within two. ';
+   if(n===1&&pi>0){
+     t+='Those two percentages are <i>meant</i> to miss 68.3% and 95.4% here: at n = 1 the sampling distribution is this lopsided population itself, not a bell. Note what did <b>not</b> break &mdash; the width. &sigma;/&radic;n is exact for the standard error at every n and every shape; only the 68/95 percentages need the normal curve, and those arrive as n grows.';
+   } else if(n<=4&&pi>0){
+     t+='They are creeping toward 68.3% and 95.4% but need not match yet &mdash; those percentages assume x&#772; is normal, which at n = '+n+' from this population it is not quite. The <i>width</i> is exact regardless; only the percentages have to wait for the bell to arrive.';
+   } else {
+     t+='Compare those with 68.3% and 95.4%, the normal-curve benchmarks. The agreement is the practical payoff: once you know SE, you know roughly how far a single study\'s answer is likely to sit from the truth &mdash; usually inside one SE, almost always inside two.';
+   }
+   return t;
+ }
+ function ansText(){
+   var p=P(), frac=tgt/100, tv=p.sd*frac;
+   var need=Math.ceil(Math.pow(100/tgt,2));
+   var ratio=need/n;
+   var t='<b>Target:</b> standard error of '+tv.toFixed(2)+', which is '+frac.toFixed(2)+'&sigma;.<br>';
+   t+='n = (&sigma; &divide; target)&sup2; = ('+p.sd.toFixed(2)+' &divide; '+tv.toFixed(2)+')&sup2; = ('+(100/tgt).toFixed(2)+')&sup2; = <span class="big">'+com(need)+'</span> observations.<br>';
+   t+='That is <b>'+(ratio>=1?(ratio>=10?ratio.toFixed(0):ratio.toFixed(1))+'&times; the '+com(n)+' you are drawing now':'less than the '+com(n)+' you are drawing now')+'</b>. ';
+   t+='Notice that &sigma; cancels out of the middle step: the sample size you need depends only on how precise you want to be <i>relative to the population\'s own spread</i>. Halve the target and the requirement quadruples &mdash; ';
+   t+='0.50&sigma; needs 4, 0.25&sigma; needs 16, 0.10&sigma; needs 100, 0.05&sigma; needs 400.';
+   return t;
+ }
+
+ /* ---------- render ---------- */
+ function render(){
+   var p=P();
+   SE=p.sd/Math.sqrt(n);
+   $('nVal').innerHTML=n;
+   $('nSl').value=n;
+   $('tSd').innerHTML=p.sd.toFixed(1);
+   $('tN').innerHTML=com(n);
+   $('tRt').innerHTML=Math.sqrt(n).toFixed(2);
+   $('tSe').innerHTML=SE.toFixed(2);
+   $('cardTitle').innerHTML=p.nm+' &middot; n = '+n+' &middot; SE = '+SE.toFixed(2);
+   $('stage').style.background=p.col;
+   $('stage').innerHTML=p.nm+'<small>n = '+n+' &middot; &sigma; = '+p.sd.toFixed(1)+' &middot; SE = &sigma;/&radic;n = '+SE.toFixed(2)+' &middot; '+(K?com(K)+' sample mean'+(K===1?'':'s'):'no samples yet')+'</small>';
+
+   $('oSt').innerHTML='&sigma;/&radic;n = '+SE.toFixed(2);
+   if(K>=2){
+     var mb=sumM/K;
+     $('oS').innerHTML=Math.sqrt(Math.max(0,(sumM2-K*mb*mb)/(K-1))).toFixed(2);
+     $('o1').innerHTML=(100*c1/K).toFixed(1)+'%';
+     $('o2').innerHTML=(100*c2/K).toFixed(1)+'%';
+     $('oX').innerHTML=mxd.toFixed(2);
+     $('oXt').innerHTML=(mxd/SE).toFixed(2)+' SE from &mu;';
+   } else {
+     $('oS').innerHTML='&mdash;'; $('o1').innerHTML='&mdash;'; $('o2').innerHTML='&mdash;';
+     $('oX').innerHTML='&mdash;'; $('oXt').innerHTML='&mdash;';
+   }
+
+   $('tVal').innerHTML=(tgt/100).toFixed(2)+'&sigma;';
+
+   var nb=document.querySelectorAll('#nseg button');
+   for(var i=0;i<nb.length;i++){
+     nb[i].className=(parseInt(nb[i].getAttribute('data-n'),10)===n)?'on':'';
+   }
+   var pb=document.querySelectorAll('#pops .it');
+   for(var j=0;j<pb.length;j++){
+     pb[j].className=(j===pi)?'it on':'it';
+   }
+
+   drawChart(); drawCost();
+   $('cap').innerHTML=capText();
+   $('costcap').innerHTML=costCap();
+   $('info').innerHTML=infoText();
+   $('ocap').innerHTML=obsText();
+   $('ans').innerHTML=ansText();
+ }
+
+ /* ---------- wiring ---------- */
+ $('pops').innerHTML=POPS.map(function(x,ix){
+   return '<button class="it" data-i="'+ix+'"><span class="nm">'+x.t+'</span><span class="s">'+x.s+'</span></button>';
+ }).join('');
+ var pbtn=document.querySelectorAll('#pops .it');
+ for(var b=0;b<pbtn.length;b++){
+   pbtn[b].onclick=function(){ pi=parseInt(this.getAttribute('data-i'),10); resetSim(); render(); };
+ }
+ var nbtn=document.querySelectorAll('#nseg button');
+ for(var c=0;c<nbtn.length;c++){
+   nbtn[c].onclick=function(){ n=parseInt(this.getAttribute('data-n'),10); resetSim(); render(); };
+ }
+ $('nSl').oninput=function(){ n=clamp(parseInt(this.value,10)||1,1,200); resetSim(); render(); };
+ $('tSl').oninput=function(){ tgt=clamp(parseInt(this.value,10)||25,5,100); $('tVal').innerHTML=(tgt/100).toFixed(2)+'&sigma;'; $('ans').innerHTML=ansText(); };
+ $('d200').onclick=function(){ batch(200); render(); };
+ $('d2000').onclick=function(){ batch(2000); render(); };
+ $('rst').onclick=function(){ resetSim(); render(); };
+
+ resetSim();
+ render();
+})();
+</script>
+</body>
+</html>

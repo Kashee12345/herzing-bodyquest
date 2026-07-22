@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Type I and Type II Errors</title>
+<meta name="description" content="Explore the two-by-two error matrix and watch power move in real time as you drag sample size, true effect size, and alpha. Live overlapping sampling distributions, a computed power curve, and 200 simulated studies.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.05fr 0.95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:14px 0 5px;}
+.hd:first-child{margin-top:0;}
+.hd span{float:right;letter-spacing:0;text-transform:none;font-size:12px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.slide{-webkit-appearance:none;appearance:none;width:100%;height:9px;border-radius:6px;outline:none;margin:2px 0 4px;background:#dbe8ef;}
+.slide::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(25,55,70,.4);cursor:grab;}
+.slide::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(25,55,70,.4);cursor:grab;}
+.rd{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.rd div{border:1px solid var(--line);border-radius:9px;padding:7px 3px;text-align:center;background:#fff;}
+.rd .k{font-size:8.8px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;}
+.rd .v{font-size:14.5px;font-weight:800;color:var(--teal-dk);font-variant-numeric:tabular-nums;margin-top:2px;}
+.rd div.a1{border-color:#e2a8b1;background:#fdf2f4;} .rd div.a1 .v{color:#b23145;}
+.rd div.a2{border-color:#e0c68a;background:#fbf5e8;} .rd div.a2 .v{color:#8a6a20;}
+.rd div.ap{border-color:#9fd0b4;background:#eef8f2;} .rd div.ap .v{color:#237a45;}
+.lg{display:flex;gap:13px;margin-top:8px;font-size:11px;color:var(--muted);font-weight:600;flex-wrap:wrap;}
+.lg i{width:14px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px;}
+.eq{text-align:center;font-size:13px;font-weight:800;color:var(--teal-dk);background:#e2eff5;border-radius:9px;padding:9px;margin-top:11px;font-variant-numeric:tabular-nums;}
+.hint{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:8px;}
+.mx{display:grid;grid-template-columns:66px 1fr 1fr;gap:5px;align-items:stretch;}
+.mxh{font-size:9.4px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;text-align:center;padding:0 2px 2px;align-self:end;}
+.mxr{font-size:10.2px;font-weight:800;color:var(--soft);line-height:1.25;display:flex;align-items:center;}
+.mx button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 9px;text-align:left;cursor:pointer;font-family:var(--sans);transition:.12s;}
+.mx button:hover{border-color:var(--teal);}
+.mx .lab{font-size:9.2px;letter-spacing:.4px;text-transform:uppercase;font-weight:800;color:var(--muted);}
+.mx .val{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);font-variant-numeric:tabular-nums;line-height:1.15;margin-top:1px;}
+.mx .sub{font-size:10.2px;font-weight:600;color:var(--muted);margin-top:1px;}
+.mx .c1 .lab,.mx .c1 .val{color:#b23145;} .mx .c1.on{background:#fdf2f4;border-color:#d1495b;}
+.mx .c2 .lab,.mx .c2 .val{color:#8a6a20;} .mx .c2.on{background:#fbf5e8;border-color:#b8862f;}
+.mx .cp .lab,.mx .cp .val{color:#237a45;} .mx .cp.on{background:#eef8f2;border-color:#2f9e5b;}
+.mx .cn .lab,.mx .cn .val{color:#255f8a;} .mx .cn.on{background:#eff5f8;border-color:#2f6f8a;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 10</div>
+  <h1>Type I and Type II Errors</h1>
+  <div class="intro">A test can be wrong in exactly two ways: it can <b>cry wolf</b> when nothing is happening, or it can <b>sleep through</b> something real. You <b>choose</b> the first error rate outright. You never choose the second one at all &mdash; it falls out of the cutoff you set, the size of the effect that is really out there, and how many observations you were willing to collect. Drag the three dials and watch the two errors refuse to move together.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2>Two worlds, one cutoff</h2>
+      <div class="hint" style="margin-top:0">Resting heart rate, &sigma; = 9 bpm. <b>H₀: &mu; = 74</b> against <b>H₁: &mu; &ne; 74</b>, two-tailed. The left bell is the sampling distribution of x&#772; if H₀ is true; the right bell is the one if the true mean is really 74 + your effect. The dashed lines are the cutoffs &mdash; the same cutoffs for both worlds, because you never know which world you are in.</div>
+      <svg viewBox="0 0 340 232" aria-label="Overlapping sampling distributions under the null and the alternative, with the Type I and Type II error regions shaded"><g id="curve"></g></svg>
+      <div class="lg">
+        <span><i style="background:#f0b8c0"></i>&alpha; &mdash; Type I</span>
+        <span><i style="background:#f2ddab"></i>&beta; &mdash; Type II</span>
+        <span><i style="background:#c6e6d6"></i>power</span>
+        <span><i style="background:#d3e3ec"></i>correct retain</span>
+      </div>
+      <div class="hint" id="fit"></div>
+    </div>
+    <div class="card"><h2>The power curve</h2>
+      <div class="seg" id="pmode">
+        <button data-m="n">Power vs sample size<small>effect and &alpha; held fixed</small></button>
+        <button data-m="d">Power vs true effect<small>n and &alpha; held fixed</small></button>
+      </div>
+      <svg viewBox="0 0 340 158" style="margin-top:11px" aria-label="Computed power curve with the current study marked"><g id="pow"></g></svg>
+      <div class="hint" id="phint"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Set the study<small>then read the two error rates</small></div>
+
+    <div class="card"><h2>The three dials</h2>
+      <div class="hd">Sample size <span id="nv">n = 36</span></div>
+      <input class="slide" id="sn" type="range" min="8" max="128" step="1" value="36" aria-label="sample size">
+      <div class="hd">True effect &mdash; how far &mu; really sits from 74 <span id="dv">+3.0 bpm</span></div>
+      <input class="slide" id="sd" type="range" min="0" max="32" step="1" value="12" aria-label="true effect in bpm">
+      <div class="hd">Significance level <span id="av">&alpha; = 0.050</span></div>
+      <input class="slide" id="sa" type="range" min="1" max="200" step="1" value="50" aria-label="significance level alpha">
+      <div class="rd">
+        <div class="a1"><div class="k">&alpha; · Type I</div><div class="v" id="ra">—</div></div>
+        <div class="a2"><div class="k">&beta; · Type II</div><div class="v" id="rb">—</div></div>
+        <div class="ap"><div class="k">Power</div><div class="v" id="rw">—</div></div>
+        <div><div class="k">Effect in SEs</div><div class="v" id="rd">—</div></div>
+      </div>
+      <div class="eq" id="calc"></div>
+    </div>
+
+    <div class="card"><h2>The error matrix — tap a cell</h2>
+      <div class="mx" id="mx">
+        <div></div>
+        <div class="mxh">Reality: H₀ is true</div>
+        <div class="mxh">Reality: H₀ is false</div>
+        <div class="mxr">Decision:<br>fail to reject H₀</div>
+        <button class="cn" data-c="tn"><div class="lab">Correct</div><div class="val" id="vtn">—</div><div class="sub">1 − &alpha;</div></button>
+        <button class="c2" data-c="t2"><div class="lab">Type II error</div><div class="val" id="vt2">—</div><div class="sub">&beta; — a miss</div></button>
+        <div class="mxr">Decision:<br>reject H₀</div>
+        <button class="c1" data-c="t1"><div class="lab">Type I error</div><div class="val" id="vt1">—</div><div class="sub">&alpha; — a false alarm</div></button>
+        <button class="cp" data-c="pw"><div class="lab">Correct</div><div class="val" id="vpw">—</div><div class="sub">1 − &beta; — power</div></button>
+      </div>
+      <div id="info"></div>
+      <div class="mnem" id="warn" style="display:none"></div>
+    </div>
+
+    <div class="card"><h2>200 studies, actually run</h2>
+      <div class="hd">Pick the world these studies are drawn from</div>
+      <div class="seg" id="world">
+        <button data-w="0">H₀ is true<small>&mu; = 74</small></button>
+        <button data-w="1">H₀ is false<small id="wlab">&mu; = 77.0</small></button>
+      </div>
+      <svg viewBox="0 0 340 122" style="margin-top:11px" aria-label="Grid of 200 simulated studies coloured by outcome"><g id="dots"></g></svg>
+      <div class="eq" id="tally"></div>
+      <div class="note" id="lr"></div>
+      <div class="row"><button class="btn solid" id="redraw">Draw 200 new studies ↻</button></div>
+      <div class="hint">The 200 studies stay put while you drag the dials, so you can watch the <i>same</i> studies flip from miss to detection as n or the effect grows.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- study constants ---------- */
+ var MU0=74, SIG=9;
+
+ /* ---------- seeded PRNG (mulberry32) ---------- */
+ var seed=25;
+ function reseed(s){seed=s>>>0;}
+ function rnd(){seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
+ function randn(){var u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+
+ /* ---------- normal distribution ---------- */
+ function normCdf(x){                                    /* Zelen & Severo, |err| < 7.5e-8 */
+   var a=Math.abs(x),t=1/(1+0.2316419*a),d=0.3989422804014327*Math.exp(-a*a/2);
+   var q=d*t*(0.319381530+t*(-0.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429))));
+   return x>0?1-q:q;
+ }
+ function normInv(p){var lo=-9,hi=9,m,i;for(i=0;i<80;i++){m=(lo+hi)/2;if(normCdf(m)<p)lo=m;else hi=m;}return (lo+hi)/2;}
+ function dens(x,mu,se){var t=(x-mu)/se;return Math.exp(-t*t/2)/(se*2.5066282746310002);}
+
+ /* Two-tailed power.  delta = (mu1 - mu0)/SE.
+    power = P(Z > z* - delta) + P(Z < -z* - delta) = 1 - F(z*-d) + F(-z*-d).
+    Check: delta = 0  ->  1-(1-a/2)+(a/2) = alpha.  delta = 2, a = .05  ->  0.516. */
+ function powerOf(zc,delta){return 1-normCdf(zc-delta)+normCdf(-zc-delta);}
+
+ /* ---------- state ---------- */
+ var n=36, d=3, alpha=0.05, world=1, cell='', pmode='n', Z=[];
+
+ function newStudies(){Z=[];for(var i=0;i<200;i++)Z.push(randn());}
+
+ /* ---------- chart 1: the two worlds ---------- */
+ var XMIN=62, XMAX=92, X0=24, X1=316, BASE=176, HT=140, DMAX=0.545;
+ function X(v){return X0+(v-XMIN)*(X1-X0)/(XMAX-XMIN);}
+ function Yd(p){return BASE-Math.min(p,DMAX)/DMAX*HT;}
+ function areaPath(mu,se,a,b){
+   var st=(b-a)/70, v, o='M'+X(a).toFixed(1)+' '+BASE;
+   for(v=a;v<b;v+=st)o+=' L'+X(v).toFixed(1)+' '+Yd(dens(v,mu,se)).toFixed(1);
+   o+=' L'+X(b).toFixed(1)+' '+Yd(dens(b,mu,se)).toFixed(1)+' L'+X(b).toFixed(1)+' '+BASE+' Z';
+   return o;
+ }
+ function curvePath(mu,se){
+   var st=(XMAX-XMIN)/220, v, o='M'+X(XMIN).toFixed(1)+' '+Yd(dens(XMIN,mu,se)).toFixed(1);
+   for(v=XMIN;v<=XMAX+0.0001;v+=st)o+=' L'+X(v).toFixed(1)+' '+Yd(dens(v,mu,se)).toFixed(1);
+   return o;
+ }
+ function drawCurve(se,zc,mu1,beta,power){
+   var cLo=MU0-zc*se, cHi=MU0+zc*se, o='';
+   /* opacity: full for the selected outcome, dim for the rest; with nothing selected the
+      two ERRORS are the headline and the two correct outcomes sit back */
+   function op(k){ if(!cell) return (k==='t1'||k==='t2')?1:(k==='pw'?0.3:0); return cell===k?1:0.16; }
+
+   o+='<path d="'+areaPath(MU0,se,cLo,cHi)+'" fill="#8fb8cd" opacity="'+op('tn')+'"/>';
+   o+='<path d="'+areaPath(mu1,se,cHi,XMAX)+'" fill="#7cc79c" opacity="'+op('pw')+'"/>';
+   o+='<path d="'+areaPath(mu1,se,XMIN,cLo)+'" fill="#7cc79c" opacity="'+op('pw')+'"/>';
+   o+='<path d="'+areaPath(mu1,se,cLo,cHi)+'" fill="#e8c265" opacity="'+op('t2')+'"/>';
+   o+='<path d="'+areaPath(MU0,se,cHi,XMAX)+'" fill="#e0788c" opacity="'+op('t1')+'"/>';
+   o+='<path d="'+areaPath(MU0,se,XMIN,cLo)+'" fill="#e0788c" opacity="'+op('t1')+'"/>';
+
+   o+='<path d="'+curvePath(MU0,se)+'" fill="none" stroke="#1c4454" stroke-width="2"/>';
+   o+='<path d="'+curvePath(mu1,se)+'" fill="none" stroke="#6b4a80" stroke-width="2" stroke-dasharray="'+(d<0.4?'5 4':'0')+'"/>';
+
+   /* axis */
+   o+='<line x1="'+X0+'" y1="'+BASE+'" x2="'+X1+'" y2="'+BASE+'" stroke="#9fb3bd" stroke-width="1.2"/>';
+   for(var t=64;t<=92;t+=4){
+     o+='<line x1="'+X(t).toFixed(1)+'" y1="'+BASE+'" x2="'+X(t).toFixed(1)+'" y2="'+(BASE+4)+'" stroke="#9fb3bd" stroke-width="1.2"/>'+
+        '<text x="'+X(t).toFixed(1)+'" y="'+(BASE+15)+'" font-size="9.5" fill="#78868d" text-anchor="middle" font-family="Inter,sans-serif">'+t+'</text>';
+   }
+   o+='<text x="170" y="'+(BASE+31)+'" font-size="10" fill="#78868d" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">the sample mean x&#772; (bpm)</text>';
+
+   /* cutoffs */
+   o+='<line x1="'+X(cLo).toFixed(1)+'" y1="30" x2="'+X(cLo).toFixed(1)+'" y2="'+BASE+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="4 3"/>'+
+      '<line x1="'+X(cHi).toFixed(1)+'" y1="30" x2="'+X(cHi).toFixed(1)+'" y2="'+BASE+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="4 3"/>'+
+      '<text x="'+Math.max(30,X(cLo)-5).toFixed(1)+'" y="27" font-size="9.3" fill="#b23145" font-weight="800" text-anchor="end" font-family="Inter,sans-serif">&#8592; reject '+cLo.toFixed(1)+'</text>'+
+      '<text x="'+Math.min(312,X(cHi)+5).toFixed(1)+'" y="27" font-size="9.3" fill="#b23145" font-weight="800" font-family="Inter,sans-serif">'+cHi.toFixed(1)+' reject &#8594;</text>';
+
+   /* peak labels */
+   var pk=dens(MU0,MU0,se);
+   if(d<0.4){
+     o+='<text x="'+X(MU0).toFixed(1)+'" y="'+(Yd(pk)-8).toFixed(1)+'" font-size="10" fill="#1c4454" font-weight="800" text-anchor="middle" font-family="Inter,sans-serif">both worlds sit here</text>';
+   }else{
+     o+='<text x="'+Math.max(38,X(MU0)).toFixed(1)+'" y="'+(Yd(pk)-8).toFixed(1)+'" font-size="9.8" fill="#1c4454" font-weight="800" text-anchor="middle" font-family="Inter,sans-serif">H₀ true: &#956; = 74</text>';
+     o+='<text x="'+Math.min(300,X(mu1)).toFixed(1)+'" y="'+(Yd(pk)-8-(d<2.6?13:0)).toFixed(1)+'" font-size="9.8" fill="#6b4a80" font-weight="800" text-anchor="middle" font-family="Inter,sans-serif">H₀ false: &#956; = '+mu1.toFixed(1)+'</text>';
+   }
+   $("curve").innerHTML=o;
+
+   var msg;
+   if(cell==='t1') msg='<b>Type I error</b> &mdash; the pink tails, the part of the <b>H₀-true</b> bell that falls past the cutoffs. Their combined area is &alpha; = '+alpha.toFixed(3)+'. Drag n or the effect and watch this pink area <b>refuse to move</b>.';
+   else if(cell==='t2') msg='<b>Type II error</b> &mdash; the gold block, the part of the <b>H₀-false</b> bell that lands <i>between</i> the cutoffs and so gets waved through. Area = &beta; = '+beta.toFixed(3)+'.';
+   else if(cell==='pw') msg='<b>Power</b> &mdash; the green area, the part of the <b>H₀-false</b> bell that clears a cutoff. Area = '+power.toFixed(3)+'. Green and gold are the same bell, so they always add to 1.';
+   else if(cell==='tn') msg='<b>Correct retain</b> &mdash; the blue block, the part of the <b>H₀-true</b> bell that stays inside the cutoffs. Area = '+(1-alpha).toFixed(3)+'. Blue and pink are the same bell, so they always add to 1.';
+   else msg='The two shaded errors live under <b>different bells</b>: pink is a slice of the H₀-true world, gold is a slice of the H₀-false world. That is why they do not trade off one-for-one &mdash; and why you cannot read one off the other.';
+   $("fit").innerHTML=msg;
+ }
+
+ /* ---------- chart 2: the power curve ---------- */
+ var P0=32,P1=322,PB=118,PT=16;
+ function drawPow(zc,se){
+   var o='',i,lo,hi,fx,lab,cur,pts=[],p,xv;
+   if(pmode==='n'){lo=8;hi=128;fx=function(v){return d/(SIG/Math.sqrt(v));};lab='sample size n';cur=n;}
+   else{lo=0;hi=8;fx=function(v){return v/se;};lab='true effect (bpm)';cur=d;}
+   function PX(v){return P0+(v-lo)*(P1-P0)/(hi-lo);}
+   function PY(v){return PB-v*(PB-PT);}
+   for(i=0;i<=120;i++){xv=lo+(hi-lo)*i/120;pts.push([PX(xv),PY(powerOf(zc,fx(xv)))]);}
+
+   /* grid + y axis */
+   for(i=0;i<=5;i++){
+     var gy=PY(i/5);
+     o+='<line x1="'+P0+'" y1="'+gy.toFixed(1)+'" x2="'+P1+'" y2="'+gy.toFixed(1)+'" stroke="#e6eef2" stroke-width="1"/>'+
+        '<text x="'+(P0-6)+'" y="'+(gy+3.4).toFixed(1)+'" font-size="9" fill="#78868d" text-anchor="end" font-family="Inter,sans-serif">'+(i*20)+'%</text>';
+   }
+   /* the alpha floor: power can never dip below alpha */
+   o+='<line x1="'+P0+'" y1="'+PY(alpha).toFixed(1)+'" x2="'+P1+'" y2="'+PY(alpha).toFixed(1)+'" stroke="#d1495b" stroke-width="1.3" stroke-dasharray="3 3"/>'+
+      '<text x="'+P1+'" y="'+(PY(alpha)-4).toFixed(1)+'" font-size="8.8" fill="#b23145" font-weight="800" text-anchor="end" font-family="Inter,sans-serif">floor = &#945;</text>';
+   /* the 80% convention */
+   o+='<line x1="'+P0+'" y1="'+PY(0.8).toFixed(1)+'" x2="'+P1+'" y2="'+PY(0.8).toFixed(1)+'" stroke="#2f9e5b" stroke-width="1.3" stroke-dasharray="4 3"/>'+
+      '<text x="'+P1+'" y="'+(PY(0.8)-4).toFixed(1)+'" font-size="8.8" fill="#237a45" font-weight="800" text-anchor="end" font-family="Inter,sans-serif">80% convention</text>';
+
+   var dp='M'+pts[0][0].toFixed(1)+' '+pts[0][1].toFixed(1);
+   for(i=1;i<pts.length;i++)dp+=' L'+pts[i][0].toFixed(1)+' '+pts[i][1].toFixed(1);
+   o+='<path d="'+dp+' L'+P1+' '+PB+' L'+P0+' '+PB+' Z" fill="#c6e6d6" opacity=".5"/>';
+   o+='<path d="'+dp+'" fill="none" stroke="#2f6f8a" stroke-width="2.4"/>';
+
+   o+='<line x1="'+P0+'" y1="'+PB+'" x2="'+P1+'" y2="'+PB+'" stroke="#9fb3bd" stroke-width="1.2"/>';
+   var ticks=(pmode==='n')?[8,32,56,80,104,128]:[0,2,4,6,8];
+   for(i=0;i<ticks.length;i++){
+     o+='<line x1="'+PX(ticks[i]).toFixed(1)+'" y1="'+PB+'" x2="'+PX(ticks[i]).toFixed(1)+'" y2="'+(PB+4)+'" stroke="#9fb3bd" stroke-width="1.2"/>'+
+        '<text x="'+PX(ticks[i]).toFixed(1)+'" y="'+(PB+15)+'" font-size="9" fill="#78868d" text-anchor="middle" font-family="Inter,sans-serif">'+ticks[i]+'</text>';
+   }
+   o+='<text x="177" y="'+(PB+31)+'" font-size="10" fill="#78868d" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">'+lab+'</text>';
+
+   p=powerOf(zc,fx(cur));
+   o+='<line x1="'+PX(cur).toFixed(1)+'" y1="'+PY(p).toFixed(1)+'" x2="'+PX(cur).toFixed(1)+'" y2="'+PB+'" stroke="#1c4454" stroke-width="1.6"/>'+
+      '<circle cx="'+PX(cur).toFixed(1)+'" cy="'+PY(p).toFixed(1)+'" r="5" fill="#1c4454" stroke="#fff" stroke-width="2"/>'+
+      '<text x="'+Math.max(58,Math.min(296,PX(cur))).toFixed(1)+'" y="'+Math.max(11,PY(p)-11).toFixed(1)+'" font-size="10.5" fill="#1c4454" font-weight="800" text-anchor="middle" font-family="Inter,sans-serif">'+(p*100).toFixed(0)+'%</text>';
+   $("pow").innerHTML=o;
+
+   $("phint").innerHTML=(pmode==='n')
+     ? 'What n actually buys is <b>&#948;</b>, and &#948; grows only as <b>&#8730;n</b> &mdash; so the curve rises steeply and then flattens. Doubling a small sample buys a lot; doubling an already-large one buys very little. And no matter how far right you go, <b>&alpha; never budges</b>.'
+     : 'Power rises with the size of the real effect, and it bottoms out at <b>&alpha;</b>, never at zero: even with no effect at all the test still rejects '+(alpha*100).toFixed(1)+'% of the time, purely by chance. Tiny effects are the ones that get missed.';
+ }
+
+ /* ---------- chart 3: 200 simulated studies ---------- */
+ function drawDots(se,zc,delT){
+   var o='',i,k=0,rej,cx,cy,col;
+   for(i=0;i<200;i++){
+     rej=Math.abs(delT+Z[i])>zc; if(rej)k++;
+     cx=20+(i%25)*12.4; cy=14+Math.floor(i/25)*13;
+     col=world? (rej?'#2f9e5b':'#b8862f') : (rej?'#d1495b':'#8fb8cd');
+     o+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy+'" r="'+(rej?4.4:3.6)+'" fill="'+col+'" opacity="'+(rej?1:0.75)+'"/>';
+   }
+   $("dots").innerHTML=o;
+   var exp=world?powerOf(zc,delT)*200:alpha*200;
+   $("tally").innerHTML= world
+     ? '<b style="color:#237a45">'+k+'</b> detected the real effect &nbsp;·&nbsp; <b style="color:#8a6a20">'+(200-k)+'</b> were Type II errors &nbsp;<span style="color:#78868d;font-weight:600">(expected &#8776; '+exp.toFixed(0)+' detections)</span>'
+     : '<b style="color:#b23145">'+k+'</b> were Type I errors &nbsp;·&nbsp; <b style="color:#255f8a">'+(200-k)+'</b> correctly left H₀ standing &nbsp;<span style="color:#78868d;font-weight:600">(expected &#8776; '+exp.toFixed(1)+' false alarms)</span>';
+   $("lr").innerHTML= world
+     ? 'Every one of these studies was run on a population where the effect is <b>genuinely there</b>. The gold dots are competent researchers running an honest test and going home with nothing &mdash; not because they were careless, but because their study was too small to see what it was looking for. <b>A non-significant result from an underpowered study tells you almost nothing.</b>'
+     : 'Every one of these studies was run on a population where <b>nothing is happening</b>. The red dots are false alarms, and their share is pinned near &alpha; = '+alpha.toFixed(3)+' no matter how large n gets. Sample size is the cure for Type II errors; it is <b>no cure at all</b> for Type I errors.';
+ }
+
+ /* ---------- track shading ---------- */
+ function track(el,pct,c){el.style.background='linear-gradient(90deg,'+c+' 0%,'+c+' '+pct+'%,#dbe8ef '+pct+'%,#dbe8ef 100%)';}
+
+ /* ---------- render ---------- */
+ function render(){
+   var se=SIG/Math.sqrt(n), zc=normInv(1-alpha/2), mu1=MU0+d, delta=d/se;
+   var power=powerOf(zc,delta), beta=1-power;
+   var flat=(d<0.05);
+
+   $("nv").innerHTML='n = '+n;
+   $("dv").innerHTML='+'+d.toFixed(2).replace(/0$/,'')+' bpm';
+   $("av").innerHTML='&alpha; = '+alpha.toFixed(3);
+   track($("sn"),(n-8)/120*100,'#cfe0ea');
+   track($("sd"),d/8*100,'#e2d3ea');
+   track($("sa"),alpha/0.2*100,'#f2ccd2');
+
+   $("ra").innerHTML=alpha.toFixed(3);
+   $("rb").innerHTML=beta.toFixed(3);
+   $("rw").innerHTML=power.toFixed(3);
+   $("rd").innerHTML=delta.toFixed(2);
+   $("calc").innerHTML='SE = 9/&#8730;'+n+' = '+se.toFixed(2)+' &nbsp;·&nbsp; z* = '+zc.toFixed(2)+' &nbsp;·&nbsp; &#948; = '+d.toFixed(2)+'/'+se.toFixed(2)+' = '+delta.toFixed(2);
+
+   $("vtn").innerHTML=(1-alpha).toFixed(3);
+   $("vt1").innerHTML=alpha.toFixed(3);
+   $("vt2").innerHTML=beta.toFixed(3);
+   $("vpw").innerHTML=power.toFixed(3);
+   $("wlab").innerHTML='&mu; = '+mu1.toFixed(2).replace(/0$/,'');
+
+   var col=power>=0.8?'#2f9e5b':(power>=0.5?'#b8862f':'#d1495b');
+   $("stage").style.background=flat?'#2f6f8a':col;
+   $("stage").innerHTML=flat
+     ? 'Power = &alpha; = '+(alpha*100).toFixed(1)+'%<small>with a true effect of zero there is nothing to detect</small>'
+     : 'Power = '+(power*100).toFixed(0)+'%<small>&beta; = '+(beta*100).toFixed(0)+'% &mdash; the chance of missing a real '+d.toFixed(2).replace(/0$/,'')+' bpm shift</small>';
+
+   $("warn").style.display=flat?'block':'none';
+   if(flat)$("warn").innerHTML='<b>Careful at zero.</b> If the true effect is exactly 0 then &mu; = 74 and <b>H₀ is true</b> &mdash; the right-hand column of the matrix describes a world that does not exist, so there is no Type II error available to make. What the power cell reports here is just &alpha;: the rate at which the test rejects a null that was correct all along. Nudge the effect off zero to make the alternative real.';
+
+   var t;
+   if(cell==='t1') t='<span class="n">Type I error &mdash; the false alarm</span>H₀ is true and you reject it anyway. You announce an effect that is not there. Its long-run rate is <b>&alpha; = '+alpha.toFixed(3)+'</b>, and you set that number yourself, before collecting a single observation. Read it conditionally: <b>among studies where H₀ is really true</b>, '+(alpha*100).toFixed(1)+'% will produce a rejection. It is <b>not</b> the chance that this particular finding is wrong, and it is <b>not</b> the chance H₀ is true. Now drag n as far right as it goes and watch this cell sit perfectly still &mdash; <b>a bigger sample is no protection against a Type I error.</b> Only a smaller &alpha; shrinks it.';
+   else if(cell==='t2') t='<span class="n">Type II error &mdash; the miss</span>H₀ is false, a real effect is out there, and your test walks past it. The rate is <b>&beta; = '+beta.toFixed(3)+'</b>. Unlike &alpha; you do not choose &beta;; it <b>falls out</b> of three things: your &alpha;, the true effect size, and n. And &beta; has no single value &mdash; it is defined only <b>against a specific alternative</b>. Right now it is '+beta.toFixed(3)+' against a '+d.toFixed(2).replace(/0$/,'')+' bpm shift; against a smaller shift it would be worse. This is why "we found no significant difference" is never the same sentence as "there is no difference."';
+   else if(cell==='pw') t='<span class="n">Power &mdash; catching what is really there</span>H₀ is false and your test correctly rejects it. Power = <b>1 &minus; &beta; = '+power.toFixed(3)+'</b>. It is the cell you buy with sample size: raise n and the H₀-false bell narrows away from the cutoff, pushing area out of gold and into green. Researchers usually plan for <b>80% power</b> against the smallest effect worth caring about &mdash; which quietly accepts a 20% chance of missing it. Power also rises if you simply <b>loosen &alpha;</b> &mdash; but every point bought that way is paid for straight out of the false-alarm cell. Sample size is the only dial that improves power <b>without</b> charging you anything in Type I errors.';
+   else if(cell==='tn') t='<span class="n">Correct &mdash; leaving a true H₀ standing</span>H₀ is true and you fail to reject it. Rate = <b>1 &minus; &alpha; = '+(1-alpha).toFixed(3)+'</b>. Notice the wording: <b>fail to reject</b>, never "accept". The test was built to see whether the evidence is strong enough to overturn H₀, and it was not. That is a verdict of <b>not proven</b>, not a verdict of innocent &mdash; the very same non-rejection would appear if a small real effect were hiding just past your cutoff.';
+   else t='<span class="n">Four outcomes, two of them wrong</span>Reality picks a column &mdash; and you never get to see which one. Your test picks a row. Two cells are correct and two are errors, and the two errors are <b>completely different animals</b>: one invents an effect, the other overlooks one. <b>Tap any cell</b> to see it shaded on the chart above.<div class="dd">Each column adds to 1, because each is read <b>given</b> a world: &alpha; + (1 &minus; &alpha;) = 1 in the true-H₀ column, &beta; + power = 1 in the false-H₀ column. They are <b>not</b> probabilities that a world is real, and the four numbers do not add to 1 across the whole table.</div>';
+   $("info").innerHTML=t;
+
+   var b=$("mx").getElementsByTagName('button'),i;
+   for(i=0;i<b.length;i++){
+     var base=b[i].getAttribute('data-c');
+     b[i].className=(base==='t1'?'c1':base==='t2'?'c2':base==='pw'?'cp':'cn')+(cell===base?' on':'');
+   }
+   var wb=$("world").getElementsByTagName('button');
+   for(i=0;i<wb.length;i++)wb[i].className=(+wb[i].getAttribute('data-w')===world)?'on':'';
+   var mb=$("pmode").getElementsByTagName('button');
+   for(i=0;i<mb.length;i++)mb[i].className=(mb[i].getAttribute('data-m')===pmode)?'on':'';
+
+   drawCurve(se,zc,mu1,beta,power);
+   drawPow(zc,se);
+   drawDots(se,zc,world?delta:0);
+ }
+
+ /* ---------- wiring ---------- */
+ $("sn").oninput=function(){n=+this.value;render();};
+ $("sd").oninput=function(){d=(+this.value)/4;render();};
+ $("sa").oninput=function(){alpha=(+this.value)/1000;render();};
+ var mb=$("mx").getElementsByTagName('button');
+ for(var i=0;i<mb.length;i++)(function(b){b.onclick=function(){
+   var c=b.getAttribute('data-c'); cell=(cell===c)?'':c; render();};})(mb[i]);
+ var wb=$("world").getElementsByTagName('button');
+ for(var j=0;j<wb.length;j++)(function(b){b.onclick=function(){
+   world=+b.getAttribute('data-w'); render();};})(wb[j]);
+ var pb=$("pmode").getElementsByTagName('button');
+ for(var k=0;k<pb.length;k++)(function(b){b.onclick=function(){
+   pmode=b.getAttribute('data-m'); render();};})(pb[k]);
+ $("redraw").onclick=function(){newStudies();render();};
+
+ newStudies();
+ render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Forms of Malnutrition</title>
+<meta name="description" content="Interactive comparison of undernutrition, stunting, and micronutrient deficiency — plot a child's age, height, and weight on WHO-style growth charts and see which forms measurement can and cannot detect.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:1.05fr 0.95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.idxrow{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap;}
+.idx{flex:1;min-width:150px;border:1px solid var(--line);border-radius:11px;padding:8px 11px;background:#fff;}
+.idx .lb{font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;}
+.idx .rw{display:flex;align-items:center;gap:8px;margin-top:5px;}
+.idx .z{font-size:11.5px;font-weight:800;color:var(--soft);font-variant-numeric:tabular-nums;margin-left:auto;}
+.pill.ok{background:#e5f3ea;color:#237a45;} .pill.mod{background:#fdf0dd;color:#8a6a20;} .pill.sev{background:#fae5e8;color:#b23145;}
+.fu{border:1px solid var(--line);border-radius:11px;padding:9px 11px 8px;background:#fff;margin-top:8px;}
+.fu .hd{display:flex;align-items:center;gap:8px;}
+.fu .nmb{flex:1;text-align:left;font-weight:700;font-size:12.5px;color:var(--ink);}
+.fu .nmb small{display:block;font-weight:600;font-size:10.2px;color:var(--muted);margin-top:1px;}
+.fu input[type=number]{width:64px;border:1px solid var(--line);border-radius:8px;padding:6px 7px;font-family:var(--sans);font-weight:800;font-size:13px;color:var(--teal-dk);text-align:right;background:#fffdf9;}
+.fu .un{font-size:11px;font-weight:800;color:var(--muted);flex:none;width:44px;}
+.fu input[type=range]{width:100%;margin-top:7px;height:20px;accent-color:var(--teal);cursor:pointer;display:block;}
+.ev{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:2px 8px;vertical-align:middle;}
+.ev.s{background:#e5f3ea;color:#237a45;} .ev.p{background:#fdf0dd;color:#8a6a20;}
+.cmp{margin-top:9px;border-top:1px solid var(--line);padding-top:7px;}
+.cmp .ln{display:flex;gap:10px;font-size:12px;color:var(--soft);padding:3px 0;line-height:1.4;}
+.cmp .ln b{color:var(--teal-dk);flex:none;width:96px;font-weight:800;}
+.hint{font-size:11px;color:var(--muted);margin-top:9px;line-height:1.45;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 14</div>
+  <h1>Forms of Malnutrition</h1>
+  <div class="intro">Malnutrition is not one thing. A child can be <b>acutely underfed</b>, <b>chronically stunted</b>, or <b>deficient in a single vitamin or mineral</b> while looking otherwise well &mdash; and each form is found in a different way. Plot a child below, then step through the three forms to see what a growth chart can, and cannot, reveal.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Plot the child, read the indices</h2>
+      <svg viewBox="0 0 330 308" aria-label="Two growth charts. Top: length or height for age. Bottom: weight for age. Each shows the median, the minus-two and minus-three standard-deviation reference lines, and a plotted point for the child."><g id="art"></g></svg>
+      <div class="idxrow">
+        <div class="idx"><span class="lb">Height-for-age</span><div class="rw"><span class="pill ok" id="haPill">&mdash;</span><span class="z" id="haZ">z &mdash;</span></div></div>
+        <div class="idx"><span class="lb">Weight-for-age</span><div class="rw"><span class="pill ok" id="waPill">&mdash;</span><span class="z" id="waZ">z &mdash;</span></div></div>
+      </div>
+      <div class="hint">Reference lines approximate the <b>WHO Child Growth Standards</b> (boys, birth&ndash;5 y), plotted here for illustration; real screening uses full sex-specific tables. The cutoffs are <b>&minus;2 SD</b> (moderate) and <b>&minus;3 SD</b> (severe). A z-score is a population screening threshold, not a diagnosis of one child &mdash; a single point is a snapshot, read over time and in context. <span class="ev s">strong evidence</span></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Three forms of malnutrition<small>move the sliders, then pick a form</small></div>
+    <div class="card">
+      <div class="seg" id="formseg">
+        <button data-f="under" class="">Undernutrition<small>acute · wasting</small></button>
+        <button data-f="stunt" class="">Stunting<small>chronic</small></button>
+        <button data-f="micro" class="">Micronutrient<small>hidden hunger</small></button>
+      </div>
+      <div id="sliders" style="margin-top:4px;"></div>
+      <div class="row"><button class="btn" id="reset">Reset</button><button class="btn solid" id="egbtn">Load examples ›</button></div>
+      <div class="list" id="eglist" style="display:none;margin-top:9px;"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ // Illustrative WHO-style reference values (boys, 0-60 mo). cm and kg.
+ var MO=[0,6,12,18,24,36,48,60];
+ var HA_M=[49.9,67.6,75.7,82.3,87.1,96.1,103.3,110.0];
+ var HA_2=[46.1,63.3,71.0,76.9,81.0,88.7,94.9,100.7];
+ var HA_3=[44.2,61.2,68.6,74.2,78.0,85.0,90.9,96.5];
+ var WA_M=[3.3,7.9,9.6,10.9,12.2,14.3,16.3,18.3];
+ var WA_2=[2.5,6.4,7.7,8.8,9.7,11.4,12.7,14.1];
+ var WA_3=[2.1,5.7,6.9,7.7,8.6,10.0,11.1,12.4];
+
+ var SL=[
+  {k:'age',nm:'Age',s2:'months old',un:'mo',min:0,max:60,step:1},
+  {k:'ht',nm:'Length / height',s2:'lying down under 2 y, standing after',un:'cm',min:42,max:118,step:0.5},
+  {k:'wt',nm:'Weight',s2:'without clothing',un:'kg',min:2,max:22,step:0.1}
+ ];
+ var V={age:24,ht:87,wt:12};
+ var form='';
+
+ var EG=[
+  {ic:'🌱',nm:'Well nourished',v:{age:24,ht:87,wt:12},f:'',
+   d:'Both indices sit near the median. Nothing here rules out a micronutrient gap &mdash; blood iron or vitamin A are not on this chart &mdash; but the child is neither stunted nor wasted.'},
+  {ic:'📏',nm:'Chronically stunted',v:{age:24,ht:79,wt:10.6},f:'stunt',
+   d:'Watch the split: <b>height-for-age falls into the deficit band while weight-for-age stays near normal</b>. The child is proportionately small &mdash; short but not thin &mdash; which is exactly why stunting is missed unless height-for-age is measured.'},
+  {ic:'⚖️',nm:'Acutely undernourished',v:{age:24,ht:87,wt:9.0},f:'under',
+   d:'Here it is the mirror image: <b>height-for-age is normal, weight-for-age has dropped</b>. Recent, rapid weight loss against preserved height is the signature of an acute energy deficit.'},
+  {ic:'🩸',nm:'Hidden hunger',v:{age:36,ht:96,wt:14},f:'micro',
+   d:'Every point reads normal. A child eating enough calories can still lack iron, vitamin A, iodine, or zinc &mdash; and this chart will never show it. That gap is the whole reason micronutrient deficiency is counted as its own form.'}
+ ];
+
+ var X0=48,X1=316, T1=30,B1=140, T2=190,B2=300, minH=42,maxH=118, minW=1.5,maxW=20;
+ function x(a){ return X0+a/60*(X1-X0); }
+ function y1(v){ var y=B1-(v-minH)/(maxH-minH)*(B1-T1); return Math.max(T1,Math.min(B1,y)); }
+ function y2(v){ var y=B2-(v-minW)/(maxW-minW)*(B2-T2); return Math.max(T2,Math.min(B2,y)); }
+ function interp(a,arr){ if(a<=MO[0])return arr[0]; if(a>=MO[MO.length-1])return arr[arr.length-1];
+   for(var i=0;i<MO.length-1;i++){ if(a<=MO[i+1]){ var t=(a-MO[i])/(MO[i+1]-MO[i]); return arr[i]+(arr[i+1]-arr[i])*t; } } return arr[arr.length-1]; }
+ function poly(arr,yf){ var s=''; for(var i=0;i<MO.length;i++)s+=(i?' ':'')+x(MO[i]).toFixed(1)+','+yf(arr[i]).toFixed(1); return s; }
+ function bandBetween(up,lo,yf){ var s=''; for(var i=0;i<MO.length;i++)s+=x(MO[i]).toFixed(1)+','+yf(up[i]).toFixed(1)+' ';
+   for(var j=MO.length-1;j>=0;j--)s+=x(MO[j]).toFixed(1)+','+yf(lo[j]).toFixed(1)+' '; return s; }
+ function bandBelow(arr,yf,by){ var s=''; for(var i=0;i<MO.length;i++)s+=x(MO[i]).toFixed(1)+','+yf(arr[i]).toFixed(1)+' ';
+   s+=x(MO[MO.length-1]).toFixed(1)+','+by+' '+x(MO[0]).toFixed(1)+','+by+' '; return s; }
+
+ function classify(v,M,m2,m3,kind){
+   var code=v>=m2?'ok':(v>=m3?'mod':'sev');
+   var sd=(M-m2)/2, z=(v-M)/sd;
+   var L=kind==='ht'?['Normal','Stunted','Severely stunted']:['Normal','Underweight','Severely underweight'];
+   var idx=code==='ok'?0:(code==='mod'?1:2);
+   return {code:code,z:z,label:L[idx]};
+ }
+ function cur(){
+   var HM=interp(V.age,HA_M),H2=interp(V.age,HA_2),H3=interp(V.age,HA_3);
+   var WM=interp(V.age,WA_M),W2=interp(V.age,WA_2),W3=interp(V.age,WA_3);
+   return {HM:HM,H2:H2,H3:H3,WM:WM,W2:W2,W3:W3,
+     clsH:classify(V.ht,HM,H2,H3,'ht'), clsW:classify(V.wt,WM,W2,W3,'wt')};
+ }
+ function dotCol(c){ return c==='sev'?'#c23a4a':(c==='mod'?'#d98a2b':'#237a45'); }
+
+ function chart(o){
+   var s='';
+   s+='<rect x="'+X0+'" y="'+o.top+'" width="'+(X1-X0)+'" height="'+(o.bot-o.top)+'" fill="#fffdf9" stroke="#ece4d6"/>';
+   s+='<polygon points="'+bandBelow(o.A3,o.yf,o.bot)+'" fill="rgba(194,58,74,.13)"/>';
+   s+='<polygon points="'+bandBetween(o.A2,o.A3,o.yf)+'" fill="rgba(216,138,43,.16)"/>';
+   var t; for(var i=0;i<o.ticks.length;i++){ t=o.ticks[i]; var yy=o.yf(t);
+     s+='<line x1="'+X0+'" y1="'+yy.toFixed(1)+'" x2="'+X1+'" y2="'+yy.toFixed(1)+'" stroke="#f0e8d8" stroke-width="1"/>';
+     s+='<text x="'+(X0-4)+'" y="'+(yy+3).toFixed(1)+'" font-size="7.6" fill="#a89b85" text-anchor="end" font-weight="700">'+t+'</text>'; }
+   s+='<polyline points="'+poly(o.M,o.yf)+'" fill="none" stroke="#6b4710" stroke-width="1.7"/>';
+   s+='<polyline points="'+poly(o.A2,o.yf)+'" fill="none" stroke="#d98a2b" stroke-width="1.3" stroke-dasharray="5 3"/>';
+   s+='<polyline points="'+poly(o.A3,o.yf)+'" fill="none" stroke="#c23a4a" stroke-width="1.3" stroke-dasharray="2 3"/>';
+   s+='<text x="'+(X1-2)+'" y="'+(o.yf(o.M[7])-3).toFixed(1)+'" font-size="7" fill="#6b4710" text-anchor="end" font-weight="700">median</text>';
+   s+='<text x="'+(X1-2)+'" y="'+(o.yf(o.A2[7])+9).toFixed(1)+'" font-size="7" fill="#b5751f" text-anchor="end" font-weight="700">&minus;2 SD</text>';
+   s+='<text x="'+(X1-2)+'" y="'+(o.yf(o.A3[7])+9).toFixed(1)+'" font-size="7" fill="#c23a4a" text-anchor="end" font-weight="700">&minus;3 SD</text>';
+   var cx=x(V.age), cy=o.yf(o.val), dc=dotCol(o.cls.code);
+   s+='<line x1="'+cx.toFixed(1)+'" y1="'+o.top+'" x2="'+cx.toFixed(1)+'" y2="'+o.bot+'" stroke="#b0a48c" stroke-width="1" stroke-dasharray="2 2"/>';
+   s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="5.6" fill="'+dc+'" stroke="#fff" stroke-width="2"/>';
+   s+='<text x="'+X0+'" y="'+(o.top-6)+'" font-size="8.6" font-weight="800" fill="#8d8270">'+o.title+'</text>';
+   s+='<text x="'+X1+'" y="'+(o.top-6)+'" font-size="8.6" font-weight="800" text-anchor="end" fill="'+dc+'">'+o.cls.label+'</text>';
+   if(o.dim) s+='<rect x="'+X0+'" y="'+o.top+'" width="'+(X1-X0)+'" height="'+(o.bot-o.top)+'" fill="#faf6ee" opacity=".6"/>';
+   return s;
+ }
+
+ function draw(){
+   var c=cur(), out='';
+   out+=chart({top:T1,bot:B1,yf:y1,M:HA_M,A2:HA_2,A3:HA_3,val:V.ht,cls:c.clsH,
+     title:'HEIGHT-FOR-AGE (cm)',ticks:[50,70,90,110],dim:(form==='under')});
+   out+=chart({top:T2,bot:B2,yf:y2,M:WA_M,A2:WA_2,A3:WA_3,val:V.wt,cls:c.clsW,
+     title:'WEIGHT-FOR-AGE (kg)',ticks:[5,10,15,20],dim:(form==='stunt')});
+   var xm=[0,12,24,36,48,60];
+   for(var i=0;i<xm.length;i++) out+='<text x="'+x(xm[i]).toFixed(1)+'" y="'+(B2+13)+'" font-size="7.4" fill="#8d8270" text-anchor="middle" font-weight="700">'+xm[i]+'</text>';
+   out+='<text x="'+((X0+X1)/2)+'" y="'+(B2+23)+'" font-size="7.6" fill="#a89b85" text-anchor="middle" font-weight="700">age in months</text>';
+   if(form==='micro'){
+     out+='<rect x="'+X0+'" y="'+T1+'" width="'+(X1-X0)+'" height="'+(B2-T1)+'" fill="#faf6ee" opacity=".72"/>';
+     out+='<text x="'+((X0+X1)/2)+'" y="'+((T1+B2)/2-8)+'" font-size="11" fill="#523a60" text-anchor="middle" font-weight="800">Anthropometry cannot see this</text>';
+     out+='<text x="'+((X0+X1)/2)+'" y="'+((T1+B2)/2+9)+'" font-size="8.4" fill="#6b4710" text-anchor="middle" font-weight="600">weight &amp; height can read normal while a nutrient runs low</text>';
+   }
+   $('art').innerHTML=out;
+ }
+
+ function pills(){
+   var c=cur();
+   $('haPill').className='pill '+c.clsH.code; $('haPill').innerHTML=c.clsH.label;
+   $('waPill').className='pill '+c.clsW.code; $('waPill').innerHTML=c.clsW.label;
+   $('haZ').innerHTML='z '+(c.clsH.z>=0?'+':'')+c.clsH.z.toFixed(1);
+   $('waZ').innerHTML='z '+(c.clsW.z>=0?'+':'')+c.clsW.z.toFixed(1);
+ }
+
+ function sliders(){
+   var out='';
+   for(var i=0;i<SL.length;i++){ var f=SL[i];
+     out+='<div class="fu"><div class="hd"><span class="nmb">'+f.nm+'<small>'+f.s2+'</small></span>'+
+       '<input type="number" id="n_'+f.k+'" min="'+f.min+'" max="'+f.max+'" step="'+f.step+'" value="'+V[f.k]+'" aria-label="'+f.nm+'"><span class="un">'+f.un+'</span></div>'+
+       '<input type="range" id="r_'+f.k+'" min="'+f.min+'" max="'+f.max+'" step="'+f.step+'" value="'+V[f.k]+'" aria-label="'+f.nm+' slider"></div>';
+   }
+   $('sliders').innerHTML=out;
+   for(i=0;i<SL.length;i++){ (function(f){
+     var n=$('n_'+f.k), r=$('r_'+f.k);
+     r.oninput=function(){ V[f.k]=+r.value; n.value=r.value; sync(); };
+     n.oninput=function(){ var v=parseFloat(n.value); if(isNaN(v))v=f.min; v=Math.max(f.min,Math.min(f.max,v)); V[f.k]=v; r.value=v; sync(); };
+     n.onblur=function(){ n.value=V[f.k]; };
+   })(SL[i]); }
+ }
+ function setSliders(){ for(var i=0;i<SL.length;i++){ var f=SL[i]; var n=$('n_'+f.k),r=$('r_'+f.k); if(n){n.value=V[f.k];} if(r){r.value=V[f.k];} } }
+
+ function stage(){
+   var c=cur();
+   if(!form){ $('stage').style.background='var(--teal)';
+     $('stage').innerHTML='Three forms of malnutrition<small>move the sliders, then pick a form</small>'; return; }
+   var F=FORMS[form];
+   $('stage').style.background=F.col;
+   var read = form==='stunt' ? c.clsH.label+' on height-for-age'
+            : form==='under' ? c.clsW.label+' on weight-for-age'
+            : 'this child reads normal &mdash; and that is the point';
+   $('stage').innerHTML=F.nm+'<small>'+read+'</small>';
+ }
+
+ var FORMS={
+  under:{nm:'Undernutrition (acute)', col:'#d1495b',
+   lack:'Too little food <b>recently</b> &mdash; a shortfall of energy and protein over days to weeks.',
+   meas:'Low <b>weight-for-height</b> (called <b>wasting</b>) and low weight-for-age; mid-upper-arm circumference (MUAC) is used for rapid screening.',
+   tempo:'Acute. It appears &mdash; and can resolve &mdash; quickly.',
+   rev:'Often <b>reversible</b> with adequate, monitored refeeding, though severe wasting carries real risk and is managed clinically.',
+   ev:'<span class="ev s">strong evidence</span> An estimated <b>45 million</b> children under 5 were affected by wasting worldwide (2022 UN joint estimates).',
+   body:'The signature is <b>weight falling faster than height</b>. A recently underfed child grows thin before growing short, so the weight-for-age point drops while height-for-age still looks normal. This tool plots weight-for-age; the purest acute marker, <b>weight-for-height</b>, compares a child\'s weight to others of the same length rather than the same age. Management &mdash; therapeutic feeding, treating infection &mdash; is a clinical decision, not something a chart prescribes.'},
+  stunt:{nm:'Stunting (chronic)', col:'#b8862f',
+   lack:'Sustained inadequate nutrition and repeated infection over <b>months to years</b>, often beginning before birth.',
+   meas:'Low <b>height (or length)-for-age</b> &mdash; the child is short for how old they are.',
+   tempo:'Chronic. It accumulates slowly across the <b>first 1,000 days</b>, from conception to age two.',
+   rev:'<b>Largely not reversible</b> after about age two; linear-growth and some developmental deficits tend to persist. This is why the early window matters so much.',
+   ev:'<span class="ev s">strong evidence</span> An estimated <b>148 million</b> children under 5 were stunted worldwide (2022 UN joint estimates).',
+   body:'Stunting is the quiet form. A stunted child is often <b>proportionate &mdash; short but not thin</b> &mdash; so weight-for-age can look normal while height-for-age has fallen away. Without measuring height against age it is easy to miss entirely. Because linear growth is cumulative, a deficit built up over the first two years does not simply catch up later, which is what separates chronic stunting from acute wasting.'},
+  micro:{nm:'Micronutrient deficiency', col:'#7a5a8a',
+   lack:'Enough calories, but too little of a specific <b>vitamin or mineral</b> &mdash; often called <b>hidden hunger</b>.',
+   meas:'<b>Not weight or height.</b> It needs blood or biochemical tests, or specific clinical signs; a growth chart is blind to it.',
+   tempo:'Variable &mdash; can build silently over months while growth stays on track.',
+   rev:'Many correct when the missing nutrient is restored; a few effects &mdash; such as iodine\'s impact on early brain development or advanced vitamin-A eye damage &mdash; can be permanent.',
+   ev:'<span class="ev s">strong evidence</span> Roughly <b>2 billion</b> people are estimated to be affected by one or more micronutrient deficiencies worldwide.',
+   body:'The classic deficiencies each have a well-established consequence: <b>iron</b> and anemia; <b>vitamin A</b> and night blindness with higher infection risk; <b>iodine</b> and goiter with impaired brain development; <b>zinc</b> and stunted growth with diarrhea; <b>folate</b> around conception and neural-tube defects. These links are strong. What is <b>not</b> true is that any single food causes or cures a deficiency &mdash; the gap is closed by restoring the nutrient across the whole diet, or through fortification or supplementation where a clinician judges it appropriate.'}
+ };
+
+ function renderInfo(){
+   if(!form){ intro(); return; }
+   var F=FORMS[form];
+   $('info').innerHTML='<span class="n">'+F.nm+'</span>'+F.body+
+     '<div class="cmp">'+
+       '<div class="ln"><b>What is lacking</b><span>'+F.lack+'</span></div>'+
+       '<div class="ln"><b>How it is found</b><span>'+F.meas+'</span></div>'+
+       '<div class="ln"><b>Time course</b><span>'+F.tempo+'</span></div>'+
+       '<div class="ln"><b>Reversible?</b><span>'+F.rev+'</span></div>'+
+     '</div>'+
+     '<div class="loc">'+F.ev+'</div>';
+ }
+
+ function intro(){
+   $('info').innerHTML='<span class="n">One word, three conditions</span>These three forms overlap in the real world &mdash; a child can have more than one &mdash; but they are found in different ways, on different timescales, and carry different chances of recovery. That is why a single number never captures nutritional status.'+
+     '<div class="cmp">'+
+       '<div class="ln"><b>Undernutrition</b><span>too little food <i>now</i> &rarr; low weight, found on weight charts, usually reversible.</span></div>'+
+       '<div class="ln"><b>Stunting</b><span>too little over <i>years</i> &rarr; low height, easy to miss, largely permanent.</span></div>'+
+       '<div class="ln"><b>Micronutrient</b><span>a missing <i>vitamin or mineral</i> &rarr; invisible on any growth chart.</span></div>'+
+     '</div>'+
+     '<div class="loc">Pick a form above, or <b>Load examples</b>, to see how each one reads on the charts. Weight-neutral by design: these are measures of physiology and access to food, never a judgment of a child or a family.</div>';
+ }
+
+ function sync(){ setSliders(); draw(); pills(); stage(); renderInfo(); }
+
+ var fs=$('formseg').querySelectorAll('button');
+ for(var i=0;i<fs.length;i++) fs[i].onclick=(function(b){return function(){
+   var f=b.getAttribute('data-f');
+   form=(form===f)?'':f;
+   for(var z=0;z<fs.length;z++) fs[z].className=(fs[z]===b&&form)?'on':'';
+   sync();
+ };})(fs[i]);
+
+ function eglist(){
+   var out='';
+   for(var i=0;i<EG.length;i++){ var e=EG[i];
+     out+='<button class="it" data-i="'+i+'"><span class="ic">'+e.ic+'</span><span><span class="nm">'+e.nm+'</span><br><span class="ct">'+e.v.age+' mo · '+e.v.ht+' cm · '+e.v.wt+' kg</span></span></button>';
+   }
+   $('eglist').innerHTML=out;
+   var bs=$('eglist').querySelectorAll('.it');
+   for(i=0;i<bs.length;i++) bs[i].onclick=(function(n){return function(){ loadEg(n); };})(bs[i].getAttribute('data-i'));
+ }
+ function loadEg(n){
+   var e=EG[+n]; V={age:e.v.age,ht:e.v.ht,wt:e.v.wt};
+   form=e.f;
+   for(var z=0;z<fs.length;z++) fs[z].className=(form&&fs[z].getAttribute('data-f')===form)?'on':'';
+   sync();
+   if(form){ var F=FORMS[form];
+     $('info').innerHTML='<span class="n">'+e.ic+' '+e.nm+'</span>'+e.d+
+       '<div class="loc"><b>'+F.nm+'.</b> '+F.lack+'</div>'; }
+   else { $('info').innerHTML='<span class="n">'+e.ic+' '+e.nm+'</span>'+e.d; }
+   var bs=$('eglist').querySelectorAll('.it');
+   for(z=0;z<bs.length;z++) bs[z].className='it'+(+bs[z].getAttribute('data-i')===+n?' on':'');
+ }
+ var egOpen=false;
+ $('egbtn').onclick=function(){ egOpen=!egOpen; $('eglist').style.display=egOpen?'':'none';
+   $('egbtn').innerHTML=egOpen?'Hide examples':'Load examples ›'; };
+
+ $('reset').onclick=function(){ V={age:24,ht:87,wt:12}; form='';
+   for(var z=0;z<fs.length;z++) fs[z].className='';
+   var bs=$('eglist').querySelectorAll('.it'); for(z=0;z<bs.length;z++) bs[z].className='it';
+   sync(); };
+
+ sliders(); eglist(); sync();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Losing Fluid, and Putting It Back</title>
+<meta name="description" content="A live fluid-and-sodium balance model. Set how much you sweat and how salty that sweat is, then choose whether to replace the loss with nothing, plain water, a sports drink, or an electrolyte mix. Plasma sodium and body-mass change recompute and plot against two failure modes: hypernatremia from replacing too little, hyponatremia from replacing volume with water.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.grp{margin-top:13px;font-size:11.5px;font-weight:800;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
+.ct{border:1px solid var(--line);border-radius:11px;padding:9px 12px 10px;background:#fff;margin-top:7px;}
+.ct .hd{display:flex;align-items:baseline;gap:8px;}
+.ct .nm{flex:1;font-weight:700;font-size:13px;color:var(--ink);line-height:1.2;}
+.ct .nm small{display:block;font-weight:600;font-size:10.4px;color:var(--muted);margin-top:1px;}
+.ct .rd{font-family:var(--sans);font-weight:800;font-size:14px;color:var(--teal-dk);font-variant-numeric:tabular-nums;text-align:right;flex:none;}
+.ct .rd i{font-style:normal;font-size:10px;color:var(--muted);margin-left:3px;font-weight:700;}
+.ct input[type=range]{width:100%;margin-top:8px;height:20px;accent-color:var(--teal);cursor:pointer;display:block;}
+.ct.dim{opacity:.45;} .ct.dim input{pointer-events:none;}
+.tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;border-top:1px solid var(--line);padding-top:10px;gap:8px;}
+.tot .lb{font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+.tot b{font-family:var(--disp);font-size:25px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.tot b i{font-style:normal;font-size:13px;color:var(--muted);margin-left:3px;}
+.tot2{display:flex;justify-content:space-between;align-items:baseline;margin-top:6px;gap:8px;}
+.tot2 .lb{font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+.tot2 b{font-family:var(--disp);font-size:18px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.tot2 b i{font-style:normal;font-size:12px;color:var(--muted);margin-left:3px;}
+.hint{font-size:11.6px;color:var(--muted);margin-top:9px;line-height:1.5;}
+.dri{font-size:12.4px;color:var(--teal-dk);background:#f4ead8;border-radius:8px;padding:8px 11px;margin-top:10px;line-height:1.5;}
+.seg small{display:block;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 9</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 9</div>
+  <h1>Losing Fluid, and Putting It Back</h1>
+  <div class="intro">Plasma sodium is a <b>ratio</b> &mdash; sodium divided by the water it is dissolved in. Sweat carries away both, but sweat is more <b>dilute</b> than plasma, so the ratio starts moving the moment you begin. Set how much you sweat and how salty it is, then choose what you drink to replace it. Replace too little and sodium <b>climbs</b>. Replace the volume with plain water and it <b>falls</b>. Two errors, two opposite failures &mdash; watch the same body travel toward each.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="mapTitle">Two failure modes on one map</h2>
+      <svg viewBox="0 0 300 232" aria-label="A chart with plasma sodium in millimoles per litre on the vertical axis and percentage change in body mass on the horizontal axis. Coloured bands mark hyponatremia below 135, the reference range 135 to 145, and hypernatremia above 145. A marker shows where the session you set lands."><g id="map"></g></svg>
+      <div class="hint" id="mapnote"></div>
+    </div>
+    <div class="card">
+      <h2 id="ledTitle">The two ledgers underneath</h2>
+      <svg viewBox="0 0 300 150" aria-label="Two paired bars comparing water lost in sweat against water drunk, and sodium lost in sweat against sodium in the drink."><g id="led"></g></svg>
+      <div class="hint">Body mass change is the <b>water</b> ledger. Plasma sodium is set by both ledgers together &mdash; which is why the scale alone cannot tell the two failures apart.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Set a session<small>then change the drink and watch the ratio move</small></div>
+    <div class="card">
+      <div class="grp">What you drink to replace it</div>
+      <div class="seg" id="drinkseg" style="margin-top:7px;">
+        <button data-d="0">Nothing<small>no replacement</small></button>
+        <button data-d="1" class="on">Plain water<small>0 mmol/L Na</small></button>
+        <button data-d="2">Sports drink<small>~21 mmol/L</small></button>
+        <button data-d="3">Electrolyte mix<small>~60 mmol/L</small></button>
+      </div>
+
+      <div class="grp">The session</div>
+      <div id="sliders"></div>
+
+      <div class="row"><button class="btn" id="reset">Reset</button></div>
+
+      <div class="tot"><span class="lb">Plasma sodium</span><span><b><span id="na">140</span><i>mmol/L</i></b> <span class="pill normal" id="pill">normal</span></span></div>
+      <div class="tot2"><span class="lb">Body-mass change</span><b><span id="mass">0.0</span><i>%</i></b></div>
+
+      <div id="info"></div>
+
+      <div class="dri" id="dri"></div>
+
+      <div class="note"><b>This is a teaching model of a ratio, not a clinical tool and not advice for any person.</b> It has no kidneys that adjust, no thirst that intervenes, and no hormonal feedback &mdash; it simply carries your numbers forward, which is what makes the mechanism visible and also why it overstates what a real body would do. Nothing here prescribes a fluid volume, a sodium amount, or a product for anyone. Symptomatic hyponatremia is a <b>medical emergency</b> handled by clinicians using a measured blood sodium, not something to manage from a chart. Body-mass change is used only as a short-term <b>measure of fluid</b>; it says nothing about body size, composition, or health, and no body here is better or worse than another.</div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- constants ---------- */
+ var BASE=140;        /* starting plasma sodium, mmol/L */
+ var MGNA=23;         /* mg of sodium per mmol */
+ var TBWF=0.6;        /* total body water as fraction of mass (teaching value) */
+ var KCAL_CHO=4;      /* kcal per gram of carbohydrate */
+
+ var COL={sweat:'#d1495b',drink:'#2f6f9f',low:'#2f6f9f',norm:'#2f9e5b',high:'#d1495b',ink:'#33291a'};
+
+ /* drink types: sodium in mmol/L, carbohydrate in grams per litre */
+ var DRINKS=[
+  {n:'Nothing',       na:0,  cho:0,  none:1,
+   d:'You replace none of the loss. Sweat is more dilute than plasma, so removing it <b>concentrates</b> what stays behind &mdash; plasma sodium rises and body mass falls together.'},
+  {n:'Plain water',   na:0,  cho:0,  none:0,
+   d:'Water carries <b>no sodium</b>. Putting a fluid of zero concentration back into a body that is shedding sodium is the most reliable way to move plasma sodium <b>down</b>.'},
+  {n:'Sports drink',  na:21, cho:58, none:0,
+   d:'Around 6% carbohydrate and roughly 21 mmol/L of sodium &mdash; far more dilute than the ~140 mmol/L plasma it is topping up, so it <b>slows</b> the fall without preventing it.'},
+  {n:'Electrolyte mix',na:60, cho:0, none:0,
+   d:'Formulated for sodium rather than fuel, near 60 mmol/L. Still hypotonic to plasma, so it slows the dilution the most of these options but never reverses it.'}
+ ];
+
+ var DEF={mass:70,sweat:1.8,sn:40,rep:100,drink:1};
+ function clone(o){var r={},k;for(k in o)if(o.hasOwnProperty(k))r[k]=o[k];return r;}
+ var P=clone(DEF);
+
+ /* ---------- the model ----------
+    Plasma sodium = total exchangeable sodium / total body water.
+    This is the transparent teaching form of the relationship. */
+ function calc(){
+   var d=DRINKS[P.drink];
+   var TBW0=TBWF*P.mass, Na0=BASE*TBW0;
+   var Wout=P.sweat, Naout=P.sweat*P.sn;
+   var Win=d.none?0:P.sweat*P.rep/100;
+   var Nain=Win*d.na;
+   var cho=Win*d.cho, kcal=cho*KCAL_CHO;
+   var TBW=Math.max(2,TBW0-Wout+Win);
+   var Na=Math.max(0,Na0-Naout+Nain);
+   var na=Na/TBW;
+   var dm=Win-Wout;
+   return {TBW0:TBW0,Wout:Wout,Naout:Naout,Win:Win,Nain:Nain,cho:cho,kcal:kcal,
+           na:na,dm:dm,pct:P.mass>0?dm/P.mass*100:0};
+ }
+
+ function band(na){
+   if(na>145) return {nm:'Hypernatremia',pill:'high',col:COL.high};
+   if(na>=135)return {nm:'Within the reference range',pill:'normal',col:COL.norm};
+   if(na>=130)return {nm:'Mild hyponatremia',pill:'low',col:COL.low};
+   if(na>=125)return {nm:'Moderate hyponatremia',pill:'low',col:COL.low};
+   return {nm:'Severe hyponatremia',pill:'low',col:COL.low};
+ }
+
+ /* ---------- formatting ---------- */
+ function fmt(n){n=Math.round(n);var s=Math.abs(n)+'';return (n<0?'−':'')+s.replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+ function f1(n){var v=Math.round(n*10)/10;return (v<0?'−':'')+Math.abs(v).toFixed(1);}
+ function sg1(n){var v=Math.round(n*10)/10;return (v<0?'−':'+')+Math.abs(v).toFixed(1);}
+ function sg0(n){var v=Math.round(n);return (v<0?'−':'+')+fmt(Math.abs(v));}
+
+ /* ---------- chart: the map ---------- */
+ function drawMap(r){
+   var out='', i, x0=40,x1=291,yt=26,yb=184;
+   var NT=158,NB=120,PL=-7,PR=4;
+   var X=function(p){return x0+Math.max(0,Math.min(1,(p-PL)/(PR-PL)))*(x1-x0);};
+   var Y=function(n){return yt+Math.max(0,Math.min(1,(NT-n)/(NT-NB)))*(yb-yt);};
+
+   out+='<rect x="0" y="0" width="300" height="232" fill="#fffdf9"/>';
+   out+='<text x="8" y="11" font-size="7.4" fill="#8d8270" font-weight="800" letter-spacing=".6">PLASMA SODIUM (mmol/L) vs BODY-MASS CHANGE (%)</text>';
+
+   var B=[{a:158,b:145,c:COL.high,o:.13,lab:'HYPERNATREMIA — replaced too little'},
+          {a:145,b:135,c:COL.norm,o:.15,lab:'REFERENCE RANGE 135–145'},
+          {a:135,b:130,c:COL.low, o:.10,lab:'MILD'},
+          {a:130,b:125,c:COL.low, o:.19,lab:'MODERATE'},
+          {a:125,b:120,c:COL.low, o:.30,lab:'SEVERE — replaced volume with water'}];
+   for(i=0;i<B.length;i++){
+     out+='<rect x="'+x0+'" y="'+Y(B[i].a).toFixed(1)+'" width="'+(x1-x0)+'" height="'+(Y(B[i].b)-Y(B[i].a)).toFixed(1)+'" fill="'+B[i].c+'" opacity="'+B[i].o+'"/>';
+     out+='<text x="'+(x1-3)+'" y="'+(Y(B[i].a)+7).toFixed(1)+'" font-size="5.7" fill="'+B[i].c+'" text-anchor="end" font-weight="800">'+B[i].lab+'</text>';
+   }
+   out+='<rect x="'+x0+'" y="'+yt+'" width="'+(x1-x0)+'" height="'+(yb-yt)+'" fill="none" stroke="#ddd2ba" stroke-width="1"/>';
+
+   /* zero line for mass change */
+   out+='<line x1="'+X(0).toFixed(1)+'" y1="'+yt+'" x2="'+X(0).toFixed(1)+'" y2="'+yb+'" stroke="#a89b85" stroke-width="1" stroke-dasharray="3 2"/>';
+   out+='<line x1="'+X(-2).toFixed(1)+'" y1="'+yt+'" x2="'+X(-2).toFixed(1)+'" y2="'+yb+'" stroke="#b8862f" stroke-width="1" stroke-dasharray="2 2"/>';
+   out+='<text x="'+(X(-2)-2).toFixed(1)+'" y="'+(yb-3)+'" font-size="5.8" fill="#8a6a20" text-anchor="end" font-weight="800">−2% convention</text>';
+
+   /* y ticks */
+   var YT=[122,128,134,140,146,152,158];
+   for(i=0;i<YT.length;i++){
+     out+='<line x1="'+(x0-3)+'" y1="'+Y(YT[i]).toFixed(1)+'" x2="'+x0+'" y2="'+Y(YT[i]).toFixed(1)+'" stroke="#ddd2ba" stroke-width="1"/>';
+     out+='<text x="'+(x0-5)+'" y="'+(Y(YT[i])+2.3).toFixed(1)+'" font-size="6.4" fill="#a89b85" text-anchor="end" font-weight="700">'+YT[i]+'</text>';
+   }
+
+   /* x ticks */
+   var XT=[-6,-4,-2,0,2,4];
+   for(i=0;i<XT.length;i++){
+     out+='<line x1="'+X(XT[i]).toFixed(1)+'" y1="'+yb+'" x2="'+X(XT[i]).toFixed(1)+'" y2="'+(yb+3)+'" stroke="#ddd2ba" stroke-width="1"/>';
+     out+='<text x="'+X(XT[i]).toFixed(1)+'" y="'+(yb+11)+'" font-size="6.4" fill="#a89b85" text-anchor="middle" font-weight="700">'+(XT[i]>0?'+':(XT[i]<0?'−':''))+Math.abs(XT[i])+'</text>';
+   }
+   out+='<text x="'+((x0+X(0))/2).toFixed(1)+'" y="'+(yb+21)+'" font-size="6.4" fill="#8d8270" text-anchor="middle" font-weight="800">← fluid deficit</text>';
+   out+='<text x="'+((X(0)+x1)/2).toFixed(1)+'" y="'+(yb+21)+'" font-size="6.4" fill="#8d8270" text-anchor="middle" font-weight="800">fluid gain →</text>';
+
+   /* guide arrows */
+   var sx=X(0), sy=Y(BASE);
+   out+='<path d="M'+(sx-4)+' '+(sy-3)+' L'+X(-5).toFixed(1)+' '+Y(152).toFixed(1)+'" stroke="'+COL.high+'" stroke-width="1" stroke-dasharray="2 2" opacity=".5" fill="none"/>';
+   out+='<text x="'+(X(-5)+2).toFixed(1)+'" y="'+(Y(152)-3).toFixed(1)+'" font-size="5.7" fill="'+COL.high+'" font-weight="800" opacity=".85">under-replace</text>';
+   out+='<path d="M'+(sx+4)+' '+(sy+3)+' L'+X(2.3).toFixed(1)+' '+Y(127).toFixed(1)+'" stroke="'+COL.low+'" stroke-width="1" stroke-dasharray="2 2" opacity=".5" fill="none"/>';
+   out+='<text x="'+(X(2.3)-1).toFixed(1)+'" y="'+(Y(127)+7).toFixed(1)+'" font-size="5.7" fill="'+COL.low+'" text-anchor="end" font-weight="800">over-replace with water</text>';
+
+   /* start marker */
+   out+='<circle cx="'+sx.toFixed(1)+'" cy="'+sy.toFixed(1)+'" r="3.2" fill="#fffdf9" stroke="'+COL.ink+'" stroke-width="1.3"/>';
+   out+='<text x="'+sx.toFixed(1)+'" y="'+(sy-6).toFixed(1)+'" font-size="5.8" fill="#5f5340" text-anchor="middle" font-weight="800">start 140</text>';
+
+   /* connecting line + current point */
+   var bd=band(r.na), ex=X(r.pct), ey=Y(r.na);
+   out+='<line x1="'+sx.toFixed(1)+'" y1="'+sy.toFixed(1)+'" x2="'+ex.toFixed(1)+'" y2="'+ey.toFixed(1)+'" stroke="'+bd.col+'" stroke-width="1.4" stroke-dasharray="3 2" opacity=".7"/>';
+   out+='<circle cx="'+ex.toFixed(1)+'" cy="'+ey.toFixed(1)+'" r="6.4" fill="'+bd.col+'" opacity=".22"/>';
+   out+='<circle cx="'+ex.toFixed(1)+'" cy="'+ey.toFixed(1)+'" r="3.6" fill="'+bd.col+'" stroke="#fffdf9" stroke-width="1.3"/>';
+
+   var lw=96, lx=Math.max(x0+1,Math.min(x1-lw-1,ex-lw/2)), ly=(ey<yt+26?ey+11:ey-20);
+   out+='<rect x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" width="'+lw+'" height="13" rx="6.5" fill="'+bd.col+'"/>';
+   out+='<text x="'+(lx+lw/2).toFixed(1)+'" y="'+(ly+9.1).toFixed(1)+'" font-size="7" fill="#fffdf9" text-anchor="middle" font-weight="800">'+f1(r.na)+' mmol/L · '+sg1(r.pct)+'%</text>';
+
+   $('map').innerHTML=out;
+ }
+
+ /* ---------- chart: the ledgers ---------- */
+ function drawLed(r){
+   var out='', x0=64, x1=291;
+   out+='<rect x="0" y="0" width="300" height="150" fill="#fffdf9"/>';
+
+   /* water ledger */
+   var wMax=Math.max(r.Wout,r.Win,0.5)*1.18;
+   var WX=function(v){return x0+Math.max(0,Math.min(1,v/wMax))*(x1-x0);};
+   out+='<text x="8" y="14" font-size="7.2" fill="#8d8270" font-weight="800" letter-spacing=".5">WATER · litres</text>';
+   out+='<text x="60" y="30" font-size="7" fill="#5f5340" text-anchor="end" font-weight="800">out</text>';
+   out+='<rect x="'+x0+'" y="23" width="'+Math.max(0.6,WX(r.Wout)-x0).toFixed(1)+'" height="10" rx="3" fill="'+COL.sweat+'" opacity=".85"/>';
+   out+='<text x="'+Math.min(x1-1,WX(r.Wout)+4).toFixed(1)+'" y="30.8" font-size="6.8" fill="#8a2a3a" font-weight="800" text-anchor="'+(WX(r.Wout)>x1-56?'end':'start')+'">'+f1(r.Wout)+' L sweat</text>';
+   out+='<text x="60" y="47" font-size="7" fill="#5f5340" text-anchor="end" font-weight="800">in</text>';
+   out+='<rect x="'+x0+'" y="40" width="'+Math.max(0.6,WX(r.Win)-x0).toFixed(1)+'" height="10" rx="3" fill="'+COL.drink+'" opacity=".85"/>';
+   out+='<text x="'+Math.min(x1-1,WX(r.Win)+4).toFixed(1)+'" y="47.8" font-size="6.8" fill="#255f8a" font-weight="800" text-anchor="'+(WX(r.Win)>x1-52?'end':'start')+'">'+f1(r.Win)+' L drunk</text>';
+   out+='<text x="'+x0+'" y="62" font-size="6.9" fill="'+(r.dm<0?'#8a2a3a':'#255f8a')+'" font-weight="800">net '+sg1(r.dm)+' L → body mass '+sg1(r.pct)+'%</text>';
+
+   out+='<line x1="8" y1="72" x2="292" y2="72" stroke="#efe7d7" stroke-width="1"/>';
+
+   /* sodium ledger */
+   var nMax=Math.max(r.Naout,r.Nain,40)*1.18;
+   var NX=function(v){return x0+Math.max(0,Math.min(1,v/nMax))*(x1-x0);};
+   out+='<text x="8" y="88" font-size="7.2" fill="#8d8270" font-weight="800" letter-spacing=".5">SODIUM · mmol</text>';
+   out+='<text x="60" y="104" font-size="7" fill="#5f5340" text-anchor="end" font-weight="800">out</text>';
+   out+='<rect x="'+x0+'" y="97" width="'+Math.max(0.6,NX(r.Naout)-x0).toFixed(1)+'" height="10" rx="3" fill="'+COL.sweat+'" opacity=".85"/>';
+   out+='<text x="'+Math.min(x1-1,NX(r.Naout)+4).toFixed(1)+'" y="104.8" font-size="6.8" fill="#8a2a3a" font-weight="800" text-anchor="'+(NX(r.Naout)>x1-70?'end':'start')+'">'+fmt(r.Naout)+' mmol · '+fmt(r.Naout*MGNA)+' mg</text>';
+   out+='<text x="60" y="121" font-size="7" fill="#5f5340" text-anchor="end" font-weight="800">in</text>';
+   out+='<rect x="'+x0+'" y="114" width="'+Math.max(0.6,NX(r.Nain)-x0).toFixed(1)+'" height="10" rx="3" fill="'+COL.drink+'" opacity=".85"/>';
+   out+='<text x="'+Math.min(x1-1,NX(r.Nain)+4).toFixed(1)+'" y="121.8" font-size="6.8" fill="#255f8a" font-weight="800" text-anchor="'+(NX(r.Nain)>x1-64?'end':'start')+'">'+fmt(r.Nain)+' mmol · '+fmt(r.Nain*MGNA)+' mg</text>';
+   out+='<text x="'+x0+'" y="136" font-size="6.9" fill="'+((r.Nain-r.Naout)<0?'#8a2a3a':'#255f8a')+'" font-weight="800">net '+sg0(r.Nain-r.Naout)+' mmol of sodium</text>';
+   out+='<text x="8" y="146" font-size="6.3" fill="#a89b85" font-weight="700">1 mmol sodium = 23 mg</text>';
+
+   $('led').innerHTML=out;
+ }
+
+ /* ---------- sliders ---------- */
+ var SL=[
+  {k:'sweat',nm:'Sweat lost',sub:'0.3 L in the cold to 2.5+ L an hour in heat',un:'L',min:0,max:4,step:0.1,fmt:f1},
+  {k:'sn',nm:'Sweat sodium',sub:'hypotonic to plasma — 10 to 90 mmol/L between people',un:'mmol/L',min:10,max:90,step:1,fmt:fmt},
+  {k:'rep',nm:'How much you replace',sub:'as a share of the sweat volume',un:'%',min:0,max:150,step:5,fmt:fmt},
+  {k:'mass',nm:'Body mass',sub:'sets total body water — the denominator of the ratio',un:'kg',min:45,max:120,step:1,fmt:fmt}
+ ];
+
+ function buildSliders(){
+   var h='',i,s;
+   for(i=0;i<SL.length;i++){ s=SL[i];
+     h+='<div class="ct" id="ct_'+s.k+'"><div class="hd"><span class="nm">'+s.nm+'<small>'+s.sub+'</small></span>'+
+        '<span class="rd" id="rd_'+s.k+'">'+s.fmt(P[s.k])+'<i>'+s.un+'</i></span></div>'+
+        '<input type="range" id="sl_'+s.k+'" min="'+s.min+'" max="'+s.max+'" step="'+s.step+'" value="'+P[s.k]+'"></div>';
+   }
+   $('sliders').innerHTML=h;
+   for(i=0;i<SL.length;i++){ (function(s){
+     var el=$('sl_'+s.k);
+     el.oninput=function(){ P[s.k]=+el.value; go(); };
+   })(SL[i]); }
+ }
+ function syncSliders(){
+   var i,s;
+   for(i=0;i<SL.length;i++){ s=SL[i];
+     $('sl_'+s.k).value=P[s.k];
+     $('rd_'+s.k).innerHTML=s.fmt(P[s.k])+'<i>'+s.un+'</i>';
+   }
+   $('ct_rep').className='ct'+(DRINKS[P.drink].none?' dim':'');
+ }
+
+ function drinkSeg(){
+   var b=$('drinkseg').querySelectorAll('button'),i;
+   for(i=0;i<b.length;i++){ (function(btn){
+     btn.onclick=function(){ P.drink=+btn.getAttribute('data-d'); go(); };
+   })(b[i]); }
+ }
+ function syncSeg(){
+   var b=$('drinkseg').querySelectorAll('button'),i;
+   for(i=0;i<b.length;i++) b[i].className=(+b[i].getAttribute('data-d')===P.drink)?'on':'';
+ }
+
+ /* ---------- render ---------- */
+ function go(){
+   var r=calc(), bd=band(r.na), d=DRINKS[P.drink];
+   syncSliders(); syncSeg();
+   drawMap(r); drawLed(r);
+
+   $('na').innerHTML=f1(r.na);
+   $('mass').innerHTML=sg1(r.pct);
+   $('pill').className='pill '+bd.pill;
+   $('pill').innerHTML=bd.pill==='normal'?'normal':(bd.pill==='high'?'high':'low');
+
+   $('stage').style.background=bd.col;
+   $('stage').innerHTML=bd.nm+'<small>'+d.n+' · '+f1(P.sweat)+' L sweat at '+fmt(P.sn)+' mmol/L</small>';
+
+   /* interpretation */
+   var msg;
+   if(bd.pill==='high'){
+     msg='<span class="n">Failure one: replacing too little</span>You put back less water than you lost, so plasma volume falls and body mass drops. Because sweat is <b>more dilute</b> than plasma, the sodium left behind is now packed into less water &mdash; concentration <b>rises</b>. Sustained, this is the hypertonic, dehydration end: rising heart rate, rising core temperature, thirst and water conservation by the kidney.';
+   } else if(r.na<135){
+     msg='<span class="n">Failure two: replacing volume with water</span>You returned the volume, or more, but with a fluid <b>more dilute</b> than what you lost &mdash; so the same sodium now sits in more water and concentration <b>falls</b>. Below 135 mmol/L is hyponatremia; the danger is water shifting into brain cells inside a fixed skull. This is the trap where early symptoms feel like dehydration and the instinct to drink more makes it worse.';
+   } else {
+     msg='<span class="n">Near the reference range</span>Volume in roughly tracks volume out, and the sodium gap is small, so plasma sodium drifts only a little. Notice that <b>nothing you drink during exercise raises</b> plasma sodium &mdash; every practical drink is hypotonic to plasma, so a saltier drink only makes the fall <b>slower</b>, never upward.';
+   }
+   $('info').innerHTML=msg;
+
+   /* energy + DRI note */
+   var e;
+   if(d.cho>0 && r.Win>0){
+     e='This '+d.n.toLowerCase()+' also delivers <b>'+fmt(r.cho)+' g of carbohydrate</b> &mdash; at '+KCAL_CHO+' kcal per gram that is <b>'+fmt(r.kcal)+' kcal</b>. Carbohydrate is a fuel question, separate from the fluid one.';
+   } else {
+     e='Sodium reference values, for context: the <b>Adequate Intake is 1,500 mg/day</b> and the <b>Chronic Disease Risk Reduction intake is 2,300 mg/day</b> (adults; the CDRR applies to ages 14 and older). This session sheds <b>'+fmt(r.Naout*MGNA)+' mg</b> of sodium in sweat &mdash; the reference values were explicitly <b>not</b> derived for people with large sweat losses.';
+   }
+   $('dri').innerHTML=e;
+
+   $('mapnote').innerHTML='The marker is where <b>'+d.n.toLowerCase()+'</b> lands this body. Flip between the four drinks with the session held still to see the trajectory rotate &mdash; it never turns upward.';
+ }
+
+ buildSliders(); drinkSeg();
+ $('reset').onclick=function(){ P=clone(DEF); go(); };
+ go();
+})();
+</script>
+</body>
+</html>

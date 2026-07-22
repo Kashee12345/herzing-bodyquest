@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>The Central Dogma: DNA → RNA → Protein</title>
+<meta name="description" content="Step through replication, transcription, and translation to watch a bacterial gene become a working protein — and see where antibiotics jam each step. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:1fr 1fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.seg button small{font-size:9px;}
+.trk{display:flex;gap:8px;margin:2px 0 10px;}
+.trk div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 4px 8px;background:#fff;}
+.trk .lb{font-size:9px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:800;}
+.trk .v{display:block;font-size:12px;font-weight:700;color:var(--teal-dk);margin-top:3px;line-height:1.18;min-height:2.3em;}
+.trk div.dim .v{color:var(--muted);font-weight:600;}
+.flow{text-align:center;font-size:12px;font-weight:700;color:var(--muted);margin-top:4px;letter-spacing:.3px;}
+.flow b{color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 7</div>
+  <h1>The Central Dogma: DNA → RNA → Protein</h1>
+  <div class="intro">Every trait a microbe has &mdash; and every way it resists a drug &mdash; traces back to a <b>gene</b> being copied, read, and built into a <b>protein</b>. Step through the journey from DNA to a working molecule.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">A stretch of DNA</h2>
+    <svg viewBox="0 0 240 185" aria-label="central dogma diagram"><g id="art"></g></svg>
+    <div class="flow" id="flow"></div>
+  </div></div>
+  <div>
+    <div id="stage">The central dogma<small>press Next to begin the journey</small></div>
+    <div class="card">
+      <div class="seg" id="seg"></div>
+      <div class="trk">
+        <div id="t1"><span class="lb">Template</span><span class="v" id="v1">—</span></div>
+        <div id="t2"><span class="lb">Machine</span><span class="v" id="v2">—</span></div>
+        <div id="t3"><span class="lb">Product</span><span class="v" id="v3">—</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="note" id="drug"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ // ---- drawing helpers -------------------------------------------------
+ function strand(cy,amp,per,ph,x0,x1,c){
+   var d='M '+x0+' '+(cy+amp*Math.sin(ph)).toFixed(1);
+   for(var x=x0;x<=x1;x+=3){ d+=' L '+x+' '+(cy+amp*Math.sin((x-x0)/per*6.2832+ph)).toFixed(1); }
+   return '<path d="'+d+'" fill="none" stroke="'+c+'" stroke-width="3" stroke-linecap="round"/>';
+ }
+ function helix(cy,x0,x1,c1,c2){
+   var amp=18,per=44,out='';
+   for(var x=x0+11;x<x1;x+=22){ var t=(x-x0)/per*6.2832;
+     out+='<line x1="'+x+'" y1="'+(cy+amp*Math.sin(t)).toFixed(1)+'" x2="'+x+'" y2="'+(cy-amp*Math.sin(t)).toFixed(1)+'" stroke="#cdbfe6" stroke-width="2.5"/>'; }
+   return out+strand(cy,amp,per,0,x0,x1,c1)+strand(cy,amp,per,Math.PI,x0,x1,c2);
+ }
+ function beads(pts,c,r){ var s=''; for(var k=0;k<pts.length;k++){ s+='<circle cx="'+pts[k][0]+'" cy="'+pts[k][1]+'" r="'+(r||5)+'" fill="'+c+'"/>'; } return s; }
+
+ // ---- step drawings ---------------------------------------------------
+ function draw(i,col){
+   var out='';
+   if(i===0){ // the gene
+     out+=helix(92,18,222,'#6d3f9c','#a97fd6');
+     out+='<rect x="90" y="58" width="60" height="70" rx="7" fill="none" stroke="#b8862f" stroke-width="2.6" stroke-dasharray="5 3"/>';
+     out+='<text x="120" y="50" font-size="11" fill="#8a6a20" text-anchor="middle" font-weight="800">a gene</text>';
+     out+='<text x="120" y="150" font-size="9.5" fill="#837a94" text-anchor="middle" font-weight="700">A · T   G · C  paired bases</text>';
+   } else if(i===1){ // replication
+     out+=helix(92,16,104,'#6d3f9c','#a97fd6');
+     out+='<path d="M 104 92 Q 120 62 132 52" fill="none" stroke="#6d3f9c" stroke-width="3" stroke-linecap="round"/>';
+     out+='<path d="M 104 92 Q 120 122 132 132" fill="none" stroke="#a97fd6" stroke-width="3" stroke-linecap="round"/>';
+     out+=helix(52,132,224,'#6d3f9c','#2f9e5b');
+     out+=helix(132,132,224,'#2f9e5b','#a97fd6');
+     out+='<circle cx="112" cy="92" r="11" fill="'+col+'"/><text x="112" y="95" font-size="8" fill="#fff" text-anchor="middle" font-weight="800">pol</text>';
+     out+='<text x="178" y="26" font-size="9.5" fill="#2f9e5b" text-anchor="middle" font-weight="800">new strand</text>';
+     out+='<text x="178" y="170" font-size="9.5" fill="#837a94" text-anchor="middle" font-weight="700">2 identical copies</text>';
+   } else if(i===2){ // transcription
+     out+=helix(140,18,222,'#b7a6d4','#b7a6d4');
+     out+='<ellipse cx="118" cy="140" rx="31" ry="23" fill="'+col+'" opacity=".92"/>';
+     out+='<text x="118" y="137" font-size="8.5" fill="#fff" text-anchor="middle" font-weight="800">RNA</text>';
+     out+='<text x="118" y="147" font-size="8.5" fill="#fff" text-anchor="middle" font-weight="800">pol</text>';
+     out+='<path d="M 138 118 Q 176 92 206 56" fill="none" stroke="'+col+'" stroke-width="3.5" stroke-linecap="round"/>';
+     out+=beads([[144,112],[160,98],[177,82],[194,66],[208,54]],col,4.5);
+     out+='<text x="200" y="40" font-size="10.5" fill="#8a6a20" text-anchor="middle" font-weight="800">mRNA</text>';
+     out+='<text x="120" y="176" font-size="9.5" fill="#837a94" text-anchor="middle" font-weight="700">code copied out: T becomes U</text>';
+   } else if(i===3){ // translation
+     var cods=['AUG','GCU','ACC','GGA','UUU','UAA'];
+     var cc=['#6d3f9c','#2f6f9f','#b8862f','#2f9e5b','#7a5a8a','#d1495b'];
+     for(var k=0;k<6;k++){ out+='<rect x="'+(18+k*34)+'" y="150" width="32" height="20" rx="4" fill="'+cc[k]+'"/><text x="'+(34+k*34)+'" y="164" font-size="8.5" fill="#fff" text-anchor="middle" font-weight="800">'+cods[k]+'</text>'; }
+     out+='<ellipse cx="118" cy="150" rx="36" ry="15" fill="#c9a24a"/>';
+     out+='<ellipse cx="118" cy="126" rx="31" ry="23" fill="'+col+'" opacity=".9"/>';
+     out+='<text x="118" y="123" font-size="8.5" fill="#fff" text-anchor="middle" font-weight="800">ribo-</text>';
+     out+='<text x="118" y="133" font-size="8.5" fill="#fff" text-anchor="middle" font-weight="800">some</text>';
+     out+='<path d="M 132 72 l -12 30 l 24 0 z" fill="#2f6f9f"/>';
+     out+='<circle cx="132" cy="64" r="8" fill="#b8862f"/><text x="132" y="55" font-size="8.5" fill="#8a6a20" text-anchor="middle" font-weight="800">tRNA</text>';
+     out+=beads([[96,102],[78,90],[60,82],[44,80]],'#b8862f',6);
+     out+='<path d="M 96 102 L 78 90 L 60 82 L 44 80" fill="none" stroke="#b8862f" stroke-width="2.5"/>';
+     out+='<text x="60" y="66" font-size="9.5" fill="#8a6a20" text-anchor="middle" font-weight="800">protein chain</text>';
+   } else { // folded protein
+     out+='<path d="M 92 96 C 66 62 128 46 138 84 C 150 62 190 78 168 108 C 190 128 150 156 118 138 C 92 152 66 128 92 96 Z" fill="'+col+'" opacity=".9"/>';
+     out+=beads([[100,90],[124,78],[146,94],[150,116],[124,128],[100,112]],'#fff',3.5);
+     out+='<circle cx="176" cy="98" r="12" fill="#2f9e5b"/><text x="176" y="82" font-size="9" fill="#237a45" text-anchor="middle" font-weight="800">substrate</text>';
+     out+='<text x="118" y="172" font-size="9.5" fill="#837a94" text-anchor="middle" font-weight="700">shape = function</text>';
+   }
+   return out;
+ }
+
+ // ---- content ---------------------------------------------------------
+ var S=[
+  {t:'The gene',col:'#6d3f9c',tag:'Gene',sub:'DNA',flow:'<b>DNA</b>',
+   tmpl:'DNA double helix',mach:'—',prod:'—',dim:[0,1,1],
+   d:'A microbe’s genome is <b>DNA</b> — a double helix of paired bases (A–T, G–C). A <b>gene</b> is a stretch of that DNA holding the recipe for <b>one protein</b>. In bacteria the DNA floats free in the cytoplasm as a single circular chromosome — <b>there is no nucleus</b> to cross.',
+   dc:'mnem',drug:'Chapter 7’s big idea: change a gene — by <b>mutation</b>, or by picking one up from another cell — and you change the protein. That is how antibiotic <b>resistance</b> arises and spreads.'},
+  {t:'Replication',col:'#2f6f9f',tag:'Replicate',sub:'DNA → DNA',flow:'<b>DNA</b> → DNA',
+   tmpl:'DNA (both strands)',mach:'DNA polymerase',prod:'2 identical DNA',dim:[0,0,0],
+   d:'Before a cell divides it must copy <b>all</b> of its DNA. The helix <b>unzips</b>, and <b>DNA polymerase</b> builds a matching new strand against each old one, so every daughter cell inherits one identical double helix. A fast bacterium can do this in about 20 minutes.',
+   dc:'note',drug:'<b>Fluoroquinolones</b> (ciprofloxacin, levofloxacin) jam the bacterial enzymes that unwind DNA (<b>gyrase / topoisomerase</b>), so replication stalls and the cell cannot divide.'},
+  {t:'Transcription',col:'#b8862f',tag:'Transcribe',sub:'DNA → RNA',flow:'DNA → <b>RNA</b>',
+   tmpl:'DNA (one strand)',mach:'RNA polymerase',prod:'mRNA',dim:[0,0,0],
+   d:'To use a gene, the cell first copies it into <b>messenger RNA (mRNA)</b>. <b>RNA polymerase</b> reads one DNA strand and builds a single-stranded mRNA — same code, but with <b>U in place of T</b>. This is the <b>DNA → RNA</b> step of the central dogma.',
+   dc:'note',drug:'<b>Rifampin</b> plugs bacterial RNA polymerase, shutting off transcription — one of the core drugs against tuberculosis.'},
+  {t:'Translation',col:'#2f9e5b',tag:'Translate',sub:'RNA → protein',flow:'RNA → <b>protein</b>',
+   tmpl:'mRNA',mach:'Ribosome + tRNA',prod:'Polypeptide chain',dim:[0,0,0],
+   d:'The <b>ribosome</b> clamps onto the mRNA and reads it three bases at a time — each triplet is a <b>codon</b> for one amino acid. <b>tRNAs</b> deliver the matching amino acids, and the ribosome links them into a growing <b>protein chain</b>. In bacteria this begins the moment mRNA appears — transcription and translation are <b>coupled</b>.',
+   dc:'note',drug:'The bacterial ribosome is a huge drug target: <b>aminoglycosides, tetracyclines, macrolides, clindamycin, and linezolid</b> all block translation. Human ribosomes are built differently, so these drugs spare our own cells.'},
+  {t:'The protein',col:'#d1495b',tag:'Protein',sub:'folded',flow:'→ <b>working protein</b>',
+   tmpl:'—',mach:'Folding',prod:'Functional protein',dim:[1,0,0],
+   d:'The finished chain <b>folds</b> into a precise 3-D shape — and shape is function. That single protein might be an <b>enzyme</b>, a structural part, a membrane channel, or a <b>toxin</b>. Making this working molecule was the whole point of the gene.',
+   dc:'note',drug:'Resistance often comes down to one changed protein: MRSA builds an altered <b>penicillin-binding protein</b> that β-lactam antibiotics cannot grip, so the drug simply fails.'},
+ ];
+
+ var i=0;
+
+ function renderSeg(){
+   $("seg").innerHTML=S.map(function(s,k){return '<button data-i="'+k+'" class="'+(k===i?'on':'')+'">'+s.tag+'<small>'+s.sub+'</small></button>';}).join('');
+   document.querySelectorAll('#seg button').forEach(function(b){b.onclick=function(){i=+b.dataset.i;render();};});
+ }
+ function setCell(id,vid,txt,dim){ $(id).className=dim?'dim':''; $(vid).innerHTML=txt; }
+
+ function render(){
+   var s=S[i];
+   $("art").innerHTML=draw(i,s.col);
+   $("flow").innerHTML=s.flow;
+   $("cardTitle").innerHTML=s.t;
+   $("stage").style.background=s.col;
+   $("stage").innerHTML=s.t+'<small>step '+(i+1)+' of '+S.length+'</small>';
+   setCell('t1','v1',s.tmpl,s.dim[0]);
+   setCell('t2','v2',s.mach,s.dim[1]);
+   setCell('t3','v3',s.prod,s.dim[2]);
+   $("info").innerHTML='<span class="n">'+s.t+'</span>'+s.d;
+   $("drug").className=s.dc; $("drug").innerHTML=s.drug;
+   $("prev").disabled=(i===0); $("next").disabled=(i===S.length-1);
+   renderSeg();
+ }
+ $("prev").onclick=function(){if(i>0){i--;render();}};
+ $("next").onclick=function(){if(i<S.length-1){i++;render();}};
+ render();
+})();
+</script>
+</body>
+</html>

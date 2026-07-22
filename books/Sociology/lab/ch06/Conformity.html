@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf3ec">
+<title>Conformity: Asch &amp; Milgram</title>
+<meta name="description" content="Run Solomon Asch's line-judgment experiment and Stanley Milgram's obedience experiment yourself — change the group size, add an ally, move the authority figure — and watch group pressure win. An interactive for introductory sociology.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_socio.css">
+<style>.wrap{grid-template-columns:1fr 1fr;}
+.seg button{font-size:12px;padding:10px 3px;letter-spacing:-.2px;}
+#segN button{font-size:13px;padding:9px 0;}
+#cap{margin-top:9px;font-size:11.8px;color:var(--soft);text-align:center;background:#faf3ec;border:1px solid var(--line);border-radius:8px;padding:8px 10px;line-height:1.45;min-height:52px;display:flex;align-items:center;justify-content:center;} #cap b{color:var(--teal-dk);}
+.lbl{font-size:10.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:0 0 7px;}
+.lbl.sp{margin-top:12px;}
+.st{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.st div{border:1px solid var(--line);border-radius:10px;padding:7px 3px;text-align:center;background:#fff;}
+.st div b{display:block;font-size:8.8px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.st div span{display:block;font-family:var(--disp);font-weight:700;font-size:18px;color:var(--teal-dk);margin-top:3px;}
+.st div.yes{background:#f2f9f4;border-color:#cfe6d8;} .st div.yes span{color:#237a45;font-size:15px;}
+.st div.no{background:#fdf1f3;border-color:#f0c9d0;} .st div.no span{color:#b23145;font-size:15px;}
+.prod{font-size:12.3px;line-height:1.5;background:#f4eef6;border:1px solid #e2d4e8;border-left:5px solid var(--purple);border-radius:9px;padding:9px 12px;margin-top:11px;color:#4a3a52;}
+.prod b{color:#3d2a45;} .prod i{font-style:normal;font-weight:800;color:var(--purple);display:block;font-size:9.6px;letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px;}
+.lensbox{font-size:12.7px;line-height:1.55;color:var(--soft);margin-top:10px;} .lensbox b{color:var(--ink);}
+.lensbox .who{display:block;font-size:11.3px;color:var(--teal-dk);background:#f8ead9;border-radius:8px;padding:7px 11px;margin-top:9px;}
+.grid .it.on{background:var(--teal);border-color:var(--teal);color:#fff;}
+.small{font-size:11.6px;color:var(--muted);line-height:1.5;margin-top:9px;} .small b{color:var(--teal-dk);}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Sociology · Chapter 6</div>
+  <h1>Conformity: Asch &amp; Milgram</h1>
+  <div class="intro">We like to think our judgments are our own. Two of sociology's most unsettling experiments say otherwise: <b>Solomon Asch</b> showed that a unanimous group can talk you out of what your own eyes report, and <b>Stanley Milgram</b> showed that an ordinary person in a lab coat can talk you into harming a stranger. Run both experiments below &mdash; change the group, move the authority &mdash; and watch where the pressure comes from.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The Asch line-judgment task</h2>
+    <svg viewBox="0 0 240 215" aria-label="experiment scene"><g id="art"></g></svg>
+    <div id="cap">Pick the confederates, then answer.</div>
+  </div></div>
+  <div>
+    <div id="stage">Conformity<small>choose an experiment</small></div>
+    <div class="card">
+      <div class="modeseg"><button id="mA" class="on">Asch · 1951</button><button id="mM">Milgram · 1963</button></div>
+      <div id="ctl"></div>
+      <div class="st" id="st"></div>
+      <div id="info"></div>
+      <div id="prodbox"></div>
+      <div class="row" id="btns"></div>
+    </div>
+    <div class="card"><h2>Read it through a paradigm</h2>
+      <div class="grid" id="lensbtns">
+        <button class="it on" data-l="0">Structural functionalism</button>
+        <button class="it" data-l="1">Conflict theory</button>
+        <button class="it" data-l="2">Symbolic interactionism</button>
+      </div>
+      <div class="lensbox" id="lens"></div>
+    </div>
+  </div>
+</div>
+<footer>Sociology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var mode='asch';
+ var LB=['A','B','C'];
+
+ /* ================= ASCH ================= */
+ var nConf=6, ally=0, pick=null, slots=[42,60,76], correct=1, group=0;
+ /* Asch's reported conformity on critical trials, by number of unanimous confederates */
+ var SIZE={1:3,2:13,3:32,4:35,5:35,6:36,7:37};
+
+ function newTrial(){
+   var h=[42,60,76];
+   for(var i=h.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=h[i];h[i]=h[j];h[j]=t;}
+   slots=h;
+   for(var k=0;k<3;k++){ if(slots[k]===60){ correct=k; } }
+   do{ group=Math.floor(Math.random()*3); }while(group===correct);
+   pick=null;
+ }
+ function rate(){
+   var b=SIZE[nConf];
+   return ally?Math.max(2,Math.round(b*0.25)):b;
+ }
+ function allyIdx(){ return Math.floor((nConf-1)/2); }
+
+ function drawAsch(){
+   var s='';
+   s+='<rect x="8" y="6" width="224" height="108" rx="10" fill="#ffffff" stroke="#eee3d8" stroke-width="1.5"/>';
+   s+='<text x="42" y="19" font-size="6.6" fill="#8c8074" text-anchor="middle" font-weight="800" letter-spacing="1">STANDARD</text>';
+   s+='<line x1="42" y1="40" x2="42" y2="100" stroke="#33261a" stroke-width="4.5" stroke-linecap="round"/>';
+   s+='<line x1="80" y1="14" x2="80" y2="106" stroke="#eee3d8" stroke-width="2"/>';
+   var lx=[122,164,206];
+   for(var i=0;i<3;i++){
+     var col='#33261a', lw=4.5;
+     if(pick!==null){ if(i===correct){col='#2f9e5b';lw=5.5;} else if(i===group){col='#d1495b';} }
+     s+='<line x1="'+lx[i]+'" y1="'+(100-slots[i])+'" x2="'+lx[i]+'" y2="100" stroke="'+col+'" stroke-width="'+lw+'" stroke-linecap="round"/>';
+     s+='<text x="'+lx[i]+'" y="111" font-size="9" text-anchor="middle" font-weight="800" fill="'+(pick===i?'#bf6a30':'#8c8074')+'">'+LB[i]+'</text>';
+   }
+   s+='<ellipse cx="120" cy="197" rx="110" ry="16" fill="#f2e6d8"/>';
+   var tot=nConf+1, x0=22, span=196;
+   var gap = tot>1?span/(tot-1):0;
+   var r=Math.max(7,Math.min(13,gap/2.4));
+   var ai=allyIdx();
+   for(var q=0;q<tot;q++){
+     var cx = tot>1 ? x0+gap*q : 120;
+     var you = (q===tot-1);
+     var al  = (ally===1 && !you && q===ai);
+     var fill = you?'#bf6a30':(al?'#2f9e5b':'#c9b8a6');
+     var ans = you ? (pick===null?'?':LB[pick]) : (al?LB[correct]:LB[group]);
+     var edge = al?'#2f9e5b':(you?'#bf6a30':'#e0d2c2');
+     var tcol = al?'#2f9e5b':(you?'#bf6a30':'#5c5145');
+     var bw = Math.max(15,r*1.5);
+     s+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="130" width="'+bw.toFixed(1)+'" height="17" rx="5.5" fill="#fff" stroke="'+edge+'" stroke-width="1.6"/>';
+     s+='<text x="'+cx.toFixed(1)+'" y="142.6" font-size="10" text-anchor="middle" font-weight="800" fill="'+tcol+'">'+ans+'</text>';
+     s+='<circle cx="'+cx.toFixed(1)+'" cy="163" r="'+r.toFixed(1)+'" fill="'+fill+'"/>';
+     s+='<circle cx="'+(cx-r*0.33).toFixed(1)+'" cy="'+(163-r*0.18).toFixed(1)+'" r="'+(r*0.15).toFixed(1)+'" fill="#fff" opacity=".65"/>';
+     s+='<circle cx="'+(cx+r*0.33).toFixed(1)+'" cy="'+(163-r*0.18).toFixed(1)+'" r="'+(r*0.15).toFixed(1)+'" fill="#fff" opacity=".65"/>';
+     if(you){ s+='<text x="'+cx.toFixed(1)+'" y="'+(163+r+11).toFixed(1)+'" font-size="7.4" text-anchor="middle" font-weight="800" fill="#7a3f18" letter-spacing=".6">YOU</text>'; }
+     if(al){ s+='<text x="'+cx.toFixed(1)+'" y="'+(163+r+11).toFixed(1)+'" font-size="7.4" text-anchor="middle" font-weight="800" fill="#237a45" letter-spacing=".6">ALLY</text>'; }
+   }
+   s+='<text x="120" y="124" font-size="7.2" text-anchor="middle" font-weight="800" fill="#8c8074" letter-spacing=".8">THEY ANSWER OUT LOUD FIRST — YOU ANSWER LAST</text>';
+   return s;
+ }
+
+ function ctlAsch(){
+   var s='<div class="lbl">Confederates in the group</div><div class="seg" id="segN">';
+   for(var n=1;n<=7;n++){ s+='<button data-n="'+n+'" class="'+(n===nConf?'on':'')+'">'+n+'</button>'; }
+   s+='</div>';
+   s+='<div class="lbl sp">The majority</div><div class="seg" id="segU">'+
+      '<button data-u="0" class="'+(ally?'':'on')+'">Unanimous<small>all give the wrong line</small></button>'+
+      '<button data-u="1" class="'+(ally?'on':'')+'">One dissents<small>a single true partner</small></button></div>';
+   s+='<div class="lbl sp">Your turn — which line matches the standard?</div><div class="seg" id="segA">';
+   for(var i=0;i<3;i++){ s+='<button data-c="'+i+'" class="'+(pick===i?'on':'')+'">Line '+LB[i]+'</button>'; }
+   s+='</div>';
+   return s;
+ }
+
+ function renderAsch(){
+   $("cardTitle").innerHTML='The Asch line-judgment task';
+   $("art").innerHTML=drawAsch();
+   $("ctl").innerHTML=ctlAsch();
+   $("prodbox").innerHTML='';
+   var r=rate();
+   var conf = (pick!==null && pick===group);
+   var indep = (pick!==null && pick===correct);
+   var res = pick===null?'—':(conf?'Conformed':(indep?'Independent':'Own error'));
+   $("st").innerHTML=
+     '<div><b>In group</b><span>'+(nConf+1)+'</span></div>'+
+     '<div class="'+(ally?'yes':'no')+'"><b>Unanimous</b><span>'+(ally?'No':'Yes')+'</span></div>'+
+     '<div><b>Conform rate</b><span>'+r+'%</span></div>'+
+     '<div class="'+(conf?'no':(indep?'yes':''))+'"><b>Your call</b><span>'+res+'</span></div>';
+
+   if(pick===null){
+     $("stage").style.background='#bf6a30';
+     $("stage").innerHTML='Asch, 1951<small>'+nConf+' confederate'+(nConf>1?'s':'')+(ally?' · one ally dissents':' · unanimous majority')+'</small>';
+     var maj=nConf-(ally?1:0), capt;
+     if(maj===0){ capt='The only other person at the table has just said <b>'+LB[correct]+'</b>.'; }
+     else{ capt='<b>'+maj+'</b> '+(maj===1?'person has':'people have')+' just said <b>'+LB[group]+'</b>'+(ally?', and one has said <b>'+LB[correct]+'</b>':'')+'.'; }
+     $("cap").innerHTML='The lines are <b>not close</b> &mdash; alone, people get this right over 99% of the time. '+capt;
+     $("info").innerHTML='<span class="n">The setup</span>You believe you are in a <b>vision test</b>. In fact everyone else at the table is a <b>confederate</b> working for the experimenter, and they have been told to give the same wrong answer out loud, before you. Nothing is at stake. No one threatens you. There is no reward for agreeing. <b>Answer honestly and you stand alone; answer with the group and you are wrong.</b> Choose a line above.';
+     $("btns").innerHTML='<button class="btn" id="shuf">Shuffle the cards</button>';
+     $("shuf").onclick=function(){ newTrial(); renderAsch(); };
+   } else {
+     $("stage").style.background=conf?'#d1495b':(indep?'#2f9e5b':'#b8862f');
+     $("stage").innerHTML=(conf?'You conformed':(indep?'You stayed independent':'Wrong — but not the group’s answer'))+'<small>the correct line was '+LB[correct]+' · the group said '+LB[group]+'</small>';
+     $("cap").innerHTML='Correct line: <b>'+LB[correct]+'</b> (green). The group answered <b>'+LB[group]+'</b> (red). You said <b>'+LB[pick]+'</b>.';
+     var t='<span class="n">'+(conf?'You went with the group':(indep?'You trusted your own eyes':'Your own mistake'))+'</span>';
+     if(!conf && !indep){ t+='You picked a line neither the group nor the card supports &mdash; an error, but not a <b>social</b> one. Asch counted only agreement with the majority as conformity. '; }
+     if(ally){
+       t+='One person breaking the unanimity is the single most powerful variable Asch found. When just <b>one confederate gave the correct answer</b>, conformity collapsed to roughly <b>a quarter</b> of its former level &mdash; about <b>'+r+'% of critical trials</b>. Remarkably, the ally did not even have to be right: a partner who gave a <i>different</i> wrong answer also freed the subject. What breaks the spell is not accuracy, it is the end of <b>unanimity</b>.';
+     } else {
+       t+='With <b>'+nConf+'</b> unanimous confederate'+(nConf>1?'s':'')+', subjects went along with the obviously wrong majority on about <b>'+r+'% of critical trials</b>. Across Asch’s studies about <b>one in three</b> critical judgments conformed, roughly <b>three-quarters</b> of subjects conformed at least once, and about <b>a quarter never did</b>. Alone in a control condition, error was <b>under 1%</b>.';
+       if(nConf<3){ t+=' Notice the size effect: <b>one</b> opponent is easy to dismiss and <b>two</b> are nearly so &mdash; pressure only bites at <b>three</b>, then flattens. A crowd of fifteen is no more coercive than a group of four.'; }
+       else if(nConf>4){ t+=' Notice that adding people past three or four buys the majority almost nothing. Conformity tracks the <b>number of independent voices</b>, not the size of the crowd.'; }
+     }
+     t+='<div class="dd">Two forces are at work here. <b>Normative social influence</b> is the wish to be accepted &mdash; subjects who conformed usually knew the answer was wrong and did not want to look foolish or spoil the group. <b>Informational social influence</b> is the assumption that others know something you don’t; a few subjects genuinely came to doubt their own perception.</div>';
+     t+='<div class="loc">Sociologically, this is <b>Durkheim’s</b> point made visible: a norm is a <b>social fact</b> &mdash; external to you and quietly <b>coercive</b> &mdash; even when no one enforces it and nothing is at stake.</div>';
+     $("info").innerHTML=t;
+     $("btns").innerHTML='<button class="btn solid" id="again">Run another trial</button>';
+     $("again").onclick=function(){ newTrial(); renderAsch(); };
+   }
+   bindAsch();
+ }
+ function bindAsch(){
+   var a=document.querySelectorAll('#segN button');
+   for(var i=0;i<a.length;i++){ a[i].onclick=function(){ nConf=parseInt(this.getAttribute('data-n'),10); newTrial(); renderAsch(); }; }
+   var b=document.querySelectorAll('#segU button');
+   for(var j=0;j<b.length;j++){ b[j].onclick=function(){ ally=parseInt(this.getAttribute('data-u'),10); newTrial(); renderAsch(); }; }
+   var c=document.querySelectorAll('#segA button');
+   for(var k=0;k<c.length;k++){ c[k].onclick=function(){ if(pick!==null){return;} pick=parseInt(this.getAttribute('data-c'),10); renderAsch(); }; }
+ }
+
+ /* ================= MILGRAM ================= */
+ var vari=0, step=0, prods=0, stopped=0, started=0;
+ var VAR=[
+  {k:'base', nm:'Baseline', sub:'Yale lab · learner in the next room', pct:65,
+   d:'The original condition: a university laboratory, a technician in a grey coat, the learner strapped in an adjoining room and heard but not seen.'},
+  {k:'prox', nm:'Same room', sub:'learner seated beside you', pct:40,
+   d:'Moving the victim into the same room &mdash; visible and audible &mdash; cut full obedience from 65% to 40%. Requiring the teacher to physically press the learner’s hand onto the shock plate cut it further, to 30%.'},
+  {k:'phone', nm:'Orders by phone', sub:'experimenter leaves the room', pct:21,
+   d:'When the experimenter gave instructions by telephone from another room, full obedience fell to about 21% &mdash; and several subjects quietly delivered lower shocks than they had been ordered to while telling the experimenter they were obeying.'},
+  {k:'peers', nm:'Two peers rebel', sub:'confederate teachers walk out', pct:10,
+   d:'Two confederate “teachers” refuse and walk out at 150V and 210V. Full obedience collapsed to 10% &mdash; the sharpest drop of any variation Milgram ran.'}
+ ];
+ var MS=[
+  {v:15,  r:'The learner answers calmly. No sign of discomfort.'},
+  {v:75,  r:'First audible reaction: “Ugh!”'},
+  {v:120, r:'“Ugh! Hey, this really hurts.”'},
+  {v:150, r:'“Experimenter! Get me out of here! I refuse to go on!” The learner first demands to be released.'},
+  {v:180, r:'“I can’t stand the pain!”'},
+  {v:210, r:'“Get me out! My heart’s bothering me!”'},
+  {v:240, r:'“I absolutely refuse to answer any more.”'},
+  {v:270, r:'An agonized scream.'},
+  {v:300, r:'Desperate pounding on the wall. The learner stops answering the questions altogether.'},
+  {v:315, r:'A violent scream, then: “I will not answer.”'},
+  {v:330, r:'Silence. No sound of any kind from the next room.'},
+  {v:345, r:'Silence.'},
+  {v:375, r:'Silence.'},
+  {v:405, r:'Silence.'},
+  {v:450, r:'Silence. This switch is labelled only “XXX.”'}
+ ];
+ /* % of Milgram's 40 baseline subjects still administering shocks at each switch */
+ var OBEY=[100,100,100,100,100,100,100,100,100,87.5,77.5,72.5,67.5,65,65];
+ var PROD=[
+  'Please continue.',
+  'The experiment requires that you continue.',
+  'It is absolutely essential that you continue.',
+  'You have no other choice, you must go on.'
+ ];
+ function band(v){
+   if(v<=60){return 'Slight shock';} if(v<=120){return 'Moderate shock';}
+   if(v<=180){return 'Strong shock';} if(v<=240){return 'Very strong shock';}
+   if(v<=300){return 'Intense shock';} if(v<=360){return 'Extreme intensity shock';}
+   if(v<=420){return 'Danger: severe shock';} return 'XXX';
+ }
+ function scol(v){
+   if(v<=60){return '#7ec49a';} if(v<=120){return '#a8c46a';} if(v<=180){return '#d8c04a';}
+   if(v<=240){return '#e0a33e';} if(v<=300){return '#dd7f3a';} if(v<=360){return '#d1603a';}
+   if(v<=420){return '#c34141';} return '#8f1f1f';
+ }
+ function drawMil(){
+   var V=VAR[vari], st=MS[step], s='', prox=(V.k==='prox');
+   s+='<rect x="8" y="6" width="224" height="78" rx="9" fill="#f7ece1" stroke="#eee3d8" stroke-width="1.5"/>';
+   /* learner */
+   var lcx = prox?96:48;
+   if(!prox){ s+='<rect x="94" y="10" width="6" height="70" rx="2" fill="#d9c3ab"/>'; }
+   s+='<rect x="'+(lcx-15)+'" y="42" width="30" height="30" rx="5" fill="#d9c3ab"/>';
+   s+='<circle cx="'+lcx+'" cy="36" r="11" fill="#e8cdb3"/>';
+   s+='<circle cx="'+(lcx-4)+'" cy="34" r="1.7" fill="#33261a"/><circle cx="'+(lcx+4)+'" cy="34" r="1.7" fill="#33261a"/>';
+   if(step===0){ s+='<path d="M'+(lcx-4)+' 41 q4 2.5 8 0" stroke="#33261a" stroke-width="1.4" fill="none" stroke-linecap="round"/>'; }
+   else if(step<10){ s+='<ellipse cx="'+lcx+'" cy="41.5" rx="3.6" ry="3.2" fill="#8f1f1f"/>'; }
+   else { s+='<line x1="'+(lcx-4)+'" y1="41.5" x2="'+(lcx+4)+'" y2="41.5" stroke="#8c8074" stroke-width="1.6" stroke-linecap="round"/>'; }
+   s+='<line x1="'+(lcx-16)+'" y1="52" x2="'+(lcx+16)+'" y2="52" stroke="#a8907a" stroke-width="2.4"/>';
+   s+='<line x1="'+(lcx-16)+'" y1="62" x2="'+(lcx+16)+'" y2="62" stroke="#a8907a" stroke-width="2.4"/>';
+   s+='<path d="M'+(lcx+15)+' 57 q22 6 34 33" stroke="#bf6a30" stroke-width="1.6" fill="none" stroke-dasharray="3 2"/>';
+   if(step>0 && step<10){ s+='<text x="'+(lcx+17)+'" y="34" font-size="13">⚡</text>'; }
+   if(step>=10){ s+='<text x="'+(lcx+16)+'" y="34" font-size="9" font-weight="800" fill="#8c8074">…</text>'; }
+   s+='<text x="'+lcx+'" y="80" font-size="6.6" text-anchor="middle" font-weight="800" fill="#8c8074" letter-spacing=".7">LEARNER '+(prox?'(SAME ROOM)':'(UNSEEN)')+'</text>';
+   /* teacher */
+   s+='<circle cx="152" cy="40" r="12" fill="#bf6a30"/>';
+   s+='<circle cx="148" cy="37.5" r="1.8" fill="#fff"/><circle cx="156" cy="37.5" r="1.8" fill="#fff"/>';
+   s+='<text x="152" y="70" font-size="6.6" text-anchor="middle" font-weight="800" fill="#7a3f18" letter-spacing=".7">YOU</text>';
+   /* experimenter or phone */
+   if(V.k==='phone'){
+     s+='<rect x="196" y="24" width="20" height="30" rx="4" fill="#5c5145"/><rect x="199" y="28" width="14" height="17" rx="2" fill="#e8dccd"/>';
+     s+='<circle cx="206" cy="49.5" r="2.4" fill="#e8dccd"/>';
+     s+='<text x="206" y="70" font-size="6.4" text-anchor="middle" font-weight="800" fill="#8c8074" letter-spacing=".6">BY PHONE</text>';
+   } else {
+     s+='<rect x="196" y="42" width="22" height="24" rx="4" fill="#ffffff" stroke="#d9c3ab" stroke-width="1.4"/>';
+     s+='<circle cx="207" cy="34" r="10" fill="#5c5145"/>';
+     s+='<circle cx="203.5" cy="32" r="1.6" fill="#fff"/><circle cx="210.5" cy="32" r="1.6" fill="#fff"/>';
+     s+='<text x="207" y="76" font-size="6.4" text-anchor="middle" font-weight="800" fill="#8c8074" letter-spacing=".6">EXPERIMENTER</text>';
+   }
+   if(V.k==='peers'){
+     s+='<circle cx="172" cy="62" r="7" fill="#cfc3b5"/><circle cx="186" cy="62" r="7" fill="#cfc3b5"/>';
+     s+='<path d="M168 58 l8 8 M176 58 l-8 8" stroke="#b23145" stroke-width="1.8" stroke-linecap="round"/>';
+     s+='<path d="M182 58 l8 8 M190 58 l-8 8" stroke="#b23145" stroke-width="1.8" stroke-linecap="round"/>';
+   }
+   /* generator */
+   s+='<rect x="8" y="90" width="224" height="118" rx="10" fill="#33261a"/>';
+   s+='<text x="20" y="105" font-size="6.4" fill="#a8907a" font-weight="800" letter-spacing="1.1">SHOCK GENERATOR</text>';
+   s+='<text x="20" y="126" font-family="Fraunces,Georgia,serif" font-size="20" font-weight="700" fill="'+scol(st.v)+'">'+st.v+' V</text>';
+   s+='<text x="224" y="126" text-anchor="end" font-size="8.4" font-weight="800" fill="#e8dccd" letter-spacing=".5">'+band(st.v).toUpperCase()+'</text>';
+   for(var i=0;i<15;i++){
+     var on=(i<=step && !(step===0 && i===0 && started===0));
+     var x=14+i*14.5;
+     s+='<rect x="'+x+'" y="140" width="11" height="30" rx="2.5" fill="'+(on?scol(MS[i].v):'#4a3a2c')+'"/>';
+     if(on){ s+='<rect x="'+x+'" y="140" width="11" height="7" rx="2" fill="#ffffff" opacity=".28"/>'; }
+   }
+   s+='<text x="19.5" y="181" font-size="6" fill="#a8907a" text-anchor="middle" font-weight="700">15</text>';
+   s+='<text x="106" y="181" font-size="6" fill="#a8907a" text-anchor="middle" font-weight="700">150</text>';
+   s+='<text x="164" y="181" font-size="6" fill="#a8907a" text-anchor="middle" font-weight="700">300</text>';
+   s+='<text x="222" y="181" font-size="6" fill="#a8907a" text-anchor="middle" font-weight="700">450</text>';
+   s+='<line x1="14" y1="188" x2="226" y2="188" stroke="#4a3a2c" stroke-width="1"/>';
+   var msg = stopped?'YOU BROKE OFF AT '+MS[step].v+' V':(step===14?'HIGHEST SWITCH REACHED':'SWITCH '+(step+1)+' OF 15');
+   s+='<text x="120" y="201" font-size="7.4" text-anchor="middle" font-weight="800" fill="'+(stopped?'#7ec49a':'#e8dccd')+'" letter-spacing=".8">'+msg+'</text>';
+   return s;
+ }
+
+ function ctlMil(){
+   var s='<div class="lbl">Experimental condition</div><div class="seg" id="segV">';
+   for(var i=0;i<VAR.length;i++){
+     s+='<button data-v="'+i+'" class="'+(i===vari?'on':'')+'">'+VAR[i].nm+'<small>'+VAR[i].sub+'</small></button>';
+   }
+   s+='</div>';
+   return s;
+ }
+
+ function renderMil(){
+   var V=VAR[vari], st=MS[step];
+   $("cardTitle").innerHTML='The Milgram obedience experiment';
+   $("art").innerHTML=drawMil();
+   $("ctl").innerHTML=ctlMil();
+   $("cap").innerHTML=(started===0&&step===0)?'You are the <b>teacher</b>. Each wrong answer, you move one switch higher.':'<b>'+st.v+' V &mdash; </b>'+st.r;
+   $("st").innerHTML=
+     '<div><b>Voltage</b><span>'+(started?st.v:0)+'</span></div>'+
+     '<div><b>Switch</b><span>'+(started?(step+1):0)+'/15</span></div>'+
+     '<div class="'+(prods>0?'no':'')+'"><b>Prods used</b><span>'+prods+'/4</span></div>'+
+     '<div><b>Obeyed to 450</b><span>'+V.pct+'%</span></div>';
+
+   var t='', pb='';
+   if(started===0){
+     $("stage").style.background='#7a5a8a';
+     $("stage").innerHTML='Milgram, 1963<small>'+V.nm+' · '+V.sub+'</small>';
+     t='<span class="n">The setup</span>You have answered an advertisement for a study of <b>memory and learning</b>. A coin toss &mdash; rigged &mdash; makes you the <b>teacher</b>. The <b>learner</b> is a mild, middle-aged man; he mentions a heart condition. He is strapped into a chair in the next room and you are told to deliver a shock for every wrong answer, <b>raising the voltage one switch each time</b>. The learner is a confederate and receives no shocks at all. <b>Nothing compels you to continue except a man in a grey lab coat.</b>'+
+       '<div class="dd">'+V.d+'</div>'+
+       '<div class="loc">Milgram’s question came from the Nuremberg defence: <b>could ordinary people do terrible things simply because they were told to?</b> Psychiatrists he polled beforehand predicted about <b>1 in 1,000</b> would reach the final switch.</div>';
+     $("btns").innerHTML='<button class="btn solid" id="go">Begin the experiment ›</button>';
+     $("go").onclick=function(){ started=1; step=0; renderMil(); };
+   } else if(stopped){
+     $("stage").style.background='#2f9e5b';
+     $("stage").innerHTML='You broke off at '+st.v+' V<small>after '+prods+' prod'+(prods===1?'':'s')+' · switch '+(step+1)+' of 15</small>';
+     t='<span class="n">You refused</span>You stopped at <b>'+st.v+' V</b> (“'+band(st.v)+'”). Milgram’s rule was that the experimenter used four prods in order; if the subject still refused after the fourth, the session was <b>over</b>. That is what just happened.'+
+       '<div class="dd">In the <b>baseline</b> condition, <b>every one of the 40 participants</b> went to at least <b>300 V</b>, and <b>26 of 40 &mdash; 65% &mdash;</b> went all the way to <b>450 V</b>. In the condition you selected, <b>'+V.pct+'%</b> obeyed to the end. Defiance was possible; it was simply rare.</div>'+
+       '<div class="loc">Notice what actually stopped people: not conscience alone, but a <b>change in the situation</b> &mdash; the victim closer, the authority further away, or someone else refusing first.</div>';
+     $("btns").innerHTML='<button class="btn" id="rs">Run it again</button>';
+     $("rs").onclick=function(){ started=0;step=0;prods=0;stopped=0;renderMil(); };
+   } else if(step===14){
+     $("stage").style.background='#8f1f1f';
+     $("stage").innerHTML='450 V — the last switch<small>marked only “XXX” · the learner has gone silent</small>';
+     t='<span class="n">You reached the end of the board</span>You have thrown every switch, including the last one &mdash; labelled only <b>XXX</b> &mdash; against a man who stopped responding a hundred and twenty volts ago. In Milgram’s baseline, <b>26 of 40 people (65%)</b> did exactly this. They were not cruel; most sweated, stammered, laughed nervously and begged the experimenter to check on the learner &mdash; <b>and then threw the switch anyway.</b>'+
+       '<div class="dd">Milgram called this the <b>agentic state</b>: the subject stops seeing himself as the author of his actions and starts seeing himself as the <b>instrument</b> of a legitimate authority. Responsibility is not felt to be his, because he did not decide &mdash; he complied. The most common thing subjects asked was not “may I stop?” but “<b>who is responsible?</b>”</div>'+
+       '<div class="loc">Obedience is not the same thing as conformity. In <b>Asch</b> the pressure came <b>sideways</b>, from equals whose approval you wanted. In <b>Milgram</b> it came <b>downward</b>, from a hierarchy you believed had the right to command &mdash; what <b>Max Weber</b> called <b>rational-legal authority</b>.</div>';
+     $("btns").innerHTML='<button class="btn" id="rs2">Run it again</button>';
+     $("rs2").onclick=function(){ started=0;step=0;prods=0;stopped=0;renderMil(); };
+   } else {
+     $("stage").style.background=scol(st.v);
+     $("stage").innerHTML=st.v+' V — '+band(st.v)+'<small>'+V.nm+' · switch '+(step+1)+' of 15</small>';
+     t='<span class="n">'+st.v+' volts</span>'+st.r+
+       '<div class="dd">At this switch, <b>'+OBEY[step]+'%</b> of Milgram’s 40 baseline participants were still administering shocks.'+
+       (step>=3?' The learner has now <b>withdrawn his consent</b> &mdash; he asked to be released at 150 V. Most subjects who ever quit, quit here.':'')+
+       (step>=8?' He has stopped answering entirely; silence is scored as a <b>wrong answer</b>, so the shocks continue.':'')+'</div>';
+     if(prods>0){ pb='<div class="prod"><i>The experimenter says, flatly</i>“'+PROD[Math.min(prods,4)-1]+'”'+(prods>=4?'<br><b>There are no further prods. Refuse once more and the session ends.</b>':'')+'</div>'; }
+     $("btns").innerHTML='<button class="btn" id="ref">I refuse</button><button class="btn solid" id="nx">Throw the next switch ›</button>';
+     $("nx").onclick=function(){ if(step<14){step++;prods=0;renderMil();} };
+     $("ref").onclick=function(){
+       if(prods>=4){ stopped=1; renderMil(); return; }
+       prods++; renderMil();
+     };
+   }
+   $("info").innerHTML=t;
+   $("prodbox").innerHTML=pb;
+   var vb=document.querySelectorAll('#segV button');
+   for(var i=0;i<vb.length;i++){
+     vb[i].onclick=function(){ vari=parseInt(this.getAttribute('data-v'),10); started=0;step=0;prods=0;stopped=0; renderMil(); };
+   }
+ }
+
+ /* ================= PARADIGM LENS ================= */
+ var LENS=[
+  {n:'Structural functionalism',
+   d:'Conformity is not a flaw in people &mdash; it is the <b>mechanism that turns norms into behavior</b>. Roles, institutions and everyday cooperation only work because most people, most of the time, do the expected thing without being made to. <b>Émile Durkheim</b> called the shared moral rules of a group its <b>collective conscience</b>, and insisted that norms are <b>social facts</b>: external to any individual, and <b>coercive</b> even when unenforced. Asch’s subjects felt that coercion with no penalty on the table at all.',
+   w:'The functionalist worry is <b>dysfunction</b>: the same reflex that makes a hospital, a court or a classroom run smoothly is what let Milgram’s subjects keep throwing switches. <b>Robert Merton</b> would file the compliant subject as a <b>conformist</b> &mdash; accepting both the goal and the approved means &mdash; and note that conformity is only functional when the goal itself is sound.'},
+  {n:'Conflict theory',
+   d:'Ask <b>who benefits</b>. Obedience is never symmetrical: it runs <b>down a hierarchy</b>, and the person giving orders is the person whose project gets completed. Milgram’s power came from borrowed institutional legitimacy &mdash; a university, a grey coat, a printed protocol &mdash; what <b>Max Weber</b> named <b>rational-legal authority</b>: obedience owed not to a person but to an office and its rules.',
+   w:'The proof is in the variations. Move the study from Yale to a run-down office building and full obedience falls to <b>47.5%</b>; have an <b>ordinary man</b> rather than the scientist give the orders and it falls to about <b>20%</b>; let two peers rebel first and it collapses to <b>10%</b>. Strip the authority of its legitimacy and the obedience largely goes with it. <b>Karl Marx</b>’s extension: the everyday obedience that keeps a workplace running is also what keeps the arrangement of power in it unquestioned.'},
+  {n:'Symbolic interactionism',
+   d:'Look at the encounter itself. Both experiments are people <b>working out what the situation means</b>, moment by moment. <b>W. I. Thomas</b>: if a situation is defined as real, it is real in its consequences &mdash; define the room as “a scientific experiment” and pressing a switch becomes “following the procedure” rather than “hurting a man.” <b>George Herbert Mead</b>’s <b>generalized other</b> is the attitude of the group carried around inside you, and it is exactly what Asch’s subjects were answering to; <b>Charles Horton Cooley</b>’s <b>looking-glass self</b> explains the sting of imagining how the table would see you.',
+   w:'<b>Erving Goffman</b> adds the quiet engine of Milgram: subjects stayed in the role of “teacher” partly because <b>breaking frame</b> — walking out, calling the experimenter wrong — would have been socially excruciating. Enormous harm was done because leaving the room would have been <b>awkward</b>.'}
+ ];
+ var lens=0;
+ function renderLens(){
+   var b=document.querySelectorAll('#lensbtns .it');
+   for(var i=0;i<b.length;i++){ b[i].className='it'+(i===lens?' on':''); }
+   $("lens").innerHTML=LENS[lens].d+'<span class="who">'+LENS[lens].w+'</span>';
+ }
+ var lb=document.querySelectorAll('#lensbtns .it');
+ for(var i=0;i<lb.length;i++){
+   lb[i].onclick=function(){ lens=parseInt(this.getAttribute('data-l'),10); renderLens(); };
+ }
+
+ /* ================= MODE ================= */
+ function render(){ if(mode==='asch'){ renderAsch(); } else { renderMil(); } }
+ $("mA").onclick=function(){ mode='asch'; $("mA").className='on'; $("mM").className=''; newTrial(); render(); };
+ $("mM").onclick=function(){ mode='mil'; $("mM").className='on'; $("mA").className=''; started=0;step=0;prods=0;stopped=0; render(); };
+
+ newTrial(); renderLens(); render();
+})();
+</script>
+</body>
+</html>

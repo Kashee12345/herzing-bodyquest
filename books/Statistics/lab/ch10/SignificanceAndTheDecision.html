@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Significance and the Decision</title>
+<meta name="description" content="Drag the significance level and watch one unchanged p-value flip the decision. A live z-test with real simulated samples, a shaded rejection region, and the long-run error rate that alpha actually buys you.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.05fr 0.95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:14px 0 6px;}
+.hd:first-child{margin-top:0;}
+.slide{-webkit-appearance:none;appearance:none;width:100%;height:9px;border-radius:6px;outline:none;margin:6px 0 2px;
+  background:linear-gradient(90deg,#f2ccd2 0%,#f2ccd2 25%,#dbe8ef 25%,#dbe8ef 100%);}
+.slide::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(25,55,70,.4);cursor:grab;}
+.slide::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(25,55,70,.4);cursor:grab;}
+.big{font-family:var(--disp);font-weight:700;font-size:26px;color:var(--teal-dk);letter-spacing:-.5px;font-variant-numeric:tabular-nums;}
+.big span{font-size:13px;font-family:var(--sans);font-weight:700;color:var(--muted);}
+.rd{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+.rd div{border:1px solid var(--line);border-radius:9px;padding:7px 3px;text-align:center;background:#fff;}
+.rd .k{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;}
+.rd .v{font-size:14.5px;font-weight:800;color:var(--teal-dk);font-variant-numeric:tabular-nums;margin-top:2px;}
+.rd div.hi{border-color:var(--coral);background:#fdf2f4;} .rd div.hi .v{color:#b23145;}
+.lg{display:flex;gap:15px;margin-top:7px;font-size:11.3px;color:var(--muted);font-weight:600;flex-wrap:wrap;}
+.lg i{width:14px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px;}
+.eq{text-align:center;font-size:13.5px;font-weight:800;color:var(--teal-dk);background:#e2eff5;border-radius:9px;padding:9px;margin-top:11px;font-variant-numeric:tabular-nums;}
+.hint{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:7px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 10</div>
+  <h1>Significance and the Decision</h1>
+  <div class="intro">A p-value is a measurement. A decision is a <b>choice</b> &mdash; and the choice depends entirely on the significance level you set <b>before</b> you look. Hold the data still, drag &alpha;, and watch one unchanged p-value reject the null at one setting and fail to reject it at the next.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2>If H₀ were true, this is where z would land</h2>
+      <svg viewBox="0 0 340 214" aria-label="Null sampling distribution with rejection region and p-value tails"><g id="curve"></g></svg>
+      <div class="lg"><span><i style="background:#f3c3ca"></i>rejection region — total area = &alpha;</span><span><i style="background:#5d8fb3"></i>p-value tails — total area = p</span></div>
+      <div class="hint" id="fit"></div>
+    </div>
+    <div class="card"><h2>p against &alpha; on one number line</h2>
+      <svg viewBox="0 0 340 84" aria-label="Number line comparing the p-value with alpha"><g id="line"></g></svg>
+      <div class="hint">The shaded strip is every p-value small enough to reject at your current &alpha;. The blue marker is this sample's p, and it does not move when you drag &alpha;.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Set a significance level<small>then read the decision</small></div>
+
+    <div class="card"><h2>The evidence — 36 resting heart rates</h2>
+      <div class="hint" style="margin-top:0">A reference population averages <b>74 bpm</b> with &sigma; = 9. H₀: &mu; = 74 &nbsp;·&nbsp; H₁: &mu; &ne; 74 (two-tailed). Each dot below is one sampled patient.</div>
+      <svg viewBox="0 0 340 66" aria-label="Dot plot of the 36 sampled heart rates"><g id="dots"></g></svg>
+      <div class="eq" id="calc"></div>
+      <div class="hd">The truth behind the curtain (you never see this in real life)</div>
+      <div class="seg" id="world">
+        <button data-w="0">H₀ is true<small>&mu; really is 74</small></button>
+        <button data-w="1">H₀ is false<small>&mu; really is 77.5</small></button>
+      </div>
+      <div class="row"><button class="btn solid" id="draw">Draw another sample ↻</button></div>
+    </div>
+
+    <div class="card"><h2>Drag your significance level</h2>
+      <div class="big" id="alv">&alpha; = 0.050</div>
+      <input class="slide" id="al" type="range" min="1" max="200" step="1" value="50" aria-label="significance level alpha">
+      <div class="seg" id="pre" style="margin-top:8px">
+        <button data-a="1">0.001</button><button data-a="10">0.01</button><button data-a="50">0.05</button><button data-a="100">0.10</button>
+      </div>
+      <div class="rd">
+        <div><div class="k">p-value</div><div class="v" id="rp">—</div></div>
+        <div><div class="k">alpha</div><div class="v" id="ra">—</div></div>
+        <div><div class="k">test z</div><div class="v" id="rz">—</div></div>
+        <div><div class="k">critical z*</div><div class="v" id="rc">—</div></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem"><b>&alpha; is chosen first.</b> Sliding it after you have seen p until the decision comes out the way you wanted is a real practice with a real name &mdash; and it destroys the guarantee the whole procedure rests on.</div>
+    </div>
+
+    <div class="card"><h2>What &alpha; actually buys you</h2>
+      <div class="hint" style="margin-top:0">300 fresh samples were drawn from the world you selected. Below is how many of them your current &alpha; would reject.</div>
+      <svg viewBox="0 0 340 58" aria-label="Long-run rejection rate bar"><g id="bar"></g></svg>
+      <div class="eq" id="rate"></div>
+      <div class="note" id="lr"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- study constants ---------- */
+ var MU0=74, SIG=9, N=36, SE=SIG/Math.sqrt(N);       /* SE = 9/6 = 1.5 */
+ var MU=[74,77.5];                                    /* truth in world 0 / world 1 */
+
+ /* ---------- seeded PRNG (mulberry32) ---------- */
+ var seed=12345;
+ function reseed(s){seed=s>>>0;}
+ function rnd(){seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
+ function randn(){var u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+
+ /* ---------- normal distribution ---------- */
+ function phi(z){return Math.exp(-z*z/2);}                     /* unit-height bell */
+ function normCdf(x){                                          /* Zelen & Severo, |err| < 7.5e-8 */
+   var a=Math.abs(x),t=1/(1+0.2316419*a),d=0.3989422804014327*Math.exp(-a*a/2);
+   var q=d*t*(0.319381530+t*(-0.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429))));
+   return x>0?1-q:q;
+ }
+ function normInv(p){                                          /* bisection — plenty precise */
+   var lo=-9,hi=9,m;
+   for(var i=0;i<80;i++){m=(lo+hi)/2;if(normCdf(m)<p)lo=m;else hi=m;}
+   return (lo+hi)/2;
+ }
+ function pTwo(z){return 2*(1-normCdf(Math.abs(z)));}
+
+ /* ---------- state ---------- */
+ var world=1, alpha=0.05, vals=[], xbar=0, z=0, pv=0, batch=[];
+
+ function drawSample(){
+   vals=[];var s=0;
+   for(var i=0;i<N;i++){var v=MU[world]+SIG*randn();vals.push(v);s+=v;}
+   xbar=s/N; z=(xbar-MU0)/SE; pv=pTwo(z);
+ }
+ function makeBatch(){                                         /* z of a sample mean is exactly Normal(delta,1) */
+   var d=(MU[world]-MU0)/SE; batch=[];
+   for(var i=0;i<300;i++)batch.push(d+randn());
+ }
+
+ /* Open on a genuinely drawn sample that sits in the interesting zone,
+    where the decision actually flips as alpha moves across the usual settings. */
+ function openingSample(){
+   for(var s=1;s<8000;s++){
+     reseed(s); drawSample();
+     if(z>2.02&&z<2.10){reseed(s);drawSample();return;}
+   }
+   reseed(7); drawSample();
+ }
+
+ /* ---------- chart 1: the null distribution ---------- */
+ var X0=24,X1=316,BASE=170,HT=124;
+ function X(v){return X0+(v+4)*(X1-X0)/8;}
+ function Y(v){return BASE-phi(v)*HT;}
+ function area(a,b){
+   var d='M'+X(a).toFixed(1)+' '+BASE,v;
+   for(v=a;v<b;v+=0.04)d+=' L'+X(v).toFixed(1)+' '+Y(v).toFixed(1);
+   d+=' L'+X(b).toFixed(1)+' '+Y(b).toFixed(1)+' L'+X(b).toFixed(1)+' '+BASE+' Z';
+   return d;
+ }
+ function drawCurve(){
+   var zc=normInv(1-alpha/2), az=Math.abs(z), o='', v;
+   /* rejection region (alpha) */
+   o+='<path d="'+area(zc,4)+'" fill="#f3c3ca"/><path d="'+area(-4,-zc)+'" fill="#f3c3ca"/>';
+   /* p-value tails, drawn on top */
+   if(az<4){o+='<path d="'+area(az,4)+'" fill="#5d8fb3" opacity=".75"/><path d="'+area(-4,-az)+'" fill="#5d8fb3" opacity=".75"/>';}
+   /* the bell */
+   var d='M'+X(-4).toFixed(1)+' '+Y(-4).toFixed(1);
+   for(v=-4;v<=4.0001;v+=0.04)d+=' L'+X(v).toFixed(1)+' '+Y(v).toFixed(1);
+   o+='<path d="'+d+'" fill="none" stroke="#1c4454" stroke-width="2"/>';
+   /* axis + ticks */
+   o+='<line x1="'+X0+'" y1="'+BASE+'" x2="'+X1+'" y2="'+BASE+'" stroke="#9fb3bd" stroke-width="1.2"/>';
+   for(v=-3;v<=3;v++){o+='<line x1="'+X(v).toFixed(1)+'" y1="'+BASE+'" x2="'+X(v).toFixed(1)+'" y2="'+(BASE+4)+'" stroke="#9fb3bd" stroke-width="1.2"/>'+
+     '<text x="'+X(v).toFixed(1)+'" y="'+(BASE+15)+'" font-size="9.5" fill="#78868d" text-anchor="middle" font-family="Inter,sans-serif">'+v+'</text>';}
+   o+='<text x="170" y="'+(BASE+31)+'" font-size="10" fill="#78868d" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">z — standard errors from 74 bpm</text>';
+   /* critical value lines */
+   o+='<line x1="'+X(zc).toFixed(1)+'" y1="40" x2="'+X(zc).toFixed(1)+'" y2="'+BASE+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="4 3"/>'+
+      '<line x1="'+X(-zc).toFixed(1)+'" y1="40" x2="'+X(-zc).toFixed(1)+'" y2="'+BASE+'" stroke="#d1495b" stroke-width="1.6" stroke-dasharray="4 3"/>'+
+      '<text x="'+Math.min(322,X(zc)+4).toFixed(1)+'" y="37" font-size="9.5" fill="#b23145" font-weight="800" text-anchor="end" font-family="Inter,sans-serif">z* = '+zc.toFixed(2)+'</text>'+
+      '<text x="'+Math.max(18,X(-zc)-4).toFixed(1)+'" y="37" font-size="9.5" fill="#b23145" font-weight="800" font-family="Inter,sans-serif">−z* = −'+zc.toFixed(2)+'</text>';
+   /* observed z marker */
+   var cz=Math.max(-3.92,Math.min(3.92,z)), mx=X(cz);
+   o+='<line x1="'+mx.toFixed(1)+'" y1="16" x2="'+mx.toFixed(1)+'" y2="'+BASE+'" stroke="#1c4454" stroke-width="2.6"/>'+
+      '<circle cx="'+mx.toFixed(1)+'" cy="'+Y(cz).toFixed(1)+'" r="4.5" fill="#1c4454"/>'+
+      '<text x="'+Math.max(30,Math.min(310,mx)).toFixed(1)+'" y="12" font-size="10.5" fill="#1c4454" font-weight="800" text-anchor="middle" font-family="Inter,sans-serif">z = '+z.toFixed(2)+(Math.abs(z)>3.92?' (off scale)':'')+'</text>';
+   $("curve").innerHTML=o;
+   $("fit").innerHTML=(pv<=alpha)
+     ? 'The blue tails sit <b>entirely inside</b> the pink region — that is what p &le; &alpha; looks like.'
+     : 'The blue tails <b>spill past</b> the pink boundary — that is what p &gt; &alpha; looks like.';
+ }
+
+ /* ---------- chart 2: p against alpha ---------- */
+ var L0=24,L1=316,LY=50,LMAX=0.25;
+ function XL(v){return L0+Math.min(v,LMAX)/LMAX*(L1-L0);}
+ function drawLine(){
+   var o='',t;
+   o+='<rect x="'+L0+'" y="'+(LY-13)+'" width="'+(XL(alpha)-L0).toFixed(1)+'" height="13" fill="#f3c3ca"/>';
+   o+='<line x1="'+L0+'" y1="'+LY+'" x2="'+L1+'" y2="'+LY+'" stroke="#9fb3bd" stroke-width="1.2"/>';
+   for(t=0;t<=0.2501;t+=0.05){
+     o+='<line x1="'+XL(t).toFixed(1)+'" y1="'+LY+'" x2="'+XL(t).toFixed(1)+'" y2="'+(LY+4)+'" stroke="#9fb3bd" stroke-width="1.2"/>'+
+        '<text x="'+XL(t).toFixed(1)+'" y="'+(LY+15)+'" font-size="9" fill="#78868d" text-anchor="middle" font-family="Inter,sans-serif">'+t.toFixed(2)+'</text>';
+   }
+   /* alpha handle below the line */
+   var ax=XL(alpha);
+   o+='<path d="M'+ax.toFixed(1)+' '+(LY-1)+' l-5 9 l10 0 Z" fill="#d1495b"/>'+
+      '<text x="'+Math.max(34,Math.min(306,ax)).toFixed(1)+'" y="'+(LY+31)+'" font-size="10.5" fill="#b23145" font-weight="800" text-anchor="middle" font-family="Inter,sans-serif">α = '+alpha.toFixed(3)+'</text>';
+   /* p marker above the line */
+   var off=pv>LMAX, px=off?L1:XL(pv);
+   o+='<path d="M'+px.toFixed(1)+' '+(LY+1)+' l-5 -9 l10 0 Z" fill="#1c4454"/>'+
+      '<text x="'+Math.max(38,Math.min(302,px)).toFixed(1)+'" y="'+(LY-19)+'" font-size="10.5" fill="#1c4454" font-weight="800" text-anchor="middle" font-family="Inter,sans-serif">p = '+fmtP(pv)+(off?' →':'')+'</text>';
+   $("line").innerHTML=o;
+ }
+
+ /* ---------- chart 3: the raw sample ---------- */
+ function drawDots(){
+   var o='',D0=20,D1=320,LO=56,HI=96,i,t;
+   function XD(v){return D0+(Math.max(LO,Math.min(HI,v))-LO)/(HI-LO)*(D1-D0);}
+   o+='<line x1="'+D0+'" y1="52" x2="'+D1+'" y2="52" stroke="#9fb3bd" stroke-width="1.2"/>';
+   for(t=60;t<=90;t+=10){o+='<line x1="'+XD(t).toFixed(1)+'" y1="52" x2="'+XD(t).toFixed(1)+'" y2="56" stroke="#9fb3bd" stroke-width="1.2"/>'+
+     '<text x="'+XD(t).toFixed(1)+'" y="65" font-size="9" fill="#78868d" text-anchor="middle" font-family="Inter,sans-serif">'+t+'</text>';}
+   for(i=0;i<vals.length;i++)o+='<circle cx="'+XD(vals[i]).toFixed(1)+'" cy="'+(20+(i%6)*5)+'" r="3.1" fill="#2f6f8a" opacity=".45"/>';
+   o+='<line x1="'+XD(MU0).toFixed(1)+'" y1="10" x2="'+XD(MU0).toFixed(1)+'" y2="52" stroke="#d1495b" stroke-width="1.8" stroke-dasharray="4 3"/>';
+   o+='<line x1="'+XD(xbar).toFixed(1)+'" y1="10" x2="'+XD(xbar).toFixed(1)+'" y2="52" stroke="#1c4454" stroke-width="2.4"/>';
+   o+='<text x="'+Math.max(30,XD(MU0)-6).toFixed(1)+'" y="8" font-size="9.5" fill="#b23145" font-weight="800" text-anchor="end" font-family="Inter,sans-serif">μ₀ = 74</text>';
+   o+='<text x="'+Math.min(312,XD(xbar)+6).toFixed(1)+'" y="8" font-size="9.5" fill="#1c4454" font-weight="800" font-family="Inter,sans-serif">x̄ = '+xbar.toFixed(2)+'</text>';
+   $("dots").innerHTML=o;
+ }
+
+ /* ---------- chart 4: long-run rejection rate ---------- */
+ function drawBar(){
+   var zc=normInv(1-alpha/2),k=0,i;
+   for(i=0;i<batch.length;i++)if(Math.abs(batch[i])>zc)k++;
+   var rate=k/batch.length, col=world?'#2f9e5b':'#d1495b', B0=20,B1=320,o='';
+   o+='<rect x="'+B0+'" y="14" width="'+(B1-B0)+'" height="18" rx="9" fill="#e4edf2"/>';
+   if(rate>0)o+='<rect x="'+B0+'" y="14" width="'+Math.max(3,(B1-B0)*rate).toFixed(1)+'" height="18" rx="9" fill="'+col+'"/>';
+   if(!world){var ax=B0+(B1-B0)*alpha;
+     o+='<line x1="'+ax.toFixed(1)+'" y1="8" x2="'+ax.toFixed(1)+'" y2="38" stroke="#1c4454" stroke-width="2" stroke-dasharray="3 2"/>'+
+        '<text x="'+Math.min(300,ax+4).toFixed(1)+'" y="50" font-size="9.5" fill="#1c4454" font-weight="800" font-family="Inter,sans-serif">α = '+alpha.toFixed(3)+'</text>';}
+   o+='<text x="'+B0+'" y="50" font-size="9" fill="#78868d" font-family="Inter,sans-serif">0%</text>'+
+      '<text x="'+B1+'" y="50" font-size="9" fill="#78868d" text-anchor="end" font-family="Inter,sans-serif">100%</text>';
+   $("bar").innerHTML=o;
+   $("rate").innerHTML=k+' of 300 samples rejected &nbsp;=&nbsp; '+(rate*100).toFixed(1)+'%';
+   $("lr").innerHTML = world
+     ? '<b>H₀ is false here, so every rejection is correct.</b> This rate is the test\'s <b>power</b>. Drag &alpha; down to be more cautious and watch power fall with it — a smaller &alpha; makes false alarms rarer and missed effects more common. That trade never goes away.'
+     : '<b>H₀ is true here, so every rejection is a false alarm</b> — a Type I error. Notice the bar tracking the dashed α line no matter where you put it. That is the entire promise of &alpha;: over the long run, it is the share of true nulls you will wrongly reject.';
+ }
+
+ /* ---------- formatting ---------- */
+ function fmtP(p){
+   if(p<0.0001)return '&lt;0.0001';
+   if(p<0.001)return p.toFixed(5);
+   return p.toFixed(4);
+ }
+
+ /* ---------- render ---------- */
+ function render(){
+   var rej=(pv<=alpha), zc=normInv(1-alpha/2);
+   $("alv").innerHTML='α = '+alpha.toFixed(3);
+   var pct=alpha/0.25*100;
+   $("al").style.background='linear-gradient(90deg,#f2ccd2 0%,#f2ccd2 '+pct+'%,#dbe8ef '+pct+'%,#dbe8ef 100%)';
+
+   $("stage").style.background=rej?'#d1495b':'#2f6f8a';
+   $("stage").innerHTML=(rej?'Reject H₀':'Fail to reject H₀')+
+     '<small>p = '+fmtP(pv)+(rej?' ≤ ':' > ')+'α = '+alpha.toFixed(3)+'</small>';
+
+   $("rp").innerHTML=fmtP(pv); $("ra").innerHTML=alpha.toFixed(3);
+   $("rz").innerHTML=z.toFixed(2); $("rc").innerHTML='±'+zc.toFixed(2);
+   $("rp").parentNode.className=rej?'hi':''; $("ra").parentNode.className=rej?'hi':'';
+
+   $("calc").innerHTML='z = (x̄ − μ₀) / (σ/√n) = ('+xbar.toFixed(2)+' − 74) / 1.50 = '+z.toFixed(2);
+
+   $("info").innerHTML = rej
+     ? '<span class="n">Reject H₀ at α = '+alpha.toFixed(3)+'</span>The p-value of '+fmtP(pv)+' is at or below the level of proof you demanded, so the result is called <b>statistically significant at this α</b>. Read it precisely: <b>if μ really were 74</b>, a sample mean this far from 74 <b>or farther</b> (in either direction) would turn up about '+(pv*100).toFixed(2)+'% of the time. That is all. The p-value is <b>not</b> the probability that H₀ is true, and it is not the probability you have made a mistake on this particular sample.'
+     : '<span class="n">Fail to reject H₀ at α = '+alpha.toFixed(3)+'</span>The p-value of '+fmtP(pv)+' is larger than the level of proof you demanded, so the evidence is <b>not significant at this α</b>. This is <b>not</b> evidence that μ = 74. Absence of a significant result is not proof of the null — the effect may be real and this sample simply too small or too noisy to detect it. The honest sentence is "we did not detect a difference," never "there is no difference."';
+
+   drawCurve(); drawLine(); drawDots(); drawBar();
+   var b=$("world").getElementsByTagName('button'),i;
+   for(i=0;i<b.length;i++)b[i].className=(+b[i].getAttribute('data-w')===world)?'on':'';
+   var q=$("pre").getElementsByTagName('button');
+   for(i=0;i<q.length;i++)q[i].className=(+q[i].getAttribute('data-a')===Math.round(alpha*1000))?'on':'';
+ }
+
+ /* ---------- wiring ---------- */
+ $("al").oninput=function(){alpha=(+this.value)/1000;render();};
+ var pb=$("pre").getElementsByTagName('button');
+ for(var i=0;i<pb.length;i++)(function(b){b.onclick=function(){
+   var v=+b.getAttribute('data-a'); $("al").value=v; alpha=v/1000; render();};})(pb[i]);
+ var wb=$("world").getElementsByTagName('button');
+ for(var j=0;j<wb.length;j++)(function(b){b.onclick=function(){
+   world=+b.getAttribute('data-w'); drawSample(); makeBatch(); render();};})(wb[j]);
+ $("draw").onclick=function(){drawSample();render();};
+
+ openingSample();
+ makeBatch();
+ render();
+})();
+</script>
+</body>
+</html>

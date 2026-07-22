@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Schedules of Reinforcement</title>
+<meta name="description" content="Compare B.F. Skinner's four schedules of reinforcement — fixed and variable ratio and interval — on a live cumulative-response graph. Interactive for psychology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:1.05fr 0.95fr;}
+.mtx{display:grid;grid-template-columns:56px 1fr 1fr;gap:6px;margin-bottom:6px;}
+.mtx .ch{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--teal-dk);text-align:center;align-self:end;padding:2px;line-height:1.2;}
+.mtx .ch small{display:block;font-weight:600;font-size:9px;color:var(--muted);letter-spacing:0;text-transform:none;margin-top:1px;}
+.mtx .rh{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--teal-dk);display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.15;}
+.cell{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 6px;cursor:pointer;text-align:center;font-family:var(--sans);transition:.12s;}
+.cell:hover{border-color:var(--teal);}
+.cell .cd{font-family:var(--disp);font-weight:700;font-size:19px;color:var(--teal-dk);line-height:1;}
+.cell .nm2{font-size:10px;color:var(--muted);font-weight:700;margin-top:3px;line-height:1.15;}
+.cell.on{background:var(--teal);border-color:var(--teal);}
+.cell.on .cd,.cell.on .nm2{color:#fff;}
+.chips{display:flex;gap:6px;margin-top:11px;}
+.chip{flex:1;border:1px solid var(--line);border-radius:9px;padding:6px 6px;text-align:center;background:#fbf2f6;}
+.chip .cl{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:800;}
+.chip .cv{display:block;font-size:12px;font-weight:800;color:var(--teal-dk);margin-top:2px;line-height:1.15;}
+.gtag{font-size:10px;color:var(--muted);font-weight:700;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 6</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 6</div>
+  <h1>Schedules of Reinforcement</h1>
+  <div class="intro">Studying operant conditioning, <b>B.F. Skinner</b> found that <i>when</i> a reward arrives &mdash; not just whether &mdash; shapes how fast and how steadily a behavior repeats. Pick a schedule to watch its signature pattern draw itself on a live cumulative-response graph.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Cumulative response record</h2>
+    <svg viewBox="0 0 320 240" aria-label="cumulative response graph">
+      <g id="axes"></g><polyline id="curve" fill="none" stroke="#a1466b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" points=""></polyline>
+      <g id="marks"></g><circle id="head" r="3.6" fill="#a1466b" opacity="0"></circle>
+    </svg>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">
+      <span class="gtag">↗ steeper = faster responding · ◆ = reinforcer delivered</span>
+    </div>
+    <div class="chips">
+      <div class="chip"><span class="cl">Response rate</span><span class="cv" id="chRate">—</span></div>
+      <div class="chip"><span class="cl">Pattern</span><span class="cv" id="chPat">—</span></div>
+      <div class="chip"><span class="cl">Resists extinction</span><span class="cv" id="chExt">—</span></div>
+    </div>
+    <div class="row"><button class="btn solid" id="run">▶ Replay the recorder</button></div>
+  </div></div>
+  <div>
+    <div id="stage">The four schedules<small>tap a cell in the grid below</small></div>
+    <div class="card">
+      <div class="mtx">
+        <div></div>
+        <div class="ch">Ratio<small>counts responses</small></div>
+        <div class="ch">Interval<small>counts time</small></div>
+        <div class="rh">Fixed</div>
+        <button class="cell" data-k="FR"><span class="cd">FR</span><span class="nm2">Fixed Ratio</span></button>
+        <button class="cell" data-k="FI"><span class="cd">FI</span><span class="nm2">Fixed Interval</span></button>
+        <div class="rh">Vari&shy;able</div>
+        <button class="cell" data-k="VR"><span class="cd">VR</span><span class="nm2">Variable Ratio</span></button>
+        <button class="cell" data-k="VI"><span class="cd">VI</span><span class="nm2">Variable Interval</span></button>
+      </div>
+      <div id="info"><span class="n">Two questions, four answers</span><b>Ratio vs. interval:</b> is the reward earned by a <b>number of responses</b> or by the <b>passage of time</b>? <b>Fixed vs. variable:</b> is that requirement <b>predictable</b> or does it <b>vary</b>? Ratio schedules drive higher rates; variable schedules drive steadier responding that is harder to stop.</div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // ---- plot geometry ----
+ var T=120, Cmax=132, x0=42, x1=306, y0=16, yb=204;
+ function px(t){return x0+(t/T)*(x1-x0);}
+ function py(c){return yb-(c/Cmax)*(yb-y0);}
+ // deterministic PRNG so "variable" schedules look natural but stable
+ function mk(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ // ---- generate a cumulative record for a schedule ----
+ function genRatio(fixed){
+   var pts=[{x:px(0),y:py(0)}], reinf=[], cum=0, cnt=0, pause=0, rnd=mk(7);
+   var target=fixed?8:(4+Math.floor(rnd()*9));
+   for(var t=1;t<=T;t++){
+     if(pause>0){pause--; pts.push({x:px(t),y:py(cum)}); continue;}
+     cum+=1; cnt+=1;
+     if(cnt>=target){reinf.push({x:px(t),y:py(cum)}); cnt=0; target=fixed?8:(4+Math.floor(rnd()*9)); if(fixed)pause=5;}
+     pts.push({x:px(t),y:py(cum)});
+   }
+   return {pts:pts,reinf:reinf};
+ }
+ function genInterval(fixed){
+   var pts=[{x:px(0),y:py(0)}], reinf=[], cum=0, last=0, rnd=mk(13);
+   var INT=fixed?24:0, nextR=fixed?24:(13+Math.floor(rnd()*15));
+   for(var t=1;t<=T;t++){
+     if(fixed){var ph=(t-last)/INT; if(ph>1)ph=1; cum+=0.08+1.05*ph*ph;}
+     else{cum+=0.52;}
+     pts.push({x:px(t),y:py(cum)});
+     if(t>=nextR){reinf.push({x:px(t),y:py(cum)}); last=t; nextR=fixed?(t+INT):(t+13+Math.floor(rnd()*15));}
+   }
+   return {pts:pts,reinf:reinf};
+ }
+ var D={
+  FR:{name:'Fixed Ratio (FR)',type:'Ratio · Fixed',col:'#2f9e5b',data:genRatio(true),
+    rate:'High',pat:'Burst + pause',ext:'Moderate',
+    tags:['Reward every Nth response','Post-reinforcement pause'],
+    desc:'Reinforcement arrives after a <b>set number of responses</b> &mdash; say every 10th press (FR-10). The animal works in fast bursts, then pauses briefly right after each reward. That <b>post-reinforcement pause</b> gives the record its stair-step look.',
+    ex:'Factory piecework paid per item · a punch card that gives a free coffee after 10 stamps.'},
+  VR:{name:'Variable Ratio (VR)',type:'Ratio · Variable',col:'#d1495b',data:genRatio(false),
+    rate:'Highest',pat:'Steady, no pause',ext:'Very high',
+    tags:['Reward after an unpredictable count','Steadiest, most persistent'],
+    desc:'Reinforcement comes after an <b>unpredictable number of responses</b> that only <i>averages</i> out (about 1 in 10). Because the next response might be the winner, responding is <b>fast, steady, and the hardest of the four to extinguish</b>.',
+    ex:'Slot machines and gambling · sales cold-calls · refreshing a feed for a reply.'},
+  FI:{name:'Fixed Interval (FI)',type:'Interval · Fixed',col:'#2f6f9f',data:genInterval(true),
+    rate:'Moderate',pat:'Scalloped',ext:'Moderate',
+    tags:['First response after a set time','Accelerates toward deadline'],
+    desc:'Reinforcement is available for the <b>first response after a fixed amount of time</b> (e.g., every 60 s). Responding nearly stops just after each reward, then <b>speeds up as the deadline nears</b> &mdash; the classic FI "scallop".',
+    ex:'A weekly paycheck · cramming right before a scheduled exam · checking the oven as the timer runs down.'},
+  VI:{name:'Variable Interval (VI)',type:'Interval · Variable',col:'#7a5a8a',data:genInterval(false),
+    rate:'Moderate',pat:'Slow & steady',ext:'High',
+    tags:['First response after a varying time','Slow but very steady'],
+    desc:'Reinforcement is available for the <b>first response after a varying amount of time</b>. Since the reward could come at any moment, responding is <b>slow but remarkably steady</b> and fairly resistant to extinction.',
+    ex:'Pop quizzes · checking your phone for a text · fishing.'}
+ };
+ // ---- static axes ----
+ function drawAxes(){
+   var s='';
+   for(var g=1;g<=4;g++){var yy=py(g/4*Cmax); s+='<line x1="'+x0+'" y1="'+yy+'" x2="'+x1+'" y2="'+yy+'" stroke="#eee0e6" stroke-width="1"/>';}
+   s+='<line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+yb+'" stroke="#c9b3bf" stroke-width="1.5"/>';
+   s+='<line x1="'+x0+'" y1="'+yb+'" x2="'+x1+'" y2="'+yb+'" stroke="#c9b3bf" stroke-width="1.5"/>';
+   s+='<text x="14" y="112" font-size="10" fill="#94818b" font-weight="700" transform="rotate(-90 14 112)" text-anchor="middle">Cumulative responses →</text>';
+   s+='<text x="'+((x0+x1)/2)+'" y="228" font-size="10" fill="#94818b" font-weight="700" text-anchor="middle">Time →</text>';
+   $("axes").innerHTML=s;
+ }
+ // ---- animation ----
+ var timer=null, cur=null;
+ function stopAnim(){if(timer){clearInterval(timer);timer=null;}}
+ function frame(d,i){
+   var pts=d.data.pts, n=Math.min(i,pts.length-1), p='';
+   for(var k=0;k<=n;k++){p+=pts[k].x.toFixed(1)+','+pts[k].y.toFixed(1)+' ';}
+   $("curve").setAttribute('points',p);
+   var lim=pts[n], m='';
+   for(var r=0;r<d.data.reinf.length;r++){var R=d.data.reinf[r]; if(R.x<=lim.x+0.5){
+     m+='<line x1="'+(R.x-4).toFixed(1)+'" y1="'+(R.y+5).toFixed(1)+'" x2="'+R.x.toFixed(1)+'" y2="'+R.y.toFixed(1)+'" stroke="#b8862f" stroke-width="1.6"/>';
+     m+='<circle cx="'+R.x.toFixed(1)+'" cy="'+R.y.toFixed(1)+'" r="2.6" fill="#f0c840" stroke="#b8862f" stroke-width="1"/>';
+   }}
+   $("marks").innerHTML=m;
+   $("head").setAttribute('cx',lim.x); $("head").setAttribute('cy',lim.y);
+ }
+ function run(d){
+   stopAnim();
+   $("curve").setAttribute('stroke',d.col);
+   $("head").setAttribute('fill',d.col); $("head").setAttribute('opacity','1');
+   var i=0; frame(d,0);
+   timer=setInterval(function(){i+=2; if(i>=d.data.pts.length-1){i=d.data.pts.length-1; frame(d,i); stopAnim(); return;} frame(d,i);},16);
+ }
+ // ---- selection ----
+ function sel(k){
+   var d=D[k]; cur=d;
+   $("cardTitle").innerHTML='Cumulative record — '+d.name;
+   $("stage").style.background=d.col;
+   $("stage").innerHTML=d.name+'<small>'+d.type+'</small>';
+   $("chRate").innerHTML=d.rate; $("chPat").innerHTML=d.pat; $("chExt").innerHTML=d.ext;
+   var tg=d.tags.map(function(t){return '<span>'+t+'</span>';}).join('');
+   $("info").innerHTML='<span class="n">'+d.name+'</span>'+d.desc+
+     '<div class="org">'+tg+'</div>'+
+     '<div class="loc"><b>In the wild:</b> '+d.ex+'</div>';
+   document.querySelectorAll('.cell').forEach(function(b){b.classList.toggle('on',b.dataset.k===k);});
+   run(d);
+ }
+ document.querySelectorAll('.cell').forEach(function(b){b.onclick=function(){sel(b.dataset.k);};});
+ $("run").onclick=function(){if(cur)run(cur);};
+ drawAxes();
+ sel('VR');
+})();
+</script>
+</body>
+</html>

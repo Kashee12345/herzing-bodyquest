@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Checking the Conditions</title>
+<meta name="description" content="A live assumption checker for the chi-square test and one-way ANOVA: expected cell counts, equal variances, normality, and independence — all computed as you move the sliders.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr !important;}}
+.hd{font-size:9.6px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:15px 0 7px;}
+.hd:first-child{margin-top:0;}
+.sl{display:flex;align-items:center;gap:10px;margin-top:9px;}
+.sl label{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);white-space:nowrap;min-width:150px;line-height:1.3;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#cfe0e8;outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl.r input[type=range]::-webkit-slider-thumb{background:#d1495b;} .sl.r input[type=range]::-moz-range-thumb{background:#d1495b;}
+.sl.g input[type=range]::-webkit-slider-thumb{background:#b8862f;} .sl.g input[type=range]::-moz-range-thumb{background:#b8862f;}
+.sl .nv{font-size:15px;font-weight:800;color:var(--teal-dk);min-width:70px;text-align:right;font-variant-numeric:tabular-nums;}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:11px;}
+.tiles div{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;}
+.tiles .lb{display:block;font-size:9.2px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tiles .vv{display:block;font-size:15px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.tiles .sub{display:block;font-size:9.2px;font-weight:700;color:var(--muted);margin-top:2px;line-height:1.3;}
+.tiles div.warn{border-color:#e2adb7;background:#fdf1f3;} .tiles div.warn .vv{color:#b23145;}
+.tiles div.good{border-color:#b6d8c4;background:#f0f8f3;} .tiles div.good .vv{color:#237a45;}
+.tiles div.gold{border-color:#ecd9ac;background:#fbf3e2;} .tiles div.gold .vv{color:#8a6a20;}
+.ck{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.ck .cr{border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:#fff;}
+.ck .cr.ok{border-color:#b6d8c4;background:#f4fbf6;}
+.ck .cr.warn{border-color:#ecd9ac;background:#fdf9ee;}
+.ck .cr.bad{border-color:#e2adb7;background:#fdf2f4;}
+.ck .cr.info{border-color:#bcd6e2;background:#f2f8fb;}
+.ck .ct{display:flex;align-items:center;gap:8px;justify-content:space-between;}
+.ck .cn{font-weight:800;font-size:12.6px;color:var(--teal-dk);}
+.ck .cd{font-size:11.6px;color:var(--soft);line-height:1.5;margin-top:5px;}
+.ck .cd b{color:var(--ink);}
+.pw{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.pw.ok{background:#e0f2e7;color:#237a45;} .pw.warn{background:#f8eecb;color:#8a6a20;}
+.pw.bad{background:#f8dde2;color:#b23145;} .pw.info{background:#dcebf3;color:#255f8a;}
+.sent{border:1px solid #bcd6e2;border-left:5px solid var(--teal);background:#eef6f9;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:13px;line-height:1.6;color:var(--soft);}
+.sent b{color:var(--teal-dk);}
+.sent .big{font-family:var(--disp);font-weight:700;font-size:18px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.sent.warn{border-color:#ecd9ac;border-left-color:#b8862f;background:#fdf9ee;} .sent.warn .big{color:#8a6a20;}
+.sent.good{border-color:#b6d8c4;border-left-color:#2f9e5b;background:#f4fbf6;} .sent.good .big{color:#237a45;}
+.sent.bad{border-color:#e2adb7;border-left-color:#d1495b;background:#fdf2f4;} .sent.bad .big{color:#b23145;}
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:10.6px;color:var(--muted);font-weight:600;}
+.lgd i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;border:1px solid rgba(0,0,0,.08);}
+.cap{font-size:11.6px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.55;} .cap b{color:var(--teal-dk);}
+.list .it .s{display:block;margin-top:2px;line-height:1.35;} .list .it .nm{line-height:1.4;}
+.hide{display:none !important;}
+.wrap > div{min-width:0;}
+@media (max-width:560px){
+  .tiles{grid-template-columns:repeat(2,1fr);}
+  .sl label{min-width:0;flex:0 0 104px;white-space:normal;}
+  .sl .nv{min-width:52px;font-size:13.5px;}
+  .modeseg{flex-wrap:wrap;} .modeseg button{flex:1 0 100%;}
+}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 13</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 13</div>
+  <h1>Checking the Conditions</h1>
+  <div class="intro">Both tests in this chapter hand you a p&#8209;value, and both of them earn that p&#8209;value only when a short list of conditions holds. The conditions are not decoration &mdash; when they fail, the number the test prints is simply wrong, confident and wrong. The good news is that each test has <b>one condition you can actually check from the data in front of you</b>: for chi&#8209;square it is whether the <b>expected cell counts</b> are large enough for the approximation to hold; for ANOVA it is whether the groups share a <b>common spread</b>. Pick a test below and move the sliders. Every count, every standard deviation, every verdict is computed live from the numbers you build.</div>
+</header>
+
+<div class="wrap">
+  <div>
+    <div class="card">
+      <div class="modeseg" id="modeSeg">
+        <button data-m="chi">Chi&#8209;square test</button>
+        <button data-m="anova">ANOVA &mdash; the F test</button>
+      </div>
+      <h2 id="vizTitle">A two&#8209;way table of counts</h2>
+      <div class="cap" id="vizCap"></div>
+      <svg viewBox="0 0 480 300" id="viz" aria-label="live diagram of the current test data"></svg>
+      <div class="lgd" id="vizLgd"></div>
+      <div class="row"><button class="btn solid" id="draw">Draw another sample</button><button class="btn" id="rst">Reset</button></div>
+      <div class="sent" id="verdict"></div>
+    </div>
+
+    <div class="card">
+      <h2>The three conditions, checked live</h2>
+      <div class="cap" style="margin-top:2px;">One of these is a fact about <b>how the data were gathered</b> and can never be recovered from the numbers. The other two are properties of the numbers themselves &mdash; and those are the ones recomputing below as you move the sliders.</div>
+      <div class="ck" id="checks"></div>
+    </div>
+  </div>
+
+  <div>
+    <div id="stage">Pick a test to begin<small>everything below recomputes from your settings</small></div>
+
+    <div class="card" id="chiCtl">
+      <h2>The table you are running</h2>
+      <div class="cap" style="margin-top:2px;">Two groups compared across several outcome categories. The <b>expected</b> count in a cell is its row total times its column total, divided by the grand total &mdash; the count you would predict if the two variables were unrelated. That is what the &chi;&sup2; approximation needs to be large; the observed counts can be anything.</div>
+      <div class="hd">Sample size</div>
+      <div class="sl"><label>people in the study, N</label><input type="range" id="cN" min="16" max="600" step="1" value="120"><span class="nv" id="vcN">120</span></div>
+      <div class="hd">Shape of the table</div>
+      <div class="sl"><label>outcome categories</label><input type="range" id="cC" min="2" max="5" step="1" value="3"><span class="nv" id="vcC">3</span></div>
+      <div class="sl g"><label>how rare the last category is</label><input type="range" id="cR" min="0" max="100" step="1" value="20"><span class="nv" id="vcR">20%</span></div>
+      <div class="sl g"><label>imbalance between the two groups</label><input type="range" id="cB" min="0" max="60" step="1" value="0"><span class="nv" id="vcB">even</span></div>
+      <div class="cap">Push <b>N</b> down, add categories, or make the last category rare &mdash; each one thins the expected counts until some cell drops below 5 and the approximation can no longer be trusted.</div>
+      <div class="tiles" id="chiTiles"></div>
+    </div>
+
+    <div class="card hide" id="anovaCtl">
+      <h2>The groups you are comparing</h2>
+      <div class="cap" style="margin-top:2px;">Several groups measured on one outcome. ANOVA pools every group's scatter into a <b>single</b> estimate of the common variance, so it only makes sense if there really is one common spread to estimate. The working rule of thumb: the largest group's standard deviation should be less than about <b>twice</b> the smallest.</div>
+      <div class="hd">The design</div>
+      <div class="sl"><label>number of groups, k</label><input type="range" id="aK" min="2" max="5" step="1" value="3"><span class="nv" id="vaK">3</span></div>
+      <div class="sl"><label>people per group, n</label><input type="range" id="aN" min="3" max="40" step="1" value="10"><span class="nv" id="vaN">10</span></div>
+      <div class="hd">The spread inside each group</div>
+      <div class="sl"><label>baseline scatter, s</label><input type="range" id="aS" min="2" max="14" step="0.5" value="7"><span class="nv" id="vaS">7.0</span></div>
+      <div class="sl r"><label>inflate one group's spread</label><input type="range" id="aU" min="0" max="200" step="1" value="0"><span class="nv" id="vaU">off</span></div>
+      <div class="cap">At zero inflation every group shares the same true spread and the ratio hovers near 1 (it wobbles from sampling alone). Push the red slider and one group's scatter grows &mdash; watch the largest&#8209;over&#8209;smallest ratio cross 2 and the condition fail.</div>
+      <div class="tiles" id="anovaTiles"></div>
+    </div>
+
+    <div class="card">
+      <h2>Say it right</h2>
+      <div class="cap" style="margin-top:2px;">Statements people make about test conditions. Some are sound; some are habits worth breaking. Tap each one.</div>
+      <div class="list" id="claims"></div>
+      <div id="info"><span class="n">Pick a statement</span>Each is either a fair reading of the conditions or a common slip. Work through all of them.</div>
+    </div>
+
+    <div class="card">
+      <h2>What to carry out of this section</h2>
+      <div class="mnem"><b>The chi&#8209;square condition is about expected counts, never observed ones.</b> A cell can hold an observed count of zero and cause no trouble at all, as long as the count you would <i>expect</i> there is large enough. The reason is arithmetic: &chi;&sup2; divides by the expected count, and dividing by a tiny expected value makes a single ordinary cell explode the statistic. The common rule is that every expected count should be at least 5; a looser version tolerates a few between 1 and 5 as long as none fall below 1. When cells are too thin, collapse categories together or gather more data &mdash; or switch to Fisher's exact test, which needs no such approximation.</div>
+      <div class="note"><b>ANOVA's equal&#8209;variance condition cannot be fixed by collecting more data.</b> More people sharpen every estimate, but they do not pull unequal spreads together. If one group is genuinely more variable, that is a fact about the world, and the honest responses are a variance&#8209;stabilising transformation or a version of the test built for unequal spreads (Welch's ANOVA) &mdash; not a bigger sample.</div>
+      <div class="mnem"><b>Normality matters most when the groups are small.</b> The F test leans on the sampling behaviour of group means, and as each group grows the central limit theorem makes those means well&#8209;behaved even when the raw data are not. With a handful of observations per group, though, a skewed or outlier&#8209;ridden distribution can distort the result, and there is little data with which to check. Small groups are exactly where normality deserves your attention.</div>
+      <div class="note"><b>Independence is a property of the design, not of the numbers.</b> No table of counts and no set of standard deviations can tell you whether one observation influenced another &mdash; that is decided by how the data were collected. Measuring the same person twice, clustering by household or clinic, or letting one response sway the next all break independence invisibly, and no on&#8209;screen check will catch it. It is the condition you must reason about before the data ever arrive.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ===== seeded PRNG (mulberry32) — reproducible ===== */
+ var seed=20260720;
+ function rnd(){
+   seed=seed+0x6D2B79F5|0;
+   var t=Math.imul(seed^seed>>>15,1|seed);
+   t=t+Math.imul(t^t>>>7,61|t)^t;
+   return ((t^t>>>14)>>>0)/4294967296;
+ }
+ function nrm(){ var u=rnd(); if(u<1e-12)u=1e-12; var v=rnd(); return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v); }
+
+ /* ===== gamma / chi-square upper tail (Numerical Recipes gammq) ===== */
+ function gammln(xx){
+   var cof=[76.18009172947146,-86.50532032941677,24.01409824083091,
+            -1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+   var x=xx,y=xx,tmp=x+5.5,ser=1.000000000190015,j;
+   tmp-=(x+0.5)*Math.log(tmp);
+   for(j=0;j<6;j++){ y+=1; ser+=cof[j]/y; }
+   return -tmp+Math.log(2.5066282746310005*ser/x);
+ }
+ function gser(a,x){
+   var gln=gammln(a),ap=a,sum=1/a,del=1/a,n;
+   if(x<=0) return 0;
+   for(n=1;n<=400;n++){ ap+=1; del*=x/ap; sum+=del; if(Math.abs(del)<Math.abs(sum)*3e-16) break; }
+   return sum*Math.exp(-x+a*Math.log(x)-gln);
+ }
+ function gcf(a,x){
+   var gln=gammln(a),FPMIN=1e-300,b=x+1-a,c=1/FPMIN,d=1/b,h=d,i,an,del;
+   for(i=1;i<=400;i++){
+     an=-i*(i-a); b+=2; d=an*d+b; if(Math.abs(d)<FPMIN)d=FPMIN;
+     c=b+an/c; if(Math.abs(c)<FPMIN)c=FPMIN; d=1/d; del=d*c; h*=del;
+     if(Math.abs(del-1)<3e-16) break;
+   }
+   return Math.exp(-x+a*Math.log(x)-gln)*h;
+ }
+ function gammq(a,x){ if(x<=0) return 1; if(x<a+1) return 1-gser(a,x); return gcf(a,x); }
+ function chi2sf(chi,df){ if(chi<=0) return 1; return gammq(df/2,chi/2); }
+
+ /* ===== formatting ===== */
+ function f1(x){ return (Math.round(x*10)/10).toFixed(1); }
+ function f2(x){ return (Math.round(x*100)/100).toFixed(2); }
+ function pTxt(p){ if(p<0.0001) return '&lt; 0.0001'; if(p<0.001) return p.toFixed(5); return p.toFixed(4); }
+ function niceStep(x){ var e=Math.pow(10,Math.floor(Math.log(x)/Math.LN10)),m=x/e; var s=m<1.5?1:(m<3?2:(m<7?5:10)); return s*e; }
+
+ /* ===== state ===== */
+ var MODE='chi';
+ var CHI={N:120,C:3,rarity:20,bal:0,O:[]};
+ var AN ={K:3,n:10,s:7,imb:0,Z:[]};
+
+ /* ---------- chi-square: marginal proportions ---------- */
+ function chiProps(){
+   var rp0=0.5+CHI.bal/100*0.5;              /* group A share: 0.5 .. 0.8 */
+   var rp=[rp0,1-rp0];
+   var w=[],j; for(j=0;j<CHI.C;j++) w.push(1);
+   w[CHI.C-1]=1-CHI.rarity/100*0.94;         /* last column made rare */
+   var sw=0; for(j=0;j<CHI.C;j++) sw+=w[j];
+   var cp=[]; for(j=0;j<CHI.C;j++) cp.push(w[j]/sw);
+   return {rp:rp,cp:cp};
+ }
+ function chiResample(){
+   var P=chiProps(),i,j,d;
+   var flat=[]; for(i=0;i<2;i++) for(j=0;j<CHI.C;j++) flat.push({i:i,j:j,p:P.rp[i]*P.cp[j]});
+   var cum=[],acc=0,k; for(k=0;k<flat.length;k++){ acc+=flat[k].p; cum.push(acc); }
+   var O=[]; for(i=0;i<2;i++){ O.push([]); for(j=0;j<CHI.C;j++) O[i].push(0); }
+   for(d=0;d<CHI.N;d++){ var u=rnd()*acc,c2=0; while(c2<cum.length-1 && u>cum[c2]) c2++; var cell=flat[c2]; O[cell.i][cell.j]++; }
+   CHI.O=O;
+ }
+ function chiCalc(){
+   var P=chiProps(),i,j;
+   var E=[]; for(i=0;i<2;i++){ E.push([]); for(j=0;j<CHI.C;j++) E[i].push(CHI.N*P.rp[i]*P.cp[j]); }
+   var chi=0; for(i=0;i<2;i++) for(j=0;j<CHI.C;j++){ var e=E[i][j]; if(e>0){ var dd=CHI.O[i][j]-e; chi+=dd*dd/e; } }
+   var df=(2-1)*(CHI.C-1);
+   var minE=1e9,nU5=0,nU1=0,cells=2*CHI.C;
+   for(i=0;i<2;i++) for(j=0;j<CHI.C;j++){ var v=E[i][j]; if(v<minE)minE=v; if(v<5)nU5++; if(v<1)nU1++; }
+   var status = (nU1>0 || nU5/cells>0.20) ? 'bad' : (nU5>0 ? 'warn' : 'ok');
+   return {P:P,E:E,O:CHI.O,chi:chi,df:df,p:chi2sf(chi,df),minE:minE,nU5:nU5,nU1:nU1,cells:cells,status:status};
+ }
+
+ /* ---------- ANOVA ---------- */
+ function anovaResample(){
+   var Z=[],j,i; for(j=0;j<AN.K;j++){ var a=[]; for(i=0;i<AN.n;i++) a.push(nrm()); Z.push(a); }
+   AN.Z=Z;
+ }
+ function anovaCalc(){
+   var j,i,K=AN.K,n=AN.n,s=AN.s;
+   var trueSD=[]; for(j=0;j<K;j++) trueSD.push(j===K-1 ? s*(1+AN.imb/100) : s);
+   var FAN=3, base=50;
+   var mean=[]; for(j=0;j<K;j++) mean.push(base+FAN*(j-(K-1)/2));
+   var pts=[],sSD=[],sM=[];
+   for(j=0;j<K;j++){
+     var g=[],sum=0;
+     for(i=0;i<n;i++){ var x=mean[j]+trueSD[j]*AN.Z[j][i]; g.push(x); sum+=x; }
+     var m=sum/n; sM.push(m);
+     var ss=0; for(i=0;i<n;i++) ss+=(g[i]-m)*(g[i]-m);
+     sSD.push(Math.sqrt(ss/Math.max(1,n-1)));
+     pts.push(g);
+   }
+   var minSD=1e9,maxSD=0,jmax=0;
+   for(j=0;j<K;j++){ if(sSD[j]<minSD)minSD=sSD[j]; if(sSD[j]>maxSD){maxSD=sSD[j];jmax=j;} }
+   var ratio = minSD>1e-9 ? maxSD/minSD : 99;
+   var vStatus = ratio<1.5 ? 'ok' : (ratio<=2 ? 'warn' : 'bad');
+   var nStatus = n>=30 ? 'ok' : (n>=15 ? 'warn' : 'bad');
+   return {K:K,n:n,trueSD:trueSD,mean:mean,pts:pts,sSD:sSD,sM:sM,
+           minSD:minSD,maxSD:maxSD,jmax:jmax,ratio:ratio,vStatus:vStatus,nStatus:nStatus};
+ }
+
+ /* ================= chi-square drawing ================= */
+ var COLc=['#2f6f8a','#7a5a8a'];
+ function drawChi(C){
+   var s='',i,j,cc=CHI.C;
+   var gl=92,gr=420,gt=40,gb=234,tcX=420,tcW=52,trY=234,trH=34;
+   var cw=(gr-gl)/cc, rh=(gb-gt)/2;
+   /* headers */
+   for(j=0;j<cc;j++){ var cx=gl+cw*(j+0.5); var lab='Cat '+(j+1); var rare=(j===cc-1 && CHI.rarity>=40);
+     s+='<text x="'+f1(cx)+'" y="26" font-size="10.6" fill="'+(rare?'#b8862f':'#4a585f')+'" text-anchor="middle" font-weight="800">'+lab+'</text>'; }
+   s+='<text x="'+(tcX+tcW/2)+'" y="26" font-size="10.6" fill="#8b99a1" text-anchor="middle" font-weight="800">Total</text>';
+   /* cells */
+   for(i=0;i<2;i++){
+     var cy=gt+rh*(i+0.5);
+     s+='<text x="46" y="'+f1(cy-3)+'" font-size="11" fill="'+COLc[i]+'" text-anchor="middle" font-weight="800">Group '+(i?'B':'A')+'</text>';
+     var rowT=0; for(j=0;j<cc;j++) rowT+=C.O[i][j];
+     for(j=0;j<cc;j++){
+       var x=gl+cw*j, y=gt+rh*i, e=C.E[i][j], o=C.O[i][j];
+       var fill=e<1?'#f4ccd3':(e<5?'#fbe3e8':'#ffffff');
+       var strk=e<5?'#d99aa6':'#dbe6ec';
+       s+='<rect x="'+f1(x+2)+'" y="'+f1(y+2)+'" width="'+f1(cw-4)+'" height="'+f1(rh-4)+'" rx="6" fill="'+fill+'" stroke="'+strk+'" stroke-width="'+(e<5?'1.6':'1')+'"/>';
+       s+='<text x="'+f1(x+cw/2)+'" y="'+f1(y+rh/2-2)+'" font-size="16" fill="#1e2a30" text-anchor="middle" font-weight="800">'+o+'</text>';
+       s+='<text x="'+f1(x+cw/2)+'" y="'+f1(y+rh/2+13)+'" font-size="9.6" fill="'+(e<5?'#b23145':'#8b99a1')+'" text-anchor="middle" font-weight="700">exp '+f1(e)+(e<5?' &#9888;':'')+'</text>';
+     }
+     s+='<text x="'+(tcX+tcW/2)+'" y="'+f1(cy+4)+'" font-size="13" fill="#4a585f" text-anchor="middle" font-weight="800">'+rowT+'</text>';
+   }
+   /* column totals + grand total */
+   for(j=0;j<cc;j++){ var ct=C.O[0][j]+C.O[1][j]; s+='<text x="'+f1(gl+cw*(j+0.5))+'" y="'+f1(trY+21)+'" font-size="12.5" fill="#8b99a1" text-anchor="middle" font-weight="800">'+ct+'</text>'; }
+   s+='<line x1="'+gl+'" y1="'+trY+'" x2="'+(tcX+tcW)+'" y2="'+trY+'" stroke="#cfe0e8" stroke-width="1.4"/>';
+   s+='<text x="46" y="'+f1(trY+21)+'" font-size="10" fill="#8b99a1" text-anchor="middle" font-weight="800">Total</text>';
+   s+='<text x="'+(tcX+tcW/2)+'" y="'+f1(trY+21)+'" font-size="13" fill="#1c4454" text-anchor="middle" font-weight="800">'+CHI.N+'</text>';
+   /* footnote */
+   s+='<text x="240" y="296" font-size="9.6" fill="#9aa9b1" text-anchor="middle" font-weight="700">big number = observed count &nbsp;·&nbsp; &ldquo;exp&rdquo; = expected count = row total &times; column total &divide; N</text>';
+   $("viz").innerHTML=s;
+ }
+
+ /* ================= ANOVA drawing ================= */
+ var COLa=['#2f6f8a','#b8862f','#2f9e5b','#7a5a8a','#2f6f9f'];
+ function drawAnova(C){
+   var s='',j,i,K=C.K;
+   var PL=60,PR=466,PT=18,PB=250;
+   var maxSD=C.maxSD, fanHalf=3*(K-1)/2;
+   var R=fanHalf+3.2*Math.max(maxSD,2)+2, lo=50-R, hi=50+R;
+   var yOf=function(v){ return PB-(v-lo)/(hi-lo)*(PB-PT); };
+   /* gridlines */
+   var step=niceStep((hi-lo)/5),t;
+   for(t=Math.ceil(lo/step)*step;t<=hi+1e-9;t+=step){ var yy=yOf(t); if(yy<PT-0.5||yy>PB+0.5)continue;
+     s+='<line x1="'+PL+'" y1="'+f1(yy)+'" x2="'+PR+'" y2="'+f1(yy)+'" stroke="#eef4f7" stroke-width="1"/>';
+     s+='<text x="'+(PL-8)+'" y="'+f1(yy+3.4)+'" font-size="9.4" fill="#9aa9b1" text-anchor="end" font-weight="700">'+Math.round(t)+'</text>'; }
+   s+='<line x1="'+PL+'" y1="'+PB+'" x2="'+PR+'" y2="'+PB+'" stroke="#cfe0e8" stroke-width="1.4"/>';
+   s+='<text x="16" y="'+((PT+PB)/2)+'" font-size="9.4" fill="#9aa9b1" font-weight="800" text-anchor="middle" transform="rotate(-90 16 '+((PT+PB)/2)+')">OUTCOME</text>';
+   var bw=(PR-PL)/K;
+   for(j=0;j<K;j++){
+     var cx=PL+bw*(j+0.5), col=COLa[j], hot=(j===C.jmax && C.ratio>2);
+     var mc=hot?'#d1495b':col;
+     var my=yOf(C.sM[j]), hiY=yOf(C.sM[j]+C.sSD[j]), loY=yOf(C.sM[j]-C.sSD[j]);
+     /* SD band */
+     s+='<rect x="'+f1(cx-bw*0.30)+'" y="'+f1(hiY)+'" width="'+f1(bw*0.60)+'" height="'+f1(loY-hiY)+'" rx="5" fill="'+mc+'" opacity="'+(hot?'.16':'.10')+'"/>';
+     /* whisker */
+     s+='<line x1="'+f1(cx)+'" y1="'+f1(hiY)+'" x2="'+f1(cx)+'" y2="'+f1(loY)+'" stroke="'+mc+'" stroke-width="1.6" opacity=".6"/>';
+     s+='<line x1="'+f1(cx-9)+'" y1="'+f1(hiY)+'" x2="'+f1(cx+9)+'" y2="'+f1(hiY)+'" stroke="'+mc+'" stroke-width="1.6" opacity=".6"/>';
+     s+='<line x1="'+f1(cx-9)+'" y1="'+f1(loY)+'" x2="'+f1(cx+9)+'" y2="'+f1(loY)+'" stroke="'+mc+'" stroke-width="1.6" opacity=".6"/>';
+     /* dots — deterministic horizontal spread by index for tidiness */
+     for(i=0;i<C.n;i++){
+       var px=cx+((i%5)-2)/2*bw*0.30 + (Math.floor(i/5)%2? bw*0.07:-bw*0.07);
+       var py=yOf(C.pts[j][i]); if(py<PT-4||py>PB+4) continue;
+       s+='<circle cx="'+f1(px)+'" cy="'+f1(py)+'" r="3.1" fill="'+mc+'" opacity=".72"/>'; }
+     /* mean tick */
+     s+='<line x1="'+f1(cx-bw*0.34)+'" y1="'+f1(my)+'" x2="'+f1(cx+bw*0.34)+'" y2="'+f1(my)+'" stroke="'+mc+'" stroke-width="2.6"/>';
+     /* labels */
+     s+='<text x="'+f1(cx)+'" y="270" font-size="10.4" fill="'+mc+'" text-anchor="middle" font-weight="800">Group '+String.fromCharCode(65+j)+'</text>';
+     s+='<text x="'+f1(cx)+'" y="284" font-size="9.6" fill="'+(hot?'#b23145':'#8b99a1')+'" text-anchor="middle" font-weight="700">SD '+f1(C.sSD[j])+(hot?' &#9888;':'')+'</text>';
+   }
+   $("viz").innerHTML=s;
+ }
+
+ /* ================= checklist ================= */
+ function pill(st,txt){ return '<span class="pw '+st+'">'+txt+'</span>'; }
+ function crow(st,name,badge,body){ return '<div class="cr '+st+'"><div class="ct"><span class="cn">'+name+'</span>'+pill(st,badge)+'</div><div class="cd">'+body+'</div></div>'; }
+
+ function renderChecksChi(C){
+   var h='';
+   /* independence */
+   h+=crow('info','Independence of observations','by design',
+     'Each person is counted in exactly one cell, and one person\'s outcome cannot sway another\'s. Nothing in the table can confirm this &mdash; it is decided by how the data were collected.');
+   /* expected counts */
+   var badge = C.status==='ok'?'met':(C.status==='warn'?'borderline':'not met');
+   var body='Smallest expected count is <b>'+f1(C.minE)+'</b>. '+
+     (C.nU5===0 ? 'Every one of the '+C.cells+' cells has an expected count of at least 5, so the &chi;&sup2; approximation is on solid ground.'
+      : '<b>'+C.nU5+' of '+C.cells+'</b> cells fall below 5'+(C.nU1>0?', and '+C.nU1+' fall below 1':'')+'. '+
+        (C.status==='bad' ? 'That is too many &mdash; the printed p&#8209;value cannot be trusted here.' : 'A few borderline cells are tolerable, but this is the edge of what the approximation can bear.'))+
+     ' Rule of thumb: every expected count &ge; 5.';
+   h+=crow(C.status,'Expected counts large enough',badge,body);
+   /* categorical / random */
+   h+=crow('info','Counts, from a random sample','assumed',
+     'The test works on raw <b>counts</b> in mutually exclusive categories drawn from a random sample &mdash; never on percentages or averages. If the cells hold anything but frequencies, &chi;&sup2; does not apply.');
+   $("checks").innerHTML=h;
+ }
+ function renderChecksAnova(C){
+   var h='';
+   h+=crow('info','Independence of observations','by design',
+     'Every value comes from a different, unrelated unit. Measuring the same person in two groups, or clustering by household or site, breaks this &mdash; and no standard deviation on screen can reveal it.');
+   var vb=C.vStatus==='ok'?'met':(C.vStatus==='warn'?'borderline':'not met');
+   h+=crow(C.vStatus,'Equal variances across groups',vb,
+     'Largest group SD <b>'+f1(C.maxSD)+'</b> &divide; smallest <b>'+f1(C.minSD)+'</b> = <b>'+f2(C.ratio)+'&times;</b>. '+
+     (C.vStatus==='ok'?'Well under the rule&#8209;of&#8209;thumb ceiling of 2 &mdash; pooling into one common spread is reasonable.'
+      :(C.vStatus==='warn'?'Right around the ceiling of 2 &mdash; treat the pooled variance with caution.'
+      :'Past 2&times; &mdash; the groups do not share a common spread, so the ordinary F test is not entitled to this data.'))+
+     ' (The ratio wobbles from sampling alone; redraw to see.)');
+   var nb=C.nStatus==='ok'?'robust':(C.nStatus==='warn'?'watch it':'fragile');
+   h+=crow(C.nStatus,'Roughly normal within each group',nb,
+     'With <b>n = '+C.n+'</b> per group, '+
+     (C.nStatus==='ok'?'the groups are large enough that the central limit theorem makes the F test robust to non&#8209;normal shapes.'
+      :(C.nStatus==='warn'?'the groups are moderate &mdash; the central limit theorem helps, but heavy skew or outliers still deserve a look.'
+      :'the groups are small, so normality genuinely matters and there is little data with which to judge it. Look hard at skew and outliers.')));
+   $("checks").innerHTML=h;
+ }
+
+ /* ================= tiles + verdict ================= */
+ function renderChi(){
+   var C=chiCalc();
+   drawChi(C);
+   $("vizTitle").innerHTML='A two&#8209;way table of counts';
+   $("vizCap").innerHTML='Two groups &times; '+CHI.C+' outcome categories. Cells shaded pink have an <b>expected</b> count below 5.';
+   $("vizLgd").innerHTML='<span><i style="background:#ffffff"></i>expected &ge; 5 &mdash; fine</span><span><i style="background:#fbe3e8"></i>expected between 1 and 5 &mdash; thin</span><span><i style="background:#f4ccd3"></i>expected below 1 &mdash; too thin</span>';
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='A two&#8209;way count table<small>is the &chi;&sup2; approximation entitled to run?</small>';
+   var t='';
+   t+='<div><span class="lb">People<br>total N</span><span class="vv">'+CHI.N+'</span><span class="sub">cells = 2 &times; '+CHI.C+'</span></div>';
+   t+='<div class="'+(C.minE<5?'warn':'good')+'"><span class="lb">Smallest<br>expected</span><span class="vv">'+f1(C.minE)+'</span><span class="sub">needs &ge; 5</span></div>';
+   t+='<div class="'+(C.nU5>0?'warn':'good')+'"><span class="lb">Cells<br>below 5</span><span class="vv">'+C.nU5+' / '+C.cells+'</span><span class="sub">'+(C.nU1>0?C.nU1+' below 1':'none below 1')+'</span></div>';
+   t+='<div><span class="lb">&chi;&sup2;<br>statistic</span><span class="vv">'+f2(C.chi)+'</span><span class="sub">from O vs E</span></div>';
+   t+='<div><span class="lb">df</span><span class="vv">'+C.df+'</span><span class="sub">(r&minus;1)(c&minus;1)</span></div>';
+   t+='<div class="'+(C.status==='bad'?'warn':'')+'"><span class="lb">p&#8209;value</span><span class="vv">'+pTxt(C.p)+'</span><span class="sub">'+(C.status==='ok'?'trustworthy':'suspect &mdash; see below')+'</span></div>';
+   $("chiTiles").innerHTML=t;
+   var vc=C.status==='ok'?'good':(C.status==='warn'?'warn':'bad');
+   var vt;
+   if(C.status==='ok') vt='<span class="big">The condition is met.</span>Every expected count is at least 5, so the &chi;&sup2; statistic really does follow a &chi;&sup2; distribution and the p&#8209;value of <b>'+pTxt(C.p)+'</b> can be read as intended.';
+   else if(C.status==='warn') vt='<span class="big">Borderline.</span>Some expected counts have slipped below 5 (smallest is <b>'+f1(C.minE)+'</b>). The approximation is fraying; the p&#8209;value is usable but no longer sharp. Collapsing the rare category or adding data would restore it.';
+   else vt='<span class="big">The condition fails.</span>Too many cells have thin expected counts (smallest is <b>'+f1(C.minE)+'</b>). The &chi;&sup2; approximation breaks down, so the p&#8209;value of <b>'+pTxt(C.p)+'</b> is not to be believed. Collapse categories, gather more data, or use Fisher\'s exact test.';
+   $("verdict").className='sent '+vc; $("verdict").innerHTML=vt;
+   renderChecksChi(C);
+ }
+ function renderAnova(){
+   var C=anovaCalc();
+   drawAnova(C);
+   $("vizTitle").innerHTML='Several groups, one outcome';
+   $("vizCap").innerHTML='Each dot is one observation; the thick tick is the group mean and the band is &plusmn;1 SD. A group tinted red is more than twice as spread as the tightest one.';
+   $("vizLgd").innerHTML='<span><i style="background:#2f6f8a"></i>group mean &amp; &plusmn;1 SD band</span><span><i style="background:#d1495b"></i>spread &gt; 2&times; the smallest &mdash; condition broken</span>';
+   $("stage").style.background='var(--teal)';
+   $("stage").innerHTML='Several groups, one outcome<small>do the groups share a common spread?</small>';
+   var t='';
+   t+='<div><span class="lb">Groups<br>k</span><span class="vv">'+C.K+'</span><span class="sub">n = '+C.n+' each</span></div>';
+   t+='<div class="good"><span class="lb">Smallest<br>group SD</span><span class="vv">'+f1(C.minSD)+'</span><span class="sub">sampled</span></div>';
+   t+='<div class="'+(C.maxSD/Math.max(0.01,C.minSD)>2?'warn':'')+'"><span class="lb">Largest<br>group SD</span><span class="vv">'+f1(C.maxSD)+'</span><span class="sub">sampled</span></div>';
+   t+='<div class="'+(C.vStatus==='ok'?'good':(C.vStatus==='bad'?'warn':'gold'))+'"><span class="lb">Largest &divide;<br>smallest</span><span class="vv">'+f2(C.ratio)+'&times;</span><span class="sub">keep &lt; 2</span></div>';
+   t+='<div><span class="lb">People<br>per group</span><span class="vv">'+C.n+'</span><span class="sub">'+(C.nStatus==='ok'?'CLT robust':(C.nStatus==='warn'?'moderate':'small'))+'</span></div>';
+   t+='<div><span class="lb">Total<br>N</span><span class="vv">'+(C.K*C.n)+'</span><span class="sub">k &times; n</span></div>';
+   $("anovaTiles").innerHTML=t;
+   var vc=C.vStatus==='ok'?'good':(C.vStatus==='warn'?'warn':'bad');
+   var vt;
+   if(C.vStatus==='ok') vt='<span class="big">Spreads look comparable.</span>The widest group is only <b>'+f2(C.ratio)+'&times;</b> the tightest &mdash; well within the rule of thumb. Pooling every group into one common variance is fair, and the F test is entitled to this data (given independence and, for small groups, roughly normal shapes).';
+   else if(C.vStatus==='warn') vt='<span class="big">Right at the edge.</span>The ratio of largest to smallest SD is <b>'+f2(C.ratio)+'&times;</b>, hovering around the ceiling of 2. Ordinary ANOVA may still be roughly valid, but a version built for unequal spreads (Welch\'s) would be safer.';
+   else vt='<span class="big">Spreads are too unequal.</span>The widest group is <b>'+f2(C.ratio)+'&times;</b> the tightest &mdash; past the factor of 2. There is no single common variance to pool, so the ordinary F test is not entitled to this data. Reach for a transformation or Welch\'s ANOVA. More data will not fix this.';
+   $("verdict").className='sent '+vc; $("verdict").innerHTML=vt;
+   renderChecksAnova(C);
+ }
+ function render(){ if(MODE==='chi') renderChi(); else renderAnova(); }
+
+ /* ================= claims ================= */
+ var CLAIMS=[
+  {t:'Chi&#8209;square needs the data in each group to be normally distributed.',ok:false,
+   e:'No. &chi;&sup2; is a test for <b>counts</b> in categories; there is no normality assumption on the underlying data. Its one distributional requirement is that the <b>expected cell counts</b> be large enough.'},
+  {t:'The &chi;&sup2; approximation is trustworthy only when the expected cell counts are large enough &mdash; commonly, every expected count at least 5.',ok:true,
+   e:'Correct. This is the checkable condition for &chi;&sup2;. When expected counts are thin, the statistic no longer follows a &chi;&sup2; distribution and the p&#8209;value is unreliable.'},
+  {t:'An observed count of 0 in a cell automatically violates the chi&#8209;square condition.',ok:false,
+   e:'No &mdash; the condition is about the <b>expected</b> count, not the observed one. A cell can hold an observed 0 with no trouble, as long as its expected count is adequate.'},
+  {t:'ANOVA assumes every group is drawn from a population with the same variance.',ok:true,
+   e:'Correct. Homogeneity of variance is a core ANOVA assumption; the test pools all groups into one estimate of a common spread, which only makes sense if that common spread exists.'},
+  {t:'If the equal&#8209;variance condition fails, collecting more data will fix it.',ok:false,
+   e:'No. More data sharpens each estimate but does not pull unequal spreads together. Use a variance&#8209;stabilising transformation or Welch\'s ANOVA instead.'},
+  {t:'ANOVA\'s normality requirement matters less as the groups grow larger.',ok:true,
+   e:'Correct. The F test relies on the behaviour of group means, and the central limit theorem makes those means well&#8209;behaved as n grows &mdash; so normality matters most in small groups.'},
+  {t:'Independence of observations can be confirmed by inspecting the counts or the standard deviations.',ok:false,
+   e:'No. Independence is a property of how the data were <b>collected</b>, not of the numbers. Repeated measures or clustering break it invisibly; no on&#8209;screen check can detect it.'},
+  {t:'Merging two rare categories together is a legitimate way to rescue small expected counts.',ok:true,
+   e:'Correct. Collapsing sparse categories raises the expected counts in the combined cells and is a standard fix &mdash; as long as the merged category still answers a meaningful question.'}
+ ];
+ function renderClaims(){
+   $("claims").innerHTML=CLAIMS.map(function(c,k){
+     return '<button class="it" data-k="'+k+'"><span><span class="nm">'+c.t+'</span></span></button>';
+   }).join('');
+   document.querySelectorAll('#claims .it').forEach(function(b){
+     b.onclick=function(){
+       document.querySelectorAll('#claims .it').forEach(function(x){x.classList.remove('on');});
+       b.classList.add('on');
+       var c=CLAIMS[+b.dataset.k];
+       $("info").innerHTML='<span class="n">'+(c.ok?'Sound':'A common slip')+' '+
+         '<span class="pill '+(c.ok?'normal':'high')+'">'+(c.ok?'correct':'incorrect')+'</span></span>'+c.e;
+     };
+   });
+ }
+
+ /* ================= mode + controls ================= */
+ function setMode(m){
+   MODE=m;
+   document.querySelectorAll('#modeSeg button').forEach(function(b){ b.classList.toggle('on',b.dataset.m===m); });
+   $("chiCtl").classList.toggle('hide',m!=='chi');
+   $("anovaCtl").classList.toggle('hide',m!=='anova');
+   $("draw").innerHTML = m==='chi'?'Draw another sample':'Draw another sample';
+   render();
+ }
+ document.querySelectorAll('#modeSeg button').forEach(function(b){ b.onclick=function(){ setMode(b.dataset.m); }; });
+
+ /* chi sliders */
+ $("cN").oninput=function(){ CHI.N=+this.value; $("vcN").innerHTML=CHI.N; chiResample(); renderChi(); };
+ $("cC").oninput=function(){ CHI.C=+this.value; $("vcC").innerHTML=CHI.C; chiResample(); renderChi(); };
+ $("cR").oninput=function(){ CHI.rarity=+this.value; $("vcR").innerHTML=CHI.rarity+'%'; chiResample(); renderChi(); };
+ $("cB").oninput=function(){ CHI.bal=+this.value; $("vcB").innerHTML=CHI.bal===0?'even':('+'+CHI.bal+'%'); chiResample(); renderChi(); };
+
+ /* anova sliders */
+ $("aK").oninput=function(){ AN.K=+this.value; $("vaK").innerHTML=AN.K; anovaResample(); renderAnova(); };
+ $("aN").oninput=function(){ AN.n=+this.value; $("vaN").innerHTML=AN.n; anovaResample(); renderAnova(); };
+ $("aS").oninput=function(){ AN.s=+this.value; $("vaS").innerHTML=f1(AN.s); renderAnova(); };
+ $("aU").oninput=function(){ AN.imb=+this.value; $("vaU").innerHTML=AN.imb===0?'off':('+'+AN.imb+'%'); renderAnova(); };
+
+ $("draw").onclick=function(){ if(MODE==='chi'){ chiResample(); renderChi(); } else { anovaResample(); renderAnova(); } };
+ $("rst").onclick=function(){
+   if(MODE==='chi'){ CHI={N:120,C:3,rarity:20,bal:0,O:[]};
+     $("cN").value=120;$("vcN").innerHTML=120; $("cC").value=3;$("vcC").innerHTML=3;
+     $("cR").value=20;$("vcR").innerHTML='20%'; $("cB").value=0;$("vcB").innerHTML='even';
+     chiResample(); renderChi();
+   } else { AN={K:3,n:10,s:7,imb:0,Z:[]};
+     $("aK").value=3;$("vaK").innerHTML=3; $("aN").value=10;$("vaN").innerHTML=10;
+     $("aS").value=7;$("vaS").innerHTML='7.0'; $("aU").value=0;$("vaU").innerHTML='off';
+     anovaResample(); renderAnova();
+   }
+ };
+
+ /* init */
+ chiResample(); anovaResample(); renderClaims(); setMode('chi');
+})();
+</script>
+</body>
+</html>

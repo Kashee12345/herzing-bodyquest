@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>The Circadian Clock</title>
+<meta name="description" content="Drag a 24-hour clock and watch melatonin, alertness, and body temperature rise and fall together — an interactive on the body's circadian rhythm.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>
+.wrap{grid-template-columns:0.92fr 1.08fr;}
+#clock{touch-action:none;cursor:grab;} #clock.drag{cursor:grabbing;}
+#clock text{font-family:var(--sans);}
+.hint{font-size:12px;color:var(--muted);text-align:center;margin-top:8px;}
+.meter{margin:12px 0;} .meter:first-of-type{margin-top:2px;}
+.mh{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--soft);margin-bottom:5px;}
+.mh .r{display:flex;align-items:center;gap:7px;}
+.val{font-family:var(--disp);font-weight:600;font-size:14px;color:var(--teal-dk);}
+.bar{height:15px;border-radius:8px;background:#f1e2ea;overflow:hidden;box-shadow:inset 0 1px 3px rgba(70,30,45,.12);}
+.bar i{display:block;height:100%;width:0;border-radius:8px;transition:width .16s linear;}
+.legend{display:flex;gap:15px;flex-wrap:wrap;margin-top:9px;font-size:11.5px;color:var(--soft);font-weight:600;}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block;}
+.qrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.qrow button{flex:1;min-width:62px;border:1px solid var(--line);background:#fff;color:var(--soft);font-weight:700;font-size:11.5px;padding:7px 4px;border-radius:9px;cursor:pointer;font-family:var(--sans);}
+.qrow button:hover{border-color:var(--teal);color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 4</div>
+  <h1>The Circadian Clock</h1>
+  <div class="intro">A cluster of neurons just above the optic nerve &mdash; the <b>suprachiasmatic nucleus</b> &mdash; keeps your body on a roughly 24-hour schedule. Drag the clock hand and watch <b>melatonin</b>, <b>alertness</b>, and <b>body temperature</b> rise and fall together.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">24-hour body clock</h2>
+      <svg id="clock" viewBox="0 0 240 240" aria-label="Draggable 24-hour clock"><g id="clockG"></g></svg>
+      <div class="hint">Drag the hand around the clock &mdash; or press Play.</div>
+      <div class="row"><button class="btn solid" id="play">▶ Play day</button></div>
+      <div class="qrow">
+        <button data-t="7">Wake · 7a</button>
+        <button data-t="12">Noon</button>
+        <button data-t="19">Peak · 7p</button>
+        <button data-t="3">Nadir · 3a</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>The 24-hour rhythm</h2>
+      <svg id="graph" viewBox="0 0 240 130" aria-label="Rhythm curves"><g id="graphG"></g></svg>
+      <div class="legend">
+        <span><i style="background:#8a5bb0"></i>Melatonin</span>
+        <span><i style="background:#c79a34"></i>Alertness</span>
+        <span><i style="background:#d1495b"></i>Body temp</span>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Set the time<small>drag the clock to begin</small></div>
+    <div class="card">
+      <div class="meter">
+        <div class="mh"><span>🌙 Melatonin</span><span class="r"><b class="val" id="mvMel">–</b><span class="pill" id="pMel"></span></span></div>
+        <div class="bar"><i id="fMel" style="background:linear-gradient(90deg,#9a6bbf,#7a4a9e)"></i></div>
+      </div>
+      <div class="meter">
+        <div class="mh"><span>⚡ Alertness</span><span class="r"><b class="val" id="mvAl">–</b><span class="pill" id="pAl"></span></span></div>
+        <div class="bar"><i id="fAl" style="background:linear-gradient(90deg,#e0b447,#b8862f)"></i></div>
+      </div>
+      <div class="meter">
+        <div class="mh"><span>🌡️ Body temperature</span><span class="r"><b class="val" id="mvTe">–</b><span class="pill" id="pTe"></span></span></div>
+        <div class="bar"><i id="fTe" style="background:linear-gradient(90deg,#e0687a,#d1495b)"></i></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem">Two forces set this pattern: a circadian wake signal from the SCN, entrained by daylight, working against steadily rising sleep pressure &mdash; the <b>two-process model</b> of sleep (Borbély, 1982).</div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---- physiology models (t = hours, 0..24) ---- */
+ var AL=[25,18,12,8,6,8,15,30,55,72,82,85,82,74,68,70,78,85,90,92,88,78,62,45];
+ function alertF(t){var i=Math.floor(t)%24;var f=t-Math.floor(t);return AL[i]+(AL[(i+1)%24]-AL[i])*f;}
+ function melF(t){var tt=t<12?t+24:t; // night-contiguous 12..36, peak at 27 = 3AM
+   if(tt>=21&&tt<=27){var p=(tt-21)/6;return 100*(0.5-0.5*Math.cos(Math.PI*p));}
+   if(tt>27&&tt<=31.5){var q=(tt-27)/4.5;return 100*(0.5+0.5*Math.cos(Math.PI*q));}
+   return 2;}
+ function tempF(t){return 36.75+0.45*Math.cos(2*Math.PI*(t-18)/24);} // max 18:00, min 06:00
+
+ /* ---- day phases ---- */
+ var PH=[
+  {a:5,b:7,name:'Dawn awakening',sub:'Melatonin switching off',col:'#c46a3d',
+   d:'As dawn light reaches the retina, the SCN halts melatonin release. Cortisol surges (the <b>cortisol awakening response</b>) and core body temperature begins its daily climb. You are awake, but alertness lags behind &mdash; the grogginess of <b>sleep inertia</b>.'},
+  {a:7,b:10,name:'Morning rise',sub:'Alertness climbing',col:'#2f9e5b',
+   d:'Bright morning light entrains the <b>suprachiasmatic nucleus (SCN)</b>, the brain\'s master clock sitting just above the optic chiasm. Melatonin is gone; temperature and alertness rise quickly toward their late-morning high.'},
+  {a:10,b:12,name:'Peak alertness',sub:'Cognitive sweet spot',col:'#2f6f9f',
+   d:'Late morning is the day\'s peak for alertness and working memory &mdash; the circadian wake signal is strong while sleep pressure is still low. A good window for demanding mental work.'},
+  {a:12,b:15,name:'Post-lunch dip',sub:'Afternoon low',col:'#b8862f',
+   d:'Early afternoon brings a genuine dip in alertness driven by the internal clock &mdash; not merely a heavy lunch. The wake-promoting signal briefly eases around 2&ndash;3 PM, a natural low that many cultures meet with a siesta.'},
+  {a:15,b:18,name:'Afternoon rebound',sub:'Best physical performance',col:'#4a8f7b',
+   d:'Alertness rebounds. Reaction time, coordination, and muscle strength reach their daily best in the late afternoon, while core body temperature approaches its peak.'},
+  {a:18,b:21,name:'Evening peak',sub:'Wake-maintenance zone',col:'#d1495b',
+   d:'Core temperature peaks near <b>37.2&deg;C</b> and the SCN fires its strongest wake-promoting signal &mdash; the "wake-maintenance zone," when it is paradoxically hardest to fall asleep. Melatonin is still switched off.'},
+  {a:21,b:23,name:'Evening wind-down',sub:'Melatonin onset',col:'#7a5a8a',
+   d:'In dim evening light the pineal gland begins secreting <b>melatonin</b> (dim-light melatonin onset, around 9 PM) &mdash; the clock\'s internal "darkness" signal. Bright screens at this hour delay the surge and push sleep later.'},
+  {a:23,b:26,name:'Sleep onset & deep sleep',sub:'Slow-wave sleep',col:'#3d2a5c',
+   d:'Alertness collapses as melatonin climbs and body temperature falls. The deepest, most restorative <b>slow-wave sleep</b> is concentrated in these first hours of the night.'},
+  {a:2,b:5,name:'Circadian nadir',sub:'The body\'s low point',col:'#25203f',
+   d:'Between about 3 and 5 AM the body reaches its <b>circadian nadir</b>: melatonin peaks, core temperature bottoms out near <b>36.3&deg;C</b>, and alertness is at its weakest &mdash; why errors and drowsy-driving crashes cluster on the night shift.'}
+ ];
+ function phaseOf(t){for(var i=0;i<PH.length;i++){var p=PH[i];
+   if(p.b>24){if(t>=p.a||t<p.b-24)return p;} else if(t>=p.a&&t<p.b)return p;}
+   return PH[0];}
+
+ /* ---- geometry ---- */
+ var CX=120,CY=120,HR=78;
+ function polar(cx,cy,r,t){var a=t/24*2*Math.PI-Math.PI/2;return {x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};}
+
+ /* ---- build clock ---- */
+ (function(){var c='';
+   c+='<circle cx="120" cy="120" r="96" fill="#fffdfc" stroke="#eee0e6" stroke-width="2"/>';
+   for(var t=0;t<24;t+=0.5){var pt=polar(CX,CY,82,t);var op=(0.10+0.9*melF(t)/100).toFixed(2);
+     c+='<circle cx="'+pt.x.toFixed(1)+'" cy="'+pt.y.toFixed(1)+'" r="4" fill="#7a4a9e" opacity="'+op+'"/>';}
+   for(var h=0;h<24;h++){var big=(h%6===0);var p1=polar(CX,CY,70,h),p2=polar(CX,CY,big?60:65,h);
+     c+='<line x1="'+p1.x.toFixed(1)+'" y1="'+p1.y.toFixed(1)+'" x2="'+p2.x.toFixed(1)+'" y2="'+p2.y.toFixed(1)+'" stroke="#d9c4d0" stroke-width="'+(big?2:1)+'"/>';}
+   [['12a',0],['6a',6],['12p',12],['6p',18]].forEach(function(L){var p=polar(CX,CY,107,L[1]);
+     c+='<text x="'+p.x.toFixed(1)+'" y="'+(p.y+3).toFixed(1)+'" font-size="10" fill="#94818b" text-anchor="middle" font-weight="700">'+L[0]+'</text>';});
+   c+='<line id="hand" x1="120" y1="120" x2="120" y2="42" stroke="#a1466b" stroke-width="4" stroke-linecap="round"/>';
+   c+='<circle id="knob" cx="120" cy="42" r="8" fill="#a1466b" stroke="#fff" stroke-width="2.5"/>';
+   c+='<circle cx="120" cy="120" r="5" fill="#5e2846"/>';
+   c+='<text id="cIcon" x="120" y="102" font-size="24" text-anchor="middle">☀️</text>';
+   c+='<text id="cTime" x="120" y="134" font-size="23" text-anchor="middle" font-weight="700" fill="#5e2846" font-family="Fraunces">10:00</text>';
+   c+='<text id="cAmpm" x="120" y="152" font-size="11" text-anchor="middle" font-weight="700" fill="#94818b">AM</text>';
+   $("clockG").innerHTML=c;
+ })();
+
+ /* ---- build graph ---- */
+ function xOf(t){return 8+t/24*224;}
+ function yOf(v){v=Math.max(0,Math.min(1,v));return 104-v*92;}
+ function series(fn){var p='';for(var t=0;t<=24.001;t+=0.25){p+=xOf(t).toFixed(1)+','+yOf(fn(t)).toFixed(1)+' ';}return p;}
+ (function(){var g='';
+   [0,6,12,18,24].forEach(function(hh){var x=xOf(hh).toFixed(1);
+     g+='<line x1="'+x+'" y1="12" x2="'+x+'" y2="104" stroke="#f0e4ea" stroke-width="1"/>';});
+   g+='<line x1="8" y1="104" x2="232" y2="104" stroke="#e2d0da" stroke-width="1"/>';
+   g+='<polyline points="'+series(function(t){return melF(t)/100;})+'" fill="none" stroke="#8a5bb0" stroke-width="2.2" stroke-linejoin="round"/>';
+   g+='<polyline points="'+series(function(t){return alertF(t)/100;})+'" fill="none" stroke="#c79a34" stroke-width="2.2" stroke-linejoin="round"/>';
+   g+='<polyline points="'+series(function(t){return (tempF(t)-36.3)/0.9;})+'" fill="none" stroke="#d1495b" stroke-width="2.2" stroke-linejoin="round"/>';
+   g+='<line id="mk" x1="8" y1="12" x2="8" y2="104" stroke="#361f2b" stroke-width="1.4" stroke-dasharray="3 3"/>';
+   g+='<circle id="dMel" cx="8" cy="104" r="4" fill="#8a5bb0"/>';
+   g+='<circle id="dAl" cx="8" cy="104" r="4" fill="#c79a34"/>';
+   g+='<circle id="dTe" cx="8" cy="104" r="4" fill="#d1495b"/>';
+   ['12a','6a','12p','6p','12a'].forEach(function(lb,k){var x=xOf(k*6).toFixed(1);
+     g+='<text x="'+x+'" y="120" font-size="9" fill="#94818b" text-anchor="middle" font-weight="600">'+lb+'</text>';});
+   $("graphG").innerHTML=g;
+ })();
+
+ /* ---- helpers ---- */
+ function fmt(t){var tot=Math.round(t*60)%1440;if(tot<0)tot+=1440;var h=Math.floor(tot/60),m=tot%60;
+   var ap=h<12?'AM':'PM';var h12=h%12;if(h12===0)h12=12;return {hm:h12+':'+(m<10?'0'+m:m),ap:ap};}
+ function iconOf(t){if(t>=5&&t<7.5)return '🌅';if(t>=7.5&&t<17.5)return '☀️';if(t>=17.5&&t<20)return '🌆';return '🌙';}
+ function melLab(v){return v>55?['High','high']:(v>18?['Moderate','normal']:['Low','low']);}
+ function alLab(v){return v>70?['High','high']:(v>35?['Moderate','normal']:['Low','low']);}
+ function teLab(v){return v>37.0?['High','high']:(v<36.5?['Low','low']:['Normal','normal']);}
+
+ var cur=15;
+ function setTime(t){
+   t=((t%24)+24)%24;cur=t;
+   var hp=polar(CX,CY,HR,t);
+   $("hand").setAttribute('x2',hp.x.toFixed(1));$("hand").setAttribute('y2',hp.y.toFixed(1));
+   $("knob").setAttribute('cx',hp.x.toFixed(1));$("knob").setAttribute('cy',hp.y.toFixed(1));
+   var fm=fmt(t);
+   $("cIcon").textContent=iconOf(t);$("cTime").textContent=fm.hm;$("cAmpm").textContent=fm.ap;
+
+   var m=melF(t),a=alertF(t),tc=tempF(t),tf=tc*9/5+32;
+   $("fMel").style.width=m.toFixed(0)+'%';
+   $("fAl").style.width=a.toFixed(0)+'%';
+   $("fTe").style.width=Math.max(0,Math.min(100,(tc-36.3)/0.9*100)).toFixed(0)+'%';
+   $("mvMel").textContent=m.toFixed(0)+'%';
+   $("mvAl").textContent=a.toFixed(0)+'%';
+   $("mvTe").textContent=tc.toFixed(1)+'°C · '+tf.toFixed(1)+'°F';
+   var lm=melLab(m),la=alLab(a),lt=teLab(tc);
+   $("pMel").textContent=lm[0];$("pMel").className='pill '+lm[1];
+   $("pAl").textContent=la[0];$("pAl").className='pill '+la[1];
+   $("pTe").textContent=lt[0];$("pTe").className='pill '+lt[1];
+
+   $("mk").setAttribute('x1',xOf(t).toFixed(1));$("mk").setAttribute('x2',xOf(t).toFixed(1));
+   $("dMel").setAttribute('cx',xOf(t).toFixed(1));$("dMel").setAttribute('cy',yOf(m/100).toFixed(1));
+   $("dAl").setAttribute('cx',xOf(t).toFixed(1));$("dAl").setAttribute('cy',yOf(a/100).toFixed(1));
+   $("dTe").setAttribute('cx',xOf(t).toFixed(1));$("dTe").setAttribute('cy',yOf((tc-36.3)/0.9).toFixed(1));
+
+   var p=phaseOf(t);
+   $("stage").style.background=p.col;
+   $("stage").innerHTML=fm.hm+' '+fm.ap+' &middot; '+p.name+'<small>'+p.sub+'</small>';
+   $("info").innerHTML='<span class="n">'+p.name+'</span>'+p.d;
+ }
+
+ /* ---- interaction ---- */
+ var clock=$("clock");
+ function angToT(cx,cy){var r=clock.getBoundingClientRect();
+   var th=Math.atan2(cy-(r.top+r.height/2),cx-(r.left+r.width/2));
+   return ((th+Math.PI/2)/(2*Math.PI))*24;}
+ var dragging=false;
+ clock.addEventListener('pointerdown',function(e){dragging=true;clock.classList.add('drag');
+   if(clock.setPointerCapture)clock.setPointerCapture(e.pointerId);stop();setTime(angToT(e.clientX,e.clientY));e.preventDefault();});
+ clock.addEventListener('pointermove',function(e){if(dragging)setTime(angToT(e.clientX,e.clientY));});
+ function endDrag(){dragging=false;clock.classList.remove('drag');}
+ clock.addEventListener('pointerup',endDrag);clock.addEventListener('pointercancel',endDrag);
+
+ var graph=$("graph");
+ graph.addEventListener('pointerdown',function(e){var r=graph.getBoundingClientRect();
+   var xv=(e.clientX-r.left)/r.width*240;stop();setTime(Math.max(0,Math.min(23.999,(xv-8)/224*24)));});
+
+ var qbtns=document.querySelectorAll('.qrow button');
+ for(var i=0;i<qbtns.length;i++){qbtns[i].addEventListener('click',function(){stop();setTime(parseFloat(this.getAttribute('data-t')));});}
+
+ var playing=false,timer=null;
+ function stop(){if(playing){playing=false;$("play").textContent='▶ Play day';clearInterval(timer);}}
+ $("play").addEventListener('click',function(){
+   if(playing){stop();return;}
+   playing=true;$("play").textContent='⏸ Pause';
+   timer=setInterval(function(){setTime(cur+0.1);},40);
+ });
+
+ setTime(15);
+})();
+</script>
+</body>
+</html>

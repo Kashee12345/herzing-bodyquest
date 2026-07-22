@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>The Therapeutic Window</title>
+<meta name="description" content="Slide the dose of an antimicrobial between subtherapeutic, effective, and toxic — and see how selective toxicity sets the width of the therapeutic window. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:1fr 1fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.cap{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:8px;}
+.sld{width:100%;margin:14px 0 3px;accent-color:var(--teal);height:26px;cursor:pointer;}
+.vread{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:6px;}
+.vread .big{font-family:var(--disp);font-weight:700;font-size:30px;line-height:1;letter-spacing:-.5px;}
+.vread .cls{font-weight:800;font-size:13.5px;text-align:right;color:var(--soft);}
+.tirow{display:flex;align-items:center;justify-content:space-between;margin-top:11px;font-size:11.5px;font-weight:700;color:var(--muted);}
+.refrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.refchip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--soft);cursor:pointer;font-family:var(--sans);transition:.12s;}
+.refchip:hover{border-color:var(--teal);color:var(--teal-dk);}
+.refchip.on{background:var(--teal);border-color:var(--teal);color:#fff;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 9</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 9</div>
+  <h1>The Therapeutic Window</h1>
+  <div class="intro">A good antimicrobial follows the rule of <b>selective toxicity</b>: harm the microbe, spare the patient. In practice that means dosing into a narrow band &mdash; high enough to work, low enough to be safe. Slide the dose and watch it cross from <b>too low</b>, into the <b>window</b>, and up to <b>toxic</b>. Then switch drugs to see how the window widens or narrows.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Slide the dose</h2>
+    <svg viewBox="0 0 236 184" aria-label="dose spectrum showing subtherapeutic, therapeutic-window, and toxic zones with microbe and host status"><g id="art"></g></svg>
+    <div class="cap"><b>MEC</b> = minimum effective concentration; <b>MTC</b> = minimum toxic concentration. The green band between them is the <b>therapeutic window</b>. Dose is on a relative 0&ndash;100 scale, since real serum levels differ for every drug.</div>
+  </div></div>
+  <div>
+    <div id="stage">The therapeutic window<small>pick a drug, then slide the dose</small></div>
+    <div class="card">
+      <div class="seg" id="drugseg">
+        <button data-i="0" class="on">Penicillin<small>cell wall</small></button>
+        <button data-i="1">Vancomycin<small>cell wall</small></button>
+        <button data-i="2">Gentamicin<small>ribosome</small></button>
+        <button data-i="3">Ampho&nbsp;B<small>fungal membrane</small></button>
+      </div>
+      <input type="range" class="sld" id="sld" min="0" max="100" step="1" value="50">
+      <div class="vread"><span class="big" id="big">Effective</span><span class="cls" id="cls">Penicillin</span></div>
+      <div class="tirow"><span>Therapeutic index</span><span class="pill normal" id="tipill">Wide</span></div>
+      <div class="refrow" id="refrow"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var DRUGS=[
+  {nm:'Penicillin',tgt:'30S? no',mec:10,mtc:90,ti:'Wide',tiCls:'normal',tgtShort:'cell wall',
+   target:'the bacterial <b>cell wall</b> (peptidoglycan)',
+   sel:'Human cells have <b>no cell wall</b>, so penicillin has almost nothing to hit in the host &mdash; selective toxicity is nearly perfect and the window is very wide.',
+   tox:'Dose-related toxicity is minimal; the main danger is <b>allergy</b> (rash to anaphylaxis), which is not dose-dependent. Only at extreme levels &mdash; usually in renal impairment &mdash; can neurotoxicity such as seizures appear.',
+   nurse:'One of the safest antimicrobial classes, so no routine serum-level monitoring is needed &mdash; but always screen for penicillin allergy before the first dose.'},
+  {nm:'Vancomycin',mec:24,mtc:64,ti:'Moderate',tiCls:'low',tgtShort:'cell wall',
+   target:'the bacterial <b>cell wall</b> (a different site than the penicillins)',
+   sel:'It still attacks a wall component our cells lack, but the drug itself is hard on the kidneys, so the safe margin is smaller.',
+   tox:'<b>Nephrotoxicity</b>, and rarely ototoxicity. A rapid infusion causes <b>&ldquo;red man syndrome&rdquo;</b> &mdash; flushing from histamine release, an infusion-rate reaction rather than a true allergy.',
+   nurse:'Dosed to a target <b>trough</b> level &mdash; draw the trough just before a dose. Monitor renal function, and slow the infusion to prevent red man syndrome.'},
+  {nm:'Gentamicin',mec:34,mtc:54,ti:'Narrow',tiCls:'high',tgtShort:'30S ribosome',
+   target:'the bacterial <b>30S ribosomal subunit</b>',
+   sel:'Human ribosomes are 80S, so our protein synthesis is largely spared &mdash; but the drug concentrates in the kidney and inner ear, which narrows the window.',
+   tox:'<b>Nephrotoxicity</b> and irreversible <b>ototoxicity</b> (hearing loss, vertigo). Toxicity climbs when trough levels stay high between doses.',
+   nurse:'A classic <b>narrow-therapeutic-index</b> drug: monitor <b>peak and trough</b> serum levels, follow renal function, and ask about hearing and balance.'},
+  {nm:'Amphotericin B',mec:44,mtc:56,ti:'Very narrow',tiCls:'high',tgtShort:'fungal membrane',
+   target:'<b>ergosterol</b> in the fungal cell membrane',
+   sel:'Fungi are <b>eukaryotes</b>, much like our own cells, so a truly unique target is hard to find &mdash; amphotericin also binds human cholesterol. Selective toxicity is poor and the window is very narrow.',
+   tox:'Infusion reactions (fever, rigors) and dose-limiting <b>nephrotoxicity</b> &mdash; earning it the nickname &ldquo;ampho-terrible.&rdquo;',
+   nurse:'Pre-medicate for infusion reactions, hydrate the patient, and monitor renal function and electrolytes (K+, Mg2+) closely.'}
+ ];
+
+ var idx=0, dose=50;
+
+ var AX0=20, AX1=216, BY=46, BH=30;
+ function px(v){ var x=AX0+(v/100)*(AX1-AX0); return x<AX0?AX0:(x>AX1?AX1:x); }
+ function zone(D,d){ return d<D.mec?'sub':(d>=D.mtc?'tox':'win'); }
+ var ZCOL={sub:'#c14a4a',win:'#2f9e5b',tox:'#c14a4a'};
+
+ function band(x,w,fill){ if(w<0.5) return ''; return '<rect x="'+x.toFixed(1)+'" y="'+BY+'" width="'+w.toFixed(1)+'" height="'+BH+'" fill="'+fill+'"/>'; }
+ function rlabel(cx,w,txt,col){ if(w<34) return ''; return '<text x="'+cx.toFixed(1)+'" y="42" font-size="7.6" fill="'+col+'" text-anchor="middle" font-weight="800" letter-spacing=".6">'+txt+'</text>'; }
+ function chip(y,bg,tc,ic,txt){
+   var s='<rect x="'+AX0+'" y="'+y+'" width="'+(AX1-AX0)+'" height="22" rx="7" fill="'+bg+'" stroke="'+tc+'" stroke-opacity=".35"/>';
+   s+='<text x="'+(AX0+13)+'" y="'+(y+15.5)+'" font-size="13" text-anchor="middle">'+ic+'</text>';
+   s+='<text x="'+(AX0+27)+'" y="'+(y+14.5)+'" font-size="8.7" fill="'+tc+'" font-weight="700">'+txt+'</text>';
+   return s;
+ }
+
+ function draw(D,d){
+   var mecx=px(D.mec), mtcx=px(D.mtc), cx=px(d), z=zone(D,d), zc=ZCOL[z];
+   var s='';
+   // dose spectrum bands
+   s+=band(AX0, mecx-AX0, '#f8dee2');
+   s+='<rect x="'+mecx.toFixed(1)+'" y="'+BY+'" width="'+(mtcx-mecx).toFixed(1)+'" height="'+BH+'" fill="#2f9e5b" opacity=".9"/>';
+   s+=band(mtcx, AX1-mtcx, '#f8dee2');
+   // region labels
+   s+=rlabel((AX0+mecx)/2, mecx-AX0, 'TOO LOW', '#b23145');
+   s+=rlabel((mecx+mtcx)/2, mtcx-mecx, 'WINDOW', '#237a45');
+   s+=rlabel((mtcx+AX1)/2, AX1-mtcx, 'TOO HIGH', '#b23145');
+   // threshold ticks + labels
+   s+='<line x1="'+mecx.toFixed(1)+'" y1="'+BY+'" x2="'+mecx.toFixed(1)+'" y2="'+(BY+BH+8)+'" stroke="#7a1f2c" stroke-width="1"/>';
+   s+='<line x1="'+mtcx.toFixed(1)+'" y1="'+BY+'" x2="'+mtcx.toFixed(1)+'" y2="'+(BY+BH+8)+'" stroke="#7a1f2c" stroke-width="1"/>';
+   s+='<text x="'+mecx.toFixed(1)+'" y="'+(BY+BH+19)+'" font-size="7.8" fill="#7a1f2c" text-anchor="middle" font-weight="800">MEC</text>';
+   s+='<text x="'+mtcx.toFixed(1)+'" y="'+(BY+BH+19)+'" font-size="7.8" fill="#7a1f2c" text-anchor="middle" font-weight="800">MTC</text>';
+   // dose marker
+   s+='<line x1="'+cx.toFixed(1)+'" y1="32" x2="'+cx.toFixed(1)+'" y2="'+(BY+BH)+'" stroke="#28223a" stroke-width="1.4" stroke-dasharray="2 2" opacity=".55"/>';
+   s+='<circle cx="'+cx.toFixed(1)+'" cy="'+(BY+BH/2)+'" r="5" fill="'+zc+'" stroke="#fff" stroke-width="1.7"/>';
+   var fx=cx<AX0+16?AX0+16:(cx>AX1-16?AX1-16:cx);
+   s+='<rect x="'+(fx-16).toFixed(1)+'" y="15" width="32" height="15" rx="5" fill="'+zc+'"/>';
+   s+='<text x="'+fx.toFixed(1)+'" y="25.5" font-size="9.5" fill="#fff" text-anchor="middle" font-weight="800">'+Math.round(d)+'</text>';
+   // status chips: microbe + host
+   var killed=d>=D.mec, harmed=d>=D.mtc;
+   s+=chip(104, killed?'#e6f2ec':'#f8e4e6', killed?'#237a45':'#b23145', '🦠',
+       killed?'Microbe inhibited — infection controlled':'Microbe still multiplying — not controlled');
+   s+=chip(132, harmed?'#f8e4e6':'#e6f2ec', harmed?'#b23145':'#237a45', harmed?'⚠️':'🫀',
+       harmed?'Host cells damaged — drug toxicity':'Host cells spared — patient safe');
+   return s;
+ }
+
+ function render(){
+   var D=DRUGS[idx], z=zone(D,dose), zc=ZCOL[z];
+   var zname=z==='sub'?'Subtherapeutic':(z==='tox'?'Toxic':'Effective');
+   $("art").innerHTML=draw(D,dose);
+
+   // seg on-states
+   var segb=$("drugseg").children;
+   for(var i=0;i<segb.length;i++){ segb[i].classList.toggle('on', i===idx); }
+
+   // therapeutic-index pill
+   var tp=$("tipill"); tp.className='pill '+D.tiCls; tp.innerHTML=D.ti;
+
+   // quick-jump chips
+   var jumps=[
+     {v:Math.max(2,Math.round(D.mec*0.5)),nm:'Too low'},
+     {v:Math.round((D.mec+D.mtc)/2),nm:'In window'},
+     {v:Math.min(98,D.mtc+Math.round((100-D.mtc)/2)),nm:'Too high'}
+   ];
+   $("refrow").innerHTML=jumps.map(function(j){
+     return '<button class="refchip'+(Math.abs(dose-j.v)<1?' on':'')+'" data-v="'+j.v+'">'+j.nm+'</button>';
+   }).join('');
+   var rc=$("refrow").children;
+   for(var r=0;r<rc.length;r++){ rc[r].onclick=function(){ dose=parseInt(this.dataset.v,10); $("sld").value=dose; render(); }; }
+
+   // readouts
+   $("big").innerHTML=zname; $("big").style.color=zc;
+   $("cls").innerHTML=D.nm;
+   $("cardTitle").innerHTML=D.nm+' — '+zname;
+   $("stage").style.background=zc;
+   $("stage").innerHTML=zname+' dose<small>'+D.nm+' · targets '+D.tgtShort+' · '+D.ti.toLowerCase()+' window</small>';
+
+   // info panel
+   var ex='<div class="ex"><span>Target: '+D.tgtShort+'</span><span>Index: '+D.ti.toLowerCase()+'</span></div>';
+   if(z==='sub'){
+     $("info").innerHTML='<span class="n">Subtherapeutic dose</span>'+
+       'The level sits below the <b>minimum effective concentration (MEC)</b>, so '+D.nm+' cannot inhibit the microbe.'+ex+
+       '<div class="note"><b>Treatment fails</b> &mdash; and sub-lethal drug exposure can <b>select for resistant organisms</b>. Under-dosing is not the safe choice it seems.</div>';
+   } else if(z==='win'){
+     $("info").innerHTML='<span class="n">In the therapeutic window</span>'+
+       'The dose is high enough to hit the microbe yet low enough to spare the patient &mdash; <b>selective toxicity</b> in action. This margin exists because '+D.nm+' attacks '+D.target+'. '+D.sel+ex+
+       '<div class="loc"><b>Nursing:</b> '+D.nurse+'</div>';
+   } else {
+     $("info").innerHTML='<span class="n">Toxic dose</span>'+
+       'Above the <b>minimum toxic concentration (MTC)</b>, the drug now harms the patient. '+D.tox+ex+
+       '<div class="note"><b>Nursing:</b> '+D.nurse+'</div>';
+   }
+ }
+
+ $("sld").addEventListener('input',function(){ dose=parseInt(this.value,10); render(); });
+ var segb=$("drugseg").children;
+ for(var i=0;i<segb.length;i++){ segb[i].onclick=function(){ idx=parseInt(this.dataset.i,10); var D=DRUGS[idx]; dose=Math.round((D.mec+D.mtc)/2); $("sld").value=dose; render(); }; }
+
+ render();
+})();
+</script>
+</body>
+</html>

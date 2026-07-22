@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>The Synapse</title>
+<meta name="description" content="Release a neurotransmitter across the synaptic cleft, then toggle agonist and antagonist drugs to see how they activate or block the postsynaptic receptor.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:1.02fr 0.98fr;}
+.leg{display:flex;flex-wrap:wrap;gap:12px;margin-top:9px;font-size:11.5px;color:var(--muted);font-weight:600;}
+.leg span{display:inline-flex;align-items:center;gap:5px;}
+.leg i{width:12px;height:12px;border-radius:50%;display:inline-block;}
+.leg i.sq{border-radius:3px;}
+.meter{margin:12px 0 2px;}
+.meter .lab{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--soft);margin-bottom:5px;}
+.meter .lab b{color:var(--teal-dk);font-weight:800;}
+.meter .bar{height:13px;border-radius:7px;background:#f0e2e9;overflow:hidden;}
+.meter .bar i{display:block;height:100%;width:0;background:var(--teal);transition:width .55s ease,background .3s;border-radius:7px;}
+#info .n i{font-style:italic;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 3</div>
+  <h1>The Synapse</h1>
+  <div class="intro">Neurons never quite touch. Where one meets the next, the electrical spike becomes a <b>chemical message</b> that drifts across a tiny gap. Press <b>Release</b> to send a neurotransmitter across the cleft &mdash; then switch on an <b>agonist</b> or <b>antagonist</b> drug and watch how it changes what the next neuron feels.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The chemical synapse</h2>
+    <svg viewBox="0 0 240 230" aria-label="synapse diagram"><g id="art"></g></svg>
+    <div class="leg">
+      <span><i style="background:#d1495b"></i>Neurotransmitter</span>
+      <span><i style="background:#b8862f"></i>Agonist drug</span>
+      <span><i class="sq" style="background:#2f6f9f"></i>Antagonist drug</span>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">The synapse<small>choose a mode, then release</small></div>
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-m="normal">Normal<small>neurotransmitter only</small></button>
+        <button data-m="agonist">Agonist<small>activates receptor</small></button>
+        <button data-m="antagonist">Antagonist<small>blocks receptor</small></button>
+      </div>
+      <div class="meter"><div class="lab"><span>Postsynaptic response</span><b id="mlab">&mdash;</b></div><div class="bar"><i id="mbar"></i></div></div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="reset">↺ Reset</button><button class="btn solid" id="fire">▶ Release</button></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var RX=[36,78,120,162,204];
+ var mode='normal', released=false, animating=false, p=1, raf=null;
+
+ var DATA={
+  normal:{card:'The chemical synapse',bg:'#a1466b',stageT:'Normal transmission',stageS:'neurotransmitter only · press Release',
+   title:'The synapse',
+   text:'When an action potential reaches the axon terminal, voltage-gated <b>Ca²⁺ channels</b> open and calcium floods in. That triggers <b>synaptic vesicles</b> to fuse with the membrane and spill <b>neurotransmitter</b> into the <b>synaptic cleft</b> &mdash; the narrow gap between the two neurons. The molecules diffuse across and <b>bind receptors</b> on the postsynaptic membrane, opening ion channels and passing the signal onward. <b>Reuptake</b> and enzymes then clear the cleft.',
+   loc:'Chemical relay &middot; Neurons never touch. The electrical spike becomes a chemical message, crosses the cleft, and is turned back into an electrical signal in the next cell.',
+   mnem:'<b>Synaptic cleft</b> &mdash; the tiny gap a neurotransmitter must diffuse across to reach the next neuron\'s receptors.'},
+  agonist:{card:'An agonist drug',bg:'#b8862f',stageT:'Agonist drug',stageS:'binds and activates the receptor',
+   title:'Agonist',
+   text:'An <b>agonist</b> is a drug that binds the same receptor a neurotransmitter uses and <b>activates it</b> &mdash; mimicking or boosting the natural signal. It fits the receptor like the real key and <b>turns the lock</b>, so the postsynaptic neuron can fire even when little or no neurotransmitter is released. Some agonists instead work indirectly, raising the transmitter\'s own effect (for example by <b>blocking reuptake</b>).',
+   loc:'Turns the lock &middot; <b>Nicotine</b> is an agonist at acetylcholine receptors, and <b>morphine</b> and other opioids are agonists at opioid receptors.',
+   mnem:'<b>Agonist</b> &mdash; binds a receptor and activates it, imitating or enhancing the neurotransmitter\'s effect.'},
+  antagonist:{card:'An antagonist drug',bg:'#2f6f9f',stageT:'Antagonist drug',stageS:'binds but blocks the receptor',
+   title:'Antagonist',
+   text:'An <b>antagonist</b> binds the receptor but <b>does not activate it</b>. It sits in the site like a key that fits the lock yet won\'t turn &mdash; and while it is there the <b>neurotransmitter cannot bind</b>, so the signal is dampened or silenced. Antagonists are used to quiet over-active pathways, or to reverse the effect of another drug.',
+   loc:'Jams the lock &middot; <b>Naloxone</b> (Narcan) reverses an opioid overdose by blocking opioid receptors; many <b>antipsychotics</b> work by blocking dopamine receptors.',
+   note:'<b>Antagonist</b> &mdash; binds a receptor without activating it, blocking the neurotransmitter. <b>Curare</b> paralyzes muscle by blocking acetylcholine receptors.'}
+ };
+
+ function easeOut(t){ return t*(2-t); }
+
+ function mol(x,y,type){
+   if(type==='nt') return '<circle cx="'+x+'" cy="'+y+'" r="6" fill="#d1495b"/><circle cx="'+(x-2)+'" cy="'+(y-2)+'" r="1.8" fill="#fff" opacity=".55"/>';
+   if(type==='agonist') return '<circle cx="'+x+'" cy="'+y+'" r="6" fill="#b8862f"/><path d="M'+(x-3)+' '+y+' h6 M'+x+' '+(y-3)+' v6" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>';
+   return '<rect x="'+(x-6)+'" y="'+(y-6)+'" width="12" height="12" rx="3" fill="#2f6f9f"/><path d="M'+(x-3.2)+' '+y+' h6.4" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>';
+ }
+ function dArrow(x,y1,y2,col){
+   return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="'+col+'" stroke-width="2"/><polygon points="'+(x-3)+','+(y2-4)+' '+(x+3)+','+(y2-4)+' '+x+','+(y2+2)+'" fill="'+col+'"/>';
+ }
+ function vesicle(x,y){
+   var s='<circle cx="'+x+'" cy="'+y+'" r="9" fill="#fff" stroke="#d99cbb" stroke-width="1.6"/>';
+   var d=[[-3,-1],[3,-2],[0,3]];
+   for(var i=0;i<3;i++){ s+='<circle cx="'+(x+d[i][0])+'" cy="'+(y+d[i][1])+'" r="1.9" fill="#d1495b"/>'; }
+   return s;
+ }
+
+ // receptor state, given mode + whether the released NT has landed
+ function receptorState(i){
+   if(mode==='antagonist') return {type:'antagonist',active:false};
+   if(mode==='agonist'){
+     if(i===1||i===3) return {type:'agonist',active:true};
+     if(released && !animating) return {type:'nt',active:true};
+     return {type:null,active:false};
+   }
+   if(released && !animating) return {type:'nt',active:true};
+   return {type:null,active:false};
+ }
+ function receptor(i){
+   var cx=RX[i], st=receptorState(i), out='';
+   var pc= st.active ? '#2f9e5b' : (st.type==='antagonist' ? '#8f8394' : '#9c6f9e');
+   out+='<rect x="'+(cx-13)+'" y="132" width="7" height="22" rx="3" fill="'+pc+'"/>';
+   out+='<rect x="'+(cx+6)+'" y="132" width="7" height="22" rx="3" fill="'+pc+'"/>';
+   if(st.type) out+=mol(cx,141,st.type);
+   if(st.active) out+=dArrow(cx-4,158,172,'#2f9e5b')+dArrow(cx+4,158,172,'#2f9e5b');
+   return out;
+ }
+
+ // molecules the neuron itself releases (animate on Release)
+ function flight(){
+   var a=[],i;
+   if(mode==='normal'){ for(i=0;i<RX.length;i++) a.push({x:RX[i],ys:74,ye:141}); }
+   else if(mode==='agonist'){ var idx=[0,2,4]; for(i=0;i<idx.length;i++) a.push({x:RX[idx[i]],ys:74,ye:141}); }
+   else { for(i=0;i<RX.length;i++) a.push({x:RX[i]+(i%2?6:-6),ys:74,ye:118}); }
+   return a;
+ }
+ function flightMols(){
+   if(!released) return '';
+   if(!animating && mode!=='antagonist') return ''; // bound ones are drawn by the receptors
+   var arr=flight(), out='', pp=easeOut(p);
+   for(var i=0;i<arr.length;i++){ var f=arr[i]; var y=f.ys+(f.ye-f.ys)*pp; out+=mol(f.x,y,'nt'); }
+   return out;
+ }
+
+ function banner(){
+   var t,c;
+   if(!released){
+     if(mode==='agonist'){ t='the agonist is already activating receptors'; c='#b8862f'; }
+     else if(mode==='antagonist'){ t='the antagonist is blocking every receptor'; c='#c0536a'; }
+     else { t='press Release to fire the neuron'; c='#9a8590'; }
+   } else {
+     if(mode==='normal'){ t='▲ signal passes to the next neuron'; c='#2f9e5b'; }
+     else if(mode==='agonist'){ t='▲ receptors fire — even without the neuron'; c='#b8862f'; }
+     else { t='✕ neurotransmitter blocked — no signal'; c='#d1495b'; }
+   }
+   return '<text x="120" y="222" font-size="10" fill="'+c+'" text-anchor="middle" font-weight="800">'+t+'</text>';
+ }
+
+ function scene(){
+   var out='',i;
+   // presynaptic neuron
+   out+='<rect x="108" y="0" width="24" height="14" rx="3" fill="#e7cfdd"/>';
+   out+='<rect x="20" y="8" width="200" height="64" rx="26" fill="#f5e2ec" stroke="#e3c3d4" stroke-width="2"/>';
+   out+='<text x="120" y="24" font-size="8.5" fill="#a1466b" text-anchor="middle" font-weight="800" letter-spacing=".5">PRESYNAPTIC TERMINAL</text>';
+   var vx=[[54,50],[92,58],[150,58],[188,50]];
+   for(i=0;i<vx.length;i++){ out+=vesicle(vx[i][0],vx[i][1]); }
+   out+='<text x="36" y="60" font-size="8" fill="#2f6f9f" text-anchor="middle" font-weight="800">Ca²⁺</text>';
+   out+='<text x="204" y="60" font-size="8" fill="#2f6f9f" text-anchor="middle" font-weight="800">Ca²⁺</text>';
+   out+='<line x1="30" y1="70" x2="210" y2="70" stroke="#d49ab4" stroke-width="2.5"/>';
+   // cleft
+   out+='<text x="120" y="110" font-size="9" fill="#c8aebb" text-anchor="middle" font-weight="700" letter-spacing="1.5">SYNAPTIC CLEFT</text>';
+   // postsynaptic neuron
+   out+='<rect x="20" y="150" width="200" height="56" rx="24" fill="#e9eef3" stroke="#cdd7df" stroke-width="2"/>';
+   out+='<text x="120" y="199" font-size="8.5" fill="#4c6a86" text-anchor="middle" font-weight="800" letter-spacing=".5">POSTSYNAPTIC MEMBRANE</text>';
+   for(i=0;i<RX.length;i++){ out+=receptor(i); }
+   out+=flightMols();
+   out+=banner();
+   return out;
+ }
+
+ function meter(){
+   var v,lab,col;
+   if(mode==='normal'){ v=released?72:0; lab=released?'Signal passed':'Resting'; col='#2f9e5b'; }
+   else if(mode==='agonist'){ v=released?100:42; lab=released?'Over-activated':'Drug firing receptors'; col='#b8862f'; }
+   else { v=6; lab=released?'Blocked':'Receptors blocked'; col='#d1495b'; }
+   $('mbar').style.width=v+'%'; $('mbar').style.background=col; $('mlab').innerHTML=lab;
+ }
+ function updateButtons(){
+   $('fire').disabled=animating;
+   $('fire').innerHTML=released?'↻ Release again':'▶ Release';
+   $('reset').disabled=(!released||animating);
+ }
+
+ function render(){
+   var d=DATA[mode];
+   $('art').innerHTML=scene();
+   $('stage').style.background=d.bg;
+   $('stage').innerHTML=d.stageT+'<small>'+d.stageS+'</small>';
+   $('cardTitle').innerHTML=d.card;
+   $('info').innerHTML='<span class="n">'+d.title+'</span>'+d.text
+     +'<div class="loc">'+d.loc+'</div>'
+     +(d.mnem?'<div class="mnem">'+d.mnem+'</div>':'')
+     +(d.note?'<div class="note">'+d.note+'</div>':'');
+   meter(); updateButtons();
+   var b=$('seg').getElementsByTagName('button');
+   for(var k=0;k<b.length;k++){ b[k].className=(b[k].getAttribute('data-m')===mode?'on':''); }
+ }
+
+ function fire(){
+   if(animating) return;
+   released=true; animating=true; p=0; updateButtons();
+   var start=null, dur=760;
+   function step(ts){
+     if(start===null) start=ts;
+     p=Math.min(1,(ts-start)/dur);
+     $('art').innerHTML=scene();
+     if(p<1){ raf=requestAnimationFrame(step); }
+     else { animating=false; $('art').innerHTML=scene(); meter(); updateButtons(); }
+   }
+   raf=requestAnimationFrame(step);
+ }
+ function reset(){
+   if(raf) cancelAnimationFrame(raf);
+   released=false; animating=false; p=1; render();
+ }
+
+ var segs=$('seg').getElementsByTagName('button');
+ for(var k=0;k<segs.length;k++){ segs[k].onclick=function(){
+   if(raf) cancelAnimationFrame(raf);
+   mode=this.getAttribute('data-m'); released=false; animating=false; p=1; render();
+ }; }
+ $('fire').onclick=fire;
+ $('reset').onclick=reset;
+ render();
+})();
+</script>
+</body>
+</html>

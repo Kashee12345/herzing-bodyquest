@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4fa">
+<title>Poisons &amp; Their Antidotes</title>
+<meta name="description" content="Interactive matching game: pair common poisons and drug overdoses with the antidote that reverses them, and learn the mechanism plus the nursing priorities for each. For nursing pharmacology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_pharm.css">
+<style>@media (min-width:881px){.wrap{grid-template-columns:0.9fr 1.1fr;}}
+.matchbar{height:13px;border-radius:7px;background:#e3ebf5;overflow:hidden;margin-top:12px;border:1px solid var(--line);}
+.matchbar i{display:block;height:100%;background:var(--green);width:0;transition:width .45s;}
+.mcount{font-size:12px;color:var(--muted);font-weight:700;margin-top:7px;text-align:right;}
+.mcount b{color:var(--teal-dk);}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.colh{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:800;color:var(--muted);margin-bottom:7px;text-align:center;}
+.mlist{display:flex;flex-direction:column;gap:6px;}
+.mit{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 7px;cursor:pointer;text-align:center;font-family:var(--sans);font-weight:700;font-size:12.5px;color:var(--ink);width:100%;line-height:1.18;transition:.12s;}
+.mit small{display:block;font-weight:500;font-size:9.7px;color:var(--muted);margin-top:2px;}
+.mit:hover{border-color:var(--teal);}
+.mit.on{background:var(--teal);border-color:var(--teal);color:#fff;}
+.mit.on small{color:rgba(255,255,255,.85);}
+.mit.done{background:#e9f5ee;border-color:var(--green);color:#237a45;cursor:pointer;box-shadow:none;}
+.mit.done small{color:#4f9a6f;}
+.mit.done::before{content:"✓ ";}
+.mit.bad{animation:mbad .42s;border-color:var(--coral);}
+@keyframes mbad{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}60%{transform:translateX(5px)}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 11</a></div>
+<header>
+  <div class="kick">Pharmacology · Chapter 11</div>
+  <h1>Poisons &amp; Their Antidotes</h1>
+  <div class="intro">Every dangerous overdose has a <b>nurse's counter-move</b>. Tap a poison, then tap the agent that reverses it &mdash; a correct pair locks in and reveals the mechanism plus what to watch at the bedside.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Select a poison</h2>
+    <svg viewBox="0 0 240 190" aria-label="poison and antidote"><g id="art"></g></svg>
+    <div class="matchbar"><i id="bar"></i></div>
+    <div class="mcount">Matched <b id="cnt">0</b> / <span id="tot">0</span></div>
+    <div class="row"><button class="btn" id="reset">↺ Reset</button></div>
+  </div></div>
+  <div>
+    <div id="stage">Match each poison to its antidote<small>tap a poison on the left, then its antidote</small></div>
+    <div class="card">
+      <div class="cols">
+        <div><div class="colh">Poison / Overdose</div><div class="mlist" id="plist"></div></div>
+        <div><div class="colh">Antidote / Reversal</div><div class="mlist" id="alist"></div></div>
+      </div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Pharmacology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var DATA=[
+  {id:'opioid',poison:'Opioids',pshort:'Opioid',pcol:'#7a5a8a',
+   sign:'The classic triad: <b>respiratory depression</b> (RR under 12), <b>pinpoint pupils</b>, and a depressed level of consciousness. Includes morphine, fentanyl, oxycodone, and heroin.',
+   antidote:'Naloxone',ashort:'Naloxone',
+   mech:'A pure competitive <b>opioid (mu) receptor antagonist</b> — it displaces the opioid and restores breathing within minutes.',
+   nurse:'Give IV, IM, or intranasally and <b>titrate to adequate respirations, not full alertness</b> (too much triggers acute withdrawal). Its half-life (30–90 min) is <b>shorter than most opioids</b>, so watch for re-sedation and be ready to repeat. Priority assessment is airway and respiratory rate.'},
+  {id:'benzo',poison:'Benzodiazepines',pshort:'Benzo',pcol:'#2f6f9f',
+   sign:'Sedation, slurred speech, ataxia, and respiratory depression. Includes diazepam, lorazepam, midazolam, and alprazolam.',
+   antidote:'Flumazenil',ashort:'Flumazenil',
+   mech:'A competitive <b>antagonist at the benzodiazepine site of the GABA-A receptor</b>.',
+   nurse:'Use it cautiously — flumazenil can <b>precipitate seizures</b> in chronic benzodiazepine users or in mixed overdoses (for example with tricyclic antidepressants). It is short-acting, so monitor closely for <b>re-sedation</b> and keep supporting the airway.'},
+  {id:'apap',poison:'Acetaminophen',pshort:'APAP',pcol:'#b8862f',
+   sign:'Often <b>no early symptoms</b>, then liver injury 24–72 hours later. The level is plotted on the Rumack–Matthew nomogram to decide treatment.',
+   antidote:'Acetylcysteine (NAC)',ashort:'NAC',
+   mech:'Replenishes <b>glutathione</b>, which neutralizes the toxic metabolite NAPQI and protects the liver.',
+   nurse:'Most effective when started <b>within 8 hours</b> of ingestion, so do not delay. The oral form smells of sulfur — dilute it and give with juice; an IV form exists too. Monitor <b>AST/ALT and INR</b> for liver injury.'},
+  {id:'warfarin',poison:'Warfarin',pshort:'Warfarin',pcol:'#2f9e5b',
+   sign:'A rising <b>INR</b> with bleeding. Warfarin blocks the vitamin-K–dependent clotting factors (II, VII, IX, X).',
+   antidote:'Vitamin K (phytonadione)',ashort:'Vitamin K',
+   mech:'Supplies the <b>vitamin K</b> the liver needs to rebuild those clotting factors.',
+   nurse:'Monitor the <b>INR</b> (usual target 2–3). Vitamin K works over <b>hours</b>, so for serious bleeding, PCC or fresh frozen plasma is added for immediate reversal. Teach the patient <b>consistent</b> dietary vitamin K, not avoidance.'},
+  {id:'heparin',poison:'Heparin',pshort:'Heparin',pcol:'#d1495b',
+   sign:'Excessive anticoagulation and bleeding. Unfractionated heparin is monitored by the <b>aPTT</b>.',
+   antidote:'Protamine sulfate',ashort:'Protamine',
+   mech:'A positively charged protein that <b>binds and neutralizes</b> negatively charged heparin.',
+   nurse:'Give by <b>slow IV push</b> — rapid infusion causes hypotension and bradycardia. There is an anaphylaxis risk with a <b>fish allergy or prior NPH insulin / protamine</b> exposure. It only <b>partially</b> reverses low-molecular-weight heparins such as enoxaparin.'},
+  {id:'digoxin',poison:'Digoxin',pshort:'Digoxin',pcol:'#6d3f9c',
+   sign:'Nausea, <b>yellow-green halos</b> around lights, bradycardia, and arrhythmias. Toxicity is worsened by <b>hypokalemia</b>. The therapeutic range is narrow (0.5–2 ng/mL).',
+   antidote:'Digoxin immune Fab',ashort:'Digoxin Fab',
+   mech:'<b>Antibody fragments</b> that bind free digoxin and pull it out of the tissues.',
+   nurse:'Check the <b>apical pulse for a full minute</b> before every dose and hold it if under 60 bpm. Monitor the <b>potassium level</b> and digoxin level; correcting hypokalemia matters because low potassium intensifies toxicity.'},
+  {id:'iron',poison:'Iron',pshort:'Iron',pcol:'#9c5230',
+   sign:'Vomiting and GI bleeding, then metabolic acidosis, shock, and liver injury. A common <b>pediatric</b> accidental overdose (ferrous sulfate).',
+   antidote:'Deferoxamine',ashort:'Deferoxamine',
+   mech:'<b>Chelates</b> free iron so the kidneys can excrete it.',
+   nurse:'Watch for <b>hypotension</b> during the IV infusion. The urine may turn a reddish <b>vin rosé</b> color as the iron is cleared — that is expected, not bleeding.'},
+  {id:'orgp',poison:'Organophosphates',pshort:'Organophos.',pcol:'#2f7a5b',
+   sign:'A cholinergic crisis — <b>SLUDGE</b>: salivation, lacrimation, urination, defecation, GI cramps, and emesis, plus bronchorrhea, pinpoint pupils, and muscle twitching. Seen with insecticides and nerve agents.',
+   antidote:'Atropine + pralidoxime',ashort:'Atropine + 2-PAM',
+   mech:'<b>Atropine</b> blocks the muscarinic effects (it dries secretions and raises heart rate); <b>pralidoxime (2-PAM)</b> reactivates acetylcholinesterase and must be given early.',
+   nurse:'Wear <b>PPE and decontaminate</b> the patient first to avoid exposing yourself. Titrate atropine to <b>drying of secretions and a clear airway</b> — not to pupil size.'},
+  {id:'mag',poison:'Magnesium sulfate',pshort:'Magnesium',pcol:'#2f5f9e',
+   sign:'<b>Loss of deep tendon reflexes</b> (an early sign), then respiratory depression and hypotension — a risk during magnesium infusions for preeclampsia.',
+   antidote:'Calcium gluconate',ashort:'Ca gluconate',
+   mech:'Calcium <b>directly antagonizes magnesium</b> at the neuromuscular junction.',
+   nurse:'During a magnesium drip, monitor <b>deep tendon reflexes, respiratory rate (hold if under 12), and urine output</b>, and keep <b>calcium gluconate at the bedside</b> as the ready antidote.'}
+ ];
+ // antidote column presented in a shuffled order so matching is a real task
+ var AORDER=['heparin','opioid','apap','digoxin','mag','warfarin','orgp','iron','benzo'];
+ var byId={}; DATA.forEach(function(d){byId[d.id]=d;});
+ var matched={}, selId=null, flash=null;
+ $("tot").innerHTML=DATA.length;
+
+ function scene(o){
+   var s='';
+   var vcol=o.vcol||'#c3ccd8';
+   // poison bottle
+   s+='<rect x="27" y="52" width="48" height="80" rx="12" fill="#fff" stroke="'+vcol+'" stroke-width="3.5"/>';
+   s+='<rect x="41" y="38" width="20" height="16" rx="3" fill="'+vcol+'"/>';
+   s+='<rect x="33" y="90" width="36" height="36" rx="7" fill="'+vcol+'" opacity="0.82"/>';
+   if(o.vsym){ s+='<text x="51" y="80" font-size="22" text-anchor="middle">'+o.vsym+'</text>'; }
+   s+='<text x="51" y="150" font-size="10.5" text-anchor="middle" font-weight="800" fill="#4b5563">'+(o.plabel||'poison')+'</text>';
+   // arrow
+   var ac=o.arrow==='green'?'#2f9e5b':(o.arrow==='red'?'#d1495b':'#b8c2d0');
+   s+='<line x1="86" y1="92" x2="150" y2="92" stroke="'+ac+'" stroke-width="6" stroke-linecap="round"/>';
+   s+='<polygon points="150,81 170,92 150,103" fill="'+ac+'"/>';
+   s+='<text x="120" y="80" font-size="10" text-anchor="middle" font-weight="800" fill="'+ac+'">'+(o.arrowSym||'reversed by')+'</text>';
+   // syringe (antidote)
+   var acol=o.acol||'#c3ccd8';
+   s+='<rect x="158" y="78" width="20" height="14" rx="2" fill="'+acol+'"/>';
+   s+='<rect x="178" y="72" width="44" height="26" rx="4" fill="#fff" stroke="'+acol+'" stroke-width="3.5"/>';
+   s+='<rect x="182" y="76" width="'+(o.afill||30)+'" height="18" rx="2" fill="'+acol+'" opacity="0.82"/>';
+   s+='<line x1="222" y1="85" x2="238" y2="85" stroke="'+acol+'" stroke-width="3"/>';
+   if(o.asym){ s+='<text x="200" y="120" font-size="20" text-anchor="middle">'+o.asym+'</text>'; }
+   s+='<text x="200" y="150" font-size="10.5" text-anchor="middle" font-weight="800" fill="#4b5563">'+(o.alabel||'antidote')+'</text>';
+   return s;
+ }
+
+ function setStage(col,t,sub){ $("stage").style.background=col; $("stage").innerHTML=t+'<small>'+sub+'</small>'; }
+
+ function render(){
+   var done=Object.keys(matched).length;
+   // lists
+   $("plist").innerHTML=DATA.map(function(d){
+     var c='mit'+(matched[d.id]?' done':'')+(selId===d.id?' on':'');
+     return '<button class="'+c+'" data-pid="'+d.id+'">'+d.poison+'</button>';
+   }).join('');
+   $("alist").innerHTML=AORDER.map(function(id){var d=byId[id];
+     var c='mit'+(matched[id]?' done':'');
+     return '<button class="'+c+'" data-aid="'+id+'">'+d.ashort+'</button>';
+   }).join('');
+   document.querySelectorAll('#plist .mit').forEach(function(b){b.onclick=function(){pickPoison(b.dataset.pid);};});
+   document.querySelectorAll('#alist .mit').forEach(function(b){b.onclick=function(){pickAntidote(b.dataset.aid,b);};});
+   // progress
+   $("bar").style.width=Math.round(done/DATA.length*100)+'%';
+   $("cnt").innerHTML=done;
+   // svg + stage + info
+   if(flash&&flash.kind==='bad'){
+     var sp=byId[flash.selId], wr=byId[flash.antId];
+     $("art").innerHTML=scene({vcol:sp.pcol,vsym:'☠',arrow:'red',arrowSym:'no match',acol:wr.pcol,asym:'✕',plabel:sp.pshort,alabel:wr.ashort});
+     $("cardTitle").innerHTML='Not a match';
+     setStage('#d1495b','✕ That is not the antidote','try '+sp.poison+' again');
+     $("info").innerHTML='<span class="n">'+sp.poison+'</span>'+sp.sign+
+       '<div class="note"><b>✕ Not a match.</b> '+wr.antidote+' reverses <b>'+wr.poison+'</b> — not '+sp.poison+'. Pick again.</div>';
+   } else if(flash&&(flash.kind==='ok'||flash.kind==='review')){
+     var d=byId[flash.id];
+     $("art").innerHTML=scene({vcol:d.pcol,vsym:'✓',arrow:'green',arrowSym:'reversed by',acol:d.pcol,asym:'💉',plabel:d.pshort,alabel:d.ashort,afill:30});
+     $("cardTitle").innerHTML=d.poison+' → '+d.antidote;
+     if(flash.kind==='ok'){ setStage('#2f9e5b','✓ Matched! '+d.antidote,'reverses '+d.poison.toLowerCase()); }
+     else { setStage('#2f9e5b','✓ '+d.poison+' → '+d.antidote,'matched — review below'); }
+     $("info").innerHTML='<span class="n">'+d.poison+' → '+d.antidote+'</span>'+d.mech+
+       '<div class="loc"><b>At the bedside —</b> '+d.nurse+'</div>';
+   } else if(selId){
+     var s=byId[selId];
+     $("art").innerHTML=scene({vcol:s.pcol,vsym:'☠',arrow:'grey',arrowSym:'reversed by?',acol:'#c3ccd8',asym:'?',plabel:s.pshort,alabel:'? which?'});
+     $("cardTitle").innerHTML=s.poison+' selected';
+     setStage(s.pcol,s.poison+' selected','now tap its antidote →');
+     $("info").innerHTML='<span class="n">'+s.poison+'</span>'+s.sign+
+       '<div class="loc">Now tap the <b>antidote</b> on the right that reverses this.</div>';
+   } else if(done===DATA.length){
+     $("art").innerHTML=scene({vcol:'#2f9e5b',vsym:'✓',arrow:'green',arrowSym:'all reversed',acol:'#2f9e5b',asym:'💚',plabel:'all '+DATA.length,alabel:'matched'});
+     $("cardTitle").innerHTML='All antidotes matched';
+     setStage('#2f9e5b','✓ All '+DATA.length+' matched!','tap any pair to review, or Reset');
+     $("info").innerHTML='<span class="n">Every poison reversed</span>You matched all '+DATA.length+' poisons to their antidotes. Tap any <b>green</b> pair to review its mechanism and nursing points, or press <b>Reset</b> to practice again.'+
+       '<div class="loc"><b>Nurse safety habit:</b> when a high-alert drug is running, know its antidote <b>before</b> you need it — and for magnesium and heparin, keep the reversal agent at the bedside.</div>';
+   } else {
+     $("art").innerHTML=scene({vcol:'#c3ccd8',arrow:'grey',arrowSym:'reversed by?',acol:'#c3ccd8',asym:'?',plabel:'poison',alabel:'antidote'});
+     $("cardTitle").innerHTML='Select a poison';
+     setStage('#2f5f9e','Match each poison to its antidote','tap a poison on the left, then its antidote');
+     $("info").innerHTML='<span class="n">How to play</span>Tap a <b>poison</b> on the left, then tap the <b>antidote</b> that reverses it. A correct pair turns <b>green</b> and reveals the mechanism plus the nursing priorities. Aim to clear all '+DATA.length+'.';
+   }
+ }
+
+ function pickPoison(id){
+   flash=null;
+   if(matched[id]){ flash={kind:'review',id:id}; selId=null; render(); return; }
+   selId=(selId===id?null:id);
+   if(selId===null){ render(); return; }
+   render();
+ }
+ function pickAntidote(aid,btn){
+   if(matched[aid]){ flash={kind:'review',id:aid}; selId=null; render(); return; }
+   if(!selId){ setStage('#b8862f','Pick a poison first','tap one on the left, then its antidote'); return; }
+   if(aid===selId){
+     matched[aid]=true; flash={kind:'ok',id:aid}; selId=null; render();
+   } else {
+     flash={kind:'bad',selId:selId,antId:aid}; render();
+     var b=document.querySelector('#alist .mit[data-aid="'+aid+'"]');
+     if(b){ b.classList.add('bad'); setTimeout(function(){b.classList.remove('bad');},420); }
+   }
+ }
+ $("reset").onclick=function(){ matched={}; selId=null; flash=null; render(); };
+ render();
+})();
+</script>
+</body>
+</html>

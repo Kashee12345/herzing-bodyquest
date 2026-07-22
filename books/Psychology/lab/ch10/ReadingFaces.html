@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf2f5">
+<title>Reading Faces</title>
+<meta name="description" content="Read six drawn faces and match each to its emotion — happiness, sadness, fear, anger, surprise, and disgust — the universal expressions studied by Darwin and Ekman. For psychology students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>.wrap{grid-template-columns:0.96fr 1.04fr;}
+#art text{pointer-events:none;}
+.prog{height:10px;border-radius:6px;background:#f0e2ea;overflow:hidden;margin:4px 0 3px;}
+.prog i{display:block;height:100%;width:0;background:var(--teal);transition:width .45s;}
+.scoretxt{font-size:11.5px;font-weight:800;color:var(--muted);text-align:center;margin-bottom:2px;}
+.mlbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:13px 2px 7px;}
+.grid .it .ic{margin-right:5px;font-size:17px;}
+.it.done{background:#eef7f0;border-color:#bfe3c9;}
+.it.done .nm{color:#237a45;}
+.it.dis{opacity:.62;cursor:default;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 10</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 10</div>
+  <h1>Reading Faces</h1>
+  <div class="intro">A face can broadcast a feeling before a single word is spoken. <b>Charles Darwin</b> argued these signals are inborn; a century later <b>Paul Ekman</b> found six that people everywhere make &mdash; and read &mdash; the same way. Study the brows, eyes, and mouth on the left, then tap the emotion the face is showing.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Whose face is this?</h2>
+    <svg viewBox="0 0 240 224" aria-label="an expressive face"><g id="art"></g></svg>
+    <div id="info"></div>
+  </div></div>
+  <div>
+    <div id="stage">Read the face<small>which emotion is this?</small></div>
+    <div class="card">
+      <div class="prog"><i id="bar"></i></div>
+      <div class="scoretxt" id="score">0 of 6 read</div>
+      <div class="mlbl">Tap the emotion</div>
+      <div class="grid" id="emos"></div>
+      <div class="row"><button class="btn" id="restart">↺ Restart</button><button class="btn solid" id="next" disabled>Next face ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var F={
+  happy:{nm:'Happiness',ic:'😊',sig:'a smile that also crinkles the eyes',
+   cue:'Lip corners pull up and back, the cheeks lift, and crow’s-feet crinkle at the outer eyes.',
+   teach:'The one truly warm signal in the set. A <b>genuine (Duchenne) smile</b> lifts the lip corners <i>and</i> raises the cheeks so the eyes crinkle. <b>Guillaume Duchenne</b> observed that the eye muscle (<i>orbicularis oculi</i>) obeys only real enjoyment, which is why a polite “say-cheese” smile can look hollow.',
+   mark:[[120,173,30,17],[144,104,17,13]]},
+  sad:{nm:'Sadness',ic:'😢',sig:'inner brows raised into an upside-down V',
+   cue:'The inner corners of the eyebrows lift and draw together, and the lip corners turn down.',
+   teach:'The hardest expression to fake, because raising only the <b>inner</b> brow corners is a movement few people can make on purpose. The upper eyelids droop and the lower lip may push up. It reliably pulls <b>helping behavior</b> from onlookers.',
+   mark:[[120,83,46,15],[120,174,34,15]]},
+  fear:{nm:'Fear',ic:'😨',sig:'wide eyes with brows raised AND pulled together',
+   cue:'Eyebrows raise and pull together (flat and high), the eyes widen showing white, and the lips stretch back.',
+   teach:'Widened eyes literally <b>expand the visual field</b> and speed eye movements &mdash; the expression may have evolved to take in more of a threat. Fear and surprise are the pair most often confused: both raise the brows and open the eyes, but in fear the brows also <b>knit together</b> and the mouth stretches sideways rather than dropping open.',
+   mark:[[96,106,18,18],[144,106,18,18]]},
+  anger:{nm:'Anger',ic:'😠',sig:'lowered, drawn-together brows over a hard stare',
+   cue:'The brows lower and pull together, the eyes harden into a stare, and the lips press thin or square off.',
+   teach:'A signal of confrontation. Lowering and knitting the brows produces the vertical <b>“glabellar” furrow</b> between them, while the lips press into a thin line or square as if to shout. Across cultures it makes a face look more <b>dominant</b>.',
+   mark:[[120,89,54,16],[120,172,34,12]]},
+  surprise:{nm:'Surprise',ic:'😮',sig:'high curved brows and a dropped-open jaw',
+   cue:'The brows arch up high and curved, the eyes open round, and the jaw drops into an O.',
+   teach:'The <b>briefest</b> of the emotions &mdash; it lasts only a moment before turning into fear, joy, or something else. The high <b>arched</b> brow (curved, not flat) and the open jaw separate it from fear, whose brows stay lower and flatter and whose mouth stretches wide instead of dropping.',
+   mark:[[96,106,18,19],[120,170,20,25]]},
+  disgust:{nm:'Disgust',ic:'🤢',sig:'a wrinkled nose and a raised upper lip',
+   cue:'The nose wrinkles, the upper lip pulls up, and the cheeks raise as if rejecting a bad smell or taste.',
+   teach:'Rooted in the body’s rejection of spoiled food or foul odor &mdash; the wrinkled nose and raised upper lip actually <b>narrow the nostrils and airway</b>. The very same face now also signals <b>moral</b> disgust, showing how an old survival reflex was borrowed for social judgment.',
+   mark:[[120,126,24,18],[120,158,34,13]]}
+ };
+ var ORDER=['happy','sad','fear','anger','surprise','disgust']; // fixed button order
+ var total=6;
+
+ var order=ORDER.slice(), idx=0, count=0, matched={};
+
+ function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
+
+ // ---------- face drawing ----------
+ function brow(d){ return '<path d="'+d+'" fill="none" stroke="#6b4a35" stroke-width="6" stroke-linecap="round"/>'; }
+ function nose(){ return '<path d="M120 110 q-6 20 -9 26 q6 4 14 1" fill="none" stroke="#d08f66" stroke-width="2.5" stroke-linecap="round"/>'; }
+ function eye(cx,cy,rx,ry,pr,pdy){ var d=(pdy||0);
+   return '<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+rx+'" ry="'+ry+'" fill="#fff" stroke="#c98a63" stroke-width="2"/>'
+     +'<circle cx="'+cx+'" cy="'+(cy+d)+'" r="'+pr+'" fill="#5b4636"/>'
+     +'<circle cx="'+(cx+pr*0.4)+'" cy="'+(cy+d-pr*0.4)+'" r="'+(pr*0.3)+'" fill="#fff"/>'; }
+ function base(){
+   return '<ellipse cx="44" cy="120" rx="10" ry="14" fill="#f3c9a4" stroke="#d99e78" stroke-width="2"/>'
+     +'<ellipse cx="196" cy="120" rx="10" ry="14" fill="#f3c9a4" stroke="#d99e78" stroke-width="2"/>'
+     +'<ellipse cx="120" cy="118" rx="78" ry="84" fill="#f3c9a4" stroke="#d99e78" stroke-width="2"/>'; }
+
+ function draw(k,solved){
+   var s=base();
+   if(k==='happy'){
+     s+=brow('M78 84 Q96 78 114 84')+brow('M126 84 Q144 78 162 84');
+     s+=eye(96,104,12,9,5)+eye(144,104,12,9,5);
+     s+='<path d="M76 100 l-7 -3 M76 106 l-8 0 M76 112 l-7 3" stroke="#d08f66" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
+     s+='<path d="M164 100 l7 -3 M164 106 l8 0 M164 112 l7 3" stroke="#d08f66" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
+     s+='<ellipse cx="82" cy="140" rx="12" ry="7" fill="#ef9f95" opacity=".45"/><ellipse cx="158" cy="140" rx="12" ry="7" fill="#ef9f95" opacity=".45"/>';
+     s+=nose();
+     s+='<path d="M84 158 Q120 196 156 158 Q120 172 84 158 Z" fill="#84324e"/>';
+     s+='<path d="M92 160 Q120 176 148 160 Q120 166 92 160 Z" fill="#fff"/>';
+   } else if(k==='sad'){
+     s+=brow('M78 90 Q92 80 112 76')+brow('M128 76 Q148 80 162 90');
+     s+=eye(96,108,12,8,5,1)+eye(144,108,12,8,5,1);
+     s+='<path d="M84 104 Q96 100 108 104" stroke="#c98a63" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+     s+='<path d="M132 104 Q144 100 156 104" stroke="#c98a63" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+     s+=nose();
+     s+='<path d="M152 116 q-4 12 0 17 q6 -3 4 -13 z" fill="#7fc3e8" opacity=".85"/>';
+     s+='<path d="M90 178 Q120 158 150 178" fill="none" stroke="#7a3b52" stroke-width="5" stroke-linecap="round"/>';
+   } else if(k==='fear'){
+     s+=brow('M76 82 Q96 70 110 80')+brow('M130 80 Q144 70 164 82');
+     s+='<path d="M92 62 Q120 56 148 62 M96 70 Q120 65 144 70" stroke="#d08f66" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
+     s+=eye(96,106,13,13,5)+eye(144,106,13,13,5);
+     s+=nose();
+     s+='<path d="M84 162 Q120 168 156 162 Q120 184 84 162 Z" fill="#84324e"/>';
+     s+='<path d="M96 164 Q120 168 144 164 Q120 170 96 164 Z" fill="#fff"/>';
+   } else if(k==='anger'){
+     s+='<path d="M76 82 L112 96" stroke="#6b4a35" stroke-width="6" stroke-linecap="round"/>';
+     s+='<path d="M128 96 L164 82" stroke="#6b4a35" stroke-width="6" stroke-linecap="round"/>';
+     s+='<path d="M114 84 L114 98 M126 84 L126 98" stroke="#d08f66" stroke-width="1.8" stroke-linecap="round"/>';
+     s+=eye(96,108,12,8,5)+eye(144,108,12,8,5);
+     s+='<path d="M84 102 L108 106 M132 106 L156 102" stroke="#6b4a35" stroke-width="3" stroke-linecap="round"/>';
+     s+=nose();
+     s+='<path d="M90 172 Q120 166 150 172" fill="none" stroke="#7a3b52" stroke-width="6" stroke-linecap="round"/>';
+   } else if(k==='surprise'){
+     s+=brow('M76 78 Q96 62 112 76')+brow('M128 76 Q144 62 164 78');
+     s+='<path d="M92 66 Q120 60 148 66" stroke="#d08f66" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
+     s+=eye(96,106,13,14,5)+eye(144,106,13,14,5);
+     s+=nose();
+     s+='<ellipse cx="120" cy="170" rx="16" ry="21" fill="#84324e"/>';
+     s+='<ellipse cx="120" cy="174" rx="10" ry="13" fill="#5c2337"/>';
+   } else if(k==='disgust'){
+     s+=brow('M78 88 Q96 84 114 92')+brow('M126 92 Q144 84 162 88');
+     s+='<path d="M104 118 Q120 112 136 118 M102 126 Q120 120 138 126 M104 134 Q120 129 136 134" stroke="#c98a63" stroke-width="2" fill="none" stroke-linecap="round"/>';
+     s+=eye(96,106,12,7,5,1)+eye(144,106,12,7,5,1);
+     s+='<path d="M85 110 Q96 106 108 110 M132 110 Q144 106 156 110" stroke="#c98a63" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
+     s+='<path d="M90 166 Q104 150 120 152 Q136 154 150 164" fill="none" stroke="#7a3b52" stroke-width="5" stroke-linecap="round"/>';
+     s+='<path d="M104 160 Q120 156 138 160" fill="none" stroke="#7a3b52" stroke-width="3" stroke-linecap="round"/>';
+   } else {
+     s+=brow('M78 86 Q96 82 114 86')+brow('M126 86 Q144 82 162 86');
+     s+=eye(96,106,12,9,5)+eye(144,106,12,9,5);
+     s+=nose();
+     s+='<path d="M96 168 Q120 174 144 168" fill="none" stroke="#7a3b52" stroke-width="5" stroke-linecap="round"/>';
+   }
+   if(solved && F[k]){
+     s+='<text x="120" y="19" font-size="12.5" font-weight="800" text-anchor="middle" fill="#237a45" font-family="Inter,sans-serif">'+F[k].ic+'  '+F[k].nm.toUpperCase()+'</text>';
+     (F[k].mark||[]).forEach(function(m){ s+='<ellipse cx="'+m[0]+'" cy="'+m[1]+'" rx="'+m[2]+'" ry="'+m[3]+'" fill="none" stroke="#a1466b" stroke-width="2" stroke-dasharray="3 3" opacity=".85"/>'; });
+   }
+   return s;
+ }
+
+ // ---------- render ----------
+ function renderEmos(){
+   var cur=order[idx], solved=!!matched[cur];
+   $("emos").innerHTML=ORDER.map(function(k){
+     var m=F[k], done=solved&&k===cur;
+     return '<button class="it'+(done?' done':'')+(solved?' dis':'')+'" data-k="'+k+'">'
+       +'<span class="ic">'+m.ic+'</span><span class="nm">'+m.nm+(done?' ✓':'')+'</span></button>';
+   }).join('');
+   $("emos").querySelectorAll('.it').forEach(function(b){ b.onclick=function(){ pick(b.dataset.k); }; });
+ }
+ function updateScore(){ $("bar").style.width=(count/total*100)+'%'; $("score").innerHTML=count+' of '+total+' read'; }
+
+ function showFace(){
+   var cur=order[idx], solved=!!matched[cur];
+   $("art").innerHTML=draw(cur,solved);
+   if(solved){
+     var m=F[cur];
+     $("cardTitle").innerHTML=m.nm;
+     $("stage").style.background='var(--green)';
+     $("stage").innerHTML='✓ '+m.nm+'<small>'+(count<total?'read the next face':'that’s the last one')+'</small>';
+     $("info").innerHTML='<span class="n">'+m.nm+' <span class="pill normal">universal</span></span>'
+       +'<b>The tell:</b> '+m.cue+'<div class="dd">'+m.teach+'</div>';
+   } else {
+     $("cardTitle").innerHTML='Whose face is this?';
+     $("stage").style.background='var(--teal)';
+     $("stage").innerHTML='Read the face &mdash; #'+(idx+1)+' of '+total+'<small>which emotion is it showing?</small>';
+     $("info").innerHTML='<span class="n">Six faces, one job</span>Six expressions the whole world shares. Study the <b>eyebrows</b>, <b>eyes</b>, and <b>mouth</b>, then tap the emotion you think this face is showing.';
+   }
+   $("next").disabled=!solved;
+   $("next").innerHTML=(idx===total-1?'See results ›':'Next face ›');
+   renderEmos(); updateScore();
+ }
+
+ function pick(k){
+   var cur=order[idx];
+   if(matched[cur]) return;
+   if(k===cur){
+     matched[cur]=1; count++;
+     showFace();
+   } else {
+     var w=F[k];
+     $("stage").style.background='var(--coral)';
+     $("stage").innerHTML='Not quite<small>look again at the brows and mouth</small>';
+     $("info").innerHTML='<div class="note"><b>'+w.nm+'?</b> That face would show <b>'+w.sig+'</b> &mdash; which isn’t what this one is doing. Read the eyebrows, eyes, and mouth again, then try another emotion.</div>';
+   }
+ }
+
+ function next(){
+   if(!matched[order[idx]]) return;
+   if(idx<total-1){ idx++; showFace(); }
+   else complete();
+ }
+
+ function complete(){
+   $("art").innerHTML=draw('happy',true);
+   $("cardTitle").innerHTML='All six, read';
+   $("stage").style.background='var(--green)';
+   $("stage").innerHTML='🎉 You read all six<small>the universal expressions</small>';
+   $("bar").style.width='100%'; $("score").innerHTML='6 of 6 read';
+   $("info").innerHTML='<span class="n">Why these six are “universal”</span>'
+     +'<b>Charles Darwin</b> proposed in <i>The Expression of the Emotions in Man and Animals</i> (1872) that facial expressions are <b>inborn</b> and shared with other animals. A century later, <b>Paul Ekman</b> and <b>Wallace Friesen</b> tested it: even the <b>Fore people of Papua New Guinea</b>, an isolated group with no exposure to Western media, matched the same faces to the same emotions &mdash; strong evidence the expressions are <b>not simply learned</b>.'
+     +'<div class="mnem"><b>The six basic emotions:</b> happiness, sadness, fear, anger, surprise, and disgust. Ekman later proposed <b>contempt</b> &mdash; a single raised, tightened lip corner &mdash; as a possible <b>seventh</b>.</div>'
+     +'<div class="note"><b>Universal ≠ always shown.</b> Ekman’s idea of <b>display rules</b> notes that cultures still differ in <b>when</b> it is acceptable to reveal a feeling &mdash; the expression is the same, but the etiquette around it is learned. To catalog the muscle movements precisely, Ekman &amp; Friesen built the <b>Facial Action Coding System (FACS)</b>.</div>';
+   $("emos").querySelectorAll('.it').forEach(function(b){ b.classList.add('dis'); b.onclick=null; });
+   $("next").disabled=true; $("next").innerHTML='Done ✓';
+ }
+
+ function restart(){
+   order=shuffle(ORDER.slice()); idx=0; count=0; matched={};
+   showFace();
+ }
+
+ $("next").onclick=next;
+ $("restart").onclick=restart;
+ restart();
+})();
+</script>
+</body>
+</html>

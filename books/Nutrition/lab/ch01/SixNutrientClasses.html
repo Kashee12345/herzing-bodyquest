@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Sort the Six Classes</title>
+<meta name="description" content="Interactive sorter for the six classes of nutrients — carbohydrate, protein, fat, vitamins, minerals, and water — plus macro vs micro and a live energy calculator.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:1fr 1fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sizebar{height:12px;border-radius:6px;background:#f1e7d4;overflow:hidden;margin-top:7px;}
+.sizebar i{display:block;height:100%;border-radius:6px;transition:width .45s;}
+.metaline{margin-top:9px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;}
+.metaline b{color:var(--teal-dk);}
+.legend{margin-top:10px;font-size:10.5px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.legend i{display:inline-block;width:13px;height:13px;border-radius:50%;border:2px solid var(--teal-dk);margin-right:4px;vertical-align:-2px;}
+.legend i.mi{border-style:dashed;border-color:var(--blue);}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;border-radius:20px;padding:3px 10px;letter-spacing:.4px;}
+.tag.ma{background:#f6ead2;color:#8a6a20;} .tag.mi{background:#e5eef6;color:#255f8a;}
+.tag.no{background:#efe9df;color:#6d6252;}
+.qbox{border:1px dashed var(--line);background:#fdfaf3;border-radius:12px;padding:13px 14px;text-align:center;margin-bottom:11px;}
+.qbox .lbl{font-size:10.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);font-weight:700;}
+.qbox .q{font-family:var(--disp);font-weight:600;font-size:19px;color:var(--teal-dk);line-height:1.2;margin-top:5px;}
+.score{margin-top:10px;font-size:11.5px;color:var(--muted);text-align:center;}
+.score b{color:var(--teal-dk);}
+.grid .it.ok{background:#e5f3ea;border-color:#2f9e5b;color:#1f6b3c;}
+.grid .it.miss{background:#fae5e8;border-color:#d1495b;color:#9d2f3e;}
+.sl{margin-top:12px;}
+.sl .lb{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:700;color:var(--soft);}
+.sl .lb b{font-size:13.5px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.sl .lb em{font-style:normal;font-size:11px;font-weight:600;color:var(--muted);}
+.sl input[type=range]{width:100%;margin-top:4px;height:22px;cursor:pointer;}
+.tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;border-top:1px solid var(--line);padding-top:11px;font-size:12.5px;font-weight:700;color:var(--soft);}
+.tot b{font-family:var(--disp);font-size:22px;color:var(--teal-dk);}
+.hide{display:none;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 1</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 1</div>
+  <h1>Sort the Six Classes</h1>
+  <div class="intro">Everything in food that your body can use falls into <b>six classes of nutrients</b> &mdash; and only three of them carry energy. Explore the six, sort real food components into them, then see where the calories actually come from.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card" id="cardWheel">
+      <h2 id="cardTitle">The six classes</h2>
+      <svg viewBox="0 0 236 206" aria-label="The six classes of nutrients arranged around food"><g id="art"></g></svg>
+      <div class="metaline"><span>Typical adult daily amount</span><b id="amttxt">&mdash;</b></div>
+      <div class="sizebar"><i id="sizebar" style="width:0"></i></div>
+      <div class="metaline" style="margin-top:5px;font-size:10.5px;"><span>log scale &mdash; 100 mg to 3 kg</span><span id="kcaltxt"></span></div>
+      <div class="legend"><span><i></i>solid ring = macronutrient</span><span><i class="mi"></i>dashed ring = micronutrient</span></div>
+    </div>
+    <div class="card hide" id="cardCalc">
+      <h2>Where the energy comes from</h2>
+      <svg viewBox="0 0 280 224" aria-label="Share of total energy by nutrient"><g id="calcArt"></g></svg>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Six classes of nutrients<small>pick a mode to begin</small></div>
+    <div class="card">
+      <div class="modeseg">
+        <button data-m="0" class="on">Explore</button>
+        <button data-m="1">Sort it</button>
+        <button data-m="2">Do the math</button>
+      </div>
+
+      <div id="mExplore">
+        <div class="list" id="list"></div>
+      </div>
+
+      <div id="mSort" class="hide">
+        <div class="qbox"><div class="lbl">Which class does this belong to?</div><div class="q" id="qtext">&mdash;</div></div>
+        <div class="grid" id="opts"></div>
+        <div class="score">Sorted <b id="sdone">0</b> of <b id="stotal">0</b> &middot; matched <b id="sright">0</b></div>
+        <div class="row"><button class="btn" id="qreset">Reshuffle</button><button class="btn solid" id="qnext" disabled>Next item ›</button></div>
+      </div>
+
+      <div id="mCalc" class="hide">
+        <div class="sl"><div class="lb"><span>Carbohydrate <em>4 kcal/g</em></span><b><span id="vc">250</span> g</b></div>
+          <input type="range" id="sc" min="0" max="500" step="5" value="250" style="accent-color:#c9902b"></div>
+        <div class="sl"><div class="lb"><span>Protein <em>4 kcal/g</em></span><b><span id="vp">90</span> g</b></div>
+          <input type="range" id="sp" min="0" max="250" step="5" value="90" style="accent-color:#c2453f"></div>
+        <div class="sl"><div class="lb"><span>Fat <em>9 kcal/g</em></span><b><span id="vf">70</span> g</b></div>
+          <input type="range" id="sf" min="0" max="200" step="5" value="70" style="accent-color:#7a5a8a"></div>
+        <div class="sl"><div class="lb"><span>Alcohol <em>7 kcal/g &middot; not a nutrient</em></span><b><span id="va">0</span> g</b></div>
+          <input type="range" id="sa" min="0" max="80" step="1" value="0" style="accent-color:#8d8270"></div>
+        <div class="tot"><span>Total energy</span><b id="totk">1,990 kcal</b></div>
+      </div>
+
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- the six classes ---------- */
+ var C=[
+  {k:'carb',nm:'Carbohydrate',ic:'🍞',col:'#c9902b',macro:1,kcal:4,mg:275000,
+   amt:'~275 g',
+   ct:'Macronutrient · 4 kcal per gram',
+   d:'Sugars, starches, and fibers. Digestible carbohydrate is broken down to <b>glucose</b> &mdash; the fuel the brain and red blood cells depend on most heavily. <b>Fiber</b> is a carbohydrate human enzymes cannot break down; it travels to the colon, where bacteria ferment part of it, and it adds bulk to stool.',
+   dri:'RDA 130 g/day for adults and children 1 year and older. That figure is derived from average brain glucose use in a population &mdash; it is a reference value, not a personal target.',
+   ex:'starch · lactose · sucrose · fiber',
+   ev:'<b>Evidence check.</b> Strong: fiber adds stool bulk and is fermented by colon bacteria. Preliminary: most claims linking one specific gut-microbe pattern to one specific disease outcome in humans rest on small or observational studies.'},
+
+  {k:'prot',nm:'Protein',ic:'🥚',col:'#c2453f',macro:1,kcal:4,mg:56000,
+   amt:'~56 g',
+   ct:'Macronutrient · 4 kcal per gram',
+   d:'Chains of <b>amino acids</b>. Twenty amino acids build human proteins and <b>nine are essential</b> for adults &mdash; the body cannot make them, so they must come from food. Protein forms structure (collagen, muscle), enzymes, transport carriers, and antibodies, and can also be burned for energy when carbohydrate and fat run short.',
+   dri:'RDA 0.80 g per kg of body weight per day for adults 19 years and older &mdash; about 56 g/day for a 70 kg adult. AMDR 10–35% of energy.',
+   ex:'casein · collagen · albumin · enzymes',
+   ev:'<b>Evidence check.</b> Strong: the nine essential amino acids, and the 0.80 g/kg adult RDA. Unsettled: the intake above the RDA that best supports athletes or older adults is still an open research question with no single agreed number.'},
+
+  {k:'fat',nm:'Fat',ic:'🥑',col:'#7a5a8a',macro:1,kcal:9,mg:65000,
+   amt:'~65 g',
+   ct:'Macronutrient · 9 kcal per gram',
+   d:'The lipid family: <b>triglycerides</b> (the storage and dietary form), <b>phospholipids</b> (cell membranes), and <b>sterols</b> such as cholesterol. Fat is the densest energy source at 9 kcal/g, insulates and cushions organs, carries the fat-soluble vitamins <b>A, D, E, and K</b>, and supplies two essential fatty acids: linoleic acid and alpha-linolenic acid.',
+   dri:'AMDR 20–35% of energy for adults 19+. Adequate Intake (AI) for linoleic acid 17 g/day (men) and 12 g/day (women), ages 19–50 y.',
+   ex:'triglycerides · cholesterol · omega-3s',
+   ev:'<b>Evidence check.</b> Strong: linoleic and alpha-linolenic acid are essential, and fat is required to absorb vitamins A, D, E, and K. Revised: dietary cholesterol raises blood cholesterol far less in most people than once assumed, which changed earlier guidance.'},
+
+  {k:'vit',nm:'Vitamins',ic:'🍊',col:'#2f9e5b',macro:0,kcal:0,mg:500,
+   amt:'~0.5 g total',
+   ct:'Micronutrient · 0 kcal per gram',
+   d:'<b>Thirteen organic compounds</b> needed in milligram or microgram amounts. Four are <b>fat-soluble</b> (A, D, E, K) and are stored in tissue; nine are <b>water-soluble</b> (C plus the eight B vitamins) and are largely excreted. Most work as <b>coenzymes</b> &mdash; they help release energy from carbohydrate, fat, and protein, but they contain no energy themselves.',
+   dri:'Example RDA — vitamin C: 90 mg/day (men) and 75 mg/day (women), nonsmoking adults 19+. Every vitamin has its own units and its own population-specific value.',
+   ex:'vitamin C · vitamin D · B12 · folate',
+   ev:'<b>Evidence check.</b> Strong: each of the 13 vitamins has a defined deficiency syndrome that intake reverses &mdash; scurvy, beriberi, pellagra. Weak or negative: large trials of vitamin supplements in people who are <i>not</i> deficient have mostly failed to reproduce the benefits that observational studies suggested.'},
+
+  {k:'min',nm:'Minerals',ic:'🧂',col:'#2f6f9f',macro:0,kcal:0,mg:10000,
+   amt:'~10 g total',
+   ct:'Micronutrient · 0 kcal per gram',
+   d:'<b>Inorganic elements</b> &mdash; single atoms straight from the periodic table, so heat, light, and acid cannot destroy them. <b>Major minerals</b> are needed above 100 mg/day (calcium, phosphorus, magnesium, sodium, potassium, chloride, sulfur). <b>Trace minerals</b> are needed below that (iron, zinc, iodine, selenium, copper, manganese, fluoride, chromium, molybdenum).',
+   dri:'Example RDA — calcium: 1,000 mg/day for adults 19–50 years. Example RDA — iron: 8 mg/day (men 19+) and 18 mg/day (women 19–50 y).',
+   ex:'calcium · iron · sodium · zinc · iodine',
+   ev:'<b>Evidence check.</b> Strong: iodine prevents goiter; iron is the oxygen-binding core of hemoglobin. Debated: the precise sodium intake that minimizes cardiovascular risk across whole populations is still actively argued in the literature.'},
+
+  {k:'wat',nm:'Water',ic:'💧',col:'#2a8f9e',macro:1,kcal:0,mg:2700000,
+   amt:'~2,700 g (2.7 L)',
+   ct:'Macronutrient · 0 kcal per gram',
+   d:'Needed in the largest amount of any nutrient, and it yields <b>no energy at all</b> &mdash; which is exactly why "macronutrient" means <i>amount required</i>, not calories. Water is the solvent for every reaction, the transport medium of blood and lymph, the body\'s temperature buffer through sweat, and a lubricant for joints and eyes. It is roughly <b>50–60% of adult body mass</b>.',
+   dri:'Adequate Intake (AI) for total water: 3.7 L/day (men) and 2.7 L/day (women), adults 19+. That counts water from food <i>and</i> all beverages; roughly 20% arrives in food.',
+   ex:'drinking water · beverages · produce',
+   ev:'<b>Evidence check.</b> Strong: the total-water Adequate Intake values, and the fact that thirst plus kidney concentrating ability keep balance tight in healthy adults. Not evidence-based: the popular "eight glasses a day" rule has no identifiable source in the research literature.'}
+ ];
+ var NON={k:'non',nm:'Not a nutrient',col:'#8d8270'};
+ function byK(k){ for(var i=0;i<C.length;i++){ if(C[i].k===k) return C[i]; } return null; }
+
+ /* ---------- wheel art ---------- */
+ var CX=118, CY=104, RAD=72;
+ var NR={carb:23,prot:18.5,fat:19,vit:9,min:12,wat:26};
+ function drawWheel(sel){
+   var s='', i, a, x, y, c, r;
+   for(i=0;i<C.length;i++){
+     a=(-90+i*60)*Math.PI/180; x=CX+RAD*Math.cos(a); y=CY+RAD*Math.sin(a);
+     s+='<line x1="'+CX+'" y1="'+CY+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#e4d9c4" stroke-width="1.6"/>';
+   }
+   s+='<circle cx="'+CX+'" cy="'+CY+'" r="30" fill="#fdfaf3" stroke="#e4d9c4" stroke-width="1.6"/>';
+   s+='<text x="'+CX+'" y="'+(CY-2)+'" font-size="9" font-weight="800" fill="#6b4710" text-anchor="middle" letter-spacing="1">FOOD</text>';
+   s+='<text x="'+CX+'" y="'+(CY+11)+'" font-size="6.6" fill="#8d8270" text-anchor="middle">six classes</text>';
+   for(i=0;i<C.length;i++){
+     c=C[i]; r=NR[c.k];
+     a=(-90+i*60)*Math.PI/180; x=CX+RAD*Math.cos(a); y=CY+RAD*Math.sin(a);
+     var on=(sel===c.k), op=on?1:(sel?0.3:0.85);
+     if(on) s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(r+9)+'" fill="'+c.col+'" opacity=".16"/>';
+     s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+r+'" fill="'+c.col+'" opacity="'+op+'"/>';
+     s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(r+4)+'" fill="none" stroke="'+c.col+'" stroke-width="'+(on?2.6:1.5)+'" opacity="'+(on?0.95:op*0.6)+'"'+(c.macro?'':' stroke-dasharray="3 3"')+'/>';
+     s+='<text x="'+x.toFixed(1)+'" y="'+(y+r*0.36).toFixed(1)+'" font-size="'+(r*1.02).toFixed(1)+'" text-anchor="middle" opacity="'+op+'">'+c.ic+'</text>';
+     s+='<text x="'+x.toFixed(1)+'" y="'+(y+r+11).toFixed(1)+'" font-size="7.4" font-weight="800" fill="'+(on?c.col:'#8d8270')+'" text-anchor="middle" letter-spacing=".4">'+c.nm.toUpperCase()+'</text>';
+   }
+   $('art').innerHTML=s;
+ }
+ function barPct(mg){ return Math.max(3,Math.min(100,(Math.log(mg)-Math.log(100))/(Math.log(2700000)-Math.log(100))*100)); }
+
+ /* ---------- explore mode ---------- */
+ function renderList(cur){
+   $('list').innerHTML=C.map(function(c){
+     return '<button class="it'+(c.k===cur?' on':'')+'" data-k="'+c.k+'"><span class="ic">'+c.ic+'</span><span><span class="nm">'+c.nm+'</span><br><span class="ct">'+c.ct+'</span></span></button>';
+   }).join('');
+   var b=document.querySelectorAll('#list .it');
+   for(var i=0;i<b.length;i++){ b[i].onclick=(function(el){return function(){ pick(el.getAttribute('data-k')); };})(b[i]); }
+ }
+ function pick(k){
+   var c=byK(k);
+   drawWheel(k); renderList(k);
+   $('cardTitle').innerHTML=c.nm;
+   $('amttxt').innerHTML=c.amt;
+   $('sizebar').style.width=barPct(c.mg)+'%';
+   $('sizebar').style.background=c.col;
+   $('kcaltxt').innerHTML='<b style="color:'+c.col+'">'+c.kcal+' kcal/g</b>';
+   $('stage').style.background=c.col;
+   $('stage').innerHTML=c.nm+'<small>'+c.ct+'</small>';
+   $('info').innerHTML='<span class="n">'+c.nm+' <span class="tag '+(c.macro?'ma':'mi')+'">'+(c.macro?'macronutrient':'micronutrient')+'</span></span>'+c.d+
+     '<div class="ex"><span>'+c.ex.split(' · ').join('</span><span>')+'</span></div>'+
+     '<div class="loc"><b>Reference values.</b> '+c.dri+'</div>'+
+     '<div class="mnem">'+c.ev+'</div>';
+ }
+ function exploreIntro(){
+   drawWheel('');
+   $('cardTitle').innerHTML='The six classes';
+   $('amttxt').innerHTML='&mdash;'; $('sizebar').style.width='0'; $('kcaltxt').innerHTML='';
+   $('stage').style.background='var(--teal)';
+   $('stage').innerHTML='Six classes of nutrients<small>tap one to explore it</small>';
+   $('info').innerHTML='<span class="n">Macro vs micro</span>The split is about <b>how much you need, not how important it is</b>. <b>Macronutrients</b> &mdash; carbohydrate, protein, fat, and water &mdash; are needed in grams to litres per day. <b>Micronutrients</b> &mdash; vitamins and minerals &mdash; are needed in milligrams or micrograms. A microgram of vitamin B12 is no less essential than 275 grams of carbohydrate.'+
+   '<div class="mnem"><b>Only three carry energy.</b> Carbohydrate (4 kcal/g), protein (4 kcal/g), and fat (9 kcal/g). Vitamins, minerals, and water supply <b>zero</b> &mdash; vitamins and minerals help <i>release</i> energy as coenzymes and cofactors, but contain none.</div>';
+   renderList('');
+ }
+
+ /* ---------- sort mode ---------- */
+ var Q=[
+  {n:'Starch in a potato',k:'carb'},
+  {n:'Lactose (milk sugar)',k:'carb'},
+  {n:'Soluble fiber in oats',k:'carb',note:'Fiber is chemically a carbohydrate that human enzymes cannot break down, so it contributes little or no usable energy — yet it still sorts into the carbohydrate class.'},
+  {n:'Casein in milk',k:'prot'},
+  {n:'Collagen in connective tissue',k:'prot'},
+  {n:'Hemoglobin',k:'prot',note:'Hemoglobin is a protein — but the iron atom at its center is a mineral. One molecule, two nutrient classes.'},
+  {n:'Triglycerides in olive oil',k:'fat'},
+  {n:'Cholesterol',k:'fat',note:'Cholesterol is a sterol, part of the lipid family. The body synthesizes it as well as absorbing it, and uses it to build cell membranes, bile acids, vitamin D, and steroid hormones.'},
+  {n:'Alpha-linolenic acid (an omega-3)',k:'fat',note:'An essential fatty acid: the body cannot make it, so it has to arrive in food.'},
+  {n:'Ascorbic acid (vitamin C)',k:'vit'},
+  {n:'Folate',k:'vit'},
+  {n:'Vitamin D',k:'vit',note:'Vitamin D is fat-soluble, and skin also makes it from UVB light — so how much is needed from food depends on sun exposure, latitude, and skin pigmentation.'},
+  {n:'Iron',k:'min'},
+  {n:'Calcium in yogurt',k:'min'},
+  {n:'Sodium in table salt',k:'min',note:'Sodium chloride is a mineral compound. Sodium and chloride are both major minerals — needed above 100 mg/day.'},
+  {n:'Iodine',k:'min'},
+  {n:'Plain drinking water',k:'wat'},
+  {n:'The water inside a cucumber',k:'wat',note:'Roughly 20% of total water intake arrives in food rather than in beverages, which is why the AI counts both.'},
+  {n:'Ethanol (drinking alcohol)',k:'non',note:'Alcohol supplies 7 kcal per gram, but no body process requires it and it fills no essential role — so it is an energy source, not a nutrient. Yielding energy and being a nutrient are two different things.'},
+  {n:'Caffeine',k:'non',note:'Caffeine is a pharmacologically active compound, not a nutrient: no energy, no essential function, no deficiency state.'}
+ ];
+ var order=[], qi=0, answered=false, done=0, right=0;
+ function shuffle(){
+   order=[]; var i;
+   for(i=0;i<Q.length;i++) order.push(i);
+   for(i=order.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), t=order[i]; order[i]=order[j]; order[j]=t; }
+   qi=0; done=0; right=0;
+ }
+ function optHTML(){
+   var s=C.map(function(c){ return '<button class="it" data-k="'+c.k+'">'+c.ic+' '+c.nm+'</button>'; }).join('');
+   s+='<button class="it" data-k="non" style="grid-column:1/-1">🚫 Not a nutrient</button>';
+   $('opts').innerHTML=s;
+   var b=document.querySelectorAll('#opts .it');
+   for(var i=0;i<b.length;i++){ b[i].onclick=(function(el){return function(){ answer(el.getAttribute('data-k')); };})(b[i]); }
+ }
+ function showQ(){
+   answered=false;
+   var it=Q[order[qi]];
+   $('qtext').innerHTML=it.n;
+   optHTML();
+   drawWheel('');
+   $('cardTitle').innerHTML='The six classes';
+   $('amttxt').innerHTML='&mdash;'; $('sizebar').style.width='0'; $('kcaltxt').innerHTML='';
+   $('stage').style.background='var(--teal)';
+   $('stage').innerHTML='Sort it<small>item '+(qi+1)+' of '+Q.length+'</small>';
+   $('qnext').disabled=true;
+   $('info').innerHTML='<span class="n">Pick a class</span>Ask two questions in order: <b>is this organic or inorganic?</b> and <b>is it needed in grams or in milligrams?</b> If nothing in the body requires it, it may not be a nutrient at all.';
+   updScore();
+ }
+ function updScore(){ $('sdone').innerHTML=done; $('stotal').innerHTML=Q.length; $('sright').innerHTML=right; }
+ function answer(k){
+   if(answered) return;
+   answered=true; done++;
+   var it=Q[order[qi]], truth=it.k, ok=(k===truth);
+   if(ok) right++;
+   var b=document.querySelectorAll('#opts .it'), i;
+   for(i=0;i<b.length;i++){
+     var bk=b[i].getAttribute('data-k');
+     if(bk===truth) b[i].className='it ok';
+     else if(bk===k) b[i].className='it miss';
+   }
+   var body='';
+   if(truth==='non'){
+     drawWheel('');
+     $('stage').style.background=NON.col;
+     $('stage').innerHTML='Not a nutrient<small>none of the six classes</small>';
+     body='<span class="n">'+(ok?'✓ ':'')+'Not a nutrient <span class="tag no">outside the six</span></span>'+
+       (ok?'':'<b>'+it.n+'</b> is not one of the six classes. ')+(it.note||'');
+   }else{
+     var c=byK(truth);
+     drawWheel(truth);
+     $('cardTitle').innerHTML=c.nm;
+     $('amttxt').innerHTML=c.amt;
+     $('sizebar').style.width=barPct(c.mg)+'%'; $('sizebar').style.background=c.col;
+     $('kcaltxt').innerHTML='<b style="color:'+c.col+'">'+c.kcal+' kcal/g</b>';
+     $('stage').style.background=c.col;
+     $('stage').innerHTML=c.nm+'<small>'+c.ct+'</small>';
+     body='<span class="n">'+(ok?'✓ ':'')+c.nm+' <span class="tag '+(c.macro?'ma':'mi')+'">'+(c.macro?'macronutrient':'micronutrient')+'</span></span>'+
+       '<b>'+it.n+'</b> sorts into <b>'+c.nm.toLowerCase()+'</b> &mdash; '+(c.macro?'a macronutrient':'a micronutrient')+' at <b>'+c.kcal+' kcal per gram</b>. '+
+       (it.note||'');
+   }
+   $('info').innerHTML=body;
+   $('qnext').disabled=(qi>=Q.length-1);
+   if(qi>=Q.length-1){
+     $('info').innerHTML+='<div class="mnem"><b>All '+Q.length+' sorted &mdash; '+right+' matched on the first tap.</b> Press Reshuffle to run the set again in a new order.</div>';
+   }
+   updScore();
+ }
+ $('qnext').onclick=function(){ if(qi<Q.length-1){ qi++; showQ(); } };
+ $('qreset').onclick=function(){ shuffle(); showQ(); };
+
+ /* ---------- calculate mode ---------- */
+ function fmt(n){ return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+ function drawCalc(){
+   var gc=+$('sc').value, gp=+$('sp').value, gf=+$('sf').value, ga=+$('sa').value;
+   $('vc').innerHTML=gc; $('vp').innerHTML=gp; $('vf').innerHTML=gf; $('va').innerHTML=ga;
+   var R=[{nm:'CARB',g:gc,v:gc*4,col:'#c9902b',mn:45,mx:65},
+          {nm:'PROTEIN',g:gp,v:gp*4,col:'#c2453f',mn:10,mx:35},
+          {nm:'FAT',g:gf,v:gf*9,col:'#7a5a8a',mn:20,mx:35},
+          {nm:'ALCOHOL',g:ga,v:ga*7,col:'#8d8270',mn:null,mx:null}];
+   var tot=R[0].v+R[1].v+R[2].v+R[3].v;
+   $('totk').innerHTML=fmt(tot)+' kcal';
+   var x0=58, W=208, X=function(p){ return x0+W*p/100; };
+   var s='', t, i;
+   for(t=0;t<=100;t+=25){
+     s+='<line x1="'+X(t)+'" y1="26" x2="'+X(t)+'" y2="188" stroke="#ebe3d5" stroke-width="1"/>';
+     s+='<text x="'+X(t)+'" y="200" font-size="7" fill="#8d8270" text-anchor="middle">'+t+'%</text>';
+   }
+   s+='<text x="4" y="14" font-size="8.4" font-weight="800" fill="#6b4710" letter-spacing=".6">SHARE OF TOTAL ENERGY</text>';
+   var inside=0, counted=0;
+   for(i=0;i<4;i++){
+     var r=R[i], y=32+i*40, pct=(tot>0? r.v/tot*100 : 0);
+     if(r.mn!==null){
+       s+='<rect x="'+X(r.mn)+'" y="'+(y-5)+'" width="'+(X(r.mx)-X(r.mn))+'" height="26" rx="3" fill="'+r.col+'" opacity=".13"/>';
+       s+='<text x="'+((X(r.mn)+X(r.mx))/2)+'" y="'+(y+29)+'" font-size="6.3" fill="#8d8270" text-anchor="middle">adult reference range '+r.mn+'–'+r.mx+'%</text>';
+       counted++; if(tot>0 && pct>=r.mn && pct<=r.mx) inside++;
+     }else{
+       s+='<text x="'+x0+'" y="'+(y+29)+'" font-size="6.3" fill="#8d8270">no reference range — alcohol is not a nutrient</text>';
+     }
+     s+='<text x="4" y="'+(y+11.5)+'" font-size="8" font-weight="800" fill="#5f5340">'+r.nm+'</text>';
+     s+='<rect x="'+x0+'" y="'+y+'" width="'+Math.max(1,W*pct/100).toFixed(1)+'" height="16" rx="3" fill="'+r.col+'"/>';
+     if(pct>=20) s+='<text x="'+(X(pct)-5)+'" y="'+(y+11.5)+'" font-size="8" font-weight="800" fill="#fff" text-anchor="end">'+Math.round(pct)+'%</text>';
+     else s+='<text x="'+(X(pct)+5)+'" y="'+(y+11.5)+'" font-size="8" font-weight="800" fill="'+r.col+'">'+Math.round(pct)+'%</text>';
+   }
+   s+='<line x1="'+x0+'" y1="188" x2="'+(x0+W)+'" y2="188" stroke="#d9cdb6" stroke-width="1.2"/>';
+   s+='<text x="4" y="214" font-size="7.4" fill="#8d8270">Vitamins · Minerals · Water contribute <tspan font-weight="800" fill="#6b4710">0 kcal</tspan> at any amount.</text>';
+   $('calcArt').innerHTML=s;
+
+   var pc=(tot>0? R[0].v/tot*100:0), pp=(tot>0? R[1].v/tot*100:0), pf=(tot>0? R[2].v/tot*100:0), pa=(tot>0? R[3].v/tot*100:0);
+   var msg='<span class="n">'+fmt(tot)+' kcal from these grams</span>'+
+     'Energy is not guessed &mdash; it is counted from the grams. <b>Carbohydrate 4</b>, <b>protein 4</b>, <b>fat 9</b>, and <b>alcohol 7</b> kcal per gram. '+
+     'Here: '+fmt(R[0].v)+' + '+fmt(R[1].v)+' + '+fmt(R[2].v)+' + '+fmt(R[3].v)+' = <b>'+fmt(tot)+' kcal</b>. '+
+     'Notice that fat delivers more than twice the energy per gram, so a small change in fat grams moves the total more than the same change in carbohydrate grams.'+
+     '<div class="ex"><span>carb '+Math.round(pc)+'%</span><span>protein '+Math.round(pp)+'%</span><span>fat '+Math.round(pf)+'%</span><span>alcohol '+Math.round(pa)+'%</span></div>'+
+     '<div class="loc"><b>What the shaded bands are.</b> The Acceptable Macronutrient Distribution Ranges (AMDR) for adults 19+: carbohydrate 45–65%, protein 10–35%, fat 20–35% of total energy. They are <b>population reference ranges</b> associated with meeting essential-nutrient needs &mdash; not a personal prescription, and a mix that sits outside a band is a description, not a verdict. Right now <b>'+inside+' of '+counted+'</b> sit inside their band.</div>'+
+     '<div class="mnem"><b>Alcohol is the exception that proves the rule.</b> It yields 7 kcal/g, so it adds to the total &mdash; but no body process requires it, it has no deficiency state, and no reference range is set for it as a nutrient. Energy-yielding and "nutrient" are separate ideas.</div>';
+   $('info').innerHTML=msg;
+ }
+
+ /* ---------- mode switching ---------- */
+ var seg=document.querySelectorAll('.modeseg button');
+ function setMode(m){
+   for(var i=0;i<seg.length;i++) seg[i].className=(+seg[i].getAttribute('data-m')===m?'on':'');
+   $('mExplore').className=(m===0?'':'hide');
+   $('mSort').className=(m===1?'':'hide');
+   $('mCalc').className=(m===2?'':'hide');
+   $('cardWheel').className=(m===2?'card hide':'card');
+   $('cardCalc').className=(m===2?'card':'card hide');
+   if(m===0){ exploreIntro(); }
+   if(m===1){ shuffle(); showQ(); }
+   if(m===2){ $('stage').style.background='#6b4710'; $('stage').innerHTML='Do the math<small>4 · 4 · 9 kcal per gram — and 7 for alcohol</small>'; drawCalc(); }
+ }
+ for(var i=0;i<seg.length;i++){
+   seg[i].onclick=(function(el){ return function(){ setMode(+el.getAttribute('data-m')); }; })(seg[i]);
+ }
+ var sl=['sc','sp','sf','sa'];
+ for(var j=0;j<sl.length;j++){ $(sl[j]).oninput=drawCalc; }
+
+ setMode(0);
+})();
+</script>
+</body>
+</html>

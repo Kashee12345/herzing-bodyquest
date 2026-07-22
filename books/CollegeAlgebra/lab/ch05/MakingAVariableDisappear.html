@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Making a Variable Disappear</title>
+<meta name="description" content="Choose a multiplier for each equation and watch a whole column of a system cancel to zero, then walk the entire elimination solve one step at a time — with the reason each move is legal, and the graph that agrees with the answer.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;--l1:#43458f;--l2:#d1495b;--ok:#237a45;}
+.wrap{grid-template-columns:1.02fr 0.98fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+#stage .big{font-family:var(--math);font-size:21px;font-weight:700;letter-spacing:.3px;}
+/* ---- aligned equation work ---- */
+.eqblk{font-family:var(--math);margin-top:4px;}
+.eqr{display:grid;grid-template-columns:56px 1fr 1fr 15px 1fr;align-items:center;gap:0 3px;font-size:16.5px;padding:1px 0;}
+.eqr .lb{font-family:var(--sans);font-size:9.3px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);text-align:right;line-height:1.2;padding-right:5px;}
+.eqr .c{text-align:right;white-space:nowrap;padding:4px 5px;border-radius:6px;}
+.eqr .eqs{text-align:center;color:var(--muted);}
+.eqr.orig{color:var(--muted);font-size:14.5px;}
+.eqr.orig .lb{color:#a2a4b8;}
+.eqr.sc{color:var(--ink);font-weight:600;}
+.eqr.sc .lb{color:var(--teal);}
+.eqr.sum{color:var(--teal-dk);font-weight:700;}
+.eqr .c.hi{background:#fbf1d3;}
+.eqr.sum .c.hi{background:#e0f2e6;}
+.eqr.flash .c{background:#e6e8f5;}
+.eqr.flash .c.hi{background:#fbe9b8;}
+.eqr.sum.flash .c.hi{background:#cfeeda;}
+.eqr i{font-style:italic;}
+.rule{height:2px;background:var(--teal-dk);opacity:.55;margin:5px 0 5px 56px;border-radius:2px;}
+.zz{color:var(--ok);font-weight:800;}
+.exl{display:grid;grid-template-columns:56px 1fr;gap:0 3px;align-items:baseline;padding:8px 0 2px;margin-top:7px;border-top:1px dashed var(--line);font-family:var(--math);font-size:16.5px;color:var(--teal-dk);}
+.exl .lb{font-family:var(--sans);font-size:9.3px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);text-align:right;line-height:1.2;padding-right:5px;}
+.exl .sm{font-family:var(--sans);font-size:11.6px;font-weight:500;color:var(--muted);display:block;margin-top:4px;line-height:1.5;}
+.exl .sm b{color:var(--soft);}
+.exl .big{display:block;margin-top:3px;font-size:19px;font-weight:700;}
+.exl.bad{color:#b23145;} .exl.good{color:var(--ok);}
+/* ---- sliders ---- */
+.sld{margin-top:11px;}
+.sld .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:10.3px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:0;}
+.sld .lab b{font-family:var(--math);font-size:19px;letter-spacing:0;text-transform:none;color:var(--l1);}
+#s2w .lab b{color:var(--l2);}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;display:block;}
+input[type=range]:focus{outline:none;}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--l1);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);margin-top:-8px;}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--l1);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);}
+#s2w input[type=range]::-webkit-slider-thumb{background:var(--l2);}
+#s2w input[type=range]::-moz-range-thumb{background:var(--l2);}
+.tick{display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);font-family:var(--math);margin-top:-4px;}
+/* ---- misc ---- */
+.why{font-size:12.2px;color:var(--soft);background:#f1f2f9;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:12px;line-height:1.55;}
+.why em{font-family:var(--sans);font-style:normal;font-size:10.2px;font-weight:800;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;}
+.why b{color:var(--teal-dk);} .why .m{font-family:var(--math);font-size:13.5px;color:var(--teal-dk);}
+.why p+p{margin-top:7px;}
+.verdict{display:flex;align-items:center;gap:9px;border-radius:10px;padding:10px 12px;margin-top:12px;font-size:12.5px;line-height:1.45;font-weight:600;}
+.verdict .bg{font-family:var(--math);font-size:22px;font-weight:700;flex:none;}
+.verdict.go{background:#e5f3ea;color:#1d6b3c;border:1px solid #bfe1cc;}
+.verdict.no{background:#fae5e8;color:#a2293a;border:1px solid #f0c9d0;}
+#sys.grid{grid-template-columns:1fr 1fr;}
+#sys .it{display:block;text-align:left;padding:8px 10px;}
+#sys .it .nm{display:block;font-size:12px;}
+#sys .it .s{display:block;font-family:var(--math);font-size:11.5px;margin-top:2px;line-height:1.3;}
+.dots{display:flex;gap:5px;justify-content:center;margin-top:11px;}
+.dots i{width:7px;height:7px;border-radius:50%;background:#d5d7e6;display:block;transition:.15s;}
+.dots i.on{background:var(--teal);transform:scale(1.35);}
+.lg{display:flex;gap:14px;font-size:11.2px;color:var(--soft);margin-top:8px;flex-wrap:wrap;font-weight:600;}
+.lg span{display:flex;align-items:center;gap:5px;}
+.lg i{width:16px;height:3px;border-radius:2px;display:block;}
+#info2{border:1px solid var(--line);border-left:5px solid var(--teal);background:#f1f2f9;border-radius:10px;padding:12px 14px;margin-top:12px;font-size:13px;color:var(--soft);line-height:1.5;}
+#info2 b{color:var(--ink);}
+#info2 .n{font-family:var(--disp);font-weight:600;font-size:16px;color:var(--teal-dk);display:block;margin-bottom:3px;}
+.cap{font-size:11.4px;color:var(--muted);line-height:1.5;margin-top:8px;}
+.cap b{color:var(--soft);}
+@media (max-width:600px){.eqr{grid-template-columns:44px 1fr 1fr 13px 1fr;font-size:15px;} .exl{grid-template-columns:44px 1fr;} .rule{margin-left:44px;} #sys.grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 5</div>
+  <h1>Making a Variable Disappear</h1>
+  <div class="intro">Elimination has exactly one idea in it: <b>rescale the equations until one column is equal and opposite, then add.</b> That column collapses to zero and you are left with one equation in one unknown. Choose the multipliers yourself below and watch the column die &mdash; then walk the whole solve, one step at a time.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="benchTitle">The cancel bench</h2>
+      <svg viewBox="0 0 240 152" aria-label="coefficient cancellation"><g id="bench"></g></svg>
+      <div class="eqblk" id="work"></div>
+      <div class="why">
+        <em>Why either move is legal</em>
+        <p><b>Multiplying a whole equation by a number that is not zero</b> changes nothing that matters. <span class="m">3<i>x</i> + 4<i>y</i> = 18</span> and <span class="m">6<i>x</i> + 8<i>y</i> = 36</span> are true for exactly the same pairs (<i>x</i>,&thinsp;<i>y</i>), because you can divide back by 2 and return. Same line, new clothes.</p>
+        <p><b>Adding two true equations</b> is just adding equals to equals: if <span class="m">A = B</span> and <span class="m">C = D</span>, then <span class="m">A + C = B + D</span>. Anything that satisfied both equations still satisfies the sum.</p>
+        <p><b>The multiplier may never be 0.</b> Multiplying by 0 turns an equation into <span class="m">0 = 0</span> &mdash; true for every point in the plane. You would not have simplified the system, you would have thrown one equation away.</p>
+      </div>
+    </div>
+    <div class="card">
+      <h2>The same picture on the plane</h2>
+      <svg viewBox="0 0 220 220" aria-label="graph of the two lines"><g id="plot"></g></svg>
+      <div class="lg"><span><i style="background:#43458f"></i>equation 1</span><span><i style="background:#d1495b"></i>equation 2</span><span id="ptlab"></span></div>
+      <div class="cap" id="gcap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Elimination<small>pick a system to start</small></div>
+    <div class="card">
+      <h2>Which system?</h2>
+      <div class="grid" id="sys"></div>
+    </div>
+    <div class="card">
+      <div class="modeseg" id="mode">
+        <button data-m="a" class="on">Choose the multiplier</button>
+        <button data-m="b">Walk the whole solve</button>
+      </div>
+      <div id="panA">
+        <div class="seg" id="tgt">
+          <button data-t="x">Eliminate <i>x</i><small>kill the first column</small></button>
+          <button data-t="y">Eliminate <i>y</i><small>kill the second column</small></button>
+        </div>
+        <div class="sld" id="s1w">
+          <div class="lab"><span>multiply equation 1 by</span><b id="m1v">1</b></div>
+          <input type="range" id="m1" min="0" max="11" step="1" value="6">
+          <div class="tick"><span>&minus;6</span><span>&minus;1</span><span>1</span><span>6</span></div>
+        </div>
+        <div class="sld" id="s2w">
+          <div class="lab"><span>multiply equation 2 by</span><b id="m2v">1</b></div>
+          <input type="range" id="m2" min="0" max="11" step="1" value="6">
+          <div class="tick"><span>&minus;6</span><span>&minus;1</span><span>1</span><span>6</span></div>
+        </div>
+        <div class="verdict" id="vd"><span class="bg">?</span><span id="vdt"></span></div>
+        <div class="row"><button class="btn" id="reset">Reset to &times;1</button><button class="btn solid" id="auto">Find a pair that cancels</button></div>
+        <div id="info"></div>
+      </div>
+      <div id="panB" style="display:none">
+        <div id="info2"></div>
+        <div class="dots" id="dots"></div>
+        <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var MIN='−', DOT='·';
+
+ /* ---------- systems ---------- */
+ var SYS=[
+  {k:'s1',nm:'Already opposite',a1:2,b1:3,c1:12,a2:5,b2:-3,c2:9,dt:'y'},
+  {k:'s2',nm:'One multiplier',a1:1,b1:2,c1:2,a2:3,b2:5,c2:7,dt:'x'},
+  {k:'s3',nm:'Two multipliers',a1:3,b1:4,c1:18,a2:2,b2:-5,c2:-11,dt:'x'},
+  {k:'s4',nm:'Parallel trap',a1:2,b1:-3,c1:6,a2:4,b2:-6,c2:5,dt:'x'},
+  {k:'s5',nm:'Same line twice',a1:2,b1:-3,c1:6,a2:4,b2:-6,c2:12,dt:'x'}
+ ];
+ SYS.forEach(function(S){
+   var D=S.a1*S.b2-S.a2*S.b1;
+   var Nx=S.c1*S.b2-S.c2*S.b1, Ny=S.a1*S.c2-S.a2*S.c1;
+   if(D!==0){S.kind='one';S.sx=Nx/D;S.sy=Ny/D;}
+   else if(Nx!==0||Ny!==0){S.kind='none';}
+   else {S.kind='inf';}
+ });
+
+ var MV=[-6,-5,-4,-3,-2,-1,1,2,3,4,5,6];
+ var cur=SYS[0], tgt=cur.dt, m1=1, m2=1, mode='a', step=0;
+
+ /* ---------- number + term formatting ---------- */
+ function fmt(v){ v=Math.round(v*1e6)/1e6; return String(v); }
+ function sg(v){ return (v<0?MIN:'')+fmt(Math.abs(v)); }
+ function term(c,v,lead){
+   if(c===0) return '<span class="zz">0<i>'+v+'</i></span>';
+   var a=Math.abs(c), s;
+   if(lead) s=(c<0?MIN:'');
+   else s=(c<0?MIN+'&thinsp;':'+&thinsp;');
+   return s+(a===1?'':fmt(a))+'<i>'+v+'</i>';
+ }
+ function co(v){ return (v<0?MIN:'+')+'&thinsp;'+fmt(Math.abs(v)); }
+ function eqTxt(a,b,c){ return term(a,'x',true)+' '+term(b,'y',false)+' = '+sg(c); }
+ function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){var t=b;b=a%b;a=t;}return a;}
+ function canon(p,q){ var L=Math.abs(p)*Math.abs(q)/gcd(p,q);
+   return [L/Math.abs(p), -(p<0?-1:1)*(q<0?-1:1)*L/Math.abs(q)]; }
+
+ /* ---------- current numbers ---------- */
+ function st(){
+   var S=cur;
+   var at1=(tgt==='x'?S.a1:S.b1), at2=(tgt==='x'?S.a2:S.b2);
+   var A=m1*S.a1+m2*S.a2, B=m1*S.b1+m2*S.b2, C=m1*S.c1+m2*S.c2;
+   var rem=(tgt==='x'?B:A), oth=(tgt==='x'?'y':'x');
+   return {S:S,at1:at1,at2:at2,v1:m1*at1,v2:m2*at2,A:A,B:B,C:C,rem:rem,oth:oth,
+           dead:(m1*at1+m2*at2)===0};
+ }
+
+ /* ---------- the cancel bench SVG ---------- */
+ function bench(){
+   var q=st(), v1=q.v1, v2=q.v2, vs=v1+v2;
+   var cx=140, half=94, mx=Math.max(Math.abs(v1),Math.abs(v2),Math.abs(vs),1), sc=half/mx;
+   var o='';
+   o+='<text x="140" y="11" font-size="9" font-weight="700" fill="#7d7f94" text-anchor="middle" font-family="Inter,sans-serif" letter-spacing="1">THE '+tgt.toUpperCase()+' COLUMN</text>';
+   o+='<line x1="140" y1="16" x2="140" y2="130" stroke="#c9cbdd" stroke-width="1.4" stroke-dasharray="3 3"/>';
+   function bar(y,v,col,lab){
+     var s='';
+     var w=Math.abs(v)*sc, x=(v>=0?cx:cx-w);
+     if(w<1.5){ w=1.5; x=cx-0.75; }
+     s+='<rect x="'+x.toFixed(1)+'" y="'+(y-9)+'" width="'+w.toFixed(1)+'" height="18" rx="4" fill="'+col+'"/>';
+     var tx=(v>=0?x+w+5:x-5);
+     s+='<text x="'+tx.toFixed(1)+'" y="'+(y+4)+'" font-size="11" font-weight="700" fill="'+col+'" text-anchor="'+(v>=0?'start':'end')+'" font-family="Georgia,serif">'+(v>0?'+':'')+sg(v)+'<tspan font-style="italic">'+tgt+'</tspan></text>';
+     s+='<text x="40" y="'+(y+4)+'" font-size="9" font-weight="700" fill="#7d7f94" text-anchor="end" font-family="Inter,sans-serif">'+lab+'</text>';
+     return s;
+   }
+   o+=bar(34,v1,'#43458f','eq 1 × '+sg(m1));
+   o+=bar(64,v2,'#d1495b','eq 2 × '+sg(m2));
+   o+='<line x1="44" y1="86" x2="236" y2="86" stroke="#22243a" stroke-width="1.8" opacity=".55"/>';
+   o+='<text x="40" y="90" font-size="12" font-weight="700" fill="#22243a" text-anchor="end" font-family="Inter,sans-serif">+</text>';
+   if(vs===0){
+     o+='<rect x="86" y="103" width="108" height="24" rx="12" fill="#e0f2e6" stroke="#8ecfa8"/>';
+     o+='<text x="140" y="119" font-size="12" font-weight="800" fill="#237a45" text-anchor="middle" font-family="Inter,sans-serif">0'+tgt+' — GONE</text>';
+     var e1=cx+(v1>=0?Math.abs(v1)*sc:-Math.abs(v1)*sc), e2=cx+(v2>=0?Math.abs(v2)*sc:-Math.abs(v2)*sc);
+     o+='<line x1="'+e1.toFixed(1)+'" y1="34" x2="'+e1.toFixed(1)+'" y2="64" stroke="#237a45" stroke-width="1.2" stroke-dasharray="2 3"/>';
+     o+='<line x1="'+e2.toFixed(1)+'" y1="34" x2="'+e2.toFixed(1)+'" y2="64" stroke="#237a45" stroke-width="1.2" stroke-dasharray="2 3"/>';
+     o+='<text x="140" y="145" font-size="9.5" fill="#237a45" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">equal and opposite — the bars annihilate</text>';
+   } else {
+     o+=bar(115,vs,'#b8862f','sum');
+     o+='<text x="140" y="145" font-size="9.5" fill="#b23145" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">'+sg(vs)+tgt+' is left over — not eliminated</text>';
+   }
+   return o;
+ }
+
+ /* ---------- the aligned work ---------- */
+ function rowHTML(cls,lab,a,b,c,hi,flash,zeroCol){
+   var hx=(hi&&tgt==='x')?' hi':'', hy=(hi&&tgt==='y')?' hi':'';
+   return '<div class="eqr '+cls+(flash?' flash':'')+'">'+
+     '<span class="lb">'+lab+'</span>'+
+     '<span class="c'+hx+'">'+term(a,'x',true)+'</span>'+
+     '<span class="c'+hy+'">'+term(b,'y',false)+'</span>'+
+     '<span class="eqs">=</span>'+
+     '<span class="c">'+sg(c)+'</span></div>';
+ }
+ function extras(){
+   var q=st(), S=cur, L=[];
+   if(S.kind==='one'&&q.dead){
+     var val=q.C/q.rem;
+     var l1='<div class="exl"><span class="lb">solve</span><span>'+term(q.rem,q.oth,true)+' = '+sg(q.C)+
+       '<span class="big">'+'<i>'+q.oth+'</i> = '+sg(val)+'</span>'+
+       '<span class="sm">One equation, one unknown. Divide both sides by '+sg(q.rem)+'.</span></span></div>';
+     L.push(l1);
+     var ox,oy,bx;
+     if(tgt==='x'){ oy=val; ox=(S.c1-S.b1*oy)/S.a1;
+       bx='<span class="sm">Put <i>'+q.oth+'</i> = '+sg(val)+' back into an <b>original</b> equation &mdash; equation 1 &mdash; and solve for <i>x</i>: '+
+          term(S.a1,'x',true)+' '+co(S.b1)+'('+sg(oy)+') = '+sg(S.c1)+'.</span>'; }
+     else { ox=val; oy=(S.c1-S.a1*ox)/S.b1;
+       bx='<span class="sm">Put <i>'+q.oth+'</i> = '+sg(val)+' back into an <b>original</b> equation &mdash; equation 1 &mdash; and solve for <i>y</i>: '+
+          sg(S.a1)+'('+sg(ox)+') '+co(S.b1)+'<i>y</i> = '+sg(S.c1)+'.</span>'; }
+     L.push('<div class="exl"><span class="lb">back-sub</span><span><i>'+(tgt==='x'?'x':'y')+'</i> = '+sg(tgt==='x'?ox:oy)+bx+'</span></div>');
+     var lhs=S.a2*S.sx+S.b2*S.sy;
+     L.push('<div class="exl good"><span class="lb">check</span><span>'+
+       sg(S.a2)+'('+sg(S.sx)+') '+co(S.b2)+'('+sg(S.sy)+') = '+sg(lhs)+' ✓'+
+       '<span class="big">(<i>x</i>,&thinsp;<i>y</i>) = ('+sg(S.sx)+',&thinsp;'+sg(S.sy)+')</span>'+
+       '<span class="sm">Always test in the equation you did <b>not</b> use for the back-substitution. It matched the required '+sg(S.c2)+', so the pair really solves both.</span></span></div>');
+   } else if(q.dead&&S.kind==='none'){
+     L.push('<div class="exl bad"><span class="lb">read it</span><span>0 = '+sg(q.C)+
+       '<span class="sm">Both variables vanished and the leftover statement is <b>false</b> &mdash; zero is not '+sg(q.C)+'. No pair (<i>x</i>,&thinsp;<i>y</i>) can make it true, so the system has <b>no solution</b>.</span></span></div>');
+     L.push('<div class="exl bad"><span class="lb">picture</span><span>parallel lines'+
+       '<span class="sm">Equation 2 is exactly 2 times equation 1 on the left side, but not on the right. Same slope, different intercept &mdash; the lines never meet.</span></span></div>');
+   } else if(q.dead&&S.kind==='inf'){
+     L.push('<div class="exl"><span class="lb">read it</span><span>0 = 0'+
+       '<span class="sm">Everything vanished and the leftover statement is <b>true no matter what</b>. Elimination did not fail; it is telling you the two equations carry the same information.</span></span></div>');
+     var flip=(S.b1<0), dn=flip?-S.b1:S.b1, nA=flip?S.a1:-S.a1, nB=flip?-S.c1:S.c1;
+     L.push('<div class="exl"><span class="lb">picture</span><span>one line, written twice'+
+       '<span class="sm">There are <b>infinitely many</b> solutions: every point on '+eqTxt(S.a1,S.b1,S.c1)+
+       '. Describe the set by solving equation 1 for <i>y</i>: <i>y</i> = ('+term(nA,'x',true)+' '+co(nB)+') &divide; '+fmt(dn)+
+       '. Pick any <i>x</i> and that formula hands you its partner.</span></span></div>');
+   }
+   return L;
+ }
+ function renderWork(vis,exn,flashRow,hiCol){
+   var S=cur, q=st();
+   var R=[
+    rowHTML('orig','eq 1',S.a1,S.b1,S.c1,hiCol,flashRow===0),
+    rowHTML('sc','&times; '+sg(m1),m1*S.a1,m1*S.b1,m1*S.c1,hiCol,flashRow===1),
+    rowHTML('orig','eq 2',S.a2,S.b2,S.c2,hiCol,flashRow===2),
+    rowHTML('sc','&times; '+sg(m2),m2*S.a2,m2*S.b2,m2*S.c2,hiCol,flashRow===3),
+    '<div class="rule"></div>',
+    rowHTML('sum','add',q.A,q.B,q.C,hiCol,flashRow===5)
+   ];
+   var o='';
+   vis.forEach(function(i){o+=R[i];});
+   var E=extras();
+   for(var j=0;j<Math.min(exn,E.length);j++) o+=E[j];
+   $('work').innerHTML=o;
+ }
+
+ /* ---------- graph ---------- */
+ var RG=7, CXG=110, CYG=110, SCG=196/(2*RG);
+ function GX(u){return CXG+u*SCG;} function GY(v){return CYG-v*SCG;}
+ function gline(a,b,c,col,w,dash){
+   var d=a*a+b*b; if(d===0) return '';
+   var px=a*c/d, py=b*c/d, L=Math.sqrt(d), dx=b/L, dy=-a/L, t=60;
+   return '<line x1="'+GX(px-dx*t).toFixed(1)+'" y1="'+GY(py-dy*t).toFixed(1)+
+     '" x2="'+GX(px+dx*t).toFixed(1)+'" y2="'+GY(py+dy*t).toFixed(1)+
+     '" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round" clip-path="url(#clp)"'+
+     (dash?' stroke-dasharray="7 5"':'')+'/>';
+ }
+ function plot(){
+   var S=cur,o='';
+   o+='<defs><clipPath id="clp"><rect x="12" y="12" width="196" height="196"/></clipPath></defs>';
+   o+='<rect x="12" y="12" width="196" height="196" rx="8" fill="#fbfaff" stroke="#e0e2ef"/>';
+   for(var u=-RG+1;u<=RG-1;u++){ if(u===0) continue;
+     o+='<line x1="'+GX(u).toFixed(1)+'" y1="12" x2="'+GX(u).toFixed(1)+'" y2="208" stroke="#eceef8" stroke-width="1"/>';
+     o+='<line x1="12" y1="'+GY(u).toFixed(1)+'" x2="208" y2="'+GY(u).toFixed(1)+'" stroke="#eceef8" stroke-width="1"/>'; }
+   o+='<line x1="12" y1="110" x2="208" y2="110" stroke="#b6b8cc" stroke-width="1.4"/>';
+   o+='<line x1="110" y1="12" x2="110" y2="208" stroke="#b6b8cc" stroke-width="1.4"/>';
+   [-6,-4,-2,2,4,6].forEach(function(u){
+     o+='<text x="'+GX(u).toFixed(1)+'" y="121" font-size="7.5" fill="#9a9cb0" text-anchor="middle" font-family="Georgia,serif">'+(u<0?MIN+Math.abs(u):u)+'</text>';
+     o+='<text x="106" y="'+(GY(u)+2.6).toFixed(1)+'" font-size="7.5" fill="#9a9cb0" text-anchor="end" font-family="Georgia,serif">'+(u<0?MIN+Math.abs(u):u)+'</text>'; });
+   o+='<text x="204" y="121" font-size="8.5" font-style="italic" fill="#7d7f94" text-anchor="end" font-family="Georgia,serif">x</text>';
+   o+='<text x="115" y="20" font-size="8.5" font-style="italic" fill="#7d7f94" font-family="Georgia,serif">y</text>';
+   o+=gline(S.a1,S.b1,S.c1,'#43458f',3.2,false);
+   o+=gline(S.a2,S.b2,S.c2,'#d1495b',3.2,S.kind==='inf');
+   if(S.kind==='one'&&Math.abs(S.sx)<=RG&&Math.abs(S.sy)<=RG){
+     o+='<circle cx="'+GX(S.sx).toFixed(1)+'" cy="'+GY(S.sy).toFixed(1)+'" r="6.5" fill="#fff" stroke="#237a45" stroke-width="3"/>';
+     o+='<text x="'+(GX(S.sx)+10).toFixed(1)+'" y="'+(GY(S.sy)-8).toFixed(1)+'" font-size="10.5" font-weight="700" fill="#237a45" font-family="Georgia,serif">('+sg(S.sx)+', '+sg(S.sy)+')</text>';
+   }
+   $('plot').innerHTML=o;
+   $('ptlab').innerHTML = S.kind==='one'
+     ? '<i style="background:#237a45;border-radius:50%;width:9px;height:9px"></i>the solution'
+     : '';
+   $('gcap').innerHTML = S.kind==='one'
+     ? 'Elimination and the graph must agree, and they do: the algebra returned (<b>'+sg(S.sx)+', '+sg(S.sy)+'</b>), which is exactly where the two lines cross. Notice that scaling an equation by '+sg(m1)+' or '+sg(m2)+' never moves its line &mdash; that is the whole permission slip for elimination.'
+     : (S.kind==='none'
+       ? 'The lines are <b>parallel</b> and never cross, which is the picture that goes with the false statement elimination produced. Slopes match; intercepts do not.'
+       : 'The dashed red line lies <b>exactly on top</b> of the blue one &mdash; two names for one line. Every point on it solves both equations, which is why elimination collapsed to 0 = 0.');
+ }
+
+ /* ---------- panel A ---------- */
+ function panelA(){
+   var q=st(), S=cur;
+   $('m1v').innerHTML=sg(m1); $('m2v').innerHTML=sg(m2);
+   var vs=q.v1+q.v2;
+   var vd=$('vd');
+   if(q.dead){
+     vd.className='verdict go';
+     vd.innerHTML='<span class="bg">0</span><span>'+sg(q.v1)+tgt+' and '+sg(q.v2)+tgt+' are equal and opposite. Add the rows and the <i>'+tgt+'</i> column is gone.</span>';
+     $('stage').style.background='#237a45';
+   } else {
+     vd.className='verdict no';
+     vd.innerHTML='<span class="bg">'+sg(vs)+'</span><span>'+sg(q.v1)+tgt+' plus '+sg(q.v2)+tgt+' is '+sg(vs)+tgt+', not 0. Adding leaves <i>'+tgt+'</i> standing, so nothing is eliminated yet.</span>';
+     $('stage').style.background='var(--teal)';
+   }
+   $('stage').innerHTML='<span class="big">'+sg(m1)+' '+DOT+' (eq 1) '+(m2<0?MIN:'+')+' '+fmt(Math.abs(m2))+' '+DOT+' (eq 2)</span><small>'+
+     (q.dead?'the '+tgt+' column cancels':'target: eliminate '+tgt)+'</small>';
+   var body;
+   if(!q.dead){
+     var cn=canon(q.at1,q.at2);
+     body='<span class="n">Not yet</span>You need the two scaled coefficients to be <b>equal in size and opposite in sign</b>, because those are the only numbers that add to zero. Right now they are '+
+       sg(q.v1)+' and '+sg(q.v2)+'.<div class="loc">A pair that works: multiply equation 1 by '+sg(cn[0])+' and equation 2 by '+sg(cn[1])+'. Both '+tgt+
+       '-coefficients become '+Math.abs(cn[0]*q.at1)+' in size &mdash; that is the least common multiple of '+Math.abs(q.at1)+' and '+Math.abs(q.at2)+'.</div>'+
+       '<div class="dd">Any multiple of that pair works too. Doubling both multipliers still cancels &mdash; it just makes bigger numbers to carry.</div>';
+   } else if(S.kind==='one'){
+     body='<span class="n">Column cleared</span>Adding the two scaled rows gives <b>'+eqTxt(q.A,q.B,q.C)+'</b>. The <i>'+tgt+
+       '</i> term is 0'+tgt+', so it contributes nothing and you are down to one equation in <i>'+q.oth+'</i> alone.<div class="loc">'+
+       term(q.rem,q.oth,true)+' = '+sg(q.C)+', so <i>'+q.oth+'</i> = '+sg(q.C/q.rem)+'.</div>'+
+       '<div class="dd">Switch to <b>Walk the whole solve</b> to finish it: back-substitute, then check.</div>';
+   } else if(S.kind==='none'){
+     body='<span class="n">Both columns died</span>You aimed at <i>'+tgt+'</i>, but <i>'+q.oth+
+       '</i> cancelled at the same time, leaving <b>0 = '+sg(q.C)+'</b>. That is a false sentence, and no choice of <i>x</i> and <i>y</i> can rescue it.<div class="note"><b>No solution.</b> When elimination wipes out both variables and leaves a false number statement, the lines are parallel.</div>';
+   } else {
+     body='<span class="n">Both columns died</span>You aimed at <i>'+tgt+'</i>, but <i>'+q.oth+
+       '</i> cancelled too, leaving <b>0 = 0</b> &mdash; a statement that is true for every point in the plane.<div class="mnem"><b>Infinitely many solutions.</b> The second equation was just the first one in disguise, so it added no new restriction.</div>';
+   }
+   $('info').innerHTML=body;
+   renderWork([0,1,2,3,4,5],q.dead?9:0,-1,true);
+ }
+
+ /* ---------- panel B: the stepper ---------- */
+ function steps(){
+   var S=cur,q=st(),L=[];
+   var oth=q.oth;
+   L.push({t:'Line the system up',
+     d:'Both equations are already written in the same order: an <i>x</i> term, then a <i>y</i> term, then the number. <b>That alignment is the whole trick</b> &mdash; it turns two equations into two columns you can add straight down, the way you add two numbers.',
+     vis:[0,2],ex:0,fl:-1,hi:false});
+   var already=(q.at1+q.at2===0);
+   L.push({t:'Choose which variable to kill',
+     d:'Take aim at <i>'+tgt+'</i>. Its coefficients are <b>'+sg(q.at1)+'</b> and <b>'+sg(q.at2)+'</b>, highlighted below. '+
+       (already
+         ? 'You are lucky here: '+sg(q.at1)+' and '+sg(q.at2)+' are <b>already equal in size and opposite in sign</b>, so they add to 0 exactly as they stand. No multiplying is needed &mdash; both multipliers stay at 1. This is the easy case, and it is worth recognising on sight so you do not invent work.'
+         : 'As written they add to '+sg(q.at1+q.at2)+', not 0, so adding right now would accomplish nothing. We need them <b>equal in size and opposite in sign</b>, since those are the only pairs that add to zero. Match their sizes at the <b>least common multiple of '+Math.abs(q.at1)+' and '+Math.abs(q.at2)+'</b>, which is '+
+           (Math.abs(q.at1)*Math.abs(q.at2)/gcd(q.at1,q.at2))+', then give one of them the opposite sign.'),
+     vis:[0,2],ex:0,fl:-1,hi:true});
+   L.push({t:(m1===1?'Leave equation 1 alone':'Multiply equation 1 by '+sg(m1)),
+     d:(m1===1
+       ? 'The multiplier here is 1, which is the same as doing nothing &mdash; equation 1 already carries the coefficient we want. It is still written out as its own row below so the two-row pattern stays visible.'
+       : 'Multiply <b>every single term</b>, on both sides: '+sg(m1)+'('+sg(S.a1)+'<i>x</i>) = '+sg(m1*S.a1)+'<i>x</i>, '+
+         sg(m1)+'('+sg(S.b1)+'<i>y</i>) = '+sg(m1*S.b1)+'<i>y</i>, and '+sg(m1)+'('+sg(S.c1)+') = '+sg(m1*S.c1)+
+         '. Miss one term and the equation stops being true. Because '+sg(m1)+' is not zero, this new equation has exactly the same solutions as the old one &mdash; its line on the graph has not budged one pixel.'),
+     vis:[0,1,2],ex:0,fl:1,hi:true});
+   L.push({t:(m2===1?'Leave equation 2 alone':'Multiply equation 2 by '+sg(m2)),
+     d:(m2===1
+       ? 'Multiplier 1 again &mdash; nothing to change. '
+       : 'Same move on the second row, again touching every term. ')+
+       'The two <i>'+tgt+'</i> coefficients are now <b>'+sg(q.v1)+'</b> and <b>'+sg(q.v2)+
+       '</b> &mdash; same size, opposite signs. They are loaded and ready to cancel.',
+     vis:[0,1,2,3],ex:0,fl:3,hi:true});
+   L.push({t:'Add the two equations',
+     d:'Add left sides to left sides and right sides to right sides. This is legal for the plainest possible reason: if A = B and C = D, then <b>A + C = B + D</b> &mdash; you added equal amounts to both sides of a balanced scale. Column by column: '+
+       sg(q.v1)+' '+co(q.v2)+' = 0 in the <i>'+tgt+'</i> column, while the other terms simply combine. <b>'+
+       (q.dead?'The <i>'+tgt+'</i> column is now 0'+tgt+' &mdash; it is gone, and one unknown went with it.':'')+'</b>',
+     vis:[0,1,2,3,4,5],ex:0,fl:5,hi:true});
+   if(S.kind==='one'){
+     var val=q.C/q.rem, ox,oy;
+     if(tgt==='x'){ oy=val; ox=(S.c1-S.b1*oy)/S.a1; } else { ox=val; oy=(S.c1-S.a1*ox)/S.b1; }
+     L.push({t:'Solve the one-variable equation',
+       d:'What is left is <b>'+term(q.rem,oth,true)+' = '+sg(q.C)+'</b> &mdash; ordinary one-variable algebra. Divide both sides by '+
+         sg(q.rem)+' and you get <b><i>'+oth+'</i> = '+sg(val)+'</b>. Half the answer is in hand.',
+       vis:[0,1,2,3,4,5],ex:1,fl:5,hi:true});
+     L.push({t:'Back-substitute for '+(tgt==='x'?'x':'y'),
+       d:'Now put <i>'+oth+'</i> = '+sg(val)+' into one of the <b>original</b> equations &mdash; not a scaled one, though either would work &mdash; and solve for the variable you eliminated. Using equation 1 gives <b><i>'+
+         (tgt==='x'?'x':'y')+'</i> = '+sg(tgt==='x'?ox:oy)+'</b>.',
+       vis:[0,1,2,3,4,5],ex:2,fl:0,hi:true});
+     L.push({t:'Check in the other equation',
+       d:'The back-substitution only used equation 1, so equation 2 is an untouched witness. Substituting gives '+
+         sg(S.a2)+'('+sg(S.sx)+') '+co(S.b2)+'('+sg(S.sy)+') = '+sg(S.a2*S.sx)+' '+co(S.b2*S.sy)+' = '+
+         sg(S.a2*S.sx+S.b2*S.sy)+', and the equation demands '+sg(S.c2)+'. They match, so <b>('+
+         sg(S.sx)+',&thinsp;'+sg(S.sy)+')</b> is the solution &mdash; the point where the two lines cross on the graph. Elimination never produces extraneous solutions the way squaring or clearing denominators can, but the check still catches arithmetic slips, and it costs ten seconds.',
+       vis:[0,1,2,3,4,5],ex:3,fl:5,hi:true});
+   } else if(S.kind==='none'){
+     L.push({t:'Read what is left',
+       d:'Both variables vanished, not just the one you aimed at. The surviving sentence is <b>0 = '+sg(q.C)+
+         '</b>, which is simply false. Since every step preserved the solution set, the original system has <b>no solution</b>: there is no pair (<i>x</i>,&thinsp;<i>y</i>) that satisfies both equations.',
+       vis:[0,1,2,3,4,5],ex:1,fl:5,hi:true});
+     L.push({t:'See why on the graph',
+       d:'Look at the left sides: 4<i>x</i> '+MIN+' 6<i>y</i> is exactly 2 times 2<i>x</i> '+MIN+
+         ' 3<i>y</i>. The two equations demand that the same quantity equal 6 and equal 5 at once. Geometrically the lines have identical slope and different intercepts &mdash; <b>parallel, never meeting</b>. Elimination detected that without you having to graph anything.',
+       vis:[0,1,2,3,4,5],ex:2,fl:5,hi:true});
+   } else {
+     L.push({t:'Read what is left',
+       d:'Everything cancelled and the surviving sentence is <b>0 = 0</b> &mdash; true for every point in the plane. This is not a failure and it is not "zero solutions". It means the second equation placed no new restriction on <i>x</i> and <i>y</i>.',
+       vis:[0,1,2,3,4,5],ex:1,fl:5,hi:true});
+     L.push({t:'Describe the whole solution set',
+       d:'The system has <b>infinitely many solutions</b>, but not just any point: the solutions are exactly the points on the shared line. Solve equation 1 for <i>y</i> to name them &mdash; pick any <i>x</i>, and <i>y</i> = (2<i>x</i> '+MIN+
+         ' 6) &divide; 3 gives its partner. Take <i>x</i> = 3: <i>y</i> = 0, and (3,&thinsp;0) does satisfy both equations. Writing "infinitely many" without the description leaves the answer half-finished.',
+       vis:[0,1,2,3,4,5],ex:2,fl:5,hi:true});
+   }
+   return L;
+ }
+ function panelB(){
+   var L=steps(); if(step>=L.length) step=L.length-1; if(step<0) step=0;
+   var s=L[step];
+   $('stage').style.background='var(--teal)';
+   $('stage').innerHTML=s.t+'<small>step '+(step+1)+' of '+L.length+'</small>';
+   $('info2').innerHTML='<span class="n">'+s.t+'</span>'+s.d;
+   $('dots').innerHTML=L.map(function(_,i){return '<i class="'+(i===step?'on':'')+'"></i>';}).join('');
+   $('prev').disabled=(step===0); $('next').disabled=(step===L.length-1);
+   renderWork(s.vis,s.ex,s.fl,s.hi);
+ }
+
+ /* ---------- render ---------- */
+ function render(){
+   $('sys').innerHTML=SYS.map(function(S){
+     return '<button class="it'+(S.k===cur.k?' on':'')+'" data-k="'+S.k+'"><span class="nm">'+S.nm+
+       '</span><span class="s">'+eqTxt(S.a1,S.b1,S.c1)+'<br>'+eqTxt(S.a2,S.b2,S.c2)+'</span></button>';}).join('');
+   Array.prototype.forEach.call(document.querySelectorAll('#sys .it'),function(b){
+     b.onclick=function(){ cur=SYS.filter(function(S){return S.k===b.dataset.k;})[0];
+       tgt=cur.dt; setCanon(); step=0; render(); };});
+   Array.prototype.forEach.call(document.querySelectorAll('#tgt button'),function(b){
+     b.className=(b.dataset.t===tgt?'on':'');
+     b.onclick=function(){ tgt=b.dataset.t; setCanon(); step=0; render(); };});
+   $('benchTitle').innerHTML='The cancel bench &mdash; the <i>'+tgt+'</i> column';
+   $('bench').innerHTML=bench();
+   $('m1').value=MV.indexOf(m1); $('m2').value=MV.indexOf(m2);
+   if(mode==='a'){ $('panA').style.display=''; $('panB').style.display='none'; panelA(); }
+   else { $('panA').style.display='none'; $('panB').style.display=''; panelB(); }
+   plot();
+ }
+ function setCanon(){ var q=st(); var c=canon(q.at1,q.at2); m1=c[0]; m2=c[1]; }
+
+ $('m1').oninput=function(){ m1=MV[+this.value]; if(mode==='b'){mode='a';syncMode();} render(); };
+ $('m2').oninput=function(){ m2=MV[+this.value]; if(mode==='b'){mode='a';syncMode();} render(); };
+ $('reset').onclick=function(){ m1=1; m2=1; render(); };
+ $('auto').onclick=function(){ setCanon(); render(); };
+ $('prev').onclick=function(){ if(step>0){step--;panelB();} };
+ $('next').onclick=function(){ if(step<steps().length-1){step++;panelB();} };
+ function syncMode(){ Array.prototype.forEach.call(document.querySelectorAll('#mode button'),
+   function(b){ b.className=(b.dataset.m===mode?'on':''); }); }
+ Array.prototype.forEach.call(document.querySelectorAll('#mode button'),function(b){
+   b.onclick=function(){ mode=b.dataset.m; syncMode();
+     if(mode==='b'){ var q=st(); if(!q.dead) setCanon(); step=0; }
+     render(); };});
+
+ setCanon(); render();
+})();
+</script>
+</body>
+</html>

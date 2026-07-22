@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f7f2">
+<title>Fluid vs. Crystallized Intelligence</title>
+<meta name="description" content="Drag an age slider to compare how fluid and crystallized intelligence change across the lifespan — Cattell &amp; Horn's two kinds of intelligence. For human development students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_humdev.css">
+<style>
+.wrap{grid-template-columns:1.05fr 0.95fr;}
+.agebar{margin-top:4px;}
+.agebar .rng{width:100%;height:26px;accent-color:var(--teal);cursor:pointer;}
+.agehd{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted);font-weight:700;}
+.agehd b{font-family:var(--disp);font-size:22px;color:var(--teal-dk);}
+.ends{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);font-weight:600;margin-top:-2px;}
+.meters{margin-top:12px;display:flex;flex-direction:column;gap:9px;}
+.mt{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:700;color:var(--soft);}
+.mt .val{font-family:var(--disp);font-weight:700;}
+.bar{height:11px;border-radius:6px;background:#e6efe9;overflow:hidden;margin-top:4px;}
+.bar i{display:block;height:100%;width:0;transition:width .18s ease;}
+.lg{display:flex;gap:16px;margin-top:9px;font-size:11.5px;color:var(--muted);font-weight:600;flex-wrap:wrap;}
+.lg span{display:inline-flex;align-items:center;gap:6px;}
+.lg b{width:12px;height:12px;border-radius:3px;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 12</a></div>
+<header>
+  <div class="kick">Human Development · Chapter 12</div>
+  <h1>Fluid vs. Crystallized Intelligence</h1>
+  <div class="intro">Psychologists <b>Raymond Cattell</b> and <b>John Horn</b> split intelligence in two. <b>Fluid intelligence</b> is raw problem-solving power &mdash; reasoning, speed, and working memory. <b>Crystallized intelligence</b> is everything you've learned &mdash; vocabulary, facts, and expertise. They age in opposite directions. Drag the age slider to watch the trade-off unfold.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Two kinds of intelligence across the lifespan</h2>
+    <svg viewBox="0 0 360 224" aria-label="graph of fluid and crystallized intelligence versus age"><g id="art"></g></svg>
+    <div class="lg">
+      <span><b style="background:#d1495b"></b> Fluid (Gf) &mdash; reasoning &amp; speed</span>
+      <span><b style="background:#2f9e5b"></b> Crystallized (Gc) &mdash; knowledge</span>
+    </div>
+    <div class="meters">
+      <div class="mt"><span>Fluid intelligence (Gf)</span><span class="val" id="gfv" style="color:#b23145">—</span></div>
+      <div class="bar"><i id="gfb" style="background:#d1495b"></i></div>
+      <div class="mt"><span>Crystallized intelligence (Gc)</span><span class="val" id="gcv" style="color:#1c6b3a">—</span></div>
+      <div class="bar"><i id="gcb" style="background:#2f9e5b"></i></div>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">Middle adulthood<small>age 45</small></div>
+    <div class="card">
+      <div class="agehd"><span>AGE</span><b id="agev">45</b></div>
+      <div class="agebar"><input class="rng" type="range" id="age" min="20" max="80" step="1" value="45"></div>
+      <div class="ends"><span>20</span><span>80</span></div>
+      <div class="seg" id="seg" style="margin-top:12px;">
+        <button data-f="both" class="on">Both<small>the trade-off</small></button>
+        <button data-f="fluid">Fluid<small>Gf only</small></button>
+        <button data-f="crys">Crystallized<small>Gc only</small></button>
+      </div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Human Development · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var FL='#d1495b', CR='#2f9e5b';
+ var x0=44,x1=330,y0=24,y1=188;
+ function clamp(v){return v<0?0:(v>100?100:v);}
+ // Fluid intelligence: peaks in the early 20s, then a slow, accelerating decline.
+ function gf(a){return clamp(100-0.62*(a-22)-0.0075*(a-22)*(a-22));}
+ // Crystallized intelligence: rises through adulthood, peaks ~late 60s, well preserved after.
+ function gc(a){return clamp(48+1.35*(a-20)-0.0125*(a-20)*(a-20));}
+ function xOf(a){return x0+(a-20)/60*(x1-x0);}
+ function yOf(v){return y1-v/100*(y1-y0);}
+ function path(fn){var d='';for(var a=20;a<=80;a++){d+=(a===20?'M':'L')+xOf(a).toFixed(1)+' '+yOf(fn(a)).toFixed(1);}return d;}
+ var PF=path(gf), PC=path(gc);
+
+ function stageName(a){return a<40?'Early adulthood':(a<65?'Middle adulthood':'Late adulthood');}
+
+ function chart(a,focus){
+   var of=focus==='fluid'?.20:1, oc=focus==='crys'?.20:1;
+   if(focus==='both'){of=1;oc=1;}
+   var s='';
+   // middle-adulthood band (40-65) to anchor the chapter
+   s+='<rect x="'+xOf(40).toFixed(1)+'" y="'+y0+'" width="'+(xOf(65)-xOf(40)).toFixed(1)+'" height="'+(y1-y0)+'" fill="#2e7d52" opacity="0.06"/>';
+   s+='<text x="'+((xOf(40)+xOf(65))/2).toFixed(1)+'" y="'+(y0+11)+'" font-size="8.5" fill="#2e7d52" text-anchor="middle" font-weight="700" opacity="0.75">MIDDLE ADULTHOOD</text>';
+   // horizontal gridlines
+   for(var g=0;g<=100;g+=25){var gy=yOf(g).toFixed(1);s+='<line x1="'+x0+'" y1="'+gy+'" x2="'+x1+'" y2="'+gy+'" stroke="#e0eee6" stroke-width="1"/>';}
+   // baseline + y caption
+   s+='<line x1="'+x0+'" y1="'+y1+'" x2="'+x1+'" y2="'+y1+'" stroke="#c4d8cc" stroke-width="1.5"/>';
+   s+='<text x="10" y="'+(y0+4)+'" font-size="8" fill="#7a8880">high</text>';
+   s+='<text x="10" y="'+y1+'" font-size="8" fill="#7a8880">low</text>';
+   // age ticks
+   [20,30,40,50,60,70,80].forEach(function(t){s+='<text x="'+xOf(t).toFixed(1)+'" y="'+(y1+15)+'" font-size="9" fill="#7a8880" text-anchor="middle">'+t+'</text>';});
+   s+='<text x="'+((x0+x1)/2).toFixed(1)+'" y="'+(y1+30)+'" font-size="9.5" fill="#4b5a52" text-anchor="middle" font-weight="700">age (years)</text>';
+   // curves
+   s+='<path d="'+PC+'" fill="none" stroke="'+CR+'" stroke-width="'+(focus==='crys'?4:2.6)+'" stroke-linecap="round" opacity="'+oc+'"/>';
+   s+='<path d="'+PF+'" fill="none" stroke="'+FL+'" stroke-width="'+(focus==='fluid'?4:2.6)+'" stroke-linecap="round" opacity="'+of+'"/>';
+   // peak annotations
+   s+='<text x="'+xOf(24).toFixed(1)+'" y="'+(yOf(gf(22))-6).toFixed(1)+'" font-size="8.5" fill="'+FL+'" text-anchor="middle" font-weight="700" opacity="'+of+'">peaks ~20s</text>';
+   s+='<text x="'+xOf(70).toFixed(1)+'" y="'+(yOf(gc(70))-7).toFixed(1)+'" font-size="8.5" fill="'+CR+'" text-anchor="middle" font-weight="700" opacity="'+oc+'">peaks ~60s-70s</text>';
+   // current-age marker
+   var mx=xOf(a).toFixed(1);
+   s+='<line x1="'+mx+'" y1="'+y0+'" x2="'+mx+'" y2="'+y1+'" stroke="#1c4a32" stroke-width="1.3" stroke-dasharray="4 4" opacity="0.55"/>';
+   // dots at current age
+   s+='<circle cx="'+mx+'" cy="'+yOf(gc(a)).toFixed(1)+'" r="6" fill="'+CR+'" stroke="#fffdf9" stroke-width="2.5" opacity="'+oc+'"/>';
+   s+='<circle cx="'+mx+'" cy="'+yOf(gf(a)).toFixed(1)+'" r="6" fill="'+FL+'" stroke="#fffdf9" stroke-width="2.5" opacity="'+of+'"/>';
+   return s;
+ }
+
+ function band(a){
+   if(a<30) return 'Fluid intelligence is at or near its <b>lifetime peak</b> &mdash; reasoning speed, working memory, and novel problem-solving are as sharp as they will ever be. Crystallized intelligence is still modest; there simply has not been time to bank decades of knowledge yet.';
+   if(a<40) return 'Fluid ability has begun its <b>slow, steady decline</b>, though the change is barely noticeable in daily life. Crystallized knowledge, meanwhile, is climbing fast as education and experience compound.';
+   if(a<65) return 'This is the classic <b>middle-adulthood trade-off</b>. Raw fluid processing has measurably slipped from its 20s peak, yet crystallized knowledge &mdash; vocabulary, expertise, judgment &mdash; is near its lifetime high. Deep experience compensates for slower processing, which is why performance in complex, knowledge-based work often peaks now.';
+   return 'Fluid intelligence has declined more noticeably &mdash; unfamiliar tasks and speed-based reasoning take more effort. Crystallized intelligence stays <b>remarkably well preserved</b>: vocabulary and accumulated knowledge hold strong well into late adulthood.';
+ }
+ var exF=['a brand-new logic puzzle','learning unfamiliar software','fast reaction time','working-memory span','spotting a new pattern'];
+ var exC=['vocabulary &amp; word meanings','general knowledge','professional expertise','reading comprehension','judgment from experience'];
+ function chips(arr){return '<div class="ex">'+arr.map(function(e){return '<span>'+e+'</span>';}).join('')+'</div>';}
+
+ function render(){
+   var a=+$("age").value, f=$("seg").querySelector('.on').dataset.f;
+   var vf=Math.round(gf(a)), vc=Math.round(gc(a));
+   $("art").innerHTML=chart(a,f);
+   $("agev").innerHTML=a;
+   $("gfv").innerHTML=vf; $("gcv").innerHTML=vc;
+   $("gfb").style.width=vf+'%'; $("gcb").style.width=vc+'%';
+   var st=stageName(a);
+   $("stage").innerHTML=st+'<small>age '+a+'</small>';
+   var html='<span class="n">'+st+' &middot; age '+a+'</span>';
+   if(f==='fluid'){
+     html+='Fluid intelligence (<b>Gf</b>) is your ability to reason and solve <b>novel</b> problems in the moment, without leaning on what you already know. It is fastest in the early 20s and slips gradually thereafter. At age '+a+' it sits around <b>'+vf+'</b> of its peak.'+chips(exF);
+   } else if(f==='crys'){
+     html+='Crystallized intelligence (<b>Gc</b>) is the store of <b>knowledge and skills</b> you have built up &mdash; facts, words, and know-how. It keeps growing through adulthood and is well maintained into old age. At age '+a+' it sits around <b>'+vc+'</b>.'+chips(exC);
+   } else {
+     html+=band(a);
+     var diff=vc-vf;
+     var net;
+     if(diff>6) net='At '+a+', crystallized knowledge (<b>'+vc+'</b>) now outweighs raw fluid speed (<b>'+vf+'</b>) &mdash; experience is doing the heavy lifting.';
+     else if(diff<-6) net='At '+a+', raw fluid speed (<b>'+vf+'</b>) still leads accumulated knowledge (<b>'+vc+'</b>) &mdash; you are quicker than you are seasoned.';
+     else net='At '+a+', the two are nearly balanced (Gf '+vf+' vs. Gc '+vc+') &mdash; you are passing through the <b>crossover</b>, where growing knowledge catches up to declining speed.';
+     html+='<div class="loc">'+net+'</div>';
+   }
+   $("info").innerHTML=html;
+ }
+
+ $("age").addEventListener('input',render);
+ $("seg").querySelectorAll('button').forEach(function(b){
+   b.onclick=function(){
+     $("seg").querySelectorAll('button').forEach(function(x){x.classList.remove('on');});
+     b.classList.add('on'); render();
+   };
+ });
+ render();
+})();
+</script>
+</body>
+</html>

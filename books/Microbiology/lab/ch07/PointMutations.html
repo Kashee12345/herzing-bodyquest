@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Point Mutations: One Base, One Protein</title>
+<meta name="description" content="Tap each type of point mutation and watch a single DNA base change ripple through the codon into the protein. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:0.98fr 1.02fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.tag{display:inline-block;font-size:11px;font-weight:800;border-radius:20px;padding:3px 10px;margin-bottom:6px;}
+.tag.silent{background:#e5f3ea;color:#237a45;} .tag.missense{background:#f7ecd6;color:#8a6412;}
+.tag.nonsense{background:#fae5e8;color:#b23145;} .tag.frameshift{background:#efe6f6;color:#5a3f7a;}
+.leg{font-size:11.5px;color:var(--muted);margin-top:9px;line-height:1.7;}
+.leg b{color:var(--soft);} .leg i{font-style:normal;font-weight:800;}
+.leg .g{color:#237a45;} .leg .r{color:#b23145;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 7</div>
+  <h1>Point Mutations: One Base, One Protein</h1>
+  <div class="intro">A change in a <b>single DNA base</b> can ripple all the way to the protein &mdash; sometimes silently, sometimes catastrophically. In microbes these point mutations are a major source of <b>spontaneous antibiotic resistance</b>. Tap each type to watch one codon change rewrite the protein.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">Reference mRNA &rarr; protein</h2>
+    <svg viewBox="0 0 240 150" aria-label="codon strip showing reference and mutated mRNA"><g id="art"></g></svg>
+    <div class="leg"><b>Reading the strip:</b> each box is one <i>codon</i> (3 bases) with its amino acid below.
+      Amino acids: <span class="g">green</span> = reference, <span class="r">coral</span> = altered, <span class="r">STOP</span> = chain ends early.</div>
+  </div></div>
+  <div>
+    <div id="stage">Point mutations<small>tap a type to explore</small></div>
+    <div class="card"><div class="list" id="list"></div>
+      <div id="info"><span class="n">One base at a time</span>The DNA is read three bases at a time. A point mutation changes just <b>one</b> base &mdash; but where it lands, and whether the codon still makes sense, decides everything downstream. Because the genetic code is <b>degenerate</b> (most amino acids have several codons), not every change matters.</div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* Standard genetic code (mRNA codons -> 3-letter amino acid). */
+ var G=[['Phe','UUU UUC'],['Leu','UUA UUG CUU CUC CUA CUG'],['Ile','AUU AUC AUA'],['Met','AUG'],
+        ['Val','GUU GUC GUA GUG'],['Ser','UCU UCC UCA UCG AGU AGC'],['Pro','CCU CCC CCA CCG'],
+        ['Thr','ACU ACC ACA ACG'],['Ala','GCU GCC GCA GCG'],['Tyr','UAU UAC'],['His','CAU CAC'],
+        ['Gln','CAA CAG'],['Asn','AAU AAC'],['Lys','AAA AAG'],['Asp','GAU GAC'],['Glu','GAA GAG'],
+        ['Cys','UGU UGC'],['Trp','UGG'],['Arg','CGU CGC CGA CGG AGA AGG'],['Gly','GGU GGC GGA GGG'],
+        ['Stop','UAA UAG UGA']];
+ var GEN={}; G.forEach(function(r){r[1].split(' ').forEach(function(c){GEN[c]=r[0];});});
+
+ /* A short mRNA fragment. Codon 6 (GAG=Glu) is the real sickle-cell site. */
+ var WT='AUGGUGCAACUGACUGAG';
+ function codonsOf(s){var a=[];for(var i=0;i<s.length;i+=3){a.push(s.substr(i,3));}return a;}
+ var WTC=codonsOf(WT);
+
+ var MUT=[
+  {id:'silent',ic:'🔇',nm:'Silent',ct:'same amino acid',col:'#2f9e5b',op:'sub',idx:14,to:'C',
+   tag:'Silent · synonymous',effect:'Protein unchanged',
+   desc:'The base swap lands on a codon that still codes for the <b>same amino acid</b>. Here ACU and ACC both mean threonine, so the protein &mdash; and the patient &mdash; are unaffected. This is possible because the genetic code is <b>degenerate</b>: most amino acids have more than one codon.',
+   note:'Third-base &ldquo;wobble&rdquo; changes are the most likely to be silent. No change in protein usually means no change in function.',nc:'mnem'},
+  {id:'missense',ic:'🩸',nm:'Missense',ct:'different amino acid',col:'#b8862f',op:'sub',idx:16,to:'U',
+   tag:'Missense · non-synonymous',effect:'One amino acid swapped',
+   desc:'A single base change makes the codon specify a <b>different amino acid</b>. The protein is full-length but may fold or work abnormally. This exact change &mdash; GAG&rarr;GUG, swapping glutamate for valine in &beta;-globin &mdash; is the cause of <b>sickle cell disease</b>, where the hemoglobin polymerizes and deforms red cells.',
+   note:'Missense changes in a drug&rsquo;s target also drive resistance: one point mutation in the <b>rpoB</b> gene reshapes RNA polymerase so rifampin no longer binds &mdash; a rifampin-resistant organism.',nc:'mnem'},
+  {id:'nonsense',ic:'🛑',nm:'Nonsense',ct:'codon → STOP',col:'#d1495b',op:'sub',idx:6,to:'U',
+   tag:'Nonsense',effect:'Premature STOP → truncated protein',
+   desc:'The base change turns an amino-acid codon into a <b>stop codon</b>. Here CAA (glutamine) becomes UAA (stop), so the ribosome falls off early. Everything downstream is lost, leaving a <b>short, usually nonfunctional protein</b>.',
+   note:'Nonsense mutations cause disease when the truncated protein can&rsquo;t do its job &mdash; seen in some forms of &beta;-thalassemia and in cystic fibrosis (the G542X allele).',nc:'note'},
+  {id:'frameshift',ic:'⏩',nm:'Frameshift',ct:'reading frame shifts',col:'#7a5a8a',op:'del',idx:6,
+   tag:'Frameshift · single-base deletion',effect:'Whole reading frame scrambled',
+   desc:'Inserting or deleting a base that is <b>not a multiple of three</b> shifts the reading frame. Every codon after the change is misread, so the amino acid sequence is scrambled and a premature stop usually appears &mdash; here a single deleted base soon hits UGA. The result is almost always a <b>nonfunctional protein</b>.',
+   note:'Frameshifts are typically the most damaging point mutations: one added or deleted base can knock out an entire gene &mdash; a mechanism behind diseases like Tay&ndash;Sachs and many loss-of-function changes.',nc:'note'}
+ ];
+ function byId(id){return MUT.filter(function(m){return m.id===id;})[0];}
+
+ function applyOp(seq,m){
+   if(m.op==='sub'){return seq.substring(0,m.idx)+m.to+seq.substring(m.idx+1);}
+   if(m.op==='del'){return seq.substring(0,m.idx)+seq.substring(m.idx+1);}
+   return seq;
+ }
+
+ /* reference strip data */
+ var ARR0=WTC.map(function(c){return {codon:c,changed:false,cbi:-1,aa:GEN[c],aaChanged:false,stop:false,faded:false};});
+
+ function buildData(m){
+   var mut=applyOp(WT,m), mc=codonsOf(mut), stopIdx=-1, i;
+   for(i=0;i<mc.length;i++){ if(mc[i].length===3 && GEN[mc[i]]==='Stop'){stopIdx=i;break;} }
+   return mc.map(function(c,i){
+     var len3=c.length===3, aa=len3?GEN[c]:null, isStop=len3&&aa==='Stop';
+     var faded=(stopIdx>=0 && i>stopIdx), wt=WTC[i]||'';
+     var changed=(c!==wt);
+     var cbi=(m.op==='sub' && i===Math.floor(m.idx/3))?(m.idx%3):-1;
+     var aaChanged; if(isStop){aaChanged=true;} else if(!len3||faded){aaChanged=false;} else {aaChanged=(GEN[wt]!==aa);}
+     var lbl; if(faded||!len3){lbl='—';} else if(isStop){lbl='STOP';} else {lbl=aa;}
+     return {codon:c,changed:changed,cbi:cbi,aa:lbl,aaChanged:aaChanged,stop:isStop,faded:faded};
+   });
+ }
+
+ function drawStrip(arr,yTop,isMut){
+   var s='';
+   for(var i=0;i<arr.length;i++){
+     var d=arr[i], x=6+i*38, op=d.faded?'0.4':'1';
+     var fill=d.changed?'#fbe0e5':(isMut?'#f2eef8':'#e9f4ee');
+     var stroke=d.changed?'#e19aa8':(isMut?'#ddd3ea':'#c4e3d0');
+     s+='<g opacity="'+op+'">';
+     s+='<rect x="'+x+'" y="'+yTop+'" width="33" height="22" rx="6" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.4"/>';
+     var ch=d.codon.split('');
+     for(var j=0;j<ch.length;j++){
+       var bx=x+8.5+j*8, hot=(j===d.cbi);
+       if(hot){ s+='<rect x="'+(bx-5.5)+'" y="'+(yTop+2.5)+'" width="11" height="17" rx="3" fill="#d1495b"/>'; }
+       var col=hot?'#fff':((d.changed&&isMut)?'#b23145':'#28223a');
+       s+='<text x="'+bx+'" y="'+(yTop+15)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+col+'" font-family="ui-monospace,Menlo,monospace">'+ch[j]+'</text>';
+     }
+     var acol=(d.stop||d.aaChanged)?'#b23145':(isMut?'#3d2a5c':'#237a45');
+     var aw=(d.stop||d.aaChanged)?'800':'600';
+     s+='<text x="'+(x+16.5)+'" y="'+(yTop+34)+'" text-anchor="middle" font-size="9.5" font-weight="'+aw+'" fill="'+acol+'">'+d.aa+'</text>';
+     s+='</g>';
+   }
+   return s;
+ }
+
+ function draw(cur){
+   var s='';
+   s+='<text x="6" y="12" font-size="9" font-weight="800" letter-spacing="0.5" fill="#3d2a5c">REFERENCE mRNA</text>';
+   s+=drawStrip(ARR0,18,false);
+   if(cur){
+     var m=byId(cur);
+     s+='<line x1="120" y1="58" x2="120" y2="74" stroke="'+m.col+'" stroke-width="2"/>';
+     s+='<path d="M116 70 L120 76 L124 70 Z" fill="'+m.col+'"/>';
+     s+='<text x="128" y="70" font-size="8.5" font-weight="700" fill="'+m.col+'">'+(m.op==='del'?'delete 1 base':'change 1 base')+'</text>';
+     s+='<text x="6" y="86" font-size="9" font-weight="800" letter-spacing="0.5" fill="'+m.col+'">MUTATED mRNA</text>';
+     s+=drawStrip(buildData(m),92,true);
+   } else {
+     s+='<text x="120" y="102" text-anchor="middle" font-size="10" fill="#837a94">Tap a mutation type to compare &rarr;</text>';
+   }
+   return s;
+ }
+
+ function render(cur){
+   $("list").innerHTML=MUT.map(function(m){
+     return '<button class="it'+(m.id===cur?' on':'')+'" data-k="'+m.id+'"><span class="ic">'+m.ic+
+       '</span><span><span class="nm">'+m.nm+'</span><br><span class="ct">'+m.ct+'</span></span></button>';
+   }).join('');
+   document.querySelectorAll('#list .it').forEach(function(b){b.onclick=function(){sel(b.dataset.k);};});
+ }
+
+ function sel(k){
+   var m=byId(k);
+   $("art").innerHTML=draw(k);
+   $("cardTitle").innerHTML=m.nm+' mutation';
+   $("stage").style.background=m.col;
+   $("stage").innerHTML=m.nm+'<small>'+m.tag+'</small>';
+   $("info").innerHTML='<span class="tag '+m.id+'">'+m.tag+'</span>'+
+     '<span class="n">'+m.nm+' mutation</span>'+m.desc+
+     '<div class="loc">Effect on protein: <b>'+m.effect+'</b></div>'+
+     '<div class="'+m.nc+'">'+m.note+'</div>';
+   render(k);
+ }
+
+ $("art").innerHTML=draw(null);
+ render('');
+})();
+</script>
+</body>
+</html>

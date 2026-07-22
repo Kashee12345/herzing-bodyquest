@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Two-Way Tables: Joint, Marginal, and Conditional</title>
+<meta name="description" content="Read joint, marginal, and conditional probabilities off a live contingency table. Set the population with sliders, draw a real seeded sample, and tap any cell to see exactly which numerator and which denominator you are using.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sl label{font-size:10.4px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;width:88px;line-height:1.2;}
+.sl input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--teal),#a9c7d5);outline:none;}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;box-shadow:0 1px 5px rgba(25,55,70,.35);cursor:pointer;}
+.sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal-dk);border:3px solid #fff;cursor:pointer;}
+.sl .nv{font-size:14px;font-weight:800;color:var(--teal-dk);min-width:96px;text-align:right;font-variant-numeric:tabular-nums;}
+.sl .nv small{display:block;font-size:9.3px;font-weight:700;color:var(--muted);margin-top:1px;letter-spacing:0;text-transform:none;}
+.frac{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:11px;flex-wrap:wrap;}
+.frac .f{text-align:center;}
+.frac .nu,.frac .de{font-size:21px;font-weight:800;color:var(--teal-dk);font-variant-numeric:tabular-nums;padding:1px 14px;}
+.frac .bar2{height:2px;background:var(--teal-dk);border-radius:2px;}
+.frac .eq{font-family:var(--disp);font-size:21px;font-weight:700;color:var(--muted);}
+.frac .res{font-size:25px;font-weight:800;color:var(--teal-dk);font-variant-numeric:tabular-nums;line-height:1.1;}
+.frac .res small{display:block;font-size:10.6px;font-weight:700;color:var(--muted);margin-top:3px;}
+.lbls{margin-top:10px;display:flex;flex-direction:column;gap:5px;}
+.lbls div{font-size:11.2px;color:var(--soft);font-weight:600;line-height:1.4;background:#f2f7fa;border-radius:8px;padding:6px 10px;}
+.lbls div b{color:var(--teal-dk);text-transform:uppercase;letter-spacing:.4px;font-size:9.4px;}
+.cap{font-size:11.2px;color:var(--muted);font-weight:600;margin-top:8px;line-height:1.5;} .cap b{color:var(--teal-dk);}
+.hd{font-size:10.4px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:13px;margin-bottom:5px;}
+.lgd{display:flex;flex-wrap:wrap;gap:9px;margin-top:9px;font-size:10.4px;color:var(--muted);font-weight:700;}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.tv{display:flex;gap:8px;margin-top:11px;}
+.tv div{flex:1;border:1px solid var(--line);border-radius:10px;padding:8px 9px;background:#fff;text-align:center;}
+.tv .lb{display:block;font-size:9.2px;letter-spacing:.35px;text-transform:uppercase;color:var(--muted);font-weight:800;line-height:1.25;}
+.tv .vv{display:block;font-size:17px;font-weight:800;color:var(--teal-dk);margin-top:3px;font-variant-numeric:tabular-nums;}
+.chk{font-size:11.6px;color:var(--teal-dk);background:#e2eff5;border-radius:9px;padding:8px 11px;margin-top:11px;line-height:1.55;font-weight:600;font-variant-numeric:tabular-nums;}
+.chk b{font-weight:800;}
+.fn{font-size:10.8px;color:var(--muted);font-weight:600;margin-top:10px;line-height:1.5;}
+#dirseg{margin-top:10px;}
+#dirseg button small{font-size:9.2px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 5</div>
+  <h1>Two-Way Tables: Joint, Marginal, and Conditional</h1>
+  <div class="intro">A two-way table holds three different kinds of probability at once, and they all share the same counts. The only thing that changes is <b>what you divide by</b>. Build a population with the sliders, draw a real sample, then tap a cell and watch the denominator move from the whole table, to a row, to a column.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="tblTitle">Commuter survey &mdash; observed counts</h2>
+      <svg viewBox="0 0 430 240" aria-label="two-way table of commute mode by punctuality"><g id="tbl"></g></svg>
+      <div class="cap" id="tblCap"></div>
+    </div>
+    <div class="card"><h2 id="chTitle">The distribution you are reading</h2>
+      <svg viewBox="0 0 430 190" aria-label="stacked bar chart of the current distribution"><g id="ch"></g></svg>
+      <div class="lgd" id="lgd"></div>
+      <div class="cap" id="chCap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Two-way tables<small>pick a probability to read</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg">
+        <button data-m="joint">Joint</button>
+        <button data-m="marg">Marginal</button>
+        <button data-m="cond">Conditional</button>
+      </div>
+      <div class="seg" id="dirseg">
+        <button data-d="row">Given the row<small>condition on commute mode</small></button>
+        <button data-d="col">Given the column<small>condition on punctuality</small></button>
+      </div>
+      <div class="frac" id="frac"></div>
+      <div class="lbls" id="lbls"></div>
+      <div class="tv">
+        <div><span class="lb">This sample</span><span class="vv" id="tvS">—</span></div>
+        <div><span class="lb">True population value</span><span class="vv" id="tvT">—</span></div>
+      </div>
+      <div class="chk" id="chk"></div>
+      <div id="info"></div>
+    </div>
+    <div class="card"><h2>The population you are sampling from</h2>
+      <div class="sl"><label>Sample size</label><input type="range" id="sN" min="50" max="1600" step="50" value="400"><span class="nv" id="vN">400<small>commuters</small></span></div>
+      <div class="sl"><label>Share who drive</label><input type="range" id="sC" min="20" max="70" step="1" value="45"><span class="nv" id="vC">45%<small>rest split 60/40</small></span></div>
+      <div class="sl"><label>Baseline on-time rate</label><input type="range" id="sB" min="35" max="88" step="1" value="72"><span class="nv" id="vB">72%<small>overall</small></span></div>
+      <div class="sl"><label>Association strength</label><input type="range" id="sA" min="0" max="100" step="1" value="60"><span class="nv" id="vA">0.60<small>0 = independent</small></span></div>
+      <div class="row"><button class="btn solid" id="draw">Draw another sample</button></div>
+      <div class="cap" id="popCap"></div>
+      <div class="fn">Each commuter is generated one at a time from a seeded pseudo-random generator: first a commute mode, then on-time or late using that mode&rsquo;s true rate. Nothing in the table is typed in by hand &mdash; every count is sampled, so it wobbles the way real data does.</div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var MD=[{nm:'Drives',ct:'car or rideshare',col:'#2f6f9f'},
+         {nm:'Transit',ct:'bus or train',col:'#b8862f'},
+         {nm:'Bikes / walks',ct:'self-powered',col:'#7a5a8a'}];
+ var SH=['Drives','Transit','Bikes'];
+ var OT=[{nm:'On time',col:'#2f9e5b'},{nm:'Late',col:'#d1495b'}];
+ var st={n:400,car:0.45,base:0.72,assoc:0.60,seed:1,mode:'joint',dir:'row',i:0,j:1,mt:'row'};
+
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function pc(x){return (100*x).toFixed(1)+'%';}
+ function p3(x){return x.toFixed(3);}
+
+ // ---- population -------------------------------------------------------
+ function pop(){
+   var c=st.car, rest=1-c, sh=[c,rest*0.6,rest*0.4];
+   var o=[-1,0,1], m=sh[0]*o[0]+sh[1]*o[1]+sh[2]*o[2], S=0.22, rt=[];
+   for(var i=0;i<3;i++){ rt.push(Math.min(0.97,Math.max(0.03, st.base+st.assoc*S*(o[i]-m)))); }
+   var jm=[[0,0],[0,0],[0,0]], ct=[0,0];
+   for(i=0;i<3;i++){ jm[i][0]=sh[i]*rt[i]; jm[i][1]=sh[i]*(1-rt[i]); ct[0]+=jm[i][0]; ct[1]+=jm[i][1]; }
+   return {sh:sh,rt:rt,jm:jm,ct:ct};
+ }
+ // ---- one real sample --------------------------------------------------
+ function sample(P){
+   var r=mulberry32(1234567+st.seed*7919), N=[[0,0],[0,0],[0,0]];
+   var c1=P.sh[0], c2=P.sh[0]+P.sh[1];
+   for(var k=0;k<st.n;k++){
+     var u=r(), i=(u<c1)?0:((u<c2)?1:2);
+     N[i][ r()<P.rt[i] ? 0 : 1 ]++;
+   }
+   return N;
+ }
+ // ---- which cells are numerator / denominator --------------------------
+ function cellState(i,j){
+   if(st.mode==='joint') return (i===st.i&&j===st.j)?'num':'den';
+   if(st.mode==='marg')  return (st.mt==='row') ? (i===st.i?'num':'den') : (j===st.j?'num':'den');
+   if(st.dir==='row')    return (i!==st.i)?'off':((j===st.j)?'num':'den');
+   return (j!==st.j)?'off':((i===st.i)?'num':'den');
+ }
+ function rowTotState(i){
+   if(st.mode==='marg'&&st.mt==='row') return i===st.i?'num':'off';
+   if(st.mode==='cond'&&st.dir==='row') return i===st.i?'den2':'off';
+   return 'off';
+ }
+ function colTotState(j){
+   if(st.mode==='marg'&&st.mt==='col') return j===st.j?'num':'off';
+   if(st.mode==='cond'&&st.dir==='col') return j===st.j?'den2':'off';
+   return 'off';
+ }
+ function grandState(){ return (st.mode==='joint'||st.mode==='marg')?'den2':'off'; }
+ var FILL={num:'#2f6f8a',den:'#e2eff5',den2:'#c7dfeb',off:'#ffffff'};
+ var TXT ={num:'#ffffff',den:'#1c4454',den2:'#1c4454',off:'#98a6ad'};
+
+ // ---- the table --------------------------------------------------------
+ function drawTable(N,rT,cT,G){
+   var LX=6,LW=118,CW=100,HY=6,HH=38,RY=46,RH=48,TY=190,TH=44, s='';
+   function cx(j){ return LX+LW+j*CW; }
+   function box(x,y,w,h,stt,live,attr){
+     return '<rect x="'+(x+1.5)+'" y="'+(y+1.5)+'" width="'+(w-3)+'" height="'+(h-3)+'" rx="8" fill="'+FILL[stt]+'" stroke="'+(stt==='off'?'#dfe8ed':(stt==='num'?'#1c4454':'#a9c7d5'))+'" stroke-width="'+(stt==='num'?2:1)+'"'+(live?' class="rgn"':'')+' '+attr+'/>';
+   }
+   function tx(x,y,t,sz,col,w){ return '<text x="'+x+'" y="'+y+'" font-size="'+sz+'" fill="'+col+'" font-weight="'+w+'" text-anchor="middle" pointer-events="none" font-family="Inter,sans-serif">'+t+'</text>'; }
+   // header row
+   s+='<rect x="'+(LX+1.5)+'" y="'+(HY+1.5)+'" width="'+(LW-3)+'" height="'+(HH-3)+'" rx="8" fill="#f2f7fa" stroke="#dfe8ed"/>';
+   s+='<text x="'+(LX+11)+'" y="'+(HY+17)+'" font-size="9.4" fill="#78868d" font-weight="800" letter-spacing="0.5" font-family="Inter,sans-serif">COMMUTE</text>';
+   s+='<text x="'+(LX+11)+'" y="'+(HY+29)+'" font-size="9.4" fill="#78868d" font-weight="800" letter-spacing="0.5" font-family="Inter,sans-serif">MODE</text>';
+   var hn=['On time','Late','Total'];
+   for(var j=0;j<3;j++){
+     var hl=(j<2)&&((st.mode==='marg')||(st.mode==='cond'&&st.dir==='col'))&&(j===st.j);
+     s+='<rect x="'+(cx(j)+1.5)+'" y="'+(HY+1.5)+'" width="'+(CW-3)+'" height="'+(HH-3)+'" rx="8" fill="'+(hl?'#dbeaf2':'#f2f7fa')+'" stroke="#dfe8ed"/>';
+     s+=tx(cx(j)+CW/2,HY+24,hn[j],12.5,j===2?'#78868d':'#1c4454',800);
+   }
+   // data rows
+   for(var i=0;i<3;i++){
+     var y=RY+i*RH, rh=(st.mode==='marg'&&st.mt==='row'&&i===st.i)||(st.mode==='cond'&&st.dir==='row'&&i===st.i);
+     s+='<rect x="'+(LX+1.5)+'" y="'+(y+1.5)+'" width="'+(LW-3)+'" height="'+(RH-3)+'" rx="8" fill="'+(rh?'#dbeaf2':'#f2f7fa')+'" stroke="#dfe8ed"/>';
+     s+='<rect x="'+(LX+7)+'" y="'+(y+13)+'" width="5" height="22" rx="2.5" fill="'+MD[i].col+'"/>';
+     s+='<text x="'+(LX+18)+'" y="'+(y+21)+'" font-size="12" fill="#1e2a30" font-weight="700" font-family="Inter,sans-serif">'+MD[i].nm+'</text>';
+     s+='<text x="'+(LX+18)+'" y="'+(y+34)+'" font-size="9.6" fill="#78868d" font-weight="600" font-family="Inter,sans-serif">'+MD[i].ct+'</text>';
+     for(j=0;j<2;j++){
+       var stt=cellState(i,j), liv=(st.mode!=='marg');
+       s+=box(cx(j),y,CW,RH,stt,liv,'data-i="'+i+'" data-j="'+j+'" data-t="cell"');
+       s+=tx(cx(j)+CW/2,y+24,N[i][j],17,TXT[stt],800);
+       s+=tx(cx(j)+CW/2,y+37,subPct(N[i][j],i,j,rT,cT,G),9.8,stt==='num'?'rgba(255,255,255,.85)':'#78868d',700);
+     }
+     var rs=rowTotState(i);
+     s+=box(cx(2),y,CW,RH,rs,st.mode==='marg','data-i="'+i+'" data-t="row"');
+     s+=tx(cx(2)+CW/2,y+24,rT[i],16,TXT[rs],800);
+     s+=tx(cx(2)+CW/2,y+37,G?pc(rT[i]/G):'—',9.8,rs==='num'?'rgba(255,255,255,.85)':'#78868d',700);
+   }
+   // total row
+   s+='<rect x="'+(LX+1.5)+'" y="'+(TY+1.5)+'" width="'+(LW-3)+'" height="'+(TH-3)+'" rx="8" fill="#f2f7fa" stroke="#dfe8ed"/>';
+   s+='<text x="'+(LX+11)+'" y="'+(TY+27)+'" font-size="11.5" fill="#78868d" font-weight="800" font-family="Inter,sans-serif">Total</text>';
+   for(j=0;j<2;j++){
+     var cs=colTotState(j);
+     s+=box(cx(j),TY,CW,TH,cs,st.mode==='marg','data-j="'+j+'" data-t="col"');
+     s+=tx(cx(j)+CW/2,TY+23,cT[j],16,TXT[cs],800);
+     s+=tx(cx(j)+CW/2,TY+35,G?pc(cT[j]/G):'—',9.8,cs==='num'?'rgba(255,255,255,.85)':'#78868d',700);
+   }
+   var gs=grandState();
+   s+=box(cx(2),TY,CW,TH,gs,false,'');
+   s+=tx(cx(2)+CW/2,TY+23,G,16,TXT[gs],800);
+   s+=tx(cx(2)+CW/2,TY+35,'100%',9.8,'#78868d',700);
+   $('tbl').innerHTML=s;
+   var hot=document.querySelectorAll('#tbl .rgn');
+   for(var k=0;k<hot.length;k++){
+     hot[k].onclick=(function(el){return function(){
+       var t=el.getAttribute('data-t');
+       if(t==='cell'){ st.i=+el.getAttribute('data-i'); st.j=+el.getAttribute('data-j'); }
+       else if(t==='row'){ st.i=+el.getAttribute('data-i'); st.mt='row'; }
+       else { st.j=+el.getAttribute('data-j'); st.mt='col'; }
+       render();
+     };})(hot[k]);
+   }
+ }
+ function subPct(v,i,j,rT,cT,G){
+   if(st.mode==='cond'&&st.dir==='row') return rT[i]?pc(v/rT[i]):'—';
+   if(st.mode==='cond'&&st.dir==='col') return cT[j]?pc(v/cT[j]):'—';
+   return G?pc(v/G):'—';
+ }
+
+ // ---- the stacked-bar / mosaic chart -----------------------------------
+ function drawChart(N,rT,cT,G){
+   var bars=[],cap='',lg=[];
+   if(st.mode==='joint'){
+     for(var i=0;i<3;i++){
+       bars.push({lab:MD[i].nm,sub:'n = '+rT[i],
+         segs:[{p:G?N[i][0]/G:0,col:MD[i].col,op:1,t:G?pc(N[i][0]/G):''},
+               {p:G?N[i][1]/G:0,col:MD[i].col,op:.42,t:G?pc(N[i][1]/G):''}]});
+     }
+     cap='Every rectangle is one <b>joint</b> probability, and all six tile the same full width because they add to 1. Solid = on time, faded = late.';
+     lg=[{c:MD[0].col,t:'Drives'},{c:MD[1].col,t:'Transit'},{c:MD[2].col,t:'Bikes / walks'}];
+   } else if(st.mode==='marg'){
+     bars.push({lab:'Commute mode',sub:'row margin',segs:[
+       {p:G?rT[0]/G:0,col:MD[0].col,op:1,t:G?pc(rT[0]/G):''},
+       {p:G?rT[1]/G:0,col:MD[1].col,op:1,t:G?pc(rT[1]/G):''},
+       {p:G?rT[2]/G:0,col:MD[2].col,op:1,t:G?pc(rT[2]/G):''}]});
+     bars.push({lab:'Punctuality',sub:'column margin',segs:[
+       {p:G?cT[0]/G:0,col:OT[0].col,op:1,t:G?pc(cT[0]/G):''},
+       {p:G?cT[1]/G:0,col:OT[1].col,op:1,t:G?pc(cT[1]/G):''}]});
+     cap='Each margin is a full probability distribution on its own &mdash; the row margin ignores punctuality entirely, the column margin ignores commute mode entirely.';
+     lg=[{c:MD[0].col,t:'Drives'},{c:MD[1].col,t:'Transit'},{c:MD[2].col,t:'Bikes'},{c:OT[0].col,t:'On time'},{c:OT[1].col,t:'Late'}];
+   } else if(st.dir==='row'){
+     for(i=0;i<3;i++){
+       bars.push({lab:MD[i].nm,sub:'n = '+rT[i],sel:(i===st.i),segs:rT[i]?[
+         {p:N[i][0]/rT[i],col:OT[0].col,op:1,t:pc(N[i][0]/rT[i])},
+         {p:N[i][1]/rT[i],col:OT[1].col,op:1,t:pc(N[i][1]/rT[i])}]:[]});
+     }
+     bars.push({lab:'Everyone',sub:'the margin',ref:1,segs:G?[
+       {p:cT[0]/G,col:OT[0].col,op:.45,t:pc(cT[0]/G)},
+       {p:cT[1]/G,col:OT[1].col,op:.45,t:pc(cT[1]/G)}]:[]});
+     cap='Each bar is stretched to the same full width &mdash; that stretching <b>is</b> the act of conditioning. If the three top bars matched the faded margin exactly, mode would tell you nothing about punctuality.';
+     lg=[{c:OT[0].col,t:'On time'},{c:OT[1].col,t:'Late'}];
+   } else {
+     for(var j=0;j<2;j++){
+       bars.push({lab:OT[j].nm,sub:'n = '+cT[j],sel:(j===st.j),segs:cT[j]?[
+         {p:N[0][j]/cT[j],col:MD[0].col,op:1,t:pc(N[0][j]/cT[j])},
+         {p:N[1][j]/cT[j],col:MD[1].col,op:1,t:pc(N[1][j]/cT[j])},
+         {p:N[2][j]/cT[j],col:MD[2].col,op:1,t:pc(N[2][j]/cT[j])}]:[]});
+     }
+     bars.push({lab:'Everyone',sub:'the margin',ref:1,segs:G?[
+       {p:rT[0]/G,col:MD[0].col,op:.45,t:pc(rT[0]/G)},
+       {p:rT[1]/G,col:MD[1].col,op:.45,t:pc(rT[1]/G)},
+       {p:rT[2]/G,col:MD[2].col,op:.45,t:pc(rT[2]/G)}]:[]});
+     cap='Now the denominators are the two column totals, so each bar is a mix of <b>modes</b>. Reversing the condition reverses which totals you divide by &mdash; and gives a completely different set of numbers.';
+     lg=[{c:MD[0].col,t:'Drives'},{c:MD[1].col,t:'Transit'},{c:MD[2].col,t:'Bikes / walks'}];
+   }
+   var LW=106,BW=316,BH=28,GP=14,PAD=8,s='';
+   var H=PAD+bars.length*(BH+GP)+4;
+   for(var b=0;b<bars.length;b++){
+     var bb=bars[b], y=PAD+b*(BH+GP);
+     s+='<text x="6" y="'+(y+13)+'" font-size="11.4" fill="'+(bb.ref?'#78868d':'#1e2a30')+'" font-weight="'+(bb.sel?800:700)+'" font-family="Inter,sans-serif">'+bb.lab+'</text>';
+     s+='<text x="6" y="'+(y+25)+'" font-size="9.4" fill="#98a6ad" font-weight="600" font-family="Inter,sans-serif">'+bb.sub+'</text>';
+     s+='<rect x="'+LW+'" y="'+y+'" width="'+BW+'" height="'+BH+'" rx="6" fill="#f2f7fa" stroke="#dfe8ed"/>';
+     var x=LW;
+     for(var q=0;q<bb.segs.length;q++){
+       var sg=bb.segs[q], w=sg.p*BW;
+       if(w<=0.35) continue;
+       s+='<rect x="'+x.toFixed(2)+'" y="'+y+'" width="'+w.toFixed(2)+'" height="'+BH+'" fill="'+sg.col+'" opacity="'+sg.op+'"/>';
+       if(w>42) s+='<text x="'+(x+w/2).toFixed(2)+'" y="'+(y+18)+'" font-size="10.6" fill="#fff" font-weight="800" text-anchor="middle" font-family="Inter,sans-serif">'+sg.t+'</text>';
+       x+=w;
+     }
+     if(bb.sel) s+='<rect x="'+(LW-1)+'" y="'+(y-1)+'" width="'+(BW+2)+'" height="'+(BH+2)+'" rx="7" fill="none" stroke="#1c4454" stroke-width="2.4"/>';
+     else s+='<rect x="'+LW+'" y="'+y+'" width="'+BW+'" height="'+BH+'" rx="6" fill="none" stroke="#dfe8ed"/>';
+   }
+   $('ch').parentNode.setAttribute('viewBox','0 0 430 '+H);
+   $('ch').innerHTML=s;
+   $('chCap').innerHTML=cap;
+   $('lgd').innerHTML=lg.map(function(o){return '<span><i style="background:'+o.c+'"></i>'+o.t+'</span>';}).join('');
+ }
+
+ // ---- the selected quantity -------------------------------------------
+ function quantity(N,rT,cT,G,P){
+   var i=st.i,j=st.j;
+   if(st.mode==='joint') return {
+     nm:'P('+SH[i]+' and '+OT[j].nm.toLowerCase()+')', num:N[i][j], den:G,
+     nl:'commuters who are <b>both</b> '+MD[i].nm.toLowerCase()+' <b>and</b> '+OT[j].nm.toLowerCase(),
+     dl:'everyone in the survey', tru:P.jm[i][j] };
+   if(st.mode==='marg'){
+     if(st.mt==='row') return { nm:'P('+SH[i]+')', num:rT[i], den:G,
+       nl:'all '+MD[i].nm.toLowerCase()+' &mdash; the whole row, both outcomes added up',
+       dl:'everyone in the survey', tru:P.sh[i] };
+     return { nm:'P('+OT[j].nm.toLowerCase()+')', num:cT[j], den:G,
+       nl:'everyone '+OT[j].nm.toLowerCase()+' &mdash; the whole column, all three modes added up',
+       dl:'everyone in the survey', tru:P.ct[j] };
+   }
+   if(st.dir==='row') return {
+     nm:'P('+OT[j].nm.toLowerCase()+' | '+SH[i]+')', num:N[i][j], den:rT[i],
+     nl:'commuters who are both '+MD[i].nm.toLowerCase()+' and '+OT[j].nm.toLowerCase()+' &mdash; <b>the same cell as before</b>',
+     dl:'only the '+rT[i]+' '+MD[i].nm.toLowerCase()+' &mdash; the row total',
+     tru:P.sh[i]?P.jm[i][j]/P.sh[i]:0 };
+   return {
+     nm:'P('+SH[i]+' | '+OT[j].nm.toLowerCase()+')', num:N[i][j], den:cT[j],
+     nl:'commuters who are both '+MD[i].nm.toLowerCase()+' and '+OT[j].nm.toLowerCase()+' &mdash; <b>the same cell as before</b>',
+     dl:'only the '+cT[j]+' who were '+OT[j].nm.toLowerCase()+' &mdash; the column total',
+     tru:P.ct[j]?P.jm[i][j]/P.ct[j]:0 };
+ }
+
+ var INFO={
+  joint:['A joint probability','A <b>joint</b> probability is the chance of landing in <b>one particular cell</b> &mdash; both things true at once. The denominator is always the grand total, so the six joint probabilities add to exactly 1. That is what makes the interior of the table a single probability distribution.'],
+  marg:['A marginal probability','A <b>marginal</b> probability ignores the other variable completely. You collapse a whole row (or column) down to its total and divide by the grand total &mdash; which is the same as adding up the joint probabilities along that row. The name comes from where the totals sit: in the margins.'],
+  cond:['A conditional probability','A <b>conditional</b> probability throws away every row (or column) except one, then re-divides inside what is left. Notice the numerator never moved &mdash; only the denominator did. <b>Same cell, smaller world.</b> Swap the direction above and the answer usually changes: P(A | B) and P(B | A) are different questions.']
+ };
+
+ function render(){
+   $('vN').innerHTML=st.n+'<small>commuters</small>';
+   $('vC').innerHTML=Math.round(st.car*100)+'%<small>rest split 60/40</small>';
+   $('vB').innerHTML=Math.round(st.base*100)+'%<small>overall</small>';
+   $('vA').innerHTML=st.assoc.toFixed(2)+'<small>'+(st.assoc===0?'independent':'0 = independent')+'</small>';
+   var P=pop(), N=sample(P);
+   var rT=[N[0][0]+N[0][1],N[1][0]+N[1][1],N[2][0]+N[2][1]];
+   var cT=[N[0][0]+N[1][0]+N[2][0], N[0][1]+N[1][1]+N[2][1]];
+   var G=rT[0]+rT[1]+rT[2];
+   drawTable(N,rT,cT,G); drawChart(N,rT,cT,G);
+
+   var mb=document.querySelectorAll('#modeseg button');
+   for(var k=0;k<mb.length;k++) mb[k].className=(mb[k].getAttribute('data-m')===st.mode)?'on':'';
+   var db=document.querySelectorAll('#dirseg button');
+   for(k=0;k<db.length;k++) db[k].className=(db[k].getAttribute('data-d')===st.dir)?'on':'';
+   $('dirseg').style.display=(st.mode==='cond')?'flex':'none';
+
+   var Q=quantity(N,rT,cT,G,P), ok=(Q.den>0), val=ok?Q.num/Q.den:0;
+   $('frac').innerHTML='<div class="f"><div class="nu">'+Q.num+'</div><div class="bar2"></div><div class="de">'+Q.den+'</div></div>'+
+     '<span class="eq">=</span><div class="res">'+(ok?p3(val):'—')+'<small>'+(ok?pc(val):'undefined')+'</small></div>';
+   $('lbls').innerHTML='<div><b>Numerator</b><br>'+Q.nl+'</div><div><b>Denominator</b><br>'+Q.dl+'</div>';
+   $('tvS').innerHTML=ok?p3(val):'—';
+   $('tvT').innerHTML=p3(Q.tru);
+
+   var col=(st.mode==='joint')?'#2f6f8a':(st.mode==='marg'?'#7a5a8a':'#1c4454');
+   $('stage').style.background=col;
+   $('stage').innerHTML=Q.nm+'<small>'+(ok?(Q.num+' out of '+Q.den+' = '+pc(val)):'no one to divide by')+'</small>';
+
+   var hint=(st.mode==='marg')?'Tap a <b>row total</b> or a <b>column total</b> to pick a margin.':'Tap any of the <b>six interior cells</b> to pick a different pair.';
+   $('tblCap').innerHTML=hint+' Dark = numerator, tinted = denominator, faded = discarded. The small percentage under each count is that cell&rsquo;s value under the view you have selected.';
+
+   // running checks
+   var chk='';
+   if(st.mode==='joint'){
+     chk='<b>Check:</b> the six joint probabilities add to '+(G?p3((N[0][0]+N[0][1]+N[1][0]+N[1][1]+N[2][0]+N[2][1])/G):'—')+' &mdash; a complete distribution.';
+   } else if(st.mode==='marg'){
+     chk='<b>Check:</b> adding along that '+(st.mt==='row'?'row':'column')+' gives the same answer &mdash; '+
+       (st.mt==='row'? (N[st.i][0]+' + '+N[st.i][1]+' = '+rT[st.i]+', and '+rT[st.i]+'/'+G+' = '+(G?p3(rT[st.i]/G):'—'))
+                     : (N[0][st.j]+' + '+N[1][st.j]+' + '+N[2][st.j]+' = '+cT[st.j]+', and '+cT[st.j]+'/'+G+' = '+(G?p3(cT[st.j]/G):'—')))+
+       '. A margin is just its joint probabilities summed.';
+   } else if(st.dir==='row'){
+     chk = rT[st.i] ? ('<b>Check:</b> '+N[st.i][st.j]+'/'+rT[st.i]+' &times; '+rT[st.i]+'/'+G+' = '+N[st.i][st.j]+'/'+G+' &mdash; the row total cancels, so conditional &times; marginal returns the joint probability '+p3(N[st.i][st.j]/G)+'.')
+                   : '<b>No one</b> in this sample uses that mode, so there is nothing to condition on and the probability is undefined &mdash; not zero.';
+   } else {
+     chk = cT[st.j] ? ('<b>Check:</b> the three column-conditional probabilities add to '+p3((N[0][st.j]+N[1][st.j]+N[2][st.j])/cT[st.j])+' &mdash; every conditional distribution still sums to 1.')
+                    : '<b>No one</b> in this sample fell in that column, so there is nothing to condition on and the probability is undefined &mdash; not zero.';
+   }
+   $('chk').innerHTML=chk;
+
+   var extra='';
+   if(st.assoc===0){
+     extra=' <b>You have set the association to zero</b>, so in the population the two variables are independent: every conditional distribution equals the margin. Any difference still visible in the table is nothing but sampling noise &mdash; and it shrinks as you raise the sample size.';
+   } else if(st.mode==='cond'){
+     extra=' Whatever gap you see between the bars is an <b>association</b> in survey data. It does not show that the commute mode <i>causes</i> the delay; people who bike may simply live closer in.';
+   }
+   $('info').innerHTML='<span class="n">'+INFO[st.mode][0]+'</span>'+INFO[st.mode][1]+extra;
+
+   $('popCap').innerHTML='True on-time rate by mode &mdash; <b>'+MD[0].nm.toLowerCase()+' '+pc(P.rt[0])+'</b>, <b>transit '+pc(P.rt[1])+'</b>, <b>bikes / walks '+pc(P.rt[2])+'</b>. Overall '+pc(P.ct[0])+' on time. These are the numbers the sample is trying to estimate; the sample gets closer to them, on average, as the sample size grows.';
+ }
+
+ // ---- wiring -----------------------------------------------------------
+ var ms=document.querySelectorAll('#modeseg button');
+ for(var k=0;k<ms.length;k++) ms[k].onclick=(function(e){return function(){st.mode=e.getAttribute('data-m');render();};})(ms[k]);
+ var ds=document.querySelectorAll('#dirseg button');
+ for(k=0;k<ds.length;k++) ds[k].onclick=(function(e){return function(){st.dir=e.getAttribute('data-d');render();};})(ds[k]);
+ $('sN').oninput=function(){st.n=+this.value;render();};
+ $('sC').oninput=function(){st.car=+this.value/100;render();};
+ $('sB').oninput=function(){st.base=+this.value/100;render();};
+ $('sA').oninput=function(){st.assoc=+this.value/100;render();};
+ $('draw').onclick=function(){st.seed++;render();};
+ render();
+})();
+</script>
+</body>
+</html>

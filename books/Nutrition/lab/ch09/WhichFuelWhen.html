@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf6ee">
+<title>Which Fuel, When</title>
+<meta name="description" content="Interactive model of the three ATP-producing energy systems — move intensity and duration and watch the phosphagen, glycolytic, and oxidative systems trade places while the fuel tanks drain.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_nutri.css">
+<style>.wrap{grid-template-columns:1.04fr 0.96fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.fu{border:1px solid var(--line);border-radius:11px;padding:9px 11px 7px;background:#fff;margin-top:7px;transition:.14s;}
+.fu.on{border-color:var(--teal);box-shadow:0 0 0 2px rgba(176,122,30,.13);}
+.fu .hd{display:flex;align-items:center;gap:8px;}
+.fu .sw{width:11px;height:11px;border-radius:3px;flex:none;}
+.fu .nmb{flex:1;text-align:left;border:none;background:none;font-family:var(--sans);font-weight:700;font-size:13px;color:var(--ink);cursor:pointer;padding:0;line-height:1.2;}
+.fu .nmb small{display:block;font-weight:600;font-size:10.4px;color:var(--muted);margin-top:1px;}
+.fu input[type=number]{width:70px;border:1px solid var(--line);border-radius:8px;padding:6px 7px;font-family:var(--sans);font-weight:800;font-size:13px;color:var(--teal-dk);text-align:right;background:#fffdf9;}
+.fu .un{font-size:10px;font-weight:800;color:var(--muted);flex:none;line-height:1.15;}
+.fu input[type=range]{width:100%;margin-top:6px;height:20px;accent-color:var(--teal);cursor:pointer;display:block;}
+.fu.calc{background:#f9f4ea;border-style:dashed;}
+.fu.calc .rd{font-family:var(--sans);font-weight:800;font-size:13px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.grp{margin-top:13px;font-size:11.5px;font-weight:800;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
+.math{margin-top:11px;border-top:1px solid var(--line);padding-top:8px;}
+.math .ln{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--soft);padding:3px 0;font-variant-numeric:tabular-nums;cursor:pointer;}
+.math .ln .lf b{color:var(--ink);}
+.math .ln .lf .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:-1px;}
+.math .ln .rt{font-weight:800;color:var(--teal-dk);white-space:nowrap;}
+.math .ln.tt{border-top:1px dashed #ddd2ba;margin-top:5px;padding-top:8px;font-size:12.5px;cursor:default;}
+.math .ln.tt .lf b,.math .ln.tt .rt{color:var(--teal-dk);}
+.tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;border-top:1px solid var(--line);padding-top:9px;}
+.tot span{font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+.tot b{font-family:var(--disp);font-size:25px;color:var(--teal-dk);font-variant-numeric:tabular-nums;}
+.tot b i{font-style:normal;font-size:13px;color:var(--muted);margin-left:3px;}
+.ev{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:3px 9px;vertical-align:middle;}
+.ev.s{background:#e5f3ea;color:#237a45;} .ev.p{background:#fdf0dd;color:#8a6a20;}
+.dri{font-size:12.5px;color:var(--teal-dk);background:#f4ead8;border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.5;}
+.hint{font-size:11.4px;color:var(--muted);margin-top:8px;line-height:1.5;}
+.ex .k{margin-left:auto;font-size:11.5px;font-weight:800;color:var(--teal-dk);font-variant-numeric:tabular-nums;flex:none;}
+.it.on .k{color:#fff;}
+.seg.sm button{font-size:11.5px;padding:9px 3px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 9</a></div>
+<header>
+  <div class="kick">Nutrition · Chapter 9</div>
+  <h1>Which Fuel, When</h1>
+  <div class="intro">A muscle cell can only spend <b>ATP</b>, and it holds barely two seconds&rsquo; worth. Everything else &mdash; the phosphagen system, glycolysis, oxidative phosphorylation &mdash; exists to rebuild that ATP as fast as it is spent. Which system does the rebuilding is not a choice. It is decided by <b>how hard</b> and <b>how long</b>. Move those two dials and watch the handover happen.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Who is making the ATP</h2>
+      <svg viewBox="0 0 300 206" aria-label="Stacked area chart on a logarithmic time axis showing the share of ATP resynthesis supplied by the phosphagen, glycolytic, and oxidative systems, with a movable time cursor"><g id="art"></g></svg>
+      <div class="hint" id="chartnote"></div>
+    </div>
+    <div class="card">
+      <h2>The tanks it is drawing on</h2>
+      <svg viewBox="0 0 300 214" aria-label="A stacked bar showing which stored fuel is supplying energy at this moment, above four gauges showing how full the phosphocreatine, muscle glycogen, liver glycogen, and stored fat tanks remain"><g id="tanks"></g></svg>
+      <div class="hint" id="tanknote"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Set an intensity<small>then slide time forward and watch the handover</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg"><button data-m="0" class="on">Move the dials</button><button data-m="1">Scenarios</button></div>
+      <div id="panelAdj">
+        <div id="sliders"></div>
+        <div class="grp">Jump the clock</div>
+        <div class="seg sm" id="tseg" style="margin-top:5px;">
+          <button data-t="6">6 s</button><button data-t="40">40 s</button><button data-t="150">2.5 min</button>
+          <button data-t="900">15 min</button><button data-t="3600">1 h</button><button data-t="10800">3 h</button>
+        </div>
+        <div class="grp">Body and starting stores</div>
+        <div id="sliders2"></div>
+        <div class="row"><button class="btn" id="reset">Reset</button><button class="btn solid" id="cross">Find the crossover</button></div>
+        <div class="hint">The time axis is <b>logarithmic</b> &mdash; one second and four hours have to share a chart, because that is the range over which this handover actually happens.</div>
+      </div>
+      <div id="panelSc" style="display:none;">
+        <div class="list" id="sclist"></div>
+        <div class="hint">Illustrative demonstrations of average physiology built from round numbers. None is a training plan, a target, or a recommendation for any particular person.</div>
+      </div>
+      <div class="math" id="math"></div>
+      <div class="tot"><span id="totlab">Energy turnover</span><b><span id="btot">0</span><i>kcal/min</i></b></div>
+      <div id="info"></div>
+      <div class="note"><b>This is a model, and models simplify.</b> Real muscle recruits fibre types unevenly, so a &ldquo;whole body&rdquo; percentage hides the fact that one motor unit may be almost fully glycolytic while its neighbour idles. Substrate curves come from group averages in laboratory conditions and vary widely between people and within the same person on different days. Nothing here describes what any individual should eat, drink, or do &mdash; that is a conversation with a qualified clinician or sports dietitian, not with an equation.</div>
+    </div>
+  </div>
+</div>
+<footer>Nutrition · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- adjustable parameters ---------- */
+ var DEF={I:65,t:1800,mass:70,vo2:42,gm:200,gl:100};
+ var P={I:0.65,t:1800,mass:70,vo2:42,glyMus:200,glyLiv:100};
+ var sel='', mode=0, tween=null, shown=0;
+
+ var TMIN=1, TMAX=14400;            /* seconds spanned by the chart */
+ var COL={pcr:'#7a5a8a',gly:'#d1495b',ox:'#2f6f9f',
+          gm:'#b07a1e',gl:'#d9ae5a',fat:'#2f6f9f',prot:'#2f9e5b'};
+
+ /* ---------- geometric time grid ---------- */
+ var GRID=(function(){
+   var g=[0], t=0.5, R=Math.pow(TMAX/0.5,1/399);
+   for(var i=0;i<400;i++){ g.push(t); t*=R; }
+   return g;
+ })();
+
+ /* ---------- derived constants ---------- */
+ function consts(){
+   var vo2abs=P.vo2*P.mass/1000;                 /* L O2 per minute at VO2max */
+   return {
+     vo2abs:vo2abs,
+     Pmax:vo2abs*5.0,                            /* kcal/min at 100% VO2max, ~5 kcal per L O2 */
+     PCR0:4.2*P.mass/70,                         /* kcal of usable phosphagen in working muscle */
+     tau:30+25*Math.min(P.I,1),                  /* seconds — oxygen uptake time constant */
+     MFO:0.55*(vo2abs/2.8),                      /* g fat per minute — maximal fat oxidation rate */
+     ANAER:6,                                    /* glycogen charged per unit of anaerobic ATP */
+     FATG:10000,                                 /* g of stored triglyceride — illustrative */
+     /* endurance training lowers RER at the same RELATIVE intensity — more
+        mitochondria and capillaries let a fitter person oxidise fat further up
+        the range. Without this term a trained athlete would implausibly hit the
+        wall sooner than an untrained one at the same %VO2max. */
+     trainF:Math.max(0.80,Math.min(1.12,1-0.20*((P.vo2-42)/33))),
+     choB:(0.30+0.70*Math.pow(Math.min(P.I,1),1.6))*Math.max(0.80,Math.min(1.12,1-0.20*((P.vo2-42)/33))),
+     kr:(60/45)*(1-0.7*Math.min(P.I,1))          /* phosphagen resynthesis rate constant */
+   };
+ }
+
+ /* ---------- instantaneous rates ---------- */
+ function rate(t,st,C){
+   var I=P.I, demand=I*C.Pmax;
+   var oxAvail=Math.min(I,1)*(1-Math.exp(-t/C.tau));
+   var floorA=Math.max(0,Math.min(I,1)-0.80)*0.35;       /* sustained glycolysis above threshold */
+   var need=Math.min(I,Math.max(I-oxAvail,floorA));
+   var pf=Math.max(0,Math.min(1,st.pcr/C.PCR0));
+   var ps=0.85*Math.pow(pf,1.5);
+   var pcrF=need*ps, glyF=need-pcrF, oxF=I-need;
+   var pcrK=pcrF*C.Pmax, glyK=glyF*C.Pmax, oxK=oxF*C.Pmax;
+
+   var glyFrac=Math.max(0,Math.min(1,st.gm/P.glyMus));
+   var pr=0.02+0.06*(1-glyFrac);
+   var cho=Math.min(1-pr,C.choB*(0.60+0.40*Math.pow(glyFrac,0.6)));
+   var fat=Math.max(0,1-cho-pr);
+   var choK=oxK*cho, fatK=oxK*fat, protK=oxK*pr;
+
+   var fatG=fatK/9;
+   if(fatG>C.MFO){ var moved=fatK-C.MFO*9; fatG=C.MFO; fatK=C.MFO*9; choK+=moved; }
+
+   var choG=choK/4, anG=(glyK/4)*C.ANAER;
+   var bloodShare=0.25+0.35*(1-glyFrac);
+   var needGm=choG*(1-bloodShare)+anG, needGl=choG*bloodShare;
+   var gmE=(st.gm<=0.5), glE=(st.gl<=0.5), short=0;
+   if(gmE&&glE){
+     var lostK=choK+glyK, room=Math.max(0,(C.MFO-fatG)*9);
+     var take=Math.min(lostK,room);
+     fatK+=take; fatG=fatK/9; short=lostK-take;
+     needGm=0; needGl=0;
+   } else if(gmE){ needGl+=needGm; needGm=0; }
+     else if(glE){ needGm+=needGl; needGl=0; }
+
+   var gmK=glyK+choK*(1-bloodShare), glK=choK*bloodShare;
+   if(gmE&&glE){ gmK=0; glK=0; }
+   var rer=(choK+fatK)>0?(0.707+0.293*(choK/(choK+fatK))):0.707;
+
+   return {pcrF:pcrF,glyF:glyF,oxF:oxF,pcrK:pcrK,glyK:glyK,oxK:oxK,
+           choK:choK,fatK:fatK,protK:protK,fatG:fatG,gmG:needGm,glG:needGl,
+           gmK:gmK,glK:glK,cho:cho,fat:fat,pr:pr,bloodShare:bloodShare,
+           short:short,demand:demand,glyFrac:glyFrac,rer:rer};
+ }
+
+ function step(st,r,dt,C){
+   var m=dt/60;
+   st.gm=Math.max(0,st.gm-r.gmG*m);
+   st.gl=Math.max(0,st.gl-r.glG*m);
+   st.fat=Math.max(0,st.fat-r.fatG*m);
+   st.usedCho+=(r.choK/4)*m; st.usedFat+=r.fatG*m; st.usedProt+=(r.protK/4)*m;
+   st.kcal+=(r.oxK+r.glyK+r.pcrK)*m;
+   st.cOx+=r.oxK*m; st.cGly+=r.glyK*m; st.cPcr+=r.pcrK*m;
+   st.pcr=Math.max(0,Math.min(C.PCR0,st.pcr-r.pcrK*m+(C.PCR0-st.pcr)*C.kr*m));
+ }
+
+ function simulate(){
+   var C=consts();
+   var st={pcr:C.PCR0,gm:P.glyMus,gl:P.glyLiv,fat:C.FATG,kcal:0,usedCho:0,usedFat:0,usedProt:0,
+           cOx:0,cGly:0,cPcr:0};
+   var out=[], wall=-1, musOut=-1, livOut=-1;
+   for(var i=0;i<GRID.length;i++){
+     var t=GRID[i], r=rate(t,st,C);
+     out.push({t:t,r:r,pcr:st.pcr,gm:st.gm,gl:st.gl,fat:st.fat,
+               kcal:st.kcal,uc:st.usedCho,uf:st.usedFat,up:st.usedProt,
+               cOx:st.cOx,cGly:st.cGly,cPcr:st.cPcr});
+     if(musOut<0&&st.gm<=0.5&&t>0) musOut=t;
+     if(livOut<0&&st.gl<=0.5&&t>0) livOut=t;
+     if(wall<0&&r.short>0.001) wall=t;
+     var dtn=(i<GRID.length-1)?(GRID[i+1]-t):0;
+     if(dtn>0) step(st,r,dtn,C);
+   }
+   return {s:out,wall:wall,musOut:musOut,livOut:livOut,C:C};
+ }
+
+ /* ---------- formatting ---------- */
+ function fmt(n){n=Math.round(n);var s=Math.abs(n)+'';return (n<0?'−':'')+s.replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+ function f1(n){return (Math.round(n*10)/10).toFixed(1);}
+ function f2(n){return (Math.round(n*100)/100).toFixed(2);}
+ function pc(n){return Math.round(n*100)+'%';}
+ function tfmt(s){
+   if(s<10) return f1(s)+' s';
+   if(s<60) return Math.round(s)+' s';
+   if(s<3600){ var m=s/60; return (m<10?f1(m):Math.round(m))+' min'; }
+   var h=Math.floor(s/3600), mm=Math.round((s-h*3600)/60);
+   if(mm===60){h++;mm=0;}
+   return h+' h'+(mm?' '+mm+' min':'');
+ }
+ function tshort(s){ if(s<60)return Math.round(s)+'s'; if(s<3600)return Math.round(s/60)+'m'; return f1(s/3600)+'h'; }
+ function idxAt(R,t){
+   var best=0,bd=1e18;
+   for(var i=0;i<R.s.length;i++){var d=Math.abs(R.s[i].t-t); if(d<bd){bd=d;best=i;}}
+   return best;
+ }
+
+ /* ---------- the systems chart ---------- */
+ function drawChart(R,cur){
+   var s=R.s, out='', x0=34,x1=291,ya=26,yb=146;
+   var L0=Math.log(TMIN), L1=Math.log(TMAX);
+   var X=function(t){return x0+(Math.log(Math.max(TMIN,t))-L0)/(L1-L0)*(x1-x0);};
+   var Y=function(f){return yb-Math.max(0,Math.min(1,f))*(yb-ya);};
+
+   out+='<rect x="0" y="0" width="300" height="206" fill="#fffdf9"/>';
+   out+='<text x="8" y="12" font-size="7.6" fill="#8d8270" font-weight="800" letter-spacing=".7">SHARE OF ATP RESYNTHESIS, BY SYSTEM</text>';
+
+   var a1=[],a2=[];
+   for(var i=0;i<s.length;i++){
+     var f=s[i].r, tt=f.pcrF+f.glyF+f.oxF; if(tt<=0)tt=1;
+     a1.push(X(s[i].t).toFixed(1)+','+Y(f.pcrF/tt).toFixed(1));
+     a2.push(X(s[i].t).toFixed(1)+','+Y((f.pcrF+f.glyF)/tt).toFixed(1));
+   }
+   out+='<polygon class="rgn" data-k="ox" points="'+x0+','+ya+' '+x1+','+ya+' '+a2.slice().reverse().join(' ')+'" fill="'+COL.ox+'"/>';
+   out+='<polygon class="rgn" data-k="gly" points="'+a1.join(' ')+' '+a2.slice().reverse().join(' ')+'" fill="'+COL.gly+'"/>';
+   out+='<polygon class="rgn" data-k="pcr" points="'+x0+','+yb+' '+x1+','+yb+' '+a1.slice().reverse().join(' ')+'" fill="'+COL.pcr+'"/>';
+
+   if(R.wall>0&&R.wall<TMAX){
+     var wx=X(R.wall);
+     out+='<rect x="'+wx.toFixed(1)+'" y="'+ya+'" width="'+(x1-wx).toFixed(1)+'" height="'+(yb-ya)+'" fill="#fffdf9" opacity=".62"/>';
+     out+='<line x1="'+wx.toFixed(1)+'" y1="'+ya+'" x2="'+wx.toFixed(1)+'" y2="'+yb+'" stroke="#8f2b3a" stroke-width="1.4"/>';
+     out+='<text x="'+(wx+3).toFixed(1)+'" y="'+(ya+9)+'" font-size="6.9" fill="#8f2b3a" font-weight="800">CARBOHYDRATE GONE &mdash; THIS INTENSITY</text>';
+     out+='<text x="'+(wx+3).toFixed(1)+'" y="'+(ya+17)+'" font-size="6.9" fill="#8f2b3a" font-weight="800">CAN NO LONGER BE SUPPLIED</text>';
+   }
+
+   var G=[1,10,60,600,3600,14400], GL=['1 s','10 s','1 min','10 min','1 h','4 h'];
+   for(i=0;i<G.length;i++){
+     var gx=X(G[i]);
+     out+='<line x1="'+gx.toFixed(1)+'" y1="'+ya+'" x2="'+gx.toFixed(1)+'" y2="'+(yb+3)+'" stroke="#fffdf9" stroke-width="0.7" opacity=".55"/>';
+     out+='<text x="'+gx.toFixed(1)+'" y="'+(yb+13)+'" font-size="7.2" fill="#a89b85" text-anchor="middle" font-weight="700">'+GL[i]+'</text>';
+   }
+   for(i=0;i<=4;i++){
+     var gy=Y(i/4);
+     out+='<text x="'+(x0-4)+'" y="'+(gy+2.7).toFixed(1)+'" font-size="7.2" fill="#a89b85" text-anchor="end" font-weight="700">'+(i*25)+'%</text>';
+   }
+   out+='<rect x="'+x0+'" y="'+ya+'" width="'+(x1-x0)+'" height="'+(yb-ya)+'" fill="none" stroke="#ddd2ba" stroke-width="1"/>';
+
+   var cx=X(cur.t), c=cur.r, ct=c.pcrF+c.glyF+c.oxF; if(ct<=0)ct=1;
+   out+='<line x1="'+cx.toFixed(1)+'" y1="'+(ya-6)+'" x2="'+cx.toFixed(1)+'" y2="'+(yb+3)+'" stroke="#33291a" stroke-width="1.5" stroke-dasharray="3 2"/>';
+   out+='<circle cx="'+cx.toFixed(1)+'" cy="'+(ya-8)+'" r="3.2" fill="#33291a"/>';
+   var lx=Math.max(x0+2,Math.min(x1-58,cx-28));
+   out+='<rect x="'+lx.toFixed(1)+'" y="'+(yb+17)+'" width="56" height="11" rx="5.5" fill="#33291a"/>';
+   out+='<text x="'+(lx+28).toFixed(1)+'" y="'+(yb+25)+'" font-size="7.4" fill="#fffdf9" text-anchor="middle" font-weight="800">'+tfmt(cur.t)+'</text>';
+
+   var LG=[['ox','Oxidative &mdash; mitochondria, needs O',COL.ox,c.oxF/ct],
+           ['gly','Anaerobic glycolysis &mdash; glucose to lactate',COL.gly,c.glyF/ct],
+           ['pcr','Phosphagen &mdash; ATP and phosphocreatine',COL.pcr,c.pcrF/ct]];
+   for(i=0;i<LG.length;i++){
+     var yy=174+i*11;
+     out+='<rect class="rgn" data-k="'+LG[i][0]+'" x="8" y="'+(yy-6)+'" width="9" height="9" rx="2" fill="'+LG[i][2]+'"/>';
+     out+='<text class="rgn" data-k="'+LG[i][0]+'" x="22" y="'+yy+'" font-size="7.8" fill="#5f5340" font-weight="700">'+LG[i][1]+(LG[i][0]==='ox'?'<tspan font-size="5.6" dy="1.5">2</tspan>':'')+'</text>';
+     out+='<text x="291" y="'+yy+'" font-size="8" fill="'+LG[i][2]+'" text-anchor="end" font-weight="800">'+pc(LG[i][3])+'</text>';
+   }
+   $('art').innerHTML=out;
+   bind('art');
+ }
+
+ /* ---------- the fuel tanks ---------- */
+ function drawTanks(R,cur,ci){
+   var C=R.C, c=cur.r, out='';
+   out+='<rect x="0" y="0" width="300" height="214" fill="#fffdf9"/>';
+   out+='<text x="8" y="12" font-size="7.6" fill="#8d8270" font-weight="800" letter-spacing=".7">WHERE THAT ENERGY IS COMING FROM RIGHT NOW</text>';
+
+   var MIX=[['pcr','stored phosphate',COL.pcr,c.pcrK],
+            ['gm','muscle glycogen',COL.gm,c.gmK],
+            ['gl','blood glucose',COL.gl,c.glK],
+            ['fat','fat',COL.fat,c.fatK],
+            ['prot','protein',COL.prot,c.protK]];
+   var tot=0,i;
+   for(i=0;i<MIX.length;i++) tot+=Math.max(0,MIX[i][3]);
+   if(tot<=0) tot=1;
+   var bx=8,bw=284,px=bx;
+   for(i=0;i<MIX.length;i++){
+     var w=Math.max(0,MIX[i][3])/tot*bw;
+     if(w<0.3) continue;
+     out+='<rect class="rgn" data-k="'+MIX[i][0]+'" x="'+px.toFixed(1)+'" y="20" width="'+w.toFixed(1)+'" height="19" fill="'+MIX[i][2]+'" stroke="#fffdf9" stroke-width="0.7"/>';
+     if(w>26) out+='<text x="'+(px+w/2).toFixed(1)+'" y="33" font-size="7.8" fill="#fff" text-anchor="middle" font-weight="800" pointer-events="none">'+pc(MIX[i][3]/tot)+'</text>';
+     px+=w;
+   }
+   var lx=8;
+   for(i=0;i<MIX.length;i++){
+     if(MIX[i][3]/tot<0.008) continue;
+     out+='<rect x="'+lx+'" y="45" width="7" height="7" rx="2" fill="'+MIX[i][2]+'"/>';
+     out+='<text x="'+(lx+10)+'" y="51.5" font-size="7.2" fill="#8d8270" font-weight="700">'+MIX[i][1]+'</text>';
+     lx+=17+MIX[i][1].length*3.85;
+   }
+
+   out+='<line x1="8" y1="60" x2="292" y2="60" stroke="#ece4d6" stroke-width="1"/>';
+   out+='<text x="8" y="72" font-size="7.6" fill="#8d8270" font-weight="800" letter-spacing=".7">HOW FULL THE TANKS STILL ARE</text>';
+
+   var TK=[['pcr','Phosphagen (PCr)',COL.pcr,cur.pcr,C.PCR0,'kcal'],
+           ['gm','Muscle glycogen',COL.gm,cur.gm,P.glyMus,'g'],
+           ['gl','Liver glycogen',COL.gl,cur.gl,P.glyLiv,'g'],
+           ['fat','Stored fat',COL.fat,cur.fat,C.FATG,'g']];
+   for(i=0;i<TK.length;i++){
+     var y=84+i*26, f=TK[i][4]>0?Math.max(0,Math.min(1,TK[i][3]/TK[i][4])):0;
+     out+='<text x="8" y="'+(y+4)+'" font-size="8" fill="#5f5340" font-weight="700">'+TK[i][1]+'</text>';
+     out+='<rect class="rgn" data-k="'+TK[i][0]+'" x="8" y="'+(y+8)+'" width="230" height="12" rx="3" fill="#f1e8d8" stroke="#e2d7c2" stroke-width="0.8"/>';
+     out+='<rect class="rgn" data-k="'+TK[i][0]+'" x="8" y="'+(y+8)+'" width="'+(230*f).toFixed(1)+'" height="12" rx="3" fill="'+TK[i][2]+'"/>';
+     var used=TK[i][4]-TK[i][3];
+     var rd=(TK[i][5]==='kcal')?(f1(TK[i][3])+' kcal'):(fmt(TK[i][3])+' g');
+     var ud=(TK[i][5]==='kcal')?(f1(used)+' kcal'):(fmt(used)+' g');
+     out+='<text x="292" y="'+(y+18)+'" font-size="8.4" fill="'+TK[i][2]+'" text-anchor="end" font-weight="800">'+Math.round(f*100)+'%</text>';
+     out+='<text x="292" y="'+(y+4)+'" font-size="7" fill="#a89b85" text-anchor="end" font-weight="700">'+rd+' left &middot; '+ud+' used</text>';
+   }
+   out+='<text x="8" y="206" font-size="7" fill="#a89b85" font-weight="700">Protein contributes '+pc(c.pr)+' of oxidative energy here &mdash; it has no tank, because there is no storage form of it.</text>';
+   $('tanks').innerHTML=out;
+   bind('tanks');
+ }
+
+ function bind(id){
+   var ns=$(id).querySelectorAll('.rgn');
+   for(var i=0;i<ns.length;i++) ns[i].onclick=(function(k){return function(){pick(k);};})(ns[i].getAttribute('data-k'));
+ }
+
+ /* ---------- the numbers ---------- */
+ function drawMath(R,cur){
+   var c=cur.r, out='', d=c.demand;
+   function ln(k,nm,rt,extra){
+     return '<div class="ln rgn2" data-k="'+k+'"><span class="lf"><span class="sw" style="background:'+(COL[k]||'#b07a1e')+'"></span><b>'+nm+'</b>'+(extra?' &nbsp;'+extra:'')+'</span><span class="rt">'+rt+'</span></div>';
+   }
+   out+=ln('ox','Oxidative',f1(c.oxK)+' kcal/min',pc(c.oxF/P.I)+' of supply');
+   out+=ln('gly','Anaerobic glycolysis',f1(c.glyK)+' kcal/min',pc(c.glyF/P.I)+' of supply');
+   out+=ln('pcr','Phosphagen',f1(c.pcrK)+' kcal/min',pc(c.pcrF/P.I)+' of supply');
+   out+='<div class="ln tt"><span class="lf"><b>Substrate leaving the tanks</b></span><span class="rt">per minute</span></div>';
+   out+=ln('gm','Carbohydrate',f2(c.gmG+c.glG)+' g/min','at 4 kcal/g');
+   out+=ln('fat','Fat',f2(c.fatG)+' g/min','at 9 kcal/g');
+   out+=ln('prot','Protein',f2(c.protK/4)+' g/min','at 4 kcal/g');
+   out+='<div class="ln tt"><span class="lf"><b>Burned since the start</b></span><span class="rt">'+fmt(cur.kcal)+' kcal</span></div>';
+   var ct=cur.cOx+cur.cGly+cur.cPcr;
+   if(ct>0) out+='<div class="ln tt"><span class="lf"><b>Cumulative</b> &mdash; share of all ATP made so far</span><span class="rt">'+
+     Math.round(cur.cOx/ct*100)+' / '+Math.round(cur.cGly/ct*100)+' / '+Math.round(cur.cPcr/ct*100)+'%</span></div>';
+   out+='<div class="ln tt"><span class="lf"><b>Non-protein RER of this mix</b></span><span class="rt">'+f2(c.rer)+'</span></div>';
+   $('math').innerHTML=out;
+   var ns=$('math').querySelectorAll('.rgn2');
+   for(var i=0;i<ns.length;i++) ns[i].onclick=(function(k){return function(){pick(k);};})(ns[i].getAttribute('data-k'));
+ }
+
+ function setTotal(v,anim){
+   if(tween){cancelAnimationFrame(tween);tween=null;}
+   if(!anim){shown=v;$('btot').innerHTML=f1(v);return;}
+   var from=shown,t0=null;
+   var st=function(ts){ if(t0===null)t0=ts; var p=Math.min(1,(ts-t0)/460); p=1-Math.pow(1-p,3);
+     shown=from+(v-from)*p; $('btot').innerHTML=f1(shown);
+     if(p<1)tween=requestAnimationFrame(st); else {shown=v;tween=null;} };
+   tween=requestAnimationFrame(st);
+ }
+
+ /* ---------- explanations ---------- */
+ var DETAIL={
+  pcr:{nm:'The phosphagen system',
+   why:'No substrate is burned here at all. Muscle holds a small pool of <b>phosphocreatine</b> that donates its phosphate straight to ADP &mdash; one enzyme, one step, no oxygen, no glucose, nothing to transport. That is why it is instantaneous: it is the only system already assembled and waiting when a movement starts.',
+   more:'The price of that speed is capacity. The working muscles hold on the order of <b>a few kilocalories</b> of phosphagen &mdash; the model uses about '+'4 kcal'+' for a 70 kg adult, which is roughly ten seconds of all-out effort and then it is gone. <span class="ev s">strong evidence</span> Refilling it requires oxygen and takes <b>tens of seconds to a few minutes</b>, which is precisely why interval work is built around rest periods and why a second sprint is always slower than the first.',
+   note:'Because it stores <i>phosphate potential</i> rather than fuel, this system is invisible in a diet log. Creatine is made endogenously from glycine, arginine, and methionine and is also present in meat and fish; dietary and supplemental creatine can raise muscle stores, with effects on repeated short maximal efforts that are among the better-replicated findings in sports nutrition. <span class="ev s">strong evidence</span> That is a description of a literature, not a recommendation for anyone.'},
+  gly:{nm:'Anaerobic glycolysis',
+   why:'Glucose &mdash; almost always cleaved straight off <b>muscle glycogen</b> &mdash; is split to pyruvate in the cytosol. When pyruvate is produced faster than mitochondria can accept it, it is reduced to <b>lactate</b>, which regenerates the NAD<sup>+</sup> that glycolysis needs to keep running. That single trick lets ATP production continue without oxygen.',
+   more:'The yield is poor: about <b>3 ATP per glycosyl unit</b> taken from glycogen, against roughly <b>31</b> if the same unit is oxidised completely. So covering a given demand anaerobically consumes glycogen roughly <b>ten times faster</b>. Much of the lactate is not wasted &mdash; it is shuttled to other fibres, the heart, and the liver, where it is oxidised or rebuilt into glucose &mdash; so this model charges the glycogen tank at about <b>six</b> times the aerobic rate rather than ten. That is a modelling approximation, not a measured constant. <span class="ev p">preliminary evidence</span>',
+   note:'<b>Lactate is not the cause of the burn.</b> The acidity that accompanies hard exercise comes from ATP hydrolysis outrunning mitochondrial reuptake of protons, not from lactate itself; lactate is a fuel and a signal. The older phrase &ldquo;lactic acid burn&rdquo; survives in gyms long after the biochemistry stopped supporting it. <span class="ev s">strong evidence</span>'},
+  ox:{nm:'The oxidative system',
+   why:'Inside mitochondria, acetyl-CoA from <b>either</b> carbohydrate or fat enters the citric acid cycle, and the electron transport chain uses oxygen as the final electron acceptor. It is the only system that can run indefinitely, the only one that can burn fat, and the only one whose rate is capped by something outside the muscle &mdash; how much oxygen the heart and lungs can deliver.',
+   more:'Its weakness is <b>latency</b>. Oxygen uptake rises with a time constant of roughly <b>30&ndash;45 seconds</b> in a healthy adult, so even a gentle walk begins with an oxygen deficit covered anaerobically. Watch the chart: at every intensity the first breaths are late, and the anaerobic wedge at the far left is that lag made visible. <span class="ev s">strong evidence</span>',
+   note:'This is also why <b>VO<sub>2</sub>max</b> matters. It is the ceiling on this system, measured in mL of O<sub>2</sub> per kg per minute; move the fitness slider and the whole chart shifts, because the same absolute workload becomes a smaller fraction of a bigger ceiling.'},
+  gm:{nm:'Muscle glycogen',
+   why:'A branched glucose polymer stored inside the muscle fibre that will use it. It cannot leave that fibre &mdash; muscle lacks glucose-6-phosphatase &mdash; so it is a <b>private reserve</b>, not a contribution to blood sugar. At <b>4 kcal per gram</b>, whole-body muscle glycogen is roughly <b>300&ndash;500 g</b> in an untrained adult and more after training or a high-carbohydrate intake.',
+   xtra:'<b>Read this gauge carefully.</b> The slider is not whole-body glycogen &mdash; it is the glycogen in the <b>fibres actually recruited</b> by this effort, which is what can be spent. Cycling or running engages a large but not total share of muscle mass, so the accessible store is commonly on the order of <b>150&ndash;250 g</b> even when the whole body holds twice that. Glycogen in a resting arm is not available to a working leg, and that is precisely why depletion arrives far sooner than a whole-body total would suggest.',
+   more:'Because it is stored with roughly <b>3 g of water per gram of glycogen</b>, filling or emptying this tank moves body mass by a kilogram or two within a day without any change in stored fat. That is the single most common reason a scale jumps after a hard week or a rest day, and it is water and carbohydrate, nothing more.',
+   note:'Depletion of this tank is the classic endurance limit &mdash; the point where a pace that felt steady abruptly cannot be held. Sports-nutrition consensus statements for <b>athletes in prolonged events</b> describe carbohydrate intakes during exercise on the order of <b>30&ndash;60 g/h</b>, rising higher for events beyond about 2.5 h with mixed carbohydrate sources. <span class="ev s">strong evidence</span> Those are performance figures for a competing population, published in grams per hour &mdash; not a health target and not individual advice.'},
+  gl:{nm:'Liver glycogen',
+   why:'About <b>80&ndash;110 g</b> in a fed adult, roughly <b>400 kcal</b>. Unlike muscle, the liver <i>can</i> release free glucose into blood, so this small tank is what holds blood glucose steady &mdash; for the brain first and the working muscle second.',
+   more:'It is also the tank that empties overnight: an overnight fast can take a meaningful share of it before breakfast. During prolonged exercise, the share of carbohydrate oxidation coming from blood glucose rises as muscle glycogen falls, which shifts the load onto this much smaller reserve. When it runs low, blood glucose can fall &mdash; the sudden disorientation and heavy legs described in long endurance events. <span class="ev s">strong evidence</span>',
+   note:'Gluconeogenesis &mdash; rebuilding glucose from lactate, glycerol, and amino acids &mdash; keeps working after the tank is empty, but at a rate far below what hard exercise demands. Carbohydrate eaten during exercise is absorbed at roughly <b>1 g/min</b> for glucose alone, higher when fructose is included because it uses a separate transporter.'},
+  fat:{nm:'Stored fat',
+   why:'Triglyceride in adipose tissue plus a smaller depot of <b>intramuscular triglyceride</b> sitting beside the mitochondria. At <b>9 kcal per gram</b> and stored nearly water-free, this tank holds <b>tens of thousands of kilocalories</b> in every adult across the whole normal range of body composition. On the timescale of this chart it is effectively bottomless.',
+   more:'The constraint on fat is therefore never <b>supply</b>. It is <b>rate</b>. Fat oxidation peaks at a moderate intensity &mdash; commonly around <b>45&ndash;65% of VO<sub>2</sub>max</b> &mdash; at a maximal rate of roughly <b>0.5&ndash;0.6 g/min</b> in untrained adults and up to about <b>1.0&ndash;1.5 g/min</b> in highly trained endurance athletes. <span class="ev s">strong evidence</span> Above that intensity the absolute rate <i>falls</i>, because the mobilisation, transport, and beta-oxidation chain simply cannot keep pace. This model enforces that ceiling.',
+   note:'This tank is drawn at an illustrative 10 kg of triglyceride purely so the gauge has a scale. Its size is not the interesting variable and this page makes no claim about what any body should look like &mdash; the point of the gauge is that even after four hours the bar has barely moved.'},
+  prot:{nm:'Protein',
+   why:'Amino acids &mdash; mainly the branched-chain ones, plus alanine and glutamine &mdash; can be deaminated and fed into the citric acid cycle, yielding <b>4 kcal per gram</b>. In practice they supply only about <b>2&ndash;5%</b> of energy during exercise, rising toward <b>~10%</b> when glycogen is low and the effort is long. <span class="ev s">strong evidence</span>',
+   more:'There is no storage form of protein. Every gram oxidised comes from functional tissue &mdash; enzymes, contractile protein, plasma proteins &mdash; which is why it appears on this page as a percentage and not as a tank. The body defends it, and it is the fuel it reaches for last.',
+   note:'Round out the energy-yield table: <b>carbohydrate 4, protein 4, fat 9, alcohol 7 kcal per gram</b>. Alcohol is the odd one out here &mdash; it carries energy but is cleared almost entirely by the liver and cannot be oxidised by working muscle, so it never appears on this chart at all.'}
+ };
+
+ /* ---------- scenarios ---------- */
+ var SC=[
+  {ic:'⚡',nm:'A six-second maximal effort',ct:'a jump, a lift, a standing start',I:145,t:6,
+   d:'The <b>phosphagen</b> system opened this effort almost alone &mdash; slide back to 1 second and it is supplying about three quarters of the ATP. By six seconds glycolysis has already caught up and is drawing level. Oxygen uptake has barely begun to rise.',
+   loc:'The systems do not hand off cleanly like relay runners; they overlap from the first second. The useful lesson is the <b>order and the timescale</b>, not a set of tidy boundaries &mdash; and the fuel tanks are still almost untouched, because phosphagen spends stored phosphate rather than burning anything.'},
+  {ic:'🔥',nm:'Forty seconds, all out',I:125,t:40,ct:'the most unpleasant duration in sport',
+   d:'Phosphagen is spent and oxygen uptake has not caught up, so <b>anaerobic glycolysis</b> is carrying the effort at its peak share. Look at the muscle glycogen tank: it is falling far faster than in any endurance scenario, because covering demand this way costs roughly six to ten times the glycogen per unit of ATP.',
+   loc:'Nothing about this is sustainable, and the reason is not fuel. Protons accumulate faster than they can be buffered or transported, and force output falls whatever the glycogen tank says.'},
+  {ic:'🏃',nm:'Two minutes at the limit',I:128,t:120,ct:'instantaneous vs cumulative',
+   d:'A middle-distance effort, and the place where two different questions get confused. <b>Right now</b>, at the two-minute mark, the oxidative system is supplying most of the ATP &mdash; the top line of the numbers below. But <b>added up across the whole effort</b>, the anaerobic systems still account for a large share, because they carried almost everything in the opening seconds.',
+   loc:'Check the <b>cumulative</b> line in the numbers: for maximal efforts the aerobic and anaerobic <i>totals</i> cross over at roughly <b>75 seconds</b>, which is the figure textbooks quote. The instantaneous share crosses much earlier. Both are correct; they answer different questions, and the chart above shows the instantaneous one. <span class="ev s">strong evidence</span>'},
+  {ic:'🚴',nm:'Thirty minutes, conversational',I:55,t:1800,ct:'moderate and steady',
+   d:'Effectively <b>all oxidative</b>, drawing on a genuine mix &mdash; roughly half carbohydrate, half fat. Fat oxidation is running near its maximum absolute rate here, which is why this intensity band is where fat contributes the most grams per minute.',
+   loc:'Sustainable for hours. Muscle glycogen falls slowly, and the mix drifts further toward fat as it does &mdash; drag the duration slider forward and watch the amber band shrink.'},
+  {ic:'🥾',nm:'Ninety minutes, easy',I:32,t:5400,ct:'a long walk or hike',
+   d:'<b>Fat</b> is the majority fuel, both as a percentage and, at this low turnover, in absolute terms it is modest. Glycogen is barely touched after an hour and a half. The oxidative system is doing everything.',
+   loc:'A useful corrective: the fraction of energy from fat is highest at low intensity, but the fraction and the rate are different questions. Higher percentage of a much smaller number.'},
+  {ic:'🏅',nm:'Two hours near threshold',I:78,t:7200,ct:'where glycogen becomes the ceiling',
+   d:'Hard enough that carbohydrate dominates, long enough that the tank empties. Watch the muscle glycogen gauge fall, blood glucose take over a rising share, and then the liver tank follow it down. The chart marks the point where this intensity can no longer be supplied.',
+   loc:'This is the physiological event behind the phrase &ldquo;hitting the wall.&rdquo; It is a fuel-supply limit, and it arrives on a schedule set by intensity, starting glycogen, and carbohydrate taken in along the way.'},
+  {ic:'🧘',nm:'Sitting quietly',I:10,t:3600,ct:'about one MET',
+   d:'Still the oxidative system, still both fuels &mdash; roughly a third carbohydrate and two thirds fat, giving a resting respiratory exchange ratio near <b>0.80</b>. The energy systems are not an exercise phenomenon; they are running right now.',
+   loc:'The brain is the reason the carbohydrate share never goes to zero. It uses on the order of <b>120 g of glucose per day</b> in an adult, which is the basis of the carbohydrate RDA.'},
+  {ic:'🎯',nm:'A trained endurance athlete',I:78,t:7200,vo2:68,gm:340,ct:'same relative effort, different body',
+   d:'The <b>same 78% of VO<sub>2</sub>max</b> as the scenario above, but on a much higher ceiling &mdash; so the absolute energy turnover is far greater. Watch what does <i>not</i> follow: a bigger engine burning proportionally more carbohydrate does not automatically last longer. What buys the extra time is that a trained athlete oxidises <b>more fat at the same relative intensity</b>, and stores more glycogen to begin with.',
+   loc:'Training moves this chart in three ways at once: it raises the oxidative ceiling, it shifts the fuel mix toward fat at any given relative intensity (a lower RER &mdash; compare the number below with the untrained scenario), and it expands glycogen storage. <span class="ev s">strong evidence</span> Press Reset afterwards to restore the default body.'}
+ ];
+
+ /* ---------- controls ---------- */
+ var SL=[
+  {k:'I',nm:'Intensity',ct:'as a percentage of VO₂max',col:'#b07a1e',min:8,max:150,stp:1,un:'%<br>VO₂max',g:1,
+   get:function(){return Math.round(P.I*100);},set:function(v){P.I=v/100;}},
+  {k:'t',nm:'Duration',ct:'time elapsed since the effort began',col:'#7a5a8a',min:0,max:1000,stp:1,un:'min',g:1,
+   get:function(){return tSlider(P.t);},set:function(v){P.t=sliderT(v);},
+   num:function(){return Math.round(P.t/60*100)/100;},
+   numset:function(v){P.t=Math.max(TMIN,Math.min(TMAX,v*60));},nmin:0.02,nmax:240,nstep:0.01},
+  {k:'mass',nm:'Body mass',ct:'scales the absolute energy figures',col:'#8d8270',min:40,max:130,stp:1,un:'kg',g:2,
+   get:function(){return P.mass;},set:function(v){P.mass=v;}},
+  {k:'vo2',nm:'Aerobic fitness',ct:'VO₂max — the oxidative ceiling',col:'#2f6f9f',min:20,max:75,stp:1,un:'mL/kg<br>/min',g:2,
+   get:function(){return P.vo2;},set:function(v){P.vo2=v;}},
+  {k:'gm',nm:'Starting muscle glycogen',ct:'in the fibres doing the work, not whole body',col:'#b07a1e',min:120,max:420,stp:10,un:'g',g:2,
+   get:function(){return P.glyMus;},set:function(v){P.glyMus=v;}}
+ ];
+ function tSlider(t){return Math.round(1000*Math.log(Math.max(TMIN,t))/Math.log(TMAX));}
+ function sliderT(v){return Math.pow(TMAX,v/1000);}
+
+ function sliders(){
+   for(var g=1;g<=2;g++){
+     var out='';
+     for(var i=0;i<SL.length;i++){
+       var f=SL[i]; if(f.g!==g) continue;
+       var nv=f.num?f.num():f.get();
+       out+='<div class="fu" id="fu_'+f.k+'">'+
+         '<div class="hd"><span class="sw" style="background:'+f.col+'"></span>'+
+         '<button class="nmb" data-k="'+f.k+'">'+f.nm+'<small>'+f.ct+'</small></button>'+
+         '<input type="number" id="n_'+f.k+'" min="'+(f.nmin!==undefined?f.nmin:f.min)+'" max="'+(f.nmax!==undefined?f.nmax:f.max)+'" step="'+(f.nstep!==undefined?f.nstep:f.stp)+'" value="'+nv+'" aria-label="'+f.nm+'"><span class="un">'+f.un+'</span></div>'+
+         '<input type="range" id="r_'+f.k+'" min="'+f.min+'" max="'+f.max+'" step="'+f.stp+'" value="'+f.get()+'" aria-label="'+f.nm+' slider"></div>';
+       if(f.k==='I')
+         out+='<div class="fu calc" id="fu_rd"><div class="hd"><span class="sw" style="background:#d9ae5a"></span>'+
+           '<span class="nmb" style="cursor:default">Absolute demand<small id="rdsub">calculated from intensity, mass, and fitness</small></span>'+
+           '<span class="rd" id="rdval">0</span><span class="un">kcal<br>/min</span></div></div>';
+     }
+     $(g===1?'sliders':'sliders2').innerHTML=out;
+   }
+   for(var j=0;j<SL.length;j++){(function(f){
+     var n=$('n_'+f.k), r=$('r_'+f.k);
+     r.oninput=function(){ f.set(+r.value); n.value=f.num?f.num():f.get(); go(false,true); };
+     n.oninput=function(){ var v=parseFloat(n.value); if(isNaN(v)) return;
+       if(f.numset){ f.numset(v); } else { f.set(Math.max(f.min,Math.min(f.max,v))); }
+       r.value=f.get(); go(false,true); };
+     n.onblur=function(){ n.value=f.num?f.num():f.get(); };
+   })(SL[j]);}
+   var bs=document.querySelectorAll('#sliders .nmb, #sliders2 .nmb');
+   for(j=0;j<bs.length;j++){ var kk=bs[j].getAttribute('data-k'); if(!kk) continue;
+     bs[j].onclick=(function(k){return function(){ pick(k==='I'?'ox':(k==='t'?'gly':(k==='vo2'?'ox':(k==='gm'?'gm':'fat')))); };})(kk); }
+ }
+ function syncControls(){
+   for(var i=0;i<SL.length;i++){ var f=SL[i], n=$('n_'+f.k), r=$('r_'+f.k);
+     if(r) r.value=f.get();
+     if(n&&document.activeElement!==n) n.value=f.num?f.num():f.get(); }
+   var ts=$('tseg').querySelectorAll('button');
+   for(i=0;i<ts.length;i++) ts[i].className=(Math.abs(P.t-(+ts[i].getAttribute('data-t')))<0.5?'on':'');
+ }
+
+ function sclist(){
+   var out='';
+   for(var i=0;i<SC.length;i++)
+     out+='<button class="it ex" data-i="'+i+'"><span class="ic">'+SC[i].ic+'</span><span><span class="nm">'+SC[i].nm+'</span><br><span class="ct">'+SC[i].ct+'</span></span><span class="k">'+SC[i].I+'% &middot; '+tshort(SC[i].t)+'</span></button>';
+   $('sclist').innerHTML=out;
+   var bs=$('sclist').querySelectorAll('.it');
+   for(i=0;i<bs.length;i++) bs[i].onclick=(function(n){return function(){loadSc(n);};})(bs[i].getAttribute('data-i'));
+ }
+ function loadSc(n){
+   var s=SC[+n];
+   P.I=s.I/100; P.t=s.t;
+   P.mass=s.mass||DEF.mass; P.vo2=s.vo2||DEF.vo2; P.glyMus=s.gm||DEF.gm; P.glyLiv=s.gl||DEF.gl;
+   sel=''; sliders(); var R=go(true,false);
+   var cur=R.s[idxAt(R,P.t)], c=cur.r, tt=c.pcrF+c.glyF+c.oxF;
+   $('info').innerHTML='<span class="n">'+s.ic+' '+s.nm+'</span>'+s.d+'<div class="loc">'+s.loc+'</div>'+
+     '<div class="dd" style="font-weight:600;color:var(--teal-dk);">At '+tfmt(P.t)+': oxidative <b>'+pc(c.oxF/tt)+'</b>, glycolytic <b>'+pc(c.glyF/tt)+'</b>, phosphagen <b>'+pc(c.pcrF/tt)+'</b> &mdash; '+fmt(cur.kcal)+' kcal turned over so far.</div>';
+   var bs=$('sclist').querySelectorAll('.it');
+   for(var i=0;i<bs.length;i++) bs[i].className='it ex'+(+bs[i].getAttribute('data-i')===+n?' on':'');
+ }
+
+ function pick(k){
+   var D=DETAIL[k]; if(!D) return;
+   sel=k;
+   var R=lastR, cur=R.s[idxAt(R,P.t)], c=cur.r, tt=c.pcrF+c.glyF+c.oxF;
+   var now='';
+   if(k==='pcr') now='Right now the phosphagen system is supplying <b>'+pc(c.pcrF/tt)+'</b> of ATP resynthesis, and the pool is <b>'+Math.round(cur.pcr/R.C.PCR0*100)+'%</b> full.';
+   else if(k==='gly') now='Right now anaerobic glycolysis is supplying <b>'+pc(c.glyF/tt)+'</b> of ATP resynthesis.';
+   else if(k==='ox') now='Right now the oxidative system is supplying <b>'+pc(c.oxF/tt)+'</b> of ATP resynthesis, at '+f1(c.oxK)+' kcal/min.';
+   else if(k==='gm') now='Muscle glycogen is <b>'+Math.round(cur.gm/P.glyMus*100)+'%</b> full &mdash; '+fmt(cur.gm)+' g left of '+fmt(P.glyMus)+' g, leaving at '+f2(c.gmG)+' g/min.';
+   else if(k==='gl') now='Liver glycogen is <b>'+Math.round(cur.gl/P.glyLiv*100)+'%</b> full &mdash; '+fmt(cur.gl)+' g left, leaving at '+f2(c.glG)+' g/min.';
+   else if(k==='fat') now='Fat is being oxidised at <b>'+f2(c.fatG)+' g/min</b>, against a modelled ceiling of '+f2(R.C.MFO)+' g/min. The tank is '+f1(cur.fat/R.C.FATG*100)+'% full after '+tfmt(P.t)+'.';
+   else if(k==='prot') now='Protein is supplying <b>'+pc(c.pr)+'</b> of oxidative energy here, about '+f2(c.protK/4)+' g/min.';
+   $('info').innerHTML='<span class="n">'+D.nm+'</span>'+D.why+
+     (D.xtra?'<div class="dd">'+D.xtra+'</div>':'')+'<div class="dd">'+D.more+'</div>'+
+     '<div class="dri">'+D.note+'</div><div class="loc">'+now+'</div>';
+ }
+
+ function intro(){
+   $('info').innerHTML='<span class="n">Three systems, one product</span>All three pathways make exactly the same thing: <b>ATP</b>. They differ only in how fast they can make it and how long they can keep making it, and those two properties trade off against each other perfectly. The phosphagen system is instant and tiny. Glycolysis is fast and expensive. Oxidative phosphorylation is slow to start, limited by oxygen delivery, and effectively unlimited in duration.'+
+     '<div class="dd">They are never used one at a time. <b>All three run continuously</b> &mdash; the chart shows the changing <i>share</i>, not a series of switches. What intensity really sets is how much demand exceeds what oxygen delivery can cover at that moment; what duration sets is which tank has emptied by then.</div>'+
+     '<div class="dri"><b>The energy-yield table, for reference:</b> carbohydrate <b>4</b>, protein <b>4</b>, fat <b>9</b>, and alcohol <b>7 kcal per gram</b>. The <b>RDA for carbohydrate is 130 g/day for adults and for children aged 1 year and over</b>, rising to <b>175 g/day in pregnancy</b> and <b>210 g/day in lactation</b>; it is set from the brain&rsquo;s glucose requirement, not from exercise. The <b>AMDR for adults is 45&ndash;65% of total energy from carbohydrate</b>. These are population reference values in grams or percentages per day for healthy people &mdash; not individual targets.</div>'+
+     '<div class="loc">Tap any band on the chart, any bar in the tanks, or any line in the numbers below to open it up.</div>';
+ }
+
+ /* ---------- stage ---------- */
+ function stage(R,cur){
+   var c=cur.r, tt=c.pcrF+c.glyF+c.oxF, nm, col, sub;
+   if(c.pcrF>=c.glyF&&c.pcrF>=c.oxF){ nm='Phosphagen system'; col=COL.pcr; }
+   else if(c.glyF>=c.oxF){ nm='Anaerobic glycolysis'; col=COL.gly; }
+   else { nm='Oxidative system'; col=COL.ox; }
+   if(P.I>1.0) sub='Above VO₂max &mdash; the limit here is phosphocreatine and rising acidity, not fuel';
+   else if(R.wall>0&&P.t>=R.wall) sub='Carbohydrate stores are effectively empty &mdash; this intensity can no longer be supplied';
+   else if(R.wall>0) sub='Sustainable until about '+tfmt(R.wall)+', when carbohydrate runs out';
+   else if(P.I>0.80) sub='Above the threshold &mdash; a small glycolytic contribution persists indefinitely';
+   else sub='Fuel is not the limiting factor on this timescale';
+   $('stage').style.background=col;
+   $('stage').innerHTML=nm+' leads at '+tfmt(cur.t)+' &mdash; '+pc(Math.max(c.pcrF,c.glyF,c.oxF)/tt)+'<small>'+sub+'</small>';
+ }
+
+ function notes(R,cur){
+   var c=cur.r, C=R.C;
+   var bits=[];
+   bits.push('At <b>'+Math.round(P.I*100)+'% of VO<sub>2</sub>max</b> the oxygen-uptake time constant in this model is about <b>'+Math.round(C.tau)+' s</b>, so the anaerobic wedge on the left is the oxygen deficit while breathing catches up.');
+   if(P.I>1) bits.push('Above 100% the oxidative system is <b>pinned at its ceiling</b> and everything beyond it must come from the two anaerobic systems &mdash; which is exactly why the effort has a stopwatch on it.');
+   if(R.wall>0) bits.push('Carbohydrate runs out at about <b>'+tfmt(R.wall)+'</b>; after that, sustainable output falls to roughly <b>'+Math.round(C.MFO*9/C.Pmax*100)+'% of VO<sub>2</sub>max</b> &mdash; whatever fat oxidation alone can supply.');
+   $('chartnote').innerHTML=bits.join(' ');
+
+   var t2=[];
+   t2.push('Muscle glycogen falls at <b>'+f2(c.gmG)+' g/min</b> here'+(R.musOut>0?', emptying at about <b>'+tfmt(R.musOut)+'</b>':', which on this trajectory outlasts the four-hour chart')+'.');
+   t2.push('Blood glucose is covering <b>'+pc(c.bloodShare)+'</b> of carbohydrate oxidation'+(R.livOut>0?', and the liver tank empties at about <b>'+tfmt(R.livOut)+'</b>':'')+'.');
+   t2.push('Modelled maximal fat oxidation for this body: <b>'+f2(C.MFO)+' g/min</b>.');
+   if(Math.abs(C.trainF-1)>0.02)
+     t2.push('Fitness also shifts the <b>mix</b>, not just the ceiling: at '+P.vo2+' mL/kg/min this model moves the carbohydrate share '+
+       (C.trainF<1?'<b>down</b> by about '+Math.round((1-C.trainF)*100)+'%':'<b>up</b> by about '+Math.round((C.trainF-1)*100)+'%')+
+       ' at any given relative intensity, which is why the RER below '+(C.trainF<1?'falls':'rises')+' as you move the fitness slider. <span class="ev s">strong evidence</span>');
+   $('tanknote').innerHTML=t2.join(' ');
+ }
+
+ /* ---------- main ---------- */
+ var lastR=null;
+ function go(anim,keepInfo){
+   var R=simulate(); lastR=R;
+   var cur=R.s[idxAt(R,P.t)];
+   drawChart(R,cur); drawTanks(R,cur); drawMath(R,cur); stage(R,cur); notes(R,cur); syncControls();
+   setTotal(cur.r.demand,anim);
+   var rd=$('rdval'); if(rd) rd.innerHTML=f1(cur.r.demand);
+   var rs=$('rdsub'); if(rs) rs.innerHTML=f1(P.I*P.vo2)+' mL O₂/kg/min &middot; '+f2(R.C.vo2abs*P.I)+' L O₂/min';
+   for(var i=0;i<SL.length;i++){var e=$('fu_'+SL[i].k); if(e) e.className='fu';}
+   if(keepInfo&&sel) pick(sel);
+   return R;
+ }
+
+ var ts=$('tseg').querySelectorAll('button');
+ for(var q=0;q<ts.length;q++) ts[q].onclick=(function(b){return function(){ P.t=+b.getAttribute('data-t'); go(true,true); };})(ts[q]);
+
+ var ms=$('modeseg').querySelectorAll('button');
+ for(q=0;q<ms.length;q++) ms[q].onclick=(function(b){return function(){
+   mode=+b.getAttribute('data-m');
+   for(var z=0;z<ms.length;z++) ms[z].className=(ms[z]===b?'on':'');
+   $('panelAdj').style.display=mode===0?'':'none';
+   $('panelSc').style.display=mode===1?'':'none';
+ };})(ms[q]);
+
+ $('reset').onclick=function(){
+   P.I=DEF.I/100; P.t=DEF.t; P.mass=DEF.mass; P.vo2=DEF.vo2; P.glyMus=DEF.gm; P.glyLiv=DEF.gl;
+   sel=''; sliders(); go(true,false); intro();
+ };
+ $('cross').onclick=function(){
+   var best=0,bd=1e9,R;
+   for(var v=15;v<=90;v++){ P.I=v/100; R=simulate();
+     var cur=R.s[idxAt(R,600)], c=cur.r;
+     var d=Math.abs(c.choK-(c.fatK+c.protK)); if(d<bd){bd=d;best=v;} }
+   P.I=best/100; P.t=600; sel=''; sliders(); R=go(true,false);
+   var cu=R.s[idxAt(R,600)];
+   $('info').innerHTML='<span class="n">The crossover point</span>At <b>'+best+'% of VO<sub>2</sub>max</b>, ten minutes in, carbohydrate and fat are each supplying about half of oxidative energy. Below this intensity fat is the majority fuel; above it carbohydrate is. Brooks and Mercier named this the <b>crossover concept</b> in 1994, and it locates in most healthy adults somewhere around <b>45&ndash;65% of VO<sub>2</sub>max</b>. <span class="ev s">strong evidence</span>'+
+     '<div class="dd">The crossover is not a fixed line. <b>Endurance training moves it upward</b> &mdash; more mitochondria and more capillaries let a trained person oxidise fat at a higher relative intensity. <b>Duration moves it downward within a session</b>: hold this intensity and glycogen depletion will gradually shift the mix back toward fat on its own. Drag the duration slider forward and watch the RER fall.</div>'+
+     '<div class="dri">The non-protein RER of this mix is <b>'+f2(cu.r.rer)+'</b>. RER is measurable &mdash; expired CO<sub>2</sub> divided by consumed O<sub>2</sub> &mdash; which is how these curves were established in the first place. One honest caveat: <b>above the lactate threshold RER exceeds 1.0</b> because bicarbonate buffering releases extra CO<sub>2</sub>, so at high intensity it stops being a clean substrate readout.</div>'+
+     '<div class="loc">A common misreading of this chart: because the <i>percentage</i> from fat is highest at low intensity, low intensity is sometimes described as burning more fat. The percentage and the rate answer different questions &mdash; check the grams per minute in the numbers below at 30% and at 60%.</div>';
+ };
+
+ sliders(); sclist(); go(false,false); intro();
+})();
+</script>
+</body>
+</html>

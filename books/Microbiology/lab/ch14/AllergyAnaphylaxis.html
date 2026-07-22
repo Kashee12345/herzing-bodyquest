@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Sensitization → Re-exposure → Anaphylaxis</title>
+<meta name="description" content="Interactive walk-through of type I hypersensitivity: how IgE arms mast cells on first exposure, then a later exposure triggers degranulation and anaphylaxis. For microbiology &amp; nursing students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_micro.css">
+<style>.wrap{grid-template-columns:1fr 1fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.chk{display:flex;gap:8px;margin-top:10px;}
+.chk div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 4px;font-size:11.5px;font-weight:700;color:var(--muted);background:#fff;}
+.chk div .v{display:block;font-size:15px;margin-top:2px;}
+.chk div.yes{border-color:var(--teal);color:var(--teal-dk);background:#f5f1fa;}
+.chk div.no{color:#b23145;}
+.phase{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-radius:20px;padding:3px 11px;margin-bottom:8px;}
+.phase.p1{background:#e5eef6;color:#255f8a;} .phase.p2{background:#fae5e8;color:#b23145;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 14</a></div>
+<header>
+  <div class="kick">Microbiology · Chapter 14</div>
+  <h1>Sensitization → Re-exposure → Anaphylaxis</h1>
+  <div class="intro">A peanut, a bee sting, or a dose of penicillin can be harmless the <b>first</b> time and life-threatening the <b>next</b>. Type I hypersensitivity has two acts: a silent setup that arms your mast cells, then the reaction. Step through both.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cardTitle">The IgE cascade</h2>
+    <svg viewBox="0 0 240 200" aria-label="allergy cascade"><g id="art"></g></svg>
+  </div></div>
+  <div>
+    <div id="stage">Type I hypersensitivity<small>press Next to begin</small></div>
+    <div class="card">
+      <div class="chk">
+        <div id="c1">IgE made?<span class="v" id="v1">—</span></div>
+        <div id="c2">Sensitized?<span class="v" id="v2">—</span></div>
+        <div id="c3">Reaction?<span class="v" id="v3">—</span></div>
+      </div>
+      <div id="info"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>Microbiology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ // ---- small SVG helpers ----
+ function allergen(x,y,sz){ sz=sz||7; return '<polygon points="'+x+','+(y-sz)+' '+(x+sz)+','+y+' '+x+','+(y+sz)+' '+(x-sz)+','+y+'" fill="#e0862a" stroke="#a85f13" stroke-width="1.5"/>'; }
+ function yAnt(x,y,ang,col){ // free-floating IgE, stem base at (x,y) pointing at ang
+   var dx=Math.cos(ang),dy=Math.sin(ang);
+   var fx=x+14*dx, fy=y+14*dy, a1=ang-0.5, a2=ang+0.5;
+   var t1x=fx+9*Math.cos(a1), t1y=fy+9*Math.sin(a1), t2x=fx+9*Math.cos(a2), t2y=fy+9*Math.sin(a2);
+   return '<line x1="'+x+'" y1="'+y+'" x2="'+fx+'" y2="'+fy+'" stroke="'+col+'" stroke-width="3" stroke-linecap="round"/>'
+     +'<line x1="'+fx+'" y1="'+fy+'" x2="'+t1x+'" y2="'+t1y+'" stroke="'+col+'" stroke-width="3" stroke-linecap="round"/>'
+     +'<line x1="'+fx+'" y1="'+fy+'" x2="'+t2x+'" y2="'+t2y+'" stroke="'+col+'" stroke-width="3" stroke-linecap="round"/>';
+ }
+ function boundIge(cx,cy,r,ang,col){ // IgE anchored on a mast-cell receptor, pointing outward
+   var dx=Math.cos(ang),dy=Math.sin(ang);
+   var bx=cx+r*dx, by=cy+r*dy, fx=bx+15*dx, fy=by+15*dy, a1=ang-0.55, a2=ang+0.55;
+   var t1x=fx+9*Math.cos(a1), t1y=fy+9*Math.sin(a1), t2x=fx+9*Math.cos(a2), t2y=fy+9*Math.sin(a2);
+   return {rec:'<rect x="'+(bx-4)+'" y="'+(by-4)+'" width="8" height="8" rx="2" fill="#8a5a9c"/>',
+     arm:'<line x1="'+bx+'" y1="'+by+'" x2="'+fx+'" y2="'+fy+'" stroke="'+col+'" stroke-width="3.4" stroke-linecap="round"/>'
+        +'<line x1="'+fx+'" y1="'+fy+'" x2="'+t1x+'" y2="'+t1y+'" stroke="'+col+'" stroke-width="3.4" stroke-linecap="round"/>'
+        +'<line x1="'+fx+'" y1="'+fy+'" x2="'+t2x+'" y2="'+t2y+'" stroke="'+col+'" stroke-width="3.4" stroke-linecap="round"/>',
+     t1:[t1x,t1y], t2:[t2x,t2y]};
+ }
+ function mastCell(opt){ // opt:{ige,granIn,granOut,crosslink}
+   var cx=150,cy=118,r=50, s='';
+   s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#f3dbe8" stroke="#c98bb0" stroke-width="2.5"/>';
+   s+='<circle cx="'+(cx-12)+'" cy="'+(cy+14)+'" r="16" fill="#b57aa0" opacity=".5"/>';
+   var G=[[-20,-4],[2,-18],[22,4],[-4,18],[16,24],[-26,10],[10,-2],[26,-12],[-14,28],[4,8]];
+   for(var i=0;i<opt.granIn&&i<G.length;i++){ s+='<circle cx="'+(cx+G[i][0])+'" cy="'+(cy+G[i][1])+'" r="5.5" fill="#7a3f9c"/>'; }
+   var iges=[];
+   if(opt.ige){
+     var A=[-2.84,-2.42,-2.0,-1.57,-1.14,-0.72,-0.30];
+     for(var k=0;k<A.length;k++){ iges.push(boundIge(cx,cy,r,A[k],'#3a6f9c')); }
+     for(var k2=0;k2<iges.length;k2++){ s+=iges[k2].rec; }
+     for(var k3=0;k3<iges.length;k3++){ s+=iges[k3].arm; }
+   }
+   if(opt.granOut){
+     var OA=[-2.9,-2.5,-2.1,-1.7,-1.3,-0.9,-0.5,-2.2,-1.0];
+     for(var m=0;m<OA.length;m++){ var rr=r+14+(m%3)*9, ox=cx+rr*Math.cos(OA[m]), oy=cy+rr*Math.sin(OA[m]); s+='<circle cx="'+ox+'" cy="'+oy+'" r="4.5" fill="#7a3f9c" opacity="'+(0.9-(m%3)*0.18)+'"/>'; }
+     s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(r+5)+'" fill="none" stroke="#d1495b" stroke-width="2" opacity=".55" stroke-dasharray="4 5"/>';
+   }
+   if(opt.crosslink&&iges.length){
+     var pairs=[[2,3],[3,4]];
+     for(var p=0;p<pairs.length;p++){ var a=iges[pairs[p][0]], b=iges[pairs[p][1]];
+       var mx=(a.t2[0]+b.t1[0])/2, my=(a.t2[1]+b.t1[1])/2 - 4;
+       s+='<line x1="'+a.t2[0]+'" y1="'+a.t2[1]+'" x2="'+mx+'" y2="'+my+'" stroke="#a85f13" stroke-width="2"/>';
+       s+='<line x1="'+b.t1[0]+'" y1="'+b.t1[1]+'" x2="'+mx+'" y2="'+my+'" stroke="#a85f13" stroke-width="2"/>';
+       s+=allergen(mx,my,8);
+     }
+   }
+   return s;
+ }
+ function dendrites(cx,cy,r){ var s=''; for(var a=0;a<9;a++){ var an=a/9*6.283, x1=cx+r*Math.cos(an), y1=cy+r*Math.sin(an), x2=cx+(r+11)*Math.cos(an), y2=cy+(r+11)*Math.sin(an); s+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#9c7bc0" stroke-width="3" stroke-linecap="round"/>'; } return s; }
+
+ // ---- the seven steps ----
+ var S=[
+  {t:'First exposure',phase:'First exposure · sensitization',pc:'p1',col:'#2f6f9f',art:'enter',ige:0,armed:0,react:0,
+   d:'The very first contact with an allergen &mdash; a peanut protein, bee venom, a drug, latex. An <b>antigen-presenting cell</b> engulfs it and carries it to a lymph node. <b>Nothing feels wrong:</b> a first exposure to an allergen causes <b>no allergic symptoms</b>. This is the setup, not the reaction.'},
+  {t:'IgE is made',phase:'First exposure · sensitization',pc:'p1',col:'#6d3f9c',art:'ige',ige:1,armed:0,react:0,
+   d:'A <b>Th2</b> helper cell reads the allergen and releases <b>IL-4</b>, driving B cells to class-switch into plasma cells that pump out <b>allergen-specific IgE</b>. IgE is the signature antibody of <b>type I hypersensitivity</b> &mdash; and it is made only against this one allergen.'},
+  {t:'Mast cells armed',phase:'First exposure · sensitization',pc:'p1',col:'#2f9e5b',art:'armed',ige:1,armed:1,react:0,
+   d:'The new IgE clips onto <b>Fc&epsilon;RI receptors</b> on the surface of <b>mast cells</b> and basophils, coating them like a loaded trap. The person is now <b>sensitized</b>. Still <b>no symptoms</b> &mdash; the reaction only comes on the <b>next</b> encounter.',
+   mnem:'<b>Sensitization is silent.</b> The trap is now loaded, but it only springs on a later exposure to the same allergen.'},
+  {t:'Re-exposure & cross-linking',phase:'Re-exposure · reaction',pc:'p2',col:'#b8862f',art:'crosslink',ige:1,armed:1,react:0,
+   d:'On a later exposure the <b>same allergen</b> returns and bridges <b>two adjacent IgE</b> molecules on the mast-cell surface &mdash; <b>cross-linking</b>. This is the trigger that flips the switch. Because it takes two IgE bound at once, a single first exposure can never do it.'},
+  {t:'Degranulation',phase:'Re-exposure · reaction',pc:'p2',col:'#d1495b',art:'degran',ige:1,armed:1,react:1,
+   d:'Cross-linking makes the mast cell <b>degranulate</b> &mdash; dumping preformed <b>histamine</b> and tryptase within seconds, then synthesizing <b>leukotrienes</b> and prostaglandins. These mediators drive the whole reaction, and onset is <b>fast</b>: often minutes.'},
+  {t:'Local reaction',phase:'Re-exposure · reaction',pc:'p2',col:'#d1495b',art:'local',ige:1,armed:1,react:1,
+   d:'Histamine causes <b>vasodilation</b> and <b>leaky vessels</b>, producing the classic <b>wheal-and-flare</b>: itchy hives, redness, and swelling. In the nose it is allergic rhinitis; in the airway, mucus and <b>bronchospasm</b> (wheeze). Confined to one area, this is urticaria.'},
+  {t:'Anaphylaxis',phase:'Re-exposure · reaction',pc:'p2',col:'#b02a3a',art:'systemic',ige:1,armed:1,react:1,
+   d:'When mediators flood the <b>whole body</b>, vessels dilate everywhere &rarr; <b>hypotension and shock</b>, the airway swells, and the bronchi clamp down. This is <b>anaphylaxis</b>, a medical emergency that can kill in minutes.',
+   note:'<b>Anaphylaxis is an emergency.</b> Give <b>intramuscular epinephrine</b> to the lateral thigh first &mdash; not antihistamines &mdash; and call for help. Repeat every 5&ndash;15 min if needed.'}
+ ];
+ var i=0;
+
+ function draw(s){ var out='';
+   if(s.art==='enter'){
+     out+=dendrites(60,120,34);
+     out+='<circle cx="60" cy="120" r="34" fill="#cbb3e0" stroke="#9c7bc0" stroke-width="2"/>';
+     out+='<circle cx="52" cy="128" r="11" fill="#8a5a9c" opacity=".5"/>';
+     out+=allergen(150,46,8)+allergen(184,74,7)+allergen(118,64,6)+allergen(86,106,7);
+     out+='<text x="60" y="176" font-size="9.5" text-anchor="middle" fill="#3d2a5c" font-weight="700">antigen-presenting cell</text>';
+     out+='<text x="164" y="30" font-size="10" text-anchor="middle" fill="#a85f13" font-weight="700">allergen</text>';
+   } else if(s.art==='ige'){
+     out+='<ellipse cx="66" cy="118" rx="34" ry="30" fill="#e6c9a0" stroke="#c69a5e" stroke-width="2"/>';
+     out+='<circle cx="56" cy="126" r="13" fill="#b07a2a" opacity=".45"/>';
+     out+='<path d="M72 100 q14 8 0 16" stroke="#c69a5e" fill="none" stroke-width="2"/>';
+     out+=yAnt(120,80,0.4,'#3a6f9c')+yAnt(150,112,-0.3,'#3a6f9c')+yAnt(132,152,0.15,'#3a6f9c')+yAnt(182,92,-0.6,'#3a6f9c')+yAnt(186,144,0.5,'#3a6f9c');
+     out+='<text x="66" y="170" font-size="9.5" text-anchor="middle" fill="#3d2a5c" font-weight="700">plasma cell</text>';
+     out+='<text x="162" y="30" font-size="10" text-anchor="middle" fill="#3a6f9c" font-weight="700">allergen-specific IgE</text>';
+   } else if(s.art==='armed'){
+     out+=mastCell({ige:1,granIn:9,granOut:0,crosslink:0});
+     out+='<text x="150" y="188" font-size="9.5" text-anchor="middle" fill="#237a45" font-weight="700">sensitized mast cell — quiet</text>';
+   } else if(s.art==='crosslink'){
+     out+=allergen(60,40,8)+allergen(96,30,7)+allergen(200,44,7);
+     out+=mastCell({ige:1,granIn:9,granOut:0,crosslink:1});
+     out+='<text x="150" y="188" font-size="9.5" text-anchor="middle" fill="#a85f13" font-weight="700">allergen bridges two IgE — cross-link</text>';
+   } else if(s.art==='degran'){
+     out+=mastCell({ige:1,granIn:3,granOut:1,crosslink:1});
+     out+='<text x="150" y="188" font-size="9.5" text-anchor="middle" fill="#b23145" font-weight="700">histamine · leukotrienes released</text>';
+   } else if(s.art==='local'){
+     out+='<rect x="24" y="34" width="192" height="15" fill="#f6e2d2"/>';
+     out+='<ellipse cx="120" cy="49" rx="62" ry="9" fill="#e05a5a" opacity=".2"/>';
+     out+='<path d="M96 49 q24 -30 48 0" fill="#f2c9b0" stroke="#d98f6b" stroke-width="2"/>';
+     out+='<text x="120" y="26" font-size="10" text-anchor="middle" fill="#b23145" font-weight="700">wheal-and-flare</text>';
+     out+='<rect x="24" y="120" width="192" height="34" rx="17" fill="#e88a8a" stroke="#c85a5a" stroke-width="2"/>';
+     for(var b=0;b<5;b++){ out+='<circle cx="'+(46+b*36)+'" cy="137" r="6" fill="#c0392b"/>'; }
+     for(var d=0;d<7;d++){ out+='<circle cx="'+(40+d*26)+'" cy="'+(112-((d%3)*10))+'" r="3.5" fill="#7a3f9c" opacity=".8"/>'; }
+     out+='<text x="120" y="178" font-size="9.5" text-anchor="middle" fill="#3d2a5c" font-weight="700">dilated, leaky vessel → swelling</text>';
+   } else { // systemic
+     out+='<circle cx="120" cy="40" r="20" fill="#e9c39d" stroke="#c99a6e" stroke-width="2"/>';
+     out+='<ellipse cx="120" cy="55" rx="13" ry="7" fill="#d1495b" opacity=".55"/>';
+     out+='<rect x="112" y="59" width="16" height="14" rx="4" fill="#e9c39d" stroke="#c99a6e" stroke-width="1.5"/>';
+     out+='<ellipse cx="120" cy="66" rx="12" ry="5" fill="#d1495b" opacity=".4"/>';
+     out+='<path d="M96 73 q24 -6 48 0 l9 74 q-33 9 -66 0 Z" fill="#7a5a8a"/>';
+     var hv=[[108,96],[130,104],[118,120],[135,130],[104,132],[124,142]];
+     for(var h=0;h<hv.length;h++){ out+='<circle cx="'+hv[h][0]+'" cy="'+hv[h][1]+'" r="5" fill="#d1495b"/>'; }
+     out+='<text x="40" y="112" font-size="13" fill="#b02a3a" font-weight="800">BP</text>';
+     out+='<line x1="46" y1="118" x2="46" y2="150" stroke="#b02a3a" stroke-width="3"/>';
+     out+='<polygon points="40,146 52,146 46,158" fill="#b02a3a"/>';
+     out+='<rect x="188" y="98" width="18" height="58" rx="6" fill="#e2b23a" stroke="#a8801a" stroke-width="2"/>';
+     out+='<line x1="197" y1="156" x2="197" y2="168" stroke="#8a8a8a" stroke-width="2"/>';
+     out+='<text x="197" y="180" font-size="9" text-anchor="middle" fill="#7a5a12" font-weight="800">EPI</text>';
+     out+='<text x="120" y="168" font-size="9.5" text-anchor="middle" fill="#b02a3a" font-weight="700">airway swelling · shock</text>';
+   }
+   return out;
+ }
+
+ function set(v,on){ v.className=on===1?'yes':(on===0?'no':''); v.querySelector('.v').innerHTML=on===1?'✓ yes':(on===0?'✕ no':'—'); }
+
+ function render(){ var s=S[i];
+   $("art").innerHTML=draw(s);
+   $("cardTitle").innerHTML=s.t;
+   $("stage").style.background=s.col;
+   $("stage").innerHTML=s.t+'<small>'+s.phase+' · step '+(i+1)+' of '+S.length+'</small>';
+   set($("c1"),s.ige); set($("c2"),s.armed); set($("c3"),s.react);
+   var html='<span class="phase '+s.pc+'">'+(s.pc==='p1'?'Act 1 · setup':'Act 2 · reaction')+'</span><br><span class="n">'+s.t+'</span>'+s.d;
+   if(s.mnem){ html+='<div class="mnem">'+s.mnem+'</div>'; }
+   if(s.note){ html+='<div class="note">'+s.note+'</div>'; }
+   $("info").innerHTML=html;
+   $("prev").disabled=(i===0); $("next").disabled=(i===S.length-1);
+ }
+ $("prev").onclick=function(){ if(i>0){ i--; render(); } };
+ $("next").onclick=function(){ if(i<S.length-1){ i++; render(); } };
+ render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>The Toolkit Functions</title>
+<meta name="description" content="Compare the nine parent graphs side by side — constant, identity, absolute value, quadratic, cubic, reciprocal, reciprocal squared, square root, and cube root — with a live tracer that shows the arithmetic behind every point.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.98fr 1.02fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.mx{font-family:var(--math);}
+sup{font-size:.62em;vertical-align:super;line-height:0;}
+.idx{font-size:.55em;vertical-align:.55em;margin-right:-.24em;line-height:0;}
+.rad{border-top:1.4px solid currentColor;padding:1px 3px 0 2px;margin-left:1px;}
+.fr{display:inline-block;vertical-align:middle;text-align:center;line-height:1.16;}
+.fr .nu{display:block;border-bottom:1.5px solid currentColor;padding:0 5px 1px;}
+.fr .de{display:block;padding:1px 5px 0;}
+/* ---- tracer controls ---- */
+.trlab{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+.trlab b{font-family:var(--math);font-size:19px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--teal-dk);}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:6px;background:#dfe2f1;outline:none;margin:7px 0 0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:21px;height:21px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.4);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.4);cursor:pointer;}
+.subst{font-family:var(--math);font-size:18px;text-align:center;color:var(--teal-dk);background:#eef0f8;border:1px solid var(--line);border-radius:10px;padding:11px 8px;line-height:1.75;margin-top:12px;}
+.subst .res{background:#ffeaa8;border-radius:4px;padding:1px 6px;box-shadow:inset 0 0 0 1.5px #e5c46a;font-weight:600;}
+.subst.bad{background:#fae5e8;border-color:#f0c9d0;color:#8a2a3a;}
+.subst.bad .res{background:#f7d3d9;box-shadow:inset 0 0 0 1.5px #e0a3ae;}
+.subst .chk{display:block;font-size:12.5px;color:var(--muted);margin-top:2px;}
+.subst .gl{display:block;font-size:13.5px;color:var(--soft);margin-top:5px;border-top:1px dashed var(--line);padding-top:6px;}
+/* ---- gallery of parent graphs ---- */
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.gal button{border:1px solid var(--line);background:#fff;border-radius:11px;padding:7px 3px 6px;cursor:pointer;font-family:var(--sans);text-align:center;color:var(--teal);transition:.12s;}
+.gal button:hover{border-color:var(--teal);}
+.gal button svg{width:100%;max-width:86px;margin:0 auto;}
+.gal .fx{font-family:var(--math);font-size:14.5px;color:var(--teal-dk);margin-top:2px;line-height:1.3;}
+.gal .nb{font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-top:1px;}
+.gal button.on{background:var(--teal);border-color:var(--teal);color:#fff;}
+.gal button.on .fx{color:#fff;} .gal button.on .nb{color:rgba(255,255,255,.85);}
+/* ---- fact strip ---- */
+.facts{display:flex;gap:7px;margin-bottom:11px;}
+.facts div{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 3px;background:#fff;}
+.facts .k{font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+.facts .v{display:block;font-family:var(--math);font-size:14px;color:var(--teal-dk);margin-top:2px;line-height:1.3;}
+/* ---- live ranking ---- */
+.rank{border:1px solid var(--line);border-radius:11px;padding:8px 10px;background:#fff;margin-bottom:11px;}
+.rank .hd{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.rk{display:flex;align-items:center;gap:7px;padding:2.5px 0;}
+.rk .sw{width:11px;height:11px;border-radius:3px;flex:none;}
+.rk .lb{font-family:var(--math);font-size:13.5px;color:var(--ink);width:52px;flex:none;}
+.rk .br{flex:1;height:7px;border-radius:4px;background:#f0f1f8;overflow:hidden;}
+.rk .br i{display:block;height:100%;border-radius:4px;}
+.rk .vv{font-family:var(--math);font-size:13px;color:var(--soft);width:56px;text-align:right;flex:none;}
+.rk.sel .lb,.rk.sel .vv{font-weight:700;color:var(--teal-dk);}
+.rk.und .vv{color:#b23145;font-size:11px;font-family:var(--sans);font-weight:700;}
+#info .fxbig{font-family:var(--math);font-size:20px;color:var(--teal-dk);text-align:center;background:#e6e8f5;border-radius:8px;padding:7px 6px;margin:2px 0 9px;}
+.cmp{font-size:12.5px;border-radius:8px;padding:8px 11px;margin-top:10px;line-height:1.55;color:#255f8a;background:#e9f0f7;border:1px solid #c9dcec;}
+.cmp b{color:#1c4c72;}
+@media (max-width:560px){.facts{flex-wrap:wrap;} .facts div{min-width:31%;} .gal .fx{font-size:13px;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 4</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 4</div>
+  <h1>The Toolkit Functions</h1>
+  <div class="intro">Nine graphs do almost all the work in this course. Learn these <b>parent shapes</b> once and every stretched, shifted, flipped function later is just one of them in a costume. Tap a graph to study it &mdash; then drag the slider to watch a single input travel through the machine.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">Pick a function</h2>
+      <svg viewBox="0 0 320 320" aria-label="coordinate graph of the selected toolkit function"><g id="plot"></g><g id="trace"></g></svg>
+      <div class="trlab"><span>Input</span><b><i>x</i> = <span id="xval">1.5</span></b></div>
+      <input type="range" id="xs" min="-5" max="5" step="0.05" value="1.5" aria-label="input x">
+      <div class="row"><button class="btn" id="sweep">&#9654; Sweep <i>x</i></button><button class="btn" id="reset">Reset to 1.5</button></div>
+      <div class="subst" id="subst"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Nine parent graphs<small>tap one below to begin</small></div>
+    <div class="card">
+      <h2>Compare them side by side</h2>
+      <div class="modeseg" id="modes">
+        <button data-m="solo" class="on">Alone</button>
+        <button data-m="pair">Its partner</button>
+        <button data-m="all">All nine</button>
+      </div>
+      <div class="gal" id="gal"></div>
+    </div>
+    <div class="card">
+      <div id="rankbox" style="display:none"></div>
+      <div class="facts" id="facts"></div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- number formatting (never LaTeX) ---------- */
+ function fmt(v){
+   if(!isFinite(v)) return '&mdash;';
+   var r=Math.round(v*1000)/1000;
+   if(r===0) return '0';
+   var s=Math.abs(r).toFixed(3).replace(/0+$/,'').replace(/\.$/,'');
+   return (r<0?'&minus;':'')+s;
+ }
+ function exact(v){ return Math.abs(v-Math.round(v*1000)/1000)<1e-9; }
+ function rel(v){ return exact(v)?' = ':' &asymp; '; }
+ function nx(x){ return fmt(x); }                       /* signed input */
+ function px(x){ return x<0?'('+fmt(x)+')':fmt(x); }    /* parenthesised when negative */
+ function frac(a,b){ return '<span class="fr"><span class="nu">'+a+'</span><span class="de">'+b+'</span></span>'; }
+ function rt(inner){ return '&radic;<span class="rad">'+inner+'</span>'; }
+ function cbrtH(inner){ return '<sup class="idx">3</sup>&radic;<span class="rad">'+inner+'</span>'; }
+ function cbrt(x){ return x<0?-Math.pow(-x,1/3):Math.pow(x,1/3); }
+
+ /* ---------- the nine toolkit functions ---------- */
+ var F=[
+ {k:'con',nm:'Constant',tag:'the flat line',col:'#7d7f94',
+  fx:'<i>f</i>(<i>x</i>) = <i>c</i>',fxs:'<i>c</i>',fxb:'<i>f</i>(<i>x</i>) = <i>c</i> &nbsp;&middot;&nbsp; here <i>c</i> = 2',
+  f:function(x){return 2;}, dom:'(&minus;&infin;, &infin;)', ran:'{2}', sym:'even', pt:'idn',
+  test:'<i>f</i>(&minus;<i>x</i>) = 2 = <i>f</i>(<i>x</i>) &rarr; <b>even</b>',
+  mono:'Constant on (&minus;&infin;, &infin;) &mdash; it never rises and never falls.',
+  why:'The machine never looks at its input. Feed it 3, feed it &minus;200, feed it &pi; &mdash; the answer is still 2. Because the height never changes, the graph is a flat horizontal line, and the entire range is the single number 2. It is the only toolkit function whose range holds just one value.',
+  mn:'<b>Flat as a table top.</b> The input is ignored, so the height cannot change.',
+  cmp:'Laid over the identity you can see the two extremes of what a function can do: one machine <b>ignores</b> its input completely, the other <b>copies</b> it exactly. Every other toolkit function lives somewhere between those two habits.',
+  sub:function(x){ return '<i>f</i>('+px(x)+') = <span class="res">2</span><span class="chk">the input never appears in the rule, so the output cannot move</span>'; }},
+
+ {k:'idn',nm:'Identity',tag:'the 45&deg; line',col:'#2f6f9f',
+  fx:'<i>f</i>(<i>x</i>) = <i>x</i>',fxs:'<i>x</i>',fxb:'<i>f</i>(<i>x</i>) = <i>x</i>',
+  f:function(x){return x;}, dom:'(&minus;&infin;, &infin;)', ran:'(&minus;&infin;, &infin;)', sym:'odd', pt:'abs',
+  test:'<i>f</i>(&minus;<i>x</i>) = &minus;<i>x</i> = &minus;<i>f</i>(<i>x</i>) &rarr; <b>odd</b>',
+  mono:'Increasing on (&minus;&infin;, &infin;).',
+  why:'The output is a copy of the input. Every point on the graph therefore has matching coordinates &mdash; (1, 1), (&minus;3, &minus;3), (0, 0) &mdash; and all such points lie on the 45&deg; diagonal through the origin. This is the "do nothing" function, and it is the yardstick the other eight get measured against: steeper than this line means growing faster than the input itself.',
+  mn:'<b>The do-nothing machine.</b> Output equals input, so the graph is the line <i>y</i> = <i>x</i>.',
+  cmp:'|<i>x</i>| sits exactly on top of <i>x</i> for every <i>x</i> &ge; 0 &mdash; slide the tracer to the right and the two dots merge into one. They only disagree on the left, where absolute value flips the negative outputs up to positive.',
+  sub:function(x){ return '<i>f</i>('+px(x)+') = <span class="res">'+nx(x)+'</span><span class="chk">whatever goes in comes straight back out</span>'; }},
+
+ {k:'abs',nm:'Absolute value',tag:'the V',col:'#2f9e5b',
+  fx:'<i>f</i>(<i>x</i>) = |<i>x</i>|',fxs:'|<i>x</i>|',fxb:'<i>f</i>(<i>x</i>) = |<i>x</i>|',
+  f:function(x){return Math.abs(x);}, dom:'(&minus;&infin;, &infin;)', ran:'[0, &infin;)', sym:'even', pt:'idn',
+  test:'<i>f</i>(&minus;<i>x</i>) = |&minus;<i>x</i>| = |<i>x</i>| = <i>f</i>(<i>x</i>) &rarr; <b>even</b>',
+  mono:'Decreasing on (&minus;&infin;, 0), increasing on (0, &infin;). Minimum value 0, reached at <i>x</i> = 0.',
+  why:'Absolute value reports <b>distance from zero</b>, and a distance is never negative. For <i>x</i> &ge; 0 nothing happens at all, so the right arm is literally the identity line. For <i>x</i> &lt; 0 the machine hands back &minus;<i>x</i>, which lifts the left half up above the axis. That is the whole V: the line <i>y</i> = <i>x</i> with its left half reflected upward. The sharp corner at the origin is the instant the rule switches over.',
+  mn:'<b>The V.</b> Distance is never negative, so nothing ever drops below the axis.',
+  cmp:'The two graphs are identical for every <i>x</i> &ge; 0 &mdash; drag the tracer right of 0 and the dots sit on top of each other. To the left, the identity keeps falling while |<i>x</i>| mirrors it back up: |&minus;3| = 3, not &minus;3.',
+  sub:function(x){ var v=Math.abs(x);
+    return '<i>f</i>('+px(x)+') = |'+nx(x)+'| = <span class="res">'+fmt(v)+'</span><span class="chk">'+(x<0?'the negative sign is stripped off &mdash; distance from 0 is '+fmt(v):'already nonnegative, so nothing changes')+'</span>'; }},
+
+ {k:'qua',nm:'Quadratic',tag:'the parabola',col:'#43458f',
+  fx:'<i>f</i>(<i>x</i>) = <i>x</i><sup>2</sup>',fxs:'<i>x</i><sup>2</sup>',fxb:'<i>f</i>(<i>x</i>) = <i>x</i><sup>2</sup>',
+  f:function(x){return x*x;}, dom:'(&minus;&infin;, &infin;)', ran:'[0, &infin;)', sym:'even', pt:'sqr',
+  test:'<i>f</i>(&minus;<i>x</i>) = (&minus;<i>x</i>)<sup>2</sup> = <i>x</i><sup>2</sup> = <i>f</i>(<i>x</i>) &rarr; <b>even</b>',
+  mono:'Decreasing on (&minus;&infin;, 0), increasing on (0, &infin;). Minimum value 0, reached at <i>x</i> = 0.',
+  why:'A negative times a negative is positive, so (&minus;3)<sup>2</sup> and 3<sup>2</sup> both give 9. Opposite inputs produce the <b>same</b> output, which is exactly why the left half of the parabola mirrors the right half across the <i>y</i>-axis. No output can ever be negative, so the range starts at 0 and the lowest point &mdash; the vertex &mdash; sits at the origin. Notice too that between 0 and 1 squaring makes numbers <b>smaller</b> (0.5<sup>2</sup> = 0.25); past 1 it makes them much bigger.',
+  mn:'<b>The bowl.</b> Squaring destroys the sign, so the left side mirrors the right.',
+  cmp:'These two undo each other &mdash; but only on the right. Reflect the part of <i>y</i> = <i>x</i><sup>2</sup> with <i>x</i> &ge; 0 across the dashed line <i>y</i> = <i>x</i> and you land precisely on <i>y</i> = &radic;<span class="rad"><i>x</i></span>. The left half of the parabola gets left behind, because <i>x</i><sup>2</sup> sends two different inputs (&minus;3 and 3) to the same output, and coming back a function is only allowed one output per input.',
+  sub:function(x){ var v=x*x;
+    return '<i>f</i>('+px(x)+') = '+px(x)+'<sup>2</sup> = '+px(x)+'&middot;'+px(x)+' = <span class="res">'+fmt(v)+'</span><span class="chk">'+(x<0?'negative &times; negative = positive, so &minus;'+fmt(-x)+' and '+fmt(-x)+' share this output':(Math.abs(x)<1&&x!==0?'a number between 0 and 1 shrinks when squared':'the output climbs faster than the input'))+'</span>'; }},
+
+ {k:'cub',nm:'Cubic',tag:'the S-curve',col:'#7a5a8a',
+  fx:'<i>f</i>(<i>x</i>) = <i>x</i><sup>3</sup>',fxs:'<i>x</i><sup>3</sup>',fxb:'<i>f</i>(<i>x</i>) = <i>x</i><sup>3</sup>',
+  f:function(x){return x*x*x;}, dom:'(&minus;&infin;, &infin;)', ran:'(&minus;&infin;, &infin;)', sym:'odd', pt:'cbr',
+  test:'<i>f</i>(&minus;<i>x</i>) = (&minus;<i>x</i>)<sup>3</sup> = &minus;<i>x</i><sup>3</sup> = &minus;<i>f</i>(<i>x</i>) &rarr; <b>odd</b>',
+  mono:'Increasing on (&minus;&infin;, &infin;) &mdash; it never turns around.',
+  why:'Cubing multiplies three copies together, so the sign survives: (&minus;2)<sup>3</sup> = &minus;8 while 2<sup>3</sup> = 8. Opposite inputs give opposite outputs, so instead of a mirror you get a half-turn about the origin. Between &minus;1 and 1, cubing <b>shrinks</b> numbers (0.5<sup>3</sup> = 0.125), which is what flattens the middle of the curve; past 1 it explodes, which is what makes the tails so steep.',
+  mn:'<b>The S-curve.</b> Cubing keeps the sign, so it dives left and climbs right.',
+  cmp:'A clean pair: <i>x</i><sup>3</sup> and <sup class="idx">3</sup>&radic;<span class="rad"><i>x</i></span> undo each other for <b>every</b> real number, with no half thrown away, because cubing never sends two different inputs to the same output. Each curve is the other one reflected across the dashed line <i>y</i> = <i>x</i>.',
+  sub:function(x){ var v=x*x*x;
+    return '<i>f</i>('+px(x)+') = '+px(x)+'<sup>3</sup> = '+px(x)+'&middot;'+px(x)+'&middot;'+px(x)+' = <span class="res">'+fmt(v)+'</span><span class="chk">'+(x<0?'three negatives multiply to a negative, so the sign comes through':(Math.abs(x)<1&&x!==0?'a number between 0 and 1 shrinks fast when cubed':'the output races ahead of the input'))+'</span>'; }},
+
+ {k:'rec',nm:'Reciprocal',tag:'the hyperbola',col:'#d1495b',
+  fx:'<i>f</i>(<i>x</i>) = 1/<i>x</i>',fxs:'1/<i>x</i>',fxb:'<i>f</i>(<i>x</i>) = '+frac('1','<i>x</i>'),
+  f:function(x){return x===0?NaN:1/x;}, dom:'(&minus;&infin;, 0) &cup; (0, &infin;)', ran:'(&minus;&infin;, 0) &cup; (0, &infin;)', sym:'odd', pt:'rsq',
+  test:'<i>f</i>(&minus;<i>x</i>) = '+frac('1','&minus;<i>x</i>')+' = &minus;'+frac('1','<i>x</i>')+' = &minus;<i>f</i>(<i>x</i>) &rarr; <b>odd</b>',
+  mono:'Decreasing on (&minus;&infin;, 0) <b>and</b> decreasing on (0, &infin;) &mdash; two separate pieces, so you may not call it decreasing on one single interval.',
+  why:'Dividing 1 by something tiny gives something enormous: 1 &divide; 0.001 = 1000. So as <i>x</i> creeps toward 0 the graph races off the top (coming from the right) or off the bottom (coming from the left). That runaway is the <b>vertical asymptote <i>x</i> = 0</b>, and <i>x</i> = 0 is excluded from the domain because dividing by zero is undefined. Dividing by something enormous gives almost nothing, so far out in either direction the curve flattens toward the <b>horizontal asymptote <i>y</i> = 0</b> &mdash; and never reaches it, since 1 divided by anything is never exactly 0.',
+  mn:'<b>Small divisor, big answer.</b> Two branches that hug the axes but never touch them.',
+  cmp:'Same asymptotes, same excluded input &mdash; the only difference is the square, and it costs 1/<i>x</i><sup>2</sup> its entire negative half. Squaring the divisor forces every output positive, which lifts the left branch up above the axis instead of down below it.',
+  sub:function(x){ if(x===0) return '<i>f</i>(0) = '+frac('1','0')+' &rarr; <span class="res">undefined</span><span class="chk">division by zero &mdash; <i>x</i> = 0 is the one input barred from the domain</span>';
+    var v=1/x; return '<i>f</i>('+px(x)+') = '+frac('1',px(x))+rel(v)+'<span class="res">'+fmt(v)+'</span><span class="chk">'+(Math.abs(x)<1?'dividing by a number smaller than 1 makes the answer bigger than 1':'dividing by a number bigger than 1 shrinks the answer toward 0')+'</span>'; }},
+
+ {k:'rsq',nm:'Reciprocal squared',tag:'both branches up',col:'#b8862f',
+  fx:'<i>f</i>(<i>x</i>) = 1/<i>x</i><sup>2</sup>',fxs:'1/<i>x</i><sup>2</sup>',fxb:'<i>f</i>(<i>x</i>) = '+frac('1','<i>x</i><sup>2</sup>'),
+  f:function(x){return x===0?NaN:1/(x*x);}, dom:'(&minus;&infin;, 0) &cup; (0, &infin;)', ran:'(0, &infin;)', sym:'even', pt:'rec',
+  test:'<i>f</i>(&minus;<i>x</i>) = '+frac('1','(&minus;<i>x</i>)<sup>2</sup>')+' = '+frac('1','<i>x</i><sup>2</sup>')+' = <i>f</i>(<i>x</i>) &rarr; <b>even</b>',
+  mono:'Increasing on (&minus;&infin;, 0), decreasing on (0, &infin;).',
+  why:'Same story as 1/<i>x</i> &mdash; a tiny divisor gives an enormous answer, so <i>x</i> = 0 is again excluded and again a vertical asymptote. But the squaring happens <b>first</b>, and squaring erases the sign. Both branches are therefore positive, the whole graph sits above the <i>x</i>-axis, and the range is (0, &infin;) &mdash; 0 itself is still impossible to reach.',
+  mn:'<b>1/<i>x</i> with the left branch flipped up.</b> Square first, so nothing can come out negative.',
+  cmp:'Same asymptotes, same excluded input. The square is the whole difference: 1/<i>x</i> keeps the sign of its input and drops below the axis on the left, while 1/<i>x</i><sup>2</sup> squares the sign away and stays up. Watch the two tracer dots split apart as you slide left of 0.',
+  sub:function(x){ if(x===0) return '<i>f</i>(0) = '+frac('1','0<sup>2</sup>')+' &rarr; <span class="res">undefined</span><span class="chk">still division by zero &mdash; <i>x</i> = 0 stays out of the domain</span>';
+    var v=1/(x*x); return '<i>f</i>('+px(x)+') = '+frac('1',px(x)+'<sup>2</sup>')+' = '+frac('1',fmt(x*x))+rel(v)+'<span class="res">'+fmt(v)+'</span><span class="chk">the bottom is squared first, so it is positive no matter what &mdash; the output must be positive too</span>'; }},
+
+ {k:'sqr',nm:'Square root',tag:'half a parabola',col:'#1f8a8a',
+  fx:'<i>f</i>(<i>x</i>) = &radic;<span class="rad"><i>x</i></span>',fxs:'&radic;<span class="rad"><i>x</i></span>',fxb:'<i>f</i>(<i>x</i>) = &radic;<span class="rad"><i>x</i></span>',
+  f:function(x){return x<0?NaN:Math.sqrt(x);}, dom:'[0, &infin;)', ran:'[0, &infin;)', sym:'neither', pt:'qua',
+  test:'<i>f</i>(&minus;<i>x</i>) = &radic;<span class="rad">&minus;<i>x</i></span> does not even exist for <i>x</i> &gt; 0 &mdash; the domain is not symmetric, so it is <b>neither even nor odd</b>',
+  mono:'Increasing on (0, &infin;) &mdash; but the climb gets slower and slower.',
+  why:'The square root asks: what number, squared, gives <i>x</i>? No real number squares to a negative, so negative inputs are simply not allowed and the domain begins at 0. And by agreement the radical returns the <b>nonnegative</b> answer (&radic;<span class="rad">9</span> = 3, not &plusmn;3), so the outputs begin at 0 as well. Now swap the coordinates on the right half of <i>y</i> = <i>x</i><sup>2</sup>: (2, 4) becomes (4, 2), and (3, 9) becomes (9, 3). Those swapped points trace this exact curve. It is that parabola reflected across the line <i>y</i> = <i>x</i>, which is why it looks like half a parabola lying on its side.',
+  mn:'<b>Half a parabola on its side.</b> Starts at the origin, climbs forever, but ever more slowly.',
+  cmp:'These two undo each other on the right-hand side only. Reflect <i>y</i> = &radic;<span class="rad"><i>x</i></span> across the dashed line <i>y</i> = <i>x</i> and you get the <i>x</i> &ge; 0 half of the parabola &mdash; the left half has no partner, because a function may not send one input to two outputs.',
+  sub:function(x){ if(x<0) return '<i>f</i>('+px(x)+') = '+rt(nx(x))+' &rarr; <span class="res">undefined</span><span class="chk">no real number squared gives a negative &mdash; every <i>x</i> &lt; 0 is outside the domain</span>';
+    var v=Math.sqrt(x), vr=Math.round(v*1000)/1000, back=vr*vr;
+    return '<i>f</i>('+px(x)+') = '+rt(nx(x))+rel(v)+'<span class="res">'+fmt(v)+'</span><span class="chk">check: '+fmt(vr)+'<sup>2</sup>'+(Math.abs(back-x)<1e-9?' = ':' &asymp; ')+fmt(x)+' &#10003;</span>'; }},
+
+ {k:'cbr',nm:'Cube root',tag:'the cubic tipped over',col:'#8a5a2f',
+  fx:'<i>f</i>(<i>x</i>) = <sup class="idx">3</sup>&radic;<span class="rad"><i>x</i></span>',fxs:'<sup class="idx">3</sup>&radic;<span class="rad"><i>x</i></span>',fxb:'<i>f</i>(<i>x</i>) = <sup class="idx">3</sup>&radic;<span class="rad"><i>x</i></span>',
+  f:function(x){return cbrt(x);}, dom:'(&minus;&infin;, &infin;)', ran:'(&minus;&infin;, &infin;)', sym:'odd', pt:'cub',
+  test:'<i>f</i>(&minus;<i>x</i>) = <sup class="idx">3</sup>&radic;<span class="rad">&minus;<i>x</i></span> = &minus;<sup class="idx">3</sup>&radic;<span class="rad"><i>x</i></span> = &minus;<i>f</i>(<i>x</i>) &rarr; <b>odd</b>',
+  mono:'Increasing on (&minus;&infin;, &infin;).',
+  why:'Every real number has exactly one real cube root, negatives included: since (&minus;2)<sup>3</sup> = &minus;8, we get <sup class="idx">3</sup>&radic;<span class="rad">&minus;8</span> = &minus;2. Nothing has to be excluded, so the domain and the range are both all real numbers &mdash; the single biggest difference between this and the square root. Reflect the whole cubic across the line <i>y</i> = <i>x</i> and this is exactly what appears: the flat middle of <i>x</i><sup>3</sup> becomes the steep middle here, and the steep tails of <i>x</i><sup>3</sup> flatten out into these.',
+  mn:'<b>The cubic tipped on its side.</b> Negatives are fine here &mdash; unlike the square root.',
+  cmp:'Reflections of each other across the dashed line <i>y</i> = <i>x</i>, and perfect partners: cube a number, then cube-root it, and you are back where you started &mdash; for <b>every</b> real number, negatives included. Nothing is discarded, which is what makes this pair cleaner than <i>x</i><sup>2</sup> with &radic;<span class="rad"><i>x</i></span>.',
+  sub:function(x){ var v=cbrt(x), vr=Math.round(v*1000)/1000, back=vr*vr*vr;
+    return '<i>f</i>('+px(x)+') = '+cbrtH(nx(x))+rel(v)+'<span class="res">'+fmt(v)+'</span><span class="chk">check: '+px(vr)+'<sup>3</sup>'+(Math.abs(back-x)<1e-9?' = ':' &asymp; ')+fmt(x)+' &#10003;</span>'; }}
+ ];
+
+ function byKey(k){ for(var i=0;i<F.length;i++){ if(F[i].k===k) return F[i]; } return null; }
+
+ /* ---------- plotting ---------- */
+ var MAIN={cx:160,cy:160,s:29,xlim:5.2,ylim:5.2,st:0.02};
+ var MINI={cx:39,cy:31,s:6.4,xlim:5.6,ylim:4.3,st:0.05};
+ function X(x,o){ return (o.cx+x*o.s).toFixed(2); }
+ function Y(y,o){ return (o.cy-y*o.s).toFixed(2); }
+ function P(x,y,o){ return X(x,o)+','+Y(y,o); }
+
+ /* walk the boundary so curves meet the frame cleanly instead of stopping short */
+ function edge(fn,outX,inX,lim){
+   for(var k=0;k<22;k++){ var m=(outX+inX)/2, y=fn(m);
+     if(isFinite(y)&&Math.abs(y)<=lim) inX=m; else outX=m; }
+   var yy=fn(inX); if(!isFinite(yy)) return null; return {x:inX,y:yy};
+ }
+ function build(fn,o){
+   var segs=[],cur=[],pv=null, n=2*Math.round(o.xlim/o.st), half=n/2;
+   for(var i=0;i<=n;i++){
+     var x=(i-half)*o.st, y=fn(x), ok=(isFinite(y)&&Math.abs(y)<=o.ylim);
+     if(ok){
+       if(pv&&!pv.ok&&isFinite(pv.y)){ var b=edge(fn,pv.x,x,o.ylim); if(b) cur.push(P(b.x,b.y,o)); }
+       cur.push(P(x,y,o));
+     }else{
+       if(pv&&pv.ok&&isFinite(y)){ var b2=edge(fn,x,pv.x,o.ylim); if(b2) cur.push(P(b2.x,b2.y,o)); }
+       if(cur.length>1) segs.push(cur);
+       cur=[];
+     }
+     pv={x:x,y:y,ok:ok};
+   }
+   if(cur.length>1) segs.push(cur);
+   return segs;
+ }
+ function poly(segs,col,w,op){
+   var s='';
+   for(var i=0;i<segs.length;i++){
+     s+='<polyline points="'+segs[i].join(' ')+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round"'+(op?' opacity="'+op+'"':'')+'/>';
+   }
+   return s;
+ }
+ F.forEach(function(g){ g.big=build(g.f,MAIN); g.small=build(g.f,MINI); });
+
+ /* ---------- static plot layer ---------- */
+ function grid(){
+   var o=MAIN,s='',g;
+   for(g=-5;g<=5;g++){
+     if(g===0) continue;
+     s+='<line x1="'+X(g,o)+'" y1="'+Y(-5.2,o)+'" x2="'+X(g,o)+'" y2="'+Y(5.2,o)+'" stroke="#e7e9f4" stroke-width="1"/>';
+     s+='<line x1="'+X(-5.2,o)+'" y1="'+Y(g,o)+'" x2="'+X(5.2,o)+'" y2="'+Y(g,o)+'" stroke="#e7e9f4" stroke-width="1"/>';
+   }
+   s+='<line x1="'+X(-5.2,o)+'" y1="'+Y(0,o)+'" x2="'+X(5.2,o)+'" y2="'+Y(0,o)+'" stroke="#9a9db5" stroke-width="1.5"/>';
+   s+='<line x1="'+X(0,o)+'" y1="'+Y(-5.2,o)+'" x2="'+X(0,o)+'" y2="'+Y(5.2,o)+'" stroke="#9a9db5" stroke-width="1.5"/>';
+   var t=[-4,-2,2,4];
+   for(var i=0;i<t.length;i++){
+     var v=t[i];
+     s+='<line x1="'+X(v,o)+'" y1="'+(o.cy-4)+'" x2="'+X(v,o)+'" y2="'+(o.cy+4)+'" stroke="#9a9db5" stroke-width="1.5"/>';
+     s+='<text x="'+X(v,o)+'" y="'+(o.cy+16)+'" font-family="Inter,sans-serif" font-size="9.5" fill="#8f92a8" text-anchor="middle">'+(v<0?'−'+Math.abs(v):v)+'</text>';
+     s+='<line x1="'+(o.cx-4)+'" y1="'+Y(v,o)+'" x2="'+(o.cx+4)+'" y2="'+Y(v,o)+'" stroke="#9a9db5" stroke-width="1.5"/>';
+     s+='<text x="'+(o.cx-8)+'" y="'+(parseFloat(Y(v,o))+3.4)+'" font-family="Inter,sans-serif" font-size="9.5" fill="#8f92a8" text-anchor="end">'+(v<0?'−'+Math.abs(v):v)+'</text>';
+   }
+   s+='<text x="312" y="'+(o.cy-7)+'" font-family="Georgia,serif" font-style="italic" font-size="12" fill="#8f92a8" text-anchor="end">x</text>';
+   s+='<text x="'+(o.cx+8)+'" y="14" font-family="Georgia,serif" font-style="italic" font-size="12" fill="#8f92a8">y</text>';
+   return s;
+ }
+ var GRID=grid();
+
+ var sel='qua', mode='solo', curX=1.5, timer=null;
+ function cur(){ return byKey(sel); }
+ function ghost(){ return mode==='pair'?byKey(cur().pt):null; }
+
+ function drawPlot(){
+   var o=MAIN, f=cur(), s=GRID;
+   if(mode==='all'){
+     F.forEach(function(g){ if(g.k!==f.k) s+=poly(g.big,g.col,2,'0.30'); });
+   }
+   if(mode==='pair'){
+     var gh=byKey(f.pt);
+     if(f.k==='qua'||f.k==='sqr'||f.k==='cub'||f.k==='cbr'){
+       s+='<line x1="'+X(-5.2,o)+'" y1="'+Y(-5.2,o)+'" x2="'+X(5.2,o)+'" y2="'+Y(5.2,o)+'" stroke="#b9bcd2" stroke-width="1.3" stroke-dasharray="5 5"/>';
+       s+='<text x="292" y="34" font-family="Georgia,serif" font-size="11" fill="#a3a6be" text-anchor="end" font-style="italic">y = x</text>';
+     }
+     s+=poly(gh.big,gh.col,3,'0.55');
+   }
+   if(f.k==='rec'||f.k==='rsq'){
+     s+='<line x1="'+X(0,o)+'" y1="'+Y(-5.2,o)+'" x2="'+X(0,o)+'" y2="'+Y(5.2,o)+'" stroke="'+f.col+'" stroke-width="1.6" stroke-dasharray="4 5" opacity=".55"/>';
+     s+='<line x1="'+X(-5.2,o)+'" y1="'+Y(0,o)+'" x2="'+X(5.2,o)+'" y2="'+Y(0,o)+'" stroke="'+f.col+'" stroke-width="1.6" stroke-dasharray="4 5" opacity=".55"/>';
+   }
+   s+=poly(f.big,f.col,3.4);
+   if(f.k==='sqr') s+='<circle cx="'+X(0,o)+'" cy="'+Y(0,o)+'" r="4.2" fill="'+f.col+'"/>';
+   if(f.k==='rec'||f.k==='rsq') s+='<circle cx="'+X(0,o)+'" cy="'+Y(0,o)+'" r="4" fill="#fffdf9" stroke="'+f.col+'" stroke-width="2"/>';
+   $('plot').innerHTML=s;
+ }
+
+ function drawTrace(){
+   var o=MAIN, f=cur(), x=curX, y=f.f(x), s='';
+   s+='<line x1="'+X(x,o)+'" y1="'+Y(-5.2,o)+'" x2="'+X(x,o)+'" y2="'+Y(5.2,o)+'" stroke="'+f.col+'" stroke-width="1.2" stroke-dasharray="3 4" opacity=".45"/>';
+   s+='<circle cx="'+X(x,o)+'" cy="'+Y(0,o)+'" r="3.4" fill="'+f.col+'" opacity=".6"/>';
+   var gh=ghost();
+   if(gh){
+     var gy=gh.f(x);
+     if(isFinite(gy)&&Math.abs(gy)<=5.2) s+='<circle cx="'+X(x,o)+'" cy="'+Y(gy,o)+'" r="5.6" fill="#fffdf9" stroke="'+gh.col+'" stroke-width="2.6" opacity=".9"/>';
+   }
+   if(isFinite(y)&&Math.abs(y)<=5.2){
+     s+='<line x1="'+X(x,o)+'" y1="'+Y(y,o)+'" x2="'+X(0,o)+'" y2="'+Y(y,o)+'" stroke="'+f.col+'" stroke-width="1.2" stroke-dasharray="3 4" opacity=".45"/>';
+     s+='<circle cx="'+X(x,o)+'" cy="'+Y(y,o)+'" r="6.6" fill="#fffdf9" stroke="'+f.col+'" stroke-width="3.2"/>';
+   }else if(isFinite(y)){
+     var up=y>0, ax=parseFloat(X(x,o)), ty=up?10:310, dir=up?1:-1;
+     s+='<polygon points="'+(ax-6)+','+(ty+11*dir)+' '+(ax+6)+','+(ty+11*dir)+' '+ax+','+ty+'" fill="'+f.col+'"/>';
+     s+='<text x="'+Math.min(280,Math.max(40,ax))+'" y="'+(up?34:296)+'" font-family="Inter,sans-serif" font-size="9.5" font-weight="700" fill="'+f.col+'" text-anchor="middle">off the '+(up?'top':'bottom')+' &#183; '+fmt(y)+'</text>';
+   }else{
+     s+='<text x="'+Math.min(268,Math.max(52,parseFloat(X(x,o))))+'" y="'+(o.cy-13)+'" font-family="Inter,sans-serif" font-size="10" font-weight="800" fill="#b23145" text-anchor="middle">not in the domain</text>';
+   }
+   $('trace').innerHTML=s;
+ }
+
+ /* ---------- gallery of the nine parent graphs ---------- */
+ function miniSVG(g){
+   var o=MINI,s='';
+   s+='<line x1="'+X(-5.6,o)+'" y1="'+Y(0,o)+'" x2="'+X(5.6,o)+'" y2="'+Y(0,o)+'" stroke="currentColor" stroke-width="1" opacity=".32"/>';
+   s+='<line x1="'+X(0,o)+'" y1="'+Y(-4.3,o)+'" x2="'+X(0,o)+'" y2="'+Y(4.3,o)+'" stroke="currentColor" stroke-width="1" opacity=".32"/>';
+   s+=poly(g.small,'currentColor',2.3);
+   return '<svg viewBox="0 0 78 62" aria-hidden="true">'+s+'</svg>';
+ }
+ function buildGal(){
+   $('gal').innerHTML=F.map(function(g){
+     return '<button data-k="'+g.k+'">'+miniSVG(g)+'<div class="fx">'+g.fxs+'</div><div class="nb">'+g.nm+'</div></button>';
+   }).join('');
+   Array.prototype.forEach.call($('gal').children,function(b){
+     b.onclick=function(){ stop(); sel=b.dataset.k; render(); };
+   });
+ }
+ function markGal(){
+   Array.prototype.forEach.call($('gal').children,function(b){
+     if(b.dataset.k===sel) b.classList.add('on'); else b.classList.remove('on');
+   });
+ }
+
+ /* ---------- live ranking (all-nine mode) ---------- */
+ function ranking(){
+   var x=curX, rows=F.map(function(g){ return {g:g,v:g.f(x)}; });
+   var mx=0;
+   rows.forEach(function(r){ if(isFinite(r.v)) mx=Math.max(mx,Math.abs(r.v)); });
+   if(mx===0) mx=1;
+   rows.sort(function(a,b){
+     if(!isFinite(a.v)&&!isFinite(b.v)) return 0;
+     if(!isFinite(a.v)) return 1;
+     if(!isFinite(b.v)) return -1;
+     return b.v-a.v;
+   });
+   var s='<div class="rank"><div class="hd">Every output at <i>x</i> = '+fmt(x)+', tallest first</div>';
+   rows.forEach(function(r){
+     var und=!isFinite(r.v);
+     s+='<div class="rk'+(r.g.k===sel?' sel':'')+(und?' und':'')+'">'+
+        '<span class="sw" style="background:'+r.g.col+'"></span>'+
+        '<span class="lb">'+r.g.fxs+'</span>'+
+        '<span class="br">'+(und?'':'<i style="width:'+(Math.abs(r.v)/mx*100).toFixed(1)+'%;background:'+r.g.col+';opacity:'+(r.v<0?'.42':'1')+'"></i>')+'</span>'+
+        '<span class="vv">'+(und?'undefined':fmt(r.v))+'</span></div>';
+   });
+   var note='';
+   if(Math.abs(x-1)<0.001) note='All nine except the constant meet here: every one of them sends 1 to 1.';
+   else if(x>0&&x<1) note='Between 0 and 1 the order flips &mdash; squaring and cubing <b>shrink</b> a number, so <i>x</i><sup>3</sup> sinks below <i>x</i><sup>2</sup>, below <i>x</i>, below the roots.';
+   else if(x>1) note='Past <i>x</i> = 1 the powers pull away upward while the roots and the reciprocals fall behind.';
+   else if(x===0) note='At <i>x</i> = 0 six of the nine pass through the origin; the two reciprocals are undefined and the constant sits at 2.';
+   else note='Left of 0 exactly four graphs stay above the axis &mdash; 2, |<i>x</i>|, <i>x</i><sup>2</sup> and 1/<i>x</i><sup>2</sup>. Those are precisely the four <b>even</b> functions, the ones that ignore the sign of their input. And &radic;<span class="rad"><i>x</i></span> is not defined here at all.';
+   s+='<div style="font-size:12px;color:var(--soft);line-height:1.5;margin-top:7px;border-top:1px dashed var(--line);padding-top:6px;">'+note+'</div></div>';
+   return s;
+ }
+
+ /* ---------- render ---------- */
+ function renderX(){
+   var f=cur();
+   $('xval').innerHTML=fmt(curX);
+   $('xs').value=curX;
+   drawTrace();
+   var bad=!isFinite(f.f(curX));
+   var html=f.sub(curX);
+   var gh=ghost();
+   if(gh){
+     var gv=gh.f(curX);
+     html+='<span class="gl">'+gh.nm.toLowerCase()+': <i>f</i>('+px(curX)+') = '+gh.fxs.replace(/<i>x<\/i>/g,px(curX))+' &rarr; <b>'+(isFinite(gv)?fmt(gv):'undefined')+'</b></span>';
+   }
+   $('subst').className='subst'+(bad?' bad':'');
+   $('subst').innerHTML=html;
+   if(mode==='all') $('rankbox').innerHTML=ranking();
+ }
+ function render(){
+   var f=cur();
+   $('cardTitle').innerHTML=f.nm+' &nbsp;<span class="mx" style="font-weight:400;color:var(--muted)">'+f.fx+'</span>';
+   $('stage').style.background=f.col;
+   $('stage').innerHTML=f.nm+'<small>'+f.tag+'</small>';
+   $('facts').innerHTML='<div><span class="k">Domain</span><span class="v">'+f.dom+'</span></div>'+
+     '<div><span class="k">Range</span><span class="v">'+f.ran+'</span></div>'+
+     '<div><span class="k">Symmetry</span><span class="v">'+f.sym+'</span></div>';
+   var info='<span class="n">'+f.nm+'</span><div class="fxbig">'+f.fxb+'</div>'+f.why+
+     '<div class="loc">Even / odd test &nbsp;&middot;&nbsp; '+f.test+'</div>'+
+     '<div class="dd"><b>Behaviour:</b> '+f.mono+'</div>';
+   if(mode==='pair'){
+     var gh=byKey(f.pt);
+     info+='<div class="cmp"><b>'+f.fxs+' vs. '+gh.fxs+'</b> &mdash; '+f.cmp+'</div>';
+   }
+   if(mode==='all'){
+     info+='<div class="cmp">All nine on one grid. Six of them pass through the <b>origin</b>; eight of them pass through <b>(1, 1)</b>. Slide the tracer and watch the order in the list above rearrange itself.</div>';
+   }
+   $('info').innerHTML=info;
+   $('mnem').innerHTML=f.mn;
+   $('rankbox').style.display=(mode==='all')?'block':'none';
+   markGal();
+   drawPlot();
+   renderX();
+ }
+
+ /* ---------- controls ---------- */
+ function setX(v){ curX=Math.round(v*100)/100; renderX(); }
+ $('xs').oninput=function(){ stop(); setX(parseFloat(this.value)); };
+ $('reset').onclick=function(){ stop(); setX(1.5); };
+ Array.prototype.forEach.call($('modes').children,function(b){
+   b.onclick=function(){
+     mode=b.dataset.m;
+     Array.prototype.forEach.call($('modes').children,function(o){ o.classList.remove('on'); });
+     b.classList.add('on');
+     render();
+   };
+ });
+ function stop(){ if(timer){ clearInterval(timer); timer=null; $('sweep').innerHTML='&#9654; Sweep <i>x</i>'; } }
+ $('sweep').onclick=function(){
+   if(timer){ stop(); return; }
+   $('sweep').innerHTML='&#10073;&#10073; Pause';
+   curX=-5;
+   timer=setInterval(function(){
+     if(curX>=5){ stop(); return; }
+     setX(curX+0.05);
+   },26);
+ };
+
+ buildGal();
+ render();
+})();
+</script>
+</body>
+</html>

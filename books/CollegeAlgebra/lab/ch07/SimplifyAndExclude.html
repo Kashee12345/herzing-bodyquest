@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>The Point That Goes Missing: Simplifying Rational Expressions</title>
+<meta name="description" content="Simplifying rational expressions run as a worked-step machine — factor, cancel, and watch the excluded values get flagged on a live graph as holes and asymptotes.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.92fr 1.08fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+/* example picker */
+#pick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+#pick button{display:block;text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 9px;cursor:pointer;font-family:var(--sans);transition:.12s;}
+#pick button:hover{border-color:var(--teal);}
+#pick button .nm{display:block;font-weight:700;font-size:11.6px;color:var(--ink);line-height:1.15;}
+#pick button .ct{display:block;font-family:var(--math);font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.25;}
+#pick button.on{background:var(--teal);border-color:var(--teal);}
+#pick button.on .nm{color:#fff;} #pick button.on .ct{color:rgba(255,255,255,.9);}
+#pick sup{font-size:.66em;}
+@media (max-width:470px){#pick{grid-template-columns:repeat(2,1fr);}}
+/* the worked-step column */
+.work{margin-top:2px;}
+.wr{display:flex;gap:10px;align-items:baseline;padding:7px 8px;border-radius:9px;border-left:4px solid transparent;transition:.18s;}
+.wr + .wr{margin-top:2px;}
+.wr .pl{flex:none;width:86px;font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);line-height:1.25;}
+.wr .mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.7;flex:1;min-width:0;}
+.wr.on{background:#eef0fa;border-left-color:var(--teal);}
+.wr.on .mx{font-size:17.5px;color:var(--ink);font-weight:600;}
+.wr.on .pl{color:var(--teal);}
+.wr.done .mx{color:var(--soft);}
+.wr .ex{font-family:var(--math);font-size:13px;color:var(--soft);line-height:1.65;margin-top:6px;display:block;font-weight:400;}
+.wr:not(.on) .ex{display:none;}
+.wr .ex u{font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;display:block;margin-bottom:1px;}
+.wr .ex b{color:var(--ink);}
+.mx sub{font-size:.62em;vertical-align:sub;} .mx sup{font-size:.66em;} .ex sup{font-size:.66em;} .ex sub{font-size:.62em;}
+/* stacked fraction, built from HTML only */
+.fr{display:inline-block;vertical-align:middle;text-align:center;line-height:1.25;margin:0 2px;}
+.fr .nu{display:block;padding:0 7px 2px;border-bottom:1.5px solid currentColor;}
+.fr .de{display:block;padding:2px 7px 0;}
+.wr.on .fr{font-size:.96em;}
+/* highlight the part that just changed */
+.hl{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.wr:not(.on) .hl{background:transparent;box-shadow:none;padding:0;}
+.gl{border-radius:4px;padding:1px 4px;background:#dbe9f5;box-shadow:inset 0 0 0 1.5px #9dc0dc;}
+.wr:not(.on) .gl{background:transparent;box-shadow:none;padding:0;}
+/* a factor being divided out */
+.cx{color:var(--muted);background-image:linear-gradient(to top right,transparent 44%,#d1495b 44%,#d1495b 56%,transparent 56%);}
+.bad{color:#b23145;}
+/* left column extras */
+.dom{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;border:1px solid var(--line);background:#f7f6fc;border-radius:9px;padding:7px 11px;}
+.dom b{font-size:9.4px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:800;flex:none;}
+.dom span{font-family:var(--math);font-size:14px;color:#b23145;font-weight:700;text-align:right;}
+.dom span.none{color:var(--muted);font-weight:400;}
+.dom sup{font-size:.66em;}
+.cap{font-size:12px;color:var(--soft);line-height:1.55;margin-top:11px;border-top:1px solid var(--line);padding-top:10px;min-height:66px;}
+.cap b{color:var(--ink);} .cap i{font-family:var(--math);} .cap sup{font-size:.66em;}
+.key{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10.2px;color:var(--muted);align-items:center;}
+.key i{font-style:normal;display:inline-flex;align-items:center;gap:4px;}
+.key .d{width:11px;height:11px;border-radius:50%;background:#fbfaff;border:2px solid #43458f;display:inline-block;}
+.key .l{width:14px;height:0;border-top:2px dashed #d1495b;display:inline-block;}
+.key .g{width:14px;height:0;border-top:2px dashed #b8862f;display:inline-block;}
+/* plan chips */
+.plan{display:flex;flex-wrap:wrap;gap:4px;margin-top:11px;}
+.plan span{font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:#eceefa;color:var(--muted);border-radius:20px;padding:4px 9px;}
+.plan span.on{background:var(--teal);color:#fff;}
+.plan span.done{background:#dfe2f4;color:var(--teal-dk);}
+#info .n{margin-bottom:4px;}
+#info i,.mnem i,.note i{font-family:var(--math);}
+#info sup,.mnem sup,.note sup{font-size:.66em;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 7</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 7</div>
+  <h1>The Point That Goes Missing</h1>
+  <div class="intro">A rational expression is a fraction with polynomials on the top and bottom, and it obeys the same law every fraction obeys: <b>the denominator may never be zero</b>. Simplifying such a fraction is a two-part job. You <b>factor and cancel</b> &mdash; and you <b>record what the original denominator forbade</b>, because cancelling erases the evidence without changing the rules. Step through each example one line at a time; the graph on the left shows exactly which point goes missing, and why you would never have found it by looking.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The graph</h2>
+      <svg id="pic" viewBox="0 0 250 200" aria-label="graph of the rational expression"><defs><clipPath id="cp"><rect x="34" y="14" width="208" height="156" rx="6"/></clipPath></defs><g id="art"></g></svg>
+      <div class="dom"><b>Excluded values</b><span id="domv" class="none">&mdash;</span></div>
+      <div class="key"><i><span class="d"></span> hole (one missing point)</i><i><span class="l"></span> vertical asymptote</i><i><span class="g"></span> factor about to cancel</i></div>
+      <div class="cap" id="cap"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Simplify, one line at a time<small>pick an example below</small></div>
+    <div class="card">
+      <div id="pick"></div>
+      <div class="work" id="work"></div>
+      <div class="plan" id="plan"></div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div id="info"></div>
+      <div class="mnem" id="mnem"></div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- tiny math-to-SVG helper: 'x^2' -> italic x with a superscript 2 ---------- */
+ function sv(str,fs){
+   var out='',i,sup=false;
+   for(i=0;i<str.length;i++){
+     var c=str.charAt(i), isSup=false;
+     if(c==='^'){ i++; c=str.charAt(i); isSup=true; }
+     var at='';
+     if(isSup&&!sup) at+=' dy="'+(-fs*0.34).toFixed(1)+'"';
+     else if(!isSup&&sup) at+=' dy="'+(fs*0.34).toFixed(1)+'"';
+     if(isSup) at+=' font-size="'+(fs*0.68).toFixed(1)+'"';
+     if(/[a-z]/i.test(c)) at+=' font-style="italic"';
+     if(c==='-') c='−';
+     if(c===' ') c=' ';   /* each char is its own tspan, so a plain space would collapse */
+     out+='<tspan'+at+'>'+c+'</tspan>';
+     sup=isSup;
+   }
+   return out;
+ }
+ function tx(x,y,s,fs,fill,anch,bold){
+   return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+(anch||'middle')+'" font-family="Georgia,serif" font-size="'+fs+'" fill="'+fill+'"'+(bold?' font-weight="bold"':'')+'>'+sv(s,fs)+'</text>';
+ }
+ var GRAY='#c9cde4', INK='#22243a', SOFT='#4d4f66', TEAL='#43458f', RED='#d1495b', GOLD='#b8862f', MUT='#7d7f94';
+
+ /* ---------- HTML fraction helper (no LaTeX anywhere) ---------- */
+ function fr(a,b){ return '<span class="fr"><span class="nu">'+a+'</span><span class="de">'+b+'</span></span>'; }
+ var X='<i>x</i>', X2='<i>x</i><sup>2</sup>', X3='<i>x</i><sup>3</sup>', NE='&ne;', M='&minus;';
+
+ /* =================== the plotter =================== */
+ var PX0=34,PX1=242,PY0=14,PY1=170;
+ function sx(x,e){ return PX0+(x-e.x0)/(e.x1-e.x0)*(PX1-PX0); }
+ function sy(y,e){ return PY1-(y-e.y0)/(e.y1-e.y0)*(PY1-PY0); }
+ function nice(span){
+   var r=span/7, p=Math.pow(10,Math.floor(Math.log(r)/Math.LN10)), n=r/p;
+   var m=(n<=1)?1:((n<=2)?2:((n<=5)?5:10));
+   return m*p;
+ }
+ function fmt(v,st){
+   var s=(st<1)?(Math.round(v*10)/10).toString():Math.round(v).toString();
+   return s.replace('-','−');
+ }
+ function isHole(e,xv){
+   var i; for(i=0;i<e.holes.length;i++){ if(Math.abs(e.holes[i].x-xv)<1e-9) return true; }
+   return false;
+ }
+ function poly(pts,col,w){
+   return '<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round"/>';
+ }
+ function curve(e,col,w){
+   var N=560, out='', pts=[], i, j, prev=null, span=e.y1-e.y0;
+   for(i=0;i<=N;i++){
+     var x=e.x0+(e.x1-e.x0)*i/N, brk=false;
+     if(prev!==null){ for(j=0;j<e.asym.length;j++){ if((prev-e.asym[j])*(x-e.asym[j])<0) brk=true; } }
+     if(brk){ if(pts.length>1) out+=poly(pts,col,w); pts=[]; }
+     var y=e.f(x);
+     if(!isFinite(y)||Math.abs(y)>span*25){ if(pts.length>1) out+=poly(pts,col,w); pts=[]; }
+     else pts.push(sx(x,e).toFixed(1)+','+sy(y,e).toFixed(1));
+     prev=x;
+   }
+   if(pts.length>1) out+=poly(pts,col,w);
+   return out;
+ }
+ function drawG(e,vs){
+   var s='', i, t;
+   s+='<rect x="'+PX0+'" y="'+PY0+'" width="'+(PX1-PX0)+'" height="'+(PY1-PY0)+'" rx="6" fill="#fbfaff" stroke="'+GRAY+'" stroke-width="1"/>';
+   var stx=nice(e.x1-e.x0), sty=nice(e.y1-e.y0);
+   for(t=Math.ceil(e.x0/stx-1e-9)*stx;t<=e.x1+1e-9;t+=stx){
+     s+='<line x1="'+sx(t,e).toFixed(1)+'" y1="'+PY0+'" x2="'+sx(t,e).toFixed(1)+'" y2="'+PY1+'" stroke="#eceefa" stroke-width="1"/>';
+   }
+   for(t=Math.ceil(e.y0/sty-1e-9)*sty;t<=e.y1+1e-9;t+=sty){
+     s+='<line x1="'+PX0+'" y1="'+sy(t,e).toFixed(1)+'" x2="'+PX1+'" y2="'+sy(t,e).toFixed(1)+'" stroke="#eceefa" stroke-width="1"/>';
+   }
+   var ax=Math.max(PY0,Math.min(PY1,sy(0,e))), ay=Math.max(PX0,Math.min(PX1,sx(0,e)));
+   s+='<line x1="'+PX0+'" y1="'+ax.toFixed(1)+'" x2="'+PX1+'" y2="'+ax.toFixed(1)+'" stroke="#9aa0c4" stroke-width="1.2"/>';
+   s+='<line x1="'+ay.toFixed(1)+'" y1="'+PY0+'" x2="'+ay.toFixed(1)+'" y2="'+PY1+'" stroke="#9aa0c4" stroke-width="1.2"/>';
+   for(t=Math.ceil(e.x0/stx-1e-9)*stx;t<=e.x1+1e-9;t+=stx){
+     if(Math.abs(t)<1e-9) continue;
+     var px=sx(t,e); if(px<PX0+9||px>PX1-9) continue;
+     s+=tx(px,ax+9,fmt(t,stx),7.5,MUT);
+   }
+   for(t=Math.ceil(e.y0/sty-1e-9)*sty;t<=e.y1+1e-9;t+=sty){
+     if(Math.abs(t)<1e-9) continue;
+     var py=sy(t,e); if(py<PY0+8||py>PY1-5) continue;
+     s+=tx(ay-4,py+2.6,fmt(t,sty),7.5,MUT,'end');
+   }
+   s+=tx(PX1-4,ax-4,'x',9,MUT,'end');
+   s+=tx(ay+8,PY0+10,'y',9,MUT,'middle');
+   /* the curve, clipped to the plot box */
+   s+='<g clip-path="url(#cp)">'+curve(e,TEAL,2.2)+'</g>';
+   /* vertical markers for the excluded values */
+   if(vs>=1){
+     for(i=0;i<e.excl.length;i++){
+       var xv=e.excl[i], hol=isHole(e,xv);
+       if(vs>=3&&hol) continue;
+       var col=(vs===1)?RED:(hol?GOLD:RED);
+       var vx=sx(xv,e);
+       s+='<line x1="'+vx.toFixed(1)+'" y1="'+PY0+'" x2="'+vx.toFixed(1)+'" y2="'+PY1+'" stroke="'+col+'" stroke-width="1.7" stroke-dasharray="5 3" opacity=".9"/>';
+       if(vs<=2){
+         var lx=Math.max(PX0+22,Math.min(PX1-22,vx));
+         s+='<rect x="'+(lx-21)+'" y="'+(PY1-14)+'" width="42" height="13" rx="4" fill="#fbfaff" opacity=".95"/>';
+         s+=tx(lx,PY1-4,'x ≠ '+String(xv).replace('-','-'),10,col,'middle',1);
+       }
+     }
+   }
+   /* the holes */
+   if(vs>=3){
+     for(i=0;i<e.holes.length;i++){
+       var h=e.holes[i], hx=sx(h.x,e), hy=sy(h.y,e);
+       s+='<circle cx="'+hx.toFixed(1)+'" cy="'+hy.toFixed(1)+'" r="3.8" fill="#fbfaff" stroke="'+TEAL+'" stroke-width="2.1"/>';
+       var tX=Math.max(PX0+26,Math.min(PX1-26,hx)), tY=Math.max(PY0+11,Math.min(PY1-4,hy-9));
+       s+=tx(tX,tY,h.l,10,TEAL,'middle',1);
+     }
+   }
+   return s;
+ }
+
+ /* =================== captions per visual stage =================== */
+ var CAP=[
+  'The graph of the expression exactly as written. Look as hard as you like &mdash; you cannot <b>see</b> where it is undefined. A single missing point has no width. Only the algebra can tell you it is there.',
+  'Every <i>x</i> that makes the <b>original denominator</b> zero is now barred. These values are decided <b>here</b>, before any cancelling &mdash; which is the whole reason we look for them first.',
+  'Gold marks a factor that is about to cancel: it will leave behind one missing point, a <b>hole</b>. Red marks a factor that survives in the denominator &mdash; there the graph runs away to infinity along a <b>vertical asymptote</b>.',
+  'The simplified expression draws the <b>same curve</b>. The open circles are the points it is still missing. Nothing in the simplified formula shows them, which is precisely why the restriction must be written down by hand.'
+ ];
+ var CAP_F=[
+  'The graph of the expression as written. This one runs unbroken from one edge to the other &mdash; and in a moment you will see why that was predictable.',
+  'Nothing to bar. The denominator <i>x</i><sup>2</sup> + 4 is never zero for a real <i>x</i>, because <i>x</i><sup>2</sup> is never negative, so <i>x</i><sup>2</sup> + 4 is always at least 4.',
+  'No factor is shared by the top and the bottom, so nothing cancels. The graph is untouched &mdash; there is no hole to open and no asymptote to run to.',
+  'Already in lowest terms and defined for every real number. Not every rational expression simplifies, and knowing when to stop is as much a skill as knowing how to start.'
+ ];
+
+ /* =================== the examples =================== */
+ var EX=[
+
+ {k:'a',nm:'A hole opens',sub:'('+X2+'+5'+X+'+6) / ('+X+'+2)',col:'#43458f',
+  x0:-9,x1:5,y0:-6,y1:8,
+  f:function(x){ return x+3; },
+  asym:[], holes:[{x:-2,y:1,l:'(-2, 1)'}], excl:[-2],
+  exclL:X+' '+NE+' '+M+'2',
+  idea:'<span class="n">Cancelling is division in disguise</span>When you cross out a factor you are dividing the top and the bottom by that factor &mdash; and division by zero is not allowed. So every factor you cancel leaves behind a value of <i>x</i> that must be excluded, forever, even though it has vanished from the page.',
+  steps:[
+   {pl:'The problem',vs:0,mx:fr(X2+' + 5'+X+' + 6',X+' + 2'),
+    ex:'<u>What a rational expression is</u>A fraction whose top and bottom are polynomials. Everything true of ordinary fractions is still true here, including the rule that never bends: <b>the bottom may not be zero</b>. Simplifying will not change which values are forbidden &mdash; it will only hide them.'},
+   {pl:'Bar the bad values',vs:1,mx:X+' + 2 = 0 &nbsp;&rarr;&nbsp; <span class="hl">'+X+' = '+M+'2</span>',
+    ex:'<u>Do this before you cancel, not after</u>Set the denominator equal to zero and solve. Every solution is an <b>excluded value</b>. Find them now, while the original denominator is still sitting in front of you &mdash; in two steps it will be gone, and with it the only clue that '+X+' = '+M+'2 was ever a problem.'},
+   {pl:'Factor the top',vs:1,mx:fr('<span class="hl">('+X+' + 2)('+X+' + 3)</span>',X+' + 2'),
+    ex:'<u>Two numbers, one job</u>For '+X2+' + 5'+X+' + 6 you want two numbers whose product is 6 and whose sum is 5 &mdash; that is 2 and 3. Multiply back to be certain: '+X+'&middot;'+X+' + 3'+X+' + 2'+X+' + 6 = '+X2+' + 5'+X+' + 6. &#10003; <b>Nothing can cancel until both the top and the bottom are written as products.</b>'},
+   {pl:'Why cancelling works',vs:1,mx:'<span class="gl">('+X+' + 2)</span> &divide; <span class="gl">('+X+' + 2)</span> = 1 &nbsp; when '+X+' + 2 '+NE+' 0',
+    ex:'<u>The same reason 12/18 = 2/3</u>Write 12/18 as (6&middot;2)/(6&middot;3). The 6 over the 6 is simply 1, so the fraction equals 2/3. Cancelling a factor is dividing the top and bottom by the same <b>nonzero</b> quantity. That word <b>nonzero</b> is the whole lesson: at '+X+' = '+M+'2 the thing you divided by is 0, and 0 &divide; 0 is not 1 &mdash; it is undefined.'},
+   {pl:'Cancel',vs:2,mx:fr('<span class="cx">('+X+' + 2)</span>('+X+' + 3)','<span class="cx">'+X+' + 2</span>')+' = '+X+' + 3',
+    ex:'<u>One factor leaves the room</u>The ('+X+' + 2) upstairs and the ('+X+' + 2) downstairs divide out to 1. What is left on the bottom is 1, so the fraction collapses into a plain polynomial. On the graph, that gold line is about to shrink to a single missing point.'},
+   {pl:'Write it with the restriction',vs:3,mx:X+' + 3, &nbsp;&nbsp; <span class="hl">'+X+' '+NE+' '+M+'2</span>',
+    ex:'<u>The answer is two things</u>An expression <b>and</b> a restriction. The polynomial '+X+' + 3 is perfectly happy at '+X+' = '+M+'2 &mdash; it equals 1 there &mdash; but the original expression was undefined. Without &ldquo;'+X+' '+NE+' '+M+'2&rdquo; written beside it, you have handed back a <b>different function</b> from the one you were given.'},
+   {pl:'Check it',vs:3,mx:'at '+X+' = 1: &nbsp; 12/3 = 4 &nbsp; and &nbsp; 1 + 3 = 4 &nbsp;&#10003;',
+    ex:'<u>Test one safe value and one barred value</u>At '+X+' = 1 the original is (1 + 5 + 6)/(1 + 2) = 12/3 = 4, and '+X+' + 3 = 4. They agree, as they must. At '+X+' = '+M+'2 the original is (4 '+M+' 10 + 6)/(0) = 0/0, undefined, while '+X+' + 3 = 1. That one disagreement is the open circle on the graph.'}
+  ]},
+
+ {k:'b',nm:'Two exclusions',sub:'('+X2+M+'9) / ('+X2+M+X+M+'12)',col:'#43458f',
+  x0:-10,x1:14,y0:-4,y1:6,
+  f:function(x){ return (x-3)/(x-4); },
+  asym:[4], holes:[{x:-3,y:6/7,l:'(-3, 6/7)'}], excl:[-3,4],
+  exclL:X+' '+NE+' '+M+'3, &nbsp;'+X+' '+NE+' 4',
+  idea:'<span class="n">Two barred values, two different fates</span>A denominator with two factors bars two values. After cancelling, one of them is still visible in the formula and one is not &mdash; and it is the invisible one that costs students marks. Both must be carried; only one carries itself.',
+  steps:[
+   {pl:'The problem',vs:0,mx:fr(X2+' '+M+' 9',X2+' '+M+' '+X+' '+M+' 12'),
+    ex:'<u>Bottom first</u>With a factorable denominator, factor <b>it</b> before anything else. The bottom is where the restrictions live, and you want them written down before a single thing gets cancelled.'},
+   {pl:'Factor the bottom',vs:1,mx:fr(X2+' '+M+' 9','<span class="hl">('+X+' '+M+' 4)('+X+' + 3)</span>'),
+    ex:'<u>Product '+M+'12, sum '+M+'1</u>You need two numbers multiplying to '+M+'12 and adding to '+M+'1: that is '+M+'4 and +3. Check by expanding: '+X2+' + 3'+X+' '+M+' 4'+X+' '+M+' 12 = '+X2+' '+M+' '+X+' '+M+' 12. &#10003;'},
+   {pl:'Bar the bad values',vs:1,mx:'('+X+' '+M+' 4)('+X+' + 3) = 0 &nbsp;&rarr;&nbsp; <span class="hl">'+X+' = 4</span> or <span class="hl">'+X+' = '+M+'3</span>',
+    ex:'<u>The zero-product property</u>A product is zero exactly when one of its factors is zero, so solve each factor separately. Both values are excluded from the domain <b>of the original expression</b>, and that stays true no matter what happens next.'},
+   {pl:'Factor the top',vs:1,mx:fr('<span class="hl">('+X+' '+M+' 3)('+X+' + 3)</span>','('+X+' '+M+' 4)('+X+' + 3)'),
+    ex:'<u>A difference of squares</u>'+X2+' '+M+' 9 is '+X2+' '+M+' 3<sup>2</sup>, and <i>a</i><sup>2</sup> '+M+' <i>b</i><sup>2</sup> = (<i>a</i> '+M+' <i>b</i>)(<i>a</i> + <i>b</i>). Expanding confirms it: '+X2+' + 3'+X+' '+M+' 3'+X+' '+M+' 9 &mdash; the middle terms destroy each other, leaving '+X2+' '+M+' 9. &#10003;'},
+   {pl:'Cancel',vs:2,mx:fr('('+X+' '+M+' 3)<span class="cx">('+X+' + 3)</span>','('+X+' '+M+' 4)<span class="cx">('+X+' + 3)</span>'),
+    ex:'<u>Read the factors carefully</u>The shared factor is ('+X+' + 3), not ('+X+' '+M+' 3). Only identical factors cancel; ('+X+' '+M+' 3) and ('+X+' + 3) are different numbers for every '+X+' except 0. Slow down here &mdash; the sign is doing real work.'},
+   {pl:'The result',vs:3,mx:fr(X+' '+M+' 3',X+' '+M+' 4')+', &nbsp; <span class="hl">'+X+' '+NE+' '+M+'3, '+X+' '+NE+' 4</span>',
+    ex:'<u>Carry both restrictions</u>Even though only one of them is still visible in the new denominator, both came from the original and both survive. Write them out; a simplified expression is never allowed to have a <b>larger</b> domain than the one it came from.'},
+   {pl:'Two different fates',vs:3,mx:X+' = 4: asymptote &nbsp;&middot;&nbsp; '+X+' = '+M+'3: hole',
+    ex:'<u>What the graph is telling you</u>At '+X+' = 4 the factor is still in the denominator, so the values blow up without limit &mdash; a <b>vertical asymptote</b>, impossible to miss. At '+X+' = '+M+'3 the factor cancelled, so the expression approaches a perfectly ordinary value (6/7) and simply fails to reach it &mdash; a <b>hole</b>, and completely invisible unless you wrote it down.'},
+   {pl:'Check it',vs:3,mx:'at '+X+' = 0: &nbsp; '+M+'9 / '+M+'12 = 3/4 &nbsp; and &nbsp; '+M+'3 / '+M+'4 = 3/4 &nbsp;&#10003;',
+    ex:'<u>Pick an easy safe value</u>'+X+' = 0 gives (0 '+M+' 9)/(0 '+M+' 0 '+M+' 12) = '+M+'9/'+M+'12 = 3/4 in the original, and (0 '+M+' 3)/(0 '+M+' 4) = 3/4 in the simplified version. Agreement at one convenient point is a fast, honest check on the whole factoring.'}
+  ]},
+
+ {k:'c',nm:'Factors, not terms',sub:'('+X2+M+'4) / ('+X2+M+'2'+X+')',col:'#d1495b',
+  x0:-9,x1:9,y0:-5,y1:7,
+  f:function(x){ return (x+2)/x; },
+  asym:[0], holes:[{x:2,y:2,l:'(2, 2)'}], excl:[0,2],
+  exclL:X+' '+NE+' 0, &nbsp;'+X+' '+NE+' 2',
+  idea:'<span class="n">The single most common error in this chapter</span>You may cancel a <b>factor</b> &mdash; something multiplying the entire top and the entire bottom. You may never cancel a <b>term</b> &mdash; something merely added in. The two look identical on the page, which is exactly why factoring first is not optional.',
+  steps:[
+   {pl:'The problem',vs:0,mx:fr(X2+' '+M+' 4',X2+' '+M+' 2'+X),
+    ex:'<u>An '+X2+' on top and an '+X2+' on the bottom</u>The temptation is obvious and almost irresistible. Before you give in, look at the next line.'},
+   {pl:'The tempting error',vs:0,mx:fr('<span class="cx bad">'+X2+'</span> '+M+' 4','<span class="cx bad">'+X2+'</span> '+M+' 2'+X)+' = '+fr(M+'4',M+'2'+X)+' = '+fr('2',X)+' &nbsp;<span class="bad">&#10007;</span>',
+    ex:'<u>Test it before you trust it</u>At '+X+' = 1 the original is (1 '+M+' 4)/(1 '+M+' 2) = ('+M+'3)/('+M+'1) = <b>3</b>. The shortcut gives 2/1 = <b>2</b>. Two different numbers, so the shortcut is simply false. Here it is in miniature with no letters at all: (6 + 3)/3 = 9/3 = 3, but cancelling the 3s would claim the answer is 6. <b>Addition blocks cancelling; multiplication permits it.</b>'},
+   {pl:'Factor the top',vs:1,mx:fr('<span class="hl">('+X+' '+M+' 2)('+X+' + 2)</span>',X2+' '+M+' 2'+X),
+    ex:'<u>Difference of squares again</u>'+X2+' '+M+' 4 = ('+X+' '+M+' 2)('+X+' + 2). Now the top is a genuine <b>product</b> &mdash; two things multiplied &mdash; rather than a sum of two terms. That change of form is what makes cancelling possible at all.'},
+   {pl:'Factor the bottom',vs:1,mx:fr('('+X+' '+M+' 2)('+X+' + 2)','<span class="hl">'+X+'('+X+' '+M+' 2)</span>'),
+    ex:'<u>Pull out the common factor</u>'+X2+' and 2'+X+' both contain one '+X+', so '+X2+' '+M+' 2'+X+' = '+X+'('+X+' '+M+' 2). Both levels of the fraction are now products, and only now can you see what they truly share.'},
+   {pl:'Bar the bad values',vs:1,mx:X+'('+X+' '+M+' 2) = 0 &nbsp;&rarr;&nbsp; <span class="hl">'+X+' = 0</span> or <span class="hl">'+X+' = 2</span>',
+    ex:'<u>Both factors, separately</u>The first factor is '+X+' itself, so '+X+' = 0 is barred. The second gives '+X+' = 2. Notice that neither was remotely visible in the expression as originally written &mdash; factoring is what exposed them.'},
+   {pl:'Cancel',vs:2,mx:fr('<span class="cx">('+X+' '+M+' 2)</span>('+X+' + 2)',X+'<span class="cx">('+X+' '+M+' 2)</span>'),
+    ex:'<u>The real shared factor</u>It was ('+X+' '+M+' 2) all along &mdash; not '+X2+', and not the 4 and the 2. An '+X2+' sitting inside a subtraction is a term; ('+X+' '+M+' 2) sitting outside the parentheses is a factor. Same symbols, entirely different privileges.'},
+   {pl:'The result',vs:3,mx:fr(X+' + 2',X)+', &nbsp; <span class="hl">'+X+' '+NE+' 0, '+X+' '+NE+' 2</span>',
+    ex:'<u>And still no cancelling</u>Do not now cancel the '+X+' on the bottom against the '+X+' inside ('+X+' + 2) &mdash; that is the very same mistake, one line later. The top is a sum; it has no '+X+' factor to give.'},
+   {pl:'Check it',vs:3,mx:'at '+X+' = 1: &nbsp; '+M+'3 / '+M+'1 = 3 &nbsp; and &nbsp; 3/1 = 3 &nbsp;&#10003;',
+    ex:'<u>Compare all three answers</u>The original gives 3 at '+X+' = 1, and the correct simplification ('+X+' + 2)/'+X+' also gives 3. The illegal shortcut from step 2 gave 2. One arithmetic test, ten seconds, and the wrong method is exposed &mdash; use that test whenever you are unsure.'}
+  ]},
+
+ {k:'d',nm:'Opposite factors',sub:'(4'+M+X2+') / ('+X2+M+X+M+'2)',col:'#2f6f9f',
+  x0:-9,x1:9,y0:-6,y1:4,
+  f:function(x){ return -(x+2)/(x+1); },
+  asym:[-1], holes:[{x:2,y:-4/3,l:'(2, -4/3)'}], excl:[-1,2],
+  exclL:X+' '+NE+' '+M+'1, &nbsp;'+X+' '+NE+' 2',
+  idea:'<span class="n">When the factors are backwards</span>(2 '+M+' '+X+') and ('+X+' '+M+' 2) are not the same factor, so they do not cancel &mdash; but they are exact <b>negatives</b> of each other. Factor a '+M+'1 out of one of them and the match appears, along with a minus sign that has to go somewhere.',
+  steps:[
+   {pl:'The problem',vs:0,mx:fr('4 '+M+' '+X2,X2+' '+M+' '+X+' '+M+' 2'),
+    ex:'<u>Notice the top is written backwards</u>It is 4 '+M+' '+X2+', not '+X2+' '+M+' 4. That reversal is the entire difficulty of this example, and it is a very common way for a problem to be handed to you.'},
+   {pl:'Factor both',vs:1,mx:fr('<span class="hl">(2 '+M+' '+X+')(2 + '+X+')</span>','<span class="hl">('+X+' '+M+' 2)('+X+' + 1)</span>'),
+    ex:'<u>Top and bottom</u>The top is a difference of squares read in the given order: 4 '+M+' '+X2+' = (2 '+M+' '+X+')(2 + '+X+'). The bottom needs two numbers with product '+M+'2 and sum '+M+'1, namely '+M+'2 and +1, so it is ('+X+' '+M+' 2)('+X+' + 1).'},
+   {pl:'Nearly, not quite',vs:1,mx:'(2 '+M+' '+X+') &nbsp; vs &nbsp; ('+X+' '+M+' 2) &nbsp;&mdash;&nbsp; <span class="bad">not identical</span>',
+    ex:'<u>Do not cancel these</u>At '+X+' = 5 the first is '+M+'3 and the second is +3. Different numbers, so they are different factors and cancelling them outright would be wrong. But look at that pair again: they are opposites.'},
+   {pl:'Why <i>a</i> '+M+' <i>b</i> = '+M+'(<i>b</i> '+M+' <i>a</i>)',vs:1,mx:'2 '+M+' '+X+' = <span class="gl">'+M+'1('+X+' '+M+' 2)</span>',
+    ex:'<u>Just the distributive property</u>Distribute the '+M+'1: '+M+'1('+X+' '+M+' 2) = '+M+X+' + 2 = 2 '+M+' '+X+'. &#10003; Test it with a number: at '+X+' = 5, 2 '+M+' 5 = '+M+'3 and '+M+'(5 '+M+' 2) = '+M+'3. Reversing a subtraction always costs exactly one minus sign &mdash; no more, no less.'},
+   {pl:'Rewrite the top',vs:1,mx:fr(M+'('+X+' '+M+' 2)('+X+' + 2)','('+X+' '+M+' 2)('+X+' + 1)'),
+    ex:'<u>Now the factors match</u>The top is '+M+'('+X+' '+M+' 2)('+X+' + 2), where the leading minus belongs to the whole numerator. Written this way, ('+X+' '+M+' 2) appears above and below in exactly the same form &mdash; which is the only form in which it may be cancelled.'},
+   {pl:'Bar the bad values',vs:1,mx:'('+X+' '+M+' 2)('+X+' + 1) = 0 &nbsp;&rarr;&nbsp; <span class="hl">'+X+' = 2</span> or <span class="hl">'+X+' = '+M+'1</span>',
+    ex:'<u>Straight from the factored bottom</u>Rewriting the numerator changed nothing downstairs, so the denominator&rsquo;s zeros are still 2 and '+M+'1. The restrictions never depend on what you do to the top.'},
+   {pl:'Cancel',vs:2,mx:fr(M+'<span class="cx">('+X+' '+M+' 2)</span>('+X+' + 2)','<span class="cx">('+X+' '+M+' 2)</span>('+X+' + 1)'),
+    ex:'<u>The minus stays behind</u>Only the matched factor leaves; the '+M+'1 out front was never part of it and remains attached to the numerator. A useful shortcut worth remembering: (2 '+M+' '+X+') &divide; ('+X+' '+M+' 2) = '+M+'1 for every '+X+' except 2.'},
+   {pl:'The result',vs:3,mx:fr(M+'('+X+' + 2)',X+' + 1)+' = '+fr(M+X+' '+M+' 2',X+' + 1)+', &nbsp; <span class="hl">'+X+' '+NE+' 2, '+X+' '+NE+' '+M+'1</span>',
+    ex:'<u>Two ways to write the same thing</u>You may leave the minus in front of the fraction, in front of the numerator, or distributed through it &mdash; all three are correct and equal. What you may not do is lose it, or leave off the restrictions.'},
+   {pl:'Check it',vs:3,mx:'at '+X+' = 0: &nbsp; 4 / '+M+'2 = '+M+'2 &nbsp; and &nbsp; '+M+'2 / 1 = '+M+'2 &nbsp;&#10003;',
+    ex:'<u>Confirm the sign</u>The original at '+X+' = 0 is (4 '+M+' 0)/(0 '+M+' 0 '+M+' 2) = 4/('+M+'2) = '+M+'2. The simplified form gives '+M+'(0 + 2)/(0 + 1) = '+M+'2. Matching signs at a test point is the fastest way to know the '+M+'1 landed where it belongs.'}
+  ]},
+
+ {k:'e',nm:'Numbers cancel too',sub:'(6'+X3+M+'12'+X2+') / (9'+X2+M+'18'+X+')',col:'#b8862f',
+  x0:-7,x1:7,y0:-5,y1:5,
+  f:function(x){ return 2*x/3; },
+  asym:[], holes:[{x:0,y:0,l:'(0, 0)'},{x:2,y:4/3,l:'(2, 4/3)'}], excl:[0,2],
+  exclL:X+' '+NE+' 0, &nbsp;'+X+' '+NE+' 2',
+  idea:'<span class="n">Every common factor comes out</span>Numbers, variables, and binomials all cancel by the same rule, and a thorough job takes all three. Here both excluded values cancel away, so the graph is a straight line with <b>two</b> holes punched in it and no asymptote at all.',
+  steps:[
+   {pl:'The problem',vs:0,mx:fr('6'+X3+' '+M+' 12'+X2,'9'+X2+' '+M+' 18'+X),
+    ex:'<u>Common factors everywhere</u>The numbers share something, the variables share something, and once those come out a binomial will be shared too. Take them in that order and nothing gets missed.'},
+   {pl:'Factor the top',vs:1,mx:fr('<span class="hl">6'+X2+'('+X+' '+M+' 2)</span>','9'+X2+' '+M+' 18'+X),
+    ex:'<u>Greatest common factor</u>6 and 12 share 6; '+X3+' and '+X2+' share '+X2+' (the smaller power is all the poorer term can afford). So the GCF is 6'+X2+'. Dividing: 6'+X3+' &divide; 6'+X2+' = '+X+', and 12'+X2+' &divide; 6'+X2+' = 2, leaving 6'+X2+'('+X+' '+M+' 2).'},
+   {pl:'Factor the bottom',vs:1,mx:fr('6'+X2+'('+X+' '+M+' 2)','<span class="hl">9'+X+'('+X+' '+M+' 2)</span>'),
+    ex:'<u>Same routine downstairs</u>9 and 18 share 9; '+X2+' and '+X+' share '+X+'. So 9'+X2+' '+M+' 18'+X+' = 9'+X+'('+X+' '+M+' 2). The same binomial ('+X+' '+M+' 2) has now appeared on both levels &mdash; but do not cancel yet.'},
+   {pl:'Bar the bad values',vs:1,mx:'9'+X+'('+X+' '+M+' 2) = 0 &nbsp;&rarr;&nbsp; <span class="hl">'+X+' = 0</span> or <span class="hl">'+X+' = 2</span>',
+    ex:'<u>The constant 9 is harmless</u>A factor of 9 can never be zero, so it bars nothing. Only factors containing '+X+' can produce restrictions: '+X+' = 0 from the first, '+X+' = 2 from the second.'},
+   {pl:'Cancel the binomial',vs:2,mx:fr('6'+X2+'<span class="cx">('+X+' '+M+' 2)</span>','9'+X+'<span class="cx">('+X+' '+M+' 2)</span>')+' = '+fr('6'+X2,'9'+X),
+    ex:'<u>One down</u>The matched binomials divide out to 1. What is left is an ordinary monomial fraction &mdash; and it is not finished, because 6/9 and '+X2+'/'+X+' both still reduce.'},
+   {pl:'Cancel the rest',vs:2,mx:fr('6'+X2,'9'+X)+' = '+fr('<span class="hl">2</span>'+X2,'<span class="hl">3</span>'+X)+' = '+fr('2'+X,'3'),
+    ex:'<u>Numbers and variables, one at a time</u>6 and 9 are both divisible by 3, giving 2 and 3. For the letters, '+X2+' &divide; '+X+' = '+X+', since '+X2+' is '+X+'&middot;'+X+' and one of them pairs off with the '+X+' below &mdash; legal because '+X+' '+NE+' 0 is already on the barred list.'},
+   {pl:'The result',vs:3,mx:fr('2'+X,'3')+', &nbsp; <span class="hl">'+X+' '+NE+' 0, '+X+' '+NE+' 2</span>',
+    ex:'<u>A line with two holes</u>Both restrictions cancelled away, so the simplified expression is a plain straight line &mdash; and it is missing two of its points. Nothing in &ldquo;2'+X+'/3&rdquo; hints at that, which is why the restrictions travel in writing or not at all.'},
+   {pl:'Check it',vs:3,mx:'at '+X+' = 3: &nbsp; 54/27 = 2 &nbsp; and &nbsp; 2(3)/3 = 2 &nbsp;&#10003;',
+    ex:'<u>Two test values, to be safe</u>At '+X+' = 3: the top is 6(27) '+M+' 12(9) = 162 '+M+' 108 = 54 and the bottom is 9(9) '+M+' 18(3) = 81 '+M+' 54 = 27, giving 54/27 = 2, which matches 2(3)/3 = 2. At '+X+' = 1: ('+M+'6)/('+M+'9) = 2/3, and 2(1)/3 = 2/3. &#10003;'}
+  ]},
+
+ {k:'f',nm:'Nothing cancels',sub:'('+X2+'+3'+X+'+2) / ('+X2+'+4)',col:'#2f9e5b',
+  x0:-10,x1:10,y0:-1,y1:2.2,
+  f:function(x){ return (x*x+3*x+2)/(x*x+4); },
+  asym:[], holes:[], excl:[],
+  exclL:'none &mdash; every real '+X+' is allowed',
+  idea:'<span class="n">Knowing when to stop</span>Some rational expressions are already in lowest terms, and some have no excluded values at all. Both facts are conclusions you <b>prove</b>, not things you assume &mdash; and reaching them correctly is as much a part of the skill as cancelling.',
+  caps:CAP_F,
+  steps:[
+   {pl:'The problem',vs:0,mx:fr(X2+' + 3'+X+' + 2',X2+' + 4'),
+    ex:'<u>Same routine, different ending</u>An '+X2+' upstairs and an '+X2+' downstairs, exactly as in the third example. And exactly as there, the answer is to factor first and let the factors decide.'},
+   {pl:'Factor the top',vs:1,mx:fr('<span class="hl">('+X+' + 1)('+X+' + 2)</span>',X2+' + 4'),
+    ex:'<u>Product 2, sum 3</u>The two numbers are 1 and 2. Expanding to check: '+X2+' + 2'+X+' + '+X+' + 2 = '+X2+' + 3'+X+' + 2. &#10003; So the numerator is a product of two linear factors.'},
+   {pl:'Try the bottom',vs:1,mx:X2+' + 4 &nbsp;&mdash;&nbsp; <span class="hl">prime</span> over the real numbers',
+    ex:'<u>A sum of squares does not factor</u>Suppose '+X2+' + 4 = ('+X+' + <i>a</i>)('+X+' + <i>b</i>). Expanding gives '+X2+' + (<i>a</i> + <i>b</i>)'+X+' + <i>ab</i>, so you would need <i>a</i> + <i>b</i> = 0 and <i>ab</i> = 4. The first forces <i>b</i> = '+M+'<i>a</i>, and then <i>ab</i> = '+M+'<i>a</i><sup>2</sup> = 4, which asks for <i>a</i><sup>2</sup> = '+M+'4. No real number squares to a negative, so no such factoring exists. <b>A difference of squares factors; a sum of squares does not.</b>'},
+   {pl:'Bar the bad values',vs:1,mx:X2+' + 4 = 0 &nbsp;&rarr;&nbsp; '+X2+' = '+M+'4 &nbsp;&rarr;&nbsp; <span class="hl">no real solution</span>',
+    ex:'<u>Nothing is excluded</u>Since '+X2+' '+'&ge;'+' 0 for every real '+X+', the quantity '+X2+' + 4 is always at least 4 &mdash; it never even approaches zero. The domain is <b>all real numbers</b>, and the graph runs unbroken from edge to edge.'},
+   {pl:'Look for a shared factor',vs:2,mx:'is ('+X+' + 1) a factor of '+X2+' + 4? &nbsp; ('+M+'1)<sup>2</sup> + 4 = 5 <span class="bad">&#10007;</span>',
+    ex:'<u>A one-line test</u>If ('+X+' + 1) divided '+X2+' + 4, then '+X+' = '+M+'1 would make '+X2+' + 4 equal zero. It gives 5 instead, so it is not a factor. Testing ('+X+' + 2) the same way: ('+M+'2)<sup>2</sup> + 4 = 8, not zero either. Neither numerator factor is shared, so nothing can cancel.'},
+   {pl:'Already simplest',vs:3,mx:fr('('+X+' + 1)('+X+' + 2)',X2+' + 4')+' &nbsp; or &nbsp; '+fr(X2+' + 3'+X+' + 2',X2+' + 4'),
+    ex:'<u>Leave it alone</u>Factored or expanded, both forms are fully simplified and equal, and neither carries a restriction. What you may <b>not</b> do is cross out the '+X2+' terms or the numbers &mdash; that is the term-versus-factor error, and it would be just as wrong here as it was there.'},
+   {pl:'Check it',vs:3,mx:'at '+X+' = 0: &nbsp; 2/4 = 1/2 &nbsp;&middot;&nbsp; at '+X+' = '+M+'1: &nbsp; 0/5 = 0 &nbsp;&#10003;',
+    ex:'<u>Where the graph touches zero</u>The expression equals zero exactly where the <b>numerator</b> is zero and the denominator is not: at '+X+' = '+M+'1 and '+X+' = '+M+'2, the two points where the curve crosses the axis. A rational expression is zero when its top is zero &mdash; never when its bottom is.'}
+  ]}
+ ];
+
+ var RECIPE='<b>The routine, every time:</b> <b>1.</b> Factor the top completely. <b>2.</b> Factor the bottom completely. <b>3.</b> Set every denominator factor equal to zero and list the excluded values &mdash; <b>before</b> cancelling. <b>4.</b> Cancel only factors that appear on both levels. <b>5.</b> Write the answer <i>with</i> every excluded value beside it.';
+ var TRAP='<b>Cancel factors, never terms.</b> A factor multiplies the whole top or the whole bottom; a term is merely added into it. The proof takes one line of arithmetic: (6 + 3) &divide; 3 = 9 &divide; 3 = <b>3</b>, but crossing out the 3s would claim <b>6</b>. So <i>x</i><sup>2</sup> may not be cancelled out of (<i>x</i><sup>2</sup> '+M+' 4) &divide; (<i>x</i><sup>2</sup> '+M+' 2<i>x</i>), and the 3 may not be cancelled out of (<i>x</i> + 3) &divide; 3. Factor first, and the question answers itself.';
+
+ var ei=0, si=0;
+
+ function pick(){
+   $('pick').innerHTML=EX.map(function(e,n){
+     return '<button data-n="'+n+'" class="'+(n===ei?'on':'')+'"><span class="nm">'+e.nm+'</span><span class="ct">'+e.sub+'</span></button>';
+   }).join('');
+   var bs=$('pick').getElementsByTagName('button'), i;
+   for(i=0;i<bs.length;i++){ bs[i].onclick=function(){ ei=parseInt(this.getAttribute('data-n'),10); si=0; render(); }; }
+ }
+
+ function render(){
+   var e=EX[ei], st=e.steps[si], i;
+   pick();
+   $('art').innerHTML=drawG(e,st.vs);
+   $('cap').innerHTML=(e.caps||CAP)[st.vs];
+   $('cardTitle').innerHTML=(st.vs>=3?'Same curve, minus a point':'The graph');
+   if(st.vs>=1){ $('domv').className=''; $('domv').innerHTML=e.exclL; }
+   else { $('domv').className='none'; $('domv').innerHTML='&mdash; not found yet'; }
+   $('stage').style.background=e.col;
+   $('stage').innerHTML=e.nm+'<small>step '+(si+1)+' of '+e.steps.length+' &nbsp;&middot;&nbsp; simplify and exclude</small>';
+   var h='';
+   for(i=0;i<e.steps.length;i++){
+     var s=e.steps[i], cl='wr'+(i===si?' on':(i<si?' done':''));
+     h+='<div class="'+cl+'"><div class="pl">'+s.pl+'</div><div class="mx">'+s.mx+(i===si?'<span class="ex">'+s.ex+'</span>':'')+'</div></div>';
+   }
+   $('work').innerHTML=h;
+   var p='';
+   for(i=0;i<e.steps.length;i++){ p+='<span class="'+(i===si?'on':(i<si?'done':''))+'">'+e.steps[i].pl+'</span>'; }
+   $('plan').innerHTML=p;
+   $('info').innerHTML=e.idea;
+   $('mnem').innerHTML=RECIPE;
+   $('note').innerHTML=TRAP;
+   $('prev').disabled=(si===0);
+   $('next').disabled=(si===e.steps.length-1);
+ }
+
+ $('prev').onclick=function(){ if(si>0){ si--; render(); } };
+ $('next').onclick=function(){ if(si<EX[ei].steps.length-1){ si++; render(); } };
+ document.addEventListener('keydown',function(ev){
+   if(ev.key==='ArrowRight'){ if(si<EX[ei].steps.length-1){ si++; render(); } }
+   if(ev.key==='ArrowLeft'){ if(si>0){ si--; render(); } }
+ });
+ render();
+})();
+</script>
+</body>
+</html>

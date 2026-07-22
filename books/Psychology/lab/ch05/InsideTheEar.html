@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0f8">
+<title>Inside the Ear</title>
+<meta name="description" content="Trace a sound wave from the pinna to the auditory nerve, then change the pitch and watch where the cochlea's basilar membrane vibrates — an interactive on hearing, place theory (Békésy), frequency theory, and the volley principle.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_psych.css">
+<style>
+.wrap{grid-template-columns:1.02fr 0.98fr;}
+#scene{background:#fdf7fa;border:1px solid var(--line);border-radius:12px;}
+#scene text{font-family:var(--sans);}
+.slab{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;margin-bottom:5px;}
+.slab .l{font-size:13px;font-weight:700;color:var(--soft);} .slab .v{font-family:var(--disp);font-weight:600;font-size:16px;color:var(--teal-dk);}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:9px;border-radius:6px;background:linear-gradient(90deg,#2f6f9f,#a1466b,#d1495b);outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:23px;height:23px;border-radius:50%;background:#fffcfa;border:3px solid #a1466b;box-shadow:0 2px 6px rgba(70,30,45,.32);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:23px;height:23px;border-radius:50%;background:#fffcfa;border:3px solid #a1466b;cursor:pointer;}
+.rangeEnds{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;color:var(--muted);margin-top:3px;}
+.earrd{display:flex;gap:8px;margin-bottom:2px;}
+.earrd div{flex:1;text-align:center;border:1px solid var(--line);border-radius:11px;padding:9px 6px;background:#fff;}
+.earrd .k{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);}
+.earrd .v{display:block;font-family:var(--disp);font-weight:600;font-size:15px;color:var(--teal-dk);margin-top:3px;line-height:1.1;}
+.grid .it .nm{font-size:12.5px;} .grid .it .s{font-size:10.5px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 5</a></div>
+<header>
+  <div class="kick">Psychology · Chapter 5</div>
+  <h1>Inside the Ear</h1>
+  <div class="intro">Hearing is a relay race. A sound wave is <b>collected</b> by the outer ear, <b>amplified</b> into vibration by the middle ear, and finally <b>turned into nerve signals</b> deep in the inner ear. Trace that path structure by structure &mdash; then switch modes and change the pitch to see how the cochlea sorts high notes from low.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="cardTitle">The ear, in cross-section</h2>
+      <svg id="scene" viewBox="0 0 268 192" aria-label="Diagram of the ear"><g id="sceneG"></g></svg>
+      <div id="pitchCtrl" style="display:none">
+        <div class="slab"><span class="l">Pitch of the sound</span><span class="v" id="fVal">&mdash;</span></div>
+        <input type="range" id="freq" min="0" max="100" step="1" value="45" aria-label="Sound frequency">
+        <div class="rangeEnds"><span>20 Hz · deep bass</span><span>20,000 Hz · highest</span></div>
+        <div class="row"><button class="btn" id="hear">&#9654; Hear this pitch</button><button class="btn" id="lowJump">Low</button><button class="btn" id="hiJump">High</button></div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Trace a sound wave<small>tap a structure or press Next</small></div>
+    <div class="card">
+      <div class="modeseg" id="modeseg">
+        <button data-m="trace" class="on">Trace the sound</button>
+        <button data-m="pitch">Change the pitch</button>
+      </div>
+      <div id="traceCtrl">
+        <div class="grid" id="list"></div>
+        <div class="row"><button class="btn" id="prev">&lsaquo; Prev</button><button class="btn solid" id="next">Next &rsaquo;</button></div>
+      </div>
+      <div id="pitchReadout" style="display:none">
+        <div class="earrd">
+          <div><span class="k">Peak vibration</span><span class="v" id="rdRegion">&mdash;</span></div>
+          <div><span class="k">Pitch coded by</span><span class="v" id="rdTheory">&mdash;</span></div>
+        </div>
+      </div>
+      <div id="info"></div>
+      <div id="note" class="note" style="display:none"></div>
+    </div>
+  </div>
+</div>
+<footer>Psychology · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ===== state ===== */
+ var mode='trace', step=0;
+ var ZC={outer:'#2f6f9f',middle:'#b8862f',inner:'#7a5a8a'};
+
+ /* ===== the sound pathway ===== */
+ var PARTS=[
+  {id:'pinna',name:'Pinna',zone:'outer',zoneLab:'Outer ear',
+   info:'<span class="n">Pinna (auricle)</span>The visible, cartilage flap of the <b>outer ear</b>. Its ridges and curves <b>funnel sound waves</b> inward and color them slightly depending on direction &mdash; a cue that helps you tell <b>where</b> a sound is coming from.',
+   nt:'Because each pinna shapes sound by direction, you localize a source partly from how your two ears differ &mdash; small <b>interaural</b> differences in timing and loudness.', nk:'mnem'},
+  {id:'canal',name:'Auditory canal',zone:'outer',zoneLab:'Outer ear',
+   info:'<span class="n">Auditory canal</span>The <b>external acoustic meatus</b> channels the collected waves toward the eardrum. Its length gives it a natural <b>resonance</b> that boosts the frequencies of human speech (roughly 2,000&ndash;5,000 Hz), making voices easier to hear.'},
+  {id:'eardrum',name:'Eardrum',zone:'outer',zoneLab:'Outer / middle border',
+   info:'<span class="n">Eardrum (tympanic membrane)</span>A thin membrane stretched across the end of the canal. Arriving sound waves make it <b>vibrate</b>, converting waves of air pressure into <b>mechanical motion</b>. It marks the border between the outer and middle ear.',
+   nt:'A narrow tube to the throat (the <b>Eustachian tube</b>) equalizes air pressure so the eardrum can move freely &mdash; the &ldquo;pop&rdquo; you feel on a plane.', nk:'mnem'},
+  {id:'ossicles',name:'Ossicles',zone:'middle',zoneLab:'Middle ear',
+   info:'<span class="n">Ossicles &mdash; malleus, incus, stapes</span>The three <b>smallest bones in the body</b> bridge the air-filled middle ear. Working as a lever chain, they <b>amplify</b> the eardrum&rsquo;s vibration. Because the eardrum is far larger than the tiny window they push on, the pressure is concentrated about <b>20-fold</b> &mdash; strong enough to move fluid.',
+   nt:'A reflex stiffens these bones during very loud sounds (the <b>acoustic reflex</b>), damping the vibration to help shield the inner ear.', nk:'mnem'},
+  {id:'ovalwin',name:'Oval window',zone:'middle',zoneLab:'Middle / inner border',
+   info:'<span class="n">Oval window</span>The stapes (the stirrup) presses on this small membrane, pushing the vibration out of the air-filled middle ear and into the <b>fluid-filled inner ear</b>. This is the hand-off from air to liquid.'},
+  {id:'cochlea',name:'Cochlea',zone:'inner',zoneLab:'Inner ear',
+   info:'<span class="n">Cochlea</span>A coiled, <b>fluid-filled</b> tube shaped like a snail&rsquo;s shell. The push at the oval window sends <b>traveling waves</b> rippling through the fluid along its length. This is where a physical vibration is finally converted into a <b>neural</b> message.',
+   nt:'Switch to <b>Change the pitch</b> to see how the cochlea sorts different frequencies to different places along its length.', nk:'mnem'},
+  {id:'hair',name:'Hair cells',zone:'inner',zoneLab:'Inner ear',
+   info:'<span class="n">Hair cells (organ of Corti)</span>Thousands of receptor cells line the <b>basilar membrane</b> inside the cochlea. As the fluid wave bends their tiny <b>stereocilia</b>, the cells fire. This step is <b>transduction</b> &mdash; turning mechanical motion into a signal the brain can read.',
+   nt:'Loud noise can snap the stereocilia, and human hair cells <b>do not grow back</b> &mdash; the cause of permanent <b>noise-induced hearing loss</b>.', nk:'note'},
+  {id:'nerve',name:'Auditory nerve',zone:'inner',zoneLab:'Inner ear &rarr; brain',
+   info:'<span class="n">Auditory nerve (CN VIII)</span>The <b>vestibulocochlear nerve</b> gathers the firing from the hair cells and carries it through the brainstem up to the <b>auditory cortex</b> in the temporal lobe, where the pattern is finally experienced as sound.',
+   nt:'A <b>cochlear implant</b> bypasses damaged hair cells and stimulates this nerve directly, restoring a usable sense of hearing.', nk:'mnem'}
+ ];
+
+ /* ===== small svg helpers ===== */
+ function C(on){return on?{s:'#5e2846',f:'#a1466b'}:{s:'#c3aab6',f:'#efe1e9'};}
+ function glow(x,y){return '<circle cx="'+x+'" cy="'+y+'" r="24" fill="rgba(161,70,107,0.14)"/>';}
+ function ring(x,y){return '<circle cx="'+x+'" cy="'+y+'" r="24" fill="none" stroke="#a1466b" stroke-width="1.6" stroke-dasharray="3 3"/>';}
+ function band(x0,x1,fill,lab,lc){
+   return '<rect x="'+x0+'" y="24" width="'+(x1-x0)+'" height="150" rx="9" fill="'+fill+'"/>'
+    +'<text x="'+((x0+x1)/2)+'" y="37" text-anchor="middle" font-size="8.5" font-weight="800" letter-spacing="0.6" fill="'+lc+'">'+lab+'</text>';
+ }
+ function bone(x1,y1,x2,y2,c){
+   return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c.s+'" stroke-width="4.6" stroke-linecap="round"/>'
+    +'<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c.f+'" stroke-width="1.8" stroke-linecap="round"/>';
+ }
+ function spiralPath(cx,cy,r0,turns,n){
+   var d='';
+   for(var i=0;i<=n;i++){var t=i/n; var ang=t*turns*2*Math.PI; var r=r0*(1-0.72*t);
+     var x=cx+r*Math.cos(ang), y=cy+r*Math.sin(ang);
+     d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}
+   return d;
+ }
+
+ /* ===== TRACE mode diagram ===== */
+ function drawEar(a){
+   var s='';
+   s+=band(8,118,'#e9f0f7','OUTER EAR','#3f7fae');
+   s+=band(118,164,'#f7efdd','MIDDLE EAR','#a67c2a');
+   s+=band(164,260,'#efe9f4','INNER EAR','#7a5a8a');
+   /* incoming waves */
+   var wc=(a==='pinna')?'#a1466b':'#b9a3b1';
+   for(var w=0;w<3;w++){var wx=8+w*7;s+='<path d="M'+wx+' 74 Q'+(wx+7)+' 100 '+wx+' 126" fill="none" stroke="'+wc+'" stroke-width="2" stroke-linecap="round" opacity="'+((a==='pinna')?0.95:0.5)+'"/>';}
+   /* pinna */
+   var c=C(a==='pinna');
+   if(a==='pinna')s+=glow(40,98);
+   s+='<path d="M62 62 C 32 48, 16 80, 22 106 C 27 132, 48 144, 64 132" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="2.5" stroke-linejoin="round"/>';
+   s+='<path d="M56 78 C 42 76, 34 94, 40 108 C 44 118, 54 122, 62 116" fill="none" stroke="'+c.s+'" stroke-width="2" opacity="0.75"/>';
+   if(a==='pinna')s+=ring(40,98);
+   /* canal */
+   c=C(a==='canal'); if(a==='canal')s+=glow(88,100);
+   s+='<rect x="58" y="92" width="60" height="17" rx="7" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="2"/>';
+   if(a==='canal')s+=ring(88,100);
+   /* eardrum */
+   c=C(a==='eardrum'); if(a==='eardrum')s+=glow(119,100);
+   s+='<line x1="114" y1="87" x2="122" y2="113" stroke="'+c.s+'" stroke-width="4.2" stroke-linecap="round"/>';
+   if(a==='eardrum')s+=ring(119,100);
+   /* ossicles */
+   c=C(a==='ossicles'); if(a==='ossicles')s+=glow(140,88);
+   s+=bone(123,105,131,84,c)+bone(131,84,147,89,c)+bone(147,89,160,101,c);
+   s+='<circle cx="131" cy="84" r="2.4" fill="'+c.s+'"/><circle cx="147" cy="89" r="2.4" fill="'+c.s+'"/>';
+   if(a==='ossicles')s+=ring(141,90);
+   /* oval window */
+   c=C(a==='ovalwin'); if(a==='ovalwin')s+=glow(162,101);
+   s+='<line x1="161" y1="93" x2="163" y2="109" stroke="'+c.s+'" stroke-width="4.4" stroke-linecap="round"/>';
+   if(a==='ovalwin')s+=ring(162,101);
+   /* cochlea */
+   var coOn=(a==='cochlea'||a==='hair'); c=C(coOn);
+   if(a==='cochlea')s+=glow(206,110);
+   s+='<path d="'+spiralPath(208,110,30,2.5,90)+'" fill="none" stroke="'+c.s+'" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>';
+   s+='<path d="'+spiralPath(208,110,30,2.5,90)+'" fill="none" stroke="'+c.f+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+   if(a==='cochlea')s+=ring(206,110);
+   /* hair cells (shown when that step is active) */
+   if(a==='hair'){ s+=glow(206,110);
+     for(var h=0;h<3;h++){var hx=197+h*8;
+       for(var j=0;j<3;j++){s+='<line x1="'+(hx+j*2)+'" y1="115" x2="'+(hx+j*2-1)+'" y2="107" stroke="#5e2846" stroke-width="1.4" stroke-linecap="round"/>';}
+       s+='<rect x="'+(hx-1)+'" y="115" width="7" height="4" rx="1.5" fill="#a1466b"/>';}
+     s+=ring(206,110);
+   }
+   /* auditory nerve */
+   c=C(a==='nerve'); if(a==='nerve')s+=glow(234,150);
+   s+='<path d="M220 130 C 234 142, 242 152, 252 172" fill="none" stroke="'+c.s+'" stroke-width="6" stroke-linecap="round"/>';
+   s+='<path d="M220 130 C 234 142, 242 152, 252 172" fill="none" stroke="'+c.f+'" stroke-width="2.4" stroke-linecap="round"/>';
+   s+='<text x="236" y="140" font-size="8" fill="'+(a==='nerve'?'#5e2846':'#a892a2')+'" font-weight="700">to brain</text>';
+   if(a==='nerve')s+=ring(234,152);
+   $('sceneG').innerHTML=s;
+ }
+
+ /* ===== PITCH mode: uncoiled cochlea + traveling wave ===== */
+ var LNF=Math.log(20000), LN0=Math.log(20), SPAN=LNF-LN0;
+ function fmtF(f){ return f>=1000 ? (f/1000).toFixed(1)+' kHz' : Math.round(f)+' Hz'; }
+ function posOf(f){ var p=(LNF-Math.log(f))/SPAN; return Math.max(0,Math.min(1,p)); }
+ function drawCochlea(pos,f){
+   var baseX=36, apexX=236, midY=104;
+   function half(x){var u=(x-baseX)/(apexX-baseX);return 7+u*18;}
+   var s='';
+   /* membrane strip */
+   var top='',bot='';
+   for(var i=0;i<=40;i++){var x=baseX+(apexX-baseX)*i/40;top+=(i?'L':'M')+x.toFixed(1)+' '+(midY-half(x)).toFixed(1);}
+   for(var i2=40;i2>=0;i2--){var x2=baseX+(apexX-baseX)*i2/40;bot+='L'+x2.toFixed(1)+' '+(midY+half(x2)).toFixed(1);}
+   s+='<path d="'+top+bot+'Z" fill="#f6ebf1" stroke="#dcc7d3" stroke-width="1.4"/>';
+   s+='<line x1="'+baseX+'" y1="'+midY+'" x2="'+apexX+'" y2="'+midY+'" stroke="#e4cfdb" stroke-width="1" stroke-dasharray="2 3"/>';
+   /* oval window / stapes at base */
+   s+='<line x1="'+(baseX-6)+'" y1="'+(midY-9)+'" x2="'+(baseX-6)+'" y2="'+(midY+9)+'" stroke="#a67c2a" stroke-width="4" stroke-linecap="round"/>';
+   s+='<text x="'+(baseX-6)+'" y="'+(midY+26)+'" text-anchor="middle" font-size="7.5" fill="#a67c2a" font-weight="700">oval window</text>';
+   /* traveling wave */
+   var peakX=baseX+pos*(apexX-baseX);
+   function envAt(u){ var e; if(u<=pos){ e=(pos<=0)?0:Math.pow(u/pos,1.7);} else { var d=(u-pos)/0.16; e=Math.max(0,1-d); e=e*e; } return e; }
+   var pts='';
+   for(var k=0;k<=170;k++){var u=k/170; var x=baseX+(apexX-baseX)*u;
+     var amp=envAt(u)*half(x)*0.92; var y=midY-amp*Math.sin(u*Math.PI*15);
+     pts+=(k?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}
+   s+='<path d="'+pts+'" fill="none" stroke="#a1466b" stroke-width="2" stroke-linejoin="round"/>';
+   var env2='';
+   for(var m=0;m<=80;m++){var uu=m/80;var xx=baseX+(apexX-baseX)*uu;var aa=envAt(uu)*half(xx)*0.92;env2+=(m?'L':'M')+xx.toFixed(1)+' '+(midY-aa).toFixed(1);}
+   s+='<path d="'+env2+'" fill="none" stroke="#d1495b" stroke-width="1" stroke-dasharray="3 2" opacity="0.55"/>';
+   /* peak marker */
+   s+='<line x1="'+peakX.toFixed(1)+'" y1="'+(midY-half(peakX)-6)+'" x2="'+peakX.toFixed(1)+'" y2="'+(midY+half(peakX)+6)+'" stroke="#b8862f" stroke-width="1.6"/>';
+   s+='<circle cx="'+peakX.toFixed(1)+'" cy="'+(midY-half(peakX)*0.85).toFixed(1)+'" r="4" fill="#b8862f" stroke="#fff" stroke-width="1.5"/>';
+   s+='<text x="'+peakX.toFixed(1)+'" y="'+(midY-half(peakX)-10)+'" text-anchor="middle" font-size="9" fill="#8a6a20" font-weight="800">'+fmtF(f)+'</text>';
+   /* tonotopic ticks */
+   var ticks=[[0,'20 kHz'],[1/3,'2 kHz'],[2/3,'200 Hz'],[1,'20 Hz']];
+   for(var t=0;t<ticks.length;t++){var tx=baseX+ticks[t][0]*(apexX-baseX);
+     s+='<line x1="'+tx.toFixed(1)+'" y1="30" x2="'+tx.toFixed(1)+'" y2="36" stroke="#b9a3b1" stroke-width="1"/>';
+     s+='<text x="'+tx.toFixed(1)+'" y="26" text-anchor="middle" font-size="7.5" fill="#94818b" font-weight="700">'+ticks[t][1]+'</text>';}
+   /* base / apex labels */
+   s+='<text x="'+baseX+'" y="'+(midY+40)+'" text-anchor="middle" font-size="9" fill="#5e2846" font-weight="800">BASE</text>';
+   s+='<text x="'+baseX+'" y="'+(midY+51)+'" text-anchor="middle" font-size="7.5" fill="#94818b">stiff &bull; narrow</text>';
+   s+='<text x="'+apexX+'" y="'+(midY+40)+'" text-anchor="middle" font-size="9" fill="#5e2846" font-weight="800">APEX</text>';
+   s+='<text x="'+apexX+'" y="'+(midY+51)+'" text-anchor="middle" font-size="7.5" fill="#94818b">floppy &bull; wide</text>';
+   $('sceneG').innerHTML=s;
+ }
+
+ /* ===== copy for pitch mode ===== */
+ function pitchInfo(f,theory){
+   var lead='<span class="n">How the ear codes pitch</span>The cochlea sorts frequencies by <b>place</b>. The <b>basilar membrane</b> is stiff and narrow at the <b>base</b> (by the oval window) and floppy and wide at the <b>apex</b>. High notes peak near the base; low notes travel all the way to the apex. This <b>place theory</b> was proposed by <b>Hermann von Helmholtz</b> and confirmed by <b>Georg von B&eacute;k&eacute;sy</b>, whose traveling-wave studies won the 1961 Nobel Prize.';
+   var add;
+   if(theory==='Frequency theory') add='At <b>'+fmtF(f)+'</b> (a low pitch), the auditory nerve can fire <i>in step</i> with the wave &mdash; <b>frequency (temporal) theory</b>. A single neuron can phase-lock only up to about 1,000 Hz.';
+   else if(theory==='Volley principle') add='At <b>'+fmtF(f)+'</b>, the wave is faster than one neuron can follow, so groups fire in alternating <b>volleys</b> &mdash; the <b>volley principle</b> of <b>Ernst Wever</b> and <b>Charles Bray</b> &mdash; together matching frequencies up to about 4,000 Hz.';
+   else add='At <b>'+fmtF(f)+'</b> (a high pitch), neurons are far too slow to fire in sync, so <b>place</b> is essentially the only code &mdash; the peak sits near the <b>base</b> of the cochlea.';
+   return lead+'<div class="loc">'+add+'</div>';
+ }
+
+ /* ===== renderers ===== */
+ function renderList(){
+   $('list').innerHTML=PARTS.map(function(p,i){
+     return '<button class="it'+(i===step?' on':'')+'" data-i="'+i+'"><span class="nm">'+(i+1)+' &middot; '+p.name+'</span><br><span class="s">'+p.zoneLab+'</span></button>';
+   }).join('');
+   var bs=$('list').querySelectorAll('.it');
+   for(var b=0;b<bs.length;b++){ bs[b].onclick=function(){ step=+this.getAttribute('data-i'); renderTrace(); }; }
+ }
+ function renderTrace(){
+   var p=PARTS[step];
+   drawEar(p.id);
+   $('cardTitle').textContent='The ear, in cross-section';
+   $('stage').style.background=ZC[p.zone];
+   $('stage').innerHTML=p.name+'<small>'+p.zoneLab+' &middot; step '+(step+1)+' of '+PARTS.length+'</small>';
+   $('info').innerHTML=p.info;
+   if(p.nt){ $('note').style.display='block'; $('note').className=(p.nk==='mnem')?'mnem':'note'; $('note').innerHTML=p.nt; }
+   else { $('note').style.display='none'; }
+   renderList();
+   $('prev').disabled=(step===0); $('next').disabled=(step===PARTS.length-1);
+ }
+ function renderPitch(){
+   var v=+$('freq').value; var f=20*Math.pow(1000,v/100);
+   var pos=posOf(f);
+   drawCochlea(pos,f);
+   $('cardTitle').textContent='The cochlea, uncoiled';
+   $('fVal').textContent=fmtF(f);
+   var region=pos<0.34?'Near the base':(pos<0.67?'Middle':'Near the apex');
+   var theory=f<500?'Frequency theory':(f<4000?'Volley principle':'Place theory');
+   $('rdRegion').textContent=region; $('rdTheory').textContent=theory;
+   var desc,bg;
+   if(f<250){desc='Very low pitch';bg='#2f6f9f';}
+   else if(f<1000){desc='Low pitch';bg='#3a7d86';}
+   else if(f<4000){desc='Mid pitch &mdash; speech range';bg='#2f9e5b';}
+   else if(f<10000){desc='High pitch';bg='#c96a2c';}
+   else {desc='Very high pitch';bg='#d1495b';}
+   $('stage').style.background=bg;
+   $('stage').innerHTML=desc+'<small>'+fmtF(f)+' &middot; peaks '+region.toLowerCase()+'</small>';
+   $('info').innerHTML=pitchInfo(f,theory);
+   $('note').style.display='block'; $('note').className='note';
+   $('note').innerHTML='<b>Aging and pitch:</b> the base of the cochlea (high frequencies) wears out first, so the top of the hearing range fades with age (<b>presbycusis</b>) and after loud-noise exposure. Children hear up near 20,000 Hz; many adults top out far lower.';
+ }
+
+ /* ===== audio (built-in Web Audio, user-triggered) ===== */
+ var actx=null;
+ function playTone(f){
+   try{
+     if(!actx){actx=new (window.AudioContext||window.webkitAudioContext)();}
+     if(actx.state==='suspended'){actx.resume();}
+     var o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime;
+     o.type='sine'; o.frequency.value=Math.max(20,Math.min(20000,f));
+     g.gain.setValueAtTime(0,t);
+     g.gain.linearRampToValueAtTime(0.16,t+0.03);
+     g.gain.setValueAtTime(0.16,t+0.55);
+     g.gain.linearRampToValueAtTime(0,t+0.72);
+     o.connect(g); g.connect(actx.destination);
+     o.start(t); o.stop(t+0.74);
+   }catch(e){}
+ }
+
+ /* ===== mode switching ===== */
+ function setMode(m){
+   mode=m;
+   var mb=$('modeseg').querySelectorAll('button');
+   for(var i=0;i<mb.length;i++){ mb[i].className=(mb[i].getAttribute('data-m')===m)?'on':''; }
+   var trace=(m==='trace');
+   $('traceCtrl').style.display=trace?'block':'none';
+   $('pitchCtrl').style.display=trace?'none':'block';
+   $('pitchReadout').style.display=trace?'none':'block';
+   if(trace){ $('scene').setAttribute('aria-label','Cross-section diagram of the ear'); renderTrace(); }
+   else { $('scene').setAttribute('aria-label','The cochlea uncoiled, showing where a pitch vibrates'); renderPitch(); }
+ }
+
+ /* ===== wiring ===== */
+ var mbtns=$('modeseg').querySelectorAll('button');
+ for(var a=0;a<mbtns.length;a++){ mbtns[a].addEventListener('click',function(){ setMode(this.getAttribute('data-m')); }); }
+ $('prev').addEventListener('click',function(){ if(step>0){step--;renderTrace();} });
+ $('next').addEventListener('click',function(){ if(step<PARTS.length-1){step++;renderTrace();} });
+ $('freq').addEventListener('input',function(){ renderPitch(); });
+ $('hear').addEventListener('click',function(){ var v=+$('freq').value; playTone(20*Math.pow(1000,v/100)); });
+ $('lowJump').addEventListener('click',function(){ $('freq').value=23; renderPitch(); });
+ $('hiJump').addEventListener('click',function(){ $('freq').value=87; renderPitch(); });
+
+ setMode('trace');
+})();
+</script>
+</body>
+</html>

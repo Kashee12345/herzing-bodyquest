@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0f7f2">
+<title>Build a Punnett Square</title>
+<meta name="description" content="Interactive builder: choose a single-gene trait and each parent's genotype to construct a Punnett square and read off the offspring genotype and phenotype ratios. For human-development students.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_humdev.css">
+<style>.wrap{grid-template-columns:0.92fr 1.08fr;}
+.lbl{font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin:13px 0 5px;}
+.lbl:first-child{margin-top:0;}
+.leg{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:11px;font-size:11.5px;font-weight:700;color:var(--soft);}
+.leg span{display:inline-flex;align-items:center;gap:5px;}
+.leg i{width:12px;height:12px;border-radius:3px;display:inline-block;}
+.phen{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.pill.carr{background:#fbf3e2;color:#8a6a20;}
+.seg button small{font-size:9.3px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">Human Development · Chapter 3</div>
+  <h1>Build a Punnett Square</h1>
+  <div class="intro">For a single-gene trait, each parent hands down <b>one allele</b> per child &mdash; and a simple 2&times;2 grid predicts every possible pairing. Pick a trait and each parent's genotype, then read the odds for each pregnancy.</div>
+</header>
+<div class="wrap">
+  <div><div class="card"><h2 id="cross">Ff &times; Ff</h2>
+    <svg viewBox="0 0 218 218" aria-label="Punnett square"><g id="art"></g></svg>
+    <div class="leg">
+      <span><i style="background:#9fd3b4"></i><span id="lg0">Unaffected</span></span>
+      <span id="lgc"><i style="background:#ecd9ac"></i>Carrier</span>
+      <span><i style="background:#f0c9d0"></i><span id="lg1">Affected</span></span>
+    </div>
+  </div></div>
+  <div>
+    <div id="stage">Cross the parents<small>set each genotype below</small></div>
+    <div class="card">
+      <div class="lbl">Trait <span id="mode" style="float:right;color:var(--gold);"></span></div>
+      <div class="seg" id="traitSeg"></div>
+      <div class="lbl">Parent 1 genotype</div>
+      <div class="seg" id="p1Seg"></div>
+      <div class="lbl">Parent 2 genotype</div>
+      <div class="seg" id="p2Seg"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+</div>
+<footer>Human Development · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ // Each trait is a genuinely single-gene (Mendelian) human condition.
+ // D = dominant allele, r = recessive allele. mode = which phenotype the DISEASE tracks.
+ var T=[
+  {k:'cf',nm:'Cystic fibrosis',gene:'CFTR gene',mode:'rec',D:'F',r:'f',
+   domPh:'Unaffected',recPh:'Cystic fibrosis',
+   note:'Autosomal recessive: a child needs <b>two</b> f alleles to have CF. A single f makes a healthy <b>carrier</b> who can still pass it on.'},
+  {k:'alb',nm:'Albinism',gene:'OCA2 gene',mode:'rec',D:'A',r:'a',
+   domPh:'Typical pigment',recPh:'Albinism',
+   note:'Autosomal recessive: two unaffected <b>carriers</b> have a 1-in-4 chance of an affected child in <b>each</b> pregnancy.'},
+  {k:'hd',nm:'Huntington disease',gene:'HTT gene',mode:'dom',D:'H',r:'h',
+   domPh:'Huntington disease',recPh:'Unaffected',
+   note:'Autosomal dominant: a <b>single</b> H allele causes disease, so an affected parent (Hh) passes it to about half of their children.'}
+ ];
+ var GENO=[
+  {nm:'Homozygous dominant',g:function(t){return[t.D,t.D];}},
+  {nm:'Heterozygous',g:function(t){return[t.D,t.r];}},
+  {nm:'Homozygous recessive',g:function(t){return[t.r,t.r];}}
+ ];
+ var ti=0,p1=1,p2=1; // defaults: cystic fibrosis, carrier x carrier
+
+ // classify an offspring by its count of dominant alleles (0,1,2)
+ function classify(dom,t){
+   if(t.mode==='rec'){
+     if(dom===2) return {s:'ok',ph:t.domPh};
+     if(dom===1) return {s:'carr',ph:'Carrier'};
+     return {s:'bad',ph:t.recPh};
+   } else {
+     if(dom===0) return {s:'ok',ph:t.recPh};
+     return {s:'bad',ph:t.domPh};
+   }
+ }
+ var COL={ok:{f:'#e2f2e9',st:'#9fd3b4',tx:'#237a45',sh:'unaffected'},
+          carr:{f:'#fbf3e2',st:'#ecd9ac',tx:'#8a6a20',sh:'carrier'},
+          bad:{f:'#fae5e8',st:'#f0c9d0',tx:'#b23145',sh:'affected'}};
+ var FR=['0','¼','½','¾','1'];
+
+ function rc(x,y,w,h,f,st){return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="'+f+'" stroke="'+st+'" stroke-width="1.5"/>';}
+ function tx(x,y,s,sz,c,w){return '<text x="'+x+'" y="'+y+'" font-size="'+sz+'" fill="'+c+'" text-anchor="middle" font-weight="'+(w||700)+'" font-family="Inter,sans-serif">'+s+'</text>';}
+
+ function offspring(t,g1,g2){ // returns 2x2 array of {geno,dom,cell}
+   var out=[];
+   for(var r=0;r<2;r++){var row=[];
+     for(var c=0;c<2;c++){
+       var a=g1[c],b=g2[r];
+       var dom=(a===t.D?1:0)+(b===t.D?1:0);
+       var geno= dom===2? t.D+t.D : (dom===0? t.r+t.r : t.D+t.r);
+       row.push({geno:geno,dom:dom,cell:classify(dom,t)});
+     }
+     out.push(row);
+   }
+   return out;
+ }
+
+ function draw(t,g1,g2,grid){
+   var H=42,C=88,s='';
+   // corner
+   s+=rc(0,0,H,H,'#eef6f0','#cfe3d6')+tx(H/2,H/2+7,'×',20,'#7a8880');
+   // top headers = parent 1 gametes (columns)
+   for(var c=0;c<2;c++){s+=rc(H+c*C,0,C,H,'#eef6f0','#cfe3d6')+tx(H+c*C+C/2,H/2+8,g1[c],24,'#1c4a32');}
+   // left headers = parent 2 gametes (rows)
+   for(var r=0;r<2;r++){s+=rc(0,H+r*C,H,C,'#eef6f0','#cfe3d6')+tx(H/2,H+r*C+C/2+8,g2[r],24,'#1c4a32');}
+   // inner offspring cells
+   for(r=0;r<2;r++){for(c=0;c<2;c++){
+     var o=grid[r][c],col=COL[o.cell.s],x=H+c*C,y=H+r*C;
+     s+=rc(x,y,C,C,col.f,col.st);
+     s+=tx(x+C/2,y+C/2-2,o.geno,30,col.tx,800);
+     s+=tx(x+C/2,y+C/2+24,col.sh,12,col.tx,600);
+   }}
+   return s;
+ }
+
+ function pill(cls,txt){return '<span class="pill '+cls+'">'+txt+'</span>';}
+
+ function render(){
+   var t=T[ti],g1=GENO[p1].g(t),g2=GENO[p2].g(t);
+   var grid=offspring(t,g1,g2);
+   $("art").innerHTML=draw(t,g1,g2,grid);
+   var cross=g1.join('')+' × '+g2.join('');
+   $("cross").innerHTML=cross;
+   $("stage").innerHTML=cross+'<small>'+GENO[p1].nm+' × '+GENO[p2].nm+'</small>';
+   $("mode").innerHTML=(t.mode==='rec'?'autosomal recessive':'autosomal dominant');
+
+   // tally genotypes + phenotypes across the 4 cells
+   var gd={},ok=0,carr=0,bad=0;
+   for(var r=0;r<2;r++)for(var c=0;c<2;c++){
+     var o=grid[r][c]; gd[o.geno]=(gd[o.geno]||0)+1;
+     if(o.cell.s==='ok')ok++; else if(o.cell.s==='carr')carr++; else bad++;
+   }
+   // genotype ratio, dominant-first ordering
+   var order=[t.D+t.D,t.D+t.r,t.r+t.r],parts=[];
+   order.forEach(function(g){ if(gd[g]) parts.push('<b>'+g+'</b> '+FR[gd[g]]); });
+
+   // phenotype pills
+   var ph='';
+   if(bad>0) ph+=pill('high',(bad*25)+'% '+(t.mode==='rec'?t.recPh:t.domPh));
+   if(carr>0) ph+=pill('carr',(carr*25)+'% carrier');
+   if(ok>0) ph+=pill('normal',(ok*25)+'% '+(t.mode==='rec'?t.domPh:t.recPh));
+
+   // takeaway
+   var loc = bad>0
+     ? 'Chance of an affected child: <b>'+(bad*25)+'%</b> in each pregnancy'+(carr>0?', plus '+(carr*25)+'% carriers.':'.')
+     : 'No affected children are possible from this cross'+(carr>0?', but '+(carr*25)+'% would be carriers.':'.');
+
+   $("info").innerHTML=
+     '<span class="n">'+cross+' &rarr; offspring</span>'+
+     'Every child inherits one allele from each parent. This cross of the <b>'+t.gene+'</b> gives a genotype ratio of '+parts.join(' &middot; ')+'.'+
+     '<div class="phen">'+ph+'</div>'+
+     '<div class="loc">'+loc+'</div>'+
+     '<div class="mnem">'+t.note+'</div>';
+
+   // legend labels track the trait
+   $("lg0").innerHTML=(t.mode==='rec'?t.domPh:t.recPh);
+   $("lg1").innerHTML=(t.mode==='rec'?t.recPh:t.domPh);
+   $("lgc").style.display=(t.mode==='rec'?'inline-flex':'none');
+
+   buildSegs();
+ }
+
+ function buildSegs(){
+   var t=T[ti];
+   $("traitSeg").innerHTML=T.map(function(x,i){
+     return '<button data-t="'+i+'" class="'+(i===ti?'on':'')+'">'+x.nm+'<small>'+x.gene+'</small></button>';
+   }).join('');
+   function segBtn(gi,cur,who){
+     var g=GENO[gi].g(t),lab=g.join(''),cl=classify((g[0]===t.D?1:0)+(g[1]===t.D?1:0),t);
+     return '<button data-'+who+'="'+gi+'" class="'+(gi===cur?'on':'')+'">'+lab+'<small>'+cl.ph+'</small></button>';
+   }
+   $("p1Seg").innerHTML=[0,1,2].map(function(gi){return segBtn(gi,p1,'p1');}).join('');
+   $("p2Seg").innerHTML=[0,1,2].map(function(gi){return segBtn(gi,p2,'p2');}).join('');
+   document.querySelectorAll('#traitSeg button').forEach(function(b){b.onclick=function(){ti=+b.dataset.t;render();};});
+   document.querySelectorAll('#p1Seg button').forEach(function(b){b.onclick=function(){p1=+b.dataset.p1;render();};});
+   document.querySelectorAll('#p2Seg button').forEach(function(b){b.onclick=function(){p2=+b.dataset.p2;render();};});
+ }
+
+ render();
+})();
+</script>
+</body>
+</html>

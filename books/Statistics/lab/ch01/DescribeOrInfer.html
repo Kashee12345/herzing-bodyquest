@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eff5f8">
+<title>Describe or Infer?</title>
+<meta name="description" content="Draw real samples from a simulated population and watch the difference between describing a sample and inferring about a population. Interactive statistics.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_stats.css">
+<style>.wrap{grid-template-columns:1.05fr 0.95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:11px;}
+.sg div{background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 9px;}
+.sg .l{font-size:9.3px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);font-weight:800;}
+.sg .v{font-family:var(--disp);font-size:16px;font-weight:700;color:var(--teal-dk);margin-top:1px;}
+.sg .v small{font-size:10.5px;font-weight:600;color:var(--muted);font-family:var(--sans);}
+.sg .w2{grid-column:span 2;}
+.sg div.hit{background:#e5f3ea;border-color:#bfe0cb;} .sg div.hit .v{color:#1f6b3c;}
+.sg div.miss{background:#fae5e8;border-color:#f0c9d0;} .sg div.miss .v{color:#8a2a3a;}
+.sld{display:flex;align-items:center;gap:10px;margin-top:12px;}
+.sld span{font-size:12px;font-weight:700;color:var(--soft);}
+.sld input{flex:1;accent-color:var(--teal);}
+.sld b{font-family:var(--disp);font-size:15px;color:var(--teal-dk);min-width:34px;text-align:right;}
+.lgd{display:flex;gap:13px;flex-wrap:wrap;font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;}
+.lgd i{display:inline-block;width:13px;height:9px;border-radius:2px;margin-right:5px;vertical-align:0px;}
+.q{font-size:13.5px;line-height:1.5;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-weight:600;min-height:66px;}
+.q em{font-style:normal;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;display:block;margin-bottom:4px;}
+.fb{margin-top:9px;font-size:12.5px;line-height:1.5;border-radius:9px;padding:9px 11px;}
+.fb.ok{background:#e5f3ea;color:#1f6b3c;border:1px solid #bfe0cb;} .fb.ok b{color:#154d2a;}
+.fb.no{background:#fae5e8;color:#8a2a3a;border:1px solid #f0c9d0;} .fb.no b{color:#7a1f2c;}
+.scr{float:right;font-size:11.5px;font-weight:800;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 1</a></div>
+<header>
+  <div class="kick">Statistics · Chapter 1</div>
+  <h1>Describe or Infer?</h1>
+  <div class="intro">Below is a city of <b>20,000 adults</b> whose resting heart rates you will never fully measure. You can only take a sample. <b>Describing</b> that sample is bookkeeping; <b>inferring</b> about the city is a leap &mdash; and the leap needs a number attached to its honesty.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="chTitle">Your sample</h2>
+      <svg viewBox="0 0 340 210" aria-label="distribution of heart rates"><g id="art"></g></svg>
+      <div class="lgd" id="lgd"></div>
+    </div>
+    <div class="card"><h2 id="ch2Title">Your measured values</h2>
+      <svg viewBox="0 0 340 200" aria-label="second view"><g id="art2"></g></svg>
+      <div style="font-size:12px;color:var(--soft);line-height:1.5;margin-top:6px;" id="cap2"></div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Describing a sample<small>facts about the people you measured</small></div>
+    <div class="card">
+      <div class="modeseg"><button id="mD" class="on">Describe the sample</button><button id="mI">Infer about the population</button></div>
+      <div class="sld"><span>Sample size n</span><input type="range" id="nSl" min="10" max="200" step="5" value="60"><b id="nv">60</b></div>
+      <div class="sg" id="sg"></div>
+      <div class="row"><button class="btn solid" id="draw">Draw another sample</button><button class="btn" id="run40" style="display:none">Run 40 more</button></div>
+      <div id="info"></div>
+    </div>
+    <div class="card"><h2>Sort the claim <span class="scr" id="scr">0 / 0</span></h2>
+      <div class="q" id="q"></div>
+      <div class="row"><button class="btn" id="bD">Describes a sample</button><button class="btn" id="bI">Infers about a population</button></div>
+      <div id="fb"></div>
+    </div>
+  </div>
+</div>
+<footer>Statistics · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ /* ---------- seeded PRNG ---------- */
+ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+ var rng=mulberry32(20260794);
+ function norm(r){var u=1-r(),v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307179586*v);}
+
+ /* ---------- build the population once ---------- */
+ var N=20000,LO=40,HI=110,BW=2,NB=(HI-LO)/BW;
+ var POP=new Array(N),prng=mulberry32(917);
+ for(var i=0;i<N;i++){var x=Math.round(72+9*norm(prng));POP[i]=x<42?42:(x>108?108:x);}
+ var MU=0;for(i=0;i<N;i++)MU+=POP[i];MU/=N;
+ var SIG=0;for(i=0;i<N;i++)SIG+=(POP[i]-MU)*(POP[i]-MU);SIG=Math.sqrt(SIG/N);
+
+ function hist(v){var c=[],k;for(k=0;k<NB;k++)c[k]=0;
+   for(k=0;k<v.length;k++){var b=Math.floor((v[k]-LO)/BW);if(b>=0&&b<NB)c[b]++;}return c;}
+ var POPC=hist(POP),POPD=POPC.map(function(c){return c/N;});
+ function mx(a){var m=0;for(var k=0;k<a.length;k++)if(a[k]>m)m=a[k];return m;}
+
+ /* ---------- sampling & statistics ---------- */
+ function takeSample(n,r){var seen={},v=[];while(v.length<n){var k=Math.floor(r()*N);if(!seen[k]){seen[k]=1;v.push(POP[k]);}}return v;}
+ function stats(v){var n=v.length,s=0,k;
+   for(k=0;k<n;k++)s+=v[k];var m=s/n;
+   var ss=0;for(k=0;k<n;k++)ss+=(v[k]-m)*(v[k]-m);
+   var sd=Math.sqrt(ss/(n-1));
+   var so=v.slice().sort(function(a,b){return a-b;});
+   var md=(n%2)?so[(n-1)/2]:(so[n/2-1]+so[n/2])/2;
+   return {n:n,m:m,sd:sd,md:md,mn:so[0],mx:so[n-1],v:v};}
+
+ /* two-sided 95% t critical values, interpolated in 1/df */
+ var TT=[[9,2.262],[10,2.228],[12,2.179],[14,2.145],[16,2.120],[18,2.101],[20,2.086],[24,2.064],
+         [29,2.045],[34,2.032],[39,2.023],[49,2.010],[59,2.001],[79,1.990],[99,1.984],[119,1.980],[149,1.976],[199,1.972]];
+ function tcrit(df){
+   if(df<=TT[0][0])return TT[0][1];
+   if(df>=TT[TT.length-1][0])return TT[TT.length-1][1];
+   for(var k=0;k<TT.length-1;k++){
+     if(df>=TT[k][0]&&df<=TT[k+1][0]){
+       var x0=1/TT[k][0],x1=1/TT[k+1][0],f=(1/df-x0)/(x1-x0);
+       return TT[k][1]+f*(TT[k+1][1]-TT[k][1]);}}
+   return 1.96;}
+ function ci(st){var se=st.sd/Math.sqrt(st.n),t=tcrit(st.n-1),me=t*se;
+   return {se:se,t:t,me:me,lo:st.m-me,hi:st.m+me,hit:(st.m-me<=MU&&MU<=st.m+me)};}
+
+ /* ---------- state ---------- */
+ var mode='D',n=60,S=stats(takeSample(n,rng)),C=ci(S);
+ var runs=[],runN=0,covHit=0,covTot=0;
+ var f1=function(x){return x.toFixed(1);},f2=function(x){return x.toFixed(2);};
+
+ /* ---------- main chart ---------- */
+ var PL=34,PR=10,PT=14,PB=26,W=340-PL-PR,H=210-PT-PB;
+ function X(v){return PL+(v-LO)/(HI-LO)*W;}
+ function chart(){
+   var sd=hist(S.v).map(function(c){return c/S.n;});
+   var dmax=Math.max(mx(POPD),mx(sd))*1.08;
+   var s='',k,base=PT+H;
+   if(mode==='I'){
+     for(k=0;k<NB;k++){if(!POPD[k])continue;var h=POPD[k]/dmax*H;
+       s+='<rect x="'+f1(X(LO+k*BW))+'" y="'+f1(base-h)+'" width="'+f1(W/NB-0.6)+'" height="'+f1(h)+'" fill="#c6d8e1"/>';}
+   }
+   for(k=0;k<NB;k++){if(!sd[k])continue;var h2=sd[k]/dmax*H;
+     s+='<rect x="'+f1(X(LO+k*BW))+'" y="'+f1(base-h2)+'" width="'+f1(W/NB-0.6)+'" height="'+f1(h2)+'" fill="#2f6f8a" opacity=".82"/>';}
+   if(mode==='I'){
+     s+='<rect x="'+f1(X(C.lo))+'" y="'+PT+'" width="'+f1(X(C.hi)-X(C.lo))+'" height="'+H+'" fill="#b8862f" opacity=".16"/>';
+     s+='<line x1="'+f1(X(MU))+'" y1="'+PT+'" x2="'+f1(X(MU))+'" y2="'+base+'" stroke="#d1495b" stroke-width="2" stroke-dasharray="5 3"/>';
+     s+='<text x="'+f1(X(MU))+'" y="'+(PT-3)+'" font-size="9.5" font-weight="700" fill="#d1495b" text-anchor="middle">&#956; = '+f2(MU)+'</text>';
+   }
+   s+='<line x1="'+f1(X(S.m))+'" y1="'+PT+'" x2="'+f1(X(S.m))+'" y2="'+base+'" stroke="#1c4454" stroke-width="2.2"/>';
+   s+='<text x="'+f1(X(S.m))+'" y="'+(base+22)+'" font-size="9.5" font-weight="700" fill="#1c4454" text-anchor="middle">x&#772; = '+f2(S.m)+'</text>';
+   s+='<line x1="'+PL+'" y1="'+base+'" x2="'+(PL+W)+'" y2="'+base+'" stroke="#b6c6cf" stroke-width="1"/>';
+   for(var t=50;t<=100;t+=10)
+     s+='<line x1="'+f1(X(t))+'" y1="'+base+'" x2="'+f1(X(t))+'" y2="'+(base+4)+'" stroke="#b6c6cf"/><text x="'+f1(X(t))+'" y="'+(base+13)+'" font-size="9" fill="#78868d" text-anchor="middle">'+t+'</text>';
+   s+='<text x="'+(PL+W)+'" y="'+(base+13)+'" font-size="8.5" fill="#78868d" text-anchor="end">bpm</text>';
+   s+='<text x="'+PL+'" y="'+(PT+7)+'" font-size="9" fill="#78868d">share of people</text>';
+   $("art").innerHTML=s;
+   $("lgd").innerHTML=(mode==='I'?'<span><i style="background:#c6d8e1"></i>all 20,000 (hidden in real life)</span><span><i style="background:#e4d3ae"></i>95% interval</span>':'')+
+     '<span><i style="background:#2f6f8a"></i>your '+S.n+' measured</span><span><i style="background:#1c4454"></i>x&#772; sample mean</span>'+
+     (mode==='I'?'<span><i style="background:#d1495b"></i>&#956; true mean</span>':'');
+ }
+
+ /* ---------- second view ---------- */
+ function dots(){
+   var c=[],k;for(k=0;k<NB;k++)c[k]=0;
+   var s='',base=168;
+   var so=S.v.slice().sort(function(a,b){return a-b;});
+   for(k=0;k<so.length;k++){
+     var b=Math.floor((so[k]-LO)/BW),lvl=c[b]++;
+     if(lvl>28)continue;
+     s+='<circle cx="'+f1(X(LO+b*BW)+W/NB/2)+'" cy="'+f1(base-4-lvl*4.6)+'" r="2.1" fill="#2f6f8a" opacity=".85"/>';}
+   s+='<line x1="'+PL+'" y1="'+base+'" x2="'+(PL+W)+'" y2="'+base+'" stroke="#b6c6cf"/>';
+   for(var t=50;t<=100;t+=10)
+     s+='<line x1="'+f1(X(t))+'" y1="'+base+'" x2="'+f1(X(t))+'" y2="'+(base+4)+'" stroke="#b6c6cf"/><text x="'+f1(X(t))+'" y="'+(base+13)+'" font-size="9" fill="#78868d" text-anchor="middle">'+t+'</text>';
+   s+='<path d="M'+f1(X(S.m)-5)+' '+(base+22)+' L'+f1(X(S.m)+5)+' '+(base+22)+' L'+f1(X(S.m))+' '+(base+13)+' Z" fill="#1c4454"/>';
+   s+='<text x="'+f1(X(S.m))+'" y="'+(base+33)+'" font-size="9.5" font-weight="700" fill="#1c4454" text-anchor="middle">mean '+f2(S.m)+'</text>';
+   s+='<text x="'+f1(X(S.mn))+'" y="'+(base-2)+'" font-size="9" fill="#78868d" text-anchor="middle">min</text>';
+   s+='<text x="'+f1(X(S.mx))+'" y="'+(base-2)+'" font-size="9" fill="#78868d" text-anchor="middle">max</text>';
+   $("art2").innerHTML=s;
+   $("ch2Title").innerHTML='Your '+S.n+' measured values';
+   $("cap2").innerHTML='One dot per person you actually measured. Every statistic on the right is just a summary of these dots &mdash; nothing more is being claimed.';
+ }
+ function coverage(){
+   var lo=MU-15,hi=MU+15,s='',k;
+   function cx(v){return PL+(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*W;}
+   s+='<line x1="'+f1(cx(MU))+'" y1="8" x2="'+f1(cx(MU))+'" y2="184" stroke="#d1495b" stroke-width="2" stroke-dasharray="5 3"/>';
+   s+='<text x="'+f1(cx(MU))+'" y="196" font-size="9.5" font-weight="700" fill="#d1495b" text-anchor="middle">&#956; = '+f2(MU)+'</text>';
+   for(k=0;k<runs.length;k++){
+     var r=runs[k],y=12+k*4.3,col=r.hit?'#2f9e5b':'#d1495b';
+     s+='<line x1="'+f1(cx(r.lo))+'" y1="'+f1(y)+'" x2="'+f1(cx(r.hi))+'" y2="'+f1(y)+'" stroke="'+col+'" stroke-width="2.4" stroke-linecap="round" opacity="'+(r.hit?'.6':'1')+'"/>';
+     s+='<circle cx="'+f1(cx(r.m))+'" cy="'+f1(y)+'" r="1.5" fill="'+col+'"/>';}
+   if(!runs.length)s+='<text x="170" y="100" font-size="11" fill="#78868d" text-anchor="middle">Press &#8220;Run 40 more&#8221; to repeat the whole procedure.</text>';
+   $("art2").innerHTML=s;
+   $("ch2Title").innerHTML='The same procedure, repeated';
+   var pct=covTot?(covHit/covTot*100).toFixed(1):'—';
+   var tail=covTot?(' <b>'+covHit+' of '+covTot+' ('+pct+'%)</b> of every interval you have built so far captured &#956; &mdash; that long-run rate <i>is</i> what &#8220;95% confident&#8221; means.'):'';
+   $("cap2").innerHTML=runs.length
+     ?('Each line is one 95% interval from a fresh sample of '+runN+'. Green captured &#956;, red missed.'+tail)
+     :('Each line will be one 95% interval built from a fresh sample of '+n+'. About 1 in 20 should miss &#956;.'+tail);
+ }
+
+ /* ---------- readouts ---------- */
+ function cell(l,v,cls){return '<div'+(cls?' class="'+cls+'"':'')+'><div class="l">'+l+'</div><div class="v">'+v+'</div></div>';}
+ function render(){
+   $("nv").innerHTML=n;
+   if(mode==='D'){
+     $("stage").style.background='#2f6f8a';
+     $("stage").innerHTML='Describing a sample<small>facts about the '+S.n+' people you measured</small>';
+     $("chTitle").innerHTML='Your sample of '+S.n;
+     $("sg").innerHTML=cell('n measured',S.n)+cell('mean x&#772;',f2(S.m)+' <small>bpm</small>')+cell('median',f1(S.md))+
+       cell('SD s',f2(S.sd))+cell('minimum',S.mn)+cell('maximum',S.mx);
+     $("info").innerHTML='<span class="n">Descriptive statistics</span>Every number above is a <b>fact about the '+S.n+' people you measured</b>. The mean is exactly '+f2(S.m)+' &mdash; not "about", not "probably". You added their heart rates and divided. There is no chance and no leap here. Draw a new sample and the numbers change, because they describe <i>that</i> sample. A descriptive statistic never claims anything about anyone you did not measure.'+
+       '<div class="mnem"><b>Describe</b> = about the data in front of you. <b>Infer</b> = about the data you will never have.</div>';
+     $("run40").style.display='none';
+     dots();
+   }else{
+     $("stage").style.background='#b8862f';
+     $("stage").innerHTML='Inferring about a population<small>a claim about all 20,000 &mdash; with its uncertainty attached</small>';
+     $("chTitle").innerHTML='Your sample of '+S.n+' vs. the whole city';
+     $("sg").innerHTML=cell('estimate x&#772;',f2(S.m))+cell('SE = s/&#8730;n',f2(C.se))+cell('t* (df '+(S.n-1)+')',f2(C.t))+
+       cell('margin of error','&#177; '+f2(C.me))+cell('95% confidence interval',f2(C.lo)+' &ndash; '+f2(C.hi),'w2')+
+       cell('true &#956; (revealed)',f2(MU))+cell('did this interval capture &#956;?',C.hit?'Yes':'No &mdash; a miss','w2 '+(C.hit?'hit':'miss'));
+     $("info").innerHTML='<span class="n">Inferential statistics</span>Now you make the leap: from '+S.n+' measured people to <b>all 20,000</b>. The sample mean becomes an <i>estimate</i> of &#956;, and the interval carries the honesty. A 95% confidence interval is a statement about the <b>procedure</b>: repeat this sampling-and-computing forever, and about 95% of the intervals it produces will contain &#956;. This particular interval either contains &#956; or it does not &mdash; the 95% is <b>not</b> the probability that &#956; sits inside <i>this</i> one.'+
+       '<div class="note"><b>The leap needs a fair draw.</b> If you had sampled only people leaving a cardiology clinic, no sample size would rescue you. A bigger biased sample just gives a narrower wrong answer.</div>';
+     $("run40").style.display='';
+     coverage();
+   }
+   chart();
+ }
+
+ /* ---------- controls ---------- */
+ function setMode(m){mode=m;$("mD").className=(m==='D'?'on':'');$("mI").className=(m==='I'?'on':'');render();}
+ $("mD").onclick=function(){setMode('D');};
+ $("mI").onclick=function(){setMode('I');};
+ $("nSl").oninput=function(){n=+this.value;runs=[];S=stats(takeSample(n,rng));C=ci(S);render();};
+ $("draw").onclick=function(){S=stats(takeSample(n,rng));C=ci(S);render();};
+ $("run40").onclick=function(){
+   runs=[];runN=n;
+   for(var k=0;k<40;k++){var st=stats(takeSample(n,rng)),cc=ci(st);
+     runs.push({lo:cc.lo,hi:cc.hi,m:st.m,hit:cc.hit});
+     covTot++;if(cc.hit)covHit++;}
+   S=stats(takeSample(n,rng));C=ci(S);render();};
+
+ /* ---------- sort the claim ---------- */
+ var Q=[
+  {t:'"The average wait time across the 240 clinic visits logged this month was 18.4 minutes."',a:'D',
+   w:'It reports a number computed from the 240 visits that were actually measured. Nothing is claimed about any other visit.'},
+  {t:'"Based on those 240 visits, the average wait for all visits this year is likely between 17.1 and 19.7 minutes."',a:'I',
+   w:'The claim reaches past the measured visits to the whole year, and it carries an interval &mdash; the signature of inference.'},
+  {t:'"62% of the 500 people we surveyed said they would vote yes."',a:'D',
+   w:'A percentage of the surveyed group itself. It is exactly true of those 500 people, whether or not they represent anyone else.'},
+  {t:'"A majority of all registered voters would vote yes."',a:'I',
+   w:'Registered voters were never all surveyed. Going from the 500 to the millions is the leap, and it can be wrong.'},
+  {t:'"Test scores in this class ranged from 51 to 98, with a median of 79."',a:'D',
+   w:'Range and median of the scores in hand. Pure summary &mdash; no population, no uncertainty.'},
+  {t:'"The gap in scores between the two groups is larger than sampling variation alone can comfortably explain."',a:'I',
+   w:'This asks whether a real difference exists beyond the people measured &mdash; a question about populations, answered with probability.'},
+  {t:'"The tallest player on this year’s roster is 81 inches."',a:'D',
+   w:'A maximum of the actual roster. It is a census of that group, so no inference is needed or made.'},
+  {t:'"The redesigned battery will outlast the old one across the entire production run."',a:'I',
+   w:'The whole production run was not tested. A conclusion about all future units from a tested batch is inference.'}
+ ];
+ var qi=0,right=0,done=0,answered=false;
+ function showQ(){
+   answered=false;
+   $("q").innerHTML='<em>Claim '+(qi+1)+' of '+Q.length+'</em>'+Q[qi].t;
+   $("fb").innerHTML='';
+   $("bD").disabled=false;$("bI").disabled=false;
+   $("bD").innerHTML='Describes a sample';$("bI").innerHTML='Infers about a population';
+   $("scr").innerHTML=right+' / '+done;
+ }
+ function answer(pick){
+   if(answered)return;answered=true;done++;
+   var q=Q[qi],ok=(pick===q.a);
+   if(ok)right++;
+   $("scr").innerHTML=right+' / '+done;
+   $("fb").innerHTML='<div class="fb '+(ok?'ok':'no')+'"><b>'+(ok?'Correct &mdash; ':'Not quite &mdash; ')+
+     (q.a==='D'?'descriptive.':'inferential.')+'</b> '+q.w+'</div>';
+   $("bD").disabled=true;$("bI").disabled=true;
+   var last=(qi===Q.length-1);
+   $("bD").innerHTML=last?'Start over':'Next claim &#8250;';
+   $("bD").disabled=false;
+   $("bD").onclick=function(){
+     if(last){qi=0;right=0;done=0;}else{qi++;}
+     $("bD").onclick=function(){answer('D');};showQ();};
+ }
+ $("bD").onclick=function(){answer('D');};
+ $("bI").onclick=function(){answer('I');};
+
+ showQ();render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Reading the Plane</title>
+<meta name="description" content="Plot a point with sliders and watch it walk, tap the four quadrants and the axes to see the sign patterns, then step through finding the x- and y-intercepts of a graph.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+:root{--math:Georgia,'Times New Roman',serif;}
+.wrap{grid-template-columns:0.96fr 1.04fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr;}}
+.modeseg button{font-size:12.5px;padding:10px 4px;line-height:1.25;}
+.modeseg button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);margin-top:2px;}
+.modeseg button.on small{color:rgba(255,255,255,.9);}
+#stage .big{font-family:var(--math);font-size:25px;font-weight:700;letter-spacing:.4px;}
+#stage .big sup{font-size:.55em;vertical-align:super;}
+.why{font-family:var(--math);font-size:14px;color:var(--teal-dk);text-align:center;background:#f1f2f9;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-top:9px;line-height:1.55;}
+.why sup{font-size:.62em;vertical-align:super;}
+.why em{font-family:var(--sans);font-style:normal;font-size:10.5px;font-weight:800;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.sld{margin-top:13px;}
+.sld .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.sld .lab b{font-family:var(--math);font-size:20px;color:var(--teal-dk);letter-spacing:0;text-transform:none;}
+.sld .ends{display:flex;justify-content:space-between;font-family:var(--math);font-size:10.5px;color:var(--muted);margin-top:-2px;}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;display:block;}
+input[type=range]:focus{outline:none;}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);margin-top:-8px;}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:#dfe1f0;}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 7px rgba(30,32,70,.32);}
+.pset{margin-top:14px;}
+.pset .cap{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.seg button{font-size:11.5px;padding:9px 3px;}
+.seg button small{font-family:var(--math);font-size:10px;}
+@media (max-width:600px){
+  #picker,#presets{display:grid;grid-template-columns:1fr 1fr;}
+  #picker button:last-child:nth-child(odd),#presets button:last-child:nth-child(odd){grid-column:1/-1;}
+  .seg button{font-size:12px;padding:10px 6px;}
+}
+#regions .it .nm,#regions .it .s{display:block;}
+#regions .it .s{font-family:var(--math);margin-top:1px;}
+#regions .it:last-child:nth-child(odd){grid-column:1/-1;}
+#mb{min-height:196px;display:flex;flex-direction:column;justify-content:center;margin-top:12px;}
+.dl{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:7px 2px;border-bottom:1px dashed var(--line);}
+.dl:last-child{border-bottom:none;}
+.mx{font-family:var(--math);font-size:15px;color:var(--muted);line-height:1.5;}
+.mx sup{font-size:.62em;vertical-align:super;}
+.dl.cur .mx{font-size:19px;color:var(--ink);font-weight:600;}
+.pl{flex:none;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);white-space:nowrap;}
+.dl.cur .pl{color:var(--gold);}
+.tg{border-radius:4px;padding:1px 5px;background:#ffeaa8;box-shadow:inset 0 0 0 1.5px #e5c46a;}
+.dl:not(.cur) .tg{background:transparent;box-shadow:none;padding:0;}
+.exlab{font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.55;}
+.exlab b{font-family:var(--math);font-size:13.5px;color:var(--teal-dk);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 3</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 3</div>
+  <h1>Reading the Plane</h1>
+  <div class="intro">Two number lines crossed at right angles turn every <b>pair</b> of numbers into a <b>place</b>. That is the whole invention. Slide a point around and watch it walk, tap the four quadrants to see why their signs are what they are, then step through finding where a graph crosses each axis.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card"><h2 id="artTitle">The coordinate plane</h2>
+      <svg viewBox="0 0 250 250" aria-label="coordinate plane"><g id="art"></g></svg>
+      <div class="why" id="why"></div>
+    </div>
+    <div class="card" id="cardSigns"><h2>The sign map</h2>
+      <svg viewBox="0 0 250 112" aria-label="sign pattern of the four quadrants"><g id="signs"></g></svg>
+      <div class="mnem"><b>Why counterclockwise?</b> Quadrant I is the corner where both coordinates are positive &mdash; the corner you meet first walking right and up. From there the numbering turns <b>counterclockwise</b>, so each step flips exactly one sign at a time.</div>
+    </div>
+    <div class="card" id="cardInt" style="display:none"><h2>The two questions</h2>
+      <svg viewBox="0 0 250 112" aria-label="an intercept sits on an axis, where one coordinate is zero"><g id="mini"></g></svg>
+      <div class="mnem"><b>An intercept is a point where a graph meets an axis</b> &mdash; and on an axis, one of the two coordinates is forced to <b>0</b>. Substituting that zero is not a trick to memorise; it is just writing down where you already are.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage"><span class="big">(3, 2)</span><small>Quadrant I</small></div>
+    <div class="card">
+      <div class="modeseg" id="modes">
+        <button data-m="0" class="on">Plot it<small>slide <i>x</i> and <i>y</i></small></button>
+        <button data-m="1">Name the region<small>quadrants &amp; axes</small></button>
+        <button data-m="2">Find the intercepts<small>step by step</small></button>
+      </div>
+      <div id="p0">
+        <div class="sld">
+          <div class="lab"><span>First coordinate &mdash; <i>x</i> &mdash; run</span><b id="xOut">3</b></div>
+          <input type="range" id="xRange" min="-6" max="6" step="1" value="3" aria-label="x coordinate">
+          <div class="ends"><span>&minus;6 left</span><span>0</span><span>6 right</span></div>
+        </div>
+        <div class="sld">
+          <div class="lab"><span>Second coordinate &mdash; <i>y</i> &mdash; rise</span><b id="yOut">2</b></div>
+          <input type="range" id="yRange" min="-6" max="6" step="1" value="2" aria-label="y coordinate">
+          <div class="ends"><span>&minus;6 down</span><span>0</span><span>6 up</span></div>
+        </div>
+        <div class="pset">
+          <div class="cap">Or jump to a point worth seeing</div>
+          <div class="seg" id="presets"></div>
+        </div>
+      </div>
+      <div id="p1" style="display:none">
+        <div class="grid" id="regions"></div>
+      </div>
+      <div id="p2" style="display:none">
+        <div class="seg" id="picker"></div>
+        <div id="mb"></div>
+        <div class="exlab" id="exlab"></div>
+      </div>
+      <div id="info"></div>
+      <div class="mnem" id="mn0"><b>The order is not negotiable.</b> An ordered pair is written <b>(<i>x</i>, <i>y</i>)</b>: the first number is the <b>horizontal</b> move, the second is the <b>vertical</b> one. Alphabetical order &mdash; <i>x</i> before <i>y</i> &mdash; is the only reminder you need. Coordinates do not have to be whole numbers; (1.5, &minus;2.75) is a perfectly ordinary point.</div>
+      <div class="mnem" id="mn2" style="display:none"><b>The recipe, both directions.</b> For the <b><i>y</i></b>-intercept, set <b><i>x</i> = 0</b> and solve for <i>y</i>. For the <b><i>x</i></b>-intercept, set <b><i>y</i> = 0</b> and solve for <i>x</i>. The zero always goes in for the <b>other</b> letter &mdash; the crossed wires there are what cost most people the marks.</div>
+      <div class="note" id="nt0"><b>The trap.</b> A point sitting <b>on an axis is in no quadrant at all</b>. The quadrants are the four open blocks; the axes are the fences between them, and a fence belongs to neither field. So (0, &minus;4) is <b>not</b> in Quadrant IV &mdash; it is on the <i>y</i>-axis. Likewise (&minus;5, 0) is on the <i>x</i>-axis, not in Quadrant III.</div>
+      <div class="note" id="nt2" style="display:none"><b>The trap.</b> An intercept is a <b>point</b>, so it has two coordinates. The <i>x</i>-intercept (6, 0) puts the nonzero number <b>first</b>; the <i>y</i>-intercept (0, 4) puts it <b>second</b>. You will also see intercepts reported as bare numbers &mdash; &ldquo;the <i>x</i>-intercept is 6&rdquo; &mdash; and both conventions are standard. Just never write the pair backwards.</div>
+      <div class="row" id="nav" style="display:none"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var CORAL='#d1495b', INK='#22243a', MUT='#7d7f94', LINE='#e0e2ef', TEAL='#43458f',
+     TDK='#262a5c', GOLD='#b8862f', PALE='#c6c9de', CARD='#fffdf9';
+ var MIN='&#8722;', CHK='&#10003;';
+
+ /* ---------------- number formatting ---------------- */
+ function h(n){ return n<0 ? '&minus;'+(-n) : ''+n; }          /* for HTML  */
+ function sv(n){ return n<0 ? MIN+(-n) : ''+n; }               /* for SVG   */
+ function pair(x,y){ return '('+h(x)+', '+h(y)+')'; }
+ function sgn(n){ return n>0 ? '+' : '&minus;'; }
+
+ /* ---------------- the plane: world -> screen ---------------- */
+ var R=6, U=18, X0=125, Y0=125;      /* 6 units each way, 18px per unit, centred */
+ function sx(x){ return X0 + U*x; }
+ function sy(y){ return Y0 - U*y; }
+
+ /* a graph drawn from computed points: sample x, keep what fits in the window */
+ function curvePath(f){
+   var d='', pen=false, i, x, y, N=600;
+   for(i=0;i<=N;i++){
+     x = -R + i*(2*R/N);
+     y = f(x);
+     if(isFinite(y) && y>=-R-0.0001 && y<=R+0.0001){
+       d += (pen?'L':'M') + sx(x).toFixed(2) + ' ' + sy(y).toFixed(2) + ' ';
+       pen = true;
+     } else { pen = false; }
+   }
+   return d;
+ }
+
+ function halo(x,y,anch,size,col,txt){
+   return '<text x="'+x+'" y="'+y+'" text-anchor="'+anch+'" font-family="Georgia,serif" font-size="'+size+'" font-weight="700" fill="'+col+'" stroke="'+CARD+'" stroke-width="3.2" paint-order="stroke" stroke-linejoin="round">'+txt+'</text>';
+ }
+ function hArrow(x1,x2,y,col){
+   if(Math.abs(x2-x1)<1) return '';
+   var d=(x2>x1)?1:-1, e=x2-d*5.5;
+   return '<line x1="'+x1+'" y1="'+y+'" x2="'+e.toFixed(1)+'" y2="'+y+'" stroke="'+col+'" stroke-width="2.4"/>'+
+          '<polygon points="'+x2.toFixed(1)+','+y+' '+e.toFixed(1)+','+(y-4)+' '+e.toFixed(1)+','+(y+4)+'" fill="'+col+'"/>';
+ }
+ function vArrow(x,y1,y2,col){
+   if(Math.abs(y2-y1)<1) return '';
+   var d=(y2>y1)?1:-1, e=y2-d*5.5;
+   return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+e.toFixed(1)+'" stroke="'+col+'" stroke-width="2.4"/>'+
+          '<polygon points="'+x+','+y2.toFixed(1)+' '+(x-4)+','+e.toFixed(1)+' '+(x+4)+','+e.toFixed(1)+'" fill="'+col+'"/>';
+ }
+
+ var QBOX={q1:[X0,17,108,108], q2:[17,17,108,108], q3:[17,Y0,108,108], q4:[X0,Y0,108,108]};
+ var QNUM={q1:['I',3.7,4.6], q2:['II',-3.7,4.6], q3:['III',-3.7,-4.6], q4:['IV',3.7,-4.6]};
+
+ /* o = {hiQ, hiAxis:'x'|'y'|'both', f, dots, pt, ghost, pick} */
+ function plane(o){
+   o = o || {};
+   var s='', i, k;
+
+   for(k in QBOX){ var b=QBOX[k];
+     s+='<rect x="'+b[0]+'" y="'+b[1]+'" width="'+b[2]+'" height="'+b[3]+'" fill="'+(o.hiQ===k?'#e6e8f5':'#fbfbfe')+'"/>';
+   }
+   for(i=-R;i<=R;i++){
+     s+='<line x1="'+sx(i)+'" y1="17" x2="'+sx(i)+'" y2="233" stroke="'+LINE+'" stroke-width="0.8"/>';
+     s+='<line x1="17" y1="'+sy(i)+'" x2="233" y2="'+sy(i)+'" stroke="'+LINE+'" stroke-width="0.8"/>';
+   }
+   if(o.hiAxis==='x'||o.hiAxis==='both') s+='<rect x="17" y="'+(Y0-6)+'" width="216" height="12" fill="#fbf3e2"/>';
+   if(o.hiAxis==='y'||o.hiAxis==='both') s+='<rect x="'+(X0-6)+'" y="17" width="12" height="216" fill="#fbf3e2"/>';
+
+   for(k in QNUM){ var q=QNUM[k], on=(o.hiQ===k);
+     s+='<text x="'+sx(q[1])+'" y="'+sy(q[2])+'" text-anchor="middle" font-family="Georgia,serif" font-size="'+(on?13:11)+'" font-weight="700" fill="'+(on?TEAL:PALE)+'">'+q[0]+'</text>';
+   }
+
+   s+='<line x1="14" y1="'+Y0+'" x2="236" y2="'+Y0+'" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<line x1="'+X0+'" y1="14" x2="'+X0+'" y2="236" stroke="'+INK+'" stroke-width="1.6"/>';
+   s+='<polygon points="241,125 233,121 233,129" fill="'+INK+'"/><polygon points="9,125 17,121 17,129" fill="'+INK+'"/>';
+   s+='<polygon points="125,9 121,17 129,17" fill="'+INK+'"/><polygon points="125,241 121,233 129,233" fill="'+INK+'"/>';
+   s+='<text x="237" y="116" text-anchor="end" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">x</text>';
+   s+='<text x="133" y="17" text-anchor="start" font-family="Georgia,serif" font-style="italic" font-size="12" font-weight="700" fill="'+INK+'">y</text>';
+
+   for(i=-R;i<=R;i++){ if(i===0) continue;
+     s+='<line x1="'+sx(i)+'" y1="'+(Y0-3)+'" x2="'+sx(i)+'" y2="'+(Y0+3)+'" stroke="'+INK+'" stroke-width="1"/>';
+     s+='<line x1="'+(X0-3)+'" y1="'+sy(i)+'" x2="'+(X0+3)+'" y2="'+sy(i)+'" stroke="'+INK+'" stroke-width="1"/>';
+   }
+   for(i=-R;i<=R;i+=2){ if(i===0) continue;
+     s+='<text x="'+sx(i)+'" y="'+(Y0+14)+'" text-anchor="middle" font-size="8" fill="'+MUT+'">'+sv(i)+'</text>';
+     s+='<text x="'+(X0-6)+'" y="'+(sy(i)+3)+'" text-anchor="end" font-size="8" fill="'+MUT+'">'+sv(i)+'</text>';
+   }
+   s+='<text x="'+(X0-6)+'" y="'+(Y0+14)+'" text-anchor="end" font-size="8" fill="'+MUT+'">O</text>';
+
+   if(o.f) s+='<path d="'+curvePath(o.f)+'" fill="none" stroke="'+TEAL+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+
+   (o.dots||[]).forEach(function(d){
+     /* near the top edge the label has to hang below the dot, or it clips */
+     var hot = d.hot, anch = (d.x<0||d.x>=4)?'end':'start', dx=(anch==='end')?-9:9,
+         dy = (d.y>=5)?16:-10;
+     s+='<circle cx="'+sx(d.x)+'" cy="'+sy(d.y)+'" r="'+(hot?6.2:4.8)+'" fill="'+(hot?CORAL:'#ffffff')+'" stroke="'+CORAL+'" stroke-width="2.2"/>';
+     s+=halo(sx(d.x)+dx, sy(d.y)+dy, anch, 11.5, hot?CORAL:TDK, pair(d.x,d.y));
+   });
+
+   if(o.pt){
+     var px=o.pt.x, py=o.pt.y, PX=sx(px), PY=sy(py);
+     if(o.ghost && px!==py){
+       s+='<circle cx="'+sx(py)+'" cy="'+sy(px)+'" r="5" fill="none" stroke="'+PALE+'" stroke-width="2" stroke-dasharray="3 2.4"/>';
+       s+=halo(sx(py)+((py<0||py>=4)?-8:8), sy(px)+((px>=5)?16:-9), (py<0||py>=4)?'end':'start', 10, '#9c9fb4', pair(py,px));
+     }
+     if(px!==0 && py!==0){
+       s+='<line x1="'+PX+'" y1="'+PY+'" x2="'+X0+'" y2="'+PY+'" stroke="'+PALE+'" stroke-width="1.4" stroke-dasharray="3 3"/>';
+       s+='<circle cx="'+X0+'" cy="'+PY+'" r="2.6" fill="'+PALE+'"/>';
+     }
+     s+=hArrow(X0,PX,Y0,GOLD);
+     s+=vArrow(PX,Y0,PY,CORAL);
+     if(px!==0) s+=halo((X0+PX)/2, Y0+(py>0?15:-8), 'middle', 9.5, GOLD, Math.abs(px)+(px>0?' right':' left'));
+     if(py!==0) s+=halo(PX+(px>=4?-7:7), (Y0+PY)/2+3, (px>=4?'end':'start'), 9.5, CORAL, Math.abs(py)+(py>0?' up':' down'));
+     s+='<circle cx="'+PX+'" cy="'+PY+'" r="6.4" fill="'+CORAL+'" stroke="#ffffff" stroke-width="2"/>';
+     s+=halo(PX+(px>=4?-11:11), PY+(py>=5?18:-11), (px>=4?'end':'start'), 13, TDK, pair(px,py));
+   }
+
+   if(o.pick){
+     for(k in QBOX){ var c=QBOX[k];
+       s+='<rect class="rgn" data-r="'+k+'" x="'+c[0]+'" y="'+c[1]+'" width="'+c[2]+'" height="'+c[3]+'" fill="transparent"/>';
+     }
+     s+='<rect class="rgn" data-r="xa" x="17" y="'+(Y0-7)+'" width="216" height="14" fill="transparent"/>';
+     s+='<rect class="rgn" data-r="ya" x="'+(X0-7)+'" y="17" width="14" height="216" fill="transparent"/>';
+     s+='<rect class="rgn" data-r="o" x="'+(X0-8)+'" y="'+(Y0-8)+'" width="16" height="16" fill="transparent"/>';
+   }
+   return s;
+ }
+
+ /* ---------------- the sign map ---------------- */
+ function drawSigns(act){
+   var B={q2:[32,8,'II','&#8722;','+'], q1:[130,8,'I','+','+'], q3:[32,54,'III','&#8722;','&#8722;'], q4:[130,54,'IV','+','&#8722;']};
+   var s='', k;
+   for(k in B){ var b=B[k], on=(act===k), cx=b[0]+44;
+     s+='<rect x="'+b[0]+'" y="'+b[1]+'" width="88" height="42" rx="7" fill="'+(on?'#e6e8f5':'#ffffff')+'" stroke="'+(on?TEAL:LINE)+'" stroke-width="'+(on?2:1)+'"/>';
+     s+='<text x="'+cx+'" y="'+(b[1]+16)+'" text-anchor="middle" font-family="Georgia,serif" font-size="12.5" font-weight="700" fill="'+(on?TDK:MUT)+'">'+b[2]+'</text>';
+     s+='<text x="'+cx+'" y="'+(b[1]+28)+'" text-anchor="middle" font-family="Georgia,serif" font-size="12" font-weight="700" fill="'+(on?CORAL:PALE)+'">('+b[3]+', '+b[4]+')</text>';
+     s+='<text x="'+cx+'" y="'+(b[1]+38)+'" text-anchor="middle" font-size="7.5" fill="'+(on?TEAL:PALE)+'">x '+(b[3]==='+'?'&#62;':'&#60;')+' 0 and y '+(b[4]==='+'?'&#62;':'&#60;')+' 0</text>';
+   }
+   var cap = (act==='xa') ? 'this point is on the x-axis &#8212; no quadrant'
+           : (act==='ya') ? 'this point is on the y-axis &#8212; no quadrant'
+           : (act==='o')  ? 'the origin sits on both axes &#8212; no quadrant'
+           : 'the two boxes sharing an edge differ by exactly one sign';
+   s+='<text x="125" y="107" text-anchor="middle" font-size="9" fill="'+MUT+'">'+cap+'</text>';
+   return s;
+ }
+
+ /* ---------------- the two intercept questions ---------------- */
+ function drawMini(hi){
+   function one(cx,ttl,cap,axis,on){
+     var cy=56, o='', hc=on?GOLD:'#e8e9f4';
+     o+='<text x="'+cx+'" y="16" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="0.4" fill="'+(on?TDK:MUT)+'">'+ttl+'</text>';
+     if(axis==='y') o+='<rect x="'+(cx-5)+'" y="'+(cy-32)+'" width="10" height="64" fill="'+(on?'#fbf3e2':'#f4f5fb')+'"/>';
+     else           o+='<rect x="'+(cx-32)+'" y="'+(cy-5)+'" width="64" height="10" fill="'+(on?'#fbf3e2':'#f4f5fb')+'"/>';
+     o+='<line x1="'+(cx-32)+'" y1="'+cy+'" x2="'+(cx+32)+'" y2="'+cy+'" stroke="'+(axis==='x'?hc:PALE)+'" stroke-width="'+(axis==='x'?2.6:1.4)+'"/>';
+     o+='<line x1="'+cx+'" y1="'+(cy-32)+'" x2="'+cx+'" y2="'+(cy+32)+'" stroke="'+(axis==='y'?hc:PALE)+'" stroke-width="'+(axis==='y'?2.6:1.4)+'"/>';
+     var dx=(axis==='y')?cx:cx+19, dy=(axis==='y')?cy-19:cy;
+     o+='<circle cx="'+dx+'" cy="'+dy+'" r="4.4" fill="'+(on?CORAL:'#ffffff')+'" stroke="'+CORAL+'" stroke-width="2"/>';
+     o+='<text x="'+cx+'" y="105" text-anchor="middle" font-family="Georgia,serif" font-size="11" font-weight="700" fill="'+(on?TDK:MUT)+'">'+cap+'</text>';
+     return o;
+   }
+   return one(66,'Y-INTERCEPT','x = 0 all along it','y', hi==='y'||hi==='both')
+        + '<line x1="125" y1="14" x2="125" y2="98" stroke="'+LINE+'" stroke-width="1" stroke-dasharray="3 3"/>'
+        + one(184,'X-INTERCEPT','y = 0 all along it','x', hi==='x'||hi==='both');
+ }
+
+ /* ================= MODE 0 : plot a point ================= */
+ var PX=3, PY=2;
+ var PRESETS=[
+   {x:3,y:2,nm:'(3, 2)',sub:'order matters'},
+   {x:2,y:3,nm:'(2, 3)',sub:'the swap'},
+   {x:-5,y:3,nm:'(&minus;5, 3)',sub:'Quadrant II'},
+   {x:0,y:-4,nm:'(0, &minus;4)',sub:'on an axis'},
+   {x:0,y:0,nm:'(0, 0)',sub:'the origin'}
+ ];
+ function regionOf(x,y){
+   if(x===0&&y===0) return 'o';
+   if(x===0) return 'ya';
+   if(y===0) return 'xa';
+   if(x>0) return (y>0)?'q1':'q4';
+   return (y>0)?'q2':'q3';
+ }
+ var RNAME={q1:'Quadrant I',q2:'Quadrant II',q3:'Quadrant III',q4:'Quadrant IV',
+            xa:'On the x-axis',ya:'On the y-axis',o:'The origin'};
+
+ function renderPlot(){
+   var x=PX, y=PY, r=regionOf(x,y);
+   var isQ = (r.charAt(0)==='q');
+
+   $('artTitle').innerHTML='Walking to '+pair(x,y);
+   $('art').innerHTML=plane({hiQ:isQ?r:null, hiAxis:(r==='xa')?'x':((r==='ya')?'y':((r==='o')?'both':null)),
+                             pt:{x:x,y:y}, ghost:true});
+   $('signs').innerHTML=drawSigns(r);
+
+   var runTxt = (x===0)?'do not move sideways at all':('go '+Math.abs(x)+' '+(x>0?'right':'left'));
+   var riseTxt= (y===0)?'do not move up or down':('go '+Math.abs(y)+' '+(y>0?'up':'down'));
+   $('why').innerHTML='<em>an ordered pair is a set of directions</em>start at the origin O &nbsp;&rarr;&nbsp; '+runTxt+' &nbsp;&rarr;&nbsp; '+riseTxt;
+
+   $('xOut').innerHTML=h(x); $('yOut').innerHTML=h(y);
+   $('stage').innerHTML='<span class="big">'+pair(x,y)+'</span><small>'+RNAME[r]+
+     (isQ?(' &nbsp;·&nbsp; <i>x</i> '+(x>0?'&gt;':'&lt;')+' 0, <i>y</i> '+(y>0?'&gt;':'&lt;')+' 0'):' &nbsp;·&nbsp; no quadrant')+'</small>';
+
+   var info;
+   if(isQ){
+     info='<span class="n">'+RNAME[r]+'</span>From the origin you '+runTxt+', then '+riseTxt+
+       '. That lands you <b>'+(x>0?'right':'left')+'</b> of the <i>y</i>-axis and <b>'+(y>0?'above':'below')+
+       '</b> the <i>x</i>-axis. Both coordinates read <b>('+sgn(x)+', '+sgn(y)+')</b>, and that sign pattern <i>is</i> the definition of this quadrant: <b><i>x</i> '+
+       (x>0?'&gt;':'&lt;')+' 0 and <i>y</i> '+(y>0?'&gt;':'&lt;')+' 0</b>. You never have to memorise a picture &mdash; read the two signs and the region names itself.'+
+       '<div class="loc">Counterclockwise from the upper right: <b>I</b> (+, +) &rarr; <b>II</b> (&minus;, +) &rarr; <b>III</b> (&minus;, &minus;) &rarr; <b>IV</b> (+, &minus;).</div>';
+   } else if(r==='xa'){
+     info='<span class="n">On the <i>x</i>-axis &mdash; no quadrant</span>The second coordinate is <b>0</b>, so after running '+Math.abs(x)+' '+(x>0?'right':'left')+
+       ' there was <b>no vertical move</b>: the point never left the horizontal axis. Every point of the <i>x</i>-axis looks like <b>(<i>a</i>, 0)</b>. And because the axes are the <b>borders</b> between the four regions, a point sitting on one belongs to <b>none</b> of them.'+
+       '<div class="loc">This is exactly where <b><i>x</i>-intercepts</b> live &mdash; a graph crossing here has <i>y</i> = 0.</div>';
+   } else if(r==='ya'){
+     info='<span class="n">On the <i>y</i>-axis &mdash; no quadrant</span>The first coordinate is <b>0</b>, so there was <b>no sideways move at all</b> and the point stayed on the vertical axis before rising '+Math.abs(y)+' '+(y>0?'up':'down')+
+       '. Every point of the <i>y</i>-axis looks like <b>(0, <i>b</i>)</b>. Sitting on a border, it is in no quadrant &mdash; a common slip is to call (0, &minus;4) &ldquo;Quadrant IV&rdquo; because it looks low and rightish. It is not.'+
+       '<div class="loc">This is exactly where <b><i>y</i>-intercepts</b> live &mdash; a graph crossing here has <i>x</i> = 0.</div>';
+   } else {
+     info='<span class="n">The origin (0, 0)</span>Both coordinates are 0, so you did not move at all. The origin is where the two axes cross: it lies on <b>both</b> axes at once, in <b>no</b> quadrant, and it is the place every single plot starts from. Every other point in the plane is described as a journey away from here.'+
+       '<div class="loc">A graph passing through the origin has its <i>x</i>-intercept and <i>y</i>-intercept at the <b>same</b> point.</div>';
+   }
+   if(x!==y){
+     info+='<div class="dd"><b>Order check.</b> Swap the two numbers and you get <b>'+pair(y,x)+'</b> &mdash; the hollow point on the graph, in a different place entirely. So <b>('+
+       '<i>a</i>, <i>b</i>) and (<i>b</i>, <i>a</i>) are different points</b> unless <i>a</i> = <i>b</i>. Along the dashed line <i>y</i> = <i>x</i> they would coincide; nowhere else.</div>';
+   }
+   $('info').innerHTML=info;
+
+   $('presets').innerHTML=PRESETS.map(function(p){
+     return '<button data-x="'+p.x+'" data-y="'+p.y+'"'+((p.x===x&&p.y===y)?' class="on"':'')+'>'+p.nm+'<small>'+p.sub+'</small></button>';
+   }).join('');
+   Array.prototype.forEach.call($('presets').querySelectorAll('button'),function(b){
+     b.onclick=function(){
+       PX=+b.getAttribute('data-x'); PY=+b.getAttribute('data-y');
+       $('xRange').value=PX; $('yRange').value=PY; renderPlot();
+     };
+   });
+ }
+
+ /* ================= MODE 1 : name the region ================= */
+ var REG=[
+  {k:'q1',nm:'Quadrant I',s:'(+, +) &middot; upper right',ex:{x:4,y:3},
+   d:'<b><i>x</i> &gt; 0 and <i>y</i> &gt; 0.</b> Right of the <i>y</i>-axis and above the <i>x</i>-axis &mdash; the corner you reach by moving in the two positive directions. Numbering of the quadrants <b>starts here</b> and then runs counterclockwise, which is why this block gets the I.',
+   loc:'Sample point: <b>(4, 3)</b>. Both positive, so no minus sign appears anywhere in the pair.'},
+  {k:'q2',nm:'Quadrant II',s:'(&minus;, +) &middot; upper left',ex:{x:-4,y:3},
+   d:'<b><i>x</i> &lt; 0 and <i>y</i> &gt; 0.</b> Left of the <i>y</i>-axis but still above the <i>x</i>-axis. Coming from Quadrant I, exactly <b>one</b> sign flipped &mdash; the first one &mdash; because you crossed the vertical axis and nothing else.',
+   loc:'Sample point: <b>(&minus;4, 3)</b>. Negative run, positive rise.'},
+  {k:'q3',nm:'Quadrant III',s:'(&minus;, &minus;) &middot; lower left',ex:{x:-4,y:-3},
+   d:'<b><i>x</i> &lt; 0 and <i>y</i> &lt; 0.</b> Left and below &mdash; the mirror image of Quadrant I through the origin. Both coordinates are negative here, and this is the only quadrant where that happens.',
+   loc:'Sample point: <b>(&minus;4, &minus;3)</b>. Negative run, negative rise.'},
+  {k:'q4',nm:'Quadrant IV',s:'(+, &minus;) &middot; lower right',ex:{x:4,y:-3},
+   d:'<b><i>x</i> &gt; 0 and <i>y</i> &lt; 0.</b> Right of the <i>y</i>-axis and below the <i>x</i>-axis. Note it is <b>not</b> the block next to Quadrant I going clockwise &mdash; the count went the other way around and arrived here last.',
+   loc:'Sample point: <b>(4, &minus;3)</b>. Positive run, negative rise.'},
+  {k:'xa',nm:'The <i>x</i>-axis',s:'(<i>a</i>, 0) &middot; a border',ex:{x:4,y:0},
+   d:'The horizontal axis is the set of all points whose <b>second</b> coordinate is <b>0</b>. Being a border between quadrants, it is <b>in none of them</b> &mdash; the four regions are open blocks that stop just short of the fence.',
+   loc:'A graph meets this axis at its <b><i>x</i>-intercepts</b>, and there <i>y</i> = 0. That single equation is how you find them.'},
+  {k:'ya',nm:'The <i>y</i>-axis',s:'(0, <i>b</i>) &middot; a border',ex:{x:0,y:3},
+   d:'The vertical axis is the set of all points whose <b>first</b> coordinate is <b>0</b>. Also a border, so also in <b>no</b> quadrant. Points here are the ones you reach without ever stepping sideways.',
+   loc:'A graph meets this axis at its <b><i>y</i>-intercept</b>, and there <i>x</i> = 0.'},
+  {k:'o',nm:'The origin',s:'(0, 0) &middot; the crossing',ex:{x:0,y:0},
+   d:'Where the two axes meet. It lies on the <i>x</i>-axis (its <i>y</i> is 0) <b>and</b> on the <i>y</i>-axis (its <i>x</i> is 0), so it belongs to both borders and to no quadrant. It is also the reference point for every other coordinate in the plane.',
+   loc:'A graph through the origin has both intercepts at this one point.'}
+ ];
+ var curReg='q1';
+ function renderRegion(){
+   var r=REG.filter(function(z){return z.k===curReg;})[0];
+   var isQ=(r.k.charAt(0)==='q');
+   $('artTitle').innerHTML='Tap any region of the plane';
+   $('art').innerHTML=plane({hiQ:isQ?r.k:null,
+     hiAxis:(r.k==='xa')?'x':((r.k==='ya')?'y':((r.k==='o')?'both':null)),
+     dots:[{x:r.ex.x,y:r.ex.y,hot:true}], pick:true});
+   Array.prototype.forEach.call($('art').querySelectorAll('.rgn'),function(el){
+     el.onclick=function(){ curReg=el.getAttribute('data-r'); renderRegion(); };
+   });
+   $('signs').innerHTML=drawSigns(r.k);
+   $('why').innerHTML='<em>the plane, divided</em>two axes cut the plane into <b>four</b> open blocks &mdash; and the two lines themselves, which belong to no block';
+   $('stage').innerHTML='<span class="big">'+r.nm+'</span><small>'+r.s+'</small>';
+   $('info').innerHTML='<span class="n">'+r.nm+'</span>'+r.d+'<div class="loc">'+r.loc+'</div>';
+   $('regions').innerHTML=REG.map(function(z){
+     return '<button class="it'+(z.k===curReg?' on':'')+'" data-r="'+z.k+'"><span class="nm">'+z.nm+'</span><span class="s">'+z.s+'</span></button>';
+   }).join('');
+   Array.prototype.forEach.call($('regions').querySelectorAll('.it'),function(b){
+     b.onclick=function(){ curReg=b.getAttribute('data-r'); renderRegion(); };
+   });
+ }
+
+ /* ================= MODE 2 : find the intercepts ================= */
+ var EX=[
+  {nm:'2<i>x</i> + 3<i>y</i> = 12', sub:'both positive', tail:'<i>y</i>-int (0, 4) &nbsp;·&nbsp; <i>x</i>-int (6, 0)',
+   f:function(x){return (12-2*x)/3;},
+   dots:{y:{x:0,y:4}, x:{x:6,y:0}},
+   S:[
+   {pl:'THE GRAPH', mx:'2<i>x</i> + 3<i>y</i> = 12', sh:[], hi:'',
+    nt:'<span class="n">Every point on the line</span>The line on the left is not decoration &mdash; it is the complete list of points <b>(<i>x</i>, <i>y</i>)</b> that make this equation true. The point (3, 2) is on it because 2(3) + 3(2) = 6 + 6 = 12. We want the two special points where the line meets an axis.'},
+   {pl:'WHAT AN INTERCEPT IS', mx:'<i>y</i>-axis: <i>x</i> = 0 &nbsp;&nbsp;·&nbsp;&nbsp; <i>x</i>-axis: <i>y</i> = 0', sh:[], hi:'both',
+    nt:'<span class="n">One coordinate is forced to zero</span>Look at the two gold strips. Every point on the <b><i>y</i>-axis</b> has the form (0, <i>b</i>), so <b><i>x</i> = 0</b> there. Every point on the <b><i>x</i>-axis</b> has the form (<i>a</i>, 0), so <b><i>y</i> = 0</b> there. That is the entire method: to find where a graph meets an axis, <b>substitute the zero you already know and solve for the one you do not</b>.'},
+   {pl:'SET x = 0', mx:'2(<span class="tg">0</span>) + 3<i>y</i> = 12', sh:[], hi:'y',
+    nt:'<span class="n">Ask for the y-intercept</span>The <i>y</i>-intercept lies on the <i>y</i>-axis, so its first coordinate <b>must</b> be 0. Put 0 in for <i>x</i> everywhere it appears. The <i>x</i>-term collapses, since 2(0) = 0 &mdash; one variable is gone, and a one-variable equation is left over.'},
+   {pl:'SOLVE FOR y', mx:'3<i>y</i> = 12, so <i>y</i> = <span class="tg">4</span>', sh:['y'], ht:['y'], hi:'y',
+    nt:'<span class="n">The <i>y</i>-intercept is (0, 4)</span>Divide both sides by 3. The intercept is the <b>point (0, 4)</b>, now marked on the graph &mdash; and it is exactly where the drawn line crosses the vertical axis, which is your free check that the algebra was right.'},
+   {pl:'SET y = 0', mx:'2<i>x</i> + 3(<span class="tg">0</span>) = 12', sh:['y'], hi:'x',
+    nt:'<span class="n">Now the other axis</span>Same move, other direction. A point on the <i>x</i>-axis has second coordinate 0, so substitute 0 for <i>y</i>. This time it is the <i>y</i>-term that vanishes.'},
+   {pl:'SOLVE FOR x', mx:'2<i>x</i> = 12, so <i>x</i> = <span class="tg">6</span>', sh:['y','x'], ht:['x'], hi:'x',
+    nt:'<span class="n">The <i>x</i>-intercept is (6, 0)</span>Divide both sides by 2. Watch the <b>order</b>: it is (6, 0), not (0, 6). For an <i>x</i>-intercept the nonzero number rides in the <b>first</b> slot; for a <i>y</i>-intercept it rides in the <b>second</b>. Writing the pair backwards is the single most common error in this section, and the graph catches it instantly &mdash; (0, 6) is not even on the line.'},
+   {pl:'CHECK', mx:'(0, 4) &nbsp;and&nbsp; (6, 0) &#10003;', sh:['y','x'], hi:'',
+    nt:'<span class="n">Verify both</span>2(0) + 3(4) = 0 + 12 = <b>12</b> &#10003; &nbsp;and&nbsp; 2(6) + 3(0) = 12 + 0 = <b>12</b> &#10003;. Both points satisfy the equation and both sit exactly on the drawn line. Two points are also all you need to draw a line &mdash; which is why intercepts are the fastest way to sketch one by hand.'}
+   ]},
+
+  {nm:'3<i>x</i> &minus; 4<i>y</i> = 12', sub:'a negative one', tail:'<i>y</i>-int (0, &minus;3) &nbsp;·&nbsp; <i>x</i>-int (4, 0)',
+   f:function(x){return (3*x-12)/4;},
+   dots:{y:{x:0,y:-3}, x:{x:4,y:0}},
+   S:[
+   {pl:'THE GRAPH', mx:'3<i>x</i> &minus; 4<i>y</i> = 12', sh:[], hi:'',
+    nt:'<span class="n">This one dips below</span>Same two questions as before, but the answer will come out negative, and a sign is waiting to bite. Notice before you start: the line crosses the vertical axis <b>below</b> the origin, so a positive <i>y</i>-intercept would have to be wrong.'},
+   {pl:'SET x = 0', mx:'3(<span class="tg">0</span>) &minus; 4<i>y</i> = 12', sh:[], hi:'y',
+    nt:'<span class="n">Ask for the <i>y</i>-intercept</span>Substitute 0 for <i>x</i>. The first term goes to 0, leaving &minus;4<i>y</i> = 12. Keep the minus sign attached to the 4 &mdash; it is part of the coefficient, not a stray.'},
+   {pl:'SOLVE FOR y', mx:'&minus;4<i>y</i> = 12, so <i>y</i> = <span class="tg">&minus;3</span>', sh:['y'], ht:['y'], hi:'y',
+    nt:'<span class="n">The <i>y</i>-intercept is (0, &minus;3)</span>Divide both sides by <b>&minus;4</b>: 12 &divide; (&minus;4) = &minus;3, because a positive divided by a negative is negative. The point lands three units <b>below</b> the origin &mdash; which is what the picture predicted. If your algebra and your graph ever disagree, one of them is wrong and you have just been handed a free alarm bell.'},
+   {pl:'SET y = 0', mx:'3<i>x</i> &minus; 4(<span class="tg">0</span>) = 12', sh:['y'], hi:'x',
+    nt:'<span class="n">Now the <i>x</i>-intercept</span>Substitute 0 for <i>y</i>. Since &minus;4(0) = 0, the whole subtracted term disappears &mdash; the minus sign goes with it, so nothing negative survives into the next line.'},
+   {pl:'SOLVE FOR x', mx:'3<i>x</i> = 12, so <i>x</i> = <span class="tg">4</span>', sh:['y','x'], ht:['x'], hi:'x',
+    nt:'<span class="n">The <i>x</i>-intercept is (4, 0)</span>Divide by 3. The intercept is <b>(4, 0)</b> &mdash; positive, on the right-hand side, matching the drawing. One intercept negative and one positive is perfectly ordinary; the two questions are independent of each other.'},
+   {pl:'CHECK', mx:'(0, &minus;3) &nbsp;and&nbsp; (4, 0) &#10003;', sh:['y','x'], hi:'',
+    nt:'<span class="n">Verify both</span>3(0) &minus; 4(&minus;3) = 0 + 12 = <b>12</b> &#10003; &mdash; note that subtracting a negative <b>added</b> 12. And 3(4) &minus; 4(0) = 12 &minus; 0 = <b>12</b> &#10003;. Substituting back like this takes seconds and catches nearly every sign error.'}
+   ]},
+
+  {nm:'<i>y</i> = 2<i>x</i>', sub:'through the origin', tail:'both intercepts are (0, 0)',
+   f:function(x){return 2*x;},
+   dots:{y:{x:0,y:0}},
+   S:[
+   {pl:'THE GRAPH', mx:'<i>y</i> = 2<i>x</i>', sh:[], hi:'',
+    nt:'<span class="n">Straight through the middle</span>A line with no constant term. Watch what the two usual questions do to it &mdash; the result surprises people the first time, and then never again.'},
+   {pl:'SET x = 0', mx:'<i>y</i> = 2(<span class="tg">0</span>) = <span class="tg">0</span>', sh:['y'], ht:['y'], hi:'y',
+    nt:'<span class="n">The <i>y</i>-intercept is (0, 0)</span>Substituting 0 for <i>x</i> gives <i>y</i> = 0 immediately. So the graph meets the <i>y</i>-axis at the point <b>(0, 0)</b> &mdash; the origin itself.'},
+   {pl:'SET y = 0', mx:'<span class="tg">0</span> = 2<i>x</i>', sh:['y'], hi:'x',
+    nt:'<span class="n">Now the <i>x</i>-intercept</span>Substitute 0 for <i>y</i> instead. That leaves the equation 0 = 2<i>x</i>, which still has to be solved &mdash; do not assume the answer just because the last one was 0.'},
+   {pl:'SOLVE FOR x', mx:'<i>x</i> = 0 &divide; 2 = <span class="tg">0</span>', sh:['y'], ht:['y'], hi:'x',
+    nt:'<span class="n">The <i>x</i>-intercept is also (0, 0)</span>Divide both sides by 2. Zero divided by any nonzero number is 0, so <i>x</i> = 0 and the <i>x</i>-intercept is <b>(0, 0)</b> &mdash; the very same point we found a moment ago.'},
+   {pl:'WHAT THAT MEANS', mx:'<i>x</i>-int = <i>y</i>-int = <span class="tg">(0, 0)</span>', sh:['y'], hi:'both',
+    nt:'<span class="n">One point doing both jobs</span>Nothing has gone wrong. The origin is the one place in the plane that lies on <b>both</b> axes at once, so it can serve as both intercepts simultaneously. Any equation with <b>no constant term</b> behaves this way &mdash; <i>y</i> = 2<i>x</i>, or 3<i>x</i> + 5<i>y</i> = 0 &mdash; because putting (0, 0) in makes both sides 0. Spot a missing constant and you can write the answer down without doing any work.'}
+   ]},
+
+  {nm:'<i>y</i> = 3', sub:'a flat line', tail:'<i>y</i>-int (0, 3) &nbsp;·&nbsp; no <i>x</i>-intercept',
+   f:function(x){return 3;},
+   dots:{y:{x:0,y:3}},
+   S:[
+   {pl:'THE GRAPH', mx:'<i>y</i> = 3', sh:[], hi:'',
+    nt:'<span class="n">Only one rule, and it is about <i>y</i></span>Every point on this line has second coordinate 3, no matter what the first one is: (&minus;5, 3), (0, 3), (4, 3) are all on it. Since <i>x</i> is unrestricted, the line runs flat across the whole plane.'},
+   {pl:'SET x = 0', mx:'<i>y</i> = 3, so the point is <span class="tg">(0, 3)</span>', sh:['y'], ht:['y'], hi:'y',
+    nt:'<span class="n">The <i>y</i>-intercept is (0, 3)</span>There is no <i>x</i> in the equation to substitute into, so nothing changes: <i>y</i> is still 3. The point on the <i>y</i>-axis with <i>y</i> = 3 is <b>(0, 3)</b>, exactly where the drawn line crosses.'},
+   {pl:'SET y = 0', mx:'<span class="tg">0</span> = 3 &nbsp; ?', sh:['y'], hi:'x',
+    nt:'<span class="n">Now try the other one</span>Substituting <i>y</i> = 0 produces the statement <b>0 = 3</b>. There is no variable left to solve for, and the statement is simply <b>false</b> &mdash; false for every value of <i>x</i>, not just for some.'},
+   {pl:'WHAT THAT MEANS', mx:'<span class="tg">no <i>x</i>-intercept</span>', sh:['y'], hi:'x',
+    nt:'<span class="n">No solution, and you can see why</span>A false statement with no variable left means the equation has <b>no solution</b> &mdash; and here that abstraction has a picture: the line runs parallel to the <i>x</i>-axis, three units above it, so it never touches. <b>Not every graph has both intercepts.</b> The vertical line <i>x</i> = &minus;2 is the mirror case: its <i>x</i>-intercept is (&minus;2, 0) and it has no <i>y</i>-intercept at all.'}
+   ]},
+
+  {nm:'<i>y</i> = <i>x</i><sup>2</sup> &minus; 4', sub:'a curve, two crossings', tail:'<i>y</i>-int (0, &minus;4) &nbsp;·&nbsp; <i>x</i>-ints (&minus;2, 0) and (2, 0)',
+   f:function(x){return x*x-4;},
+   dots:{y:{x:0,y:-4}, x1:{x:-2,y:0}, x2:{x:2,y:0}},
+   S:[
+   {pl:'THE GRAPH', mx:'<i>y</i> = <i>x</i><sup>2</sup> &minus; 4', sh:[], hi:'',
+    nt:'<span class="n">Not a line &mdash; and it does not matter</span>The curve was drawn the same way you would draw it by hand: pick an <i>x</i>, compute <i>y</i>, plot the pair, repeat. Reading its intercepts uses exactly the method from the earlier examples, because the <b>axes</b> have not changed and the axes are what an intercept is about.'},
+   {pl:'SET x = 0', mx:'<i>y</i> = (<span class="tg">0</span>)<sup>2</sup> &minus; 4 = <span class="tg">&minus;4</span>', sh:['y'], ht:['y'], hi:'y',
+    nt:'<span class="n">The <i>y</i>-intercept is (0, &minus;4)</span>Substitute 0 for <i>x</i>: 0<sup>2</sup> = 0, so <i>y</i> = &minus;4. That is the lowest point of this curve, four units below the origin. There is only ever <b>one</b> <i>y</i>-intercept here &mdash; <i>x</i> = 0 is a single input, and it produces a single output.'},
+   {pl:'SET y = 0', mx:'<span class="tg">0</span> = <i>x</i><sup>2</sup> &minus; 4', sh:['y'], hi:'x',
+    nt:'<span class="n">Now the <i>x</i>-intercepts</span>Substitute 0 for <i>y</i>. What is left is an equation in <i>x</i> alone &mdash; and unlike every earlier example, this one is not linear, so it may well have more than one answer.'},
+   {pl:'SOLVE FOR x', mx:'<i>x</i><sup>2</sup> = 4, so <i>x</i> = &plusmn;<span class="tg">2</span>', sh:['y','x1','x2'], ht:['x1','x2'], hi:'x',
+    nt:'<span class="n">Two answers, both real</span>Add 4 to both sides, then ask which numbers square to 4. <b>Two</b> of them do: 2 and &minus;2, since (&minus;2)<sup>2</sup> = 4 as well. Writing only <i>x</i> = 2 throws away half the answer &mdash; and the graph shows the discarded half sitting there in plain view. Substituting back confirms both: (&minus;2)<sup>2</sup> &minus; 4 = 0 &#10003; and (2)<sup>2</sup> &minus; 4 = 0 &#10003;, so neither is extraneous.'},
+   {pl:'CHECK', mx:'(&minus;2, 0), (2, 0), (0, &minus;4) &#10003;', sh:['y','x1','x2'], hi:'',
+    nt:'<span class="n">Three intercepts on one graph</span>A graph may cross the <i>x</i>-axis <b>any number of times</b> &mdash; zero, once, twice, more. But a graph that is a function crosses the <i>y</i>-axis <b>at most once</b>, because the single input <i>x</i> = 0 cannot produce two different outputs. That asymmetry is why the two questions, though they look like mirror images, do not behave like them.'}
+   ]}
+ ];
+ var exi=0, step=0;
+
+ function renderSteps(){
+   var E=EX[exi], i=step, S=E.S, k, out='';
+
+   $('picker').innerHTML=EX.map(function(e,j){
+     return '<button data-k="'+j+'"'+(j===exi?' class="on"':'')+'>'+e.nm+'<small>'+e.sub+'</small></button>';
+   }).join('');
+   Array.prototype.forEach.call($('picker').querySelectorAll('button'),function(b){
+     b.onclick=function(){ exi=+b.getAttribute('data-k'); step=0; renderSteps(); };
+   });
+
+   for(k=0;k<=i;k++){
+     out+='<div class="dl'+(k===i?' cur':'')+'"><span class="mx">'+S[k].mx+'</span><span class="pl">'+S[k].pl+'</span></div>';
+   }
+   $('mb').innerHTML=out;
+   $('exlab').innerHTML='Step '+(i+1)+' of '+S.length+' &nbsp;·&nbsp; <b>'+E.tail+'</b>';
+
+   var ds=[], ht=S[i].ht||[];
+   (S[i].sh||[]).forEach(function(key){
+     var d=E.dots[key];
+     if(d) ds.push({x:d.x, y:d.y, hot:(ht.indexOf(key)>=0)});
+   });
+
+   $('artTitle').innerHTML='Where the graph meets an axis';
+   $('art').innerHTML=plane({f:E.f, dots:ds, hiAxis:S[i].hi||null});
+   $('mini').innerHTML=drawMini(S[i].hi||'');
+   $('why').innerHTML='<em>the one fact behind both questions</em>on the <i>y</i>-axis <b><i>x</i> = 0</b> &nbsp;&nbsp;·&nbsp;&nbsp; on the <i>x</i>-axis <b><i>y</i> = 0</b>';
+   $('stage').innerHTML='<span class="big">'+E.nm+'</span><small>'+S[i].pl.toLowerCase()+' &nbsp;·&nbsp; step '+(i+1)+' of '+S.length+'</small>';
+   $('info').innerHTML=S[i].nt;
+   $('prev').disabled=(i===0); $('next').disabled=(i===S.length-1);
+ }
+
+ /* ---------------- wiring ---------------- */
+ var mode=0;
+ function setMode(m){
+   mode=m;
+   Array.prototype.forEach.call($('modes').querySelectorAll('button'),function(b){
+     b.className=(+b.getAttribute('data-m')===m)?'on':'';
+   });
+   $('p0').style.display=(m===0)?'':'none';
+   $('p1').style.display=(m===1)?'':'none';
+   $('p2').style.display=(m===2)?'':'none';
+   $('nav').style.display=(m===2)?'':'none';
+   $('cardSigns').style.display=(m===2)?'none':'';
+   $('cardInt').style.display=(m===2)?'':'none';
+   $('mn0').style.display=(m===2)?'none':'';
+   $('mn2').style.display=(m===2)?'':'none';
+   $('nt0').style.display=(m===2)?'none':'';
+   $('nt2').style.display=(m===2)?'':'none';
+   if(m===0) renderPlot(); else if(m===1) renderRegion(); else renderSteps();
+ }
+ Array.prototype.forEach.call($('modes').querySelectorAll('button'),function(b){
+   b.onclick=function(){ setMode(+b.getAttribute('data-m')); };
+ });
+ $('xRange').oninput=function(){ PX=+this.value; renderPlot(); };
+ $('yRange').oninput=function(){ PY=+this.value; renderPlot(); };
+ $('prev').onclick=function(){ if(step>0){ step--; renderSteps(); } };
+ $('next').onclick=function(){ if(step<EX[exi].S.length-1){ step++; renderSteps(); } };
+ document.addEventListener('keydown',function(e){
+   if(mode!==2) return;
+   if(e.key==='ArrowLeft')  $('prev').click();
+   if(e.key==='ArrowRight') $('next').click();
+ });
+
+ setMode(0);
+})();
+</script>
+</body>
+</html>

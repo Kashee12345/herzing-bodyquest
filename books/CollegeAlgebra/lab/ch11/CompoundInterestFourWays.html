@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f2f9">
+<title>Compound Interest, Four Ways</title>
+<meta name="description" content="Put one deposit into four accounts — compounded annually, monthly, daily, and continuously — and watch the balances separate. Every dollar figure worked out one step at a time.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_algebra.css">
+<style>
+.wrap{grid-template-columns:1.05fr .95fr;}
+@media (max-width:880px){.wrap{grid-template-columns:1fr !important;}}
+.sld{width:100%;margin:0;-webkit-appearance:none;appearance:none;height:24px;background:transparent;cursor:pointer;}
+.sld::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-moz-range-track{height:6px;border-radius:3px;background:#e3e5f2;}
+.sld::-webkit-slider-thumb{-webkit-appearance:none;width:23px;height:23px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);margin-top:-8.5px;}
+.sld::-moz-range-thumb{width:23px;height:23px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 1px 5px rgba(30,32,70,.35);}
+.sldlab{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--muted);font-weight:600;gap:8px;margin-bottom:1px;}
+.sldlab b{font-size:15px;color:var(--teal-dk);flex:none;}
+.sldwrap + .sldwrap{margin-top:10px;}
+.cap{font-size:12px;color:var(--soft);margin-top:9px;line-height:1.55;}
+.cap b{color:var(--teal-dk);}
+.it .sw{width:13px;height:13px;border-radius:4px;flex:none;}
+.it .amt{font-weight:800;font-size:13px;color:var(--teal-dk);}
+.it.on .amt{color:#fff;}
+.it .apy{font-size:10.5px;color:var(--muted);}
+.it.on .apy{color:rgba(255,255,255,.85);}
+.eqbig{font-size:clamp(14px,3.3vw,18px);font-weight:700;color:var(--teal-dk);text-align:center;background:#f3f4fb;border:1px solid #dfe2f2;border-radius:10px;padding:14px 8px;line-height:1.75;overflow-x:auto;}
+.hl{background:#fdf0c8;border-radius:4px;padding:2px 5px;box-shadow:inset 0 -2px 0 #e8c96a;}
+.hl2{background:#dcf0e4;border-radius:4px;padding:2px 5px;box-shadow:inset 0 -2px 0 #9ed2b2;}
+.stepttl{font-family:var(--disp);font-weight:600;font-size:15px;color:var(--teal-dk);margin-bottom:8px;}
+.stepttl span{font-family:var(--sans);font-size:10.5px;font-weight:800;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;float:right;padding-top:4px;}
+.stepdot{display:flex;gap:4px;justify-content:center;margin-top:11px;}
+.stepdot i{width:7px;height:7px;border-radius:50%;background:#d9dcee;transition:.15s;}
+.stepdot i.on{background:var(--teal);transform:scale(1.3);}
+.why{margin-top:11px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:9px 10px 4px;}
+.legrow{display:flex;flex-wrap:wrap;gap:5px 12px;margin-top:8px;justify-content:center;}
+.legrow span{font-size:11px;font-weight:700;color:var(--soft);display:flex;align-items:center;gap:5px;}
+.legrow i{width:15px;height:3.5px;border-radius:2px;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Chapter 11</a></div>
+<header>
+  <div class="kick">College Algebra · Chapter 11</div>
+  <h1>Compound Interest, Four Ways</h1>
+  <div class="intro">One deposit. Same rate. Same number of years. The only difference is <b>how often the bank stops and adds the interest in</b> &mdash; once a year, once a month, once a day, or without ever stopping. Move the sliders, then walk through where each dollar figure actually comes from.</div>
+</header>
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2 id="gTitle">Balance over time</h2>
+      <div class="modeseg" id="modeseg">
+        <button data-m="bal" class="on">Balance</button>
+        <button data-m="gap">Extra above annual</button>
+      </div>
+      <svg viewBox="0 0 380 252" aria-label="graph of balance over time"><g id="art"></g></svg>
+      <div class="legrow" id="leg"></div>
+      <div class="cap" id="gCap"></div>
+    </div>
+    <div class="card">
+      <h2>Set up the account</h2>
+      <div class="sldwrap">
+        <div class="sldlab"><span>Principal <i>P</i> &mdash; the deposit</span><b id="lP">$1,000</b></div>
+        <input class="sld" id="sP" type="range" min="100" max="20000" step="100" value="1000">
+      </div>
+      <div class="sldwrap">
+        <div class="sldlab"><span>Annual rate <i>r</i></span><b id="lR">5%</b></div>
+        <input class="sld" id="sR" type="range" min="1" max="20" step="0.25" value="5">
+      </div>
+      <div class="sldwrap">
+        <div class="sldlab"><span>Time <i>t</i> in years</span><b id="lT">10 yr</b></div>
+        <input class="sld" id="sT" type="range" min="1" max="40" step="1" value="10">
+      </div>
+      <div class="note"><b>Two errors that ruin the answer.</b> <i>r</i> goes in as a <b>decimal</b> &mdash; 5% is <b>0.05</b>, not 5. And <i>n</i> counts periods <b>per year</b>, not in total; monthly is always <i>n</i>&nbsp;=&nbsp;12 whether <i>t</i> is 1 year or 40. The formula needs <i>n</i>&nbsp;&gt;&nbsp;0 and 1&nbsp;+&nbsp;<i>r</i>/<i>n</i>&nbsp;&gt;&nbsp;0, which is automatic for any real deposit.</div>
+    </div>
+  </div>
+  <div>
+    <div id="stage">Pick a compounding schedule<small>each one is the same money, counted differently</small></div>
+    <div class="card">
+      <h2>Four accounts, same deposit</h2>
+      <div class="list" id="list"></div>
+      <div class="cap" id="cmp"></div>
+    </div>
+    <div class="card">
+      <div class="stepttl" id="stepT">Where that number comes from<span id="stepN"></span></div>
+      <div class="eqbig" id="eq"></div>
+      <div id="info"></div>
+      <div class="why" id="why" style="display:none">
+        <svg viewBox="0 0 288 196" aria-label="area model of one dollar compounded twice"><g id="areaArt"></g></svg>
+        <div class="cap" style="margin:2px 0 6px">Cut the year in half and the dollar grows twice. The two skinny strips are the ordinary interest, <i>r</i>. The little green corner is <b>interest earned by interest</b> &mdash; <i>r</i><sup>2</sup>/4 &mdash; and it is the entire reason a shorter compounding period pays more.</div>
+      </div>
+      <div class="row"><button class="btn" id="prev">‹ Prev</button><button class="btn solid" id="next">Next ›</button></div>
+      <div class="stepdot" id="dots"></div>
+    </div>
+  </div>
+</div>
+<footer>College Algebra · an interactive by <b>Dr. Akash Garg &middot; Herzing University</b></footer>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+
+ var METH=[
+  {k:1,   nm:'Annually',    ct:'<i>n</i> = 1 period per year',   col:'#d1495b'},
+  {k:12,  nm:'Monthly',     ct:'<i>n</i> = 12 periods per year', col:'#b8862f'},
+  {k:365, nm:'Daily',       ct:'<i>n</i> = 365 periods per year',col:'#2f6f9f'},
+  {k:0,   nm:'Continuously',ct:'no stopping &mdash; <i>n</i> &rarr; &infin;', col:'#2f9e5b'}
+ ];
+
+ var P=1000, rP=5, T=10, sel=12, gm='bal', si=0;
+
+ /* ---------- number helpers ---------- */
+ function comma(s){return s.replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+ function money(v){var s=v.toFixed(2).split('.');return '$'+comma(s[0])+'.'+s[1];}
+ function money0(v){return '$'+comma(Math.round(v).toString());}
+ function pct(v){return (v*100).toFixed(3)+'%';}
+ function rr(){return rP/100;}
+ /* trim trailing zeros but never leave fewer than 2 decimal places */
+ function tr(x,k){
+   var s=x.toFixed(k);
+   if(s.indexOf('.')<0) return s;
+   s=s.replace(/0+$/,'');
+   var p=s.split('.');
+   while(p[1].length<2) p[1]+='0';
+   return p[0]+'.'+p[1];
+ }
+ /* same, but flags a value whose decimal expansion was cut off */
+ function cut(x,k){ return Number(x.toFixed(k))!==x; }
+ function trE(x,k){ return tr(x,k)+(cut(x,k)?'&hellip;':''); }
+
+ /* A = P(1 + r/n)^(nt)   ·   continuous: A = P e^(rt) */
+ function amount(n,tt){
+   if(tt===undefined) tt=T;
+   if(n===0) return P*Math.exp(rr()*tt);
+   return P*Math.pow(1+rr()/n, n*tt);
+ }
+ function apy(n){ return n===0 ? Math.exp(rr())-1 : Math.pow(1+rr()/n,n)-1; }
+ function meth(k){ for(var i=0;i<METH.length;i++){ if(METH[i].k===k) return METH[i]; } return METH[1]; }
+
+ /* ---------- graph ---------- */
+ var W=380,H=252,PL=54,PR=14,PT=16,PB=30;
+ function niceMax(v){
+   if(!(v>0)) return 1;
+   var e=Math.pow(10,Math.floor(Math.log(v)/Math.LN10)), m=v/e,
+       st=[1,1.2,1.5,2,2.5,3,4,5,6,8,10], i;
+   for(i=0;i<st.length;i++){ if(m<=st[i]+1e-12) return st[i]*e; }
+   return 10*e;
+ }
+ function pts(n,stair,sub){
+   var a=[],i,k,tt,v,per;
+   if(n===0){
+     for(i=0;i<=240;i++){ tt=T*i/240; a.push([tt,P*Math.exp(rr()*tt)]); }
+   } else {
+     per=n*T;
+     if(stair && per<=400){
+       for(k=0;k<=per;k++){ v=P*Math.pow(1+rr()/n,k); a.push([k/n,v]); if(k<per) a.push([(k+1)/n,v]); }
+     } else {
+       for(i=0;i<=240;i++){ tt=T*i/240; a.push([tt,P*Math.pow(1+rr()/n,n*tt)]); }
+     }
+   }
+   if(sub){ for(i=0;i<a.length;i++){ a[i][1]=a[i][1]-P*Math.pow(1+rr(),a[i][0]); } }
+   return a;
+ }
+ function plot(){
+   var gap=(gm==='gap'), hi, o='', i, j, m;
+   hi = gap ? niceMax(amount(0)-amount(1)) : niceMax(amount(0));
+   var X=function(t){return PL+(W-PL-PR)*(T? t/T : 0);};
+   var Y=function(v){return (H-PB)-(H-PB-PT)*(v/hi);};
+
+   /* grid + y labels */
+   for(i=0;i<=4;i++){
+     var yv=hi*i/4, y=Y(yv);
+     o+='<line x1="'+PL+'" y1="'+y.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+y.toFixed(1)+'" stroke="#e5e7f3" stroke-width="1"/>';
+     var lab;
+     if(hi>=10000) lab='$'+comma(Math.round(yv/1000).toString())+'k';
+     else if(hi>=1000) lab='$'+(yv/1000).toFixed(1)+'k';
+     else if(hi>=10) lab='$'+Math.round(yv);
+     else if(hi>=1) lab='$'+yv.toFixed(2);
+     else lab='$'+yv.toFixed(4);
+     o+='<text x="'+(PL-6)+'" y="'+(y+3.5).toFixed(1)+'" font-size="9.5" fill="#7d7f94" text-anchor="end" font-weight="700">'+lab+'</text>';
+   }
+   /* x ticks */
+   var xs = T<=5?1 : (T<=12?2 : (T<=25?5:10));
+   for(j=0;j<=T;j+=xs){
+     o+='<line x1="'+X(j).toFixed(1)+'" y1="'+(H-PB)+'" x2="'+X(j).toFixed(1)+'" y2="'+(H-PB+4)+'" stroke="#c9ccdf" stroke-width="1"/>';
+     o+='<text x="'+X(j).toFixed(1)+'" y="'+(H-PB+15)+'" font-size="9.5" fill="#7d7f94" text-anchor="middle" font-weight="700">'+j+'</text>';
+   }
+   o+='<line x1="'+PL+'" y1="'+(H-PB)+'" x2="'+(W-PR)+'" y2="'+(H-PB)+'" stroke="#b9bdd6" stroke-width="1.2"/>';
+   o+='<line x1="'+PL+'" y1="'+PT+'" x2="'+PL+'" y2="'+(H-PB)+'" stroke="#b9bdd6" stroke-width="1.2"/>';
+   o+='<text x="'+((PL+W-PR)/2)+'" y="'+(H-3)+'" font-size="10" fill="#7d7f94" text-anchor="middle" font-weight="700">years</text>';
+
+   /* principal reference line in balance mode */
+   if(!gap && P<=hi){
+     o+='<line x1="'+PL+'" y1="'+Y(P).toFixed(1)+'" x2="'+(W-PR)+'" y2="'+Y(P).toFixed(1)+'" stroke="#9aa0c4" stroke-width="1" stroke-dasharray="4 3"/>';
+     o+='<text x="'+(W-PR-2)+'" y="'+(Y(P)-4).toFixed(1)+'" font-size="9" fill="#7d7f94" text-anchor="end" font-weight="700">deposit '+money0(P)+'</text>';
+   }
+
+   /* curves — draw unselected first so the chosen one sits on top */
+   var order=[], k;
+   for(i=0;i<METH.length;i++){ if(METH[i].k!==sel) order.push(METH[i]); }
+   order.push(meth(sel));
+   for(i=0;i<order.length;i++){
+     m=order[i];
+     if(gap && m.k===1){
+       o+='<line x1="'+PL+'" y1="'+Y(0).toFixed(1)+'" x2="'+(W-PR)+'" y2="'+Y(0).toFixed(1)+'" stroke="'+m.col+'" stroke-width="'+(m.k===sel?3:2)+'" opacity="'+(m.k===sel?1:.5)+'"/>';
+       continue;
+     }
+     var a=pts(m.k, !gap, gap), s='';
+     for(j=0;j<a.length;j++){ s+=X(a[j][0]).toFixed(1)+','+Math.max(PT-4,Math.min(H-PB,Y(a[j][1]))).toFixed(1)+' '; }
+     var on=(m.k===sel);
+     o+='<polyline points="'+s+'" fill="none" stroke="'+m.col+'" stroke-width="'+(on?3:1.8)+'" opacity="'+(on?1:.45)+'" stroke-linejoin="round" stroke-linecap="round"/>';
+   }
+   /* endpoint dot for the selected schedule */
+   var fv = gap ? amount(sel)-amount(1) : amount(sel);
+   var ey = Math.max(PT-4,Math.min(H-PB,Y(fv)));
+   o+='<circle cx="'+X(T).toFixed(1)+'" cy="'+ey.toFixed(1)+'" r="4.5" fill="#fff" stroke="'+meth(sel).col+'" stroke-width="2.5"/>';
+   $("art").innerHTML=o;
+
+   $("gTitle").innerHTML = gap ? 'Dollars earned <i>above</i> annual compounding' : 'Balance over time';
+   $("gCap").innerHTML = gap
+     ? 'Annual compounding is now the flat zero line, and everything above it is the bonus you get for compounding more often. Notice the shape of the payoff: going from <b>once a year to once a month</b> buys most of it, and <b>daily practically touches the continuous ceiling</b>. Doubling the frequency again and again gives less and less.'
+     : 'All four curves nearly lie on top of each other &mdash; and that is the real lesson. <b>Rate and time bend the curve; frequency only nudges it.</b> Push <i>r</i> and <i>t</i> up and the fan finally opens. To see the difference at any setting, switch to <b>Extra above annual</b>.';
+
+   $("leg").innerHTML = METH.map(function(m){
+     return '<span style="opacity:'+(m.k===sel?1:.6)+'"><i style="background:'+m.col+'"></i>'+m.nm.replace('Continuously','Continuous')+'</span>';
+   }).join('');
+ }
+
+ /* ---------- account list ---------- */
+ function renderList(){
+   $("list").innerHTML = METH.map(function(m){
+     return '<button class="it'+(m.k===sel?' on':'')+'" data-k="'+m.k+'">'+
+       '<span class="sw" style="background:'+m.col+'"></span>'+
+       '<span style="flex:1"><span class="nm">'+m.nm+'</span><br><span class="ct">'+m.ct+'</span></span>'+
+       '<span style="text-align:right"><span class="amt">'+money(amount(m.k))+'</span><br><span class="apy">APY '+pct(apy(m.k))+'</span></span></button>';
+   }).join('');
+   var b=document.querySelectorAll('#list .it');
+   for(var i=0;i<b.length;i++){ b[i].onclick=(function(el){return function(){ sel=parseInt(el.getAttribute('data-k'),10); if(si>7) si=7; render(); };})(b[i]); }
+
+   var a1=amount(1), ac=amount(0);
+   $("cmp").innerHTML='Over '+T+' year'+(T===1?'':'s')+', switching from annual to continuous compounding earns an extra <b>'+money(ac-a1)+'</b> &mdash; that is '+((a1-P)>0?((ac-a1)/(a1-P)*100).toFixed(1)+'% more interest':'the whole difference')+', on the very same deposit. <b>Continuous is the ceiling:</b> no schedule, however fast, can beat it.';
+ }
+
+ /* ---------- worked steps ---------- */
+ function steps(){
+   var n=sel, r=rr(), A=amount(n), I=A-P;
+   var fP=comma(P.toString()), fr=r.toFixed(4).replace(/0+$/,'').replace(/\.$/,'.0');
+   var head='<i>A</i> = <i>P</i>(1 + <i>r</i>/<i>n</i>)<sup><i>nt</i></sup>';
+   var why={t:'Why squeezing in more periods pays more',
+     e:'(1 + <i>r</i>/2)<sup>2</sup> = 1 + <i>r</i> + <span class="hl2"><i>r</i><sup>2</sup>/4</span>',
+     d:'Expand it and the extra term is impossible to miss. Compounding <b>twice</b> a year instead of once gives every dollar an additional <i>r</i><sup>2</sup>/4 &mdash; interest paid on the half-year interest. At <i>r</i> = '+rP+'%, that is <b>'+money(P*r*r/4)+'</b> extra on '+money0(P)+' in the very first year. Split the year into <i>n</i> pieces instead of 2 and you collect a whole pile of these crumbs. They are real, but they are <b>crumbs</b> &mdash; which is why the four balances stay so close together.',
+     why:1};
+
+   if(n===0){
+     return [
+      {t:'Start from the ordinary formula', e:head,
+       d:'<b>A</b> is the final amount · <b>P</b> the principal you deposit · <b>r</b> the annual rate <b>as a decimal</b> · <b>n</b> the compounding periods per year · <b>t</b> the number of years. Continuous compounding is what happens to this formula when <i>n</i> stops being a number you can count.'},
+      {t:'Let n run away to infinity', e:'(1 + <i>r</i>/<i>n</i>)<sup><i>n</i></sup> &rarr; <span class="hl"><i>e</i><sup><i>r</i></sup></span>&nbsp;&nbsp;as&nbsp;&nbsp;<i>n</i> &rarr; &infin;',
+       d:'Hourly, then every second, then every instant. The one-year growth factor does <b>not</b> blow up &mdash; it settles onto a fixed number, <i>e</i><sup><i>r</i></sup>, where <i>e</i> &asymp; 2.718281828. That limit is the whole reason <i>e</i> is in this chapter.'},
+      {t:'The formula collapses', e:'<i>A</i> = <span class="hl"><i>P e</i><sup><i>rt</i></sup></span>',
+       d:'One year multiplies the money by <i>e</i><sup><i>r</i></sup>, so <i>t</i> years multiplies it by (<i>e</i><sup><i>r</i></sup>)<sup><i>t</i></sup> = <i>e</i><sup><i>rt</i></sup>. No <i>n</i> anywhere &mdash; there is nothing left to count.'},
+      {t:'Substitute every letter', e:'<i>A</i> = <span class="hl">'+fP+'</span> &middot; <i>e</i><sup>(<span class="hl">'+fr+'</span>)(<span class="hl">'+T+'</span>)</sup>',
+       d:'<i>P</i> = '+money0(P)+', and '+rP+'% becomes the decimal <b>'+fr+'</b>. Feeding in '+rP+' instead of '+fr+' is the single most common wrong answer on this topic &mdash; it would compound the money at '+comma(Math.round(rP*100).toString())+'%.'},
+      {t:'Multiply out the exponent', e:'<i>A</i> = '+fP+' &middot; <i>e</i><sup><span class="hl">'+tr(r*T,4)+'</span></sup>',
+       d:'<i>rt</i> = '+fr+' &times; '+T+' = <b>'+tr(r*T,4)+'</b>. This exponent is the only place the rate and the time appear, and they enter as a <b>product</b> &mdash; half the rate for twice the years lands on exactly the same growth.'},
+      {t:'Evaluate the growth factor', e:'<i>e</i><sup>'+tr(r*T,4)+'</sup> = <span class="hl">'+trE(Math.exp(r*T),7)+'</span>',
+       d:'Every single dollar turns into $'+trE(Math.exp(r*T),7)+'. Use the <b>e<sup>x</sup></b> key, not 2.718 typed by hand &mdash; rounding <i>e</i> early can shift the final cents.'},
+      {t:'Multiply by the principal', e:'<i>A</i> = '+fP+' &middot; '+trE(Math.exp(r*T),7)+' = <span class="hl2">'+money(A)+'</span>',
+       d:'Interest earned = <i>A</i> &minus; <i>P</i> = '+money(A)+' &minus; '+money0(P)+' = <b>'+money(I)+'</b>. Effective annual yield: <i>e</i><sup><i>r</i></sup> &minus; 1 = <b>'+pct(apy(0))+'</b> &mdash; the true yearly growth, slightly above the stated '+rP+'%.'},
+      why
+     ];
+   }
+
+   var pr=r/n, tot=n*T, g=Math.pow(1+pr,tot), nm=meth(n).nm.toLowerCase(), each=(n===1?'year':(n===12?'month':'day'));
+   var prS=trE(pr,10), gS=trE(g,7), mulS=trE(1+pr,10), rep=cut(pr,10);
+   return [
+    {t:'The compound interest formula', e:head,
+     d:'<b>A</b> is the final amount · <b>P</b> the principal you deposit · <b>r</b> the annual rate <b>as a decimal</b> · <b>n</b> the compounding periods per year · <b>t</b> the number of years. Everything below is just this formula with the letters filled in.'},
+    {t:'Pin down n first', e:'<i>A</i> = <i>P</i>(1 + <i>r</i>/<span class="hl">'+n+'</span>)<sup>(<span class="hl">'+n+'</span>)<i>t</i></sup>',
+     d:'Compounded '+nm+' means the bank stops <b>'+n+' time'+(n===1?'':'s')+' every year</b> to add interest in. <i>n</i> is periods <b>per year</b> &mdash; it never changes when <i>t</i> changes. It appears twice: dividing the rate, and multiplying the time.'},
+    {t:'Substitute every letter', e:'<i>A</i> = <span class="hl">'+fP+'</span>(1 + <span class="hl">'+fr+'</span>/'+n+')<sup>('+n+')(<span class="hl">'+T+'</span>)</sup>',
+     d:'<i>P</i> = '+money0(P)+', and '+rP+'% becomes the decimal <b>'+fr+'</b>. Feeding in '+rP+' instead of '+fr+' is the single most common wrong answer on this topic &mdash; it would compound the money at '+comma(Math.round(rP*100).toString())+'%.'},
+    {t:'Divide: the rate actually applied', e:'<i>A</i> = '+fP+'(<span class="hl">'+mulS+'</span>)<sup>('+n+')('+T+')</sup>',
+     d:'<i>r</i>/<i>n</i> = '+fr+' &divide; '+n+' = <b>'+prS+'</b>. The bank does <b>not</b> add '+rP+'% each '+each+' &mdash; it slices the annual rate into '+n+' equal '+(n===1?'piece':'pieces')+' and applies '+(n===1?'it':'one')+' per '+each+'. Adding 1 turns it into a multiplier: money left alone for one '+each+' gets multiplied by '+mulS+'.'+(n===1?' With <i>n</i> = 1 the division changes nothing, which is exactly why annual compounding is the plain-vanilla case.':'')},
+    {t:'Multiply: count the periods', e:'<i>A</i> = '+fP+'('+mulS+')<sup><span class="hl">'+comma(tot.toString())+'</span></sup>',
+     d:'<i>nt</i> = '+n+' &times; '+T+' = <b>'+comma(tot.toString())+'</b>. Interest gets added '+comma(tot.toString())+' separate times, and each time it lands on a balance that already includes every earlier payment. That is what makes this exponential instead of linear.'},
+    {t:'Raise to the power', e:'('+mulS+')<sup>'+comma(tot.toString())+'</sup> = <span class="hl">'+gS+'</span>',
+     d:'This is the <b>growth factor</b>: one dollar becomes $'+gS+'. '+(rep
+        ? 'The &hellip; is doing real work: '+fr+'/'+n+' never terminates, so <b>keep it in the calculator</b> instead of retyping a short version. Chop it off at four or five decimals and the '+comma(tot.toString())+' compoundings magnify the error into whole dollars.'
+        : 'Here the division came out exact, so nothing is lost to rounding &mdash; that only happens when <i>n</i> divides the rate cleanly.')},
+    {t:'Multiply by the principal', e:'<i>A</i> = '+fP+' &middot; '+gS+' = <span class="hl2">'+money(A)+'</span>',
+     d:'Interest earned = <i>A</i> &minus; <i>P</i> = '+money(A)+' &minus; '+money0(P)+' = <b>'+money(I)+'</b>. Effective annual yield: (1 + <i>r</i>/'+n+')<sup>'+n+'</sup> &minus; 1 = <b>'+pct(apy(n))+'</b>'+(n===1?' &mdash; identical to the stated rate, because annual compounding has nothing extra to add.':' &mdash; the rate this account really pays, a little above the stated '+rP+'%.')},
+    why
+   ];
+ }
+
+ /* ---------- area model ---------- */
+ function areaArt(){
+   var x0=52,y0=16,B=104,K=40, o='';
+   o+='<rect x="'+x0+'" y="'+y0+'" width="'+B+'" height="'+B+'" fill="#e6e8f5" stroke="#43458f" stroke-width="1.4"/>';
+   o+='<text x="'+(x0+B/2)+'" y="'+(y0+B/2+2)+'" font-size="15" font-weight="800" fill="#262a5c" text-anchor="middle">1</text>';
+   o+='<text x="'+(x0+B/2)+'" y="'+(y0+B/2+18)+'" font-size="9" font-weight="700" fill="#4d4f66" text-anchor="middle">your dollar</text>';
+   o+='<rect x="'+(x0+B)+'" y="'+y0+'" width="'+K+'" height="'+B+'" fill="#fbf3e2" stroke="#b8862f" stroke-width="1.4"/>';
+   o+='<text x="'+(x0+B+K/2)+'" y="'+(y0+B/2+2)+'" font-size="12" font-weight="800" fill="#8a6a20" text-anchor="middle">r/2</text>';
+   o+='<rect x="'+x0+'" y="'+(y0+B)+'" width="'+B+'" height="'+K+'" fill="#fbf3e2" stroke="#b8862f" stroke-width="1.4"/>';
+   o+='<text x="'+(x0+B/2)+'" y="'+(y0+B+K/2+4)+'" font-size="12" font-weight="800" fill="#8a6a20" text-anchor="middle">r/2</text>';
+   o+='<rect x="'+(x0+B)+'" y="'+(y0+B)+'" width="'+K+'" height="'+K+'" fill="#dcf0e4" stroke="#2f9e5b" stroke-width="1.8"/>';
+   o+='<text x="'+(x0+B+K/2)+'" y="'+(y0+B+K/2+4)+'" font-size="10.5" font-weight="800" fill="#1e6b3c" text-anchor="middle">r²/4</text>';
+   o+='<text x="'+(x0+B/2)+'" y="'+(y0-5)+'" font-size="9.5" font-weight="800" fill="#7d7f94" text-anchor="middle">1</text>';
+   o+='<text x="'+(x0+B+K/2)+'" y="'+(y0-5)+'" font-size="9.5" font-weight="800" fill="#7d7f94" text-anchor="middle">r/2</text>';
+   o+='<text x="'+(x0-7)+'" y="'+(y0+B/2+3)+'" font-size="9.5" font-weight="800" fill="#7d7f94" text-anchor="end">1</text>';
+   o+='<text x="'+(x0-7)+'" y="'+(y0+B+K/2+3)+'" font-size="9.5" font-weight="800" fill="#7d7f94" text-anchor="end">r/2</text>';
+   o+='<text x="144" y="188" font-size="11" font-weight="800" fill="#262a5c" text-anchor="middle">side = 1 + r/2, so area = (1 + r/2)² = 1 + r + r²/4</text>';
+   o+='<text x="'+(x0+B+K+4)+'" y="'+(y0+B+K/2+3)+'" font-size="8.5" font-weight="700" fill="#2f9e5b">interest on interest</text>';
+   $("areaArt").innerHTML=o;
+ }
+
+ /* ---------- render ---------- */
+ function render(){
+   var m=meth(sel), S=steps();
+   if(si>=S.length) si=S.length-1;
+   var s=S[si];
+
+   $("lP").innerHTML=money0(P); $("lR").innerHTML=rP+'%'; $("lT").innerHTML=T+' yr';
+   $("stage").style.background=m.col;
+   $("stage").innerHTML='Compounded '+m.nm.toLowerCase()+'<small>'+money0(P)+' at '+rP+'% for '+T+' year'+(T===1?'':'s')+' &rarr; <b>'+money(amount(sel))+'</b></small>';
+
+   renderList(); plot();
+
+   $("stepT").innerHTML=s.t+'<span>step '+(si+1)+' / '+S.length+'</span>';
+   $("eq").innerHTML=s.e;
+   $("info").innerHTML='<span class="n">'+(s.why?'The crumb that makes the difference':'What just changed')+'</span>'+s.d;
+   $("why").style.display=s.why?'block':'none';
+   if(s.why) areaArt();
+   $("prev").disabled=(si===0); $("next").disabled=(si===S.length-1);
+   var d=''; for(var i=0;i<S.length;i++){ d+='<i class="'+(i===si?'on':'')+'"></i>'; }
+   $("dots").innerHTML=d;
+ }
+
+ /* ---------- wiring ---------- */
+ $("sP").oninput=function(){P=parseFloat(this.value);render();};
+ $("sR").oninput=function(){rP=parseFloat(this.value);render();};
+ $("sT").oninput=function(){T=parseInt(this.value,10);render();};
+ $("prev").onclick=function(){if(si>0){si--;render();}};
+ $("next").onclick=function(){var L=steps().length;if(si<L-1){si++;render();}};
+ (function(){
+   var b=document.querySelectorAll('#modeseg button');
+   for(var i=0;i<b.length;i++){
+     b[i].onclick=(function(el){return function(){
+       gm=el.getAttribute('data-m');
+       var all=document.querySelectorAll('#modeseg button');
+       for(var j=0;j<all.length;j++){ all[j].className = (all[j]===el?'on':''); }
+       plot();
+     };})(b[i]);
+   }
+ })();
+
+ render();
+})();
+</script>
+</body>
+</html>
